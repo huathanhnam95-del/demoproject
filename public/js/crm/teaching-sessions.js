@@ -351,7 +351,7 @@ window.CrmTeachingSessions = (function () {
                     </div>
                     ${readinessClean ? `
                         <div class="crm-briefing-readiness-chip ${readinessClass}">
-                            <span>Readiness:</span> <strong>${escapeHtml(readinessClean)}</strong>
+                            <strong>${escapeHtml(readinessClean)}</strong>
                         </div>
                     ` : ''}
                 </div>
@@ -362,6 +362,7 @@ window.CrmTeachingSessions = (function () {
         if (summary.quick_recap_60s) {
             html += `
                 <div class="crm-briefing-recap-box">
+                    <span class="crm-recap-label">Tóm tắt nhanh</span>
                     <p>${escapeHtml(summary.quick_recap_60s)}</p>
                 </div>
             `;
@@ -944,11 +945,12 @@ window.CrmTeachingSessions = (function () {
 
             // Attach delete listeners
             listEl.querySelectorAll('.btn-delete-teaching-session').forEach((btn) => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', () => {
                     const sid = btn.dataset.sessionId;
                     if (!sid) return;
-                    if (!confirm('Are you sure you want to delete this teaching session and its report?')) return;
-                    await deleteSession(sid);
+                    showStyledConfirm('Bạn có chắc muốn xóa phiên dạy này và báo cáo của nó?', async () => {
+                        await deleteSession(sid);
+                    });
                 });
             });
 
@@ -1030,7 +1032,32 @@ window.CrmTeachingSessions = (function () {
         }
     }
 
+    function showSkeletonLoading(reportHtmlEl) {
+        if (!reportHtmlEl) return;
+        reportHtmlEl.innerHTML = `
+            <div class="crm-skeleton-wrap">
+                <div class="crm-skeleton-line sk-title"></div>
+                <div class="crm-skeleton-line sk-meta"></div>
+                <div class="crm-skeleton-line sk-block"></div>
+                <div class="crm-skeleton-line sk-short"></div>
+                <div class="crm-skeleton-line"></div>
+                <div class="crm-skeleton-line sk-block"></div>
+            </div>
+        `;
+    }
+
     async function openSessionDetail(sessionId) {
+        const modalEl = document.getElementById('crm-teaching-session-modal');
+        const reportHtmlEl = document.getElementById('teaching-session-report-html');
+
+        // Show modal immediately with skeleton
+        if (modalEl) {
+            modalEl.style.display = 'flex';
+            modalEl.setAttribute('aria-hidden', 'false');
+        }
+        showSkeletonLoading(reportHtmlEl);
+        switchSessionView('report');
+
         try {
             const headers = await getAuthHeaders();
             const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}`, {
@@ -1043,10 +1070,8 @@ window.CrmTeachingSessions = (function () {
             currentSession = session;
 
             // Populate header info
-            const modalEl = document.getElementById('crm-teaching-session-modal');
             const titleEl = document.getElementById('teaching-session-modal-title');
             const statusEl = document.getElementById('teaching-session-status-badge');
-            const reportHtmlEl = document.getElementById('teaching-session-report-html');
             const rawJsonEl = document.getElementById('teaching-session-json-raw');
             const mindmapContainer = document.getElementById('teaching-session-mindmap-container');
             const flowchartContainer = document.getElementById('teaching-session-flowchart-container');
@@ -1082,7 +1107,7 @@ window.CrmTeachingSessions = (function () {
                     if (dockedAudio) dockedAudio.style.display = 'flex';
                     const audioMeta = document.getElementById('teaching-session-audio-meta');
                     if (audioMeta) {
-                        audioMeta.textContent = session.audioDurationSec 
+                        audioMeta.textContent = session.audioDurationSec
                             ? `Recording duration: ${formatDuration(session.audioDurationSec)}`
                             : 'Full recording playback';
                     }
@@ -1093,18 +1118,9 @@ window.CrmTeachingSessions = (function () {
                 }
             }
 
-            // Structured Briefing HTML (Default)
+            // Structured Briefing HTML — replace skeleton with real content
             if (reportHtmlEl) {
                 reportHtmlEl.innerHTML = renderBriefing(session);
-            }
-
-            // Set default view to 'report' (Briefing)
-            switchSessionView('report');
-
-            // Open modal
-            if (modalEl) {
-                modalEl.style.display = 'flex';
-                modalEl.setAttribute('aria-hidden', 'false');
             }
 
             // Check saved fullscreen preference
@@ -1127,7 +1143,14 @@ window.CrmTeachingSessions = (function () {
 
         } catch (err) {
             console.error('[Teaching Sessions] Error viewing session:', err);
-            alert(`Failed to load session details: ${err.message}`);
+            if (reportHtmlEl) {
+                reportHtmlEl.innerHTML = `
+                    <div class="crm-session-error-card">
+                        <p><strong>Không thể tải phiên dạy</strong></p>
+                        <p>${escapeHtml(err.message)}</p>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -1136,7 +1159,13 @@ window.CrmTeachingSessions = (function () {
             btn.classList.toggle('active', btn.dataset.view === viewName);
         });
         document.querySelectorAll('.teaching-session-view-pane').forEach((pane) => {
-            pane.style.display = pane.id === `teaching-session-view-${viewName}` ? 'block' : 'none';
+            const isTarget = pane.id === `teaching-session-view-${viewName}`;
+            pane.style.display = isTarget ? 'block' : 'none';
+            pane.classList.remove('is-entering');
+            if (isTarget) {
+                void pane.offsetWidth;
+                pane.classList.add('is-entering');
+            }
         });
 
         // If switching to a diagram, fit/refit pan-zoom
@@ -1147,6 +1176,27 @@ window.CrmTeachingSessions = (function () {
                 attachDiagramPanZoom(stage);
             }
         }
+    }
+
+    function showStyledConfirm(message, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.className = 'crm-confirm-overlay';
+        overlay.innerHTML = `
+            <div class="crm-confirm-card">
+                <p>${escapeHtml(message)}</p>
+                <div class="crm-confirm-actions">
+                    <button class="crm-confirm-cancel">Hủy</button>
+                    <button class="crm-confirm-danger">Xóa</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('.crm-confirm-cancel').addEventListener('click', () => overlay.remove());
+        overlay.querySelector('.crm-confirm-danger').addEventListener('click', () => {
+            overlay.remove();
+            onConfirm();
+        });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     }
 
     async function deleteSession(sessionId) {
@@ -1164,7 +1214,6 @@ window.CrmTeachingSessions = (function () {
             }
         } catch (err) {
             console.error('[Teaching Sessions] Delete error:', err);
-            alert(`Could not delete session: ${err.message}`);
         }
     }
 
@@ -1406,10 +1455,10 @@ window.CrmTeachingSessions = (function () {
                 if (currentSession && currentSession.markdownReport) {
                     try {
                         await navigator.clipboard.writeText(currentSession.markdownReport);
-                        copyBtn.textContent = '✅ Copied!';
-                        setTimeout(() => { copyBtn.textContent = 'Copy Report Markdown'; }, 2000);
+                        copyBtn.textContent = '✅ Đã sao chép!';
+                        setTimeout(() => { copyBtn.textContent = 'Sao chép Báo cáo'; }, 2000);
                     } catch (e) {
-                        alert('Could not copy to clipboard');
+                        console.warn('Could not copy to clipboard');
                     }
                 }
             });
@@ -1437,6 +1486,9 @@ window.CrmTeachingSessions = (function () {
                         audioPlayer.currentTime = seekTime;
                         audioPlayer.play().catch(() => {});
                     }
+                    // Set active state
+                    reportHtmlEl.querySelectorAll('.crm-timestamp-chip.is-playing').forEach(c => c.classList.remove('is-playing'));
+                    timeChip.classList.add('is-playing');
                     return;
                 }
 

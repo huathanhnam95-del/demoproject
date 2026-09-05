@@ -1,3 +1,18 @@
+## [V1.8.123] - 2026-09-05
+
+### Enhanced & Fixed
+- **Guided Write Essay Step 1 UI Refinements & Bug Fixes**:
+  - **Auto-Fullscreen on "Start Writing"**: Selecting Guided Practice and clicking "Start Writing" immediately expands `#mode-essay` into full-screen mode (`.essay-fullscreen`) and locks body scroll, persisting preference in sessionStorage for an immersive distraction-free workspace.
+  - **Mindmap Connector SVG Alignment Fix**: Corrected SVG connector anchor calculations across fullscreen and container resizing. Connectors branch directly from the bottom-center anchor of `#mm-prompt-core` across the full canvas width without bunching on the left. Attached `ResizeObserver` for dynamic responsiveness.
+  - **Argument Card Heading + Details Hierarchy**: Separated colon-delimited claims into prominent bold headings (`.essay-wb-chip-heading`) and clean descriptive explanation bodies (`.essay-wb-chip-details`) in both Agree and Disagree stance cards.
+  - **Dynamic POS & PEEL Branching Flowchart Tree**: Replaced stacked cards in Part 3 with an interactive flowchart tree (`.essay-flowchart-tree`):
+    - *Mở bài (POS)*: Root node ➔ directional connector ➔ child branches `[P] Paraphrase`, `[O] Opinion`, `[S] Signpost` (dynamically displaying the student's selected arguments).
+    - *Thân bài 1 & 2 (PEEL)*: Root node with `P ➔ E ➔ Ex ➔ L` badge ➔ directional connector ➔ sequential nodes `[P] Point`, `[E] Explanation`, `[Ex] Example`, `[L] Link`.
+    - *Kết bài*: Root node ➔ child branches `[Reaffirm Stance]`, `[Synthesize 2 Points]`, `[Final Remark]`.
+- **CRM Teaching Session Analysis Viewer (Round 3 Improvements)**:
+  - Cleaned styles and verified layout responsiveness across teaching session briefing, mindmap, and diagram components.
+  - Updated backend analysis error resilience and Gemini Files payload handling.
+
 ## [V1.8.122] - 2026-09-05
 
 ### Enhanced & Fixed

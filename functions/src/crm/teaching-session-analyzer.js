@@ -36,15 +36,14 @@ YÊU CẦU CỐT LÕI: TRÍCH XUẤT TOÀN DIỆN & ĐẦY ĐỦ (EXHAUSTIVE PED
 - TUYỆT ĐỐI KHÔNG tóm tắt sơ sài 2-3 mục chung chung rồi bỏ qua phần còn lại. Mọi chủ điểm ngữ pháp, từ vựng, collocations, phát âm, lỗi logic lập luận xuất hiện trong buổi dạy đều phải được ghi nhận chi tiết.
 - Cung cấp timestamp ước lượng theo giây (approx_start_sec) tương ứng với thời điểm diễn ra trong đoạn ghi âm để giáo viên có thể tra cứu và nghe lại.
 
-YÊU CẦU VỀ GIỌNG ĐIỆU & VĂN PHONG SƯ PHẠM:
-- Sử dụng văn phong sư phạm chuẩn mực, khúc chiết, mạch lạc, chính xác và mang tính ứng dụng thực tế cao.
-- KHÔNG dùng từ ngữ suồng sã, tiếng lóng hay văn nói quá đà (tránh: "gò tật", "huề vốn", "sượng trân", "đá nhau", "ổn áp").
-- KHÔNG dùng văn phong dịch máy hoặc văn bản hành chính rườm rà.
-- Diễn đạt chỉ rõ bản chất ngôn ngữ và phương pháp sư phạm:
-  + Ví dụ Recap: "Buổi học tập trung hoàn thiện kỹ năng liên kết câu đoạn (Lexical Cohesion) và tính mạch lạc trong bài viết. Trọng tâm là khắc phục xu hướng lạm dụng từ đồng nghĩa gượng ép, đồng thời chuẩn hóa cách phát triển ý theo cấu trúc Tổng - Phân (Hypernym - Hyponym) và lựa chọn từ vựng đúng ngữ cảnh."
-  + Ví dụ Phân tích lỗi: "Chỉ rõ lỗi dư thừa thông tin (redundancy) và dùng sai thuật ngữ 'open spaces'. Khi đã diễn đạt xe lấp kín các làn đường, việc thêm mệnh đề đối lập trở nên thừa ý."
-  + Ví dụ Sửa lỗi: "Giải thích sự khác biệt về sắc thái thời gian: 'bucket list' dùng cho mục tiêu cả cuộc đời, còn kế hoạch trong năm cần dùng 'wish list'."
-- Giữ nguyên các thuật ngữ tiếng Anh chuyên môn, câu trích dẫn của học viên (quotes), collocations, quy tắc ngữ pháp và câu sửa mẫu bằng TIẾNG ANH.
+YÊU CẦU VỀ VĂN PHONG:
+- Viết ngắn gọn, rõ ràng, thực tế — như một giáo viên đang nói chuyện nhanh với đồng nghiệp trước giờ dạy.
+- Mỗi câu tối đa 20-25 từ. Ưu tiên câu đơn. Tránh câu ghép nối dài.
+- Dùng tiếng Việt tự nhiên, tránh văn phong luận văn hay hành chính.
+- Giữ nguyên thuật ngữ tiếng Anh chuyên môn, quotes, collocations, quy tắc ngữ pháp.
+- KHÔNG dùng tiếng lóng, văn nói quá đà (tránh: "gò tật", "huề vốn", "sượng trân").
+- Ví dụ Recap tốt: "Em hay thay từ đồng nghĩa nhưng chưa chính xác. Cần tập chọn từ đúng ngữ cảnh và viết theo cấu trúc Tổng - Phân."
+- Ví dụ Sửa lỗi tốt: "Giải thích 'bucket list' là mục tiêu cả đời, kế hoạch trong năm dùng 'wish list'."
 
 Hãy xuất JSON chuẩn theo schema sau:
 {
@@ -52,28 +51,28 @@ Hãy xuất JSON chuẩn theo schema sau:
   "lesson_summary": {
     "focus_skill": "Writing / Speaking / Reading / Listening / Grammar",
     "core_topic": "Tên chủ đề bài học chuẩn xác (VD: Academic Writing: Lexical Cohesion & Paragraph Logic)",
-    "quick_recap_60s": "Tóm tắt 2-4 câu chuẩn mực về toàn bộ trọng tâm buổi dạy, khó khăn chính của học viên và mức độ tiến bộ để giáo viên nắm vững tình hình.",
+    "quick_recap_60s": "2-3 câu ngắn: Em học gì, em yếu chỗ nào, tiến bộ ra sao.",
     "student_readiness_level": "Đã Nắm Vững (Mastered) / Khá (Good) / Trung Bình (Developing) / Cần Củng Cố (Needs Reinforcement)"
   },
   "what_taught": [
     {
       "category": "Chiến Thuật / Từ Vựng / Ngữ Pháp / Phát Âm / Tính Liên Kết",
       "topic": "Tên khái niệm (kèm thuật ngữ Anh-Việt)",
-      "key_rule": "Nguyên lý sư phạm / Quy tắc cốt lõi đã dạy (phân tích rõ ràng, chi tiết, không cắt cụt)",
+      "key_rule": "Quy tắc / mẹo thực tế mà giáo viên đã dạy. Viết dưới 30 từ.",
       "examples": ["Ví dụ mục tiêu 1", "Ví dụ 2"],
       "approx_start_sec": 120
     },
     {
       "category": "Từ Vựng",
       "topic": "Collocation & Connotation",
-      "key_rule": "Quy tắc lựa chọn từ đúng sắc thái ngữ cảnh học thuật thay vì dịch nghĩa đen",
+      "key_rule": "Chọn từ đúng sắc thái ngữ cảnh, không dịch nghĩa đen",
       "examples": ["traffic congestion thay vì too many cars"],
       "approx_start_sec": 480
     },
     {
       "category": "Tính Liên Kết",
       "topic": "Hypernym - Hyponym Ordering",
-      "key_rule": "Khi phát triển ý, luôn đi từ danh từ bao quát (hypernym) trước khi chuyển sang các đối tượng cụ thể (hyponyms) để tránh lặp từ",
+      "key_rule": "Luôn đi từ khái niệm bao quát trước, rồi mới nêu ví dụ cụ thể",
       "examples": ["vehicles -> passenger cars and trucks"],
       "approx_start_sec": 950
     }
@@ -82,11 +81,11 @@ Hãy xuất JSON chuẩn theo schema sau:
     {
       "problem_id": "P1",
       "severity": "🔴 Nghiêm trọng / 🟡 Trung bình / 🟢 Nhẹ",
-      "issue_summary": "Tên lỗi ngắn gọn, chuẩn xác",
-      "student_error": "Trích dẫn nguyên văn câu/từ chưa chuẩn của học viên (English quote)",
-      "teacher_fix": "Phân tích của giáo viên: Bản chất lỗi sai + Hướng dẫn sửa chuẩn xác",
+      "issue_summary": "Tên lỗi dưới 10 từ",
+      "student_error": "Trích dẫn nguyên văn câu/từ sai (English quote)",
+      "teacher_fix": "Giáo viên sửa thế nào? 1-2 câu ngắn.",
       "student_outcome": "Đã Nắm Vững (Mastered) / Cải Thiện Một Phần (Partially Improved) / Cần Củng Cố Thêm (Needs Practice)",
-      "outcome_evidence": "Bằng chứng cụ thể từ phản hồi hoặc bài làm sửa lại của học viên",
+      "outcome_evidence": "Bằng chứng ngắn gọn từ phản hồi của học viên",
       "approx_start_sec": 310
     },
     {
@@ -94,7 +93,7 @@ Hãy xuất JSON chuẩn theo schema sau:
       "severity": "🟡 Trung bình",
       "issue_summary": "Lạm dụng từ đồng nghĩa gượng ép (Inappropriate synonym substitution)",
       "student_error": "commuters and travelers interchangeably without distinction",
-      "teacher_fix": "Chỉ rõ 'travelers' là khách du lịch, không dùng thay thế cho người đi làm hàng ngày 'commuters'",
+      "teacher_fix": "Giải thích 'travelers' là khách du lịch, 'commuters' là người đi làm hàng ngày — không dùng lẫn.",
       "student_outcome": "Cải Thiện Một Phần (Partially Improved)",
       "outcome_evidence": "Học viên nhận biết được sự khác biệt nhưng còn ngập ngừng khi đặt câu mới",
       "approx_start_sec": 750
@@ -104,7 +103,7 @@ Hãy xuất JSON chuẩn theo schema sau:
       "severity": "🔴 Nghiêm trọng",
       "issue_summary": "Lỗi câu chắp vá (Run-on sentence) và thiếu liên từ",
       "student_error": "The infrastructure is poor people still commute every day.",
-      "teacher_fix": "Hướng dẫn tách thành 2 câu đơn hoặc sử dụng liên từ chỉ sự nhượng bộ (Although / Despite)",
+      "teacher_fix": "Tách thành 2 câu đơn hoặc nối bằng Although / Despite.",
       "student_outcome": "Đã Nắm Vững (Mastered)",
       "outcome_evidence": "Học viên tự sửa lại thành câu phức hoàn chỉnh không cần giáo viên nhắc lại",
       "approx_start_sec": 1340
@@ -128,27 +127,45 @@ Hãy xuất JSON chuẩn theo schema sau:
 `;
 
 const MERMAID_UNIFIED_PROMPT = `
-Bạn là một trợ lý trực quan hóa dữ liệu sư phạm song ngữ Việt-Anh chuyên nghiệp.
+Bạn là một trợ lý trực quan hóa dữ liệu sư phạm.
 
-Từ dữ liệu JSON phân tích buổi dạy, hãy tạo ĐỒNG THỜI 2 sơ đồ Mermaid:
-1. "mindmap": Sơ đồ Mindmap bao quát toàn bộ buổi học theo chuẩn Mermaid mindmap syntax:
+Từ dữ liệu JSON phân tích buổi dạy, hãy tạo ĐỒNG THỜI 2 sơ đồ Mermaid thể hiện MỐI LIÊN HỆ NHÂN QUẢ giữa các khái niệm, lỗi sai và kế hoạch buổi sau.
+
+NGUYÊN TẮC CHUNG:
+- Mỗi node tối đa 40 ký tự. Dùng thuật ngữ tiếng Anh nếu ngắn hơn tiếng Việt.
+- KHÔNG dùng ký tự gây lỗi cú pháp Mermaid: tránh (, ), [, ], {, }, #, &, ;, <, >, \`, *, |
+- Thụt lề 2 spaces mỗi cấp.
+
+1. "mindmap": Sơ đồ Mindmap THEO KHÁI NIỆM (concept-centric):
    - Bắt đầu bằng: mindmap
-   - Root: root(("Tên chủ đề bài học"))
-   - Nhánh 1: 🎯 Kiến Thức Đã Dạy - Knowledge Taught: gom nhóm theo các Danh mục (Category) chính làm sub-branches (VD: Chiến thuật, Từ vựng, Ngữ pháp, Liên kết), mỗi sub-branch chứa các topic và quy tắc ngắn.
-   - Nhánh 2: ⚠️ Lỗi Học Viên - Student Errors: liệt kê các lỗi chính theo mức độ nghiêm trọng (P1, P2... kèm tên lỗi ngắn, quote sai tiêu biểu và outcome).
-   - Nhánh 3: 📋 Buổi Sau - Next Lesson Briefing: chia thành Warmup Quiz, Teacher Followup, Homework.
-   - KHÔNG dùng ký tự gây lỗi cú pháp Mermaid trong node: tránh (, ), [, ], {, }, #, &, ;, <, >, \`, *, |
-   - Giữ mỗi dòng súc tích (< 80 ký tự), thụt lề 2 spaces mỗi cấp.
+   - Root: root(("Tên chủ đề ngắn"))
+   - MỖI KHÁI NIỆM ĐÃ DẠY là một NHÁNH (không phải lá):
+     + Dưới mỗi khái niệm: quy tắc chính, VÀ các lỗi học viên LIÊN QUAN đến khái niệm đó
+     + Mỗi lỗi kèm outcome ngắn
+   - Điều này thể hiện NHÂN QUẢ: khái niệm X -> lỗi Y -> kết quả Z
+   - Nhánh cuối: Buổi Sau (gom warmup, homework)
 
-2. "flowchart": Sơ đồ Flowchart luồng bài học theo chuẩn Mermaid graph TD syntax:
+   Ví dụ cấu trúc:
+   mindmap
+     root(("Lexical Cohesion"))
+       Hypernym-Hyponym Order
+         Rule: general to specific
+         Err: dung synonym sai
+           Can luyen them
+       Collocation Choice
+         Rule: match context
+       Next Steps
+         Warmup quiz
+         Homework
+
+2. "flowchart": Sơ đồ Flowchart HÀNH TRÌNH HỌC (learning journey):
    - Bắt đầu bằng: graph TD
-   - Luồng logic: START["Chủ đề"] --> STEP1["Khái niệm 1"] --> STEP2["Khái niệm 2"] --> NEXT["Kế hoạch buổi sau"]
-   - Tại các khái niệm có lỗi hoặc cần rèn luyện, liên kết đến các node lỗi với classDef tương ứng:
-     Dùng :::critical cho lỗi Nghiêm trọng (🔴)
-     Dùng :::warning cho lỗi Trung bình (🟡)
-     Dùng :::success cho đã nắm vững
-     Dùng :::action cho nhiệm vụ tiếp theo
-   - Luôn định nghĩa classDef ở cuối sơ đồ:
+   - Trục chính: các khái niệm theo thứ tự thời gian
+   - Khái niệm đã nắm vững: :::success
+   - Khái niệm cần luyện: :::warning
+   - Mỗi khái niệm có lỗi -> liên kết đến node lỗi (:::critical hoặc :::warning)
+   - Node "Buổi Sau" NỐI NGƯỢC về các khái niệm cần củng cố (tạo feedback loop)
+   - classDef ở cuối:
      classDef critical fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#991b1b;
      classDef warning fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#92400e;
      classDef success fill:#dcfce7,stroke:#10b981,stroke-width:2px,color:#065f46;

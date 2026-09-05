@@ -6054,6 +6054,37 @@
   color: #d97706;
 }
 
+#mode-essay .essay-wb-chip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+#mode-essay .essay-wb-chip-heading {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--essay-ink, #0f172a);
+  line-height: 1.35;
+}
+
+#mode-essay .essay-wb-chip-details {
+  font-size: 0.77rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--essay-ink-muted, #475569);
+}
+
+#mode-essay .essay-wb-chip.is-active .essay-wb-chip-heading {
+  color: inherit;
+}
+
+#mode-essay .essay-wb-chip.is-active .essay-wb-chip-details {
+  color: inherit;
+  opacity: 0.92;
+}
+
 /* --- 2. Whiteboard: "Khung dàn ý 4 đoạn" (Interactive Pipeline) --- */
 #mode-essay .essay-wb-pipeline-stepper {
   display: grid;
@@ -6197,7 +6228,7 @@
   font-size: 0.9rem;
 }
 
-/* Dynamic POS & PEEL Outline Drawer Elements */
+/* Dynamic POS & PEEL Outline Flowchart Tree */
 #mode-essay .essay-pos-peel-body {
   display: flex;
   flex-direction: column;
@@ -6205,16 +6236,209 @@
   margin-bottom: 8px;
 }
 
-#mode-essay .essay-pos-peel-item {
+#mode-essay .essay-flowchart-tree {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  position: relative;
+  padding: 4px 0;
+}
+
+#mode-essay .essay-flowchart-root-col {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 140px;
+}
+
+#mode-essay .essay-flowchart-root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+#mode-essay .essay-flowchart-root.is-intro {
+  border-color: #3b82f6;
+  background: linear-gradient(160deg, #eff6ff, #ffffff);
+}
+
+#mode-essay .essay-flowchart-root.is-peel {
+  border-color: #6366f1;
+  background: linear-gradient(160deg, #eef2ff, #ffffff);
+}
+
+#mode-essay .essay-flowchart-root.is-conclusion {
+  border-color: #10b981;
+  background: linear-gradient(160deg, #ecfdf5, #ffffff);
+}
+
+#mode-essay .essay-flowchart-root-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+#mode-essay .essay-flowchart-root.is-intro .essay-flowchart-root-badge {
+  color: #1d4ed8;
+  background: rgba(59, 130, 246, 0.14);
+}
+
+#mode-essay .essay-flowchart-root.is-peel .essay-flowchart-root-badge {
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.14);
+}
+
+#mode-essay .essay-flowchart-root.is-conclusion .essay-flowchart-root-badge {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.14);
+}
+
+#mode-essay .essay-flowchart-root-title {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--essay-ink, #0f172a);
+  line-height: 1.25;
+}
+
+#mode-essay .essay-flowchart-root-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--essay-ink-muted, #64748b);
+  margin-top: 4px;
+}
+
+#mode-essay .essay-flowchart-pipeline-mini {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+
+/* Branching Connector & Tree Lines */
+#mode-essay .essay-flowchart-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+#mode-essay .essay-flowchart-connector::before {
+  content: '';
+  width: 100%;
+  height: 2px;
+  background: #cbd5e1;
+}
+
+#mode-essay .essay-flowchart-connector::after {
+  content: '▶';
+  position: absolute;
+  right: -2px;
+  font-size: 8px;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+#mode-essay .essay-flowchart-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  position: relative;
+  padding-left: 20px;
+}
+
+/* Vertical trunk connecting child branches */
+#mode-essay .essay-flowchart-branches::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  background: #cbd5e1;
+}
+
+#mode-essay .essay-flowchart-node {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
-  font-size: 0.86rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.18s ease;
+}
+
+#mode-essay .essay-flowchart-node:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Horizontal feeder branch from trunk to node */
+#mode-essay .essay-flowchart-node::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 17px;
+  width: 20px;
+  height: 2px;
+  background: #cbd5e1;
+}
+
+#mode-essay .essay-flowchart-node-lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#mode-essay .essay-flowchart-node-content {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--essay-ink, #334155);
+}
+
+@media (max-width: 768px) {
+  #mode-essay .essay-flowchart-tree {
+    flex-direction: column;
+    gap: 12px;
+  }
+  #mode-essay .essay-flowchart-root-col {
+    width: 100%;
+  }
+  #mode-essay .essay-flowchart-connector {
+    display: none;
+  }
+  #mode-essay .essay-flowchart-branches {
+    padding-left: 14px;
+  }
+  #mode-essay .essay-flowchart-node::before {
+    left: -14px;
+    width: 14px;
+  }
 }
 
 #mode-essay .essay-pos-peel-pill {

@@ -75,13 +75,13 @@
     let guidedViewMode = 'mindmap';
     try {
         guidedViewMode = localStorage.getItem(GUIDED_VIEW_MODE_KEY) || 'mindmap';
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
 
     const GUIDED_STEP1_LAYOUT_KEY = 'pte_guided_step1_layout';
     let guidedStep1Layout = 'whiteboard';
     try {
         guidedStep1Layout = localStorage.getItem(GUIDED_STEP1_LAYOUT_KEY) || 'whiteboard';
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
     let guidedStep1PipelineStep = 1;
     let guidedStep1StationTab = 'blueprint';
     let guidedStep1ActiveStance = 'agree';
@@ -288,6 +288,15 @@
 
         // Scroll overlay to top on enter so the user sees the full workspace
         if (on) mp.scrollTop = 0;
+
+        // Re-align mindmap connectors when entering or leaving fullscreen
+        if (typeof shouldRenderMindMapSVG === 'function' && shouldRenderMindMapSVG() && typeof renderGuidedMindMapSVGLines === 'function') {
+            requestAnimationFrame(() => {
+                renderGuidedMindMapSVGLines();
+                setTimeout(renderGuidedMindMapSVGLines, 80);
+                setTimeout(renderGuidedMindMapSVGLines, 260);
+            });
+        }
     }
 
     function _persistFullscreenPref(on) {
@@ -408,7 +417,7 @@
             document.removeEventListener('keydown', onKeyDown, true);
             modal.removeEventListener('click', handleModalClick);
             if (prevFocus && typeof prevFocus.focus === 'function') {
-                try { prevFocus.focus(); } catch (_) {}
+                try { prevFocus.focus(); } catch (_) { /* ignore */ }
             }
         };
     }
@@ -1105,7 +1114,7 @@
                     guidedStep1Layout = layout;
                     try {
                         localStorage.setItem(GUIDED_STEP1_LAYOUT_KEY, layout);
-                    } catch (_) {}
+                    } catch (_) { /* ignore */ }
                     syncPrestartLayoutCards();
                 }
             });
@@ -1843,7 +1852,7 @@
                 guidedViewMode = mode;
                 try {
                     localStorage.setItem(GUIDED_VIEW_MODE_KEY, mode);
-                } catch (_) {}
+                } catch (_) { /* ignore */ }
                 renderGuidedSupport();
             }
         } else if (action === 'set-step1-layout') {
@@ -1852,7 +1861,7 @@
                 guidedStep1Layout = layout;
                 try {
                     localStorage.setItem(GUIDED_STEP1_LAYOUT_KEY, layout);
-                } catch (_) {}
+                } catch (_) { /* ignore */ }
                 syncPrestartLayoutCards();
                 renderGuidedSupport();
             }
@@ -2106,13 +2115,30 @@
         el.guidedProgress.hidden = !guidedPack;
     }
 
+    function shouldRenderMindMapSVG() {
+        if (guidedSection === 'understand') {
+            return guidedStep1Layout === 'whiteboard';
+        }
+        return guidedViewMode === 'mindmap' && (guidedSection === 'direction');
+    }
+
     function renderGuidedMindMapSVGLines() {
-        if (guidedSection === 'understand' ? (guidedStep1Layout !== 'whiteboard') : (guidedViewMode !== 'mindmap')) return;
+        if (!shouldRenderMindMapSVG()) return;
 
         // 1. Step 1: Prompt Mind Map
         const promptCanvas = document.getElementById('essay-prompt-mindmap-canvas');
         const promptSvg = document.getElementById('essay-prompt-mindmap-svg');
         const promptCore = document.getElementById('mm-prompt-core');
+
+        if (promptCanvas && !promptCanvas.__mmObserverAttached && typeof ResizeObserver !== 'undefined') {
+            promptCanvas.__mmObserverAttached = true;
+            const ro = new ResizeObserver(() => {
+                if (shouldRenderMindMapSVG()) {
+                    renderGuidedMindMapSVGLines();
+                }
+            });
+            ro.observe(promptCanvas);
+        }
 
         if (promptCanvas && promptSvg && promptCore) {
             const canvasRect = promptCanvas.getBoundingClientRect();
@@ -2216,7 +2242,7 @@
     if (typeof window !== 'undefined' && !window.__guidedMindMapResizeAttached) {
         window.__guidedMindMapResizeAttached = true;
         window.addEventListener('resize', () => {
-            if (guidedViewMode === 'mindmap') {
+            if (shouldRenderMindMapSVG()) {
                 renderGuidedMindMapSVGLines();
             }
         });
@@ -2255,7 +2281,7 @@
         renderGuidedChecklist();
         renderGuidedRecycle(levelData);
 
-        if (guidedViewMode === 'mindmap' && (section === 'understand' || section === 'direction')) {
+        if (shouldRenderMindMapSVG()) {
             requestAnimationFrame(() => {
                 renderGuidedMindMapSVGLines();
                 setTimeout(renderGuidedMindMapSVGLines, 60);
@@ -3685,16 +3711,32 @@
                             </div>
                         </div>
                         <div class="essay-wb-side-chips">
-                            ${items1.map((item, idx) => {
-                                const chipId = `${side1Key}-${idx}`;
-                                const isPicked = isSide1Active && guidedStep1SelectedChips.has(chipId);
-                                const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
-                                return `
-                                <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
-                                    <span class="essay-wb-chip-icon">${isPicked ? '✓' : '+'}</span>
-                                    <span>${escapeHtml(rawText)}</span>
-                                </button>`;
-                            }).join('')}
+                            ${(() => {
+                                function formatWbChipParts(item) {
+                                    const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
+                                    let heading = rawText;
+                                    let details = '';
+                                    const colonIdx = rawText.indexOf(':');
+                                    if (colonIdx !== -1) {
+                                        heading = rawText.substring(0, colonIdx).trim();
+                                        details = rawText.substring(colonIdx + 1).trim();
+                                    }
+                                    return { heading, details };
+                                }
+                                return items1.map((item, idx) => {
+                                    const chipId = `${side1Key}-${idx}`;
+                                    const isPicked = isSide1Active && guidedStep1SelectedChips.has(chipId);
+                                    const { heading, details } = formatWbChipParts(item);
+                                    return `
+                                    <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
+                                        <span class="essay-wb-chip-icon">${isPicked ? '✓' : '+'}</span>
+                                        <div class="essay-wb-chip-body">
+                                            <span class="essay-wb-chip-heading">${escapeHtml(heading)}</span>
+                                            ${details ? `<span class="essay-wb-chip-details">${escapeHtml(details)}</span>` : ''}
+                                        </div>
+                                    </button>`;
+                                }).join('');
+                            })()}
                         </div>
                     </div>
                     <div class="essay-wb-side-card is-${meta2.tone}${isSide2Active ? ' is-active-stance' : ' is-greyed-out'}" ${!isSide2Active ? `data-guided-action="switch-stance" data-stance="${side2Key}"` : ''}>
@@ -3707,16 +3749,32 @@
                             </div>
                         </div>
                         <div class="essay-wb-side-chips">
-                            ${items2.map((item, idx) => {
-                                const chipId = `${side2Key}-${idx}`;
-                                const isPicked = isSide2Active && guidedStep1SelectedChips.has(chipId);
-                                const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
-                                return `
-                                <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
-                                    <span class="essay-wb-chip-icon">${isPicked ? '✓' : '+'}</span>
-                                    <span>${escapeHtml(rawText)}</span>
-                                </button>`;
-                            }).join('')}
+                            ${(() => {
+                                function formatWbChipParts(item) {
+                                    const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
+                                    let heading = rawText;
+                                    let details = '';
+                                    const colonIdx = rawText.indexOf(':');
+                                    if (colonIdx !== -1) {
+                                        heading = rawText.substring(0, colonIdx).trim();
+                                        details = rawText.substring(colonIdx + 1).trim();
+                                    }
+                                    return { heading, details };
+                                }
+                                return items2.map((item, idx) => {
+                                    const chipId = `${side2Key}-${idx}`;
+                                    const isPicked = isSide2Active && guidedStep1SelectedChips.has(chipId);
+                                    const { heading, details } = formatWbChipParts(item);
+                                    return `
+                                    <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
+                                        <span class="essay-wb-chip-icon">${isPicked ? '✓' : '+'}</span>
+                                        <div class="essay-wb-chip-body">
+                                            <span class="essay-wb-chip-heading">${escapeHtml(heading)}</span>
+                                            ${details ? `<span class="essay-wb-chip-details">${escapeHtml(details)}</span>` : ''}
+                                        </div>
+                                    </button>`;
+                                }).join('');
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -3800,22 +3858,46 @@
                 roleVi: `Paraphrase + ${opinionStatementVi} + Báo trước 2 luận điểm`,
                 tag: '2-3 câu',
                 renderDrawer: () => `
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill pos-p">[P] Paraphrase</span>
-                        <strong>${guidedText('Paraphrase Prompt:', 'Nhắc lại đề bài:')}</strong>
-                        <span>${guidedText('Restate the prompt in your own words with synonyms, avoiding verbatim repetition.', 'Diễn đạt lại nhận định trong đề bài bằng từ ngữ của bạn, tuyệt đối không chép nguyên văn.')}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill pos-o">[O] Opinion</span>
-                        <strong>${guidedText('Thesis & Opinion:', 'Chốt lập trường:')}</strong>
-                        <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${escapeHtml(stanceTitle)}).</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill pos-s">[S] Signpost</span>
-                        <strong>${guidedText('Signpost 2 Core Points:', 'Báo trước 2 luận điểm chính đã chọn:')}</strong>
-                        <div class="essay-pos-signposts">
-                            <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
-                            <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                    <div class="essay-flowchart-tree">
+                        <div class="essay-flowchart-root-col">
+                            <div class="essay-flowchart-root is-intro">
+                                <span class="essay-flowchart-root-badge">MỞ BÀI</span>
+                                <span class="essay-flowchart-root-title">Introduction</span>
+                                <span class="essay-flowchart-root-sub">Khung 3 bước POS</span>
+                            </div>
+                        </div>
+                        <div class="essay-flowchart-connector"></div>
+                        <div class="essay-flowchart-branches">
+                            <div class="essay-flowchart-node is-p">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill pos-p">[P] Paraphrase</span>
+                                    <strong>${guidedText('Paraphrase Prompt:', 'Nhắc lại đề bài:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${guidedText('Restate the prompt in your own words with synonyms, avoiding verbatim repetition.', 'Diễn đạt lại nhận định trong đề bài bằng từ ngữ của bạn, tuyệt đối không chép nguyên văn.')}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-o">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill pos-o">[O] Opinion</span>
+                                    <strong>${guidedText('Thesis & Opinion:', 'Chốt lập trường:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${escapeHtml(stanceTitle)}).</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-s">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill pos-s">[S] Signpost</span>
+                                    <strong>${guidedText('Signpost 2 Core Points:', 'Báo trước 2 luận điểm chính đã chọn:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <div class="essay-pos-signposts">
+                                        <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
+                                        <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>`
             },
@@ -3827,25 +3909,54 @@
                 roleVi: `[Luận điểm 1] ${p1.titleVi}`,
                 tag: '4-5 câu',
                 renderDrawer: () => `
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-p">[P] Point</span>
-                        <strong>${guidedText('Point 1 (Topic Sentence):', 'Luận điểm 1:')}</strong>
-                        <span class="essay-peel-highlight">${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
-                        <strong>${guidedText('Explanation:', 'Giải thích cơ chế vì sao luận điểm này đúng:')}</strong>
-                        <span>${escapeHtml(guidedText(p1.expEn, p1.expVi))}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-ex">[E] Example</span>
-                        <strong>${guidedText('Example / Evidence:', 'Gợi ý dẫn chứng:')}</strong>
-                        <span>${guidedText('Provide a concrete real-world example, observation, or case study demonstrating this effect.', 'Đưa ra ví dụ thực tế đời sống hoặc nghiên cứu cụ thể để chứng minh cho cơ chế trên.')}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-l">[L] Link</span>
-                        <strong>${guidedText('Link Sentence:', 'Câu chốt:')}</strong>
-                        <span>${guidedText(`Conclude how Point 1 reinforces your stance (${opinionStatementEn.toLowerCase()}).`, `Chốt lại một câu ngắn gọn khẳng định lý do vì sao luận điểm 1 củng cố cho quan điểm chung của bài.`)}</span>
+                    <div class="essay-flowchart-tree">
+                        <div class="essay-flowchart-root-col">
+                            <div class="essay-flowchart-root is-peel">
+                                <span class="essay-flowchart-root-badge">THÂN BÀI 1</span>
+                                <span class="essay-flowchart-root-title">Body 1</span>
+                                <span class="essay-flowchart-root-sub">Cấu trúc PEEL</span>
+                                <span class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</span>
+                            </div>
+                        </div>
+                        <div class="essay-flowchart-connector"></div>
+                        <div class="essay-flowchart-branches">
+                            <div class="essay-flowchart-node is-peel-p">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-p">[P] Point</span>
+                                    <strong>${guidedText('Point 1 (Topic Sentence):', 'Luận điểm 1 (Câu mở đoạn):')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span class="essay-peel-highlight">${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-peel-e">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                                    <strong>${guidedText('Explanation:', 'Giải thích cơ chế vì sao luận điểm này đúng:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${escapeHtml(guidedText(p1.expEn, p1.expVi))}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-peel-ex">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
+                                    <strong>${guidedText('Example / Evidence:', 'Gợi ý dẫn chứng minh họa:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${guidedText('Provide a concrete real-world example, observation, or case study demonstrating this effect.', 'Đưa ra ví dụ thực tế đời sống hoặc nghiên cứu cụ thể để chứng minh cho cơ chế trên.')}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-peel-l">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-l">[L] Link</span>
+                                    <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${guidedText(`Conclude how Point 1 reinforces your stance (${opinionStatementEn.toLowerCase()}).`, `Chốt lại một câu ngắn gọn khẳng định lý do vì sao luận điểm 1 củng cố cho quan điểm chung của bài.`)}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>`
             },
             {
@@ -3856,25 +3967,54 @@
                 roleVi: `[Luận điểm 2] ${p2.titleVi}`,
                 tag: '4-5 câu',
                 renderDrawer: () => `
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-p">[P] Point</span>
-                        <strong>${guidedText('Point 2 (Topic Sentence):', 'Luận điểm 2:')}</strong>
-                        <span class="essay-peel-highlight">${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
-                        <strong>${guidedText('Explanation:', 'Giải thích luận điểm 2:')}</strong>
-                        <span>${escapeHtml(guidedText(p2.expEn, p2.expVi))}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-ex">[E] Example</span>
-                        <strong>${guidedText('Example / Evidence:', 'Dẫn chứng thực tế:')}</strong>
-                        <span>${guidedText('Offer another illustrative real-world instance or comparative contrast strengthening point 2.', 'Đưa ví dụ minh chứng đời sống hoặc so sánh thực tiễn để tăng sức thuyết phục cho luận điểm 2.')}</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill peel-l">[L] Link</span>
-                        <strong>${guidedText('Link Sentence:', 'Câu chốt:')}</strong>
-                        <span>${guidedText('Wrap up Body 2, building a smooth logical transition into the conclusion.', 'Khép lại thân bài 2, tạo bước đệm chuyển ý mượt mà sang phần kết luận.')}</span>
+                    <div class="essay-flowchart-tree">
+                        <div class="essay-flowchart-root-col">
+                            <div class="essay-flowchart-root is-peel">
+                                <span class="essay-flowchart-root-badge">THÂN BÀI 2</span>
+                                <span class="essay-flowchart-root-title">Body 2</span>
+                                <span class="essay-flowchart-root-sub">Cấu trúc PEEL</span>
+                                <span class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</span>
+                            </div>
+                        </div>
+                        <div class="essay-flowchart-connector"></div>
+                        <div class="essay-flowchart-branches">
+                            <div class="essay-flowchart-node is-peel-p">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-p">[P] Point</span>
+                                    <strong>${guidedText('Point 2 (Topic Sentence):', 'Luận điểm 2 (Câu mở đoạn):')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span class="essay-peel-highlight">${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-peel-e">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                                    <strong>${guidedText('Explanation:', 'Giải thích luận điểm 2:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${escapeHtml(guidedText(p2.expEn, p2.expVi))}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-peel-ex">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
+                                    <strong>${guidedText('Example / Evidence:', 'Dẫn chứng thực tế:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${guidedText('Offer another illustrative real-world instance or comparative contrast strengthening point 2.', 'Đưa ví dụ minh chứng đời sống hoặc so sánh thực tiễn để tăng sức thuyết phục cho luận điểm 2.')}</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-peel-l">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill peel-l">[L] Link</span>
+                                    <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${guidedText('Wrap up Body 2, building a smooth logical transition into the conclusion.', 'Khép lại thân bài 2, tạo bước đệm chuyển ý mượt mà sang phần kết luận.')}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>`
             },
             {
@@ -3885,23 +4025,47 @@
                 roleVi: 'Khẳng định lại lập trường & đúc kết 2 luận điểm',
                 tag: '1-2 câu',
                 renderDrawer: () => `
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill pos-o">✓ ${guidedText('Reaffirm', 'Khẳng định')}</span>
-                        <strong>${guidedText('Reaffirm Stance:', 'Khẳng định lại quan điểm:')}</strong>
-                        <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${guidedText('using fresh phrasing, not duplicating intro', 'bằng câu từ diễn đạt khác mở bài')}).</span>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill pos-s">✓ ${guidedText('Synthesize', 'Đúc kết')}</span>
-                        <strong>${guidedText('Synthesize 2 Core Points:', 'Đúc kết 2 luận điểm then chốt:')}</strong>
-                        <div class="essay-pos-signposts">
-                            <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
-                            <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                    <div class="essay-flowchart-tree">
+                        <div class="essay-flowchart-root-col">
+                            <div class="essay-flowchart-root is-conclusion">
+                                <span class="essay-flowchart-root-badge">KẾT BÀI</span>
+                                <span class="essay-flowchart-root-title">Conclusion</span>
+                                <span class="essay-flowchart-root-sub">Đúc kết & Khẳng định</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="essay-pos-peel-item">
-                        <span class="essay-pos-peel-pill pos-p">💡 ${guidedText('Final Remark', 'Mở rộng')}</span>
-                        <strong>${guidedText('Final Thought (Optional):', 'Lời bình / Mở rộng (tuỳ chọn):')}</strong>
-                        <span>${guidedText('A concise forward-looking remark or practical takeaway for lasting essay resonance.', '1 câu nhận định tương lai hoặc khuyến nghị thực tiễn để bài viết có chiều sâu ấn tượng.')}</span>
+                        <div class="essay-flowchart-connector"></div>
+                        <div class="essay-flowchart-branches">
+                            <div class="essay-flowchart-node is-o">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill pos-o">✓ ${guidedText('Reaffirm', 'Khẳng định')}</span>
+                                    <strong>${guidedText('Reaffirm Stance:', 'Khẳng định lại quan điểm:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${guidedText('using fresh phrasing, not duplicating intro', 'bằng câu từ diễn đạt khác mở bài')}).</span>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-s">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill pos-s">✓ ${guidedText('Synthesize', 'Đúc kết')}</span>
+                                    <strong>${guidedText('Synthesize 2 Core Points:', 'Đúc kết 2 luận điểm then chốt:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <div class="essay-pos-signposts">
+                                        <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
+                                        <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="essay-flowchart-node is-p">
+                                <div class="essay-flowchart-node-lead">
+                                    <span class="essay-pos-peel-pill pos-p">💡 ${guidedText('Final Remark', 'Mở rộng')}</span>
+                                    <strong>${guidedText('Final Thought (Optional):', 'Lời bình / Mở rộng (tuỳ chọn):')}</strong>
+                                </div>
+                                <div class="essay-flowchart-node-content">
+                                    <span>${guidedText('A concise forward-looking remark or practical takeaway for lasting essay resonance.', '1 câu nhận định tương lai hoặc khuyến nghị thực tiễn để bài viết có chiều sâu ấn tượng.')}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>`
             }
         ];
@@ -6154,7 +6318,8 @@
             if (el.guidedDraftContainer) el.guidedDraftContainer.style.display = 'none';
             if (el.fullscreenBtn) el.fullscreenBtn.style.display = '';
             if (el.railFullscreenBtn) el.railFullscreenBtn.style.display = '';
-            restoreEssayFullscreen();
+            _applyFullscreen(true);
+            _persistFullscreenPref(true);
         } else {
             // Exam Practice: Standard exam editor
             if (mp) {

@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 1033,
-  "round1_pass_count": 804,
-  "debate_revised_count": 176,
-  "unresolved_count": 53,
+  "processed_questions": 1061,
+  "round1_pass_count": 825,
+  "debate_revised_count": 182,
+  "unresolved_count": 54,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -49842,6 +49842,1496 @@
                 }
               ],
               "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1117,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation for why 'foundation' is incorrect does not address the collocation or semantic fit adequately.",
+                "affected_text": "While foundation means base or basis, in this context, 'forefront' specifically denotes leading status or pioneering work.",
+                "correction": "While 'foundation' means base or basis, it does not convey the idea of being at the leading edge. 'Forefront' specifically denotes the leading status or pioneering work in this context."
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+            "overall_notes": "The explanation is mostly correct but lacks sufficient detail regarding the inappropriateness of 'foundation'."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the collocation, semantics, and context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'forefront' because it completes the fixed idiom 'at the forefront of,' which means being at the leading edge or most advanced stage in a field. \n\n* Why 'backdrop' is incorrect: 'Backdrop' refers to something behind, like scenery, and does not imply leadership or advancement in a field. \n* Why 'appendix' is incorrect: 'Appendix' is a section added to the end of a book or document, making it irrelevant in the context of leading or pioneering work. \n* Why 'foundation' is incorrect: While 'foundation' means base or basis, it does not convey the idea of being at the leading edge. 'Forefront' specifically denotes the leading status or pioneering work in this context. \n\nAdditionally, the phrase 'at the forefront of' is a well-established collocation used to describe leadership in a field, which is not semantically or contextually supported by the other options.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the completeness gap regarding 'foundation' as pointed out by Model [deepseek-r1:14b], while retaining the clarity and accuracy praised by Model [qwen3:14b]. The grammar tag was confirmed as accurate, and the explanation was structured to be clear and accessible for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'forefront' because it completes the fixed idiom 'at the forefront of,' which means being at the leading edge or most advanced stage in a field. \n\n* Why 'backdrop' is incorrect: 'Backdrop' refers to something behind, like scenery, and does not imply leadership or advancement in a field. \n* Why 'appendix' is incorrect: 'Appendix' is a section added to the end of a book or document, making it irrelevant in the context of leading or pioneering work. \n* Why 'foundation' is incorrect: While 'foundation' means base or basis, it does not convey the idea of being at the leading edge. 'Forefront' specifically denotes the leading status or pioneering work in this context. \n\nAdditionally, the phrase 'at the forefront of' is a well-established collocation used to describe leadership in a field, which is not semantically or contextually supported by the other options.",
+          "candidate_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the collocation and semantic context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models explicitly passing it and the third model failing to respond. The grammar tag was confirmed as 'Fixed Collocation / Idiom (Lexis)' by all models that provided feedback. The explanation was refined to explicitly address subject-verb logic and ensure clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'forefront' because it completes the fixed idiom 'at the forefront of,' which means being at the leading edge or most advanced stage in a field. \n\n* Why 'backdrop' is incorrect: 'Backdrop' refers to something behind, like scenery, and does not imply leadership or advancement in a field. \n* Why 'appendix' is incorrect: 'Appendix' is a section added to the end of a book or document, making it irrelevant in the context of leading or pioneering work. \n* Why 'foundation' is incorrect: While 'foundation' means base or basis, it does not convey the idea of being at the leading edge. 'Forefront' specifically denotes the leading status or pioneering work in this context. \n\nAdditionally, the phrase 'at the forefront of' is a well-established collocation used to describe leadership in a field, which is not semantically or contextually supported by the other options. The use of 'forefront' aligns with the active voice and subject-verb logic, emphasizing the leading role of perovskite materials in solar energy research.",
+          "candidate_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the collocation, semantics, and context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was already clear, complete, and suitable for B1-B2 learners. No changes were necessary beyond confirming consensus and ensuring clarity.",
+          "candidate_explanation": "The correct answer is 'forefront' because it completes the fixed idiom 'at the forefront of,' which means being at the leading edge or most advanced stage in a field. \n\n* Why 'backdrop' is incorrect: 'Backdrop' refers to something behind, like scenery, and does not imply leadership or advancement in a field. \n* Why 'appendix' is incorrect: 'Appendix' is a section added to the end of a book or document, making it irrelevant in the context of leading or pioneering work. \n* Why 'foundation' is incorrect: While 'foundation' means base or basis, it does not convey the idea of being at the leading edge. 'Forefront' specifically denotes the leading status or pioneering work in this context. \n\nThe phrase 'at the forefront of' is a well-established collocation used to describe leadership in a field, which is not semantically or contextually supported by the other options. The use of 'forefront' aligns with the active voice and subject-verb logic, emphasizing the leading role of perovskite materials in solar energy research.",
+          "candidate_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of the collocation, semantics, and context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Fixed Collocation / Idiom (Lexis)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1123,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar_tag 'Verb Choice / Semantic Fit (Present Tense)' is not entirely accurate because 'empowering' is used as a predicate adjective, not a verb in the present tense.",
+                "affected_text": "Verb Choice / Semantic Fit (Present Tense)",
+                "correction": "Verb Form and Function / Semantic Fit (Predicative Adjective)"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the fact that 'empowering' is a present participle used as a predicative adjective, which affects its grammatical role and collocation.",
+                "affected_text": "The correct answer is 'empowering' because it accurately conveys that the maker movement gives people the ability and confidence to create and innovate.",
+                "correction": "The correct answer is 'empowering' because it accurately conveys that the maker movement gives people the ability and confidence to create and innovate, functioning as a predicative adjective describing the movement's impact."
+              }
+            ],
+            "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Predicative Adjective)",
+            "overall_notes": "The explanation is mostly correct but misses key grammatical details about the verb form and its function in the sentence."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Choice / Semantic Fit (Present Tense)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. No gaps or errors were found."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Choice / Semantic Fit (Present Tense)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'empowering' because it accurately conveys that the maker movement gives people the ability and confidence to create and innovate, functioning as a present participle verb. * Why 'highlighting' is incorrect: This means merely drawing attention to something, which doesn't capture the active process of giving power. * Why 'advancing' is incorrect: While related to progress, 'advancing' does not specifically mean granting capability or authority. * Why 'deluding' is incorrect: This word has a negative meaning (to trick), which contradicts the positive message of the passage. The grammar tag is 'Verb Form and Function / Semantic Fit (Verb)' because 'empowering' is used as a present participle functioning as a verb, not a predicative adjective. This distinction is important for understanding its grammatical role and collocation in the sentence. Additionally, the explanation clarifies the active vs. passive meaning, ensuring that the semantic logic is clear, especially for passive distractors like 'advancing', which implies movement rather than granting power.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Verb Choice / Semantic Fit (Present Tense)' to 'Verb Form and Function / Semantic Fit (Predicative Adjective)' based on the critique from Model [deepseek-r1:14b], which pointed out that 'empowering' functions as a predicative adjective, not a present tense verb. Model [qwen3:14b] agreed with the content of the explanation but did not challenge the grammar tag. Model [gemma4:12b] did not respond, so no further input was available. The explanation was revised to clarify the grammatical role of 'empowering' and its semantic fit with the passage.",
+          "candidate_explanation": "The correct answer is 'empowering' because it accurately conveys that the maker movement gives people the ability and confidence to create and innovate, functioning as a predicative adjective describing the movement's impact. * Why 'highlighting' is incorrect: This means merely drawing attention to something, which doesn't capture the active process of giving power. * Why 'advancing' is incorrect: While related to progress, 'advancing' does not specifically mean granting capability or authority. * Why 'deluding' is incorrect: This word has a negative meaning (to trick), which contradicts the positive message of the passage. The grammar tag has been corrected to 'Verb Form and Function / Semantic Fit (Predicative Adjective)' because 'empowering' is used as a present participle functioning as a predicative adjective, not a verb in the present tense. This distinction is important for understanding its grammatical role and collocation in the sentence.",
+          "candidate_grammar_tag": "Verb Form and Function / Semantic Fit (Predicative Adjective)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag incorrectly labels 'empowering' as a predicative adjective when it is actually a verb.",
+                  "affected_text": "Verb Form and Function / Semantic Fit (Predicative Adjective)",
+                  "correction": "Verb Form and Function / Semantic Fit (Verb)"
+                }
+              ],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "The explanation correctly identifies the reasoning but mislabels the grammatical role of 'empowering'."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Predicative Adjective)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form and Function / Semant"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Predicative Adjective)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 0
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The initial explanation incorrectly labeled 'empowering' as a predicative adjective. After reviewing the grammatical structure and function, it was determined that 'empowering' is a present participle functioning as a verb, not an adjective. This resolved the disagreement between the models and clarified the grammatical role for learners.",
+          "candidate_explanation": "The correct answer is 'empowering' because it accurately conveys that the maker movement gives people the ability and confidence to create and innovate, functioning as a verb in the present participle form. * Why 'highlighting' is incorrect: This means merely drawing attention to something, which doesn't capture the active process of giving power. * Why 'advancing' is incorrect: While related to progress, 'advancing' does not specifically mean granting capability or authority. * Why 'deluding' is incorrect: This word has a negative meaning (to trick), which contradicts the positive message of the passage. The grammar tag has been corrected to 'Verb Form and Function / Semantic Fit (Verb)' because 'empowering' is used as a present participle functioning as a verb, not a predicative adjective. This distinction is important for understanding its grammatical role and collocation in the sentence.",
+          "candidate_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Verb Form and Function / Semant"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure JSON validity and clarity, addressing the flagged parse error by ensuring proper formatting. The grammar tag was confirmed as accurate, and the semantic logic between active and passive meanings was explicitly explained to resolve any ambiguity.",
+          "candidate_explanation": "The correct answer is 'empowering' because it accurately conveys that the maker movement gives people the ability and confidence to create and innovate, functioning as a present participle verb. * Why 'highlighting' is incorrect: This means merely drawing attention to something, which doesn't capture the active process of giving power. * Why 'advancing' is incorrect: While related to progress, 'advancing' does not specifically mean granting capability or authority. * Why 'deluding' is incorrect: This word has a negative meaning (to trick), which contradicts the positive message of the passage. The grammar tag is 'Verb Form and Function / Semantic Fit (Verb)' because 'empowering' is used as a present participle functioning as a verb, not a predicative adjective. This distinction is important for understanding its grammatical role and collocation in the sentence. Additionally, the explanation clarifies the active vs. passive meaning, ensuring that the semantic logic is clear, especially for passive distractors like 'advancing', which implies movement rather than granting power.",
+          "candidate_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "The explanation is accurate and complete, with correct grammar labeling and logical reasoning for each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the grammatical form and function of 'empowering' and clearly explains why the other options are semantically and functionally inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Form and Function / Semantic Fit (Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1124,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Past Participle)"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'obtained' because the sentence uses a passive voice structure. The subject ('Protein') is receiving the action from the sources (animal and plant). The past participle form of the verb is used to show that protein is acquired or received from these sources.\n\n* Why 'disposed' is incorrect: This means to throw away, which is the opposite meaning required here.\n* Why 'surmised' is incorrect: This means to guess or assume something, which has no relation to acquiring physical nutrients.\n* Why 'inferred' is incorrect: This means to deduce or conclude from evidence; it describes a mental process, not the physical act of receiving food.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy. The grammar tag 'Passive Voice (Past Participle)' was confirmed as correct. The JSON formatting issue was resolved, and the explanation was made more explicit to address all models' concerns, including the need for a clear distinction between active and passive voice in the context of the sentence.",
+          "candidate_explanation": "The correct answer is 'obtained' because the sentence uses a passive voice structure. The subject ('Protein') is receiving the action from the sources (animal and plant). The past participle form of the verb is used to show that protein is acquired or received from these sources.\n\n* Why 'disposed' is incorrect: This means to throw away, which is the opposite meaning required here.\n* Why 'surmised' is incorrect: This means to guess or assume something, which has no relation to acquiring physical nutrients.\n* Why 'inferred' is incorrect: This means to deduce or conclude from evidence; it describes a mental process, not the physical act of receiving food.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Past Participle)"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correct formatting, resolving the JSON error. The grammar tag 'Passive Voice (Past Participle)' was confirmed as accurate, and the explanation was made consistent with all models' expectations, including explicit clarification of subject-verb relationship and semantic logic.",
+          "candidate_explanation": "The correct answer is 'obtained' because the sentence uses a passive voice structure. The subject ('Protein') is receiving the action from the sources (animal and plant). The past participle form of the verb is used to show that protein is acquired or received from these sources.\n\n* Why 'disposed' is incorrect: This means to throw away, which is the opposite meaning required here.\n* Why 'surmised' is incorrect: This means to guess or assume something, which has no relation to acquiring physical nutrients.\n* Why 'inferred' is incorrect: This means to deduce or conclude from evidence; it describes a mental process, not the physical act of receiving food.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate and complete. 'Obtained' is correctly identified as the right choice in a passive voice structure, and each distractor is logically and factually addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Past Participle)"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag 'Passive Voice (Past Participle)' was confirmed as accurate by Model [deepseek-r1:14b], and the explanation was structured to clearly differentiate the correct answer from the distractors based on meaning and grammatical function.",
+          "candidate_explanation": "The correct answer is 'obtained' because the sentence uses a passive voice structure. The subject ('Protein') is receiving the action from the sources (animal and plant). The past participle form of the verb is used to show that protein is acquired or received from these sources.\n\n* Why 'disposed' is incorrect: This means to throw away, which is the opposite meaning required here.\n* Why 'surmised' is incorrect: This means to guess or assume something, which has no relation to acquiring physical nutrients.\n* Why 'inferred' is incorrect: This means to deduce or conclude from evidence; it describes a mental process, not the physical act of receiving food.",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice (Past Participle)"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1126,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 0,
+        "fail": 3,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The explanation incorrectly labels 'activation' as a verb form when it is actually a noun.",
+                "affected_text": "Why 'activation' is incorrect: It is primarily a verb form and does not fit grammatically as a direct object here.",
+                "correction": "Why 'activation' is incorrect: While it is a noun, it refers to the process of bringing something into action, which does not fit the context of 'call for immediate'."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The reasoning incorrectly states that 'activation' is primarily a verb form, which is factually incorrect.",
+                "affected_text": "Why 'activation' is incorrect: It is primarily a verb form and does not fit grammatically as a direct object here.",
+                "correction": "Why 'activation' is incorrect: While it is a noun, it refers to the process of bringing something into action, which does not fit the context of 'call for immediate'."
+              }
+            ],
+            "verified_grammar_tag": "Noun Usage/Collocation (N)",
+            "overall_notes": "The explanation contains factual errors regarding the grammatical nature of 'activation' and flawed reasoning about its form."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic fit of 'activation' in the context of the sentence. While it is noted that 'activation' is primarily a verb, it is not explained why it is semantically inappropriate as a noun in this context.",
+                "affected_text": "* Why 'activation' is incorrect: It is primarily a verb form and does not fit grammatically as a direct object here.",
+                "correction": "* Why 'activation' is incorrect: While 'activation' can function as a noun, it refers to the process of initiating something, which is not the intended meaning here. The scientific community is calling for concrete steps, not the initiation of a process."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address the collocation of 'action' with 'call for', which is a common and natural pairing in English.",
+                "affected_text": "The correct answer is 'action' because the phrase 'call for immediate...' requires a noun that represents concrete steps or measures.",
+                "correction": "The correct answer is 'action' because the phrase 'call for immediate...' is a common collocation that naturally pairs with a noun representing concrete steps or measures."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not clearly explain why 'act' is semantically inappropriate as a noun in this context, beyond noting it is typically a verb.",
+                "affected_text": "* Why 'act' is incorrect: This word is typically used as a verb (to act) and does not function correctly as a direct object after 'call for'.",
+                "correction": "* Why 'act' is incorrect: While 'act' can function as a noun, it typically refers to a specific instance or performance, not a general call for measures. The context requires a more general and abstract noun, which 'action' provides."
+              }
+            ],
+            "verified_grammar_tag": "Noun Usage/Collocation (N)",
+            "overall_notes": "The grammar tag is accurate, but the explanation lacks sufficient semantic and collocation analysis for some distractors, leading to an incomplete and logically flawed explanation."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Noun Usage/Collocation (N)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'action' because the phrase 'call for immediate...' is a common collocation that naturally pairs with a noun representing concrete steps or measures. * Why 'activation' is incorrect: While 'activation' can function as a noun, it refers to the process of initiating something, which is not the intended meaning here. The scientific community is calling for concrete steps, not the initiation of a process. * Why 'activity' is incorrect: While it is a noun, it refers generally to ongoing movement or engagement, lacking the specific sense of decisive measures needed in this context. * Why 'act' is incorrect: While 'act' can function as a noun, it typically refers to a specific instance or performance, not a general call for measures. The context requires a more general and abstract noun, which 'action' provides.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The critiques from the models were reconciled by correcting the grammatical classification of 'activation' as a noun, adding semantic and collocation analysis for all distractors, and ensuring that the explanation clearly addresses both grammatical and contextual appropriateness. The grammar tag was confirmed as accurate and relevant.",
+          "candidate_explanation": "The correct answer is 'action' because the phrase 'call for immediate...' is a common collocation that naturally pairs with a noun representing concrete steps or measures. * Why 'activation' is incorrect: While 'activation' can function as a noun, it refers to the process of initiating something, which is not the intended meaning here. The scientific community is calling for concrete steps, not the initiation of a process. * Why 'activity' is incorrect: While it is a noun, it refers generally to ongoing movement or engagement, lacking the specific sense of decisive measures needed in this context. * Why 'act' is incorrect: While 'act' can function as a noun, it typically refers to a specific instance or performance, not a general call for measures. The context requires a more general and abstract noun, which 'action' provides.",
+          "candidate_grammar_tag": "Noun Usage/Collocation (N)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of noun usage and collocation. Each distractor is clearly explained with regard to semantic fit and collocation with the surrounding words."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Noun Usage/Collocation (N)' by all models that provided feedback. The explanation was refined to explicitly address the semantic differences between 'act' and 'action', ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'action' because the phrase 'call for immediate...' is a common collocation that naturally pairs with a noun representing concrete steps or measures. * Why 'activation' is incorrect: While 'activation' can function as a noun, it refers to the process of initiating something, which is not the intended meaning here. The scientific community is calling for concrete steps, not the initiation of a process. * Why 'activity' is incorrect: While it is a noun, it refers generally to ongoing movement or engagement, lacking the specific sense of decisive measures needed in this context. * Why 'act' is incorrect: While 'act' can function as a noun, it typically refers to a specific instance or performance, not a general call for measures. The context requires a more general and abstract noun, which 'action' provides. Additionally, 'act' would imply a singular, specific action, whereas the context demands a broader, collective response.",
+          "candidate_grammar_tag": "Noun Usage/Collocation (N)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses semantic, collocational, and grammatical considerations for each distractor. It clearly explains why 'action' is the correct choice and why the other options are semantically or collocational mismatches."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'action' because the phrase 'call for immediate...' is a common collocation that naturally pairs with a noun representing concrete steps or measures. * Why 'activation' is incorrect: While 'activation' can function as a noun, it refers to the process of initiating something, which is not the intended meaning here. The scientific community is calling for concrete steps, not the initiation of a process. * Why 'activity' is incorrect: While it is a noun, it refers generally to ongoing movement or engagement, lacking the specific sense of decisive measures needed in this context. * Why 'act' is incorrect: While 'act' can function as a noun, it typically refers to a specific instance or performance, not a general call for measures. The context requires a more general and abstract noun, which 'action' provides. Additionally, 'act' would imply a singular, specific action, whereas the context demands a broader, collective response. The grammar tag 'Noun Usage/Collocation (N)' is accurate as the question tests the appropriate noun that collocates with the verb 'call for' in this context.",
+          "candidate_grammar_tag": "Noun Usage/Collocation (N)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly applied."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of noun usage and collocation in the context of the sentence. Each distractor is clearly explained with appropriate semantic and collocational reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Noun Usage/Collocation (N)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1127,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation/Phrasal Verb Usage'"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'involves' because it logically connects the prediction to the year 1999. The verb 'involves' means that something includes or relates to another thing, and in this context, the prediction involves the year 1999, meaning that the year is a key element of the prediction. This makes logical sense because predictions can include or relate to specific years.\n\n* Why 'composes' is incorrect: 'Composes' means to create or arrange something, typically music or text. Predictions are not created by a year. This is a semantic mismatch between the verb and the subject.\n\n* Why 'attaches' is incorrect: 'Attaches' suggests a physical or emotional connection (like attaching a label), which is too literal and doesn't fit the abstract relationship between predictions and years.\n\n* Why 'overlooks' is incorrect: 'Overlooks' implies that the prediction is being ignored or not noticed, which is semantically impossible because the prediction itself cannot be the receiver of the action. The subject (the prediction) cannot logically be overlooked by itself.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by Model [qwen3:14b] and clarifying the grammar tag. The timeout from Model [gemma4:12b] was acknowledged but did not affect the reconciliation. The grammar tag was confirmed as valid and relevant to the explanation.",
+          "candidate_explanation": "The correct answer is 'involves' because it naturally connects the idea of predictions with the year 1999. The phrase 'involves' means that something includes or relates to another thing, which fits the context perfectly (e.g., a topic involves certain elements). \n\n* Why 'composes' is incorrect: 'Composes' means to create or arrange something, typically music or text. Predictions are not created by a year. This is a semantic mismatch between the verb and the subject.\n\n* Why 'attaches' is incorrect: 'Attaches' suggests a physical or emotional connection (like attaching a label), which is too literal and doesn't fit the abstract relationship between predictions and years.\n\n* Why 'overlooks' is incorrect: 'Overlooks' means to ignore or fail to notice something. This would imply that Nostradamus ignored 1999, contradicting the text. Additionally, 'overlooks' is a passive verb, which does not align with the active meaning of the sentence, where the prediction is being described as something that includes the year, not something that is being ignored by the subject.\n\nThe grammar tag 'Collocation/Phrasal Verb Usage' is appropriate because the explanation focuses on the correct pairing of the verb 'involves' with the context of the sentence, and the incorrect options are evaluated based on their collocational and semantic fit.",
+          "candidate_grammar_tag": "Collocation/Phrasal Verb Usage",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation/Phrasal Verb Usage'"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and correctness, addressing the JSON formatting issue raised by Model [qwen3:14b]. The grammar tag was confirmed as valid and appropriate, and the explanation was structured to be accessible to B1-B2 English learners with clear bullet points and semantic explanations for each option.",
+          "candidate_explanation": "The correct answer is 'involves' because it naturally connects the idea of predictions with the year 1999. The phrase 'involves' means that something includes or relates to another thing, which fits the context perfectly (e.g., a topic involves certain elements). \n\n* Why 'composes' is incorrect: 'Composes' means to create or arrange something, typically music or text. Predictions are not created by a year. This is a semantic mismatch between the verb and the subject. \n\n* Why 'attaches' is incorrect: 'Attaches' suggests a physical or emotional connection (like attaching a label), which is too literal and doesn't fit the abstract relationship between predictions and years. \n\n* Why 'overlooks' is incorrect: 'Overlooks' means to ignore or fail to notice something. This would imply that Nostradamus ignored 1999, contradicting the text. Additionally, 'overlooks' is a passive verb, which does not align with the active meaning of the sentence, where the prediction is being described as something that includes the year, not something that is being ignored by the subject. \n\nThe grammar tag 'Collocation/Phrasal Verb Usage' is appropriate because the explanation focuses on the correct pairing of the verb 'involves' with the context of the sentence, and the incorrect options are evaluated based on their collocational and semantic fit.",
+          "candidate_grammar_tag": "Collocation/Phrasal Verb Usage",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar tag 'Collocation/Phrasal Verb Usage' is not factually correct for the word 'involves'. The correct grammar tag should be 'Verb Collocation' or 'Semantic Fit', as the explanation is focused on the semantic and contextual appropriateness of the verb, not phrasal verb usage.",
+                  "affected_text": "'Collocation/Phrasal Verb Usage'",
+                  "correction": "'Verb Collocation' or 'Semantic Fit'"
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not explicitly address whether the subject (the prediction) logically performs the action (involves) in the context of the sentence. While it is implied, this is a critical semantic check that should be made explicit.",
+                  "affected_text": "The phrase 'involves' means that something includes or relates to another thing, which fits the context perfectly (e.g., a topic involves certain elements).",
+                  "correction": "The phrase 'involves' means that something includes or relates to another thing. In this context, the prediction involves the year 1999, meaning that the year is a key element of the prediction. This makes logical sense because predictions can include or relate to specific years."
+                },
+                {
+                  "type": "semantic_gap",
+                  "description": "For the distractor 'overlooks', the explanation does not clearly address the semantic impossibility of the subject (the prediction) being the receiver of the action (being overlooked). This is a critical point that must be made explicit for passive voice distractors.",
+                  "affected_text": "'Overlooks' is a passive verb, which does not align with the active meaning of the sentence, where the prediction is being described as something that includes the year, not something that is being ignored by the subject.",
+                  "correction": "'Overlooks' implies that the prediction is being ignored or not noticed, which is semantically impossible because the prediction itself cannot be the receiver of the action. The subject (the prediction) cannot logically be overlooked by itself."
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation",
+              "overall_notes": "The explanation is mostly correct but fails to properly label the grammar tag and misses critical semantic checks, particularly for the 'overlooks' distractor."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Phrasal Verb Usage",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The grammar tag was revised from 'Collocation/Phrasal Verb Usage' to 'Verb Collocation' based on the semantic and contextual appropriateness of the verb. The explanation was enhanced to explicitly address the subject-verb logic, particularly for the 'overlooks' distractor, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'involves' because it logically connects the prediction to the year 1999. The verb 'involves' means that something includes or relates to another thing, and in this context, the prediction involves the year 1999, meaning that the year is a key element of the prediction. This makes logical sense because predictions can include or relate to specific years.\n\n* Why 'composes' is incorrect: 'Composes' means to create or arrange something, typically music or text. Predictions are not created by a year. This is a semantic mismatch between the verb and the subject.\n\n* Why 'attaches' is incorrect: 'Attaches' suggests a physical or emotional connection (like attaching a label), which is too literal and doesn't fit the abstract relationship between predictions and years.\n\n* Why 'overlooks' is incorrect: 'Overlooks' implies that the prediction is being ignored or not noticed, which is semantically impossible because the prediction itself cannot be the receiver of the action. The subject (the prediction) cannot logically be overlooked by itself.",
+          "candidate_grammar_tag": "Verb Collocation",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all relevant points without any gaps or errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. It correctly identifies the grammar tag and provides clear reasoning for why 'involves' is the correct choice and why the distractors are incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1134,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation for 'only view' does not address the collocation and semantic inappropriateness.",
+                "affected_text": "Why 'only view' is incorrect: It lacks the necessary grammatical form (gerund) to maintain parallel structure with the rest of the clause.",
+                "correction": "Why 'only view' is incorrect: It lacks the necessary grammatical form (gerund) and does not collocate naturally with the context, additionally changing the meaning to imply exclusivity rather than shared use."
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+            "overall_notes": "The explanation is mostly correct but misses critical analysis for the 'only view' distractor."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all grammatical, semantic, and structural aspects of the question. It correctly identifies the grammatical form of each option and explains why 'viewing' is the only one that maintains parallel structure with 'a right'."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'viewing' because it functions as a gerund (a verb form ending in -ing used as a noun), maintaining grammatical parallelism. The structure 'not [gerund] but rather [noun phrase]' requires the first element to be a verbal concept. \n\n* Why 'view of' is incorrect: This prepositional phrase changes the structure and breaks the required parallel balance ('not viewing... but rather a right').\n* Why 'as viewed' is incorrect: This passive construction implies that the view was observed by an external party, which contradicts the intent—the Lenape held this concept themselves.\n* Why 'only view' is incorrect: It lacks the necessary grammatical form (gerund) and does not collocate naturally with the context, additionally changing the meaning to imply exclusivity rather than shared use.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the completeness gap noted by Model [deepseek-r1:14b], ensuring that the 'only view' distractor is explained both grammatically and semantically. Model [qwen3:14b] confirmed the explanation was logically sound, and the grammar tag was retained as 'Gerund/Parallel Structure' based on consensus.",
+          "candidate_explanation": "The correct answer is 'viewing' because it functions as a gerund (a verb form ending in -ing used as a noun), maintaining grammatical parallelism. The structure 'not [gerund] but rather [noun phrase]' requires the first element to be a verbal concept. \n\n* Why 'view of' is incorrect: This prepositional phrase changes the structure and breaks the required parallel balance ('not viewing... but rather a right').\n* Why 'as viewed' is incorrect: This passive construction implies that the view was observed by an external party, which contradicts the intent—the Lenape held this concept themselves.\n* Why 'only view' is incorrect: It lacks the necessary grammatical form (gerund) and does not collocate naturally with the context, additionally changing the meaning to imply exclusivity rather than shared use.",
+          "candidate_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all relevant grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Gerund/Parallel Structure' based on the structure 'not [gerund] but rather [noun phrase]'. The explanation was refined to explicitly address subject-verb logic, particularly for the passive construction 'as viewed', and to ensure clarity for lower-level English learners.",
+          "candidate_explanation": "The correct answer is 'viewing' because it functions as a gerund (a verb form ending in -ing used as a noun), maintaining grammatical parallelism. The structure 'not [gerund] but rather [noun phrase]' requires the first element to be a verbal concept. \n\n* Why 'view of' is incorrect: This prepositional phrase changes the structure and breaks the required parallel balance ('not viewing... but rather a right').\n* Why 'as viewed' is incorrect: This passive construction implies that the view was observed by an external party, which contradicts the intent—the Lenape held this concept themselves. It also shifts the focus from the Lenape's active perspective to a passive one.\n* Why 'only view' is incorrect: It lacks the necessary grammatical form (gerund) and does not collocate naturally with the context, additionally changing the meaning to imply exclusivity rather than shared use.\n\nThe explanation clearly addresses the grammatical structure, semantic logic, and collocational appropriateness of each option, ensuring clarity for B1-B2 English learners.",
+          "candidate_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option. It correctly identifies the gerund form of 'viewing' and explains why the other options fail in terms of parallel structure, voice, and meaning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond due to a timeout. The grammar tag was confirmed as 'Gerund/Parallel Structure', and the explanation was found to be accurate, clear, and appropriate for the target language level.",
+          "candidate_explanation": "The correct answer is 'viewing' because it functions as a gerund (a verb form ending in -ing used as a noun), maintaining grammatical parallelism in the structure 'not [gerund] but rather [noun phrase]'. This structure requires the first element to be a verbal concept that matches the noun phrase that follows. \n\n* Why 'view of' is incorrect: This prepositional phrase changes the structure and breaks the required parallel balance ('not viewing... but rather a right').\n* Why 'as viewed' is incorrect: This passive construction implies that the view was observed by an external party, which contradicts the intent—the Lenape held this concept themselves. It also shifts the focus from the Lenape's active perspective to a passive one.\n* Why 'only view' is incorrect: It lacks the necessary grammatical form (gerund) and does not collocate naturally with the context, additionally changing the meaning to imply exclusivity rather than shared use.\n\nThe explanation clearly addresses the grammatical structure, semantic logic, and collocational appropriateness of each option, ensuring clarity for B1-B2 English learners.",
+          "candidate_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option. It clearly explains the role of 'viewing' as a gerund in maintaining parallel structure and correctly identifies the grammatical and semantic flaws in the distractors."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund/Parallel Structure (Grammar: Gerund)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1135,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adverb Modifying Reduced Relative Clause",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adverb Modifying Reduced Relative Clause",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Adverb Modifying Reduced Relati"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adverb Modifying Reduced Relative Clause",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'commonly' because it functions as an adverb modifying the verb phrase 'referred to,' indicating that this name is generally or frequently used for Native Australians. * Why 'especially' is incorrect: 'Especially' suggests a specific, highlighted case, which doesn't fit the general statement being made. * Why 'accordingly' is incorrect: 'Accordingly' means 'as a result of something,' and there is no preceding cause mentioned in the sentence to justify this adverb. * Why 'completely' is incorrect: 'Completely' means 'entirely' or 'totally,' which does not match the meaning of being referred to in a general way. Additionally, the phrase 'referred to as Aboriginal Australians' is in passive voice, and 'commonly' correctly modifies the action of being referred, while the other options do not fit the context or grammatical role in the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The original grammar tag was adjusted from 'Adverb Modifying Reduced Relative Clause' to 'Adverb Modifying Passive Verb Phrase' to more accurately reflect the grammatical structure. The explanation was revised to explicitly address the passive voice and clarify the semantic logic between active and passive constructions, resolving the ambiguity that caused the error in the JSON response and ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'commonly' because it functions as an adverb modifying the verb phrase 'referred to,' indicating that this name is generally or frequently used for Native Australians. * Why 'especially' is incorrect: 'Especially' suggests a specific, highlighted case, which doesn't fit the general statement being made. * Why 'accordingly' is incorrect: 'Accordingly' means 'as a result of something,' and there is no preceding cause mentioned in the sentence to justify this adverb. * Why 'completely' is incorrect: 'Completely' means 'entirely' or 'totally,' which does not match the meaning of being referred to in a general way. Additionally, the phrase 'referred to as Aboriginal Australians' is in passive voice, and 'commonly' correctly modifies the action of being referred, while the other options do not fit the context or grammatical role in the sentence.",
+          "candidate_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations. The grammar tag is accurate, and each distractor is correctly evaluated with appropriate reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model (gemma4:12b) failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'commonly' because it functions as an adverb modifying the passive verb phrase 'referred to,' indicating that the term 'Aboriginal Australians' is generally or frequently used for Native Australians. * Why 'especially' is incorrect: 'Especially' suggests a specific, highlighted case, which does not fit the general statement being made. * Why 'accordingly' is incorrect: 'Accordingly' implies a result based on a prior cause, but no such cause is mentioned in the sentence. * Why 'completely' is incorrect: 'Completely' means 'entirely' or 'totally,' which does not match the meaning of being referred to in a general way. The phrase 'referred to as Aboriginal Australians' is in passive voice, and 'commonly' correctly modifies the action of being referred, while the other options do not fit the grammatical role or context of the sentence.",
+          "candidate_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labeling, logical reasoning, and appropriate semantic and collocation analysis."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and contextual considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enriched by explicitly addressing the passive voice and its relationship with the adverb, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'commonly' because it functions as an adverb modifying the passive verb phrase 'referred to,' indicating that the term 'Aboriginal Australians' is generally or frequently used for Native Australians. * Why 'especially' is incorrect: 'Especially' suggests a specific, highlighted case, which does not fit the general statement being made. * Why 'accordingly' is incorrect: 'Accordingly' implies a result based on a prior cause, but no such cause is mentioned in the sentence. * Why 'completely' is incorrect: 'Completely' means 'entirely' or 'totally,' which does not match the meaning of being referred to in a general way. The phrase 'referred to as Aboriginal Australians' is in passive voice, and 'commonly' correctly modifies the action of being referred, while the other options do not fit the grammatical role or context of the sentence. Additionally, the passive voice emphasizes the action being done to the subject (Native Australians), and the adverb 'commonly' appropriately describes the frequency of this action.",
+          "candidate_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and contextual considerations. The grammar tag is accurate, and each distractor is correctly analyzed for both grammatical form and semantic appropriateness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adverb Modifying Passive Verb Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1135,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the grammatical form (tense) of the distractors, only their meaning.",
+                "affected_text": "The explanation does not mention the tense of the distractors.",
+                "correction": "The explanation should also note that the distractors are in the past tense, which does not align with the present perfect tense required by the context."
+              }
+            ],
+            "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+            "overall_notes": "The explanation is mostly correct but incomplete in addressing the grammatical form of the distractors."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, semantics, and collocation for each distractor."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'preserved' because it uses the present perfect tense ('have preserved'), which correctly indicates an action that started in the past and continues to have relevance or effect up to the present moment. * Why 'contacted' is incorrect: This verb means to communicate with someone, failing both in meaning (the culture was kept, not communicated) and context. It is also in the past tense, which does not match the present perfect tense required by the sentence. * Why 'submitted' is incorrect: This implies giving up or yielding control, which contradicts the text's message of active contribution and advocacy. It is also in the past tense, which does not align with the present perfect tense required by the context. * Why 'plotted' is incorrect: This suggests secret planning, usually negatively, and does not fit the positive action of maintaining culture. It is also in the past tense, which is inconsistent with the grammatical form of the correct answer.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to include the grammatical form (tense) of the distractors, addressing the completeness gap raised by Model [deepseek-r1:14b]. Model [qwen3:14b] confirmed the explanation was logically sound, and the timeout from Model [gemma4:12b] did not affect the reconciliation. The grammar tag was confirmed as 'Present Perfect Tense (Action over Time)' based on consensus.",
+          "candidate_explanation": "The correct answer is 'preserved' because it uses the present perfect tense ('have preserved'), which correctly indicates an action that started in the past and continues to have relevance or effect up to the present moment. * Why 'contacted' is incorrect: This verb means to communicate with someone, failing both in meaning (the culture was kept, not communicated) and context. It is also in the past tense, which does not match the present perfect tense required by the sentence. * Why 'submitted' is incorrect: This implies giving up or yielding control, which contradicts the text's message of active contribution and advocacy. It is also in the past tense, which does not align with the present perfect tense required by the context. * Why 'plotted' is incorrect: This suggests secret planning, usually negatively, and does not fit the positive action of maintaining culture. It is also in the past tense, which is inconsistent with the grammatical form of the correct answer.",
+          "candidate_grammar_tag": "Present Perfect Tense (Action over Time)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "The explanation is accurate, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and logically consistent, and the semantic and collocation aspects are appropriately addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from one model, which did not affect the consensus. The explanation was refined to explicitly address the active vs. passive meaning of distractors, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'preserved' because it uses the present perfect tense ('have preserved'), which correctly indicates an action that started in the past and continues to have relevance or effect up to the present moment. * Why 'contacted' is incorrect: This verb means to communicate with someone, which fails in both meaning (the culture was kept, not communicated) and context. It is also in the past tense, which does not match the present perfect tense required by the sentence. * Why 'submitted' is incorrect: This implies giving up or yielding control, which contradicts the text's message of active contribution and advocacy. It is also in the past tense, which does not align with the grammatical form of the correct answer. * Why 'plotted' is incorrect: This suggests secret planning, usually with a negative connotation, and does not fit the positive action of maintaining culture. It is also in the past tense, which is inconsistent with the grammatical form of the correct answer. Additionally, 'submitted' and 'plotted' are passive in meaning, which does not align with the active, ongoing effort described in the passage.",
+          "candidate_grammar_tag": "Present Perfect Tense (Action over Time)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Perfect Tense (Action o"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by one model. The grammar tag was confirmed as correct, and the explanation was expanded to explicitly contrast the active meaning of 'preserved' with the passive or negative connotations of the distractors, ensuring all models agree on the explanation and grammar tag.",
+          "candidate_explanation": "The correct answer is 'preserved' because it uses the present perfect tense ('have preserved'), which correctly indicates an action that started in the past and continues to have relevance or effect up to the present moment. * Why 'contacted' is incorrect: This verb means to communicate with someone, which fails in both meaning (the culture was kept, not communicated) and context. It is also in the past tense, which does not match the present perfect tense required by the sentence. * Why 'submitted' is incorrect: This implies giving up or yielding control, which contradicts the text's message of active contribution and advocacy. It is also in the past tense, which does not align with the grammatical form of the correct answer. Additionally, 'submitted' has a passive meaning, which does not match the active, ongoing effort described in the passage. * Why 'plotted' is incorrect: This suggests secret planning, usually with a negative connotation, and does not fit the positive action of maintaining culture. It is also in the past tense, which is inconsistent with the grammatical form of the correct answer. Furthermore, 'plotted' is passive in meaning, which does not align with the active, ongoing effort described in the passage.",
+          "candidate_grammar_tag": "Present Perfect Tense (Action over Time)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses both grammatical and semantic aspects of each option. It correctly identifies the grammar tag, explains the tense mismatch for the distractors, and provides clear reasoning based on meaning and context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Perfect Tense (Action over Time)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

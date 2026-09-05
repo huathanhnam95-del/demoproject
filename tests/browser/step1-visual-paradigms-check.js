@@ -76,7 +76,59 @@ const crypto = require('crypto');
       window.WriteEssayMode.init();
     });
     await page.waitForTimeout(600);
+    console.log('1.1. Testing Pre-start Layout Cards & Bilingual Sync in Preferences...');
     await page.locator('input[name="essay-practice-kind"][value="guided"]').check();
+    await page.waitForTimeout(300);
+
+    const prestartCards = page.locator('#essay-prestart-layout-cards .essay-prestart-layout-card');
+    assert.strictEqual(await prestartCards.count(), 4, 'Should have 4 pre-start layout cards');
+
+    // Test clicking each pre-start layout card
+    for (const layout of ['flowchart', 'table', 'cards', 'mindmap']) {
+      const card = page.locator(`#essay-prestart-layout-cards .essay-prestart-layout-card[data-layout="${layout}"]`);
+      await card.click();
+      await page.waitForTimeout(100);
+      assert.strictEqual(await card.evaluate(el => el.classList.contains('is-active')), true, `Prestart card ${layout} should be active`);
+      const detailText = await page.locator('#essay-prestart-active-detail').textContent();
+      assert.ok(detailText.length > 20, `Active detail box should render description for ${layout}`);
+    }
+
+    // Test Expandable Pedagogical Comparison Drawer
+    const compareToggleBtn = page.locator('#essay-layout-compare-toggle-btn');
+    await compareToggleBtn.click();
+    await page.waitForTimeout(200);
+    const drawer = page.locator('#essay-layout-compare-drawer');
+    assert.strictEqual(await drawer.isVisible(), true, 'Comparison drawer should be open');
+
+    // Test Bilingual sync: Switch language to English in Preferences
+    console.log('1.2. Testing English language synchronization...');
+    await page.selectOption('#essay-guided-language', 'en');
+    await page.waitForTimeout(200);
+
+    const mindmapNameEn = await page.locator('#essay-prestart-layout-cards .essay-prestart-layout-card[data-layout="mindmap"] .essay-prestart-layout-name').textContent();
+    assert.strictEqual(mindmapNameEn.trim(), 'Mind Map', 'Mindmap card name should be localized to English');
+
+    const flowchartNameEn = await page.locator('#essay-prestart-layout-cards .essay-prestart-layout-card[data-layout="flowchart"] .essay-prestart-layout-name').textContent();
+    assert.strictEqual(flowchartNameEn.trim(), 'Flowchart', 'Flowchart card name should be localized to English');
+
+    const tableNameEn = await page.locator('#essay-prestart-layout-cards .essay-prestart-layout-card[data-layout="table"] .essay-prestart-layout-name').textContent();
+    assert.strictEqual(tableNameEn.trim(), 'Comparison Matrix', 'Table card name should be localized to English');
+
+    const cardsNameEn = await page.locator('#essay-prestart-layout-cards .essay-prestart-layout-card[data-layout="cards"] .essay-prestart-layout-name').textContent();
+    assert.strictEqual(cardsNameEn.trim(), 'Visual Cards', 'Cards card name should be localized to English');
+
+    const drawerHeadersEn = await page.locator('#essay-layout-compare-drawer th').allTextContents();
+    assert.ok(drawerHeadersEn[0].includes('Layout Mode'), 'Drawer header should be English');
+    assert.ok(drawerHeadersEn[1].includes('Your Learning Style'), 'Drawer header should be English');
+
+    // Switch back to Vietnamese
+    await page.selectOption('#essay-guided-language', 'vi');
+    await page.waitForTimeout(200);
+    await compareToggleBtn.click(); // close drawer
+    await page.waitForTimeout(200);
+    assert.strictEqual(await drawer.isHidden(), true, 'Drawer should be closed');
+
+    // Start Guided Practice
     await page.locator('#start-essay-btn').click();
     await page.waitForSelector('#essay-guided-rail:not([hidden])', { timeout: 7000 });
     await page.waitForSelector('.essay-guided-view-toggle-bar', { timeout: 5000 });
@@ -127,6 +179,13 @@ const crypto = require('crypto');
 
     const stanceGate = page.locator('.essay-flowchart-stance-gate');
     assert.strictEqual(await stanceGate.isVisible(), true, 'Stance Decision Gate should be visible');
+
+    // Test clicking directional arrow col
+    const arrowCol1 = page.locator('.essay-flowchart-arrow-col.col-1');
+    assert.strictEqual(await arrowCol1.isVisible(), true, 'Arrow column 1 should be visible');
+    await arrowCol1.click();
+    await page.waitForTimeout(200);
+    assert.strictEqual(await page.locator('#flowchart-card-1').evaluate(el => el.classList.contains('is-selected')), true, 'Clause card 1 should be selected after clicking arrow');
 
     const pipelineBox = page.locator('.essay-wb-pipeline-box');
     assert.strictEqual(await pipelineBox.isVisible(), true, 'POS-PEEL 4-paragraph pipeline box should be visible');
@@ -231,7 +290,21 @@ const crypto = require('crypto');
 
       const contentBox = await page.locator('.essay-step1-container').boundingBox();
       assert.ok(contentBox && contentBox.width <= 390, `Mode ${mode} width should fit within viewport, got ${contentBox?.width}`);
+
+      if (mode === 'table') {
+        const scrollHint = page.locator('.essay-matrix-scroll-hint');
+        assert.strictEqual(await scrollHint.isVisible(), true, 'Table scroll hint should be visible on mobile');
+        const stanceBarBox = await page.locator('.essay-table-stance-bar').boundingBox();
+        assert.ok(stanceBarBox && stanceBarBox.width <= 390, 'Table stance bar should fit mobile viewport');
+      }
     }
+
+    console.log('8. Testing Legacy renderStep1List Fallback Safety...');
+    const legacyCardsHtml = await page.evaluate(() => {
+      return window.WriteEssayMode.renderStep1List([], '<div>Type</div>', '<div>Reqs</div>', '<div>Traps</div>', '<div>Angles</div>', '', '');
+    });
+    assert.ok(legacyCardsHtml && legacyCardsHtml.includes('essay-guided-cards-layout'), 'Legacy renderStep1List must return valid cards layout without crashing');
+    assert.ok(legacyCardsHtml.includes('essay-cards-clause-card'), 'Legacy renderStep1List must render clause cards via fallback');
 
     console.log('✅ ALL STEP 1 VISUAL PARADIGMS & RESPONSIVENESS CHECKS PASSED!');
 

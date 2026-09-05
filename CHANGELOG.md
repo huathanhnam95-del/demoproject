@@ -1,3 +1,21 @@
+## [V1.8.128] - 2026-09-05
+
+### Enhanced & Overhauled
+- **Guided Write Essay Step 1 Four-Paradigm Visual Upgrade**:
+  - **4 Distinct Pedagogical Paradigms**: Restructured Step 1 (Lập dàn ý & Whiteboard) into 4 dedicated, cleanly decoupled visual approaches:
+    1. **Mind Map (`mindmap` / Sơ đồ tư duy)**: True radiating conceptual tree centered on `#mm-prompt-core`, branching into Opposing Stance Hubs (`.essay-mm-stance-hub`) and Supporting Idea Leaves (`.essay-mm-leaf`), joined by 6 responsive SVG Bezier paths with amber selection accents.
+    2. **Flowchart (`flowchart` / Sơ đồ quy trình POS-PEEL)**: End-to-end procedural assembly line featuring Directional Clause Flowchart (`Vế 1 ↓`, `Vế 2 ↓`) with interactive arrow column navigation, Stance Decision Gate, POS Introduction Tree, PEEL Body 1 & 2 Pipelines (`↓ Vì sao?`, `↓ Dẫn chứng...`, `↓ Chốt lại...`), and Conclusion Synthesis Drawer.
+    3. **Matrix Table (`table` / Bảng so sánh 2 quan điểm)**: Dialectical side-by-side matrix evaluating Agree vs Disagree across 5 structured tactical criteria (Thesis Statement, Main Arguments & Mechanisms, Real-world Examples, Counter-argument & Rebuttal, Tactical Score Weight) with mobile scroll affordance.
+    4. **Modular Cards (`cards` / Thẻ trực quan & Danh sách)**: Distraction-free textbook reader completely devoid of SVG canvases or floating bubbles (`count === 0`).
+  - **Cross-Step State Decoupling**: Conditioned prompt deconstruction strictly on `guidedStep1Layout`, preventing Step 2 (Direction) ideation toggling (`guidedViewMode`) from retroactively mutating Step 1 layout.
+  - **Bilingual Synchronization**: Localized pre-start layout selection cards, tags, tooltips, and pedagogical comparison drawer table headers and rows in real time when toggling between Vietnamese and English.
+  - **Mobile Responsiveness (390px iPhone 12)**: Added horizontal overflow scrolling (`overflow-x: auto`) on `.essay-guided-view-toggle-bar` to eliminate button clipping on narrow viewports.
+- **Smooth Practice Mode Transitions with Motion Blur & Zero Flicker**:
+  - Implemented scoped stage transition orchestrator with directional motion blur (`filter: blur(3px)` + `translateY(-6px)`), eliminating empty void screens and hard cuts across practice mode selection, dashboard return, and speaking mode deferrals.
+  - Replaced static placeholder text with pre-sized skeleton shimmer placeholders in `#essay-prompt-preview` preventing layout shifts (`CLS: 0.12`).
+  - Refactored `#essay-guided-preferences` into a modern CSS Grid Accordion (`grid-template-rows: 0fr -> 1fr`) with zero phantom height.
+  - Added speculative background pre-fetching for Guided Support packs upon mode radio selection.
+
 ## [V1.8.127] - 2026-09-05
 
 ### Fixed & Resolved

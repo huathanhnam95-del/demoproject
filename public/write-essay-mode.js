@@ -1190,14 +1190,15 @@
         if (el.layoutCompareToggleBtn && el.layoutCompareDrawer) {
             el.layoutCompareToggleBtn.addEventListener('click', () => {
                 const isHidden = el.layoutCompareDrawer.hasAttribute('hidden');
+                const isVi = guidedLanguage === 'vi';
                 if (isHidden) {
                     el.layoutCompareDrawer.removeAttribute('hidden');
                     el.layoutCompareToggleBtn.setAttribute('aria-expanded', 'true');
-                    el.layoutCompareToggleBtn.textContent = '✕ Đóng bảng so sánh cả 4 kiểu';
+                    el.layoutCompareToggleBtn.textContent = isVi ? '✕ Đóng bảng so sánh cả 4 kiểu' : '✕ Close 4-layout comparison table';
                 } else {
                     el.layoutCompareDrawer.setAttribute('hidden', '');
                     el.layoutCompareToggleBtn.setAttribute('aria-expanded', 'false');
-                    el.layoutCompareToggleBtn.textContent = '💡 Xem bảng so sánh cả 4 kiểu';
+                    el.layoutCompareToggleBtn.textContent = isVi ? '💡 Xem bảng so sánh cả 4 kiểu' : '💡 Compare all 4 layout types';
                 }
             });
         }
@@ -1400,6 +1401,9 @@
         if (shouldPersist) {
             persistGuidedPreferences();
         }
+        if (typeof shouldRenderMindMapSVG === 'function' && shouldRenderMindMapSVG()) {
+            requestAnimationFrame(renderGuidedMindMapSVGLines);
+        }
     }
 
     function toggleGuidedTypoPopover() {
@@ -1489,15 +1493,113 @@
         `;
     }
 
+    function renderLayoutCompareDrawerTable(isVi) {
+        if (!el.layoutCompareDrawer) return;
+        const tableWrap = el.layoutCompareDrawer.querySelector('.essay-layout-compare-table-wrap');
+        if (!tableWrap) return;
+
+        const modes = ['mindmap', 'flowchart', 'table', 'cards'];
+        const badgeClasses = {
+            mindmap: 'essay-compare-badge--primary',
+            flowchart: 'essay-compare-badge--accent',
+            table: 'essay-compare-badge--speed',
+            cards: 'essay-compare-badge--text'
+        };
+
+        const thCol1 = isVi ? 'Cách xem' : 'Layout Mode';
+        const thCol2 = isVi ? 'Nhu cầu & Phong cách của bạn' : 'Your Learning Style & Needs';
+        const thCol3 = isVi ? 'Bạn nên chọn kiểu này khi:' : 'Best Suited When:';
+
+        const rowsHtml = modes.map(mode => {
+            const meta = PRESTART_LAYOUT_METAS[mode];
+            if (!meta) return '';
+            const name = isVi ? meta.nameVi : meta.nameEn;
+            const badge = isVi ? meta.badgeVi : meta.badgeEn;
+            const wants = isVi ? meta.wantsVi : meta.wantsEn;
+            const fits = isVi ? meta.fitsVi : meta.fitsEn;
+            const badgeClass = badgeClasses[mode] || 'essay-compare-badge--primary';
+
+            const wantsFormatted = wants.split('\n').map(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return '';
+                const content = trimmed.startsWith('•') ? trimmed.substring(1).trim() : trimmed;
+                return `• ${escapeHtml(content)}<br>`;
+            }).join('');
+
+            return `
+            <tr>
+                <td class="essay-compare-col-name">
+                    <strong>${meta.icon} ${escapeHtml(name)}</strong>
+                    <span class="essay-compare-badge ${badgeClass}">${escapeHtml(badge)}</span>
+                </td>
+                <td>
+                    ${wantsFormatted}
+                </td>
+                <td>
+                    ${escapeHtml(fits)}
+                </td>
+            </tr>`;
+        }).join('');
+
+        tableWrap.innerHTML = `
+            <table class="essay-layout-compare-table">
+                <thead>
+                    <tr>
+                        <th>${thCol1}</th>
+                        <th>${thCol2}</th>
+                        <th>${thCol3}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+            </table>`;
+    }
+
     function syncPrestartLayoutCards() {
         if (!el.prestartLayoutCards) return;
         const current = normalizeStep1Layout(guidedStep1Layout);
+        const isVi = guidedLanguage === 'vi';
+
+        const titleEl = document.querySelector('.essay-prestart-layout-title');
+        if (titleEl) {
+            titleEl.textContent = isVi ? '🎯 Cách xem Bước 1 phù hợp với bạn:' : '🎯 Choose your Step 1 viewing mode:';
+        }
+        const subEl = document.querySelector('.essay-prestart-layout-sub');
+        if (subEl) {
+            subEl.textContent = isVi ? 'Bạn có thể đổi kiểu xem bất cứ lúc nào trong khi làm bài' : 'You can switch viewing modes anytime during practice';
+        }
+        el.prestartLayoutCards.setAttribute('aria-label', isVi ? 'Chọn cách xem đề Bước 1' : 'Choose Step 1 viewing mode');
+
         el.prestartLayoutCards.querySelectorAll('.essay-prestart-layout-card').forEach(card => {
-            const isMatch = normalizeStep1Layout(card.dataset.layout) === current;
+            const rawLayout = card.dataset.layout;
+            const norm = normalizeStep1Layout(rawLayout);
+            const isMatch = norm === current;
             card.classList.toggle('is-active', isMatch);
             card.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+
+            const meta = PRESTART_LAYOUT_METAS[norm];
+            if (meta) {
+                const nameEl = card.querySelector('.essay-prestart-layout-name');
+                if (nameEl) nameEl.textContent = isVi ? meta.nameVi : meta.nameEn;
+                const tagEl = card.querySelector('.essay-prestart-layout-tag');
+                if (tagEl) tagEl.textContent = isVi ? meta.tagVi : meta.tagEn;
+                card.title = isVi ? meta.fitsVi : meta.fitsEn;
+            }
         });
+
         renderPrestartActiveDetail(current);
+
+        if (el.layoutCompareToggleBtn) {
+            const isExpanded = el.layoutCompareToggleBtn.getAttribute('aria-expanded') === 'true';
+            if (isExpanded) {
+                el.layoutCompareToggleBtn.textContent = isVi ? '✕ Đóng bảng so sánh cả 4 kiểu' : '✕ Close 4-layout comparison table';
+            } else {
+                el.layoutCompareToggleBtn.textContent = isVi ? '💡 Xem bảng so sánh cả 4 kiểu' : '💡 Compare all 4 layout types';
+            }
+        }
+
+        renderLayoutCompareDrawerTable(isVi);
     }
 
     function updatePracticeChoiceUI() {
@@ -1535,6 +1637,7 @@
         guidedLanguage = guidedLanguage === 'en' ? 'vi' : 'en';
         if (el.guidedLanguage) el.guidedLanguage.value = guidedLanguage;
         persistGuidedPreferences();
+        syncPrestartLayoutCards();
         renderGuidedSupport();
         if (getModePanelEl()?.classList.contains('essay-writing-phase')) {
             renderGuidedDraft();
@@ -3154,9 +3257,9 @@
         if (!parsedSegments || parsedSegments.length === 0) return '';
         return `
         <div class="essay-guided-flowchart">
-            <div class="essay-flowchart-arrow-strip" aria-hidden="true">
+            <div class="essay-flowchart-arrow-strip" role="group" aria-label="${guidedText('Prompt clause directional flow', 'Trình tự các vế đề bài')}">
                 ${parsedSegments.map(item => `
-                    <div class="essay-flowchart-arrow-col col-${item.index}${item.isSegSelected ? ' is-selected' : ''}">
+                    <div class="essay-flowchart-arrow-col col-${item.index}${item.isSegSelected ? ' is-selected' : ''}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" title="${guidedText(`Jump to Clause ${item.index}`, `Xem chi tiết Vế ${item.index}`)}">
                         <span class="essay-flowchart-arrow-label">${guidedText('Clause', 'Vế')} ${item.index}</span>
                         <span class="essay-flowchart-arrow-icon">↓</span>
                     </div>
@@ -4546,6 +4649,11 @@
                 </div>
             </div>
 
+            <!-- Mobile Horizontal Scroll Hint -->
+            <div class="essay-matrix-scroll-hint" aria-hidden="true">
+                <span>${guidedText('👉 Scroll horizontally to compare both sides', '👉 Cuộn ngang bảng để đối chiếu 2 phe')}</span>
+            </div>
+
             <!-- 5-Dimension Dialectical Matrix -->
             <div class="essay-dialectical-matrix-wrap">
                 <table class="essay-dialectical-matrix">
@@ -4628,6 +4736,9 @@
     }
 
     function renderStep1Cards(parsedSegments, essayTypeCardHtml, reqsHtml, trapsHtml, anglesHtml, mcqHtml, gapFillHtml) {
+        const segmentsToRender = (parsedSegments && parsedSegments.length > 0)
+            ? parsedSegments
+            : parsePromptSegments(guidedPack?.common?.promptSegments || [], guidedPack?.prompt || currentEntry?.prompt || '');
         return `
         <div class="essay-guided-cards-layout">
             <div class="essay-step1-part essay-step1-part-1">
@@ -4635,7 +4746,7 @@
                     <span class="essay-step1-part-pill">Part 1</span>
                     <h3 class="essay-step1-part-title">${guidedText('Question Breakdown & Meaning', 'Hiểu nhanh các vế của đề bài')}</h3>
                 </div>
-                ${renderPromptClauseCards(parsedSegments)}
+                ${renderPromptClauseCards(segmentsToRender)}
             </div>
             <div class="essay-step1-part essay-step1-part-2">
                 <div class="essay-step1-part-header">
@@ -4663,7 +4774,11 @@
         return renderStep1Table(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml);
     }
     function renderStep1List(segmentsHtml, essayTypeCardHtml, reqsHtml, trapsHtml, anglesHtml, mcqHtml, gapFillHtml) {
-        return renderStep1Cards([], essayTypeCardHtml, reqsHtml, trapsHtml, anglesHtml, mcqHtml, gapFillHtml);
+        let parsed = [];
+        if (Array.isArray(segmentsHtml)) {
+            parsed = parsePromptSegments(segmentsHtml, guidedPack?.prompt || currentEntry?.prompt || '');
+        }
+        return renderStep1Cards(parsed, essayTypeCardHtml, reqsHtml, trapsHtml, anglesHtml, mcqHtml, gapFillHtml);
     }
 
     function getAvailablePointsForPlan(plan, levelData, common) {
@@ -8006,7 +8121,15 @@
         shouldConfirmExit: shouldConfirmExit,
         onEnter: onEnter,
         applyGuidedTypography: applyGuidedTypography,
-        restoreGuidedPreferences: restoreGuidedPreferences
+        restoreGuidedPreferences: restoreGuidedPreferences,
+        renderStep1Mindmap: renderStep1Mindmap,
+        renderStep1Flowchart: renderStep1Flowchart,
+        renderStep1Table: renderStep1Table,
+        renderStep1Cards: renderStep1Cards,
+        renderStep1Whiteboard: renderStep1Whiteboard,
+        renderStep1Stations: renderStep1Stations,
+        renderStep1Hud: renderStep1Hud,
+        renderStep1List: renderStep1List
     };
 
     function onEnter() {

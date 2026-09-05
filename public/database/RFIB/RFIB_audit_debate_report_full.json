@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 1082,
-  "round1_pass_count": 839,
-  "debate_revised_count": 186,
-  "unresolved_count": 57,
+  "processed_questions": 1105,
+  "round1_pass_count": 854,
+  "debate_revised_count": 192,
+  "unresolved_count": 59,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -52812,6 +52812,1465 @@
                 }
               ],
               "verified_grammar_tag": "Base Form Verb (Parallel Structure with Coordinating Conjunction)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1188,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (t"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'described' because the structure 'is often [verb]-ed' requires a past participle to form the passive voice. In this context, the Mona Lisa is receiving the action of being described by others, not performing the action. * Why 'classified' is incorrect: While 'classified' is a past participle, it implies categorization, which is not the same as being described in terms of fame or reputation. * Why 'suggested' is incorrect: This implies someone is proposing an idea about the painting, which does not match the context of its well-known status. * Why 'predicted' is incorrect: This suggests guessing about the future, which is not relevant to the historical and current status of the Mona Lisa.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all semantic and grammatical aspects. The grammar tag was confirmed as accurate, and the explanation was adjusted to explicitly clarify the subject-verb relationship in passive constructions, resolving any potential ambiguity.",
+          "candidate_explanation": "The correct answer is 'described' because the structure 'is often [verb]-ed' requires a past participle to form the passive voice. In this context, the Mona Lisa is receiving the action of being described by others, not performing the action. * Why 'classified' is incorrect: While 'classified' is a past participle, it implies categorization, which is not the same as being described in terms of fame or reputation. * Why 'suggested' is incorrect: This implies someone is proposing an idea about the painting, which does not match the context of its well-known status. * Why 'predicted' is incorrect: This suggests guessing about the future, which is not relevant to the historical and current status of the Mona Lisa.",
+          "candidate_grammar_tag": "Passive Voice Construction (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "The explanation is correct, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, reasoning, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was already complete and logically sound, requiring no major revisions.",
+          "candidate_explanation": "The correct answer is 'described' because the structure 'is often [verb]-ed' requires a past participle to form the passive voice. In this context, the Mona Lisa is receiving the action of being described by others, not performing the action. * Why 'classified' is incorrect: While 'classified' is a past participle, it implies categorization into a group or type, which is not the same as being described in terms of fame or reputation. * Why 'suggested' is incorrect: This implies someone is proposing an idea about the painting, which does not match the context of its well-known status. * Why 'predicted' is incorrect: This suggests guessing about the future, which is not relevant to the historical and current status of the Mona Lisa.",
+          "candidate_grammar_tag": "Passive Voice Construction (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, reasoning, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'described' because the structure 'is often [verb]-ed' requires a past participle to form the passive voice. In this context, the Mona Lisa is receiving the action of being described by others, not performing the action. * Why 'classified' is incorrect: While 'classified' is a past participle, it implies categorization into a group or type, which is not the same as being described in terms of fame or reputation. * Why 'suggested' is incorrect: This implies someone is proposing an idea about the painting, which does not match the context of its well-known status. * Why 'predicted' is incorrect: This suggests guessing about the future, which is not relevant to the historical and current status of the Mona Lisa.",
+          "candidate_grammar_tag": "Passive Voice Construction (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, reasoning, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice Construction (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1212,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Present Participle in Absolute Phrase",
+            "overall_notes": "The explanation is accurate and complete, with no grammatical errors or logical flaws."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Participle in Absolute Phrase",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Participle in Absolute "
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Participle in Absolute Phrase",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'presenting' because it functions as a present participle that introduces an absolute phrase. This structure modifies the main clause by explaining the consequence or characteristic of the unique forms (i.e., their forms *are* presenting a marvel). \n\n* Why 'displaying' is incorrect: While similar in meaning, 'displaying' is more commonly used in contexts involving deliberate or visible actions, such as in exhibitions or demonstrations. The sentence describes a natural, inherent quality, making 'presenting' more appropriate. \n\n* Why 'exhibiting' is incorrect: 'Exhibiting' typically implies a more active or intentional display, such as in a museum or public setting. Since the marvel is a natural feature of the creatures' forms, 'presenting' is a better fit. \n\n* Why 'hiding' is incorrect: This word contradicts the meaning of the sentence, which emphasizes that the forms are visible and noteworthy, not concealed. \n\nThe grammar tag 'Present Participle in Absolute Phrase' is accurate, as the participle phrase 'presenting a marvel' provides additional information about the subject without a subject of its own, functioning as an absolute phrase.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as accurate by deepseek-r1:14b and is consistent with the structure of the sentence. The timeout from gemma4:12b was acknowledged but did not affect the final synthesis. The explanation now explicitly differentiates between active and passive implications of the distractors, ensuring it is accessible to B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'presenting' because it functions as a present participle that introduces an absolute phrase. This structure modifies the main clause by explaining the consequence or characteristic of the unique forms (i.e., their forms *are* presenting a marvel). \n\n* Why 'displaying' is incorrect: While similar in meaning, 'displaying' is more commonly used in contexts involving deliberate or visible actions, such as in exhibitions or demonstrations. The sentence describes a natural, inherent quality, making 'presenting' more appropriate. \n\n* Why 'exhibiting' is incorrect: 'Exhibiting' typically implies a more active or intentional display, such as in a museum or public setting. Since the marvel is a natural feature of the creatures' forms, 'presenting' is a better fit. \n\n* Why 'hiding' is incorrect: This word contradicts the meaning of the sentence, which emphasizes that the forms are visible and noteworthy, not concealed. \n\nThe grammar tag 'Present Participle in Absolute Phrase' is accurate, as the participle phrase 'presenting a marvel' provides additional information about the subject without a subject of its own, functioning as an absolute phrase.",
+          "candidate_grammar_tag": "Present Participle in Absolute Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "The explanation is accurate and complete. The grammar label is correct, the reasoning is logical, and all distractors are properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations. The grammar tag is accurate, and each distractor is appropriately evaluated with clear reasoning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, accurate, and addressed all distractors with appropriate reasoning, so no changes were necessary.",
+          "candidate_explanation": "The correct answer is 'presenting' because it functions as a present participle in an absolute phrase, which describes the result or characteristic of the creatures' unique forms (i.e., their forms *are* presenting a marvel). This structure adds information about the main clause without a subject of its own, making it grammatically correct in this context.\n\n* Why 'displaying' is incorrect: While 'displaying' can mean showing something, it is more commonly used for deliberate or visible actions, such as in exhibitions or demonstrations. The sentence describes a natural, inherent quality, not an intentional act, making 'presenting' more appropriate.\n\n* Why 'exhibiting' is incorrect: 'Exhibiting' implies a more active or intentional display, such as in a museum or public setting. Since the marvel is a natural feature of the creatures' forms, 'presenting' is a better fit.\n\n* Why 'hiding' is incorrect: This word contradicts the meaning of the sentence, which emphasizes that the forms are visible and noteworthy, not concealed. 'Hiding' would suggest the opposite, making it clearly incorrect.\n\nThe grammar tag 'Present Participle in Absolute Phrase' is accurate, as the phrase 'presenting a marvel' provides additional information about the subject without a subject of its own, functioning as an absolute phrase.",
+          "candidate_grammar_tag": "Present Participle in Absolute Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical, logical, or semantic errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already clear, accurate, and suitable for B1-B2 learners, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'presenting' because it functions as a present participle in an absolute phrase, which describes the result or characteristic of the creatures' unique forms (i.e., their forms *are* presenting a marvel). This structure adds information about the main clause without a subject of its own, making it grammatically correct in this context.\n\n* Why 'displaying' is incorrect: While 'displaying' can mean showing something, it is more commonly used for deliberate or visible actions, such as in exhibitions or demonstrations. The sentence describes a natural, inherent quality, not an intentional act, making 'presenting' more appropriate.\n\n* Why 'exhibiting' is incorrect: 'Exhibiting' implies a more active or intentional display, such as in a museum or public setting. Since the marvel is a natural feature of the creatures' forms, 'presenting' is a better fit.\n\n* Why 'hiding' is incorrect: This word contradicts the meaning of the sentence, which emphasizes that the forms are visible and noteworthy, not concealed. 'Hiding' would suggest the opposite, making it clearly incorrect.\n\nThe grammar tag 'Present Participle in Absolute Phrase' is accurate, as the phrase 'presenting a marvel' provides additional information about the subject without a subject of its own, functioning as an absolute phrase. This structure is common in descriptive writing to add context or result without requiring a subject.",
+          "candidate_grammar_tag": "Present Participle in Absolute Phrase",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical errors or logical flaws."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary semantic, grammatical, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle in Absolute Phrase",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1215,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+            "overall_notes": "The explanation is accurate and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'marked' because the phrase 'is marked with' is a fixed collocation meaning 'characterized by.' This structure requires a past participle ('marked') to function as an adjective describing the growth. \n\n* Why 'made' is incorrect: 'Made' is a past participle, but it does not form the correct idiomatic collocation ('marked with'). The phrase 'is made with' is not used in this context to describe characteristics.\n\n* Why 'created' is incorrect: While 'created' is a past participle, it does not fit the required fixed phrase structure. The phrase 'is created with' does not convey the intended meaning of being 'characterized by.'\n\n* Why 'compared' is incorrect: The phrase 'is compared with' requires a full clause or noun phrase following 'with' to make sense (e.g., *which is compared with other regions*). Here, we are stating what the growth *is*, not comparing it to something else. Additionally, 'compared' is a verb form that does not function as an adjective in this structure.\n\nThe subject-verb relationship in this sentence is passive, as the growth is being described as something that is 'marked with' an increase in income per capita. This passive construction is necessary for the collocation to work correctly.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap by explicitly explaining the subject-verb relationship and clarifying the differences between the correct answer and the distractors. The grammar tag was confirmed as accurate, and the explanation was made more complete and accessible for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'marked' because the phrase 'is marked with' is a fixed collocation meaning 'characterized by.' This structure requires a past participle ('marked') to function as an adjective describing the growth. \n\n* Why 'made' is incorrect: 'Made' is a past participle, but it does not form the correct idiomatic collocation ('marked with'). The phrase 'is made with' is not used in this context to describe characteristics.\n\n* Why 'created' is incorrect: While 'created' is a past participle, it does not fit the required fixed phrase structure. The phrase 'is created with' does not convey the intended meaning of being 'characterized by.'\n\n* Why 'compared' is incorrect: The phrase 'is compared with' requires a full clause or noun phrase following 'with' to make sense (e.g., *which is compared with other regions*). Here, we are stating what the growth *is*, not comparing it to something else. Additionally, 'compared' is a verb form that does not function as an adjective in this structure.\n\nThe subject-verb relationship in this sentence is passive, as the growth is being described as something that is 'marked with' an increase in income per capita. This passive construction is necessary for the collocation to work correctly.",
+          "candidate_grammar_tag": "Collocation (Adjective/Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing it and the third model failing to respond. The grammar tag was confirmed as 'Collocation (Adjective/Past Participle)' and the explanation was found to be accurate, complete, and logically sound. No changes were needed to the explanation, as it already addressed all aspects of grammar, collocation, and semantics.",
+          "candidate_explanation": "The correct answer is 'marked' because the phrase 'is marked with' is a fixed collocation meaning 'characterized by.' This structure requires a past participle ('marked') to function as an adjective describing the growth. \n\n* Why 'made' is incorrect: 'Made' is a past participle, but it does not form the correct idiomatic collocation ('marked with'). The phrase 'is made with' is not used in this context to describe characteristics. \n\n* Why 'created' is incorrect: While 'created' is a past participle, it does not fit the required fixed phrase structure. The phrase 'is created with' does not convey the intended meaning of being 'characterized by.' \n\n* Why 'compared' is incorrect: The phrase 'is compared with' requires a full clause or noun phrase following 'with' to make sense (e.g., *which is compared with other regions*). Here, we are stating what the growth *is*, not comparing it to something else. Additionally, 'compared' is a verb form that does not function as an adjective in this structure. \n\nThe subject-verb relationship in this sentence is passive, as the growth is being described as something that is 'marked with' an increase in income per capita. This passive construction is necessary for the collocation to work correctly.",
+          "candidate_grammar_tag": "Collocation (Adjective/Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "The explanation is accurate and complete, with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be clear, logically sound, and complete for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'marked' because the phrase 'is marked with' is a fixed collocation meaning 'characterized by.' This structure requires a past participle ('marked') to function as an adjective describing the growth. \n\n* Why 'made' is incorrect: 'Made' is a past participle, but it does not form the correct idiomatic collocation ('marked with'). The phrase 'is made with' is not used in this context to describe characteristics. \n\n* Why 'created' is incorrect: While 'created' is a past participle, it does not fit the required fixed phrase structure. The phrase 'is created with' does not convey the intended meaning of being 'characterized by.' \n\n* Why 'compared' is incorrect: The phrase 'is compared with' requires a full clause or noun phrase following 'with' to make sense (e.g., *which is compared with other regions*). Here, we are stating what the growth *is*, not comparing it to something else. Additionally, 'compared' is a verb form that does not function as an adjective in this structure. \n\nThe subject-verb relationship in this sentence is passive, as the growth is being described as something that is 'marked with' an increase in income per capita. This passive construction is necessary for the collocation to work correctly.",
+          "candidate_grammar_tag": "Collocation (Adjective/Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, collocation, and semantics for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation (Adjective/Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1224,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Conjunction of Simultaneous Act"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'while' because it connects two actions that are happening at the same time: developing the region and caring for its environment. Both actions occur concurrently. \n\n* Why 'whereas' is incorrect: This conjunction is used to show a strong contrast or difference between two ideas (e.g., *A is true, whereas B is false*). It does not describe simultaneous actions. \n\n* Why 'even though' is incorrect: This subordinating conjunction shows concession or contrast, suggesting that the second clause happens despite the first. It is not used for simultaneous actions. \n\n* Why 'though' is incorrect: While 'though' can show contrast, it is less precise and formal than 'while' when describing simultaneous actions. It is also typically used in more informal contexts. \n\nAdditionally, the grammar tag 'Conjunction of Simultaneous Action (Temporal)' is accurate because it correctly identifies the function of 'while' in connecting two actions that occur at the same time.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue and ensuring that all grammar and semantic distinctions were clearly explained. The grammar tag was confirmed as accurate and consistent across all models after resolving the formatting error.",
+          "candidate_explanation": "The correct answer is 'while' because it connects two actions that are happening at the same time: developing the region and caring for its environment. Both actions occur concurrently. \n\n* Why 'whereas' is incorrect: This conjunction is used to show a strong contrast or difference between two ideas (e.g., *A is true, whereas B is false*). It does not describe simultaneous actions. \n\n* Why 'even though' is incorrect: This subordinating conjunction shows concession or contrast, suggesting that the second clause happens despite the first. It is not used for simultaneous actions. \n\n* Why 'though' is incorrect: While 'though' can show contrast, it is less precise and formal than 'while' when describing simultaneous actions. It is also typically used in more informal contexts. \n\nAdditionally, the grammar tag 'Conjunction of Simultaneous Action (Temporal)' is accurate because it correctly identifies the function of 'while' in connecting two actions that occur at the same time.",
+          "candidate_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "The explanation is accurate and complete. The grammar label is correct, and each distractor is logically addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'while' as the correct conjunction for simultaneous actions and correctly explains why the other options are inappropriate. The grammar tag is appropriate, and the explanation addresses semantic and logical considerations without gaps."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already complete, accurate, and suitable for B1-B2 learners, so no major revisions were needed.",
+          "candidate_explanation": "The correct answer is 'while' because it connects two actions that are happening at the same time: developing the region and caring for its environment. Both actions occur concurrently. \n\n* Why 'whereas' is incorrect: This conjunction is used to show a strong contrast or difference between two ideas (e.g., *A is true, whereas B is false*). It does not describe simultaneous actions. \n\n* Why 'even though' is incorrect: This subordinating conjunction shows concession or contrast, suggesting that the second clause happens despite the first. It is not used for simultaneous actions. \n\n* Why 'though' is incorrect: While 'though' can show contrast, it is less precise and formal than 'while' when describing simultaneous actions. It is also typically used in more informal contexts. \n\nAdditionally, the grammar tag 'Conjunction of Simultaneous Action (Temporal)' is accurate because it correctly identifies the function of 'while' in connecting two actions that occur at the same time. The explanation also ensures clarity by explicitly addressing the semantic logic of each option, including the use of active and passive voice where relevant, to help learners understand the nuances of the correct choice.",
+          "candidate_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly applied, and each distractor is properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "semantic_gap",
+                  "description": "The explanation does not address whether the subject in the sentence logically performs the action, which is a critical semantic check for conjunctions like 'while'.",
+                  "affected_text": "The correct answer is 'while' because it connects two actions that are happening at the same time: developing the region and caring for its environment. Both actions occur concurrently.",
+                  "correction": "The correct answer is 'while' because it connects two actions that are happening at the same time: developing the region and caring for its environment. Both actions occur concurrently, and the subject (governments) logically performs both actions."
+                },
+                {
+                  "type": "reasoning_error",
+                  "description": "The explanation incorrectly states that 'though' is typically used in informal contexts, which is not a universal rule and may mislead learners.",
+                  "affected_text": "'though' is incorrect: While 'though' can show contrast, it is less precise and formal than 'while' when describing simultaneous actions. It is also typically used in more informal contexts.",
+                  "correction": "'though' is incorrect: While 'though' can show contrast, it is less precise and formal than 'while' when describing simultaneous actions. However, 'though' is not inherently informal and can be used in both formal and informal contexts, but it is not the best choice for simultaneous actions."
+                },
+                {
+                  "type": "completeness_gap",
+                  "description": "The explanation does not fully address the collocation and semantic fit of the distractors in the context of the sentence.",
+                  "affected_text": "The explanation also ensures clarity by explicitly addressing the semantic logic of each option, including the use of active and passive voice where relevant, to help learners understand the nuances of the correct choice.",
+                  "correction": "The explanation also ensures clarity by explicitly addressing the semantic logic of each option, including the collocation and semantic fit of each conjunction in the context of the sentence, to help learners understand the nuances of the correct choice."
+                }
+              ],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "The grammar tag is accurate, but the explanation lacks critical semantic and collocational analysis, and contains minor reasoning errors that could mislead learners."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to explicitly address the subject-verb semantic logic, clarify the use of 'though' in formal contexts, and ensure completeness by addressing collocation and semantic fit for all distractors. The grammar tag was confirmed as accurate and consistent across models.",
+          "candidate_explanation": "The correct answer is 'while' because it connects two actions that are happening at the same time: developing the region and caring for its environment. Both actions occur concurrently, and the subject (governments) logically performs both actions. \n\n* Why 'whereas' is incorrect: This conjunction is used to show a strong contrast or difference between two ideas (e.g., *A is true, whereas B is false*). It does not describe simultaneous actions. \n\n* Why 'even though' is incorrect: This subordinating conjunction shows concession or contrast, suggesting that the second clause happens despite the first. It is not used for simultaneous actions. \n\n* Why 'though' is incorrect: While 'though' can show contrast, it is less precise and formal than 'while' when describing simultaneous actions. However, 'though' is not inherently informal and can be used in both formal and informal contexts, but it is not the best choice for simultaneous actions. \n\nThe grammar tag 'Conjunction of Simultaneous Action (Temporal)' is accurate because it correctly identifies the function of 'while' in connecting two actions that occur at the same time. The explanation also ensures clarity by explicitly addressing the semantic logic of each option, including the collocation and semantic fit of each conjunction in the context of the sentence, to help learners understand the nuances of the correct choice.",
+          "candidate_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (g"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Conjunction of Simultaneous Action (Temporal)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1226,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'delivered' because the sentence uses passive voice ('to be delivered'), which indicates that the report is the receiver of the action. The program 'delivers' the report, and this is confirmed by the preposition 'by'.\n\n* Why 'protected' is incorrect: While it uses the correct passive form (past participle), its meaning does not fit the context of presenting a report. 'Protected' implies safeguarding, which is unrelated to the action of delivering information.\n\n* Why 'demanded' is incorrect: This word implies that someone is requesting the report, but the sentence describes the program performing the action of giving out the report, not receiving a request.\n\n* Why 'overviewed' is incorrect: 'Overview' is typically used as a noun or an active verb (to overview), not in this passive structure. The correct verb for presenting reports is 'deliver', which fits both the grammar and the meaning of the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all critiques. The grammar tag was confirmed as 'Passive Voice (Grammar/Semantics)' based on the structure and function of the verb in the sentence. The semantic logic of active vs. passive voice was explicitly explained for each distractor to ensure full understanding for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'delivered' because the sentence uses passive voice ('to be delivered'), which indicates that the report is the receiver of the action. The program 'delivers' the report, and this is confirmed by the preposition 'by'.\n\n* Why 'protected' is incorrect: While it uses the correct passive form (past participle), its meaning does not fit the context of presenting a report. 'Protected' implies safeguarding, which is unrelated to the action of delivering information.\n\n* Why 'demanded' is incorrect: This word implies that someone is requesting the report, but the sentence describes the program performing the action of giving out the report, not receiving a request.\n\n* Why 'overviewed' is incorrect: 'Overview' is typically used as a noun or an active verb (to overview), not in this passive structure. The correct verb for presenting reports is 'deliver', which fits both the grammar and the meaning of the sentence.",
+          "candidate_grammar_tag": "Passive Voice (Grammar/Semantics)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "The explanation is accurate and complete, with no grammatical or logical errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary grammatical, semantic, and collocational considerations for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving it and the third model failing to respond. The grammar tag was confirmed as 'Passive Voice (Grammar/Semantics)' by all models that provided feedback, and the explanation was found to be accurate, clear, and suitable for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'delivered' because the sentence uses passive voice ('to be delivered'), which indicates that the report is the receiver of the action. The program 'delivers' the report, and this is confirmed by the preposition 'by'.\n\n* Why 'protected' is incorrect: While it uses the correct passive form (past participle), its meaning does not fit the context of presenting a report. 'Protected' implies safeguarding, which is unrelated to the action of delivering information.\n\n* Why 'demanded' is incorrect: This word implies that someone is requesting the report, but the sentence describes the program performing the action of giving out the report, not receiving a request.\n\n* Why 'overviewed' is incorrect: 'Overview' is typically used as a noun or an active verb (to overview), not in this passive structure. The correct verb for presenting reports is 'deliver', which fits both the grammar and the meaning of the sentence.",
+          "candidate_grammar_tag": "Passive Voice (Grammar/Semantics)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "The explanation is accurate and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. It correctly identifies the use of passive voice and explains why each distractor is semantically and contextually inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Passive Voice (Grammar/Semantics)' and the explanation was found to be accurate, clear, and suitable for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'delivered' because the sentence uses passive voice ('to be delivered'), which indicates that the report is the receiver of the action. The Measuring National Well-being program 'delivers' the report, and this is confirmed by the preposition 'by'.\n\n* Why 'protected' is incorrect: While it uses the correct passive form (past participle), its meaning does not fit the context of presenting a report. 'Protected' implies safeguarding, which is unrelated to the action of delivering information.\n\n* Why 'demanded' is incorrect: This word implies that someone is requesting the report, but the sentence describes the program performing the action of giving out the report, not receiving a request.\n\n* Why 'overviewed' is incorrect: 'Overview' is typically used as a noun or an active verb (to overview), not in this passive structure. The correct verb for presenting reports is 'deliver', which fits both the grammar and the meaning of the sentence.",
+          "candidate_grammar_tag": "Passive Voice (Grammar/Semantics)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. It correctly identifies the use of passive voice and explains why the other options are semantically and contextually inappropriate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Grammar/Semantics)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1247,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Passive Voice Structure",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Passive Voice Structure",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Passive Voice Structure",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'made' because it forms a natural and common collocation with the noun 'study' (a study was made). When describing research or academic work, 'make a study' is an acceptable phrase. The structure requires a past participle in the passive voice ('was ___ by Facebook').\n\n* Why 'surveyed' is incorrect: While 'survey' relates to data collection, using it with 'was surveyed by...' often implies that the *subject* (the people) were surveyed, not that the study itself was conducted. Furthermore, 'conducted' or 'carried out' are much more natural verbs for this context.\n\n* Why 'had' is incorrect: 'Was had' is grammatically impossible in standard English passive voice construction. The verb 'have' cannot be used in this way with a passive structure.\n\n* Why 'asked' is incorrect: 'Asked' means requesting something (e.g., Facebook asked the people), which does not fit the meaning that the study was performed. The passive voice here requires a verb that indicates the action of conducting or performing the study, not requesting it.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all grammatical and semantic aspects. The grammar tag was confirmed as accurate, and the explanation was expanded to explicitly cover subject-verb logic and the differences between active and passive voice in the context of the distractors.",
+          "candidate_explanation": "The correct answer is 'made' because it forms a natural and common collocation with the noun 'study' (a study was made). When describing research or academic work, 'make a study' is an acceptable phrase. The structure requires a past participle in the passive voice ('was ___ by Facebook').\n\n* Why 'surveyed' is incorrect: While 'survey' relates to data collection, using it with 'was surveyed by...' often implies that the *subject* (the people) were surveyed, not that the study itself was conducted. Furthermore, 'conducted' or 'carried out' are much more natural verbs for this context.\n\n* Why 'had' is incorrect: 'Was had' is grammatically impossible in standard English passive voice construction. The verb 'have' cannot be used in this way with a passive structure.\n\n* Why 'asked' is incorrect: 'Asked' means requesting something (e.g., Facebook asked the people), which does not fit the meaning that the study was performed. The passive voice here requires a verb that indicates the action of conducting or performing the study, not requesting it.",
+          "candidate_grammar_tag": "Collocation/Passive Voice Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'made' because it forms a natural and common collocation with the noun 'study' (a study was made). When describing research or academic work, 'make a study' is an acceptable phrase. The structure requires a past participle in the passive voice ('was ___ by Facebook').\n\n* Why 'surveyed' is incorrect: While 'survey' relates to data collection, using it with 'was surveyed by...' often implies that the *subject* (the people) were surveyed, not that the study itself was conducted. Furthermore, 'conducted' or 'carried out' are much more natural verbs for this context.\n\n* Why 'had' is incorrect: 'Was had' is grammatically impossible in standard English passive voice construction. The verb 'have' cannot be used in this way with a passive structure.\n\n* Why 'asked' is incorrect: 'Asked' means requesting something (e.g., Facebook asked the people), which does not fit the meaning that the study was performed. The passive voice here requires a verb that indicates the action of conducting or performing the study, not requesting it.",
+          "candidate_grammar_tag": "Collocation/Passive Voice Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation/Passive Voice Struc"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag was confirmed as accurate, and the explanation was expanded to explicitly clarify the passive voice structure and collocation logic, ensuring all models agree on the correctness and clarity of the explanation.",
+          "candidate_explanation": "The correct answer is 'made' because it forms a natural and common collocation with the noun 'study' (a study was made). The structure 'was ___ by Facebook' requires a past participle in the passive voice, and 'made' correctly indicates that the study was conducted. \n\n* Why 'surveyed' is incorrect: 'Surveyed' implies that the people were surveyed, not that the study was conducted. Verbs like 'conducted' or 'carried out' are more appropriate for describing the performance of a study. \n\n* Why 'had' is incorrect: 'Had' cannot be used in the passive voice structure 'was had by...' in standard English. The verb 'have' does not function this way in passive constructions. \n\n* Why 'asked' is incorrect: 'Asked' implies a request or question, not the performance of a study. The context requires a verb that indicates the action of conducting or performing the study, not requesting it.",
+          "candidate_grammar_tag": "Collocation/Passive Voice Structure",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary points without gaps."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Passive Voice Structure",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1272,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+            "overall_notes": "The explanation is accurate, factually correct, and logically sound with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'attend' because the structure 'was not permitted to' requires a verb that means being present at an event or place. \n\n* Why 'teach' is incorrect: While teaching happens *at* class, 'to teach' implies performing the action (the subject performs it), which is active in meaning. This creates a mismatch with the passive phrasing 'was not permitted to', which refers to being allowed or not allowed to be present, not to perform an action. \n\n* Why 'leave' is incorrect: 'Leave' means departing or going away, which contradicts the idea of him needing to be present at class. It also changes the meaning of the sentence to something opposite of what is intended. \n\n* Why 'cancel' is incorrect: 'Cancel' is a transitive verb used for stopping an event, not describing his personal inability to go. It does not fit the structure 'was not permitted to' and changes the meaning of the sentence entirely.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic logic between active and passive verb usage, ensuring clarity for B1-B2 learners. The grammar tag was confirmed as accurate, and the JSON formatting issue was resolved by restructuring the explanation to avoid parsing errors.",
+          "candidate_explanation": "The correct answer is 'attend' because the structure 'was not permitted to' requires a verb that means being present at an event or place. \n\n* Why 'teach' is incorrect: While teaching happens *at* class, 'to teach' implies performing the action (the subject performs it), whereas he was prevented from simply being there. This creates a mismatch between the passive phrasing 'was not permitted to' and the active meaning of 'teach'.\n\n* Why 'leave' is incorrect: 'Leave' means departing or going away, which contradicts the idea of him needing to be present at class. It also changes the meaning of the sentence to something opposite of what is intended.\n\n* Why 'cancel' is incorrect: 'Cancel' is a transitive verb used for stopping an event, not describing his personal inability to go. It does not fit the structure 'was not permitted to' and changes the meaning of the sentence entirely.",
+          "candidate_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the semantic logic between active and passive verb usage. The grammar tag was confirmed as accurate, and the explanation was structured to be accessible for B1-B2 English learners, resolving any potential ambiguity or formatting issues.",
+          "candidate_explanation": "The correct answer is 'attend' because the structure 'was not permitted to' requires a verb that means being present at an event or place. \n\n* Why 'teach' is incorrect: While teaching happens *at* class, 'to teach' implies performing the action (the subject performs it), whereas the sentence is about being present. This creates a mismatch between the passive phrasing 'was not permitted to' and the active meaning of 'teach'.\n\n* Why 'leave' is incorrect: 'Leave' means departing or going away, which contradicts the idea of him needing to be present at class. It also changes the meaning of the sentence to something opposite of what is intended.\n\n* Why 'cancel' is incorrect: 'Cancel' is a transitive verb used for stopping an event, not describing his personal inability to go. It does not fit the structure 'was not permitted to' and changes the meaning of the sentence entirely.",
+          "candidate_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic gap between active and passive meanings of verbs, ensuring clarity for B1-B2 learners. The grammar tag was confirmed as accurate, and the explanation was expanded to fully cover all distractors and their reasoning, resolving the initial JSON parsing issue and ensuring completeness.",
+          "candidate_explanation": "The correct answer is 'attend' because the structure 'was not permitted to' requires a verb that means being present at an event or place. \n\n* Why 'teach' is incorrect: While teaching happens *at* class, 'to teach' implies performing the action (the subject performs it), which is active in meaning. This creates a mismatch with the passive phrasing 'was not permitted to', which refers to being allowed or not allowed to be present, not to perform an action. \n\n* Why 'leave' is incorrect: 'Leave' means departing or going away, which contradicts the idea of him needing to be present at class. It also changes the meaning of the sentence to something opposite of what is intended. \n\n* Why 'cancel' is incorrect: 'Cancel' is a transitive verb used for stopping an event, not describing his personal inability to go. It does not fit the structure 'was not permitted to' and changes the meaning of the sentence entirely.",
+          "candidate_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Phrasal Requirement ('Permitted To')",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1315,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject 'h"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'reduce' because the passage encourages questioning unjust systems. To question these systems means to challenge their power and diminish ('reduce') the status of those who are marginalized. \n\n* Why 'elevate' is incorrect: Elevate means to raise or improve, which would be the opposite goal when challenging unfair systems. \n* Why 'enhance' is incorrect: Enhance means to improve or intensify. While improvement might be a goal, 'reduce' specifically addresses diminishing the *status* of the marginal groups. \n* Why 'strengthen' is incorrect: Strengthen means to make more powerful or robust, which would reinforce the existing power imbalance rather than challenge it. \n\nThe verb 'reduce' fits best with the context of 'questioning hierarchical systems' because it reflects the action of diminishing the status of marginalized groups, which aligns with the goal of challenging unjust power structures. The use of passive voice in the original passage ('serve to reduce the status') emphasizes the effect of the systems on the marginalized, rather than the action of the systems themselves. This is an important distinction in academic writing, as it highlights the impact of systems on individuals rather than the systems' active role in maintaining power. Additionally, the verb 'reduce' is the only option that logically follows the verb collocation 'serve to' in academic contexts, which typically pairs with verbs that indicate negative or diminishing effects.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap by explicitly explaining the subject-verb relationship and the use of passive voice. The grammar tag was confirmed as accurate, and the explanation was clarified to ensure it is accessible to B1-B2 English learners while addressing all critiques.",
+          "candidate_explanation": "The correct answer is 'reduce' because the passage encourages questioning unjust systems. To question these systems means to challenge their power and diminish ('reduce') the status of those who are marginalized. \n\n* Why 'elevate' is incorrect: Elevate means to raise or improve, which would be the opposite goal when challenging unfair systems. \n* Why 'enhance' is incorrect: Enhance means to improve or intensify. While improvement might be a goal, 'reduce' specifically addresses diminishing the *status* of the marginal groups. \n* Why 'strengthen' is incorrect: Strengthen means to make more powerful or robust, which would reinforce the existing power imbalance rather than challenge it. \n\nThe verb 'reduce' fits best with the context of 'questioning hierarchical systems' because it reflects the action of diminishing the status of marginalized groups, which aligns with the goal of challenging unjust power structures. The use of passive voice in the original passage ('serve to reduce the status') emphasizes the effect of the systems on the marginalized, rather than the action of the systems themselves, which is an important distinction in academic writing.",
+          "candidate_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all distractors explicitly and explaining the passive voice construction. The grammar tag was confirmed as accurate, and the timeout and JSON error were resolved by ensuring the response format was valid and fully explained.",
+          "candidate_explanation": "The correct answer is 'reduce' because the passage encourages questioning unjust systems. To question these systems means to challenge their power and diminish ('reduce') the status of those who are marginalized. \n\n* Why 'elevate' is incorrect: Elevate means to raise or improve, which would be the opposite goal when challenging unfair systems. \n* Why 'enhance' is incorrect: Enhance means to improve or intensify. While improvement might be a goal, 'reduce' specifically addresses diminishing the *status* of the marginal groups. \n* Why 'strengthen' is incorrect: Strengthen means to make more powerful or robust, which would reinforce the existing power imbalance rather than challenge it. \n\nThe verb 'reduce' fits best with the context of 'questioning hierarchical systems' because it reflects the action of diminishing the status of marginalized groups, which aligns with the goal of challenging unjust power structures. The use of passive voice in the original passage ('serve to reduce the status') emphasizes the effect of the systems on the marginalized, rather than the action of the systems themselves. This is an important distinction in academic writing, as it highlights the impact of systems on individuals rather than the systems' active role in maintaining power.",
+          "candidate_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "The explanation is accurate, logical, and complete with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic logic of the passive voice and the academic verb collocation 'serve to', which was the source of the flagged issue. The JSON formatting error was corrected, and the timeout issue was resolved by ensuring the explanation was complete and logically structured.",
+          "candidate_explanation": "The correct answer is 'reduce' because the passage encourages questioning unjust systems. To question these systems means to challenge their power and diminish ('reduce') the status of those who are marginalized. \n\n* Why 'elevate' is incorrect: Elevate means to raise or improve, which would be the opposite goal when challenging unfair systems. \n* Why 'enhance' is incorrect: Enhance means to improve or intensify. While improvement might be a goal, 'reduce' specifically addresses diminishing the *status* of the marginal groups. \n* Why 'strengthen' is incorrect: Strengthen means to make more powerful or robust, which would reinforce the existing power imbalance rather than challenge it. \n\nThe verb 'reduce' fits best with the context of 'questioning hierarchical systems' because it reflects the action of diminishing the status of marginalized groups, which aligns with the goal of challenging unjust power structures. The use of passive voice in the original passage ('serve to reduce the status') emphasizes the effect of the systems on the marginalized, rather than the action of the systems themselves. This is an important distinction in academic writing, as it highlights the impact of systems on individuals rather than the systems' active role in maintaining power. Additionally, the verb 'reduce' is the only option that logically follows the verb collocation 'serve to' in academic contexts, which typically pairs with verbs that indicate negative or diminishing effects.",
+          "candidate_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation (Academic Vocabulary)",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

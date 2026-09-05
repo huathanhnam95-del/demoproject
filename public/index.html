@@ -212,7 +212,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V1.8.121</div>
+  <div id="version-indicator" class="version-indicator">V1.8.122</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4606,8 +4606,8 @@
                 <div class="essay-guided-pref-group">
                   <label for="essay-guided-language">Support language<button type="button" class="essay-guided-help" data-guided-action="help" data-help-key="support-language" aria-expanded="false" aria-label="Giải thích"><span aria-hidden="true">?</span></button></label>
                   <select id="essay-guided-language" aria-label="Guided support language">
-                    <option value="en" selected>English</option>
-                    <option value="vi">Tiếng Việt</option>
+                    <option value="vi" selected>Tiếng Việt</option>
+                    <option value="en">English</option>
                   </select>
                 </div>
                 <div class="essay-guided-pref-group">
@@ -4627,6 +4627,115 @@
                     <button type="button" id="essay-guided-scale-down" class="essay-guided-scale-btn" title="Giảm cỡ chữ (A−)">A−</button>
                     <input type="range" id="essay-guided-font-scale" min="0.8" max="1.5" step="0.05" value="1.0" aria-label="Chỉnh cỡ chữ">
                     <button type="button" id="essay-guided-scale-up" class="essay-guided-scale-btn" title="Tăng cỡ chữ (A+)">A+</button>
+                  </div>
+                </div>
+
+                <div class="essay-guided-pref-group essay-guided-pref-group--full">
+                  <div class="essay-prestart-layout-group">
+                    <label class="essay-prestart-layout-label">
+                      <span class="essay-prestart-layout-title">🎯 Cách xem Bước 1 phù hợp với bạn:</span>
+                      <small class="essay-prestart-layout-sub">Bạn có thể đổi kiểu xem bất cứ lúc nào trong khi làm bài</small>
+                    </label>
+                  </div>
+                  <div class="essay-prestart-layout-cards" id="essay-prestart-layout-cards" role="radiogroup" aria-label="Chọn cách xem đề Bước 1">
+                    <button type="button" class="essay-prestart-layout-card is-active" data-layout="whiteboard" role="radio" aria-checked="true" title="Bạn muốn nhìn toàn cảnh đề bài và sơ đồ ý tưởng">
+                      <span class="essay-prestart-layout-icon">🗺️</span>
+                      <strong class="essay-prestart-layout-name">Sơ đồ tư duy</strong>
+                      <span class="essay-prestart-layout-tag">Bạn muốn sơ đồ trực quan</span>
+                    </button>
+                    <button type="button" class="essay-prestart-layout-card" data-layout="stations" role="radio" aria-checked="false" title="Bạn muốn học từng phần, không phải cuộn trang">
+                      <span class="essay-prestart-layout-icon">🏛️</span>
+                      <strong class="essay-prestart-layout-name">Học từng phần</strong>
+                      <span class="essay-prestart-layout-tag">Bạn không muốn cuộn trang</span>
+                    </button>
+                    <button type="button" class="essay-prestart-layout-card" data-layout="hud" role="radio" aria-checked="false" title="Bạn cần lướt nhanh dàn ý và mẹo trong 20 giây">
+                      <span class="essay-prestart-layout-icon">⚡</span>
+                      <strong class="essay-prestart-layout-name">Lướt nhanh 20s</strong>
+                      <span class="essay-prestart-layout-tag">Bạn cần tóm tắt 20 giây</span>
+                    </button>
+                    <button type="button" class="essay-prestart-layout-card" data-layout="list" role="radio" aria-checked="false" title="Bạn muốn đọc một mạch như tài liệu bài học">
+                      <span class="essay-prestart-layout-icon">📋</span>
+                      <strong class="essay-prestart-layout-name">Đọc truyền thống</strong>
+                      <span class="essay-prestart-layout-tag">Bạn muốn đọc như bài học</span>
+                    </button>
+                  </div>
+
+                  <!-- Focused Single-Card Detail Box -->
+                  <div id="essay-prestart-active-detail" class="essay-prestart-active-detail" aria-live="polite"></div>
+
+                  <div class="essay-layout-compare-toggle-wrap">
+                    <button type="button" id="essay-layout-compare-toggle-btn" class="essay-layout-compare-toggle-btn" aria-expanded="false">
+                      💡 Xem bảng so sánh cả 4 kiểu
+                    </button>
+                  </div>
+
+                  <!-- Expandable Pedagogical Comparison Drawer -->
+                  <div id="essay-layout-compare-drawer" class="essay-layout-compare-drawer" hidden>
+                    <div class="essay-layout-compare-table-wrap">
+                      <table class="essay-layout-compare-table">
+                        <thead>
+                          <tr>
+                            <th>Cách xem</th>
+                            <th>Nhu cầu &amp; Phong cách của bạn</th>
+                            <th>Bạn nên chọn kiểu này khi:</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td class="essay-compare-col-name">
+                              <strong>🗺️ Sơ đồ tư duy</strong>
+                              <span class="essay-compare-badge essay-compare-badge--primary">Mặc định</span>
+                            </td>
+                            <td>
+                              • <strong>Bạn muốn nhìn toàn cảnh</strong> đề bài và sơ đồ ý tưởng 2 phe cùng lúc.<br>
+                              • <strong>Bạn muốn bấm thử từng luận điểm</strong> và xem ngay dàn ý 4 đoạn gợi ý chi tiết (POS &amp; PEEL).
+                            </td>
+                            <td>
+                              Bạn thích học qua hình ảnh trực quan, muốn nghiền ngẫm kỹ đề bài và tự do thử nghiệm các hướng lập luận trước khi viết.
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="essay-compare-col-name">
+                              <strong>🏛️ Học từng phần</strong>
+                              <span class="essay-compare-badge essay-compare-badge--accent">Không cuộn trang</span>
+                            </td>
+                            <td>
+                              • <strong>Bạn muốn học gọn từng phần một</strong> mà không phải cuộn trang lên xuống.<br>
+                              • <strong>Bạn muốn đi theo lộ trình 3 bước</strong>: Trạm 1 (Khung bài) ➔ Trạm 2 (Chọn phe) ➔ Trạm 3 (Mẹo &amp; Luyện tập).
+                            </td>
+                            <td>
+                              Bạn dùng laptop hoặc màn hình vừa/nhỏ, ngại cuộn chuột dài; bạn thích học dứt điểm từng phần rồi mới sang phần tiếp theo.
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="essay-compare-col-name">
+                              <strong>⚡ Lướt nhanh 20s</strong>
+                              <span class="essay-compare-badge essay-compare-badge--speed">Siêu tốc 20s</span>
+                            </td>
+                            <td>
+                              • <strong>Bạn cần xem nhanh mạch 4 đoạn</strong> trên sơ đồ băng chuyền ngắn gọn.<br>
+                              • <strong>Bạn cần đối chiếu ngay bảng</strong> "NÊN LÀM ✓" vs "NÊN TRÁNH ✕" để tránh các bẫy đề thi dễ mất điểm.
+                            </td>
+                            <td>
+                              Bạn đã nắm vững cấu trúc bài viết, chuẩn bị bấm giờ làm bài và chỉ cần liếc mắt 20 giây để chốt chiến thuật.
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="essay-compare-col-name">
+                              <strong>📋 Đọc truyền thống</strong>
+                              <span class="essay-compare-badge essay-compare-badge--text">Truyền thống</span>
+                            </td>
+                            <td>
+                              • <strong>Bạn muốn đọc một mạch từ trên xuống dưới</strong> như một tài liệu bài học quen thuộc.<br>
+                              • <strong>Bạn muốn tập trung vào nội dung chữ</strong>, không cần sơ đồ hay thao tác bấm chọn qua lại.
+                            </td>
+                            <td>
+                              Bạn thích phong cách đọc truyền thống, thích sự tối giản và không muốn bị phân tâm bởi hình khối đồ họa.
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -6228,7 +6337,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=1.8.121"></script>
+  <script src="/read-aloud-mode.js?v=1.8.122"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

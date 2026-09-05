@@ -6,18 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260905-v1.8.121">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260905-v1.8.122">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260905-v1.8.121&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260905-v1.8.121&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260905-v1.8.122&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260905-v1.8.122&bgm=v2" />
 </head>
 
 <body>
@@ -2855,7 +2854,6 @@
             <button class="crm-tab-btn active" data-view="report" type="button">Briefing</button>
             <button class="crm-tab-btn" data-view="mindmap" type="button">Mindmap</button>
             <button class="crm-tab-btn" data-view="flowchart" type="button">Flowchart</button>
-            <button id="tab-teaching-session-audio" class="crm-tab-btn" data-view="audio" type="button">Audio</button>
           </div>
           <button class="crm-tab-btn crm-tab-btn-muted" data-view="json" type="button" title="View Raw JSON Data">Data</button>
         </div>
@@ -2900,22 +2898,19 @@
             </div>
           </div>
 
-          <!-- Audio Pane -->
-          <div id="teaching-session-view-audio" class="teaching-session-view-pane" style="display: none;">
-            <div class="teaching-session-audio-panel">
-              <div class="teaching-session-audio-info">
-                <div class="audio-panel-title">Lesson Audio Recording</div>
-                <div class="audio-panel-sub" id="teaching-session-audio-meta">Full recording playback</div>
-              </div>
-              <audio id="teaching-session-audio-player" controls preload="metadata"></audio>
-            </div>
-          </div>
-
           <!-- Raw Data Pane -->
           <div id="teaching-session-view-json" class="teaching-session-view-pane" style="display: none;">
             <pre id="teaching-session-json-raw" class="teaching-session-json-code"></pre>
           </div>
         </div>
+      </div>
+      <!-- Docked Audio Bar (Visible when recording exists) -->
+      <div id="teaching-session-docked-audio" class="crm-session-docked-audio" style="display: none;">
+        <div class="crm-docked-audio-info">
+          <span class="crm-docked-audio-icon">🎧</span>
+          <span id="teaching-session-audio-meta" class="crm-docked-audio-meta">Full recording playback</span>
+        </div>
+        <audio id="teaching-session-audio-player" controls preload="metadata"></audio>
       </div>
       <div class="crm-modal-footer crm-session-viewer-footer">
         <button id="btn-copy-teaching-report" class="crm-btn-secondary" type="button">Copy Report Markdown</button>
@@ -2939,60 +2934,60 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260905-v1.8.121"></script>
-  <script src="js/classroom-api.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/lifecycle-stages.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/utils.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/state.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/dom.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/courses.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/schedule-availability.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/students.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/student-360.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/student-courses.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/classrooms.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/leads.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/activities.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/enrollments.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/attendance.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/finance-workflow.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/finance.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/communications.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/staff-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/student-finance.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/live-delivery.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/classroom-modal.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/student-modal.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/course-modal.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/lead-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/communications-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/books-workspace.js?v=20260905-v1.8.121&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/dashboard.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/governance.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/index.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/devtools-access.js?v=20260905-v1.8.121&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260905-v1.8.121"></script>
-  <script src="arpabet-ipa-map.js?v=20260905-v1.8.121"></script>
-  <script src="phonetics.js?v=20260905-v1.8.121"></script>
+  <script src="js/auth-session-guard.js?v=20260905-v1.8.122"></script>
+  <script src="js/classroom-api.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/utils.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/state.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/dom.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/courses.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/schedule-availability.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/students.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/student-360.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/student-courses.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/classrooms.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/leads.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/activities.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/enrollments.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/attendance.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/finance-workflow.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/finance.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/communications.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/staff-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/student-finance.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/live-delivery.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/classroom-modal.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/student-modal.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/course-modal.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/lead-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/communications-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/books-workspace.js?v=20260905-v1.8.122&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/dashboard.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/governance.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/index.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/devtools-access.js?v=20260905-v1.8.122&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260905-v1.8.122"></script>
+  <script src="arpabet-ipa-map.js?v=20260905-v1.8.122"></script>
+  <script src="phonetics.js?v=20260905-v1.8.122"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/voice-cloning-workspace.js?v=20260905-v1.8.121"></script>
-  <script src="crm-admin.js?v=20260905-v1.8.121"></script>
-  <script src="js/crm/segmentation-study.js?v=20260905-v1.8.121" defer></script>
+  <script src="js/crm/teaching-sessions.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/voice-cloning-workspace.js?v=20260905-v1.8.122"></script>
+  <script src="crm-admin.js?v=20260905-v1.8.122"></script>
+  <script src="js/crm/segmentation-study.js?v=20260905-v1.8.122" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

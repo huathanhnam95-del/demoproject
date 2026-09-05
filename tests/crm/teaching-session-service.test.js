@@ -70,13 +70,17 @@ const patch = buildTeachingSessionPatchData(created, {
     status: 'analyzed',
     title: 'Updated Title',
     mermaidMindmap: 'mindmap\n  root((Updated))',
-    notes: 'Updated notes'
+    notes: 'Updated notes',
+    errorMessage: 'Quota exceeded',
+    analysisStartedAt: '2026-09-02T10:05:00.000Z'
 }, context);
 
 assert.strictEqual(patch.status, 'analyzed');
 assert.strictEqual(patch.title, 'Updated Title');
 assert.strictEqual(patch.mermaidMindmap, 'mindmap\n  root((Updated))');
 assert.strictEqual(patch.notes, 'Updated notes');
+assert.strictEqual(patch.errorMessage, 'Quota exceeded');
+assert.strictEqual(patch.analysisStartedAt, '2026-09-02T10:05:00.000Z');
 assert.strictEqual(patch.updatedAt, '2026-09-02T10:00:00.000Z');
 assert.strictEqual(patch.updatedBy, 'teacher-1');
 
@@ -84,14 +88,18 @@ assert.throws(() => buildTeachingSessionPatchData(created, { status: 'bad_status
 
 // 5. Mapping doc to API response
 const mapped = mapTeachingSessionRecord({
+    ...created,
     id: 'ts_abc123',
-    ...created
+    errorMessage: 'Network timeout',
+    analysisStartedAt: '2026-09-02T09:55:00.000Z'
 });
 
 assert.strictEqual(mapped.id, 'ts_abc123');
 assert.strictEqual(mapped.sessionId, 'ts_abc123');
 assert.strictEqual(mapped.studentId, 'student-123');
 assert.strictEqual(mapped.status, 'uploaded');
+assert.strictEqual(mapped.errorMessage, 'Network timeout');
+assert.strictEqual(mapped.analysisStartedAt, '2026-09-02T09:55:00.000Z');
 
 // 6. Sorting
 const sessionList = [

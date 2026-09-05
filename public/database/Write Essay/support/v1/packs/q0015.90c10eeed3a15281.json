@@ -1,0 +1,1791 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "15",
+  "title": "#15 Home to Work Place",
+  "prompt": "Do you think it has a positive or negative impact on you if you buy a home close to the workplace?",
+  "source": {
+    "promptSha256": "47b85edadf73aa63a26aac1135f6ca5e9b3f29c7e4615b36a2f9717fe05ba307",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Do you think it has a positive or negative impact on you if you buy a home close to the workplace?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "Lifestyle"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "positive",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      },
+      {
+        "term": "negative",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      },
+      {
+        "term": "workplace",
+        "enGloss": "A key word in this prompt.",
+        "viGloss": "Từ quan trọng trong đề."
+      }
+    ],
+    "requirements": [
+      {
+        "id": "comparison",
+        "required": true,
+        "en": "Discuss the important advantages and disadvantages.",
+        "vi": "Thảo luận những ưu điểm và nhược điểm quan trọng."
+      },
+      {
+        "id": "judgement",
+        "required": true,
+        "en": "Make the required overall judgement.",
+        "vi": "Đưa ra nhận định tổng thể theo yêu cầu."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Support the comparison with relevant examples.",
+        "vi": "Hỗ trợ phần so sánh bằng ví dụ phù hợp."
+      }
+    ],
+    "angles": [
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "Living close to your job saves a lot of time.",
+        "vi": "Góc nhìn: Living close to your job saves a lot of time.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "The local area might become very expensive.",
+        "vi": "Góc nhìn: The local area might become very expensive.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "The main point of the first body paragraph is that living near work saves time.",
+        "vi": "Góc nhìn: The main point of the first body paragraph is that living near work saves time.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "The main point of the second body paragraph is that living near work makes the neighborhood feel too much like a job area.",
+        "vi": "Góc nhìn: The main point of the second body paragraph is that living near work makes the neighborhood feel too much like a job area.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "Living near work saves significant time, allowing individuals to use the saved time for exercise or family activities, thereby improving daily life.",
+        "vi": "Góc nhìn: Living near work saves significant time, allowing individuals to use the saved time for exercise or family activities, thereby improving daily life.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "However, living close to work can be financially disadvantageous because local properties often have high overhead costs, negatively impacting savings.",
+        "vi": "Góc nhìn: However, living close to work can be financially disadvantageous because local properties often have high overhead costs, negatively impacting savings.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "The main advantage of living near work is saving time and reducing the daily commute.",
+        "vi": "Góc nhìn: The main advantage of living near work is saving time and reducing the daily commute.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "The main disadvantage of living near work is the high cost of housing and living expenses.",
+        "vi": "Góc nhìn: The main disadvantage of living near work is the high cost of housing and living expenses.",
+        "sourceVariantId": "negative"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+        "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh câu chung học thuộc và mọi ý không trả lời đúng yêu cầu."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "benefit",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "drawbacks",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "local",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "job",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "benefit",
+            "enGloss": "good thing or advantage",
+            "viGloss": "lợi ích",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawbacks",
+            "enGloss": "negative points or problems",
+            "viGloss": "nhược điểm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "local",
+            "enGloss": "of the area near you",
+            "viGloss": "địa phương",
+            "source": "approved_sample"
+          },
+          {
+            "term": "job",
+            "enGloss": "place of work",
+            "viGloss": "công việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "time",
+            "enGloss": "period of time",
+            "viGloss": "thời gian",
+            "source": "approved_sample"
+          },
+          {
+            "term": "expensive",
+            "enGloss": "costing a lot of money",
+            "viGloss": "đắt tiền",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "brief time",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "earlier times",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "economic benefits",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "local area",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Living close to your job saves a lot of time.",
+          "point2": "The local area might become very expensive.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The main point of the first body paragraph is that living near work saves time.",
+          "point2": "The main point of the second body paragraph is that living near work makes the neighborhood feel too much like a job area.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Living near where you work can change your daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that living close to your job is good for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that living close to your job saves a lot of time.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people do not have to travel far every day in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person can walk to their job in only fifteen minutes.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they have more time for other things, like family or hobbies.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a short travel time is a big benefit.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that living near your job has some drawbacks.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the local area might become very expensive.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, house prices near the job can be much higher than in other places.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many people might find it hard to buy a home there.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that high costs are a negative problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that living close to your job is good for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from hand and other.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many people think about where to live when they buy a house near their job.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that living close to your job can be bad for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, living close to your job can save you a lot of time.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the travel time to your job is very short.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, you can walk to your job in only fifteen minutes.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, you have more time for other things in your day.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the short travel time is a big benefit.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, living close to your job has a negative impact on your life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the local area might become too focused on work.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, there may be many shops and buildings for people who work there.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the neighborhood might lose its quiet, home feeling.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that the local area is not good for living.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that living close to your job can be bad for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While short travel time is a benefit, the negative impact on the local area is a bigger problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Tái sử dụng tối đa hai mục tiêu phù hợp từ câu Guided trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "proximity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "benefit",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "distance",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "proximity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "proximity",
+            "enGloss": "nearness or closeness",
+            "viGloss": "sự gần gũi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "benefit",
+            "enGloss": "an advantage or profit",
+            "viGloss": "lợi ích",
+            "source": "approved_sample"
+          },
+          {
+            "term": "distance",
+            "enGloss": "the length between two points",
+            "viGloss": "khoảng cách",
+            "source": "approved_sample"
+          },
+          {
+            "term": "proximity",
+            "enGloss": "nearness or closeness",
+            "viGloss": "sự gần gũi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "overhead costs",
+            "enGloss": "the costs of running a business or maintaining a property",
+            "viGloss": "chi phí vận hành",
+            "source": "approved_sample"
+          },
+          {
+            "term": "disadvantage",
+            "enGloss": "an unfavorable circumstance or condition",
+            "viGloss": "bất lợi",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "close proximity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "economic benefits",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "physical proximity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "potential benefits",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Living near work saves significant time, allowing individuals to use the saved time for exercise or family activities, thereby improving daily life.",
+          "point2": "However, living close to work can be financially disadvantageous because local properties often have high overhead costs, negatively impacting savings.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The main advantage of living near work is saving time and reducing the daily commute.",
+          "point2": "The main disadvantage of living near work is the high cost of housing and living expenses.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The location of one's home relative to their place of work is a topic that many people consider.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that living close to the workplace has a positive impact.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, living near the workplace offers a major benefit in terms of saving time.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people do not have to travel long distances every day.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a person might walk to their office in under fifteen minutes.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they save time that can be used for exercise or family time.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that this proximity greatly improves daily life.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, buying a home close to work can present a financial disadvantage.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that such properties often cost much more money.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that local houses usually have high overhead costs.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people must spend a lot of money on housing, which affects their savings.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that this financial drawback is a negative factor.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that living close to the workplace has a positive impact.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because it significantly saves commuting time and, despite the higher housing costs, the convenience outweighs the financial drawback.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The decision of where to live in relation to one's job is a topic that many people consider.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that living close to the workplace has a negative impact.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, living near work offers a clear benefit of saving time.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people do not have to travel long distances every day.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a person who works downtown can walk to their office in under fifteen minutes.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they gain extra time that can be used for exercise or family time.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the reduced travel time is a major advantage.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are clear disadvantages to buying a home close to the workplace.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that such areas often have high costs of living.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that housing prices are much higher in central business districts.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people must spend more money on rent or mortgages, which affects their savings.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the financial burden is a significant drawback.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that living close to the workplace has a negative impact.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from hand and other.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Tái sử dụng tối đa hai mục tiêu phù hợp từ câu Guided trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "proximity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "enhances",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "convenience",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "congestion",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "proximity",
+            "enGloss": "nearness",
+            "viGloss": "sự gần gũi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "enhances",
+            "enGloss": "improves",
+            "viGloss": "cải thiện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "convenience",
+            "enGloss": "ease of use",
+            "viGloss": "sự tiện lợi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "congestion",
+            "enGloss": "crowding",
+            "viGloss": "sự tắc nghẽn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "allocated",
+            "enGloss": "set aside",
+            "viGloss": "phân bổ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "disadvantage",
+            "enGloss": "negative aspect",
+            "viGloss": "bất lợi",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "close proximity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          },
+          {
+            "term": "physical proximity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Living near the workplace improves daily convenience and saves time, allowing individuals to avoid traffic stress and allocate time to leisure.",
+          "point2": "A potential drawback is the increased cost of living in desirable areas, which raises real estate prices and causes financial strain.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The first point discusses the primary benefit of living close to work, which is the significant reduction in daily commuting time, allowing individuals to gain valuable hours for leisure or personal development.",
+          "point2": "The second point highlights a major drawback: the substantial increase in overhead costs because properties near central business districts command premium prices, limiting other financial goals.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The proximity of one's residence to their place of employment is a subject of considerable discussion.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that living close to the workplace has a positive impact.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, living near the workplace significantly enhances daily convenience and saves considerable time.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the daily journey becomes much shorter and less taxing on the individual.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a person might walk to their office, avoiding the stress of peak-hour traffic congestion.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals gain valuable time that can be allocated to leisure or personal development.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that reduced commuting time contributes positively to overall lifestyle balance.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a potential disadvantage of this lifestyle is the increased cost of living in desirable areas.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that high demand for convenient locations drives up real estate prices significantly.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that houses in central business districts command a substantial premium over suburban properties.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that potential residents face considerable financial strain when purchasing or renting accommodation.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that financial burdens can offset the benefits of proximity.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that living close to the workplace has a positive impact.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because reduced commuting time enhances overall lifestyle balance, although it simultaneously necessitates confronting increased financial burdens due to high real estate costs.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The decision of purchasing a residence in close proximity to one's place of employment is a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that living close to the workplace has a negative impact.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, the primary benefit is the significant reduction in daily commuting time.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, individuals spend considerably less time traveling between their home and their job.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a person who lives a short walk away avoids the stress of traffic congestion entirely.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they gain valuable hours each week that can be dedicated to leisure or personal development.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that this proximity greatly enhances one's overall lifestyle balance.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a major drawback is the substantial increase in overhead costs associated with such a location.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that properties near central business districts command premium prices.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that housing units in highly accessible neighbourhoods are significantly more expensive than those in suburban areas.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that potential residents must allocate a disproportionate amount of their income to housing, limiting other financial goals.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that this residential proximity presents a considerable financial burden.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that living close to the workplace has a negative impact.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because while it offers the advantage of minimizing daily travel time, it simultaneously imposes a considerable financial burden due to elevated housing costs.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Tái sử dụng tối đa hai mục tiêu phù hợp từ câu Guided trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode",
+    "naturalizerPass": true
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:51.509010+00:00"
+  }
+}

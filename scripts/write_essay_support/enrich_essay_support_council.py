@@ -44,6 +44,7 @@ MODELS = {
     "reasoner": "deepseek-r1:14b",
     "linguist": "qwen3:14b",
     "scaffolder": "gemma4:12b",
+    "naturalizer": "qwen3:14b",
 }
 
 GENERIC_BANNED_PHRASES = [
@@ -55,6 +56,35 @@ GENERIC_BANNED_PHRASES = [
     "an important topic in modern society",
     "there are two sides to every coin",
     "has both pros and cons"
+]
+
+BANNED_VI_CALQUES = [
+    "thiên lệch",
+    "tưởng thưởng",
+    "thất bại học đường",
+    "nỗi sợ hãi thất bại học đường",
+    "học phủ",
+    "kích lệ",
+    "cán cân lập luận",
+    "trục dàn bài",
+    "đối đãi",
+    "trọng thưởng",
+    "biện biệt",
+]
+
+VIETNAMESE_CALQUE_REPLACEMENTS = [
+    (r"(?i)\bnỗi sợ hãi thất bại học đường\b", "nỗi sợ bị điểm kém"),
+    (r"(?i)\bthất bại học đường\b", "kết quả học tập kém"),
+    (r"(?i)\bthiên lệch\b", "lệch về một phía"),
+    (r"(?i)\btưởng thưởng\b", "khen thưởng"),
+    (r"(?i)\bnỗi sợ hãi\b", "nỗi sợ"),
+    (r"(?i)\bhọc phủ\b", "trường học"),
+    (r"(?i)\bkích lệ\b", "khuyến khích"),
+    (r"(?i)\bcán cân lập luận\b", "hai hướng làm bài"),
+    (r"(?i)\btrục dàn bài\b", "khung dàn ý"),
+    (r"(?i)\bđối đãi\b", "đối xử"),
+    (r"(?i)\btrọng thưởng\b", "trao thưởng lớn"),
+    (r"(?i)\bbiện biệt\b", "phân biệt rõ"),
 ]
 
 
@@ -108,6 +138,10 @@ def repair_json_text(content: str) -> str:
     for k, v in VIETNAMESE_SANITIZE_MAP.items():
         content = content.replace(k, v)
 
+    # Clean known translationese / Sino-Vietnamese calques
+    for pat, repl in VIETNAMESE_CALQUE_REPLACEMENTS:
+        content = re.sub(pat, repl, content)
+
     return content
 
 
@@ -132,6 +166,33 @@ VIETNAMESE_SANITIZE_MAP = {
     ':_agree / ủng hộ': ': Đồng ý / Ủng hộ',
     ':不同意 / thay thế': ': Phản đối / Hướng khác',
 }
+
+
+def clean_vietnamese_calques(text: str) -> str:
+    """Deterministic regex & dictionary sanitizer for known stiff calques and translationese."""
+    if not isinstance(text, str) or not text:
+        return text
+
+    out = text
+    for pat, repl in VIETNAMESE_CALQUE_REPLACEMENTS:
+        out = re.sub(pat, repl, out)
+
+    for k, v in VIETNAMESE_SANITIZE_MAP.items():
+        out = out.replace(k, v)
+
+    return out
+
+
+def clean_pack_vietnamese_calques(obj: Any) -> Any:
+    """Recursively cleans all strings in the pack using clean_vietnamese_calques."""
+    if isinstance(obj, str):
+        return clean_vietnamese_calques(obj)
+    elif isinstance(obj, dict):
+        return {k: clean_pack_vietnamese_calques(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_pack_vietnamese_calques(elem) for elem in obj]
+    return obj
+
 
 
 # ==============================================================================
@@ -323,6 +384,32 @@ Generate:
    - "body1": Body 1 topic sentence
    - "body2": Body 2 topic sentence
    - "conclusion": Restatement conclusion sentence"""
+    return system, user
+
+
+def build_naturalizer_prompt(items_to_polish: Dict[str, Any]) -> Tuple[str, str]:
+    system = (
+        "You are an expert native Vietnamese ELT educator and conversational editor for PTE Academic writing. "
+        "Your task is to refine and naturalize Vietnamese explanations so they read 100% authentically, casually, "
+        "and clearly for Vietnamese learners. Phrasing should be natural and student-friendly, like a tutor explaining directly.\n"
+        "\nCRITICAL RULES:\n"
+        "1. PURGE UNNATURAL SINO-VIETNAMESE CALQUES:\n"
+        "   - 'thiên lệch' -> 'nghiêng hẳn về' / 'thiên vị' / 'lệch về một phía'\n"
+        "   - 'tưởng thưởng' -> 'khen thưởng' / 'trao thưởng' / 'tạo động lực'\n"
+        "   - 'thất bại học đường' / 'nỗi sợ hãi thất bại học đường' -> 'kết quả học tập kém' / 'nỗi sợ bị điểm kém' / 'áp lực thi cử'\n"
+        "   - 'học phủ' -> 'trường học'\n"
+        "   - 'kích lệ' -> 'khuyến khích' / 'động viên'\n"
+        "   - 'cán cân lập luận' -> 'hai hướng làm bài'\n"
+        "   - 'đối đãi' -> 'đối xử' / 'nhìn nhận'\n"
+        "2. Focus on the learner's needs and intention. Where appropriate, phrase guidance naturally (e.g. 'Bạn muốn...', 'Bạn cần...').\n"
+        "3. Keep all academic facts, reasoning, and markdown **bold** target markers 100% intact.\n"
+        "4. Respond strictly in valid JSON matching the exact structure and keys of the input."
+    )
+    user = (
+        "Here are draft Vietnamese explanations for an essay topic. "
+        "Rewrite them into natural, conversational, and student-friendly Vietnamese according to the rules above:\n\n"
+        + json.dumps(items_to_polish, ensure_ascii=False, indent=2)
+    )
     return system, user
 
 
@@ -671,12 +758,135 @@ def validate_pack_enriched(pack: Dict[str, Any]) -> List[str]:
         if phrase.lower() in pack_text:
             errors.append(f"Contains generic banned phrase: '{phrase}'")
 
+    # 5. Zero tolerance for unnatural Vietnamese calques / translationese
+    pack_text_vi = json.dumps(pack, ensure_ascii=False).lower()
+    for calque in BANNED_VI_CALQUES:
+        if calque.lower() in pack_text_vi:
+            errors.append(f"Contains unnatural Vietnamese calque: '{calque}'")
+
     return errors
 
 
 # ==============================================================================
 # PIPELINE ORCHESTRATOR
 # ==============================================================================
+
+def naturalize_vietnamese_copy(client: OllamaClient, pack: Dict[str, Any],
+                               model: str = MODELS["naturalizer"]) -> Dict[str, Any]:
+    """
+    Stage 4: Native Vietnamese Naturalizer Filter Pass.
+    Rewrites pedagogical strategies, traps, and feedback into warm, conversational,
+    student-friendly Vietnamese, followed by recursive deterministic calque cleansing.
+    """
+    print(f"  -> [Stage 4] Running Native Vietnamese Naturalizer Filter ({model})...", flush=True)
+    t0 = time.time()
+
+    # Extract pedagogical Vietnamese items to polish
+    items_to_polish: Dict[str, Any] = {
+        "traps": [],
+        "arguments": [],
+        "vocabulary": [],
+        "mcq": {}
+    }
+
+    traps = pack.get("common", {}).get("promptTraps", [])
+    for idx, t in enumerate(traps):
+        items_to_polish["traps"].append({
+            "idx": idx,
+            "titleVi": t.get("titleVi", ""),
+            "mistakeVi": t.get("mistakeVi", ""),
+            "whyVi": t.get("whyVi", ""),
+            "fixVi": t.get("fixVi", "")
+        })
+
+    plans = pack.get("levels", {}).get("b2", {}).get("plans", [])
+    for plan in plans:
+        for pt in plan.get("candidatePoints", []):
+            items_to_polish["arguments"].append({
+                "id": pt.get("id", ""),
+                "titleVi": pt.get("titleVi", ""),
+                "strategyVi": pt.get("strategyVi", "")
+            })
+
+    vocab = pack.get("levels", {}).get("b2", {}).get("languageKit", {}).get("vocabulary", [])
+    for idx, v in enumerate(vocab):
+        items_to_polish["vocabulary"].append({
+            "idx": idx,
+            "term": v.get("term", ""),
+            "meaningVi": v.get("meaningVi", ""),
+            "exampleVi": v.get("exampleVi", "")
+        })
+
+    mcq = pack.get("common", {}).get("comprehensionCheck", {}).get("mcq", {})
+    if mcq:
+        items_to_polish["mcq"] = {
+            "questionVi": mcq.get("questionVi", ""),
+            "options": [
+                {"id": opt.get("id"), "textVi": opt.get("textVi", ""), "feedbackVi": opt.get("feedbackVi", "")}
+                for opt in mcq.get("options", [])
+            ]
+        }
+
+    try:
+        sys_p, usr_p = build_naturalizer_prompt(items_to_polish)
+        polished = client.generate_json(model, sys_p, usr_p, temperature=0.25, num_predict=3500)
+
+        if polished and isinstance(polished, dict):
+            # 1. Traps
+            polished_traps = polished.get("traps", [])
+            trap_map = {p.get("idx"): p for p in polished_traps if isinstance(p, dict)}
+            for idx, t in enumerate(traps):
+                if idx in trap_map:
+                    p = trap_map[idx]
+                    if p.get("titleVi"): t["titleVi"] = p["titleVi"]
+                    if p.get("mistakeVi"): t["mistakeVi"] = p["mistakeVi"]
+                    if p.get("whyVi"): t["whyVi"] = p["whyVi"]
+                    if p.get("fixVi"): t["fixVi"] = p["fixVi"]
+                    t["vi"] = f"{t['titleVi']}: {t['mistakeVi']} Tại sao mất điểm: {t['whyVi']} Cách viết chuẩn: {t['fixVi']}"
+
+            # 2. Arguments
+            polished_args = polished.get("arguments", [])
+            arg_map = {a.get("id"): a for a in polished_args if isinstance(a, dict)}
+            for plan in plans:
+                for pt in plan.get("candidatePoints", []):
+                    pt_id = pt.get("id")
+                    if pt_id in arg_map:
+                        pa = arg_map[pt_id]
+                        if pa.get("titleVi"): pt["titleVi"] = pa["titleVi"]
+                        if pa.get("strategyVi"): pt["strategyVi"] = pa["strategyVi"]
+                        if "vi" in pt and pa.get("titleVi"): pt["vi"] = pa["titleVi"]
+
+            # 3. Vocabulary
+            polished_vocab = polished.get("vocabulary", [])
+            vocab_map = {v.get("idx"): v for v in polished_vocab if isinstance(v, dict)}
+            for idx, v in enumerate(vocab):
+                if idx in vocab_map:
+                    pv = vocab_map[idx]
+                    if pv.get("meaningVi"): v["meaningVi"] = pv["meaningVi"]
+                    if pv.get("exampleVi"): v["exampleVi"] = pv["exampleVi"]
+                    if pv.get("meaningVi") and ("viGloss" in v): v["viGloss"] = pv["meaningVi"][:60]
+
+            # 4. MCQ
+            polished_mcq = polished.get("mcq", {})
+            if polished_mcq and mcq:
+                if polished_mcq.get("questionVi"): mcq["questionVi"] = polished_mcq["questionVi"]
+                opt_map = {o.get("id"): o for o in polished_mcq.get("options", []) if isinstance(o, dict)}
+                for opt in mcq.get("options", []):
+                    o_id = opt.get("id")
+                    if o_id in opt_map:
+                        po = opt_map[o_id]
+                        if po.get("textVi"): opt["textVi"] = po["textVi"]
+                        if po.get("feedbackVi"): opt["feedbackVi"] = po["feedbackVi"]
+
+            print(f"     Naturalizer pass completed in {time.time() - t0:.1f}s", flush=True)
+            pack.setdefault("audit", {})["naturalizerPass"] = True
+    except Exception as err:
+        print(f"  [WARN] Naturalizer LLM pass skipped or failed ({err}), falling back to deterministic sanitizer.", flush=True)
+
+    # Always run deterministic sanitizer across the entire pack to guarantee 100% clean output
+    pack = clean_pack_vietnamese_calques(pack)
+    return pack
+
 
 def publish_pack(pack: Dict[str, Any], output_root: Path) -> Tuple[Path, str]:
     packs_dir = output_root / "packs"
@@ -750,6 +960,9 @@ def enrich_single_question(q: Dict[str, Any], client: OllamaClient,
     # Assemble
     pack = build_essay_pack(q, ds_data, qw_data, gm_data)
 
+    # 4. Stage 4: Native Vietnamese Naturalizer Filter Pass
+    pack = naturalize_vietnamese_copy(client, pack, model=MODELS["naturalizer"])
+
     # Validate
     errors = validate_pack_enriched(pack)
     if errors:
@@ -813,12 +1026,13 @@ def enrich_batch_stage_optimized(questions: List[Dict[str, Any]], client: Ollama
         gm_results[q["id"]] = client.generate_json(MODELS["scaffolder"], sys_p, usr_p, temperature=0.2, num_predict=1500)
         print(f"         Done in {time.time() - t0:.1f}s", flush=True)
 
-    # Stage 4: Merge & Publish
-    print(f"\n>>> [MERGE & PUBLISH] Assembling, validating, and publishing packs...")
+    # Stage 4: Merge, Naturalize & Publish
+    print(f"\n>>> [MERGE & PUBLISH] Assembling, naturalizing, validating, and publishing packs...")
     results = []
     for q in questions:
         qid = q["id"]
         pack = build_essay_pack(q, ds_results.get(qid, {}), qw_results.get(qid, {}), gm_results.get(qid, {}))
+        pack = naturalize_vietnamese_copy(client, pack, model=MODELS["naturalizer"])
         errors = validate_pack_enriched(pack)
         if not dry_run:
             dest_path, pack_hash = publish_pack(pack, output_root)

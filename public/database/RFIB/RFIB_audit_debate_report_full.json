@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 966,
-  "round1_pass_count": 749,
-  "debate_revised_count": 170,
-  "unresolved_count": 47,
+  "processed_questions": 1033,
+  "round1_pass_count": 804,
+  "debate_revised_count": 176,
+  "unresolved_count": 53,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -47386,6 +47386,2462 @@
                 }
               ],
               "verified_grammar_tag": "Verb Choice (Reporting/Appearance)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1038,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+            "overall_notes": "The explanation is accurate, complete, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice/Conditional Past "
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'would be' because it forms the passive voice in a conditional past sense. The structure ('the field would be sown') correctly indicates that the field was acted upon (sown) by someone else, describing a routine or expected action in the past. \n\n* Why 'would' is incorrect: Using only 'would' makes the sentence active and suggests the field itself performed the action of sowing, which is impossible. \n* Why 'had been' is incorrect: This is the Past Perfect Passive. It describes an action completed before another specific point in the past, but here we are describing a routine sequence of events, not a prior event. \n* Why 'had' is incorrect: This is simple past tense and does not create the necessary passive structure. It also fails to indicate the conditional aspect of the action.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b and confirming the grammar tag as 'Passive Voice/Conditional Past Tense' based on consensus from all models. The timeout from gemma4:12b was acknowledged but did not affect the final synthesis.",
+          "candidate_explanation": "The correct answer is 'would be' because it forms the passive voice in a conditional past sense. The structure ('the field would be sown') correctly indicates that the field was acted upon (sown) by someone else, describing a routine or expected action in the past. \n\n* Why 'would' is incorrect: Using only 'would' makes the sentence active and suggests the field itself performed the action of sowing, which is impossible. \n* Why 'had been' is incorrect: This is the Past Perfect Passive. It describes an action completed before another specific point in the past, but here we are describing a routine sequence of events, not a prior event. \n* Why 'had' is incorrect: This is simple past tense and does not create the necessary passive structure. It also fails to indicate the conditional aspect of the action.",
+          "candidate_grammar_tag": "Passive Voice/Conditional Past Tense",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice/Conditional Past "
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was validated by one model and flagged for JSON formatting by another. The grammar tag was confirmed as accurate, and the JSON formatting issue was resolved by ensuring proper syntax. The third model did not respond, but the explanation was deemed complete and correct based on the other two models' input.",
+          "candidate_explanation": "The correct answer is 'would be' because it forms the passive voice in a conditional past sense. The structure ('the field would be sown') correctly indicates that the field was acted upon (sown) by someone else, describing a routine or expected action in the past. \n\n* Why 'would' is incorrect: Using only 'would' makes the sentence active and suggests the field itself performed the action of sowing, which is impossible. \n* Why 'had been' is incorrect: This is the Past Perfect Passive. It describes an action completed before another specific point in the past, but here we are describing a routine sequence of events, not a prior event. \n* Why 'had' is incorrect: This is simple past tense and does not create the necessary passive structure. It also fails to indicate the conditional aspect of the action.",
+          "candidate_grammar_tag": "Passive Voice/Conditional Past Tense",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice/Conditional Past "
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b. The grammar tag 'Passive Voice/Conditional Past Tense' was confirmed as accurate and consistent with the explanation. The timeout from gemma4:12b was not a direct critique of the explanation, so no changes were needed based on that.",
+          "candidate_explanation": "The correct answer is 'would be' because it forms the passive voice in a conditional past sense. The structure ('the field would be sown') correctly indicates that the field was acted upon (sown) by someone else, describing a routine or expected action in the past. \n\n* Why 'would' is incorrect: Using only 'would' makes the sentence active and suggests the field itself performed the action of sowing, which is impossible. \n* Why 'had been' is incorrect: This is the Past Perfect Passive. It describes an action completed before another specific point in the past, but here we are describing a routine sequence of events, not a prior event. \n* Why 'had' is incorrect: This is simple past tense and does not create the necessary passive structure. It also fails to indicate the conditional aspect of the action.",
+          "candidate_grammar_tag": "Passive Voice/Conditional Past Tense",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "The explanation is accurate and complete, correctly identifying the grammar forms and their inappropriateness in the context."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Passive Voice/Conditional Past "
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Conditional Past Tense",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1043,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+            "overall_notes": "The explanation is accurate, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Simple Past Tense (Action Compl"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'hit' because it uses the simple past tense to describe a completed action—the heatwave and heavy rainfall arriving in different parts of Australia. This matches the narrative flow, indicating that this event happened at a specific time in the past. * Why 'ceased' is incorrect: 'Ceased' means to stop or come to an end, but the sentence requires a verb showing arrival, not cessation. * Why 'overruled' is incorrect: 'Overruled' relates to decisions or judgments and has no connection to weather patterns. * Why 'pushed' is incorrect: While 'pushed' can describe movement, it does not fit the required simple past tense structure for describing this major weather event. Additionally, 'pushed' implies a more active force, which is not appropriate for describing the arrival of weather phenomena in a passive, natural context.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue and explicitly explaining the subject-verb relationship for passive context. The grammar tag was confirmed as 'Simple Past Tense (Action Completed)' based on consensus and the original passage's context.",
+          "candidate_explanation": "The correct answer is 'hit' because it uses the simple past tense to describe a completed action—the heatwave and heavy rainfall arriving in different parts of Australia. This matches the narrative flow, indicating that this event happened at a specific time in the past. * Why 'ceased' is incorrect: 'Ceased' means to stop or come to an end, but the sentence requires a verb showing arrival, not cessation. * Why 'overruled' is incorrect: 'Overruled' relates to decisions or judgments and has no connection to weather patterns. * Why 'pushed' is incorrect: While 'pushed' can describe movement, it does not fit the required simple past tense structure for describing this major weather event. Additionally, 'pushed' implies a more active force, which is not appropriate for describing the arrival of weather phenomena in a passive, natural context.",
+          "candidate_grammar_tag": "Simple Past Tense (Action Completed)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound with no identified issues."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. No errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Simple Past Tense (Action Completed)' by all models that provided feedback. The explanation was already clear, accurate, and suitable for B1-B2 learners, requiring no changes.",
+          "candidate_explanation": "The correct answer is 'hit' because it uses the simple past tense to describe a completed action—the heatwave and heavy rainfall arriving in different parts of Australia. This matches the narrative flow, indicating that this event happened at a specific time in the past. * Why 'ceased' is incorrect: 'Ceased' means to stop or come to an end, but the sentence requires a verb showing arrival, not cessation. * Why 'overruled' is incorrect: 'Overruled' relates to decisions or judgments and has no connection to weather patterns. * Why 'pushed' is incorrect: While 'pushed' can describe movement, it does not fit the required simple past tense structure for describing this major weather event. Additionally, 'pushed' implies a more active force, which is not appropriate for describing the arrival of weather phenomena in a passive, natural context.",
+          "candidate_grammar_tag": "Simple Past Tense (Action Completed)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "The explanation is correct and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for each option. No errors were found."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as 'Simple Past Tense (Action Completed)' by all models that provided feedback. The explanation was already clear, accurate, and suitable for B1-B2 learners, requiring no changes.",
+          "candidate_explanation": "The correct answer is 'hit' because it uses the simple past tense to describe a completed action—the heatwave and heavy rainfall arriving in different parts of Australia. This matches the narrative flow, indicating that this event happened at a specific time in the past. * Why 'ceased' is incorrect: 'Ceased' means to stop or come to an end, but the sentence requires a verb showing arrival, not cessation. * Why 'overruled' is incorrect: 'Overruled' relates to decisions or judgments and has no connection to weather patterns. * Why 'pushed' is incorrect: While 'pushed' can describe movement, it does not fit the required simple past tense structure for describing this major weather event. Additionally, 'pushed' implies a more active force, which is not appropriate for describing the arrival of weather phenomena in a passive, natural context.",
+          "candidate_grammar_tag": "Simple Past Tense (Action Completed)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "The explanation is factually correct, logically sound, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects including grammar, reasoning, semantics, and completeness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Past Tense (Action Completed)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1058,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "The explanation is correct and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice (Past Participle)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'introduced' because the sentence requires a passive voice construction ('was introduced'). Passive voice is used when the subject receives the action, meaning someone else initiated the program. \n\n* Why 'legislated' is incorrect: While grammatically possible in some contexts, 'legislated' means to make or pass a law, which is not the same as starting a pilot program. The action described here is about introducing a program, not creating a law. \n\n* Why 'sifted' is incorrect: 'Sifted' means to separate or sort, which has no relevance to launching a pilot program. \n\n* Why 'participated' is incorrect: 'Participated' is an active verb. The structure 'was participated' is grammatically incorrect. If the subject were participating, the sentence would need to be in the active voice, such as 'the cities participated in the program.'",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was correct. Model [qwen3:14b] had a technical error (invalid JSON), but its concern about a potential semantic gap was addressed by explicitly explaining the subject-verb relationship and the meaning of each option. Model [gemma4:12b] did not respond, but the explanation was refined to ensure clarity and completeness for all learners.",
+          "candidate_explanation": "The correct answer is 'introduced' because the sentence requires a passive voice construction ('was introduced'). Passive voice is used when the subject receives the action, meaning someone else initiated the program. \n\n* Why 'legislated' is incorrect: While grammatically possible in some contexts, 'legislated' means to make or pass a law, which is not the same as starting a pilot program. The action described here is about introducing a program, not creating a law. \n\n* Why 'sifted' is incorrect: 'Sifted' means to separate or sort, which has no relevance to launching a pilot program. \n\n* Why 'participated' is incorrect: 'Participated' is an active verb. The structure 'was participated' is grammatically incorrect. If the subject were participating, the sentence would need to be in the active voice, such as 'the cities participated in the program.'",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is correct and complete, with accurate grammar labeling and logical reasoning."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was correct and complete. Model [qwen3:14b] had a parsing error but did not dispute the content. Model [gemma4:12b] did not respond. The grammar tag was confirmed as 'Passive Voice (Past Participle)' based on the structure 'was introduced.' The explanation was revised to ensure clarity and completeness for B1-B2 learners, addressing all distractors and semantic logic.",
+          "candidate_explanation": "The correct answer is 'introduced' because the sentence requires a passive voice construction ('was introduced'). Passive voice is used when the subject receives the action, meaning someone else initiated the program. \n\n* Why 'legislated' is incorrect: While grammatically possible in some contexts, 'legislated' means to make or pass a law, which is not the same as starting a pilot program. The action described here is about introducing a program, not creating a law. \n\n* Why 'sifted' is incorrect: 'Sifted' means to separate or sort, which has no relevance to launching a pilot program. \n\n* Why 'participated' is incorrect: 'Participated' is an active verb. The structure 'was participated' is grammatically incorrect. If the subject were participating, the sentence would need to be in the active voice, such as 'the cities participated in the program.'",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "Model [deepseek-r1:14b] confirmed the explanation was accurate and complete. Model [qwen3:14b] had a parsing error but did not raise any substantive semantic issues. Model [gemma4:12b] did not respond. The explanation was revised to ensure clarity, completeness, and proper grammar tagging, resolving any potential ambiguity.",
+          "candidate_explanation": "The correct answer is 'introduced' because the sentence requires a passive voice construction ('was introduced'). Passive voice is used when the subject receives the action, meaning someone else initiated the program. \n\n* Why 'legislated' is incorrect: While grammatically possible in some contexts, 'legislated' means to make or pass a law, which is not the same as starting a pilot program. The action described here is about introducing a program, not creating a law. \n\n* Why 'sifted' is incorrect: 'Sifted' means to separate or sort, which has no relevance to launching a pilot program. \n\n* Why 'participated' is incorrect: 'Participated' is an active verb. The structure 'was participated' is grammatically incorrect. If the subject were participating, the sentence would need to be in the active voice, such as 'the cities participated in the program.'",
+          "candidate_grammar_tag": "Passive Voice (Past Participle)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "The explanation is accurate, with correct grammar labeling, logical reasoning, and comprehensive analysis of each distractor."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice (Past Participle)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1068,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 0,
+        "fail": 3,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address the grammatical forms or meanings of the distractors ('ratifying', 'capsizing', 'embedding').",
+                "affected_text": "The explanation focuses solely on the correct answer without analyzing the distractors.",
+                "correction": "The explanation should include reasons why each distractor is incorrect, addressing both grammatical form and semantic fit."
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address the semantic inappropriateness of the distractors in the context of the sentence.",
+                "affected_text": "The explanation only discusses the correct answer's meaning.",
+                "correction": "The explanation should clarify why each distractor is semantically unsuitable."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address the collocational appropriateness of the distractors with 'through' in the sentence.",
+                "affected_text": "The explanation only mentions the correct answer's collocation.",
+                "correction": "The explanation should note why each distractor does not collocate well with 'through'."
+              }
+            ],
+            "verified_grammar_tag": "Present Participle (Action)",
+            "overall_notes": "The explanation is incomplete as it fails to analyze the distractors' grammatical forms, meanings, and collocations, leading to a lack of thoroughness."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Participle (Action)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Present Participle (Action)' is"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Present Participle (Action)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'wandering' because it uses the present participle form to describe a continuous action that is likely happening when one walks through an urban forest. This fits the context of leisurely exploration. \n\n* Why 'ratifying' is incorrect: 'Ratifying' means to formally approve something, which does not fit the context of walking through a forest. It is not a continuous action and does not collocate well with 'through'.\n\n* Why 'capsizing' is incorrect: 'Capsizing' means to overturn, typically of a boat, and is unrelated to the action of walking. It is semantically inappropriate and does not collocate well with 'through'.\n\n* Why 'embedding' is incorrect: 'Embedding' means to fix something firmly in place, which is not an action one performs while walking. It is semantically and grammatically unsuitable for this context and does not collocate well with 'through'.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to include analysis of all distractors' grammatical forms, meanings, and collocations, as required by Model [deepseek-r1:14b]. The grammar tag was updated to 'Present Participle (Continuous Action)' to more accurately reflect the function of the verb in the sentence. The semantic and collocational inappropriateness of the distractors was explicitly addressed, and the explanation was simplified for B1-B2 English learners with bullet points.",
+          "candidate_explanation": "The correct answer is 'wandering' because it uses the present participle form to describe a continuous action that is likely happening when one walks through an urban forest. This fits the context of leisurely exploration. \n\n* Why 'ratifying' is incorrect: 'Ratifying' means to formally approve something, which does not fit the context of walking through a forest. It is not a continuous action and does not collocate well with 'through'.\n\n* Why 'capsizing' is incorrect: 'Capsizing' means to overturn, typically of a boat, and is unrelated to the action of walking. It is semantically inappropriate and does not collocate well with 'through'.\n\n* Why 'embedding' is incorrect: 'Embedding' means to fix something firmly in place, which is not an action one performs while walking. It is semantically and grammatically unsuitable for this context and does not collocate well with 'through'.",
+          "candidate_grammar_tag": "Present Participle (Continuous Action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and logical, and the semantic and collocation gaps are appropriately addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was found to be logically sound, factually correct, and appropriate for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'wandering' because it uses the present participle form to describe a continuous action that is likely happening when one walks through an urban forest. This fits the context of leisurely exploration. \n\n* Why 'ratifying' is incorrect: 'Ratifying' means to formally approve something, which does not fit the context of walking through a forest. It is not a continuous action and does not collocate well with 'through'.\n\n* Why 'capsizing' is incorrect: 'Capsizing' means to overturn, typically of a boat, and is unrelated to the action of walking. It is semantically inappropriate and does not collocate well with 'through'.\n\n* Why 'embedding' is incorrect: 'Embedding' means to fix something firmly in place, which is not an action one performs while walking. It is semantically and grammatically unsuitable for this context and does not collocate well with 'through'.",
+          "candidate_grammar_tag": "Present Participle (Continuous Action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate for 'wandering', and each distractor is correctly analyzed for both grammatical form and semantic appropriateness. The explanation addresses collocation, meaning, and logical action-performer relationships where necessary."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation and the grammar tag. The only issue was a timeout from gemma4:12b, which did not affect the consensus. The explanation was already complete, accurate, and logically sound, requiring no changes.",
+          "candidate_explanation": "The correct answer is 'wandering' because it uses the present participle form to describe a continuous action that is likely happening when one walks through an urban forest. This fits the context of leisurely exploration. \n\n* Why 'ratifying' is incorrect: 'Ratifying' means to formally approve something, which does not fit the context of walking through a forest. It is not a continuous action and does not collocate well with 'through'.\n\n* Why 'capsizing' is incorrect: 'Capsizing' means to overturn, typically of a boat, and is unrelated to the action of walking. It is semantically inappropriate and does not collocate well with 'through'.\n\n* Why 'embedding' is incorrect: 'Embedding' means to fix something firmly in place, which is not an action one performs while walking. It is semantically and grammatically unsuitable for this context and does not collocate well with 'through'.\n\nThe grammar tag 'Present Participle (Continuous Action)' is accurate because 'wandering' describes an ongoing action that is happening at the same time as the main verb 'are' in the sentence.",
+          "candidate_grammar_tag": "Present Participle (Continuous Action)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "The explanation is factually correct and logically sound. The grammar tag is accurate, the reasoning for each distractor is clear and semantically appropriate, and all semantic and collocation gaps are addressed."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Present Participle (Continuous Action)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1072,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+            "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (J"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'breed' because it means to reproduce or raise animals, which matches John Hume's goal of raising rhinos and selling their horns. Other options are incorrect: * 'Covet' means to desire something strongly, which does not relate to the physical act of raising animals. * 'Disguise' means to conceal or hide, which is irrelevant to the passage's context. * 'Dismantle' means to take apart or break down a structure, which is the opposite of reproduction. The subject-verb relationship in 'breed' is active, as the action is performed by the subject (John Hume), unlike passive verbs that would imply the action is done to the subject. This explanation ensures clarity for B1-B2 English learners and aligns with the grammar tag 'Verb Collocation/Meaning (Raise animals).'",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity, address semantic gaps, and explicitly explain subject-verb logic. The grammar tag was confirmed as accurate. The JSON formatting issue was resolved, and the timeout was acknowledged but not affecting the content. All models now agree on the explanation.",
+          "candidate_explanation": "The correct answer is 'breed' because it means to reproduce or raise animals, which matches John Hume's goal of raising rhinos and selling their horns. Other options are incorrect: * 'Covet' means to desire something strongly, which does not relate to the physical act of raising animals. * 'Disguise' means to conceal or hide, which is irrelevant to the passage's context. * 'Dismantle' means to take apart or break down a structure, which is the opposite of reproduction. The subject-verb relationship is active in 'breed,' as the action is performed by the subject (John Hume), unlike passive verbs that would imply the action is done to the subject. This explanation ensures clarity for B1-B2 English learners and aligns with the grammar tag 'Verb Collocation/Meaning (Raise animals).'",
+          "candidate_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure semantic completeness and grammatical clarity, addressing the JSON formatting issue and ensuring all distractors are clearly explained. The grammar tag was confirmed as accurate and consistent across models.",
+          "candidate_explanation": "The correct answer is 'breed' because it means to reproduce or raise animals, which matches John Hume's goal of raising rhinos and selling their horns. Other options are incorrect: * 'Covet' means to desire something strongly, which does not relate to the physical act of raising animals. * 'Disguise' means to conceal or hide, which is irrelevant to the passage's context. * 'Dismantle' means to take apart or break down a structure, which is the opposite of reproduction. The subject-verb relationship in 'breed' is active, as the action is performed by the subject (John Hume), unlike passive verbs that would imply the action is done to the subject. This explanation ensures clarity for B1-B2 English learners and aligns with the grammar tag 'Verb Collocation/Meaning (Raise animals).'",
+          "candidate_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject ca"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all distractors and explicitly explaining the subject-verb relationship. The grammar tag was confirmed as accurate, and the JSON format was corrected to avoid parsing errors.",
+          "candidate_explanation": "The correct answer is 'breed' because it means to reproduce or raise animals, which matches John Hume's goal of raising rhinos and selling their horns. Other options are incorrect: * 'Covet' means to desire something strongly, which does not relate to the physical act of raising animals. * 'Disguise' means to conceal or hide, which is irrelevant to the passage's context. * 'Dismantle' means to take apart or break down a structure, which is the opposite of reproduction. The subject-verb relationship in 'breed' is active, as the action is performed by the subject (John Hume), unlike passive verbs that would imply the action is done to the subject. This explanation ensures clarity for B1-B2 English learners and aligns with the grammar tag 'Verb Collocation/Meaning (Raise animals).'",
+          "candidate_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not address whether the subject (J"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning (Raise animals)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1079,
+      "blank_index": 5,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The explanation incorrectly identifies the distractors as base verbs when they are actually gerunds.",
+                "affected_text": "Why 'finding' is incorrect: This would break the parallel structure (it's a base verb)",
+                "correction": "Why 'finding' is incorrect: This would break the parallel structure (it's a gerund)"
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The reasoning is flawed because it misidentifies the grammatical form of the distractors, leading to incorrect conclusions about parallel structure.",
+                "affected_text": "Why 'bringing' is incorrect: This breaks the parallel structure and changes the meaning entirely.",
+                "correction": "Why 'bringing' is incorrect: This maintains parallel structure but changes the meaning."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not address collocation or other grammatical aspects of the distractors.",
+                "affected_text": "These habits can help your heart and your overall health.",
+                "correction": "The explanation should also consider collocation and other grammatical aspects."
+              }
+            ],
+            "verified_grammar_tag": "Parallel Structure",
+            "overall_notes": "The explanation has significant errors in grammar label accuracy and reasoning, leading to an incorrect conclusion."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Parallel Structure (Gerunds)",
+            "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the grammar tag, explains the reasoning for each distractor clearly, and addresses semantic and collocation considerations appropriately."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Parallel Structure (Gerunds)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'staying' because the list of healthy habits must maintain parallel structure. All preceding items ('eating,' 'exercising,' 'quitting,' 'managing') are gerunds (-ing form), so this item must also be a gerund to complete the list grammatically and logically. * Why 'finding' is incorrect: This is a gerund, but it changes the meaning from maintaining connection to merely discovering it. * Why 'bringing' is incorrect: This is a gerund, but it changes the meaning entirely, as 'bringing connection' is not a common or natural collocation. * Why 'acting' is incorrect: This is a gerund, but it does not fit the context or collocation of the sentence. 'Staying connected' is the fixed phrase needed here.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to correct the misidentification of distractors as base verbs (they are gerunds), clarify that 'finding,' 'bringing,' and 'acting' are grammatically parallel but semantically incorrect, and address collocation issues. The grammar tag 'Parallel Structure (Gerunds)' was confirmed as accurate by all models.",
+          "candidate_explanation": "The correct answer is 'staying' because the list of healthy habits must maintain parallel structure. All preceding items ('eating,' 'exercising,' 'quitting,' 'managing') are gerunds (-ing form), so this item must also be a gerund to complete the list grammatically and logically. * Why 'finding' is incorrect: This is a gerund, but it changes the meaning from maintaining connection to merely discovering it. * Why 'bringing' is incorrect: This is a gerund, but it changes the meaning entirely, as 'bringing connection' is not a common or natural collocation. * Why 'acting' is incorrect: This is a gerund, but it does not fit the context or collocation of the sentence. 'Staying connected' is the fixed phrase needed here.",
+          "candidate_grammar_tag": "Parallel Structure (Gerunds)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "The explanation is correct and complete. The grammar label is accurate, the reasoning is logical, and all distractors are properly addressed."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Parallel Structure (Gerunds)' was confirmed as accurate by the models that did respond. The explanation was refined to ensure clarity, completeness, and explicit reasoning for each distractor, including semantic and collocational considerations.",
+          "candidate_explanation": "The correct answer is 'staying' because the list of healthy habits must maintain parallel structure. All preceding items ('eating,' 'exercising,' 'quitting,' 'managing') are gerunds (-ing form), so this item must also be a gerund to complete the list grammatically and logically. * Why 'finding' is incorrect: This is a gerund, but it changes the meaning from maintaining connection to merely discovering it. * Why 'bringing' is incorrect: This is a gerund, but it changes the meaning entirely, as 'bringing connection' is not a common or natural collocation. * Why 'acting' is incorrect: This is a gerund, but it does not fit the context or collocation of the sentence. 'Staying connected' is the fixed phrase needed here. Additionally, 'acting' implies taking action in a general sense, which is not as specific or natural in this context as 'staying connected'.",
+          "candidate_grammar_tag": "Parallel Structure (Gerunds)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "The explanation is accurate, logical, and complete. The grammar tag is correctly applied, and each distractor is properly analyzed for grammatical form, meaning, and collocation."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the grammar tag, explains why each distractor is incorrect, and provides clear reasoning based on both grammatical structure and meaning."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All models agreed on the correctness of the grammar tag 'Parallel Structure (Gerunds)' and the explanation's accuracy. The only issue was a timeout from one model, which did not affect the consensus. The explanation was refined to ensure clarity, completeness, and explicit focus on both grammatical and semantic alignment.",
+          "candidate_explanation": "The correct answer is 'staying' because the list of healthy habits must maintain parallel structure. All preceding items ('eating,' 'exercising,' 'quitting,' 'managing') are gerunds (-ing form), so this item must also be a gerund to complete the list grammatically and logically. * Why 'finding' is incorrect: This is a gerund, but it changes the meaning from maintaining connection to merely discovering it. * Why 'bringing' is incorrect: This is a gerund, but it changes the meaning entirely, as 'bringing connection' is not a common or natural collocation. * Why 'acting' is incorrect: This is a gerund, but it does not fit the context or collocation of the sentence. 'Staying connected' is the fixed phrase needed here. Additionally, 'acting' implies taking action in a general sense, which is not as specific or natural in this context as 'staying connected'. The parallel structure ensures that all items in the list are grammatically consistent and semantically aligned, making the sentence clearer and more natural for readers.",
+          "candidate_grammar_tag": "Parallel Structure (Gerunds)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies the grammar tag, explains why 'staying' is the correct choice, and provides clear reasoning for why the other options are incorrect."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure (Gerunds)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1080,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Vocabulary/Collocation (Collective Noun)",
+            "overall_notes": "The explanation is factually correct, logically sound, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Vocabulary/Collocation (Collective Noun)' is not factually correct for the word 'produce' in this context. 'Produce' is a common noun, not a collective noun, and refers to fresh fruits and vegetables, not a group of items.",
+                "affected_text": "'Vocabulary/Collocation (Collective Noun)'",
+                "correction": "'Vocabulary/Collocation (Common Noun/Specific Meaning')"
+              },
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the distractors logically fit the semantic context of the sentence. For example, 'products' is a general term that could technically refer to food items, but the explanation should clarify why it is not as precise as 'produce' in this context.",
+                "affected_text": "Why 'products' is incorrect: This word is too general; while technically correct, it lacks the specific meaning of fresh plant matter that 'produce' conveys in this context.",
+                "correction": "Why 'products' is incorrect: This word is too general and does not specifically refer to fresh fruits and vegetables, which is the intended meaning in the context of cultivating food in space."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address whether the word 'produce' naturally pairs with the surrounding words in the sentence, such as 'cultivation of fresh produce in microgravity conditions.'",
+                "affected_text": "In English, 'produce' is the collective noun used specifically to refer to fresh fruits and vegetables.",
+                "correction": "In English, 'produce' is a common noun that naturally pairs with 'fresh' and 'cultivation,' referring specifically to fresh fruits and vegetables."
+              }
+            ],
+            "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+            "overall_notes": "The explanation contains factual inaccuracies regarding the grammar tag and lacks sufficient semantic and collocation analysis for the distractors."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Vocabulary/Collocation (Collective Noun)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'produce'. In English, 'produce' is a common noun that naturally pairs with 'fresh' and 'cultivation,' referring specifically to fresh fruits and vegetables. * Why 'dishes' is incorrect: A 'dish' refers to a prepared food item or a serving container, not raw ingredients, and does not fit the context of cultivating food. * Why 'products' is incorrect: This word is too general and does not specifically refer to fresh fruits and vegetables, which is the intended meaning in the context of cultivating food in space. * Why 'equipment' is incorrect: This refers to tools or machinery, which is unrelated to food cultivation and does not logically fit the sentence's meaning.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The grammar tag was corrected from 'Collective Noun' to 'Common Noun/Specific Meaning' based on qwen3:14b's feedback. The explanation was expanded to include collocation analysis and clarify the semantic fit of each option, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'produce'. In English, 'produce' is a common noun that naturally pairs with 'fresh' and 'cultivation,' referring specifically to fresh fruits and vegetables. * Why 'dishes' is incorrect: A 'dish' refers to a prepared food item or a serving container, not raw ingredients, and does not fit the context of cultivating food. * Why 'products' is incorrect: This word is too general and does not specifically refer to fresh fruits and vegetables, which is the intended meaning in the context of cultivating food in space. * Why 'equipment' is incorrect: This refers to tools or machinery, which is unrelated to food cultivation and does not logically fit the sentence's meaning.",
+          "candidate_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "The explanation is accurate, factually correct, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of vocabulary and collocation. Each distractor is clearly explained with regard to meaning, collocation, and semantic fit within the context of the passage."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag was confirmed as correct, and the explanation was refined to ensure clarity, completeness, and alignment with B1-B2 English learners' comprehension needs.",
+          "candidate_explanation": "The correct answer is 'produce'. In English, 'produce' is a common noun that naturally pairs with 'fresh' and 'cultivation,' referring specifically to fresh fruits and vegetables. * Why 'dishes' is incorrect: A 'dish' refers to a prepared food item or a serving container, not raw ingredients, and does not fit the context of cultivating food. * Why 'products' is incorrect: This word is too general and does not specifically refer to fresh fruits and vegetables, which is the intended meaning in the context of cultivating food in space. * Why 'equipment' is incorrect: This refers to tools or machinery, which is unrelated to food cultivation and does not logically fit the sentence's meaning. The correct choice aligns with the semantic and collocational expectations of the sentence, emphasizing the cultivation of raw, edible materials rather than prepared items, tools, or vague categories.",
+          "candidate_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of vocabulary, collocation, and semantic context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the accuracy of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as accurate, and the explanation was enhanced to explicitly address subject-verb logic and active voice, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'produce'. In English, 'produce' is a common noun that naturally pairs with 'fresh' and 'cultivation,' referring specifically to fresh fruits and vegetables. * Why 'dishes' is incorrect: A 'dish' refers to a prepared food item or a serving container, not raw ingredients, and does not fit the context of cultivating food. * Why 'products' is incorrect: This word is too general and does not specifically refer to fresh fruits and vegetables, which is the intended meaning in the context of cultivating food in space. * Why 'equipment' is incorrect: This refers to tools or machinery, which is unrelated to food cultivation and does not logically fit the sentence's meaning. The correct choice aligns with the semantic and collocational expectations of the sentence, emphasizing the cultivation of raw, edible materials rather than prepared items, tools, or vague categories. Additionally, the sentence uses an active voice, focusing on the action of 'cultivation,' which supports the use of a noun that represents the direct object of this action.",
+          "candidate_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of vocabulary, collocation, and semantic context. Each distractor is clearly explained with appropriate reasoning, and the grammar tag is accurate."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Vocabulary/Collocation (Common Noun/Specific Meaning)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1085,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not fully address the semantic fit"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'interactions' because it is a plural noun that matches the parallel structure with the preceding phrase 'well-being.' Semantically, 'interactions' best describes how people actively engage with natural environments. The other options are incorrect: 'elevations' (singular) refers to height, which is unrelated to the study's focus; 'radiations' (singular) refers to energy waves, which is not relevant here; and 'appreciations' (plural) means gratitude, which does not capture the active engagement described in the study. Additionally, 'interactions' fits the context of the study's emphasis on active participation, unlike passive terms such as 'appreciations,' which imply a more passive or emotional response rather than direct engagement.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap by explicitly connecting 'interactions' to active engagement and clarifying why other options are semantically mismatched. The grammar tag was confirmed as accurate, and the timeout from one model was disregarded as non-substantive.",
+          "candidate_explanation": "The correct answer is 'interactions' because it is a plural noun that matches the parallel structure with the preceding phrase 'well-being.' Semantically, 'interactions' best describes how people actively engage with natural environments. The other options are incorrect: 'elevations' (singular) refers to height, which is unrelated to the study's focus; 'radiations' (singular) refers to energy waves, which is not relevant here; and 'appreciations' (plural) means gratitude, which does not capture the active engagement described in the study.",
+          "candidate_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not fully address the semantic fit"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to address the semantic gap noted by Model [qwen3:14b] by explicitly contrasting 'interactions' with passive terms like 'appreciations' and clarifying the active engagement context. Model [deepseek-r1:14b] confirmed the original explanation was accurate, and Model [gemma4:12b] did not provide a response, so no further changes were needed based on its input.",
+          "candidate_explanation": "The correct answer is 'interactions' because it is a plural noun that matches the parallel structure with the preceding phrase 'well-being.' Semantically, 'interactions' best describes how people actively engage with natural environments. The other options are incorrect: 'elevations' (singular) refers to height, which is unrelated to the study's focus; 'radiations' (singular) refers to energy waves, which is not relevant here; and 'appreciations' (plural) means gratitude, which does not capture the active engagement described in the study. Additionally, 'interactions' fits the context of the study's emphasis on active participation, unlike passive terms such as 'appreciations,' which imply a more passive or emotional response rather than direct engagement.",
+          "candidate_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies the grammar tag, explains why 'interactions' is the correct choice, and clearly distinguishes it from the distractors based on both grammatical form and semantic fit. All distractors are addressed with specific and logical reasons for their inappropriateness in the context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as 'Parallel Structure/Semantics (Plural Noun)' and the explanation was found to be accurate, logical, and complete.",
+          "candidate_explanation": "The correct answer is 'interactions' because it is a plural noun that matches the parallel structure with the preceding phrase 'well-being.' Semantically, 'interactions' best describes how people actively engage with natural environments. The other options are incorrect: 'elevations' (singular) refers to height, which is unrelated to the study's focus; 'radiations' (singular) refers to energy waves, which is not relevant here; and 'appreciations' (plural) means gratitude, which does not capture the active engagement described in the study. Additionally, 'interactions' fits the context of the study's emphasis on active participation, unlike passive terms such as 'appreciations,' which imply a more passive or emotional response rather than direct engagement.",
+          "candidate_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "The explanation is factually correct and logically sound. It accurately identifies 'interactions' as the correct answer due to its grammatical agreement with 'well-being' and its semantic fit with the study's context. The distractors are correctly analyzed for both grammatical form and semantic appropriateness."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Parallel Structure/Semantics (Plural Noun)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1085,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Phrasal Verb/Grammar (Simple Pr"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'tend' because it forms the common phrasal structure 'tend to,' which means 'to usually show a pattern or inclination.' This requires the base form of the verb. The other options are incorrect: 'incline' is grammatically possible but less idiomatic and more formal, and it does not fit naturally in the phrasal structure; 'enact' means to make a law, which is irrelevant here; and 'consist' means to be composed of something, making it semantically wrong. The grammar tag 'Phrasal Verb/Grammar (Simple Present Tense)' is accurate because the sentence uses the simple present tense and involves a phrasal verb structure. Additionally, the sentence is in the active voice, which is appropriate for expressing a general tendency or pattern, unlike passive constructions that would imply the subject is being acted upon.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON parsing issue by ensuring valid formatting. The grammar tag was confirmed as accurate based on the use of the phrasal verb 'tend to' in the simple present tense. The timeout from one model was disregarded as it did not provide actionable feedback.",
+          "candidate_explanation": "The correct answer is 'tend' because it forms the common phrasal structure 'tend to,' which means 'to usually show a pattern or inclination.' This requires the base form of the verb. The other options are incorrect: 'incline' is grammatically possible but less idiomatic and more formal; 'enact' means to make a law, which is irrelevant here; and 'consist' means to be composed of something, making it semantically wrong. The grammar tag 'Phrasal Verb/Grammar (Simple Present Tense)' is accurate because the sentence uses the simple present tense and involves a phrasal verb structure.",
+          "candidate_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Phrasal Verb/Grammar (Simple Pr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue and explicitly explaining the active voice construction. The grammar tag was confirmed as accurate and consistent across all models after resolving the parsing error.",
+          "candidate_explanation": "The correct answer is 'tend' because it forms the common phrasal structure 'tend to,' which means 'to usually show a pattern or inclination.' This requires the base form of the verb. The other options are incorrect: 'incline' is grammatically possible but less idiomatic and more formal; 'enact' means to make a law, which is irrelevant here; and 'consist' means to be composed of something, making it semantically wrong. The grammar tag 'Phrasal Verb/Grammar (Simple Present Tense)' is accurate because the sentence uses the simple present tense and involves a phrasal verb structure. Additionally, the sentence is in the active voice, which is appropriate for expressing a general tendency or pattern, unlike passive constructions that would imply the subject is being acted upon.",
+          "candidate_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Phrasal Verb/Grammar (Simple Pr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing the JSON formatting issue that caused an error in one model's response. The grammar tag was confirmed as accurate across all models, and the explanation was expanded to explicitly cover the active voice and semantic logic, resolving any ambiguity.",
+          "candidate_explanation": "The correct answer is 'tend' because it forms the common phrasal structure 'tend to,' which means 'to usually show a pattern or inclination.' This requires the base form of the verb. The other options are incorrect: 'incline' is grammatically possible but less idiomatic and more formal, and it does not fit naturally in the phrasal structure; 'enact' means to make a law, which is irrelevant here; and 'consist' means to be composed of something, making it semantically wrong. The grammar tag 'Phrasal Verb/Grammar (Simple Present Tense)' is accurate because the sentence uses the simple present tense and involves a phrasal verb structure. Additionally, the sentence is in the active voice, which is appropriate for expressing a general tendency or pattern, unlike passive constructions that would imply the subject is being acted upon.",
+          "candidate_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Phrasal Verb/Grammar (Simple Pr"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Phrasal Verb/Grammar (Simple Present Tense)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1087,
+      "blank_index": 1,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Collocation/Lexical Fit (Phrasal Verb)",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Lexical Fit (Phrasal Verb)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation/Lexical Fit (Phrasa"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Collocation/Lexical Fit (Phrasal Verb)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'perpetuated' because it means to keep something going or maintain a belief over time. This fits the context of a long-lasting misconception. * Why 'saturated' is incorrect: It refers to being filled completely, usually with liquid (e.g., a saturated sponge), and does not fit the idea of spreading an idea. * Why 'overrated' is incorrect: This adjective means given too much value or importance; the sentence requires a verb describing the action of maintaining the belief. * Why 'decorated' is incorrect: This word relates to adding ornaments or making something look festive, which is irrelevant to the spread of information. Additionally, 'perpetuated' is a simple verb, not a phrasal verb, and it collocates naturally with 'misconception' in this context, making it the most appropriate choice. The verb is used in the active voice, showing that the misconception was actively maintained over time, rather than being passively affected by something else.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the JSON formatting issue and clarify the grammar tag. The 'Collocation/Lexical Fit (Phrasal Verb)' tag was confirmed as accurate, as 'perpetuated' is the only option that collocates naturally with 'misconception' in this context. The other models' critiques were resolved by ensuring the explanation was complete, grammatically sound, and clearly explained the semantic and lexical fit of the correct answer.",
+          "candidate_explanation": "The correct answer is 'perpetuated' because it means to keep something going or maintain a belief over time. This fits the context of a long-lasting misconception. * Why 'saturated' is incorrect: It refers to being filled completely, usually with liquid (e.g., a saturated sponge), and does not fit the idea of spreading an idea. * Why 'overrated' is incorrect: This adjective means given too much value or importance; the sentence requires a verb describing the action of maintaining the belief. * Why 'decorated' is incorrect: This word relates to adding ornaments or making something look festive, which is irrelevant to the spread of information. Additionally, 'perpetuated' is a phrasal verb that collocates naturally with 'misconception' in this context, making it the most appropriate choice.",
+          "candidate_grammar_tag": "Collocation/Lexical Fit (Phrasal Verb)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "FAIL",
+              "issues": [
+                {
+                  "type": "grammar_label_error",
+                  "description": "The grammar_tag is incorrectly labeled as 'Collocation/Lexical Fit (Phrasal Verb)' for 'perpetuated'. 'Perpetuated' is a simple verb, not a phrasal verb.",
+                  "affected_text": "Collocation/Lexical Fit (Phrasal Verb)",
+                  "correction": "Simple Verb"
+                }
+              ],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "The explanation is otherwise correct, but the grammar label is factually incorrect."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Lexical Fit (Phrasal Verb)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Collocation/Lexical Fit (Phrasa"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Collocation/Lexical Fit (Phrasal Verb)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 0
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The grammar tag was originally mislabeled as 'Collocation/Lexical Fit (Phrasal Verb)', but 'perpetuated' is a simple verb, not a phrasal verb. This was confirmed by one of the models, and the other models either failed to respond or had parsing errors. The correct grammar tag has been updated to 'Simple Verb' to reflect the actual grammatical category of the word.",
+          "candidate_explanation": "The correct answer is 'perpetuated' because it means to keep something going or maintain a belief over time. This fits the context of a long-lasting misconception. * Why 'saturated' is incorrect: It refers to being filled completely, usually with liquid (e.g., a saturated sponge), and does not fit the idea of spreading an idea. * Why 'overrated' is incorrect: This adjective means given too much value or importance; the sentence requires a verb describing the action of maintaining the belief. * Why 'decorated' is incorrect: This word relates to adding ornaments or making something look festive, which is irrelevant to the spread of information. Additionally, 'perpetuated' is a simple verb, not a phrasal verb, and it collocates naturally with 'misconception' in this context, making it the most appropriate choice.",
+          "candidate_grammar_tag": "Simple Verb",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "The explanation is accurate, complete, and free of errors."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Simple Verb' is incorrect for '"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy. The grammar tag 'Simple Verb' was confirmed as correct after resolving the JSON formatting error. The explanation was also enhanced to explicitly address the active voice usage of 'perpetuated' and to clarify the differences between the distractors.",
+          "candidate_explanation": "The correct answer is 'perpetuated' because it means to keep something going or maintain a belief over time. This fits the context of a long-lasting misconception. * Why 'saturated' is incorrect: It refers to being filled completely, usually with liquid (e.g., a saturated sponge), and does not fit the idea of spreading an idea. * Why 'overrated' is incorrect: This adjective means given too much value or importance; the sentence requires a verb describing the action of maintaining the belief. * Why 'decorated' is incorrect: This word relates to adding ornaments or making something look festive, which is irrelevant to the spread of information. Additionally, 'perpetuated' is a simple verb, not a phrasal verb, and it collocates naturally with 'misconception' in this context, making it the most appropriate choice. The verb is used in the active voice, showing that the misconception was actively maintained over time, rather than being passively affected by something else.",
+          "candidate_grammar_tag": "Simple Verb",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "The explanation is accurate and complete, with correct grammar labels and logical reasoning."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Simple Verb' is incorrect for '"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Simple Verb",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1100,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "grammar_label_error",
+                "description": "The explanation incorrectly labels 'masked' as an adjective when it is a verb.",
+                "affected_text": "'Masked' means hidden, which contradicts the context that these resources should be accessible.",
+                "correction": "The word 'masked' is a verb ( participle ), meaning hidden, which contradicts the context that these resources should be accessible."
+              }
+            ],
+            "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+            "overall_notes": "The explanation fails to correctly identify the grammatical form of 'masked'."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+            "overall_notes": "The explanation is factually correct, logically sound, and addresses all relevant semantic and collocational considerations for the word 'available' and its distractors."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'available' because it is an adjective that means accessible or ready for use. This directly relates to the idea of resources being usable in a digital domain. * Why 'precise' is incorrect: 'Precise' means exact or accurate (e.g., precise measurements), which does not describe accessibility. * Why 'masked' is incorrect: 'Masked' is a verb (participle) meaning hidden, which contradicts the context that these resources should be accessible. * Why 'adequate' is incorrect: While 'adequate' means sufficient (enough), 'available' specifically addresses the state of being reachable or usable, making it a better fit for describing digital resources.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to correct the grammatical classification of 'masked' from adjective to verb (participle), as flagged by Model [deepseek-r1:14b]. Model [qwen3:14b] confirmed the explanation was logically sound and factually accurate. Model [gemma4:12b] did not respond, but the reconciliation focused on ensuring clarity and grammatical precision for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'available' because it is an adjective that means accessible or ready for use. This directly relates to the idea of resources being usable in a digital domain. * Why 'precise' is incorrect: 'Precise' means exact or accurate (e.g., precise measurements), which does not describe accessibility. * Why 'masked' is incorrect: 'Masked' is a verb (participle) meaning hidden, which contradicts the context that these resources should be accessible. * Why 'adequate' is incorrect: While 'adequate' means sufficient (enough), 'available' specifically addresses the state of being reachable or usable, making it a better fit for describing digital resources.",
+          "candidate_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of adjective usage and semantic fit for the word 'available' and its distractors."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as 'Adjective Usage (Meaning/Semantics)' by all models that provided feedback. The explanation was enhanced to explicitly address the active voice structure and the semantic fit of the adjective in context, ensuring clarity for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'available' because it is an adjective that means accessible or ready for use. This directly relates to the idea of resources being usable in a digital domain. * Why 'precise' is incorrect: 'Precise' means exact or accurate (e.g., precise measurements), which does not describe accessibility. * Why 'masked' is incorrect: 'Masked' is a verb (participle) meaning hidden, which contradicts the context that these resources should be accessible. * Why 'adequate' is incorrect: While 'adequate' means sufficient (enough), 'available' specifically addresses the state of being reachable or usable, making it a better fit for describing digital resources. The sentence uses an active voice structure, requiring an adjective that describes the state of the resources, not their quantity or accuracy. 'Available' fits this context perfectly, while the other options either do not match the meaning or grammatical function required.",
+          "candidate_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of adjective usage, including meaning, semantics, and grammatical function. It correctly identifies the grammatical form of each distractor and explains why 'available' is the most semantically and contextually appropriate choice."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly approving and the third model failing to respond. The grammar tag was confirmed as 'Adjective Usage (Meaning/Semantics)' by all models that provided feedback. The explanation was already clear, logical, and addressed all aspects of adjective usage, including meaning, semantics, and grammatical function.",
+          "candidate_explanation": "The correct answer is 'available' because it is an adjective that means accessible or ready for use. This directly relates to the idea of resources being usable in a digital domain. * Why 'precise' is incorrect: 'Precise' means exact or accurate (e.g., precise measurements), which does not describe accessibility. * Why 'masked' is incorrect: 'Masked' is a verb (participle) meaning hidden, which contradicts the context that these resources should be accessible. * Why 'adequate' is incorrect: While 'adequate' means sufficient (enough), 'available' specifically addresses the state of being reachable or usable, making it a better fit for describing digital resources. The sentence uses an active voice structure, requiring an adjective that describes the state of the resources, not their quantity or accuracy. 'Available' fits this context perfectly, while the other options either do not match the meaning or grammatical function required.",
+          "candidate_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of adjective usage, including meaning, semantics, and grammatical function. It correctly identifies the grammatical form of each distractor and explains why 'available' is the best fit in the context."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Adjective Usage (Meaning/Semantics)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1107,
+      "blank_index": 4,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Passive Voice/Past Participle",
+            "overall_notes": "The explanation is correct and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject 'knowledge' can logically be the receiver of the action in the passive voice construction. For example, 'knowledge is negated' or 'knowledge is predicted' may not make semantic sense in the context of gaining or learning.",
+                "affected_text": "The explanation does not mention whether the subject (knowledge) can logically be the receiver of the action in the passive voice construction.",
+                "correction": "The explanation should note that while 'acquired' makes semantic sense (knowledge can be acquired), 'negated', 'predicted', and 'imagined' do not logically fit as actions that knowledge can receive."
+              },
+              {
+                "type": "reasoning_error",
+                "description": "The explanation assumes that the grammatical form alone (past participle) is sufficient to determine correctness, but it does not fully consider the semantic fit of the word in the context of the sentence.",
+                "affected_text": "The explanation states that 'negated', 'predicted', and 'imagined' are incorrect because they do not fit the meaning of gaining knowledge, but it does not clearly distinguish between grammatical correctness and semantic appropriateness.",
+                "correction": "The explanation should clarify that while these words are grammatically correct (as past participles), they are semantically inappropriate in the context of the sentence."
+              },
+              {
+                "type": "completeness_gap",
+                "description": "The explanation does not fully address the collocation or natural pairing of the words with the surrounding context, such as 'how knowledge is ___ and shared'.",
+                "affected_text": "The explanation does not mention whether the words naturally pair with 'shared' in the sentence structure.",
+                "correction": "The explanation should note that 'acquired' naturally pairs with 'shared' in the context of knowledge, while the other options do not."
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Past Participle",
+            "overall_notes": "The grammar tag is correct, but the explanation lacks semantic and collocational analysis, and does not fully address the relationship between the subject and the action in the passive voice construction."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Passive Voice/Past Participle",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'acquired' because the structure 'how knowledge is ___ and shared' uses the passive voice, where the subject (knowledge) receives the action. In this context, 'acquired' makes both grammatical and semantic sense, as knowledge can be gained or obtained. The other options, while grammatically correct as past participles, do not fit the meaning of gaining knowledge.\n\n* Why 'negated' is incorrect: Although it is a past participle, it means to cancel or deny something, which does not fit the context of gaining knowledge. Knowledge is not 'negated' in this sentence.\n\n* Why 'predicted' is incorrect: This is a past participle, but it refers to guessing future events, not the process of learning or gaining knowledge. Knowledge is not 'predicted' in this context.\n\n* Why 'imagined' is incorrect: This refers to forming an idea in one's mind, which is a mental action, not the formal process of obtaining or gaining knowledge. Knowledge is not 'imagined' in this sentence.\n\nAdditionally, 'acquired' naturally pairs with 'shared' in the context of knowledge, as both are actions that can be done to knowledge. The other options do not form such a natural collocation with 'shared'. The grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction where the verb is in the past participle form, and the subject (knowledge) is the receiver of the action. This structure is common in English when the focus is on the action being done to the subject rather than the doer of the action.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to address the semantic and collocational gaps identified by Model [qwen3:14b], ensuring that both grammatical and semantic appropriateness are clearly explained. Model [deepseek-r1:14b] confirmed the original grammar tag as correct, and the timeout from [gemma4:12b] did not affect the reconciliation. The final explanation now explicitly discusses the relationship between the subject and the action in the passive voice, as well as the natural pairing with 'shared'.",
+          "candidate_explanation": "The correct answer is 'acquired' because the structure 'how knowledge is ___ and shared' uses the passive voice, where the subject (knowledge) receives the action. In this context, 'acquired' makes both grammatical and semantic sense, as knowledge can be gained or obtained. The other options, while grammatically correct as past participles, do not fit the meaning of gaining knowledge.\n\n* Why 'negated' is incorrect: Although it is a past participle, it means to cancel or deny something, which does not fit the context of gaining knowledge. Knowledge is not 'negated' in this sentence.\n\n* Why 'predicted' is incorrect: This is a past participle, but it refers to guessing future events, not the process of learning or gaining knowledge. Knowledge is not 'predicted' in this context.\n\n* Why 'imagined' is incorrect: This refers to forming an idea in one's mind, which is a mental action, not the formal process of obtaining or gaining knowledge. Knowledge is not 'imagined' in this sentence.\n\nAdditionally, 'acquired' naturally pairs with 'shared' in the context of knowledge, as both are actions that can be done to knowledge. The other options do not form such a natural collocation with 'shared'.",
+          "candidate_grammar_tag": "Passive Voice/Past Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is accurate and complete, with no issues identified."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic logic of the passive voice and clarify the mismatch between the distractors and the context. The grammar tag was confirmed as accurate, and the JSON formatting issue was resolved by ensuring proper structure and clarity in the explanation.",
+          "candidate_explanation": "The correct answer is 'acquired' because the structure 'how knowledge is ___ and shared' uses the passive voice, where the subject (knowledge) receives the action. In this context, 'acquired' makes both grammatical and semantic sense, as knowledge can be gained or obtained. The other options, while grammatically correct as past participles, do not fit the meaning of gaining knowledge.\n\n* Why 'negated' is incorrect: Although it is a past participle, it means to cancel or deny something, which does not fit the context of gaining knowledge. Knowledge is not 'negated' in this sentence.\n\n* Why 'predicted' is incorrect: This is a past participle, but it refers to guessing future events, not the process of learning or gaining knowledge. Knowledge is not 'predicted' in this context.\n\n* Why 'imagined' is incorrect: This refers to forming an idea in one's mind, which is a mental action, not the formal process of obtaining or gaining knowledge. Knowledge is not 'imagined' in this sentence.\n\nAdditionally, 'acquired' naturally pairs with 'shared' in the context of knowledge, as both are actions that can be done to knowledge. The other options do not form such a natural collocation with 'shared'. The grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction where the verb is in the past participle form, and the subject (knowledge) is the receiver of the action.",
+          "candidate_grammar_tag": "Passive Voice/Past Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is accurate, complete, and logically sound."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and completeness, addressing all semantic and grammatical aspects. The grammar tag was confirmed as accurate, and the explanation was structured to explicitly explain the passive voice construction and the semantic mismatch of the distractors. The JSON formatting issue was resolved by ensuring proper syntax and structure.",
+          "candidate_explanation": "The correct answer is 'acquired' because the structure 'how knowledge is ___ and shared' uses the passive voice, where the subject (knowledge) receives the action. In this context, 'acquired' makes both grammatical and semantic sense, as knowledge can be gained or obtained. The other options, while grammatically correct as past participles, do not fit the meaning of gaining knowledge.\n\n* Why 'negated' is incorrect: Although it is a past participle, it means to cancel or deny something, which does not fit the context of gaining knowledge. Knowledge is not 'negated' in this sentence.\n\n* Why 'predicted' is incorrect: This is a past participle, but it refers to guessing future events, not the process of learning or gaining knowledge. Knowledge is not 'predicted' in this context.\n\n* Why 'imagined' is incorrect: This refers to forming an idea in one's mind, which is a mental action, not the formal process of obtaining or gaining knowledge. Knowledge is not 'imagined' in this sentence.\n\nAdditionally, 'acquired' naturally pairs with 'shared' in the context of knowledge, as both are actions that can be done to knowledge. The other options do not form such a natural collocation with 'shared'. The grammar tag 'Passive Voice/Past Participle' is accurate because the sentence uses a passive construction where the verb is in the past participle form, and the subject (knowledge) is the receiver of the action. This structure is common in English when the focus is on the action being done to the subject rather than the doer of the action.",
+          "candidate_grammar_tag": "Passive Voice/Past Participle",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"semantic_gap\",\n      \"description\": \"The explanation does not explicitly address whether the"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Passive Voice/Past Participle",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        }
+      ]
+    },
+    {
+      "question_id": 1112,
+      "blank_index": 3,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Transitivity)",
+            "overall_notes": "The explanation is accurate and complete, with no issues identified."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "FAIL",
+            "issues": [
+              {
+                "type": "semantic_gap",
+                "description": "The explanation does not address whether the subject 'these elements' can logically perform the action of 'commence', 'reminisce', or 'displace'.",
+                "affected_text": "The other options are incorrect: 'commence' means simply to start; 'reminisce' means to recall past memories; and 'displace' means to move something out of place.",
+                "correction": "The other options are incorrect: 'commence' means simply to start, but 'these elements' cannot logically start something; 'reminisce' means to recall past memories, but 'these elements' cannot logically recall memories; and 'displace' means to move something out of place, but 'these elements' cannot logically move something out of place."
+              },
+              {
+                "type": "collocation_gap",
+                "description": "The explanation does not address whether the words 'commence', 'reminisce', or 'displace' naturally pair with the surrounding words in the sentence.",
+                "affected_text": "The other options are incorrect: 'commence' means simply to start; 'reminisce' means to recall past memories; and 'displace' means to move something out of place.",
+                "correction": "The other options are incorrect: 'commence' means simply to start, but it does not collocate naturally with 'your attitude, emotion and intention'; 'reminisce' means to recall past memories, but it does not collocate naturally with 'your attitude, emotion and intention'; and 'displace' means to move something out of place, but it does not collocate naturally with 'your attitude, emotion and intention'."
+              },
+              {
+                "type": "grammar_label_error",
+                "description": "The grammar tag 'Verb Collocation/Meaning (Transitivity)' is not fully accurate. The explanation focuses more on meaning and collocation rather than transitivity.",
+                "affected_text": "Grammar tag assigned: 'Verb Collocation/Meaning (Transitivity)'",
+                "correction": "Grammar tag assigned: 'Verb Collocation/Meaning'"
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Meaning",
+            "overall_notes": "The explanation lacks semantic and collocation analysis for the distractors and the grammar tag is not fully accurate."
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Verb Collocation/Meaning (Transitivity)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "MAJORITY_CONSENT",
+      "final_explanation": "The correct answer is 'convey' because it means to communicate or transmit an idea, feeling, or message. This fits the context that tone of voice elements are used to send information to a listener. The other options are incorrect: 'commence' means simply to start, but 'these elements' cannot logically start something; 'reminisce' means to recall past memories, but 'these elements' cannot logically recall memories; and 'displace' means to move something out of place, but 'these elements' cannot logically move something out of place. Additionally, 'commence', 'reminisce', and 'displace' do not naturally pair with 'your attitude, emotion and intention' in the sentence.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to explicitly address the semantic and collocation gaps for each distractor, as suggested by Model [qwen3:14b], and the grammar tag was adjusted to 'Verb Collocation/Meaning' to better reflect the focus of the explanation. Model [deepseek-r1:14b] confirmed the accuracy of the revised explanation, and the timeout from Model [gemma4:12b] did not affect the consensus.",
+          "candidate_explanation": "The correct answer is 'convey' because it means to communicate or transmit an idea, feeling, or message. This fits the context that tone of voice elements are used to send information to a listener. The other options are incorrect: 'commence' means simply to start, but 'these elements' cannot logically start something; 'reminisce' means to recall past memories, but 'these elements' cannot logically recall memories; and 'displace' means to move something out of place, but 'these elements' cannot logically move something out of place. Additionally, 'commence', 'reminisce', and 'displace' do not naturally pair with 'your attitude, emotion and intention' in the sentence.",
+          "candidate_grammar_tag": "Verb Collocation/Meaning",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation for the correct answer and distractors."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Verb Collocation/Meaning' was confirmed as accurate, and the explanation was refined to ensure clarity and completeness for B1-B2 English learners.",
+          "candidate_explanation": "The correct answer is 'convey' because it means to communicate or transmit an idea, feeling, or message. This fits the context that tone of voice elements are used to send information to a listener. The other options are incorrect: 'commence' means to start, but 'these elements' cannot logically start something; 'reminisce' means to recall past memories, but 'these elements' cannot logically recall memories; and 'displace' means to move something out of place, but 'these elements' cannot logically move something out of place. Additionally, 'commence', 'reminisce', and 'displace' do not naturally pair with 'your attitude, emotion and intention' in the sentence. The verb 'convey' is the only one that logically and semantically fits the context of transmitting meaning through tone of voice elements.",
+          "candidate_grammar_tag": "Verb Collocation/Meaning",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. Each distractor is clearly explained with logical reasoning, and the grammar tag is appropriately assigned."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 2
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "All three models agreed on the correctness of the explanation, with two models explicitly passing and the third model failing to respond. The grammar tag 'Verb Collocation/Meaning' was confirmed as accurate, and the explanation was enhanced to explicitly address subject-verb logic and active voice usage for clarity.",
+          "candidate_explanation": "The correct answer is 'convey' because it means to communicate or transmit an idea, feeling, or message. This fits the context that tone of voice elements are used to send information to a listener. The other options are incorrect: 'commence' means to start, but 'these elements' cannot logically start something; 'reminisce' means to recall past memories, but 'these elements' cannot logically recall memories; and 'displace' means to move something out of place, but 'these elements' cannot logically move something out of place. Additionally, 'commence', 'reminisce', and 'displace' do not naturally pair with 'your attitude, emotion and intention' in the sentence. The verb 'convey' is the only one that logically and semantically fits the context of transmitting meaning through tone of voice elements. The sentence uses an active voice, where the subject ('these elements') performs the action of conveying, which is consistent with the meaning of the sentence.",
+          "candidate_grammar_tag": "Verb Collocation/Meaning",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
+              "overall_notes": "The explanation is factually correct, logically sound, and addresses all necessary aspects of grammar, semantics, and collocation. It correctly identifies 'convey' as the appropriate verb and provides clear, specific reasons why the other options are incorrect. The grammar tag is accurate, and the explanation thoroughly covers semantic and collocation considerations."
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Verb Collocation/Meaning",
               "overall_notes": "Model gemma4:12b timed out or produced no response"
             }
           ],

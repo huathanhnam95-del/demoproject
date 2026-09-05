@@ -1,3 +1,19 @@
+## [V1.8.122] - 2026-09-05
+
+### Enhanced & Fixed
+- **CRM Teaching Session Analysis Viewer (Round 2 Quality & Sizing Fixes)**:
+  - **Bidirectional Schema Harmonization**: Harmonized schema aliases between `lesson_summary` ↔ `summary`, `student_error` ↔ `student_error_quote`, `concept_or_rule` ↔ `concept`, and `homework_items` ↔ `homework_list`, ensuring consistent rendering across legacy analysis formats and new Gemini structured payloads.
+  - **Mermaid Diagram Sizing & Pan/Zoom Stability**: Solved the SVG replaced-element 300px × 124px miniature collapse bug by explicitly resolving viewBox dimensions from `svg.getBBox()` or `svg.viewBox.baseVal` upon render and applying a scale floor ≥ 90%, ensuring full readability across high-density lesson mindmaps and flowcharts.
+  - **Docked Audio Bar & Interactive Audio Jumps**: Moved the audio player into a persistent docked bar above the footer with responsive timestamps (`▸ ~MM:SS`) that seek directly to relevant transcript segments with a 3-second lead-in.
+  - **Scannable Pedagogical Briefing**: Integrated `<details>` accordions with severity filter chips, line clamping toggles, and checklist styling for homework items.
+  - **Typography & Theme Polish**: Embedded Google Font `Be Vietnam Pro` in the typography stack for clean Vietnamese diacritics, and tuned Mermaid `base` theme styling.
+  - **Gemini Files API Transport**: Switched large lesson audio uploads from base64 payload transport to the Gemini Files API, significantly reducing latency and memory pressure.
+- **Guided Write Essay Step 1 Whiteboard & Layout Selector**:
+  - **Dynamic POS-PEEL Structure**: Interactive whiteboard outlines with live argument and evidence planning for PTE Write Essay questions.
+  - **Stance Exclusivity & Prompt Recap**: Clear prompt understanding with stance-specific idea starters and vocabulary hints.
+  - **Layout Comparison Selector**: Side-by-side template preview and layout selection with responsive switching.
+  - **Native Vietnamese LLM Essay Enrichment**: Updated essay support packs (q0001–q0025) with high-scoring collocations, grammar patterns, and native Vietnamese explanations.
+
 ## [V1.8.121] - 2026-09-05
 
 ### Enhanced & Overhauled

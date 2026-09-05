@@ -71,6 +71,14 @@ window.CrmTeachingSessions = (function () {
         return `${min}m ${sec}s`;
     }
 
+    function formatTimestamp(seconds) {
+        if (seconds == null || Number.isNaN(Number(seconds))) return '00:00';
+        const s = Math.max(0, Math.round(Number(seconds)));
+        const m = Math.floor(s / 60);
+        const remSec = s % 60;
+        return `${String(m).padStart(2, '0')}:${String(remSec).padStart(2, '0')}`;
+    }
+
     async function getAuthHeaders() {
         const headers = { 'Content-Type': 'application/json' };
         try {
@@ -227,13 +235,14 @@ window.CrmTeachingSessions = (function () {
         }
         if (!rep || typeof rep !== 'object') return null;
 
-        const summary = rep.summary || {};
-        let whatTaught = rep.what_taught || rep.whatTaught || [];
-        let problems = rep.student_problems_and_solutions || rep.studentProblemsAndSolutions || [];
+        const summary = rep.lesson_summary || rep.summary || rep.lessonSummary || {};
+        let rawWhatTaught = rep.what_taught || rep.whatTaught || [];
+        let rawProblems = rep.student_problems_and_solutions || rep.studentProblemsAndSolutions || [];
         const nextBriefing = rep.next_lesson_briefing || rep.nextLessonBriefing || {};
 
+        let problems = [];
         // Legacy schema shim (from Python CLI logger where problems and solutions were separate arrays)
-        if ((!Array.isArray(problems) || problems.length === 0) && Array.isArray(rep.student_problems)) {
+        if ((!Array.isArray(rawProblems) || rawProblems.length === 0) && Array.isArray(rep.student_problems)) {
             const solutionsMap = {};
             (rep.teacher_solutions || []).forEach((sol) => {
                 const pid = sol.targeted_problem_id || sol.problem_id;
@@ -249,20 +258,54 @@ window.CrmTeachingSessions = (function () {
                 const pid = prob.problem_id;
                 const sol = solutionsMap[pid] || {};
                 const resp = responseMap[pid] || {};
+                const errQuote = prob.student_error_quote || prob.student_error || prob.quote || '';
+                const teachFix = sol.explanation_or_rule || sol.teacher_solution || sol.teacher_fix || sol.solution || '';
                 return {
+                    problem_id: pid || 'P1',
                     issue_summary: prob.issue_summary || prob.issue || '',
-                    student_error_quote: prob.student_error_quote || prob.quote || '',
-                    teacher_solution: sol.explanation_or_rule || sol.solution || '',
+                    student_error_quote: errQuote,
+                    student_error: errQuote,
+                    teacher_solution: teachFix,
+                    teacher_fix: teachFix,
                     severity: prob.severity || 'Medium',
                     student_outcome: resp.final_verdict_or_score || resp.verdict || 'Needs Practice',
                     outcome_evidence: resp.evidence_quote || ''
                 };
             });
+        } else if (Array.isArray(rawProblems)) {
+            problems = rawProblems.map((prob, idx) => {
+                const errQuote = prob.student_error || prob.student_error_quote || prob.quote || '';
+                const teachFix = prob.teacher_fix || prob.teacher_solution || prob.solution || '';
+                return {
+                    problem_id: prob.problem_id || prob.id || `P${idx + 1}`,
+                    severity: prob.severity || 'Medium',
+                    issue_summary: prob.issue_summary || prob.issue || prob.name || 'Lỗi học viên',
+                    student_error_quote: errQuote,
+                    student_error: errQuote,
+                    teacher_solution: teachFix,
+                    teacher_fix: teachFix,
+                    student_outcome: prob.student_outcome || prob.verdict || prob.outcome || 'Needs Practice',
+                    outcome_evidence: prob.outcome_evidence || prob.evidence || prob.evidence_quote || '',
+                    approx_start_sec: prob.approx_start_sec != null ? prob.approx_start_sec : (prob.approxStartSec != null ? prob.approxStartSec : null)
+                };
+            });
         }
 
+        const whatTaught = (Array.isArray(rawWhatTaught) ? rawWhatTaught : []).map(item => ({
+            category: item.category || '',
+            topic: item.topic || '',
+            key_rule: item.key_rule || item.rule || '',
+            examples: Array.isArray(item.examples) ? item.examples : (item.examples ? [item.examples] : []),
+            approx_start_sec: item.approx_start_sec != null ? item.approx_start_sec : (item.approxStartSec != null ? item.approxStartSec : null)
+        }));
+
         const hasSummary = Boolean(summary.core_topic || summary.quick_recap_60s);
-        const hasContent = (Array.isArray(whatTaught) && whatTaught.length > 0) || (Array.isArray(problems) && problems.length > 0);
+        const hasContent = whatTaught.length > 0 || problems.length > 0;
         if (!hasSummary && !hasContent) return null;
+
+        const warmups = nextBriefing.warmup_quiz_questions || nextBriefing.warmup_tasks || nextBriefing.warmupQuizQuestions || nextBriefing.warmupTasks || [];
+        const followups = nextBriefing.teacher_followup_focus || nextBriefing.followup_error_focus || nextBriefing.teacherFollowupFocus || nextBriefing.followupErrorFocus || [];
+        const homework = nextBriefing.student_homework_checklist || nextBriefing.recommended_homework || nextBriefing.studentHomeworkChecklist || nextBriefing.recommendedHomework || [];
 
         return {
             summary: {
@@ -270,12 +313,15 @@ window.CrmTeachingSessions = (function () {
                 quick_recap_60s: summary.quick_recap_60s || '',
                 student_readiness_level: summary.student_readiness_level || 'Good'
             },
-            whatTaught: Array.isArray(whatTaught) ? whatTaught : [],
-            problems: Array.isArray(problems) ? problems : [],
+            whatTaught,
+            problems,
             nextBriefing: {
-                warmup_tasks: Array.isArray(nextBriefing.warmup_tasks) ? nextBriefing.warmup_tasks : [],
-                followup_error_focus: Array.isArray(nextBriefing.followup_error_focus) ? nextBriefing.followup_error_focus : [],
-                recommended_homework: Array.isArray(nextBriefing.recommended_homework) ? nextBriefing.recommended_homework : []
+                warmup_tasks: Array.isArray(warmups) ? warmups : [],
+                warmup_quiz_questions: Array.isArray(warmups) ? warmups : [],
+                followup_error_focus: Array.isArray(followups) ? followups : [],
+                teacher_followup_focus: Array.isArray(followups) ? followups : [],
+                recommended_homework: Array.isArray(homework) ? homework : [],
+                student_homework_checklist: Array.isArray(homework) ? homework : []
             }
         };
     }
@@ -336,14 +382,21 @@ window.CrmTeachingSessions = (function () {
                 const topic = stripLeadingEmoji(item.topic || '');
                 const rule = item.key_rule || '';
                 const examples = Array.isArray(item.examples) ? item.examples : (item.examples ? [item.examples] : []);
+                const timeChip = (item.approx_start_sec != null && !Number.isNaN(Number(item.approx_start_sec)))
+                    ? `<button type="button" class="crm-timestamp-chip" data-seek-sec="${Number(item.approx_start_sec)}" title="Bấm để nghe đoạn ghi âm">▸ ~${formatTimestamp(item.approx_start_sec)}</button>`
+                    : '';
+                const isLongRule = rule && rule.length > 180;
+                const ruleClass = isLongRule ? 'crm-knowledge-rule is-clamped' : 'crm-knowledge-rule';
+                const clampBtn = isLongRule ? '<button type="button" class="crm-btn-clamp-toggle">Xem thêm</button>' : '';
 
                 html += `
                     <div class="crm-knowledge-item">
                         <div class="crm-knowledge-header">
                             ${cat ? `<span class="crm-category-chip">${escapeHtml(cat)}</span>` : ''}
                             <strong class="crm-knowledge-topic">${escapeHtml(topic)}</strong>
+                            ${timeChip}
                         </div>
-                        ${rule ? `<p class="crm-knowledge-rule">${escapeHtml(rule)}</p>` : ''}
+                        ${rule ? `<p class="${ruleClass}">${escapeHtml(rule)}</p>${clampBtn}` : ''}
                         ${examples.length > 0 ? `
                             <div class="crm-knowledge-examples">
                                 ${examples.map(ex => `<span class="crm-example-chip">${escapeHtml(ex)}</span>`).join('')}
@@ -360,7 +413,8 @@ window.CrmTeachingSessions = (function () {
 
         // 3. Problems and Solutions (Lỗi & Cách sửa)
         if (problems.length > 0) {
-            const practiceCount = problems.filter(p => classifyOutcome(p.student_outcome) !== 'mastered').length;
+            const criticalCount = problems.filter(p => classifySeverity(p.severity) === 'critical').length;
+            const practiceCount = problems.filter(p => classifyOutcome(p.student_outcome) === 'practice').length;
             const countLabel = practiceCount > 0 
                 ? `${problems.length} lỗi · ${practiceCount} cần củng cố`
                 : `${problems.length} lỗi đã xử lý`;
@@ -371,7 +425,12 @@ window.CrmTeachingSessions = (function () {
                         <span>Lỗi & cách sửa</span>
                         <span class="crm-briefing-heading-count">${countLabel}</span>
                     </div>
-                    <div class="crm-problems-list">
+                    <div class="crm-briefing-filters">
+                        <button type="button" class="crm-filter-chip active" data-filter="all">Tất cả <span class="crm-filter-count">(${problems.length})</span></button>
+                        <button type="button" class="crm-filter-chip" data-filter="critical">Nghiêm trọng <span class="crm-filter-count">(${criticalCount})</span></button>
+                        <button type="button" class="crm-filter-chip" data-filter="practice">Cần củng cố <span class="crm-filter-count">(${practiceCount})</span></button>
+                    </div>
+                    <div class="crm-problems-list" data-active-filter="all">
             `;
 
             problems.forEach((prob) => {
@@ -379,26 +438,32 @@ window.CrmTeachingSessions = (function () {
                 const out = classifyOutcome(prob.student_outcome);
                 const issue = stripLeadingEmoji(prob.issue_summary || 'Phát hiện lỗi');
                 const outcomeLabel = stripLeadingEmoji(prob.student_outcome || (out === 'mastered' ? 'Đã nắm vững' : 'Cần củng cố'));
+                const isOpen = out === 'practice';
+                const timeChip = (prob.approx_start_sec != null && !Number.isNaN(Number(prob.approx_start_sec)))
+                    ? `<button type="button" class="crm-timestamp-chip" data-seek-sec="${Number(prob.approx_start_sec)}" title="Bấm để nghe đoạn ghi âm">▸ ~${formatTimestamp(prob.approx_start_sec)}</button>`
+                    : '';
 
                 html += `
-                    <div class="crm-problem-row">
-                        <div class="crm-problem-header">
-                            <div class="crm-problem-title-wrap">
-                                <span class="crm-severity-dot severity-${sev}" title="Mức độ: ${sev}"></span>
-                                <strong class="crm-problem-title">${escapeHtml(issue)}</strong>
-                            </div>
+                    <details class="crm-problem-accordion" data-severity="${sev}" data-outcome="${out}" ${isOpen ? 'open' : ''}>
+                        <summary class="crm-problem-summary">
+                            <span class="crm-severity-dot severity-${sev}" title="Mức độ: ${sev}"></span>
+                            <strong class="crm-problem-title">${escapeHtml(issue)}</strong>
+                            ${timeChip}
                             <span class="crm-outcome-chip outcome-${out}">${escapeHtml(outcomeLabel)}</span>
+                            <span class="crm-problem-chevron">›</span>
+                        </summary>
+                        <div class="crm-problem-details-body">
+                            ${(prob.student_error_quote || prob.student_error) ? `
+                                <blockquote class="crm-problem-quote">"${escapeHtml(prob.student_error_quote || prob.student_error)}"</blockquote>
+                            ` : ''}
+                            ${(prob.teacher_solution || prob.teacher_fix) ? `
+                                <p class="crm-problem-solution"><strong>Giải pháp:</strong> ${escapeHtml(prob.teacher_solution || prob.teacher_fix)}</p>
+                            ` : ''}
+                            ${prob.outcome_evidence ? `
+                                <p class="crm-problem-evidence">${escapeHtml(prob.outcome_evidence)}</p>
+                            ` : ''}
                         </div>
-                        ${prob.student_error_quote ? `
-                            <blockquote class="crm-problem-quote">"${escapeHtml(prob.student_error_quote)}"</blockquote>
-                        ` : ''}
-                        ${prob.teacher_solution ? `
-                            <p class="crm-problem-solution"><strong>Giải pháp:</strong> ${escapeHtml(prob.teacher_solution)}</p>
-                        ` : ''}
-                        ${prob.outcome_evidence ? `
-                            <p class="crm-problem-evidence">${escapeHtml(prob.outcome_evidence)}</p>
-                        ` : ''}
-                    </div>
+                    </details>
                 `;
             });
 
@@ -409,9 +474,9 @@ window.CrmTeachingSessions = (function () {
         }
 
         // 4. Next Lesson Plan (Buổi học tiếp theo)
-        const warmups = nextBriefing.warmup_tasks || [];
-        const followups = nextBriefing.followup_error_focus || [];
-        const homework = nextBriefing.recommended_homework || [];
+        const warmups = nextBriefing.warmup_tasks || nextBriefing.warmup_quiz_questions || [];
+        const followups = nextBriefing.followup_error_focus || nextBriefing.teacher_followup_focus || [];
+        const homework = nextBriefing.recommended_homework || nextBriefing.student_homework_checklist || [];
 
         if (warmups.length > 0 || followups.length > 0 || homework.length > 0) {
             html += `
@@ -425,8 +490,8 @@ window.CrmTeachingSessions = (function () {
                 html += `
                     <div class="crm-next-plan-block">
                         <h4 class="crm-next-plan-subtitle">Warmup đầu giờ</h4>
-                        <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--crm-text-main);">
-                            ${warmups.map(w => `<li style="margin-bottom: 4px;">${escapeHtml(w)}</li>`).join('')}
+                        <ol class="crm-next-plan-list">
+                            ${warmups.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
                         </ol>
                     </div>
                 `;
@@ -436,8 +501,8 @@ window.CrmTeachingSessions = (function () {
                 html += `
                     <div class="crm-next-plan-block">
                         <h4 class="crm-next-plan-subtitle">Trọng tâm theo dõi</h4>
-                        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--crm-text-main);">
-                            ${followups.map(f => `<li style="margin-bottom: 4px;">${escapeHtml(f)}</li>`).join('')}
+                        <ul class="crm-next-plan-list">
+                            ${followups.map(f => `<li>${escapeHtml(f)}</li>`).join('')}
                         </ul>
                     </div>
                 `;
@@ -447,7 +512,7 @@ window.CrmTeachingSessions = (function () {
                 html += `
                     <div class="crm-next-plan-block">
                         <h4 class="crm-next-plan-subtitle">Bài tập về nhà</h4>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div class="crm-checklist-group">
                             ${homework.map(h => `
                                 <div class="crm-checklist-item">
                                     <span class="crm-checklist-box">☐</span>
@@ -471,9 +536,36 @@ window.CrmTeachingSessions = (function () {
         try {
             window.mermaid.initialize({
                 startOnLoad: false,
-                theme: 'default',
+                theme: 'base',
                 securityLevel: 'loose',
-                mindmap: { useMaxWidth: true }
+                fontFamily: "'Be Vietnam Pro', system-ui, -apple-system, sans-serif",
+                themeVariables: {
+                    fontFamily: "'Be Vietnam Pro', system-ui, -apple-system, sans-serif",
+                    primaryColor: '#ecfdf5',
+                    primaryTextColor: '#065f46',
+                    primaryBorderColor: '#10b981',
+                    lineColor: '#64748b',
+                    secondaryColor: '#f1f5f9',
+                    tertiaryColor: '#ffffff',
+                    background: '#ffffff',
+                    mainBkg: '#f8fafc',
+                    nodeBorder: '#cbd5e1',
+                    clusterBkg: '#f8fafc',
+                    clusterBorder: '#cbd5e1',
+                    titleColor: '#0f172a',
+                    edgeLabelBackground: '#ffffff',
+                    textColor: '#1e293b'
+                },
+                mindmap: {
+                    padding: 12,
+                    maxNodeWidth: 220,
+                    useMaxWidth: true
+                },
+                flowchart: {
+                    curve: 'basis',
+                    htmlLabels: true,
+                    useMaxWidth: true
+                }
             });
             isMermaidInitialized = true;
         } catch (e) {
@@ -533,6 +625,41 @@ window.CrmTeachingSessions = (function () {
             container.appendChild(wrapper);
         }
 
+        // Set natural explicit dimensions on SVG from bbox or viewBox so it never collapses to 300px default replaced size
+        function getSvgNaturalDimensions() {
+            let w = 0;
+            let h = 0;
+            if (typeof svg.getBBox === 'function') {
+                try {
+                    const bbox = svg.getBBox();
+                    if (bbox && bbox.width > 0 && bbox.height > 0) {
+                        w = bbox.width;
+                        h = bbox.height;
+                    }
+                } catch (_) {}
+            }
+            if ((!w || w <= 300) && svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width > 0) {
+                w = svg.viewBox.baseVal.width;
+                h = svg.viewBox.baseVal.height;
+            }
+            if (!w || w <= 300) {
+                const attrW = parseFloat(svg.getAttribute('width'));
+                const attrH = parseFloat(svg.getAttribute('height'));
+                if (attrW > 0 && attrH > 0) {
+                    w = attrW;
+                    h = attrH;
+                }
+            }
+            return { width: w || 1200, height: h || 600 };
+        }
+
+        const naturalDim = getSvgNaturalDimensions();
+        if (naturalDim.width > 0 && naturalDim.height > 0) {
+            svg.style.width = `${Math.ceil(naturalDim.width + 30)}px`;
+            svg.style.height = `${Math.ceil(naturalDim.height + 30)}px`;
+            svg.style.maxWidth = 'none';
+        }
+
         let scale = 1.0;
         let translateX = 0;
         let translateY = 0;
@@ -554,13 +681,18 @@ window.CrmTeachingSessions = (function () {
 
         function fitToView() {
             const stageRect = stageEl.getBoundingClientRect();
-            const bbox = (typeof svg.getBBox === 'function') ? svg.getBBox() : { width: svg.clientWidth || 800, height: svg.clientHeight || 500 };
-            if (bbox.width > 0 && bbox.height > 0 && stageRect.width > 0 && stageRect.height > 0) {
+            const natural = getSvgNaturalDimensions();
+            const diagW = natural.width;
+            const diagH = natural.height;
+
+            if (diagW > 0 && diagH > 0 && stageRect.width > 0 && stageRect.height > 0) {
                 const availW = stageRect.width - 60;
                 const availH = stageRect.height - 60;
-                const scaleW = availW / bbox.width;
-                const scaleH = availH / bbox.height;
-                scale = Math.min(Math.max(Math.min(scaleW, scaleH), 0.35), 1.5);
+                const scaleW = availW / diagW;
+                const scaleH = availH / diagH;
+                const naturalFit = Math.min(scaleW, scaleH);
+                // Floor initial readable scale at 0.90 - 1.0 so text is always crisp and readable
+                scale = Math.min(Math.max(naturalFit, 0.90), 1.15);
             } else {
                 scale = 1.0;
             }
@@ -940,12 +1072,14 @@ window.CrmTeachingSessions = (function () {
                 rawJsonEl.textContent = JSON.stringify(session, null, 2);
             }
 
-            // Audio Player & Tab Visibility
+            // Audio Player & Docked Bar Visibility
             const audioTab = document.getElementById('tab-teaching-session-audio');
+            const dockedAudio = document.getElementById('teaching-session-docked-audio');
             if (audioPlayer) {
                 if (session.audioUrl) {
                     audioPlayer.src = session.audioUrl;
                     if (audioTab) audioTab.style.display = 'inline-block';
+                    if (dockedAudio) dockedAudio.style.display = 'flex';
                     const audioMeta = document.getElementById('teaching-session-audio-meta');
                     if (audioMeta) {
                         audioMeta.textContent = session.audioDurationSec 
@@ -955,6 +1089,7 @@ window.CrmTeachingSessions = (function () {
                 } else {
                     audioPlayer.removeAttribute('src');
                     if (audioTab) audioTab.style.display = 'none';
+                    if (dockedAudio) dockedAudio.style.display = 'none';
                 }
             }
 
@@ -1285,6 +1420,52 @@ window.CrmTeachingSessions = (function () {
         if (fsBtn) {
             fsBtn.addEventListener('click', () => {
                 toggleFullscreen();
+            });
+        }
+
+        // Event delegation on teaching-session-report-html (Timestamps, Clamping, Filters)
+        const reportHtmlEl = document.getElementById('teaching-session-report-html');
+        if (reportHtmlEl) {
+            reportHtmlEl.addEventListener('click', (e) => {
+                // 1. Click on timestamp chip to seek audio
+                const timeChip = e.target.closest('.crm-timestamp-chip');
+                if (timeChip && timeChip.dataset.seekSec != null) {
+                    const sec = Number(timeChip.dataset.seekSec);
+                    const audioPlayer = document.getElementById('teaching-session-audio-player');
+                    if (audioPlayer && !Number.isNaN(sec)) {
+                        const seekTime = Math.max(0, sec - 3);
+                        audioPlayer.currentTime = seekTime;
+                        audioPlayer.play().catch(() => {});
+                    }
+                    return;
+                }
+
+                // 2. Click on rule clamp toggle
+                const clampBtn = e.target.closest('.crm-btn-clamp-toggle');
+                if (clampBtn) {
+                    const ruleEl = clampBtn.previousElementSibling;
+                    if (ruleEl && ruleEl.classList.contains('crm-knowledge-rule')) {
+                        const isClamped = ruleEl.classList.toggle('is-clamped');
+                        clampBtn.textContent = isClamped ? 'Xem thêm' : 'Thu gọn';
+                    }
+                    return;
+                }
+
+                // 3. Click on problem filter pill
+                const filterBtn = e.target.closest('.crm-filter-chip');
+                if (filterBtn && filterBtn.dataset.filter) {
+                    const filter = filterBtn.dataset.filter;
+                    const filterRow = filterBtn.closest('.crm-briefing-filters');
+                    if (filterRow) {
+                        filterRow.querySelectorAll('.crm-filter-chip').forEach(b => b.classList.remove('active'));
+                        filterBtn.classList.add('active');
+                    }
+                    const problemsList = reportHtmlEl.querySelector('.crm-problems-list');
+                    if (problemsList) {
+                        problemsList.setAttribute('data-active-filter', filter);
+                    }
+                    return;
+                }
             });
         }
 

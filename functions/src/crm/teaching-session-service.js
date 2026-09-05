@@ -60,6 +60,8 @@ function buildTeachingSessionCreateData(payload = {}, context = {}) {
         mermaidMindmap: cleanString(payload.mermaidMindmap, ''),
         mermaidFlowchart: cleanString(payload.mermaidFlowchart, ''),
         markdownReport: cleanString(payload.markdownReport, ''),
+        errorMessage: cleanString(payload.errorMessage, null),
+        analysisStartedAt: toIsoString(payload.analysisStartedAt),
         createdAt: serverTimestamp,
         updatedAt: serverTimestamp,
         createdBy: cleanString(user.uid, 'system'),
@@ -125,6 +127,12 @@ function buildTeachingSessionPatchData(current = {}, payload = {}, context = {})
     if (payload.markdownReport !== undefined) {
         patch.markdownReport = cleanString(payload.markdownReport);
     }
+    if (payload.errorMessage !== undefined) {
+        patch.errorMessage = cleanString(payload.errorMessage, null);
+    }
+    if (payload.analysisStartedAt !== undefined) {
+        patch.analysisStartedAt = toIsoString(payload.analysisStartedAt);
+    }
 
     return patch;
 }
@@ -155,6 +163,8 @@ function mapTeachingSessionRecord(docOrData, id) {
         mermaidMindmap: data.mermaidMindmap || '',
         mermaidFlowchart: data.mermaidFlowchart || '',
         markdownReport: data.markdownReport || '',
+        errorMessage: data.errorMessage || null,
+        analysisStartedAt: toIsoString(data.analysisStartedAt) || (typeof data.analysisStartedAt === 'string' ? data.analysisStartedAt : null),
         createdAt: toIsoString(data.createdAt) || (typeof data.createdAt === 'string' ? data.createdAt : null),
         updatedAt: toIsoString(data.updatedAt) || (typeof data.updatedAt === 'string' ? data.updatedAt : null),
         createdBy: data.createdBy || null,

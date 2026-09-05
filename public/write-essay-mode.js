@@ -44,7 +44,7 @@
     let essayElapsedSeconds = 0;
     let practiceKind = 'exam';
     let guidedLevel = 'b2';
-    let guidedLanguage = 'en';
+    let guidedLanguage = 'vi';
     let guidedFontFamily = 'be-vietnam-pro';
     let guidedFontScale = 1.0;
     let guidedPack = null;
@@ -84,9 +84,65 @@
     } catch (_) {}
     let guidedStep1PipelineStep = 1;
     let guidedStep1StationTab = 'blueprint';
-    let guidedStep1SelectedChips = new Set(['agree-0', 'agree-1', 'disagree-0']);
+    let guidedStep1ActiveStance = 'agree';
+    let guidedStep1SelectedChips = new Set(['agree-0', 'agree-1']);
     let guidedLanguageKitTab = 'all'; // 'all' | 'vocab' | 'collo' | 'grammar' | 'cohesion'
     let guidedPlanExpandedNode = null; // node index: 0 (intro), 1 (body1), 2 (body2), 3 (concl)
+
+    const PRESTART_LAYOUT_METAS = Object.freeze({
+        whiteboard: {
+            icon: '🗺️',
+            nameEn: 'Mind Map',
+            nameVi: 'Sơ đồ tư duy',
+            tagEn: 'Visual idea map',
+            tagVi: 'Bản đồ ý niệm trực quan',
+            badgeEn: 'Recommended • Visual',
+            badgeVi: 'Khuyên dùng • Trực quan',
+            wantsEn: '• See prompt breakdown and two-stance comparisons side-by-side simultaneously.\n• Click argument chips to dynamically build your 4-paragraph outline with POS & PEEL models.',
+            wantsVi: '• Bạn muốn nhìn toàn cảnh đề bài và sơ đồ ý tưởng 2 phe cùng lúc.\n• Bạn muốn bấm thử từng luận điểm để xem ngay dàn ý 4 đoạn gợi ý chi tiết (POS & PEEL).',
+            fitsEn: 'Ideal for visual thinkers who want to explore arguments deeply and experiment with essay directions before writing.',
+            fitsVi: 'Bạn thích học qua hình ảnh trực quan, muốn nghiền ngẫm kỹ đề bài và tự do thử nghiệm các hướng lập luận trước khi viết.'
+        },
+        stations: {
+            icon: '🏛️',
+            nameEn: 'Section Tabs',
+            nameVi: 'Học từng phần',
+            tagEn: 'Zero-scroll sections',
+            tagVi: 'Gọn gàng, không cuộn',
+            badgeEn: 'Bite-Sized • Zero-Scroll',
+            badgeVi: 'Tập trung • Không cuộn trang',
+            wantsEn: '• Learn one clean section at a time without scrolling up and down.\n• Move step-by-step: Station 1 (Structure) ➔ Station 2 (Pick Stance) ➔ Station 3 (Tips & Practice).',
+            wantsVi: '• Bạn muốn học gọn từng phần một mà không phải cuộn trang lên xuống.\n• Bạn muốn đi theo lộ trình 3 bước: Trạm 1 (Khung bài) ➔ Trạm 2 (Chọn phe) ➔ Trạm 3 (Mẹo & Luyện tập).',
+            fitsEn: 'Ideal for laptops or medium screens, or learners who like focused, distraction-free progression.',
+            fitsVi: 'Bạn dùng laptop hoặc màn hình vừa/nhỏ, ngại cuộn chuột dài; bạn thích học dứt điểm từng phần rồi mới sang phần tiếp theo.'
+        },
+        hud: {
+            icon: '⚡',
+            nameEn: 'Quick Recap',
+            nameVi: 'Lướt nhanh 20s',
+            tagEn: '20-second recap',
+            tagVi: 'Dàn ý & mẹo thi',
+            badgeEn: 'Fast Recap • 20s',
+            badgeVi: 'Siêu tốc • 20 giây',
+            wantsEn: '• Scan the 4-paragraph flow quickly in a clean conveyor belt view.\n• Immediately reference DOs ✓ vs DON\'Ts ✕ pitfalls before starting your timer.',
+            wantsVi: '• Bạn cần xem nhanh mạch 4 đoạn trên sơ đồ băng chuyền ngắn gọn.\n• Bạn cần đối chiếu ngay bảng "NÊN LÀM ✓" vs "NÊN TRÁNH ✕" để tránh các bẫy đề thi dễ mất điểm.',
+            fitsEn: 'Ideal when you already know the essay format and just need a rapid 20-second strategy check before writing.',
+            fitsVi: 'Bạn đã nắm vững cấu trúc bài viết, chuẩn bị bấm giờ làm bài và chỉ cần liếc mắt 20 giây để chốt chiến thuật.'
+        },
+        list: {
+            icon: '📋',
+            nameEn: 'Classic Reader',
+            nameVi: 'Đọc truyền thống',
+            tagEn: 'Textbook layout',
+            tagVi: 'Văn bản bài học',
+            badgeEn: 'Classic • Minimalist',
+            badgeVi: 'Truyền thống • Tối giản',
+            wantsEn: '• Read straight down from top to bottom like a classic study textbook.\n• Focus entirely on pure text content without graphical widgets or tabs.',
+            wantsVi: '• Bạn muốn đọc một mạch từ trên xuống dưới như một tài liệu bài học quen thuộc.\n• Bạn muốn tập trung vào nội dung chữ, không cần sơ đồ hay thao tác bấm chọn qua lại.',
+            fitsEn: 'Ideal if you prefer traditional text reading, minimalism, and zero graphical distractions.',
+            fitsVi: 'Bạn thích phong cách đọc truyền thống, thích sự tối giản và không muốn bị phân tâm bởi hình khối đồ họa.'
+        }
+    });
 
     // v7 question picker + navigation parity with the Reading tasks. The Random
     // preference is shared app-wide under this one localStorage key.
@@ -169,6 +225,7 @@
         setupEventListeners();
         registerAuthStateRefresh();
         pendingRouteQuestionId = getCurrentRouteQuestionId();
+        syncPrestartLayoutCards();
         loadEntries();
         isInitialized = true;
     }
@@ -841,6 +898,10 @@
         el.guidedPopoverScaleDown = document.getElementById('essay-guided-popover-scale-down');
         el.guidedPopoverScaleUp = document.getElementById('essay-guided-popover-scale-up');
         el.guidedPopoverScaleRange = document.getElementById('essay-guided-popover-scale-range');
+        el.prestartLayoutCards = document.getElementById('essay-prestart-layout-cards');
+        el.prestartActiveDetail = document.getElementById('essay-prestart-active-detail');
+        el.layoutCompareToggleBtn = document.getElementById('essay-layout-compare-toggle-btn');
+        el.layoutCompareDrawer = document.getElementById('essay-layout-compare-drawer');
 
         // Filters
         el.filterToolbar = document.getElementById('essay-filter-toolbar');
@@ -1007,6 +1068,7 @@
         });
         if (el.guidedLanguage) el.guidedLanguage.addEventListener('change', () => {
             guidedLanguage = el.guidedLanguage.value;
+            syncPrestartLayoutCards();
             persistGuidedPreferences();
         });
         if (el.guidedFontSelect) {
@@ -1030,6 +1092,36 @@
             el.guidedScaleUp.addEventListener('click', () => {
                 const nextScale = Math.min(1.5, Math.round((guidedFontScale + 0.1) * 10) / 10);
                 applyGuidedTypography(guidedFontFamily, nextScale, true);
+            });
+        }
+
+        // Pre-start Step 1 Layout selection & comparison drawer
+        if (el.prestartLayoutCards) {
+            el.prestartLayoutCards.addEventListener('click', (e) => {
+                const card = e.target.closest('.essay-prestart-layout-card');
+                if (!card) return;
+                const layout = card.dataset.layout;
+                if (['whiteboard', 'stations', 'hud', 'list'].includes(layout)) {
+                    guidedStep1Layout = layout;
+                    try {
+                        localStorage.setItem(GUIDED_STEP1_LAYOUT_KEY, layout);
+                    } catch (_) {}
+                    syncPrestartLayoutCards();
+                }
+            });
+        }
+        if (el.layoutCompareToggleBtn && el.layoutCompareDrawer) {
+            el.layoutCompareToggleBtn.addEventListener('click', () => {
+                const isHidden = el.layoutCompareDrawer.hasAttribute('hidden');
+                if (isHidden) {
+                    el.layoutCompareDrawer.removeAttribute('hidden');
+                    el.layoutCompareToggleBtn.setAttribute('aria-expanded', 'true');
+                    el.layoutCompareToggleBtn.textContent = '✕ Đóng bảng so sánh cả 4 kiểu';
+                } else {
+                    el.layoutCompareDrawer.setAttribute('hidden', '');
+                    el.layoutCompareToggleBtn.setAttribute('aria-expanded', 'false');
+                    el.layoutCompareToggleBtn.textContent = '💡 Xem bảng so sánh cả 4 kiểu';
+                }
             });
         }
 
@@ -1263,7 +1355,7 @@
             onboardingLevel: prefs.onboardingLevel || profile?.englishLevel,
             manualOverride: prefs.level,
         }) || prefs.level || 'b2';
-        guidedLanguage = prefs.language === 'vi' ? 'vi' : 'en';
+        guidedLanguage = prefs.language === 'en' ? 'en' : 'vi';
         guidedFontFamily = GUIDED_FONTS[prefs.fontFamily] ? prefs.fontFamily : 'be-vietnam-pro';
         guidedFontScale = typeof prefs.fontScale === 'number' && !isNaN(prefs.fontScale)
             ? Math.max(0.8, Math.min(1.5, Math.round(prefs.fontScale * 100) / 100))
@@ -1284,12 +1376,58 @@
         });
     }
 
+    function renderPrestartActiveDetail(layout) {
+        const container = el.prestartActiveDetail || document.getElementById('essay-prestart-active-detail');
+        if (!container) return;
+        const meta = PRESTART_LAYOUT_METAS[layout] || PRESTART_LAYOUT_METAS.whiteboard;
+        const isVi = guidedLanguage === 'vi';
+        const name = isVi ? meta.nameVi : meta.nameEn;
+        const badge = isVi ? meta.badgeVi : meta.badgeEn;
+        const wants = isVi ? meta.wantsVi : meta.wantsEn;
+        const fits = isVi ? meta.fitsVi : meta.fitsEn;
+
+        const wantsFormatted = wants.split('\n').map(line => `<p class="essay-prestart-detail-bullet">${escapeHtml(line)}</p>`).join('');
+
+        container.innerHTML = `
+            <div class="essay-prestart-detail-card">
+                <div class="essay-prestart-detail-header">
+                    <span class="essay-prestart-detail-icon">${meta.icon}</span>
+                    <div class="essay-prestart-detail-title-group">
+                        <strong class="essay-prestart-detail-name">${escapeHtml(name)}</strong>
+                        <span class="essay-prestart-detail-badge">${escapeHtml(badge)}</span>
+                    </div>
+                </div>
+                <div class="essay-prestart-detail-body">
+                    <div class="essay-prestart-detail-section">
+                        <span class="essay-prestart-detail-label">🎯 ${isVi ? 'Bạn muốn:' : 'You want:'}</span>
+                        <div class="essay-prestart-detail-text">${wantsFormatted}</div>
+                    </div>
+                    <div class="essay-prestart-detail-section">
+                        <span class="essay-prestart-detail-label">💡 ${isVi ? 'Hợp với bạn khi:' : 'Best suited when:'}</span>
+                        <p class="essay-prestart-detail-text">${escapeHtml(fits)}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function syncPrestartLayoutCards() {
+        if (!el.prestartLayoutCards) return;
+        el.prestartLayoutCards.querySelectorAll('.essay-prestart-layout-card').forEach(card => {
+            const isMatch = card.dataset.layout === guidedStep1Layout;
+            card.classList.toggle('is-active', isMatch);
+            card.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+        });
+        renderPrestartActiveDetail(guidedStep1Layout);
+    }
+
     function updatePracticeChoiceUI() {
         const guided = practiceKind === 'guided';
         if (el.guidedPreferences) el.guidedPreferences.hidden = !guided;
         if (el.practiceChoice) el.practiceChoice.dataset.mode = practiceKind;
         const selected = document.querySelector(`input[name="essay-practice-kind"][value="${practiceKind}"]`);
         if (selected) selected.checked = true;
+        if (guided) syncPrestartLayoutCards();
     }
 
     function getGuidedLevelData() {
@@ -1715,6 +1853,7 @@
                 try {
                     localStorage.setItem(GUIDED_STEP1_LAYOUT_KEY, layout);
                 } catch (_) {}
+                syncPrestartLayoutCards();
                 renderGuidedSupport();
             }
         } else if (action === 'select-pipeline-step') {
@@ -1729,13 +1868,30 @@
                 guidedStep1StationTab = station;
                 renderGuidedSupport();
             }
+        } else if (action === 'switch-stance') {
+            const stance = target.dataset.stance || target.closest('[data-stance]')?.dataset.stance;
+            if (stance && stance !== guidedStep1ActiveStance) {
+                guidedStep1ActiveStance = stance;
+                guidedStep1SelectedChips.clear();
+                guidedStep1SelectedChips.add(`${stance}-0`);
+                guidedStep1SelectedChips.add(`${stance}-1`);
+                renderGuidedSupport();
+            }
         } else if (action === 'toggle-side-chip') {
-            const chipId = target.dataset.chipId;
+            const chipId = target.dataset.chipId || target.closest('[data-chip-id]')?.dataset.chipId;
             if (chipId) {
-                if (guidedStep1SelectedChips.has(chipId)) {
-                    guidedStep1SelectedChips.delete(chipId);
-                } else {
+                const chipStance = chipId.split('-')[0];
+                if (chipStance && chipStance !== guidedStep1ActiveStance) {
+                    // Learner selected a chip on the opposite side: switch stance and pick this chip!
+                    guidedStep1ActiveStance = chipStance;
+                    guidedStep1SelectedChips.clear();
                     guidedStep1SelectedChips.add(chipId);
+                } else {
+                    if (guidedStep1SelectedChips.has(chipId)) {
+                        guidedStep1SelectedChips.delete(chipId);
+                    } else {
+                        guidedStep1SelectedChips.add(chipId);
+                    }
                 }
                 renderGuidedSupport();
             }
@@ -2608,21 +2764,21 @@
             <div class="essay-guided-view-toggle-bar">
                 <span class="essay-guided-view-toggle-label">${guidedText('Layout Mode:', 'Cách xem:')}</span>
                 <div class="essay-guided-view-toggle" role="group" aria-label="${guidedText('Select view mode', 'Chọn cách xem')}">
-                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'whiteboard' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="whiteboard" title="${guidedText('Whiteboard Canvas', 'Bảng vẽ ý tưởng')}">
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'whiteboard' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="whiteboard" title="${guidedText('Mind Map: When you want a visual overview of ideas', 'Sơ đồ tư duy: Bạn muốn nhìn toàn cảnh đề bài & sơ đồ ý tưởng')}">
                         <span class="essay-view-toggle-icon">🗺️</span>
-                        <span>${guidedText('Whiteboard', 'Bảng vẽ ý tưởng')}</span>
+                        <span>${guidedText('Mind Map', 'Sơ đồ tư duy')}</span>
                     </button>
-                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'stations' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="stations" title="${guidedText('Station Tabs', 'Chia theo trạm')}">
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'stations' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="stations" title="${guidedText('Section Tabs: When you want clean, zero-scroll section learning', 'Học từng phần: Bạn muốn học từng phần, không phải cuộn trang')}">
                         <span class="essay-view-toggle-icon">🏛️</span>
-                        <span>${guidedText('Station Tabs', 'Chia theo trạm')}</span>
+                        <span>${guidedText('Section Tabs', 'Học từng phần')}</span>
                     </button>
-                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'hud' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="hud" title="${guidedText('Quick Summary', 'Tóm tắt nhanh')}">
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'hud' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="hud" title="${guidedText('Quick Recap: When you need a 20-second recap before writing', 'Lướt nhanh 20s: Bạn cần lướt nhanh dàn ý & mẹo thi trong 20 giây')}">
                         <span class="essay-view-toggle-icon">⚡</span>
-                        <span>${guidedText('Quick Summary', 'Tóm tắt nhanh')}</span>
+                        <span>${guidedText('Quick Recap', 'Lướt nhanh 20s')}</span>
                     </button>
-                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'list' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="list" title="${guidedText('Compact List', 'Danh sách')}">
+                    <button type="button" class="essay-view-toggle-btn${guidedStep1Layout === 'list' ? ' is-active' : ''}" data-guided-action="set-step1-layout" data-layout="list" title="${guidedText('Classic Reader: When you want to read continuously like textbook', 'Đọc truyền thống: Bạn muốn đọc một mạch như tài liệu bài học')}">
                         <span class="essay-view-toggle-icon">📋</span>
-                        <span>${guidedText('Compact List', 'Danh sách')}</span>
+                        <span>${guidedText('Classic Reader', 'Đọc truyền thống')}</span>
                     </button>
                 </div>
             </div>`;
@@ -3473,6 +3629,10 @@
         const segmentsHtml = renderInteractivePromptStructure(segments, promptText);
         const stanceKeys = Object.keys(grouped);
 
+        if (!guidedStep1ActiveStance || !stanceKeys.includes(guidedStep1ActiveStance)) {
+            guidedStep1ActiveStance = stanceKeys[0] || 'agree';
+        }
+
         let twoSidesHtml = '';
         if (stanceKeys.length >= 2) {
             const side1Key = stanceKeys[0];
@@ -3482,27 +3642,52 @@
             const items1 = grouped[side1Key] || [];
             const items2 = grouped[side2Key] || [];
 
+            const isSide1Active = guidedStep1ActiveStance === side1Key;
+            const isSide2Active = guidedStep1ActiveStance === side2Key;
+
             let side1Count = 0;
             items1.forEach((_, idx) => { if (guidedStep1SelectedChips.has(`${side1Key}-${idx}`)) side1Count++; });
             let side2Count = 0;
             items2.forEach((_, idx) => { if (guidedStep1SelectedChips.has(`${side2Key}-${idx}`)) side2Count++; });
 
+            const side1ActiveBadge = isSide1Active
+                ? `<span class="essay-wb-side-active-badge">✓ ${guidedText('Active Stance', 'Phe đang chọn')}</span>`
+                : '';
+            const side2ActiveBadge = isSide2Active
+                ? `<span class="essay-wb-side-active-badge">✓ ${guidedText('Active Stance', 'Phe đang chọn')}</span>`
+                : '';
+
+            const side1InactiveBanner = !isSide1Active
+                ? `<div class="essay-wb-side-inactive-banner" data-guided-action="switch-stance" data-stance="${side1Key}">
+                    <span>💡 ${guidedText('Not selected — Click here to choose this side', 'Chưa chọn phe này — Bấm vào để đổi sang phe này')}</span>
+                   </div>`
+                : '';
+            const side2InactiveBanner = !isSide2Active
+                ? `<div class="essay-wb-side-inactive-banner" data-guided-action="switch-stance" data-stance="${side2Key}">
+                    <span>💡 ${guidedText('Not selected — Click here to choose this side', 'Chưa chọn phe này — Bấm vào để đổi sang phe này')}</span>
+                   </div>`
+                : '';
+
             twoSidesHtml = `
             <div class="essay-wb-twosides-box">
                 <div class="essay-wb-section-head">
-                    <span class="essay-wb-section-badge">⚖️ ${guidedText('Two Angles to Consider', 'So sánh 2 phe')}</span>
-                    <p class="essay-wb-section-sub">${guidedText('Click on ideas to test which direction is easier and more natural for you to write:', 'Bấm chọn thử các ý để xem bạn thấy phe nào dễ viết và thuyết phục hơn:')}</p>
+                    <span class="essay-wb-section-badge">⚖️ ${guidedText('Two Angles to Consider (Choose 1 Stance)', 'So sánh 2 phe (Chọn 1 phe duy nhất)')}</span>
+                    <p class="essay-wb-section-sub">${guidedText('Choose your preferred stance. The unselected side will be greyed out. Click any idea to test or switch sides:', 'Chọn phe bạn thấy tự tin viết nhất (phe còn lại sẽ mờ đi). Bấm vào luận điểm để thử hoặc đổi phe:')}</p>
                 </div>
                 <div class="essay-wb-twosides-grid">
-                    <div class="essay-wb-side-card is-${meta1.tone}">
+                    <div class="essay-wb-side-card is-${meta1.tone}${isSide1Active ? ' is-active-stance' : ' is-greyed-out'}" ${!isSide1Active ? `data-guided-action="switch-stance" data-stance="${side1Key}"` : ''}>
+                        ${side1InactiveBanner}
                         <div class="essay-wb-side-head">
                             <span class="essay-wb-side-title">${meta1.icon} ${escapeHtml(guidedText(meta1.en, meta1.vi))}</span>
-                            <span class="essay-wb-side-count">${side1Count} ${guidedText('selected', 'ý đã chọn')}</span>
+                            <div class="essay-wb-side-status">
+                                ${side1ActiveBadge}
+                                <span class="essay-wb-side-count">${side1Count} ${guidedText('selected', 'ý đã chọn')}</span>
+                            </div>
                         </div>
                         <div class="essay-wb-side-chips">
                             ${items1.map((item, idx) => {
                                 const chipId = `${side1Key}-${idx}`;
-                                const isPicked = guidedStep1SelectedChips.has(chipId);
+                                const isPicked = isSide1Active && guidedStep1SelectedChips.has(chipId);
                                 const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
                                 return `
                                 <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
@@ -3512,15 +3697,19 @@
                             }).join('')}
                         </div>
                     </div>
-                    <div class="essay-wb-side-card is-${meta2.tone}">
+                    <div class="essay-wb-side-card is-${meta2.tone}${isSide2Active ? ' is-active-stance' : ' is-greyed-out'}" ${!isSide2Active ? `data-guided-action="switch-stance" data-stance="${side2Key}"` : ''}>
+                        ${side2InactiveBanner}
                         <div class="essay-wb-side-head">
                             <span class="essay-wb-side-title">${meta2.icon} ${escapeHtml(guidedText(meta2.en, meta2.vi))}</span>
-                            <span class="essay-wb-side-count">${side2Count} ${guidedText('selected', 'ý đã chọn')}</span>
+                            <div class="essay-wb-side-status">
+                                ${side2ActiveBadge}
+                                <span class="essay-wb-side-count">${side2Count} ${guidedText('selected', 'ý đã chọn')}</span>
+                            </div>
                         </div>
                         <div class="essay-wb-side-chips">
                             ${items2.map((item, idx) => {
                                 const chipId = `${side2Key}-${idx}`;
-                                const isPicked = guidedStep1SelectedChips.has(chipId);
+                                const isPicked = isSide2Active && guidedStep1SelectedChips.has(chipId);
                                 const rawText = cleanArgumentClaim(preferTranslated(item.en, guidedLanguage === 'vi' ? item.vi : ''));
                                 return `
                                 <button type="button" class="essay-wb-chip${isPicked ? ' is-active' : ''}" data-guided-action="toggle-side-chip" data-chip-id="${chipId}">
@@ -3534,9 +3723,191 @@
             </div>`;
         }
 
-        const blueprint = essayTypeInfo.blueprint || [];
-        const activeStepIdx = Math.max(0, Math.min(guidedStep1PipelineStep - 1, blueprint.length - 1));
-        const activeBlueprint = blueprint[activeStepIdx] || { partVi: 'Đoạn ' + guidedStep1PipelineStep, roleVi: 'Nhiệm vụ đoạn' };
+        // --- Dynamic POS-PEEL Outline Data from Active Stance & Selected Chips ---
+        const activeStanceItems = grouped[guidedStep1ActiveStance] || [];
+        const activeMeta = stanceLabels[guidedStep1ActiveStance] || { en: 'Selected Stance', vi: 'Phe đã chọn', icon: '🎯' };
+        const stanceTitle = guidedLanguage === 'vi' ? activeMeta.vi : activeMeta.en;
+        const isToneAgree = ['agree', 'positive', 'advantage'].includes(guidedStep1ActiveStance);
+
+        const pickedItems = [];
+        activeStanceItems.forEach((item, idx) => {
+            const chipId = `${guidedStep1ActiveStance}-${idx}`;
+            if (guidedStep1SelectedChips.has(chipId)) {
+                pickedItems.push(item);
+            }
+        });
+
+        // Fallback to top arguments if fewer than 2 chosen so outline is always concrete
+        const effectiveItems = [...pickedItems];
+        if (effectiveItems.length < 2 && activeStanceItems.length >= 2) {
+            for (const item of activeStanceItems) {
+                if (!effectiveItems.includes(item)) {
+                    effectiveItems.push(item);
+                    if (effectiveItems.length === 2) break;
+                }
+            }
+        }
+
+        function parseAngleItem(item, fallbackIdx) {
+            if (!item) {
+                return {
+                    titleEn: `Key Argument ${fallbackIdx}`,
+                    titleVi: `Luận điểm chính ${fallbackIdx}`,
+                    expEn: 'Provide concrete reasoning and logical mechanisms to support this claim.',
+                    expVi: 'Giải thích cơ chế và lý lẽ bổ trợ trực tiếp cho luận điểm.'
+                };
+            }
+            const enText = item.en || '';
+            const viText = item.vi || '';
+            let titleEn = enText;
+            let expEn = '';
+            if (enText.includes(':')) {
+                const parts = enText.split(':');
+                titleEn = parts[0].trim();
+                expEn = parts.slice(1).join(':').trim();
+            }
+            let titleVi = viText;
+            let expVi = '';
+            if (viText.includes(':')) {
+                const parts = viText.split(':');
+                titleVi = parts[0].trim();
+                expVi = parts.slice(1).join(':').trim();
+            }
+            return {
+                titleEn: cleanArgumentClaim(titleEn),
+                titleVi: cleanArgumentClaim(titleVi),
+                expEn: expEn || enText,
+                expVi: expVi || viText
+            };
+        }
+
+        const p1 = parseAngleItem(effectiveItems[0], 1);
+        const p2 = parseAngleItem(effectiveItems[1], 2);
+
+        const opinionStatementEn = isToneAgree
+            ? 'Firmly agree with the prompt'
+            : 'Firmly disagree with the prompt';
+        const opinionStatementVi = isToneAgree
+            ? 'Khẳng định quan điểm cá nhân theo hướng Đồng ý'
+            : 'Khẳng định quan điểm cá nhân theo hướng Phản đối';
+
+        const dynamicSteps = [
+            {
+                num: 1,
+                partEn: 'Para 1: Intro (POS)',
+                partVi: 'Đoạn 1: Mở bài (POS)',
+                roleEn: `Paraphrase + ${opinionStatementEn} + Signpost 2 points`,
+                roleVi: `Paraphrase + ${opinionStatementVi} + Báo trước 2 luận điểm`,
+                tag: '2-3 câu',
+                renderDrawer: () => `
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill pos-p">[P] Paraphrase</span>
+                        <strong>${guidedText('Paraphrase Prompt:', 'Nhắc lại đề bài:')}</strong>
+                        <span>${guidedText('Restate the prompt in your own words with synonyms, avoiding verbatim repetition.', 'Diễn đạt lại nhận định trong đề bài bằng từ ngữ của bạn, tuyệt đối không chép nguyên văn.')}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill pos-o">[O] Opinion</span>
+                        <strong>${guidedText('Thesis & Opinion:', 'Chốt lập trường:')}</strong>
+                        <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${escapeHtml(stanceTitle)}).</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill pos-s">[S] Signpost</span>
+                        <strong>${guidedText('Signpost 2 Core Points:', 'Báo trước 2 luận điểm chính đã chọn:')}</strong>
+                        <div class="essay-pos-signposts">
+                            <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
+                            <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                        </div>
+                    </div>`
+            },
+            {
+                num: 2,
+                partEn: 'Para 2: Body 1 (PEEL)',
+                partVi: 'Đoạn 2: Thân bài 1 (PEEL)',
+                roleEn: `[Point 1] ${p1.titleEn}`,
+                roleVi: `[Luận điểm 1] ${p1.titleVi}`,
+                tag: '4-5 câu',
+                renderDrawer: () => `
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-p">[P] Point</span>
+                        <strong>${guidedText('Point 1 (Topic Sentence):', 'Luận điểm 1:')}</strong>
+                        <span class="essay-peel-highlight">${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                        <strong>${guidedText('Explanation:', 'Giải thích cơ chế vì sao luận điểm này đúng:')}</strong>
+                        <span>${escapeHtml(guidedText(p1.expEn, p1.expVi))}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-ex">[E] Example</span>
+                        <strong>${guidedText('Example / Evidence:', 'Gợi ý dẫn chứng:')}</strong>
+                        <span>${guidedText('Provide a concrete real-world example, observation, or case study demonstrating this effect.', 'Đưa ra ví dụ thực tế đời sống hoặc nghiên cứu cụ thể để chứng minh cho cơ chế trên.')}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-l">[L] Link</span>
+                        <strong>${guidedText('Link Sentence:', 'Câu chốt:')}</strong>
+                        <span>${guidedText(`Conclude how Point 1 reinforces your stance (${opinionStatementEn.toLowerCase()}).`, `Chốt lại một câu ngắn gọn khẳng định lý do vì sao luận điểm 1 củng cố cho quan điểm chung của bài.`)}</span>
+                    </div>`
+            },
+            {
+                num: 3,
+                partEn: 'Para 3: Body 2 (PEEL)',
+                partVi: 'Đoạn 3: Thân bài 2 (PEEL)',
+                roleEn: `[Point 2] ${p2.titleEn}`,
+                roleVi: `[Luận điểm 2] ${p2.titleVi}`,
+                tag: '4-5 câu',
+                renderDrawer: () => `
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-p">[P] Point</span>
+                        <strong>${guidedText('Point 2 (Topic Sentence):', 'Luận điểm 2:')}</strong>
+                        <span class="essay-peel-highlight">${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                        <strong>${guidedText('Explanation:', 'Giải thích luận điểm 2:')}</strong>
+                        <span>${escapeHtml(guidedText(p2.expEn, p2.expVi))}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-ex">[E] Example</span>
+                        <strong>${guidedText('Example / Evidence:', 'Dẫn chứng thực tế:')}</strong>
+                        <span>${guidedText('Offer another illustrative real-world instance or comparative contrast strengthening point 2.', 'Đưa ví dụ minh chứng đời sống hoặc so sánh thực tiễn để tăng sức thuyết phục cho luận điểm 2.')}</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill peel-l">[L] Link</span>
+                        <strong>${guidedText('Link Sentence:', 'Câu chốt:')}</strong>
+                        <span>${guidedText('Wrap up Body 2, building a smooth logical transition into the conclusion.', 'Khép lại thân bài 2, tạo bước đệm chuyển ý mượt mà sang phần kết luận.')}</span>
+                    </div>`
+            },
+            {
+                num: 4,
+                partEn: 'Para 4: Conclusion',
+                partVi: 'Đoạn 4: Kết bài',
+                roleEn: 'Reaffirm stance & synthesize 2 points',
+                roleVi: 'Khẳng định lại lập trường & đúc kết 2 luận điểm',
+                tag: '1-2 câu',
+                renderDrawer: () => `
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill pos-o">✓ ${guidedText('Reaffirm', 'Khẳng định')}</span>
+                        <strong>${guidedText('Reaffirm Stance:', 'Khẳng định lại quan điểm:')}</strong>
+                        <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${guidedText('using fresh phrasing, not duplicating intro', 'bằng câu từ diễn đạt khác mở bài')}).</span>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill pos-s">✓ ${guidedText('Synthesize', 'Đúc kết')}</span>
+                        <strong>${guidedText('Synthesize 2 Core Points:', 'Đúc kết 2 luận điểm then chốt:')}</strong>
+                        <div class="essay-pos-signposts">
+                            <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
+                            <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
+                        </div>
+                    </div>
+                    <div class="essay-pos-peel-item">
+                        <span class="essay-pos-peel-pill pos-p">💡 ${guidedText('Final Remark', 'Mở rộng')}</span>
+                        <strong>${guidedText('Final Thought (Optional):', 'Lời bình / Mở rộng (tuỳ chọn):')}</strong>
+                        <span>${guidedText('A concise forward-looking remark or practical takeaway for lasting essay resonance.', '1 câu nhận định tương lai hoặc khuyến nghị thực tiễn để bài viết có chiều sâu ấn tượng.')}</span>
+                    </div>`
+            }
+        ];
+
+        const activeStepIdx = Math.max(0, Math.min(guidedStep1PipelineStep - 1, dynamicSteps.length - 1));
+        const activeDynamicStep = dynamicSteps[activeStepIdx];
 
         let stepTrap = null;
         if (traps && traps.length > 0) {
@@ -3549,22 +3920,22 @@
         const pipelineHtml = `
         <div class="essay-wb-pipeline-box">
             <div class="essay-wb-section-head">
-                <span class="essay-wb-section-badge">🏛️ ${guidedText('4-Paragraph Blueprint', 'Khung dàn ý 4 đoạn')}</span>
-                <p class="essay-wb-section-sub">${guidedText('Click on each paragraph to view its primary mission and common pitfalls to avoid:', 'Bấm vào từng đoạn để xem nhiệm vụ chính và mẹo tránh mất điểm:')}</p>
+                <span class="essay-wb-section-badge">🏛️ ${guidedText('Dynamic 4-Paragraph Outline (POS & PEEL)', 'Dàn ý 4 đoạn gợi ý theo lựa chọn của bạn (POS & PEEL)')}</span>
+                <p class="essay-wb-section-sub">${guidedText('Bấm vào từng đoạn để xem chi tiết cấu trúc POS (Mở bài) & PEEL (Thân bài) được cá nhân hóa theo các ý bạn đã chọn:', 'Bấm vào từng đoạn để xem chi tiết cấu trúc POS (Mở bài) & PEEL (Thân bài) được cá nhân hóa theo các ý bạn đã chọn:')}</p>
             </div>
             <div class="essay-wb-pipeline-stepper">
-                ${blueprint.map((b, idx) => {
-                    const stepNum = idx + 1;
+                ${dynamicSteps.map((s, idx) => {
+                    const stepNum = s.num;
                     const isActive = stepNum === guidedStep1PipelineStep;
                     return `
                     <button type="button" class="essay-wb-pipe-btn${isActive ? ' is-active' : ''}" data-guided-action="select-pipeline-step" data-step-num="${stepNum}">
                         <div class="essay-wb-pipe-top">
                             <span class="essay-wb-pipe-num">${stepNum}</span>
-                            <span class="essay-wb-pipe-label">${escapeHtml(guidedText(b.partEn, b.partVi))}</span>
+                            <span class="essay-wb-pipe-label">${escapeHtml(guidedText(s.partEn, s.partVi))}</span>
                         </div>
-                        <div class="essay-wb-pipe-role">${escapeHtml(guidedText(b.roleEn, b.roleVi))}</div>
+                        <div class="essay-wb-pipe-role">${escapeHtml(guidedText(s.roleEn, s.roleVi))}</div>
                         <div class="essay-wb-pipe-footer">
-                            <span class="essay-wb-pipe-tag">${idx === 0 ? '2-3 câu' : (idx === 3 ? '1-2 câu' : '4-5 câu')}</span>
+                            <span class="essay-wb-pipe-tag">${s.tag}</span>
                             ${isActive ? '<span class="essay-wb-pipe-trap-badge">⚠️ Lưu ý</span>' : ''}
                         </div>
                     </button>`;
@@ -3573,12 +3944,12 @@
 
             <div class="essay-wb-pipeline-drawer">
                 <div class="essay-wb-drawer-head">
-                    <span class="essay-wb-drawer-pill">🎯 ${guidedText('Viewing:', 'Đang xem:')} ${escapeHtml(guidedText(activeBlueprint.partEn, activeBlueprint.partVi))}</span>
+                    <span class="essay-wb-drawer-pill">🎯 ${guidedText('Viewing:', 'Đang xem:')} ${escapeHtml(guidedText(activeDynamicStep.partEn, activeDynamicStep.partVi))}</span>
                 </div>
                 <div class="essay-wb-drawer-content">
-                    <p class="essay-wb-drawer-mission">
-                        <strong>${guidedText('Mission:', 'Nhiệm vụ chính:')}</strong> ${escapeHtml(guidedText(activeBlueprint.roleEn, activeBlueprint.roleVi))}
-                    </p>
+                    <div class="essay-pos-peel-body">
+                        ${activeDynamicStep.renderDrawer()}
+                    </div>
                     ${stepTrap ? `
                     <div class="essay-wb-drawer-trap">
                         <span class="essay-wb-drawer-trap-icon">⚠️</span>
@@ -3604,6 +3975,10 @@
                 <div class="essay-step1-part-header">
                     <span class="essay-step1-part-pill">Part 2</span>
                     <h3 class="essay-step1-part-title">${guidedText('Stances & Structure', 'So sánh 2 phe & Khung dàn ý')}</h3>
+                </div>
+                <div class="essay-wb-prompt-recap-box">
+                    <span class="essay-wb-prompt-recap-badge">📌 ${guidedText('Essay Question Prompt', 'Đề bài đang luyện tập')}</span>
+                    <blockquote class="essay-wb-prompt-recap-text">“${escapeHtml(promptText)}”</blockquote>
                 </div>
                 ${twoSidesHtml}
                 ${pipelineHtml}

@@ -1950,3 +1950,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 955,2026-09-04,Overhaul Guided Essay Steps 3-5 visualization and natural copy via 3-LLM council consensus,Done,2026-09-04
 956,2026-09-05,Execute Guided Essay visual and content optimization with 3-LLM council enrichment,Done,2026-09-05
 957,2026-09-05,Release V1.8.121: Deploy Teaching Session Analysis Viewer UI/UX optimization and Guided Write Essay visual overhaul to production,Done,2026-09-05
+958,2026-09-05,Implement Step 1 pre-start layout selector with comparison guide and sticky header,Done,2026-09-05
+959,2026-09-05,Teaching Session Viewer Round 2: Fix layout typography briefing IA timestamps and deepen analysis,Done,2026-09-05
+960,2026-09-05,Add native Vietnamese natural language filter pass to local LLM essay enrichment,Done,2026-09-05
+961,2026-09-05,Overhaul Step 1 Whiteboard: dynamic POS-PEEL outline prompt recap stance exclusivity and clamped checks,Done,2026-09-05
+962,2026-09-05,Fix teaching session analyzer schema mismatch auto-fit diagrams and verify timestamps in UI,Done,2026-09-05
+963,2026-09-05,Release V1.8.122: Deploy Teaching Session Viewer Round 2 fixes and Guided Essay Step 1 overhaul to production,Done,2026-09-05

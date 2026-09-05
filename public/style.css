@@ -864,6 +864,7 @@ h1 {
 .growth-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  align-content: start;
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -3067,15 +3068,6 @@ h1 {
   will-change: opacity, filter, transform;
 }
 
-#panel-tutorials .tutorial-grid {
-  min-height: 750px;
-}
-
-@media (max-width: 900px) {
-  #panel-tutorials .tutorial-grid {
-    min-height: unset;
-  }
-}
 
 .tutorial-grid.skill-grid-fading-out {
   opacity: 0;

@@ -1,3 +1,12 @@
+## [V1.8.129] - 2026-09-05
+
+### Fixed & Refined
+- **Practice Dashboard Mode Cards Vertical Stretch Fix**:
+  - **Removed `min-height: 750px` on `#panel-tutorials .tutorial-grid`**: Removed legacy hardcoded minimum grid height that caused single-row categories (such as PTE Practice Writing cards *Write Essay* and *Summarize Written Text*) to stretch into 750px tall monolithic blocks with massive whitespace voids.
+  - **Added `align-content: start` to `.tutorial-grid` & `.growth-grid`**: Guaranteed that CSS grid tracks are aligned to the top and will never vertically stretch row tracks across excess container height.
+  - **Restored Natural Card Proportions**: Restored compact, natural card height (~309px) with perfectly aligned CTA buttons across all skill views (Speaking, Listening, Reading, Writing) in both PTE Practice and English Practice scopes.
+  - **Regression Test Harness**: Added automated Playwright regression test (`tests/browser/practice-cards-height-check.js`) validating card and grid height bounds across all practice skills.
+
 ## [V1.8.128] - 2026-09-05
 
 ### Enhanced & Overhauled

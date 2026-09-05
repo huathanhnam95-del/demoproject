@@ -14,9 +14,12 @@ import re
 import sys
 import time
 
-import requests
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+try:
+    import requests
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    requests = None
 
 
 ROOT = Path(__file__).resolve().parents[2]

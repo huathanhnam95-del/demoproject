@@ -1972,4 +1972,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 977,2026-09-05,Fix Python 3.10 f-string backslash syntax in pronunciation audit script to resolve GitHub Actions CI failure,Done,2026-09-05
 978,2026-09-05,Upgrade Step 1 Understand into 4 dedicated visual paradigms with mobile scrolling and state decoupling,Done,2026-09-05
 979,2026-09-05,Release V1.8.128: Deploy Step 1 four-paradigm visual upgrade and smooth transitions to production,Done,2026-09-05
-980,2026-09-05,Fix practice dashboard mode cards stretching vertically to 750px when selecting Writing,In Progress,
+980,2026-09-05,Fix practice dashboard mode cards stretching vertically to 750px when selecting Writing,Done,2026-09-05
+981,2026-09-05,Release V1.8.129: Deploy practice dashboard card height fix to production,Done,2026-09-05

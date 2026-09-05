@@ -239,6 +239,62 @@ async function main() {
   await page.screenshot({ path: tooltipScreenshotPath });
   console.log('[Browser Test] Tooltip screenshot captured to:', tooltipScreenshotPath);
 
+  // 3b. Test hovering over Q1 "After" for dual-metric subtitle, amber syllables & diagnostic insight
+  console.log('[Browser Test] Testing hover on Q1 "After" for dual-metric subtitle and acoustic diagnosis...');
+  const afterBtn = await page.locator('.crm-result-question:nth-of-type(1) button.crm-word-token:has-text("After")').first();
+  await afterBtn.hover();
+  await page.waitForTimeout(250);
+
+  const afterWord = await tooltipLocator.locator('.crm-tooltip-word').textContent();
+  const afterBadge = await tooltipLocator.locator('.crm-tooltip-badge').textContent();
+  const afterBadgeClass = await tooltipLocator.locator('.crm-tooltip-badge').getAttribute('class');
+  const afterSubtitle = await tooltipLocator.locator('.crm-tooltip-subtitle').textContent();
+  const afterChips = tooltipLocator.locator('.crm-syl-chip');
+  const afterChipCount = await afterChips.count();
+
+  console.log('  After word:', afterWord);
+  console.log('  After badge:', afterBadge);
+  console.log('  After badge class:', afterBadgeClass);
+  console.log('  After subtitle:', afterSubtitle);
+  console.log('  After chips count:', afterChipCount);
+
+  assert.strictEqual(afterWord.toLowerCase(), 'after', 'Tooltip word must be "after"');
+  assert.strictEqual(afterBadge, '97%', 'Tooltip badge must show 97%');
+  assert.ok(afterBadgeClass.includes('syl-green'), 'Tooltip badge for 97% must be syl-green');
+  assert.ok(afterSubtitle.includes('accent variance'), 'Subtitle must explain syllable accent variance');
+  assert.strictEqual(afterChipCount, 2, '"After" must have 2 syllable chips');
+
+  const afterChip1Text = await afterChips.nth(0).textContent();
+  const afterChip1Class = await afterChips.nth(0).getAttribute('class');
+  const afterChip2Text = await afterChips.nth(1).textContent();
+  const afterChip2Class = await afterChips.nth(1).getAttribute('class');
+  console.log('  After Chip 1:', afterChip1Text, 'class:', afterChip1Class);
+  console.log('  After Chip 2:', afterChip2Text, 'class:', afterChip2Class);
+
+  assert.ok(afterChip1Text.includes('af'), 'Chip 1 must contain "af"');
+  assert.ok(afterChip1Text.includes('71%'), 'Chip 1 must show 71%');
+  assert.ok(afterChip1Class.includes('syl-amber'), 'Chip 1 (71%) must have syl-amber');
+  assert.ok(afterChip2Text.includes('ter'), 'Chip 2 must contain "ter"');
+  assert.ok(afterChip2Text.includes('75%'), 'Chip 2 must show 75%');
+  assert.ok(afterChip2Class.includes('syl-amber'), 'Chip 2 (75%) must have syl-amber');
+
+  // Verify diagnostic insight card
+  const insightCard = tooltipLocator.locator('.crm-tooltip-insight');
+  assert.ok(await insightCard.count() > 0, 'Diagnostic insight card must be rendered');
+  const insightText = await insightCard.textContent();
+  console.log('  Diagnostic insight text:', insightText);
+  assert.ok(insightText.includes('Acoustic Diagnosis'), 'Insight card must have "Acoustic Diagnosis" header');
+  assert.ok(insightText.includes('/æt/'), 'Insight card must show candidate substitution /æt/');
+
+  // Test interactive syllable chip click
+  console.log('[Browser Test] Testing click on syllable chip for audio playback...');
+  await afterChips.nth(0).click();
+  await page.waitForTimeout(200);
+
+  const afterScreenshotPath = path.join(resultsDir, 'crm-entrance-test-after-tooltip.png');
+  await page.screenshot({ path: afterScreenshotPath });
+  console.log('[Browser Test] After tooltip screenshot captured to:', afterScreenshotPath);
+
   // Test hovering on "indicators" in Q2 (multi-syllabic with green/amber breakdown)
   console.log('[Browser Test] Testing hover on "indicators" for syllable breakdown...');
   const indBtn = await page.locator('.crm-result-question:nth-of-type(2) button.crm-word-token:has-text("indicators")').first();

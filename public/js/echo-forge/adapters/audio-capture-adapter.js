@@ -36,6 +36,14 @@ export async function prepareWavBlob(blob, {
   sampleRate = 16000,
 } = {}) {
   if (!(blob instanceof Blob)) throw new TypeError('audio blob is required');
+  if (globalThis.AudioDspPipeline && typeof globalThis.AudioDspPipeline.enhance === 'function') {
+    try {
+      const result = await globalThis.AudioDspPipeline.enhance(blob, { targetSampleRate: sampleRate });
+      if (result && result.wavBlob) return result.wavBlob;
+    } catch (e) {
+      console.warn('[EchoForge] AudioDspPipeline enhancement failed, falling back:', e);
+    }
+  }
   if (blob.type === 'audio/wav' || blob.type === 'audio/wave') return blob;
   if (typeof AudioContextClass !== 'function' || typeof OfflineAudioContextClass !== 'function') {
     throw new Error('WAV conversion is unavailable in this browser');

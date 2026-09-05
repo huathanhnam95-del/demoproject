@@ -411,6 +411,20 @@
                     recordingBlob = blob;
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
+
+                    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+                        window.AudioDspPipeline.enhance(blob).then((result) => {
+                            if (sessionToken !== recordingSessionToken) return;
+                            if (result && result.wavBlob && result.audioUrl) {
+                                if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
+                                recordingBlob = result.wavBlob;
+                                recordingBlobUrl = result.audioUrl;
+                                if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
+                            }
+                        }).catch((err) => {
+                            console.warn('[DescribeImage] AudioDspPipeline enhancement failed, keeping raw audio:', err);
+                        });
+                    }
                 }
 
                 // Transition to review only if we were still in the recording step.

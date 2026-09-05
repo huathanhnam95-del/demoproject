@@ -162,9 +162,11 @@
             headers
         });
         if (!res.ok) {
-            throw new Error(`Failed to load enrollments (HTTP ${res.status})`);
+            const errData = await res.json().catch(() => ({}));
+            const msg = errData.message || errData.error || `Failed to load enrollments (HTTP ${res.status})`;
+            throw new Error(msg);
         }
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         return data.enrollments || [];
     }
 

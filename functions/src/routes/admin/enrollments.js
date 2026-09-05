@@ -42,11 +42,18 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
 
             const snaps = await db.collection(CRM_ENROLLMENTS)
                 .where('studentId', '==', studentId)
-                .orderBy('createdAt', 'desc')
                 .get();
 
+            const sortedEnrollmentDocs = (snaps.docs || []).slice().sort((a, b) => {
+                const aData = a.data() || {};
+                const bData = b.data() || {};
+                const aTime = aData.createdAt?.toMillis ? aData.createdAt.toMillis() : (aData.createdAt ? new Date(aData.createdAt).getTime() : 0);
+                const bTime = bData.createdAt?.toMillis ? bData.createdAt.toMillis() : (bData.createdAt ? new Date(bData.createdAt).getTime() : 0);
+                return bTime - aTime;
+            });
+
             const enrollments = [];
-            for (const doc of snaps.docs) {
+            for (const doc of sortedEnrollmentDocs) {
                 const enrollment = mapEnrollmentRecord(doc, doc.id);
                 let course = null;
                 let classroom = null;
@@ -73,11 +80,21 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                     // Load active scheduled sessions for this classroom
                     const sessionSnaps = await db.collection(CRM_SCHEDULED_SESSIONS)
                         .where('classId', '==', enrollment.classId)
-                        .orderBy('scheduledLocalDate', 'asc')
                         .get()
                         .catch(() => ({ docs: [] }));
 
-                    sessions = sessionSnaps.docs.map((sDoc) => normalizeScheduledSession({
+                    const sortedSessionDocs = (sessionSnaps.docs || []).slice().sort((a, b) => {
+                        const aData = a.data() || {};
+                        const bData = b.data() || {};
+                        const aDate = String(aData.scheduledLocalDate || '');
+                        const bDate = String(bData.scheduledLocalDate || '');
+                        if (aDate !== bDate) return aDate.localeCompare(bDate);
+                        const aTime = String(aData.scheduledLocalTime || '');
+                        const bTime = String(bData.scheduledLocalTime || '');
+                        return aTime.localeCompare(bTime);
+                    });
+
+                    sessions = sortedSessionDocs.map((sDoc) => normalizeScheduledSession({
                         sessionId: sDoc.id,
                         ...(sDoc.data() || {})
                     }));
@@ -216,14 +233,15 @@ module.exports = function registerEnrollmentRoutes(router, deps) {
                 }
             }
 
+            const classIdToMatch = String(payload.classId || '').trim();
+            const studentIdToMatch = String(payload.studentId || '').trim();
             const existingSnap = await db.collection(CRM_ENROLLMENTS)
-                .where('classId', '==', String(payload.classId || '').trim())
-                .where('studentId', '==', String(payload.studentId || '').trim())
-                .limit(1)
-                .get();
+                .where('studentId', '==', studentIdToMatch)
+                .get()
+                .catch(() => ({ docs: [] }));
 
-            if (existingSnap && !existingSnap.empty && Array.isArray(existingSnap.docs) && existingSnap.docs[0]) {
-                const existingDoc = existingSnap.docs[0];
+            const existingDoc = (existingSnap.docs || []).find((d) => String(d.data()?.classId || '').trim() === classIdToMatch);
+            if (existingDoc) {
                 return sendSuccess(res, {
                     deduped: true,
                     enrollment: mapEnrollmentRecord(existingDoc, existingDoc.id)

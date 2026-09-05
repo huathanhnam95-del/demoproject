@@ -591,6 +591,18 @@ class AsqMode {
         const rawBlob = new Blob(recordedChunks, { type: recorder.mimeType || 'audio/webm' });
         this.showRecordedAudio(rawBlob);
 
+        const dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
+          ? window.AudioDspPipeline.enhance(rawBlob).then((result) => {
+              if (this.isAttemptCurrent(attemptId) && result?.wavBlob) {
+                this.showRecordedAudio(result.wavBlob);
+              }
+              return result?.wavBlob || rawBlob;
+            }).catch((err) => {
+              console.warn('[ASQ] AudioDspPipeline enhancement failed, keeping raw audio:', err);
+              return rawBlob;
+            })
+          : Promise.resolve(rawBlob);
+
         try {
           this.setStatus('Transcribing...', 'muted');
           const transcript = await this.waitForTranscript({ timeoutMs: 5000 });
@@ -621,6 +633,8 @@ class AsqMode {
             xpEarned
           });
 
+          const finalBlob = await dspPromise.catch(() => rawBlob);
+
           window.PTEAttemptArchive?.saveAttempt?.({
             practiceMode: 'asq',
             promptSnapshot: {
@@ -643,8 +657,8 @@ class AsqMode {
             media: [{
               slot: 'student',
               label: 'Student answer',
-              blob: rawBlob,
-              contentType: rawBlob.type || 'audio/webm'
+              blob: finalBlob,
+              contentType: finalBlob.type || 'audio/wav'
             }]
           }).catch((archiveError) => console.warn('[PTE Archive] ASQ save failed:', archiveError));
 

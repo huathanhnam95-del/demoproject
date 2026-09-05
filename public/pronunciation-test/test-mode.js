@@ -509,6 +509,23 @@ class SegmentalScreeningApp {
       return this.testHooks.overrideWavBlob(blob);
     }
 
+    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+      try {
+        const result = await window.AudioDspPipeline.enhance(blob, {
+          targetSampleRate: 16000,
+          highpassFreq: 80,
+          targetPeakDb: -3,
+          trim: true,
+          paddingMs: 150
+        });
+        if (result && result.wavBlob) {
+          return result.wavBlob;
+        }
+      } catch (err) {
+        console.warn('[PronunciationTest] AudioDspPipeline enhancement failed, falling back:', err);
+      }
+    }
+
     if (blob.type === 'audio/wav' || blob.type === 'audio/wave') {
       return blob;
     }

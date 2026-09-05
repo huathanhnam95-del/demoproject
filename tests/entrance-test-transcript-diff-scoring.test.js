@@ -291,3 +291,54 @@ test('computeTranscriptDiffHtml: correctly escapes and serializes complex syllab
     assert.ok(html.includes('<span class="crm-word-token crm-transcript-error" data-playable="false" data-accuracy="55" data-syllables='), 'unplayable token with accuracy must serialize data-accuracy and data-syllables');
 });
 
+test('computeTranscriptDiffHtml: preserves enriched syllable metadata with timestamps, heardIpa and diagnosis', () => {
+    const computeTranscriptDiffHtml = getDiffFunction();
+    const expected = 'After these have been done, they get their results.';
+    const words = [
+        {
+            word: 'After',
+            startMs: 5620,
+            endMs: 6090,
+            accuracyScore: 97,
+            errorType: 'None',
+            syllables: [
+                {
+                    text: 'af',
+                    ipa: 'æf',
+                    accuracyScore: 71,
+                    startMs: 5620,
+                    endMs: 5850,
+                    heardIpa: 'æt',
+                    diagnosis: 'Sounded like /æt/ (/t/ instead of /f/)'
+                },
+                {
+                    text: 'ter',
+                    ipa: 'tɚ',
+                    accuracyScore: 75,
+                    startMs: 5860,
+                    endMs: 6090,
+                    heardIpa: null,
+                    diagnosis: 'Weak acoustic match on /ɚ/ (68%)'
+                }
+            ]
+        }
+    ];
+
+    const html = computeTranscriptDiffHtml(expected, '', words);
+    const match = html.match(/data-syllables='([^']+)'/);
+    assert.ok(match, 'must match data-syllables');
+    const decoded = match[1]
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#039;/g, "'")
+        .replace(/&amp;/g, '&');
+    const parsed = JSON.parse(decoded);
+    assert.strictEqual(parsed.length, 2);
+    assert.strictEqual(parsed[0].text, 'af');
+    assert.strictEqual(parsed[0].startMs, 5620);
+    assert.strictEqual(parsed[0].endMs, 5850);
+    assert.strictEqual(parsed[0].heardIpa, 'æt');
+    assert.strictEqual(parsed[0].diagnosis, 'Sounded like /æt/ (/t/ instead of /f/)');
+    assert.strictEqual(parsed[1].diagnosis, 'Weak acoustic match on /ɚ/ (68%)');
+});
+

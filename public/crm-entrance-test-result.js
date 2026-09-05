@@ -814,6 +814,9 @@
 
   let activeTooltipToken = null;
   let wordTooltipEl = null;
+  let tooltipHideTimer = null;
+  let isHoveringTooltip = false;
+  let isHoveringToken = false;
 
   function ensureWordTooltip() {
     if (!wordTooltipEl) {
@@ -825,12 +828,54 @@
         wordTooltipEl.style.display = 'none';
         document.body.appendChild(wordTooltipEl);
       }
+
+      if (!wordTooltipEl.dataset.crmTooltipBound) {
+        wordTooltipEl.dataset.crmTooltipBound = 'true';
+
+        wordTooltipEl.addEventListener('mouseenter', () => {
+          isHoveringTooltip = true;
+          if (tooltipHideTimer) {
+            clearTimeout(tooltipHideTimer);
+            tooltipHideTimer = null;
+          }
+        });
+
+        wordTooltipEl.addEventListener('mouseleave', () => {
+          isHoveringTooltip = false;
+          if (!isHoveringToken) {
+            tooltipHideTimer = setTimeout(() => {
+              if (!isHoveringTooltip && !isHoveringToken) {
+                hideWordTooltip();
+              }
+            }, 120);
+          }
+        });
+
+        wordTooltipEl.addEventListener('click', (e) => {
+          const chip = e.target.closest('.crm-syl-chip');
+          if (!chip || !activeTooltipToken) return;
+          const sStart = chip.dataset.startMs;
+          const sEnd = chip.dataset.endMs;
+          if (!sStart || !sEnd) return;
+          const questionCard = activeTooltipToken.closest('.crm-result-question');
+          const audioEl = questionCard?.querySelector('audio.crm-result-audio');
+          if (!audioEl) return;
+          e.stopPropagation();
+          playWordSegment(audioEl, sStart, sEnd, chip);
+        });
+      }
     }
     return wordTooltipEl;
   }
 
   function hideWordTooltip() {
     activeTooltipToken = null;
+    isHoveringTooltip = false;
+    isHoveringToken = false;
+    if (tooltipHideTimer) {
+      clearTimeout(tooltipHideTimer);
+      tooltipHideTimer = null;
+    }
     if (wordTooltipEl) {
       wordTooltipEl.style.display = 'none';
     }
@@ -890,6 +935,20 @@
       ? `<span class="crm-tooltip-badge ${badgeClass}">${acc}%</span>`
       : '';
 
+    // Calculate syllable average / status
+    const sylScores = Array.isArray(syllables)
+      ? syllables.map(s => Math.round(Number(s.accuracyScore ?? 0)))
+      : [];
+    const avgSylScore = sylScores.length > 0
+      ? Math.round(sylScores.reduce((a, b) => a + b, 0) / sylScores.length)
+      : null;
+
+    // Subtitle context: if word is green but syllables show divergence
+    let subtitleHtml = '<div class="crm-tooltip-subtitle">Word Intelligibility</div>';
+    if (acc != null && acc >= 80 && avgSylScore != null && avgSylScore < 80) {
+      subtitleHtml = '<div class="crm-tooltip-subtitle">Word is clearly intelligible, but syllables show accent variance.</div>';
+    }
+
     let syllablesHtml = '';
     if (Array.isArray(syllables) && syllables.length > 1) {
       const chips = syllables.map((s) => {
@@ -898,13 +957,45 @@
         if (score < 60) chipClass = 'syl-red';
         else if (score < 80) chipClass = 'syl-amber';
         const sText = escapeHtml(s.text || s.ipa || '');
-        return `<span class="crm-syl-chip ${chipClass}"><span class="crm-syl-text">${sText}</span> <span class="crm-syl-score">${score}%</span></span>`;
+        const timeAttr = (s.startMs != null && s.endMs != null)
+          ? ` data-start-ms="${s.startMs}" data-end-ms="${s.endMs}" title="Click to listen to '${sText}'"`
+          : '';
+        const playIcon = (s.startMs != null && s.endMs != null) ? '<span class="crm-syl-play">🔊</span> ' : '';
+        return `<span class="crm-syl-chip ${chipClass}" role="button" tabindex="0"${timeAttr}>${playIcon}<span class="crm-syl-text">${sText}</span> <span class="crm-syl-score">${score}%</span></span>`;
       }).join('');
-      syllablesHtml = `<div class="crm-tooltip-syllables">${chips}</div>`;
+      syllablesHtml = `
+        <div class="crm-tooltip-section">
+          <div class="crm-tooltip-section-title">Syllables (Acoustic Match: ${avgSylScore}%)</div>
+          <div class="crm-tooltip-syllables">${chips}</div>
+        </div>
+      `;
     }
 
-    const hintHtml = token.dataset.playable === 'true'
-      ? '<div class="crm-tooltip-hint">Click to listen</div>'
+    // Diagnostic insights for low-scoring or substituted syllables
+    let insightHtml = '';
+    const diagnosticItems = [];
+    if (Array.isArray(syllables)) {
+      for (const s of syllables) {
+        if (s.diagnosis) {
+          const sLabel = escapeHtml(s.text || s.ipa || '');
+          diagnosticItems.push(`<div class="crm-insight-item"><strong class="crm-insight-syl">${sLabel}:</strong> ${escapeHtml(s.diagnosis)}</div>`);
+        }
+      }
+    }
+    if (diagnosticItems.length > 0) {
+      insightHtml = `
+        <div class="crm-tooltip-insight">
+          <div class="crm-insight-title">💡 Acoustic Diagnosis</div>
+          <div class="crm-insight-list">${diagnosticItems.join('')}</div>
+        </div>
+      `;
+    }
+
+    const hintText = Array.isArray(syllables) && syllables.some(s => s.startMs != null)
+      ? '🔊 Click word or syllable chip to listen'
+      : (token.dataset.playable === 'true' ? '🔊 Click word to listen' : '');
+    const hintHtml = hintText
+      ? `<div class="crm-tooltip-hint">${hintText}</div>`
       : '';
 
     tooltip.innerHTML = `
@@ -912,7 +1003,9 @@
         <span class="crm-tooltip-word">${escapeHtml(wordText)}</span>
         ${badgeHtml}
       </div>
+      ${subtitleHtml}
       ${syllablesHtml}
+      ${insightHtml}
       ${hintHtml}
     `;
 
@@ -930,6 +1023,11 @@
     rootEl.addEventListener('mouseover', (e) => {
       const token = e.target.closest('.crm-word-token[data-playable="true"], .crm-word-token[data-accuracy]');
       if (!token) return;
+      isHoveringToken = true;
+      if (tooltipHideTimer) {
+        clearTimeout(tooltipHideTimer);
+        tooltipHideTimer = null;
+      }
       if (token === activeTooltipToken) return;
       showWordTooltip(token);
     });
@@ -938,21 +1036,30 @@
       const token = e.target.closest('.crm-word-token');
       if (!token) return;
       const related = e.relatedTarget;
-      if (related && token.contains(related)) return;
-      if (token === activeTooltipToken) {
-        hideWordTooltip();
+      if (related && (token.contains(related) || (wordTooltipEl && wordTooltipEl.contains(related)))) return;
+      isHoveringToken = false;
+      if (tooltipHideTimer) {
+        clearTimeout(tooltipHideTimer);
+        tooltipHideTimer = null;
       }
+      tooltipHideTimer = setTimeout(() => {
+        if (!isHoveringTooltip && !isHoveringToken) {
+          hideWordTooltip();
+        }
+      }, 120);
     });
 
     rootEl.addEventListener('focusin', (e) => {
       const token = e.target.closest('.crm-word-token[data-playable="true"], .crm-word-token[data-accuracy]');
       if (!token) return;
+      isHoveringToken = true;
       showWordTooltip(token);
     });
 
     rootEl.addEventListener('focusout', (e) => {
       const token = e.target.closest('.crm-word-token');
       if (!token) return;
+      isHoveringToken = false;
       if (token === activeTooltipToken) {
         hideWordTooltip();
       }

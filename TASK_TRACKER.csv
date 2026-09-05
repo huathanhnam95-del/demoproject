@@ -1974,3 +1974,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 979,2026-09-05,Release V1.8.128: Deploy Step 1 four-paradigm visual upgrade and smooth transitions to production,Done,2026-09-05
 980,2026-09-05,Fix practice dashboard mode cards stretching vertically to 750px when selecting Writing,Done,2026-09-05
 981,2026-09-05,Release V1.8.129: Deploy practice dashboard card height fix to production,Done,2026-09-05
+982,2026-09-05,Audit and standardize client-side audio DSP enhancement pipeline across all recording modes and future modes,Done,2026-09-05
+983,2026-09-05,Investigate acoustic score discrepancy phoneme substitution diagnostics and tooltip UI scaling,In Progress,
+984,2026-09-05,Fix Firestore composite index requirement 500 error in CRM Student Courses enrollments endpoint,Done,2026-09-05
+985,2026-09-05,Release V1.8.130: Deploy CRM Student Courses Firestore 500 fix and index resilience to production,Done,2026-09-05

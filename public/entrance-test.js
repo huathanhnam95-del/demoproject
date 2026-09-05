@@ -990,6 +990,25 @@
    * Falls back to raw blob on processing failure or 3-second timeout (iOS Safari screen-lock).
    */
   async function prepareEntranceTestBlob(rawBlob) {
+    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+      try {
+        const result = await window.AudioDspPipeline.enhance(rawBlob, {
+          targetSampleRate: 16000,
+          highpassFreq: 80,
+          targetPeakDb: -3,
+          trim: true,
+          paddingMs: 150
+        });
+        return {
+          wavBlob: result.wavBlob,
+          stats: result.stats
+        };
+      } catch (err) {
+        console.warn('[EntranceTest] AudioDspPipeline enhancement failed, falling back to raw blob:', err);
+        return { wavBlob: rawBlob, stats: null };
+      }
+    }
+
     let audioContext = null;
     try {
       const arrayBuffer = await rawBlob.arrayBuffer();

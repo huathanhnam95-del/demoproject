@@ -1,3 +1,16 @@
+## [V1.8.130] - 2026-09-05
+
+### Fixed & Enhanced
+- **CRM Student Courses Firestore Index Resilience & HTTP 500 Fix**:
+  - **Eliminated Composite Index Requirement in Enrollments Query**: Replaced `.orderBy('createdAt', 'desc')` in `functions/src/routes/admin/enrollments.js` (`GET /students/:studentId/enrollments`) with single-field equality filtering `.where('studentId', '==', studentId).get()`, sorting docs in Node.js memory. This completely resolves the Firestore `9 FAILED_PRECONDITION` error on production environments where a composite index was required but unindexed.
+  - **In-Memory Session Sorting**: Updated `CRM_SCHEDULED_SESSIONS` query to remove `.orderBy('scheduledLocalDate', 'asc')`, sorting retrieved sessions by `scheduledLocalDate` and `scheduledStartTime` in Node.js memory for zero-index resilience.
+  - **Post Enrollment Deduplication Resilience**: Hardened `POST /enrollments` duplicate check to query single-field `studentId` and evaluate active enrollments in-memory.
+  - **Client Error Message Extraction**: Enhanced `public/js/crm/student-courses.js` `fetchStudentEnrollments` to extract and display backend JSON error messages (`errData.message || errData.error`) instead of generic `(HTTP 500)`.
+  - **Firestore Index Manifest**: Added composite index definitions for `crmEnrollments` (`studentId`, `createdAt`) and `crmScheduledSessions` (`classId`, `scheduledLocalDate`) to `firestore.indexes.json`.
+- **Client-Side Audio DSP Enhancement Pipeline Standardization**:
+  - Standardized audio capture and preprocessing pipeline across all student voice recording modes (`asq-mode.js`, `describe-image-mode.js`, `read-aloud-mode.js`, `rts-mode.js`, `sgd-mode.js`, `entrance-test.js`, `pronunciation-test/test-mode.js`, `echo-forge/adapters/audio-capture-adapter.js`).
+  - Implemented 80Hz rumble removal, 16kHz sinc-resampling, -3dBFS peak normalization, and silence trimming for crystal-clear playback and enhanced ASR scoring accuracy.
+
 ## [V1.8.129] - 2026-09-05
 
 ### Fixed & Refined

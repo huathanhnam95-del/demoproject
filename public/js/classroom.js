@@ -183,14 +183,24 @@
                 elements.mediaPreview.innerHTML = `
           <div style="background: #f1f5f9; padding: 12px; border-radius: 8px;">
             <div style="font-weight:600; font-size: 0.85rem; margin-bottom: 8px;">Your Recording</div>
-            <audio controls src="${audioUrl}" style="width: 100%; outline: none;"></audio>
+            <audio id="classroom-recording-audio" controls src="${audioUrl}" style="width: 100%; outline: none;"></audio>
           </div>
         `;
                 elements.mediaPreview.style.display = 'block';
                 elements.btnSubmit.disabled = false;
                 elements.validationNote.style.display = 'none';
 
-                // Let it be submitted
+                if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+                    window.AudioDspPipeline.enhance(currentAudioBlob).then(result => {
+                        if (result && result.wavBlob && result.audioUrl) {
+                            currentAudioBlob = result.wavBlob;
+                            const aud = document.getElementById('classroom-recording-audio');
+                            if (aud) aud.src = result.audioUrl;
+                        }
+                    }).catch(err => {
+                        console.warn('[Classroom] AudioDspPipeline enhancement failed, keeping raw audio:', err);
+                    });
+                }
             };
 
             mediaRecorder.start();

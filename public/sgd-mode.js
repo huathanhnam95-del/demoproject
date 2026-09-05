@@ -1114,6 +1114,19 @@
                     if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
                     show(el.playbackArea);
                     showInline(el.submitBtn);
+
+                    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+                        window.AudioDspPipeline.enhance(blob).then((result) => {
+                            if (result && result.wavBlob && result.audioUrl) {
+                                if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
+                                recordingBlob = result.wavBlob;
+                                recordingBlobUrl = result.audioUrl;
+                                if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
+                            }
+                        }).catch((err) => {
+                            console.warn('[SGD] AudioDspPipeline enhancement failed, keeping raw audio:', err);
+                        });
+                    }
                 }
                 // Bug fix: show record button only here (not in stopRecording)
                 showInline(el.recordBtn);

@@ -3948,6 +3948,32 @@ class ReadAloudMode {
     // A new assessment must never reuse a buffer from a prior recording if
     // decoding or quality validation fails.
     this.assessmentAudioBuffer = null;
+
+    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+      const result = await window.AudioDspPipeline.enhance(blob, {
+        targetSampleRate: 16000,
+        highpassFreq: 80,
+        targetPeakDb: -3,
+        trim: true,
+        paddingMs: 150
+      });
+
+      if (!result.audioBuffer) {
+        throw new Error('Audio enhancement failed to produce a valid buffer');
+      }
+
+      const quality = this.validateAudioBufferQuality(result.audioBuffer);
+      if (!quality.passed) {
+        const error = new Error('Audio quality validation failed');
+        error.code = 'INVALID_AUDIO';
+        error.reason = quality.reason;
+        throw error;
+      }
+
+      this.assessmentAudioBuffer = result.audioBuffer;
+      return result.wavBlob;
+    }
+
     const arrayBuffer = await blob.arrayBuffer();
     const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextCtor) throw new Error('AudioContext is not supported.');
@@ -4037,6 +4063,9 @@ class ReadAloudMode {
    * or null if no speech is detected.
    */
   detectSpeechBoundaries(channelData, sampleRate) {
+    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.detectSpeechBoundaries === 'function') {
+      return window.AudioDspPipeline.detectSpeechBoundaries(channelData, sampleRate);
+    }
     const totalSamples = channelData.length;
     const frameSize = Math.max(1, Math.round(sampleRate * 0.01)); // 10ms frames
     const frameDurationMs = (frameSize / sampleRate) * 1000;
@@ -4088,6 +4117,9 @@ class ReadAloudMode {
    * trimming would remove less than 10% of the total duration.
    */
   trimSilence(audioBuffer, paddingMs = 150) {
+    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.trimSilence === 'function') {
+      return window.AudioDspPipeline.trimSilence(audioBuffer, { paddingMs });
+    }
     const channelData = audioBuffer.getChannelData(0);
     const sampleRate = audioBuffer.sampleRate;
     const boundaries = this.detectSpeechBoundaries(channelData, sampleRate);

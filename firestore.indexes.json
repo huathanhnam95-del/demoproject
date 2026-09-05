@@ -324,6 +324,22 @@
           "vectorConfig": { "dimension": 768, "flat": {} }
         }
       ]
+    },
+    {
+      "collectionGroup": "crmEnrollments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studentId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crmScheduledSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "classId", "order": "ASCENDING" },
+        { "fieldPath": "scheduledLocalDate", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

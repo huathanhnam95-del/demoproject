@@ -225,7 +225,8 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         Granularity: 'Phoneme',
         Dimension: 'Comprehensive',
         PhonemeAlphabet: 'IPA',
-        EnableMiscue: true
+        EnableMiscue: true,
+        NBestPhonemeCount: 5
     };
     const header = Buffer.from(JSON.stringify(config)).toString('base64');
     const endpoint = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed`;
@@ -259,13 +260,64 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
             const startMs = Number.isFinite(rawOffset) && rawOffset >= 0 ? Math.round(rawOffset / 10000) : null;
             const durMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.round(rawDuration / 10000) : null;
             const endMs = startMs != null && durMs != null ? startMs + durMs : null;
+
             const syllables = Array.isArray(w.Syllables) && w.Syllables.length > 0
-                ? w.Syllables.map(s => ({
-                    text: String(s.Grapheme || s.Syllable || '').trim(),
-                    ipa: String(s.Syllable || '').trim(),
-                    accuracyScore: Math.round(Number(s.AccuracyScore ?? s.PronunciationAssessment?.AccuracyScore ?? 0))
-                })).filter(s => s.text.length > 0)
+                ? w.Syllables.map(s => {
+                    const sOffset = Number(s.Offset);
+                    const sDuration = Number(s.Duration);
+                    const sStartMs = Number.isFinite(sOffset) && sOffset >= 0 ? Math.round(sOffset / 10000) : null;
+                    const sDurMs = Number.isFinite(sDuration) && sDuration > 0 ? Math.round(sDuration / 10000) : null;
+                    const sEndMs = sStartMs != null && sDurMs != null ? sStartMs + sDurMs : null;
+                    const sAccuracy = Math.round(Number(s.AccuracyScore ?? s.PronunciationAssessment?.AccuracyScore ?? 0));
+
+                    // Correlate constituent phonemes within this syllable interval
+                    const constituents = (Array.isArray(w.Phonemes) ? w.Phonemes : []).filter(p => {
+                        const pOffset = Number(p.Offset);
+                        return Number.isFinite(pOffset) && pOffset >= sOffset && pOffset < (sOffset + sDuration);
+                    });
+
+                    let heardPhonemes = [];
+                    let substitutions = [];
+
+                    for (const p of constituents) {
+                        const expectedPh = String(p.Phoneme || '').trim();
+                        const topCand = p.NBestPhonemes?.[0]?.Phoneme ? String(p.NBestPhonemes[0].Phoneme).trim() : expectedPh;
+                        const phAcc = Math.round(Number(p.AccuracyScore ?? 0));
+                        heardPhonemes.push(topCand);
+
+                        if (topCand !== expectedPh && phAcc < 80) {
+                            substitutions.push({ expected: expectedPh, heard: topCand, score: phAcc });
+                        }
+                    }
+
+                    const heardIpa = heardPhonemes.join('');
+                    let diagnosis = null;
+
+                    if (substitutions.length > 0) {
+                        const details = substitutions.map(sp => `/${sp.heard}/ instead of /${sp.expected}/`).join(', ');
+                        diagnosis = `Sounded like /${heardIpa}/ (${details})`;
+                    } else if (sAccuracy < 80) {
+                        const lowPhonemes = constituents.filter(p => Math.round(Number(p.AccuracyScore ?? 0)) < 75);
+                        if (lowPhonemes.length > 0) {
+                            const phList = lowPhonemes.map(p => `/${p.Phoneme}/ (${Math.round(Number(p.AccuracyScore ?? 0))}%)`).join(', ');
+                            diagnosis = `Weak acoustic match on ${phList}`;
+                        } else {
+                            diagnosis = `Acoustic match was ${sAccuracy}% due to non-native resonance`;
+                        }
+                    }
+
+                    return {
+                        text: String(s.Grapheme || s.Syllable || '').trim(),
+                        ipa: String(s.Syllable || '').trim(),
+                        accuracyScore: sAccuracy,
+                        startMs: sStartMs,
+                        endMs: sEndMs,
+                        heardIpa: heardIpa && heardIpa !== String(s.Syllable || '').trim() ? heardIpa : null,
+                        diagnosis
+                    };
+                }).filter(s => s.text.length > 0)
                 : null;
+
             return {
                 word: String(w.Word || '').trim(),
                 startMs,

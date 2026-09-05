@@ -606,6 +606,23 @@
         recordingBlob = blob;
         recordingBlobUrl = URL.createObjectURL(blob);
         showResults(recordingBlobUrl);
+
+        if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+            const currentToken = recordingSessionToken;
+            window.AudioDspPipeline.enhance(blob).then((result) => {
+                if (currentToken !== recordingSessionToken) return;
+                if (result && result.wavBlob && result.audioUrl) {
+                    if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
+                    recordingBlob = result.wavBlob;
+                    recordingBlobUrl = result.audioUrl;
+                    if (el.rtsRecordingPlayback) {
+                        el.rtsRecordingPlayback.src = recordingBlobUrl;
+                    }
+                }
+            }).catch((err) => {
+                console.warn('[RTS] AudioDspPipeline enhancement failed, keeping raw audio:', err);
+            });
+        }
     }
 
     /* ──────────────────────────── SPEECH RECOGNITION ──────────────────────────── */

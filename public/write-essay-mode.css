@@ -6184,15 +6184,26 @@
   border-radius: 4px;
 }
 
+#mode-essay .essay-wb-pipeline-stepper {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
 #mode-essay .essay-wb-pipeline-drawer {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
   background: var(--essay-paper, #f1f5f9);
   border: 1px solid var(--essay-border, #cbd5e1);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 14px 18px;
 }
 
 #mode-essay .essay-wb-drawer-head {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 #mode-essay .essay-wb-drawer-pill {
@@ -6222,13 +6233,14 @@
   padding: 6px 10px;
   border-radius: 6px;
   color: var(--essay-ink, #1e293b);
+  margin-top: 10px;
 }
 
 #mode-essay .essay-wb-drawer-trap-icon {
   font-size: 0.9rem;
 }
 
-/* Dynamic POS & PEEL Outline Flowchart Tree */
+/* Dynamic POS & PEEL Outline Flowchart & Pipeline */
 #mode-essay .essay-pos-peel-body {
   display: flex;
   flex-direction: column;
@@ -6236,19 +6248,23 @@
   margin-bottom: 8px;
 }
 
+/* --- A. Horizontal Branching Tree (for POS Intro & Conclusion) --- */
 #mode-essay .essay-flowchart-tree {
   display: flex;
   align-items: stretch;
   gap: 16px;
   position: relative;
-  padding: 4px 0;
+  padding: 6px 0;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 #mode-essay .essay-flowchart-root-col {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  width: 140px;
+  width: 145px;
 }
 
 #mode-essay .essay-flowchart-root {
@@ -6258,7 +6274,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 16px 10px;
+  padding: 18px 10px;
   border-radius: 12px;
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
@@ -6269,11 +6285,6 @@
 #mode-essay .essay-flowchart-root.is-intro {
   border-color: #3b82f6;
   background: linear-gradient(160deg, #eff6ff, #ffffff);
-}
-
-#mode-essay .essay-flowchart-root.is-peel {
-  border-color: #6366f1;
-  background: linear-gradient(160deg, #eef2ff, #ffffff);
 }
 
 #mode-essay .essay-flowchart-root.is-conclusion {
@@ -6296,9 +6307,14 @@
   background: rgba(59, 130, 246, 0.14);
 }
 
-#mode-essay .essay-flowchart-root.is-peel .essay-flowchart-root-badge {
+#mode-essay .essay-flowchart-root-badge.is-body1 {
   color: #4338ca;
   background: rgba(99, 102, 241, 0.14);
+}
+
+#mode-essay .essay-flowchart-root-badge.is-body2 {
+  color: #0369a1;
+  background: rgba(14, 165, 233, 0.14);
 }
 
 #mode-essay .essay-flowchart-root.is-conclusion .essay-flowchart-root-badge {
@@ -6325,10 +6341,10 @@
   font-weight: 700;
   color: #4338ca;
   background: rgba(99, 102, 241, 0.1);
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 6px;
-  margin-top: 8px;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 /* Branching Connector & Tree Lines */
@@ -6336,7 +6352,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
+  width: 24px;
   flex-shrink: 0;
   position: relative;
 }
@@ -6360,7 +6376,7 @@
 #mode-essay .essay-flowchart-branches {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   flex-grow: 1;
   position: relative;
   padding-left: 20px;
@@ -6371,8 +6387,8 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 18px;
-  bottom: 18px;
+  top: 20px;
+  bottom: 20px;
   width: 2px;
   background: #cbd5e1;
 }
@@ -6381,8 +6397,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 9px 12px;
+  gap: 5px;
+  padding: 10px 14px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
@@ -6390,6 +6406,31 @@
   line-height: 1.45;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.18s ease;
+}
+
+/* Differentiated left accent borders for tree nodes */
+#mode-essay .essay-flowchart-node.is-p {
+  border-left: 3.5px solid #3b82f6;
+}
+
+#mode-essay .essay-flowchart-node.is-o {
+  border-left: 3.5px solid #10b981;
+}
+
+#mode-essay .essay-flowchart-node.is-s {
+  border-left: 3.5px solid #f59e0b;
+}
+
+#mode-essay .essay-flowchart-node.is-reaffirm {
+  border-left: 3.5px solid #10b981;
+}
+
+#mode-essay .essay-flowchart-node.is-synthesize {
+  border-left: 3.5px solid #f59e0b;
+}
+
+#mode-essay .essay-flowchart-node.is-remark {
+  border-left: 3.5px solid #3b82f6;
 }
 
 #mode-essay .essay-flowchart-node:hover {
@@ -6402,7 +6443,7 @@
   content: '';
   position: absolute;
   left: -20px;
-  top: 17px;
+  top: 18px;
   width: 20px;
   height: 2px;
   background: #cbd5e1;
@@ -6415,10 +6456,180 @@
   flex-wrap: wrap;
 }
 
-#mode-essay .essay-flowchart-node-content {
+/* Enhanced Inner Callout Boxes for Content Depth */
+#mode-essay .essay-flowchart-callout {
+  padding: 7px 11px;
+  border-radius: 6px;
   font-size: 0.84rem;
   line-height: 1.45;
   color: var(--essay-ink, #334155);
+}
+
+#mode-essay .essay-flowchart-callout.callout-blue {
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+#mode-essay .essay-flowchart-callout.callout-emerald {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+#mode-essay .essay-flowchart-callout.callout-amber {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+#mode-essay .essay-flowchart-callout.callout-indigo {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+#mode-essay .essay-flowchart-callout.callout-sky {
+  background: rgba(14, 165, 233, 0.05);
+  border: 1px solid rgba(14, 165, 233, 0.15);
+}
+
+#mode-essay .essay-flowchart-callout.callout-orange {
+  background: rgba(234, 88, 12, 0.05);
+  border: 1px solid rgba(234, 88, 12, 0.15);
+}
+
+#mode-essay .essay-flowchart-callout.callout-purple {
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+/* --- B. Sequential PEEL Progression Pipeline (Body 1 & 2) --- */
+#mode-essay .essay-peel-pipeline {
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+#mode-essay .essay-peel-pipeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#mode-essay .essay-peel-header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#mode-essay .essay-peel-pipeline-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--essay-ink, #0f172a);
+  line-height: 1.25;
+}
+
+#mode-essay .essay-peel-pipeline-sub {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--essay-ink-muted, #64748b);
+}
+
+#mode-essay .essay-peel-steps-list {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+#mode-essay .essay-peel-step-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.18s ease;
+}
+
+#mode-essay .essay-peel-step-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+#mode-essay .essay-peel-step-card.is-p {
+  border-left: 4px solid #6366f1;
+}
+
+#mode-essay .essay-peel-step-card.is-e {
+  border-left: 4px solid #0ea5e9;
+}
+
+#mode-essay .essay-peel-step-card.is-ex {
+  border-left: 4px solid #ea580c;
+}
+
+#mode-essay .essay-peel-step-card.is-l {
+  border-left: 4px solid #a855f7;
+}
+
+#mode-essay .essay-peel-card-lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#mode-essay .essay-peel-transition {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+#mode-essay .essay-peel-transition::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  background: #cbd5e1;
+  z-index: 1;
+}
+
+#mode-essay .essay-peel-transition-badge {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 2px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+#mode-essay .essay-peel-transition-arrow {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #3b82f6;
+  line-height: 1;
 }
 
 @media (max-width: 768px) {

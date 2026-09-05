@@ -3858,7 +3858,7 @@
                 roleVi: `Paraphrase + ${opinionStatementVi} + Báo trước 2 luận điểm`,
                 tag: '2-3 câu',
                 renderDrawer: () => `
-                    <div class="essay-flowchart-tree">
+                    <div class="essay-flowchart-tree is-pos-intro">
                         <div class="essay-flowchart-root-col">
                             <div class="essay-flowchart-root is-intro">
                                 <span class="essay-flowchart-root-badge">MỞ BÀI</span>
@@ -3868,30 +3868,30 @@
                         </div>
                         <div class="essay-flowchart-connector"></div>
                         <div class="essay-flowchart-branches">
-                            <div class="essay-flowchart-node is-p">
+                            <div class="essay-flowchart-node is-pos-node is-p">
                                 <div class="essay-flowchart-node-lead">
                                     <span class="essay-pos-peel-pill pos-p">[P] Paraphrase</span>
                                     <strong>${guidedText('Paraphrase Prompt:', 'Nhắc lại đề bài:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-blue">
                                     <span>${guidedText('Restate the prompt in your own words with synonyms, avoiding verbatim repetition.', 'Diễn đạt lại nhận định trong đề bài bằng từ ngữ của bạn, tuyệt đối không chép nguyên văn.')}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-o">
+                            <div class="essay-flowchart-node is-pos-node is-o">
                                 <div class="essay-flowchart-node-lead">
                                     <span class="essay-pos-peel-pill pos-o">[O] Opinion</span>
                                     <strong>${guidedText('Thesis & Opinion:', 'Chốt lập trường:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-emerald">
                                     <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${escapeHtml(stanceTitle)}).</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-s">
+                            <div class="essay-flowchart-node is-pos-node is-s">
                                 <div class="essay-flowchart-node-lead">
                                     <span class="essay-pos-peel-pill pos-s">[S] Signpost</span>
                                     <strong>${guidedText('Signpost 2 Core Points:', 'Báo trước 2 luận điểm chính đã chọn:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-amber">
                                     <div class="essay-pos-signposts">
                                         <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
                                         <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
@@ -3909,50 +3909,74 @@
                 roleVi: `[Luận điểm 1] ${p1.titleVi}`,
                 tag: '4-5 câu',
                 renderDrawer: () => `
-                    <div class="essay-flowchart-tree">
-                        <div class="essay-flowchart-root-col">
-                            <div class="essay-flowchart-root is-peel">
-                                <span class="essay-flowchart-root-badge">THÂN BÀI 1</span>
-                                <span class="essay-flowchart-root-title">Body 1</span>
-                                <span class="essay-flowchart-root-sub">Cấu trúc PEEL</span>
-                                <span class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</span>
+                    <div class="essay-peel-pipeline">
+                        <div class="essay-peel-pipeline-header">
+                            <div class="essay-peel-header-main">
+                                <span class="essay-flowchart-root-badge is-body1">THÂN BÀI 1</span>
+                                <span class="essay-peel-pipeline-title">Body 1 (PEEL)</span>
+                                <span class="essay-peel-pipeline-sub">${guidedText('Sequential 4-Step Argument Pipeline', 'Quy trình lập luận 4 bước tuần tự')}</span>
                             </div>
+                            <div class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</div>
                         </div>
-                        <div class="essay-flowchart-connector"></div>
-                        <div class="essay-flowchart-branches">
-                            <div class="essay-flowchart-node is-peel-p">
-                                <div class="essay-flowchart-node-lead">
+
+                        <div class="essay-peel-steps-list">
+                            <div class="essay-peel-step-card is-p">
+                                <div class="essay-peel-card-lead">
                                     <span class="essay-pos-peel-pill peel-p">[P] Point</span>
                                     <strong>${guidedText('Point 1 (Topic Sentence):', 'Luận điểm 1 (Câu mở đoạn):')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-indigo">
                                     <span class="essay-peel-highlight">${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-peel-e">
-                                <div class="essay-flowchart-node-lead">
-                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
-                                    <strong>${guidedText('Explanation:', 'Giải thích cơ chế vì sao luận điểm này đúng:')}</strong>
+
+                            <div class="essay-peel-transition">
+                                <div class="essay-peel-transition-badge">
+                                    <span class="essay-peel-transition-arrow">↓</span>
+                                    <span class="essay-peel-transition-label">${guidedText('Why? (Logical Explanation)', 'Vì sao? (Cơ chế giải thích)')}</span>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                            </div>
+
+                            <div class="essay-peel-step-card is-e">
+                                <div class="essay-peel-card-lead">
+                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                                    <strong>${guidedText('Explanation (Mechanism):', 'Giải thích cơ chế logic:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-callout callout-sky">
                                     <span>${escapeHtml(guidedText(p1.expEn, p1.expVi))}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-peel-ex">
-                                <div class="essay-flowchart-node-lead">
-                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
-                                    <strong>${guidedText('Example / Evidence:', 'Gợi ý dẫn chứng minh họa:')}</strong>
+
+                            <div class="essay-peel-transition">
+                                <div class="essay-peel-transition-badge">
+                                    <span class="essay-peel-transition-arrow">↓</span>
+                                    <span class="essay-peel-transition-label">${guidedText('Real-World Evidence', 'Dẫn chứng thực tế minh họa')}</span>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                            </div>
+
+                            <div class="essay-peel-step-card is-ex">
+                                <div class="essay-peel-card-lead">
+                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
+                                    <strong>${guidedText('Example / Evidence:', 'Ví dụ & minh chứng cụ thể:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-callout callout-orange">
                                     <span>${guidedText('Provide a concrete real-world example, observation, or case study demonstrating this effect.', 'Đưa ra ví dụ thực tế đời sống hoặc nghiên cứu cụ thể để chứng minh cho cơ chế trên.')}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-peel-l">
-                                <div class="essay-flowchart-node-lead">
+
+                            <div class="essay-peel-transition">
+                                <div class="essay-peel-transition-badge">
+                                    <span class="essay-peel-transition-arrow">↓</span>
+                                    <span class="essay-peel-transition-label">${guidedText('Reinforce Stance & Link', 'Chốt lại & liên kết')}</span>
+                                </div>
+                            </div>
+
+                            <div class="essay-peel-step-card is-l">
+                                <div class="essay-peel-card-lead">
                                     <span class="essay-pos-peel-pill peel-l">[L] Link</span>
                                     <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-purple">
                                     <span>${guidedText(`Conclude how Point 1 reinforces your stance (${opinionStatementEn.toLowerCase()}).`, `Chốt lại một câu ngắn gọn khẳng định lý do vì sao luận điểm 1 củng cố cho quan điểm chung của bài.`)}</span>
                                 </div>
                             </div>
@@ -3967,50 +3991,74 @@
                 roleVi: `[Luận điểm 2] ${p2.titleVi}`,
                 tag: '4-5 câu',
                 renderDrawer: () => `
-                    <div class="essay-flowchart-tree">
-                        <div class="essay-flowchart-root-col">
-                            <div class="essay-flowchart-root is-peel">
-                                <span class="essay-flowchart-root-badge">THÂN BÀI 2</span>
-                                <span class="essay-flowchart-root-title">Body 2</span>
-                                <span class="essay-flowchart-root-sub">Cấu trúc PEEL</span>
-                                <span class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</span>
+                    <div class="essay-peel-pipeline">
+                        <div class="essay-peel-pipeline-header">
+                            <div class="essay-peel-header-main">
+                                <span class="essay-flowchart-root-badge is-body2">THÂN BÀI 2</span>
+                                <span class="essay-peel-pipeline-title">Body 2 (PEEL)</span>
+                                <span class="essay-peel-pipeline-sub">${guidedText('Sequential 4-Step Argument Pipeline', 'Quy trình lập luận 4 bước tuần tự')}</span>
                             </div>
+                            <div class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</div>
                         </div>
-                        <div class="essay-flowchart-connector"></div>
-                        <div class="essay-flowchart-branches">
-                            <div class="essay-flowchart-node is-peel-p">
-                                <div class="essay-flowchart-node-lead">
+
+                        <div class="essay-peel-steps-list">
+                            <div class="essay-peel-step-card is-p">
+                                <div class="essay-peel-card-lead">
                                     <span class="essay-pos-peel-pill peel-p">[P] Point</span>
                                     <strong>${guidedText('Point 2 (Topic Sentence):', 'Luận điểm 2 (Câu mở đoạn):')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-indigo">
                                     <span class="essay-peel-highlight">${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-peel-e">
-                                <div class="essay-flowchart-node-lead">
-                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
-                                    <strong>${guidedText('Explanation:', 'Giải thích luận điểm 2:')}</strong>
+
+                            <div class="essay-peel-transition">
+                                <div class="essay-peel-transition-badge">
+                                    <span class="essay-peel-transition-arrow">↓</span>
+                                    <span class="essay-peel-transition-label">${guidedText('Why? (Logical Explanation)', 'Vì sao? (Cơ chế giải thích)')}</span>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                            </div>
+
+                            <div class="essay-peel-step-card is-e">
+                                <div class="essay-peel-card-lead">
+                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                                    <strong>${guidedText('Explanation (Mechanism):', 'Giải thích cơ chế logic:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-callout callout-sky">
                                     <span>${escapeHtml(guidedText(p2.expEn, p2.expVi))}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-peel-ex">
-                                <div class="essay-flowchart-node-lead">
-                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
-                                    <strong>${guidedText('Example / Evidence:', 'Dẫn chứng thực tế:')}</strong>
+
+                            <div class="essay-peel-transition">
+                                <div class="essay-peel-transition-badge">
+                                    <span class="essay-peel-transition-arrow">↓</span>
+                                    <span class="essay-peel-transition-label">${guidedText('Real-World Evidence', 'Dẫn chứng thực tế minh họa')}</span>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                            </div>
+
+                            <div class="essay-peel-step-card is-ex">
+                                <div class="essay-peel-card-lead">
+                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
+                                    <strong>${guidedText('Example / Evidence:', 'Ví dụ & dẫn chứng thực tế:')}</strong>
+                                </div>
+                                <div class="essay-flowchart-callout callout-orange">
                                     <span>${guidedText('Offer another illustrative real-world instance or comparative contrast strengthening point 2.', 'Đưa ví dụ minh chứng đời sống hoặc so sánh thực tiễn để tăng sức thuyết phục cho luận điểm 2.')}</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-peel-l">
-                                <div class="essay-flowchart-node-lead">
+
+                            <div class="essay-peel-transition">
+                                <div class="essay-peel-transition-badge">
+                                    <span class="essay-peel-transition-arrow">↓</span>
+                                    <span class="essay-peel-transition-label">${guidedText('Transition to Conclusion', 'Chuyển ý mượt mà sang Kết bài')}</span>
+                                </div>
+                            </div>
+
+                            <div class="essay-peel-step-card is-l">
+                                <div class="essay-peel-card-lead">
                                     <span class="essay-pos-peel-pill peel-l">[L] Link</span>
                                     <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-purple">
                                     <span>${guidedText('Wrap up Body 2, building a smooth logical transition into the conclusion.', 'Khép lại thân bài 2, tạo bước đệm chuyển ý mượt mà sang phần kết luận.')}</span>
                                 </div>
                             </div>
@@ -4025,7 +4073,7 @@
                 roleVi: 'Khẳng định lại lập trường & đúc kết 2 luận điểm',
                 tag: '1-2 câu',
                 renderDrawer: () => `
-                    <div class="essay-flowchart-tree">
+                    <div class="essay-flowchart-tree is-conclusion-tree">
                         <div class="essay-flowchart-root-col">
                             <div class="essay-flowchart-root is-conclusion">
                                 <span class="essay-flowchart-root-badge">KẾT BÀI</span>
@@ -4035,33 +4083,33 @@
                         </div>
                         <div class="essay-flowchart-connector"></div>
                         <div class="essay-flowchart-branches">
-                            <div class="essay-flowchart-node is-o">
+                            <div class="essay-flowchart-node is-conclusion-node is-reaffirm">
                                 <div class="essay-flowchart-node-lead">
                                     <span class="essay-pos-peel-pill pos-o">✓ ${guidedText('Reaffirm', 'Khẳng định')}</span>
                                     <strong>${guidedText('Reaffirm Stance:', 'Khẳng định lại quan điểm:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-emerald">
                                     <span class="essay-peel-highlight">${guidedText(opinionStatementEn, opinionStatementVi)} (${guidedText('using fresh phrasing, not duplicating intro', 'bằng câu từ diễn đạt khác mở bài')}).</span>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-s">
+                            <div class="essay-flowchart-node is-conclusion-node is-synthesize">
                                 <div class="essay-flowchart-node-lead">
                                     <span class="essay-pos-peel-pill pos-s">✓ ${guidedText('Synthesize', 'Đúc kết')}</span>
                                     <strong>${guidedText('Synthesize 2 Core Points:', 'Đúc kết 2 luận điểm then chốt:')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-amber">
                                     <div class="essay-pos-signposts">
                                         <span class="essay-signpost-point">1. ${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
                                         <span class="essay-signpost-point">2. ${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="essay-flowchart-node is-p">
+                            <div class="essay-flowchart-node is-conclusion-node is-remark">
                                 <div class="essay-flowchart-node-lead">
                                     <span class="essay-pos-peel-pill pos-p">💡 ${guidedText('Final Remark', 'Mở rộng')}</span>
                                     <strong>${guidedText('Final Thought (Optional):', 'Lời bình / Mở rộng (tuỳ chọn):')}</strong>
                                 </div>
-                                <div class="essay-flowchart-node-content">
+                                <div class="essay-flowchart-callout callout-blue">
                                     <span>${guidedText('A concise forward-looking remark or practical takeaway for lasting essay resonance.', '1 câu nhận định tương lai hoặc khuyến nghị thực tiễn để bài viết có chiều sâu ấn tượng.')}</span>
                                 </div>
                             </div>

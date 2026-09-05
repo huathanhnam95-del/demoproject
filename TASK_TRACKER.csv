@@ -1960,3 +1960,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 965,2026-09-05,Live browser audit: Teaching Session Viewer upload + analysis + visual audit on production,In Progress,
 966,2026-09-05,Guided Write Essay Step 1 UI refinements: auto fullscreen on Start Writing mindmap connector resize fix card heading layout and flowchart outline,Done,2026-09-05
 967,2026-09-05,Release V1.8.123: Deploy Guided Write Essay Step 1 UI refinements and Teaching Session Viewer fixes to production,Done,2026-09-05
+968,2026-09-05,Refine Guided Write Essay Step 1 flowchart design for POS and PEEL,Done,2026-09-05

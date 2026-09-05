@@ -6099,6 +6099,12 @@
   }
 }
 
+@media (max-width: 480px) {
+  #mode-essay .essay-wb-pipeline-stepper {
+    grid-template-columns: 1fr;
+  }
+}
+
 #mode-essay .essay-wb-pipe-btn {
   display: flex;
   flex-direction: column;
@@ -6633,6 +6639,14 @@
 }
 
 @media (max-width: 768px) {
+  #mode-essay .essay-wb-pipeline-drawer {
+    padding: 10px 12px;
+  }
+  #mode-essay .essay-peel-pipeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
   #mode-essay .essay-flowchart-tree {
     flex-direction: column;
     gap: 12px;

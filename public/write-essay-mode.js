@@ -3815,8 +3815,8 @@
                     expVi: 'Giải thích cơ chế và lý lẽ bổ trợ trực tiếp cho luận điểm.'
                 };
             }
-            const enText = item.en || '';
-            const viText = item.vi || '';
+            const enText = String(item.en || '').trim();
+            const viText = String(item.vi || '').trim();
             let titleEn = enText;
             let expEn = '';
             if (enText.includes(':')) {
@@ -3834,8 +3834,8 @@
             return {
                 titleEn: cleanArgumentClaim(titleEn),
                 titleVi: cleanArgumentClaim(titleVi),
-                expEn: expEn || enText,
-                expVi: expVi || viText
+                expEn: expEn || 'Explain the underlying logical mechanism and real-world cause and effect for this argument.',
+                expVi: expVi || 'Giải thích chi tiết cơ chế nhân quả và tác động thực tế của luận điểm này.'
             };
         }
 
@@ -3848,6 +3848,101 @@
         const opinionStatementVi = isToneAgree
             ? 'Khẳng định quan điểm cá nhân theo hướng Đồng ý'
             : 'Khẳng định quan điểm cá nhân theo hướng Phản đối';
+
+        function renderPeelPipeline({
+            bodyNum,
+            badgeClass,
+            pointData,
+            transition3LabelEn,
+            transition3LabelVi,
+            linkTextEn,
+            linkTextVi
+        }) {
+            const pointTitle = escapeHtml(guidedText(pointData.titleEn, pointData.titleVi));
+            const pointExp = escapeHtml(guidedText(pointData.expEn, pointData.expVi));
+            const isBody1 = bodyNum === 1;
+            const exampleHintEn = isBody1
+                ? 'Provide a concrete real-world example, observation, or case study demonstrating this effect.'
+                : 'Offer another illustrative real-world instance or comparative contrast strengthening point 2.';
+            const exampleHintVi = isBody1
+                ? 'Đưa ra ví dụ thực tế đời sống hoặc nghiên cứu cụ thể để chứng minh cho cơ chế trên.'
+                : 'Đưa ví dụ minh chứng đời sống hoặc so sánh thực tiễn để tăng sức thuyết phục cho luận điểm 2.';
+
+            return `
+            <div class="essay-peel-pipeline">
+                <div class="essay-peel-pipeline-header">
+                    <div class="essay-peel-header-main">
+                        <span class="essay-flowchart-root-badge ${badgeClass}">${guidedText(`BODY ${bodyNum}`, `THÂN BÀI ${bodyNum}`)}</span>
+                        <span class="essay-peel-pipeline-title">Body ${bodyNum} (PEEL)</span>
+                        <span class="essay-peel-pipeline-sub">${guidedText('Sequential 4-Step Argument Pipeline', 'Quy trình lập luận 4 bước tuần tự')}</span>
+                    </div>
+                    <div class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</div>
+                </div>
+
+                <div class="essay-peel-steps-list">
+                    <div class="essay-peel-step-card is-p">
+                        <div class="essay-peel-card-lead">
+                            <span class="essay-pos-peel-pill peel-p">[P] Point</span>
+                            <strong>${guidedText(`Point ${bodyNum} (Topic Sentence):`, `Luận điểm ${bodyNum} (Câu mở đoạn):`)}</strong>
+                        </div>
+                        <div class="essay-flowchart-callout callout-indigo">
+                            <span class="essay-peel-highlight">${pointTitle}</span>
+                        </div>
+                    </div>
+
+                    <div class="essay-peel-transition">
+                        <div class="essay-peel-transition-badge">
+                            <span class="essay-peel-transition-arrow" aria-hidden="true">↓</span>
+                            <span class="essay-peel-transition-label">${guidedText(`Why is Point ${bodyNum} true?`, `Vì sao luận điểm ${bodyNum} đúng?`)}</span>
+                        </div>
+                    </div>
+
+                    <div class="essay-peel-step-card is-e">
+                        <div class="essay-peel-card-lead">
+                            <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
+                            <strong>${guidedText('Explanation (Mechanism):', 'Giải thích cơ chế logic:')}</strong>
+                        </div>
+                        <div class="essay-flowchart-callout callout-sky">
+                            <span>${pointExp}</span>
+                        </div>
+                    </div>
+
+                    <div class="essay-peel-transition">
+                        <div class="essay-peel-transition-badge">
+                            <span class="essay-peel-transition-arrow" aria-hidden="true">↓</span>
+                            <span class="essay-peel-transition-label">${guidedText('Real-World Evidence', 'Dẫn chứng thực tế minh họa')}</span>
+                        </div>
+                    </div>
+
+                    <div class="essay-peel-step-card is-ex">
+                        <div class="essay-peel-card-lead">
+                            <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
+                            <strong>${guidedText('Example / Evidence:', 'Ví dụ & minh chứng cụ thể:')}</strong>
+                        </div>
+                        <div class="essay-flowchart-callout callout-orange">
+                            <span>${guidedText(exampleHintEn, exampleHintVi)}</span>
+                        </div>
+                    </div>
+
+                    <div class="essay-peel-transition">
+                        <div class="essay-peel-transition-badge">
+                            <span class="essay-peel-transition-arrow" aria-hidden="true">↓</span>
+                            <span class="essay-peel-transition-label">${guidedText(transition3LabelEn, transition3LabelVi)}</span>
+                        </div>
+                    </div>
+
+                    <div class="essay-peel-step-card is-l">
+                        <div class="essay-peel-card-lead">
+                            <span class="essay-pos-peel-pill peel-l">[L] Link</span>
+                            <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
+                        </div>
+                        <div class="essay-flowchart-callout callout-purple">
+                            <span>${guidedText(linkTextEn, linkTextVi)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
 
         const dynamicSteps = [
             {
@@ -3908,80 +4003,15 @@
                 roleEn: `[Point 1] ${p1.titleEn}`,
                 roleVi: `[Luận điểm 1] ${p1.titleVi}`,
                 tag: '4-5 câu',
-                renderDrawer: () => `
-                    <div class="essay-peel-pipeline">
-                        <div class="essay-peel-pipeline-header">
-                            <div class="essay-peel-header-main">
-                                <span class="essay-flowchart-root-badge is-body1">THÂN BÀI 1</span>
-                                <span class="essay-peel-pipeline-title">Body 1 (PEEL)</span>
-                                <span class="essay-peel-pipeline-sub">${guidedText('Sequential 4-Step Argument Pipeline', 'Quy trình lập luận 4 bước tuần tự')}</span>
-                            </div>
-                            <div class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</div>
-                        </div>
-
-                        <div class="essay-peel-steps-list">
-                            <div class="essay-peel-step-card is-p">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-p">[P] Point</span>
-                                    <strong>${guidedText('Point 1 (Topic Sentence):', 'Luận điểm 1 (Câu mở đoạn):')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-indigo">
-                                    <span class="essay-peel-highlight">${escapeHtml(guidedText(p1.titleEn, p1.titleVi))}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-transition">
-                                <div class="essay-peel-transition-badge">
-                                    <span class="essay-peel-transition-arrow">↓</span>
-                                    <span class="essay-peel-transition-label">${guidedText('Why? (Logical Explanation)', 'Vì sao? (Cơ chế giải thích)')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-step-card is-e">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
-                                    <strong>${guidedText('Explanation (Mechanism):', 'Giải thích cơ chế logic:')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-sky">
-                                    <span>${escapeHtml(guidedText(p1.expEn, p1.expVi))}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-transition">
-                                <div class="essay-peel-transition-badge">
-                                    <span class="essay-peel-transition-arrow">↓</span>
-                                    <span class="essay-peel-transition-label">${guidedText('Real-World Evidence', 'Dẫn chứng thực tế minh họa')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-step-card is-ex">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
-                                    <strong>${guidedText('Example / Evidence:', 'Ví dụ & minh chứng cụ thể:')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-orange">
-                                    <span>${guidedText('Provide a concrete real-world example, observation, or case study demonstrating this effect.', 'Đưa ra ví dụ thực tế đời sống hoặc nghiên cứu cụ thể để chứng minh cho cơ chế trên.')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-transition">
-                                <div class="essay-peel-transition-badge">
-                                    <span class="essay-peel-transition-arrow">↓</span>
-                                    <span class="essay-peel-transition-label">${guidedText('Reinforce Stance & Link', 'Chốt lại & liên kết')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-step-card is-l">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-l">[L] Link</span>
-                                    <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-purple">
-                                    <span>${guidedText(`Conclude how Point 1 reinforces your stance (${opinionStatementEn.toLowerCase()}).`, `Chốt lại một câu ngắn gọn khẳng định lý do vì sao luận điểm 1 củng cố cho quan điểm chung của bài.`)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`
+                renderDrawer: () => renderPeelPipeline({
+                    bodyNum: 1,
+                    badgeClass: 'is-body1',
+                    pointData: p1,
+                    transition3LabelEn: 'Reinforce Stance & Link',
+                    transition3LabelVi: 'Chốt lại & liên kết',
+                    linkTextEn: `Conclude how Point 1 reinforces your stance (${opinionStatementEn.toLowerCase()}).`,
+                    linkTextVi: 'Chốt lại một câu ngắn gọn khẳng định lý do vì sao luận điểm 1 củng cố cho quan điểm chung của bài.'
+                })
             },
             {
                 num: 3,
@@ -3990,80 +4020,15 @@
                 roleEn: `[Point 2] ${p2.titleEn}`,
                 roleVi: `[Luận điểm 2] ${p2.titleVi}`,
                 tag: '4-5 câu',
-                renderDrawer: () => `
-                    <div class="essay-peel-pipeline">
-                        <div class="essay-peel-pipeline-header">
-                            <div class="essay-peel-header-main">
-                                <span class="essay-flowchart-root-badge is-body2">THÂN BÀI 2</span>
-                                <span class="essay-peel-pipeline-title">Body 2 (PEEL)</span>
-                                <span class="essay-peel-pipeline-sub">${guidedText('Sequential 4-Step Argument Pipeline', 'Quy trình lập luận 4 bước tuần tự')}</span>
-                            </div>
-                            <div class="essay-flowchart-pipeline-mini">P ➔ E ➔ Ex ➔ L</div>
-                        </div>
-
-                        <div class="essay-peel-steps-list">
-                            <div class="essay-peel-step-card is-p">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-p">[P] Point</span>
-                                    <strong>${guidedText('Point 2 (Topic Sentence):', 'Luận điểm 2 (Câu mở đoạn):')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-indigo">
-                                    <span class="essay-peel-highlight">${escapeHtml(guidedText(p2.titleEn, p2.titleVi))}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-transition">
-                                <div class="essay-peel-transition-badge">
-                                    <span class="essay-peel-transition-arrow">↓</span>
-                                    <span class="essay-peel-transition-label">${guidedText('Why? (Logical Explanation)', 'Vì sao? (Cơ chế giải thích)')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-step-card is-e">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-e">[E] Explanation</span>
-                                    <strong>${guidedText('Explanation (Mechanism):', 'Giải thích cơ chế logic:')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-sky">
-                                    <span>${escapeHtml(guidedText(p2.expEn, p2.expVi))}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-transition">
-                                <div class="essay-peel-transition-badge">
-                                    <span class="essay-peel-transition-arrow">↓</span>
-                                    <span class="essay-peel-transition-label">${guidedText('Real-World Evidence', 'Dẫn chứng thực tế minh họa')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-step-card is-ex">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-ex">[Ex] Example</span>
-                                    <strong>${guidedText('Example / Evidence:', 'Ví dụ & dẫn chứng thực tế:')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-orange">
-                                    <span>${guidedText('Offer another illustrative real-world instance or comparative contrast strengthening point 2.', 'Đưa ví dụ minh chứng đời sống hoặc so sánh thực tiễn để tăng sức thuyết phục cho luận điểm 2.')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-transition">
-                                <div class="essay-peel-transition-badge">
-                                    <span class="essay-peel-transition-arrow">↓</span>
-                                    <span class="essay-peel-transition-label">${guidedText('Transition to Conclusion', 'Chuyển ý mượt mà sang Kết bài')}</span>
-                                </div>
-                            </div>
-
-                            <div class="essay-peel-step-card is-l">
-                                <div class="essay-peel-card-lead">
-                                    <span class="essay-pos-peel-pill peel-l">[L] Link</span>
-                                    <strong>${guidedText('Link Sentence:', 'Câu chốt liên kết:')}</strong>
-                                </div>
-                                <div class="essay-flowchart-callout callout-purple">
-                                    <span>${guidedText('Wrap up Body 2, building a smooth logical transition into the conclusion.', 'Khép lại thân bài 2, tạo bước đệm chuyển ý mượt mà sang phần kết luận.')}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`
+                renderDrawer: () => renderPeelPipeline({
+                    bodyNum: 2,
+                    badgeClass: 'is-body2',
+                    pointData: p2,
+                    transition3LabelEn: 'Transition to Conclusion',
+                    transition3LabelVi: 'Chốt lại & chuyển tiếp sang Kết bài',
+                    linkTextEn: 'Wrap up Body 2, building a smooth logical transition into the conclusion.',
+                    linkTextVi: 'Khép lại thân bài 2, tạo bước đệm chuyển ý mượt mà sang phần kết luận.'
+                })
             },
             {
                 num: 4,
@@ -4126,7 +4091,14 @@
             if (activeStepIdx === 0 && traps[1]) stepTrap = traps[1];
             else if (activeStepIdx === 1 && traps[0]) stepTrap = traps[0];
             else if (activeStepIdx === 2 && traps[2]) stepTrap = traps[2];
-            else stepTrap = traps[0];
+            else if (activeStepIdx === 3) {
+                stepTrap = {
+                    mistakeEn: 'Introducing entirely new arguments or evidence in the conclusion that were never developed in the body.',
+                    mistakeVi: 'Đưa thêm các lý lẽ hoặc luận điểm hoàn toàn mới vào kết bài mà chưa từng được phân tích ở thân bài.'
+                };
+            } else {
+                stepTrap = traps[0];
+            }
         }
 
         const pipelineHtml = `
@@ -4135,12 +4107,12 @@
                 <span class="essay-wb-section-badge">🏛️ ${guidedText('Dynamic 4-Paragraph Outline (POS & PEEL)', 'Dàn ý 4 đoạn gợi ý theo lựa chọn của bạn (POS & PEEL)')}</span>
                 <p class="essay-wb-section-sub">${guidedText('Bấm vào từng đoạn để xem chi tiết cấu trúc POS (Mở bài) & PEEL (Thân bài) được cá nhân hóa theo các ý bạn đã chọn:', 'Bấm vào từng đoạn để xem chi tiết cấu trúc POS (Mở bài) & PEEL (Thân bài) được cá nhân hóa theo các ý bạn đã chọn:')}</p>
             </div>
-            <div class="essay-wb-pipeline-stepper">
-                ${dynamicSteps.map((s, idx) => {
+            <div class="essay-wb-pipeline-stepper" role="tablist" aria-label="${guidedText('Essay Paragraph Outline Tabs', 'Các đoạn trong dàn ý bài viết')}">
+                ${dynamicSteps.map((s) => {
                     const stepNum = s.num;
                     const isActive = stepNum === guidedStep1PipelineStep;
                     return `
-                    <button type="button" class="essay-wb-pipe-btn${isActive ? ' is-active' : ''}" data-guided-action="select-pipeline-step" data-step-num="${stepNum}">
+                    <button type="button" class="essay-wb-pipe-btn${isActive ? ' is-active' : ''}" data-guided-action="select-pipeline-step" data-step-num="${stepNum}" role="tab" aria-selected="${isActive ? 'true' : 'false'}" aria-controls="essay-wb-pipeline-drawer">
                         <div class="essay-wb-pipe-top">
                             <span class="essay-wb-pipe-num">${stepNum}</span>
                             <span class="essay-wb-pipe-label">${escapeHtml(guidedText(s.partEn, s.partVi))}</span>
@@ -4148,13 +4120,13 @@
                         <div class="essay-wb-pipe-role">${escapeHtml(guidedText(s.roleEn, s.roleVi))}</div>
                         <div class="essay-wb-pipe-footer">
                             <span class="essay-wb-pipe-tag">${s.tag}</span>
-                            ${isActive ? '<span class="essay-wb-pipe-trap-badge">⚠️ Lưu ý</span>' : ''}
+                            ${isActive ? `<span class="essay-wb-pipe-trap-badge">${guidedText('⚠️ Note', '⚠️ Lưu ý')}</span>` : ''}
                         </div>
                     </button>`;
                 }).join('')}
             </div>
 
-            <div class="essay-wb-pipeline-drawer">
+            <div class="essay-wb-pipeline-drawer" id="essay-wb-pipeline-drawer" role="tabpanel">
                 <div class="essay-wb-drawer-head">
                     <span class="essay-wb-drawer-pill">🎯 ${guidedText('Viewing:', 'Đang xem:')} ${escapeHtml(guidedText(activeDynamicStep.partEn, activeDynamicStep.partVi))}</span>
                 </div>

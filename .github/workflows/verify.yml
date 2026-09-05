@@ -28,6 +28,9 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Install Python test dependencies
+        run: pip install requests
+
       - name: Run pronunciation lexical contract tests
         run: python -m unittest backend.test_pronunciation_reference -v
 

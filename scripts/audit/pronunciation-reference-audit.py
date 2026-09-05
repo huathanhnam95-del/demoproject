@@ -161,17 +161,49 @@ def load_sampling_frame():
 
 
 def request_json(method, url, **kwargs):
-    if "verify" not in kwargs:
-        kwargs["verify"] = False
+    if requests is not None:
+        if "verify" not in kwargs:
+            kwargs["verify"] = False
+        last_error = None
+        for attempt in range(3):
+            try:
+                response = requests.request(method, url, timeout=45, **kwargs)
+                if not response.ok:
+                    raise RuntimeError("HTTP " + str(response.status_code))
+                return response.json(), response.status_code
+            except Exception as error:
+                last_error = error
+                if attempt < 2:
+                    time.sleep(0.2 * (attempt + 1))
+        raise RuntimeError(str(last_error))
+
+    # Standard library fallback via urllib.request
+    import urllib.request
+    import ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     last_error = None
-    last_status = None
+    data = None
+    if "json" in kwargs:
+        data = json.dumps(kwargs["json"]).encode("utf-8")
+    elif "data" in kwargs:
+        data = kwargs["data"]
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+    headers = kwargs.get("headers", {})
+    if "json" in kwargs and "Content-Type" not in headers:
+        headers = dict(headers)
+        headers["Content-Type"] = "application/json"
+
     for attempt in range(3):
         try:
-            response = requests.request(method, url, timeout=45, **kwargs)
-            last_status = response.status_code
-            if not response.ok:
-                raise RuntimeError("HTTP " + str(response.status_code))
-            return response.json(), response.status_code
+            req = urllib.request.Request(url, data=data, headers=headers, method=method.upper())
+            with urllib.request.urlopen(req, context=ctx, timeout=45) as resp:
+                status = resp.getcode()
+                if status < 200 or status >= 300:
+                    raise RuntimeError("HTTP " + str(status))
+                return json.loads(resp.read().decode("utf-8")), status
         except Exception as error:
             last_error = error
             if attempt < 2:
@@ -256,11 +288,22 @@ def local_native_analysis(variant):
     import tempfile
     from backend.local_server.server import analyze_audio_v2
 
-    response = requests.get(variant["audioUrl"], timeout=45, verify=False)
-    response.raise_for_status()
+    if requests is not None:
+        response = requests.get(variant["audioUrl"], timeout=45, verify=False)
+        response.raise_for_status()
+        content = response.content
+    else:
+        import urllib.request
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        req = urllib.request.Request(variant["audioUrl"])
+        with urllib.request.urlopen(req, context=ctx, timeout=45) as resp:
+            content = resp.read()
     suffix = Path(str(variant["audioUrl"])).suffix or ".mp3"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as audio_file:
-        audio_file.write(response.content)
+        audio_file.write(content)
         audio_path = audio_file.name
     try:
         analysis = analyze_audio_v2(
@@ -538,10 +581,20 @@ def get_local_git_sha():
 
 
 def get_health_info(base_url: str) -> dict:
+    if requests is not None:
+        try:
+            response = requests.get(base_url.rstrip("/") + "/health", timeout=10)
+            if response.ok:
+                return response.json()
+        except Exception:
+            pass
+        return {}
+    import urllib.request
     try:
-        response = requests.get(base_url.rstrip("/") + "/health", timeout=10)
-        if response.ok:
-            return response.json()
+        req = urllib.request.Request(base_url.rstrip("/") + "/health")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if 200 <= resp.getcode() < 300:
+                return json.loads(resp.read().decode("utf-8"))
     except Exception:
         pass
     return {}

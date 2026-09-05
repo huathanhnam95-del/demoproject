@@ -1,3 +1,18 @@
+## [V1.8.124] - 2026-09-05
+
+### Enhanced & Fixed
+- **Guided Write Essay Step 1 Flowchart Redesign & Pipeline Overhaul**:
+  - **Bounded Flowchart Container**: Clamped `.essay-wb-pipeline-stepper` and `.essay-wb-pipeline-drawer` to `max-width: 960px; margin: 0 auto;`, preventing horizontal stretching across wide desktop monitors.
+  - **Differentiated POS vs. PEEL Semantics**:
+    - *Introduction (POS) & Conclusion*: Formatted as horizontal branching trees with directional connectors (`➔`) and colored left accent lines (`3.5px solid`) for `[P] Paraphrase`, `[O] Opinion`, and `[S] Signpost`.
+    - *Body 1 & 2 (PEEL Progression Pipeline)*: Replaced parallel fork tree with a true vertical progression pipeline (`.essay-peel-pipeline`), connecting `[P] Point`, `[E] Explanation`, `[Ex] Example`, and `[L] Link` via labeled downward transition badges (`↓ Vì sao?`, `↓ Dẫn chứng...`, `↓ Chốt lại...`).
+  - **Visual Callout Boxes**: Integrated `.essay-flowchart-callout` with soft color-matched tints, giving claims and explanations distinct visual prominence without nested container card clutter.
+  - **DRY Refactoring (`renderPeelPipeline`)**: Parameterized PEEL pipeline rendering into a single reusable helper function, eliminating ~120 lines of redundant code.
+  - **Instructional Fallbacks in `parseAngleItem`**: When argument strings lack colon separators, explanation cards now provide meaningful mechanism guidance instead of duplicating the claim sentence verbatim.
+  - **Contextual Conclusion Advice**: Configured Step 4 (Conclusion) drawer to deliver specific guidance against introducing unanalyzed arguments at the conclusion stage.
+  - **WCAG 2.1 AA Accessibility**: Added `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls`, and `role="tabpanel"` across outline navigation tabs, and marked decorative arrows with `aria-hidden="true"`.
+  - **Mobile Responsive Polish**: Added single-column stepper layout for screens under 480px, and optimized drawer padding and header flex flow for tablet/mobile viewports.
+
 ## [V1.8.123] - 2026-09-05
 
 ### Enhanced & Fixed

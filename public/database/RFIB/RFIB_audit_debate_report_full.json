@@ -2,10 +2,10 @@
   "sample_pct": 0.2,
   "sample_seed": 42,
   "total_target_questions": 221,
-  "processed_questions": 1061,
-  "round1_pass_count": 825,
+  "processed_questions": 1066,
+  "round1_pass_count": 829,
   "debate_revised_count": 182,
-  "unresolved_count": 54,
+  "unresolved_count": 55,
   "debate_transcripts": [
     {
       "question_id": 5,
@@ -51336,6 +51336,200 @@
             }
           ],
           "pass_count": 2
+        }
+      ]
+    },
+    {
+      "question_id": 1153,
+      "blank_index": 2,
+      "round_1_votes": {
+        "pass": 1,
+        "fail": 2,
+        "details": [
+          {
+            "model": "deepseek-r1:14b",
+            "model_key": "dr",
+            "verdict": "PASS",
+            "issues": [],
+            "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+            "overall_notes": "The explanation is accurate, logical, and complete."
+          },
+          {
+            "model": "qwen3:14b",
+            "model_key": "qw",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "parse_error",
+                "description": "Invalid JSON response",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+            "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Gerund Usage (After Preposition"
+          },
+          {
+            "model": "gemma4:12b",
+            "model_key": "gm",
+            "verdict": "ERROR",
+            "issues": [
+              {
+                "type": "timeout_error",
+                "description": "gemma4:12b failed to respond",
+                "affected_text": "",
+                "correction": ""
+              }
+            ],
+            "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+            "overall_notes": "Model gemma4:12b timed out or produced no response"
+          }
+        ]
+      },
+      "debate_rounds": 3,
+      "consensus_type": "UNRESOLVED_DEBATE",
+      "final_explanation": "The correct answer is 'acting' because the phrase 'before [verb]' requires a gerund (the -ing form) when used after a preposition. Gerunds are used after prepositions like 'before.' The other options are incorrect: 'of action' is not a verb form and is grammatically incorrect in this context; 'act' is the base form of the verb, but it cannot follow 'before' in this structure; and 'to act' is an infinitive, which does not fit the grammatical structure required after a preposition. This explanation ensures clarity for B1-B2 learners by explicitly addressing each option and the correct grammar rule.",
+      "debate_history": [
+        {
+          "round": 1,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing the JSON formatting issue raised by qwen3:14b and confirming the correct grammar tag as 'Gerund Usage (After Prepositions)' based on consensus from all models. The timeout from gemma4:12b was acknowledged but did not affect the final synthesis.",
+          "candidate_explanation": "The correct answer is 'acting' because the phrase 'before [verb]' requires a gerund (the -ing form) when used after a preposition. Gerunds are used after prepositions like 'before.' The other options are incorrect: 'of action' is not a verb form and is grammatically incorrect in this context; 'act' is the base form of the verb, but it cannot follow 'before' in this structure; and 'to act' is an infinitive, which does not fit the grammatical structure required after a preposition. This explanation ensures clarity for B1-B2 learners by explicitly addressing each option and the correct grammar rule.",
+          "candidate_grammar_tag": "Gerund Usage (After Prepositions)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Gerund Usage (After Preposition"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 2,
+          "reconciliation_summary": "The explanation was revised to ensure clarity and grammatical accuracy, addressing all critiques. The grammar tag was confirmed as 'Gerund Usage (After Prepositions)' based on consensus and verified grammar rules. The JSON formatting issue was resolved, and the explanation was made more explicit for B1-B2 learners.",
+          "candidate_explanation": "The correct answer is 'acting' because the phrase 'before [verb]' requires a gerund (the -ing form) when used after a preposition. Gerunds are used after prepositions like 'before.' The other options are incorrect: 'of action' is not a verb form and is grammatically incorrect in this context; 'act' is the base form of the verb, but it cannot follow 'before' in this structure; and 'to act' is an infinitive, which does not fit the grammatical structure required after a preposition. This explanation ensures clarity for B1-B2 learners by explicitly addressing each option and the correct grammar rule.",
+          "candidate_grammar_tag": "Gerund Usage (After Prepositions)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Gerund Usage (After Preposition"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
+        },
+        {
+          "round": 3,
+          "reconciliation_summary": "The explanation was validated as accurate by one model and confirmed to be grammatically correct with the 'Gerund Usage (After Prepositions)' tag. The JSON error from another model was due to a formatting issue, not content. The third model did not respond, so the explanation was accepted as correct based on consensus and verified grammar.",
+          "candidate_explanation": "The correct answer is 'acting' because the phrase 'before [verb]' requires a gerund (the -ing form) when used after a preposition. Gerunds are used after prepositions like 'before.' The other options are incorrect: 'of action' is not a verb form and is grammatically incorrect in this context; 'act' is the base form of the verb, but it cannot follow 'before' in this structure; and 'to act' is an infinitive, which does not fit the grammatical structure required after a preposition. This explanation ensures clarity for B1-B2 learners by explicitly addressing each option and the correct grammar rule.",
+          "candidate_grammar_tag": "Gerund Usage (After Prepositions)",
+          "votes": [
+            {
+              "model": "deepseek-r1:14b",
+              "model_key": "dr",
+              "verdict": "PASS",
+              "issues": [],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "The explanation is accurate, logical, and complete."
+            },
+            {
+              "model": "qwen3:14b",
+              "model_key": "qw",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "parse_error",
+                  "description": "Invalid JSON response",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Invalid JSON returned: {\n  \"verdict\": \"FAIL\",\n  \"issues\": [\n    {\n      \"type\": \"grammar_label_error\",\n      \"description\": \"The grammar tag 'Gerund Usage (After Preposition"
+            },
+            {
+              "model": "gemma4:12b",
+              "model_key": "gm",
+              "verdict": "ERROR",
+              "issues": [
+                {
+                  "type": "timeout_error",
+                  "description": "gemma4:12b failed to respond",
+                  "affected_text": "",
+                  "correction": ""
+                }
+              ],
+              "verified_grammar_tag": "Gerund Usage (After Prepositions)",
+              "overall_notes": "Model gemma4:12b timed out or produced no response"
+            }
+          ],
+          "pass_count": 1
         }
       ]
     }

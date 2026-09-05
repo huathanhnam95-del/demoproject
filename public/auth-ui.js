@@ -1072,20 +1072,22 @@ async function resolveTeacherAccess(user) {
   // 1) Fast path: custom claim
   try {
     const tokenResult = await user.getIdTokenResult();
-    if (tokenResult?.claims?.isTeacher === true) {
+    const claims = tokenResult?.claims || {};
+    if (claims.isTeacher === true || claims.teacher === true || claims.crmRole === 'teacher' || claims.role === 'teacher') {
       return true;
     }
   } catch (e) {
     // ignore; fallback to profile
   }
 
-  // 2) Fallback: Firestore profile (crmRole/isTeacher)
+  // 2) Fallback: Firestore profile (crmRole/isTeacher/role)
   if (firestoreFunctions && typeof firestoreFunctions.getUserProfile === 'function') {
     try {
       const result = await firestoreFunctions.getUserProfile(user.uid);
       const data = result?.success && result?.data ? result.data : {};
       const crmRole = String(data?.crmRole || '').trim().toLowerCase();
-      return data?.isTeacher === true || crmRole === 'teacher';
+      const role = String(data?.role || '').trim().toLowerCase();
+      return data?.isTeacher === true || crmRole === 'teacher' || role === 'teacher';
     } catch (e) {
       // ignore
     }

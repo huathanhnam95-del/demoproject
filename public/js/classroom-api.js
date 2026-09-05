@@ -613,6 +613,23 @@ window.ClassroomAPI = (function () {
         return json.teachers || [];
     }
 
+    // Check teacher status via authenticated server endpoint
+    async function checkTeacherStatus() {
+        const headers = await getHeaders();
+        const res = await fetch('/api/teacher/status', {
+            method: 'GET',
+            headers,
+            cache: 'no-store'
+        });
+        if (!res.ok) return { isTeacher: false, isAdmin: false, uid: null };
+        const json = await res.json().catch(() => null);
+        return {
+            isTeacher: Boolean(json?.data?.isTeacher),
+            isAdmin: Boolean(json?.data?.isAdmin),
+            uid: json?.data?.uid || null
+        };
+    }
+
     return {
         fetchCourses,
         fetchClassrooms,
@@ -659,6 +676,7 @@ window.ClassroomAPI = (function () {
         openScheduledAttendanceSession,
         gradeSubmission,
         returnSubmissionForRevision,
-        fetchTeachers
+        fetchTeachers,
+        checkTeacherStatus
     };
 })();

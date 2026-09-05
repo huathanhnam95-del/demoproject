@@ -140,6 +140,51 @@ const crypto = require('crypto');
 
     const mindmapLayout = page.locator('.essay-guided-mindmap-layout');
     assert.strictEqual(await mindmapLayout.isVisible(), true, 'Mind Map layout container should be visible');
+
+    // Assert Stage 1 Prompt Analyzer exists prominently in Mind Map mode
+    console.log('2.1. Verifying Stage 1 Prompt Analyzer in Mind Map mode...');
+    const mmAnalyzer = page.locator('.essay-mindmap-stage-analyzer');
+    assert.strictEqual(await mmAnalyzer.isVisible(), true, 'Stage 1 Prompt Analyzer must be visible in Mind Map mode');
+
+    const mmPromptHero = mmAnalyzer.locator('.essay-guided-prompt-hero');
+    assert.strictEqual(await mmPromptHero.isVisible(), true, 'Deconstructed Prompt Hero strip must be visible');
+    const mmHlClauses = mmPromptHero.locator('.essay-prompt-hl');
+    assert.strictEqual(await mmHlClauses.count(), 2, 'Should highlight both prompt clauses in hero strip');
+
+    const mmClauseCards = mmAnalyzer.locator('.essay-cards-clause-grid .essay-cards-clause-card');
+    assert.strictEqual(await mmClauseCards.count(), 2, 'Should display clause cards breakdown in Stage 1');
+
+    // Check keywords and traps in clause cards
+    const mmKeywords = mmAnalyzer.locator('.essay-clause-kw-tag');
+    assert.ok(await mmKeywords.count() > 0, 'Clause cards must render core keyword chips');
+
+    const mmTraps = mmAnalyzer.locator('.essay-clause-trap');
+    assert.ok(await mmTraps.count() > 0, 'Clause cards must render interpretation traps');
+
+    // Check Prompt Tension Banner
+    const mmTensionBanner = mmAnalyzer.locator('.essay-prompt-tension-banner');
+    assert.strictEqual(await mmTensionBanner.isVisible(), true, 'Prompt Tension Banner must be visible in Mind Map');
+    const mmTensionText = await mmTensionBanner.locator('.essay-tension-text').textContent();
+    assert.ok(mmTensionText.trim().length > 10, 'Prompt tension description should be informative');
+
+    // Test clicking highlighted clause 1 in hero strip triggers card selection
+    await mmHlClauses.first().click();
+    await page.waitForTimeout(200);
+    assert.strictEqual(await page.locator('#clause-card-1').evaluate(el => el.classList.contains('is-selected')), true, 'Clause card 1 should be selected after clicking hero clause 1');
+
+    // Test clicking again toggles off selection
+    await mmHlClauses.first().click();
+    await page.waitForTimeout(200);
+    assert.strictEqual(await page.locator('#clause-card-1').evaluate(el => el.classList.contains('is-selected')), false, 'Clause card 1 should deselect when clicked again');
+
+    // Capture screenshot of Mind Map with prominent Prompt Analyzer
+    const screenshotDir = path.join(__dirname, '..', '..', '.tempmediaStorage');
+    const mindmapScreenshotPath = path.join(screenshotDir, 'mindmap_prompt_analyzer_verified.png');
+    await page.screenshot({ path: mindmapScreenshotPath, fullPage: false });
+    console.log(`Captured verification screenshot: ${mindmapScreenshotPath}`);
+
+    // Stage 2: Radiating Mind Map Tree & Canvas
+    console.log('2.2. Verifying Stage 2 Radiating Tree & Canvas...');
     const mindmapCanvas = page.locator('#essay-prompt-mindmap-canvas');
     assert.strictEqual(await mindmapCanvas.isVisible(), true, 'Mind Map canvas should be visible');
     const coreNode = page.locator('#mm-prompt-core');
@@ -166,6 +211,14 @@ const crypto = require('crypto');
     console.log(`Mind Map SVG paths rendered: ${svgPaths}`);
     assert.ok(svgPaths >= 2, 'SVG bezier curves should be drawn between core and hubs/leaves');
 
+    await page.evaluate(() => {
+      const stage1 = document.querySelector('.essay-mindmap-stage-analyzer');
+      if (stage1) stage1.scrollIntoView({ behavior: 'instant', block: 'start' });
+    });
+    await page.waitForTimeout(200);
+    await page.locator('.essay-guided-mindmap-layout').screenshot({ path: path.join(screenshotDir, 'mindmap_full_stage1_and_stage2.png') });
+    console.log('Saved element screenshot of entire Mind Map mode (Stage 1 + Stage 2)');
+
     console.log('3. Testing Paradigm 2: Flowchart (POS-PEEL Assembly Line)...');
     const flowchartBtn = page.locator('button[data-guided-action="set-step1-layout"][data-layout="flowchart"]');
     await flowchartBtn.click();
@@ -174,8 +227,21 @@ const crypto = require('crypto');
     const flowchartLayout = page.locator('.essay-guided-flowchart-layout');
     assert.strictEqual(await flowchartLayout.isVisible(), true, 'Flowchart layout should be visible');
 
+    // Assert Stage 1 Prompt Analyzer & Flowchart exists
+    const fcPromptHero = flowchartLayout.locator('.essay-flowchart-stage .essay-guided-prompt-hero');
+    assert.strictEqual(await fcPromptHero.isVisible(), true, 'Prompt Hero strip should be visible in Flowchart Stage 1');
+
     const clauseFlowchart = page.locator('.essay-guided-flowchart');
     assert.strictEqual(await clauseFlowchart.isVisible(), true, 'Clause directional flowchart should be visible');
+
+    const fcKeywords = clauseFlowchart.locator('.essay-clause-kw-tag');
+    assert.ok(await fcKeywords.count() > 0, 'Flowchart cards must render core keyword chips');
+
+    const fcTraps = clauseFlowchart.locator('.essay-clause-trap');
+    assert.ok(await fcTraps.count() > 0, 'Flowchart cards must render interpretation traps');
+
+    const fcTensionBanner = flowchartLayout.locator('.essay-flowchart-stage .essay-prompt-tension-banner');
+    assert.strictEqual(await fcTensionBanner.isVisible(), true, 'Flowchart Stage 1 must include prompt tension banner');
 
     const stanceGate = page.locator('.essay-flowchart-stance-gate');
     assert.strictEqual(await stanceGate.isVisible(), true, 'Stance Decision Gate should be visible');
@@ -205,6 +271,12 @@ const crypto = require('crypto');
     const tableLayout = page.locator('.essay-guided-table-layout');
     assert.strictEqual(await tableLayout.isVisible(), true, 'Table layout should be visible');
 
+    // Assert Stage 1 Prompt Analyzer exists in Table mode
+    const tableAnalyzer = tableLayout.locator('.essay-table-stage-analyzer');
+    assert.strictEqual(await tableAnalyzer.isVisible(), true, 'Stage 1 Prompt Analyzer must be visible in Table mode');
+    assert.strictEqual(await tableAnalyzer.locator('.essay-guided-prompt-hero').isVisible(), true, 'Prompt Hero strip must be visible in Table Stage 1');
+    assert.strictEqual(await tableAnalyzer.locator('.essay-prompt-tension-banner').isVisible(), true, 'Prompt Tension Banner must be visible in Table Stage 1');
+
     const stanceBar = page.locator('.essay-table-stance-bar');
     assert.strictEqual(await stanceBar.isVisible(), true, 'Active Stance selection bar should be visible');
 
@@ -228,8 +300,18 @@ const crypto = require('crypto');
     const cardsLayout = page.locator('.essay-guided-cards-layout');
     assert.strictEqual(await cardsLayout.isVisible(), true, 'Visual Cards layout should be visible');
 
+    // Assert Part 1 contains prompt hero, clause cards, and tension banner
+    assert.strictEqual(await cardsLayout.locator('.essay-step1-part-1 .essay-guided-prompt-hero').isVisible(), true, 'Cards Part 1 must contain Prompt Hero strip');
+    assert.strictEqual(await cardsLayout.locator('.essay-step1-part-1 .essay-prompt-tension-banner').isVisible(), true, 'Cards Part 1 must contain Prompt Tension Banner');
+
     const clauseGrid = page.locator('.essay-cards-clause-grid');
     assert.strictEqual(await clauseGrid.isVisible(), true, 'Clause cards grid should be visible');
+
+    const cardsKeywords = clauseGrid.locator('.essay-clause-kw-tag');
+    assert.ok(await cardsKeywords.count() > 0, 'Cards mode clause cards must render keyword chips');
+
+    const cardsTraps = clauseGrid.locator('.essay-clause-trap');
+    assert.ok(await cardsTraps.count() > 0, 'Cards mode clause cards must render traps');
 
     // Verify Mindmap Leak is completely eliminated: canvas must NOT exist in cards mode
     const leakedCanvas = await page.locator('#essay-prompt-mindmap-canvas').count();
@@ -305,6 +387,99 @@ const crypto = require('crypto');
     });
     assert.ok(legacyCardsHtml && legacyCardsHtml.includes('essay-guided-cards-layout'), 'Legacy renderStep1List must return valid cards layout without crashing');
     assert.ok(legacyCardsHtml.includes('essay-cards-clause-card'), 'Legacy renderStep1List must render clause cards via fallback');
+
+    console.log('9. Testing Bilingual Stage Pills Localization in Mind Map, Flowchart, Table, and Cards...');
+    // Reset to desktop viewport
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.waitForTimeout(200);
+
+    // Switch to English language via the active rail toggle button
+    await page.locator('#essay-guided-language-toggle').click();
+    await page.waitForTimeout(200);
+
+    // 9.1 Table in English
+    await page.locator('button[data-guided-action="set-step1-layout"][data-layout="table"]').click();
+    await page.waitForTimeout(200);
+    const tablePill1En = await page.locator('.essay-table-stage-analyzer .essay-step1-stage-pill').textContent();
+    assert.strictEqual(tablePill1En.trim(), 'Part 1: Understand Prompt', 'Table Stage 1 pill should be in English');
+    const tablePill2En = await page.locator('.essay-guided-table-layout > .essay-step1-stage-header .essay-step1-stage-pill').textContent();
+    assert.strictEqual(tablePill2En.trim(), 'Part 2: Compare 2 Stances', 'Table Stage 2 pill should be in English');
+
+    // 9.2 Cards in English
+    await page.locator('button[data-guided-action="set-step1-layout"][data-layout="cards"]').click();
+    await page.waitForTimeout(200);
+    const cardsPill1En = await page.locator('.essay-step1-part-1 .essay-step1-part-pill').textContent();
+    assert.strictEqual(cardsPill1En.trim(), 'Part 1', 'Cards Part 1 pill should be Part 1 in English');
+    const cardsPill2En = await page.locator('.essay-step1-part-2 .essay-step1-part-pill').textContent();
+    assert.strictEqual(cardsPill2En.trim(), 'Part 2', 'Cards Part 2 pill should be Part 2 in English');
+
+    // 9.3 Mindmap in English
+    await page.locator('button[data-guided-action="set-step1-layout"][data-layout="mindmap"]').click();
+    await page.waitForTimeout(200);
+    const mmPill1En = await page.locator('.essay-mindmap-stage-analyzer .essay-step1-stage-pill').textContent();
+    assert.strictEqual(mmPill1En.trim(), 'Part 1: Understand Prompt', 'Mindmap Stage 1 pill should be in English');
+    const mmPill2En = await page.locator('.essay-guided-mindmap-layout > .essay-step1-stage-header .essay-step1-stage-pill').textContent();
+    assert.strictEqual(mmPill2En.trim(), 'Part 2: Choose Stance & Arguments', 'Mindmap Stage 2 pill should be in English');
+
+    // 9.4 Flowchart in English
+    await page.locator('button[data-guided-action="set-step1-layout"][data-layout="flowchart"]').click();
+    await page.waitForTimeout(200);
+    const fcPill1En = await page.locator('.essay-flowchart-stage-pill').textContent();
+    assert.strictEqual(fcPill1En.trim(), 'Stage 1', 'Flowchart Stage 1 pill should be Stage 1 in English');
+
+    // Switch back to Vietnamese
+    await page.locator('#essay-guided-language-toggle').click();
+    await page.waitForTimeout(200);
+    await page.locator('button[data-guided-action="set-step1-layout"][data-layout="table"]').click();
+    await page.waitForTimeout(200);
+    const tablePill1Vi = await page.locator('.essay-table-stage-analyzer .essay-step1-stage-pill').textContent();
+    assert.strictEqual(tablePill1Vi.trim(), 'Phần 1: Hiểu đề bài', 'Table Stage 1 pill should be in Vietnamese');
+    const tablePill2Vi = await page.locator('.essay-guided-table-layout > .essay-step1-stage-header .essay-step1-stage-pill').textContent();
+    assert.strictEqual(tablePill2Vi.trim(), 'Phần 2: Đối chiếu 2 phe', 'Table Stage 2 pill should be in Vietnamese');
+
+    console.log('10. Testing Clause Splitting & Segmentation Engine Edge Cases...');
+    const edgeCaseResults = await page.evaluate(() => {
+      const splitter = window.WriteEssayMode.splitPromptIntoClauses;
+      const parser = window.WriteEssayMode.parsePromptSegments;
+
+      // Case 1: Trailing clause without terminal punctuation
+      const textNoTrailingPunct = '“Climate change is real.” To what extent do you agree or disagree discuss advantages';
+      const clausesNoTrailingPunct = splitter(textNoTrailingPunct);
+
+      // Case 2: Quote with internal period followed by author attribution
+      const textQuoteWithAttribution = '“The only thing that interferes with my learning is my education.” – Albert Einstein. Do you agree or disagree?';
+      const clausesQuote = splitter(textQuoteWithAttribution);
+
+      // Case 3: Prompt with abbreviations (e.g., etc., Dr., U.S.)
+      const textWithAbbr = 'Some people believe modern tech (e.g. smartphones) harms students in the U.S. vs. traditional methods. Discuss both views.';
+      const clausesAbbr = splitter(textWithAbbr);
+
+      // Case 4: Parsing segments and extracting keywords from mock guidedPack
+      const parsedSegments = parser([], textQuoteWithAttribution);
+
+      return {
+        clausesNoTrailingPunct,
+        clausesQuote,
+        clausesAbbr,
+        parsedSegments
+      };
+    });
+
+    console.log('Edge case 1 (trailing unpunctuated clause):', edgeCaseResults.clausesNoTrailingPunct);
+    assert.strictEqual(edgeCaseResults.clausesNoTrailingPunct.length, 2, 'Should split into 2 clauses without losing trailing text');
+    assert.ok(edgeCaseResults.clausesNoTrailingPunct[1].includes('discuss advantages'), 'Trailing unpunctuated clause must be preserved');
+
+    console.log('Edge case 2 (quote with attribution):', edgeCaseResults.clausesQuote);
+    assert.strictEqual(edgeCaseResults.clausesQuote.length, 2, 'Should keep quote intact and not fracture at internal period');
+    assert.ok(edgeCaseResults.clausesQuote[0].includes('Albert Einstein'), 'First clause should retain author attribution');
+
+    console.log('Edge case 3 (abbreviations):', edgeCaseResults.clausesAbbr);
+    assert.strictEqual(edgeCaseResults.clausesAbbr.length, 2, 'Should not split on abbreviations like e.g. or U.S.');
+    assert.ok(edgeCaseResults.clausesAbbr[0].includes('e.g.'), 'e.g. must be unmasked properly');
+
+    console.log('Edge case 4 (parsed segments structure):', edgeCaseResults.parsedSegments.length);
+    assert.strictEqual(edgeCaseResults.parsedSegments.length, 2, 'Should yield 2 parsed segments');
+    assert.ok(edgeCaseResults.parsedSegments[0].keywords.length > 0, 'Should have extracted keywords');
 
     console.log('✅ ALL STEP 1 VISUAL PARADIGMS & RESPONSIVENESS CHECKS PASSED!');
 

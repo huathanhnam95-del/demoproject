@@ -2,21 +2,28 @@ import json
 import os
 import sys
 
-SIDE_CAR_PATH = r"public/database/RFIB/RFIB_3model_revision.jsonl"
+SIDE_CAR_PATH = r"public/database/RFIB/RFIB_audited_full.jsonl"
+FALLBACK_SIDE_CAR_PATH = r"public/database/RFIB/RFIB_3model_revision.jsonl"
 REVIEW_METADATA_PATH = r"public/database/RFIB/review-metadata.json"
 WORKBOOK_PATH = r"public/database/RFIB/RFIB Final ver.xlsx"
 MD_EXPORT_PATH = r"public/database/RFIB/RFIB_Audit_Manual_Review.md"
 
 def load_sidecar(path):
     records = {}
-    if not os.path.exists(path):
-        return records
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            rec = json.loads(line)
-            records[rec["id"]] = rec
+    paths_to_check = [path]
+    if os.path.exists(FALLBACK_SIDE_CAR_PATH):
+        paths_to_check.append(FALLBACK_SIDE_CAR_PATH)
+    
+    # Load fallback first, then override with primary audited path
+    for p in reversed(paths_to_check):
+        if not os.path.exists(p):
+            continue
+        with open(p, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                records[rec["id"]] = rec
     return records
 
 def update_review_metadata(sidecar_recs, review_metadata_path):
@@ -31,12 +38,18 @@ def update_review_metadata(sidecar_recs, review_metadata_path):
     updated_count = 0
 
     for qid, rec in sidecar_recs.items():
-        key = str(qid)
+        try:
+            numeric_id = int(qid)
+            key = f"{numeric_id:04d}"
+        except Exception:
+            key = str(qid)
+
         if key not in items:
             items[key] = {}
         
         blank_analysis_list = []
         for b in rec.get("blanks", []):
+            distractors = b.get("dr_distractor_analysis", [])
             blank_item = {
                 "blank_index": b.get("blank_index"),
                 "correct_answer": b.get("correct_answer"),
@@ -44,6 +57,9 @@ def update_review_metadata(sidecar_recs, review_metadata_path):
                 "concise_explanation": b.get("concise_explanation", ""),
                 "detailed_explanation": b.get("final_explanation", b.get("student_explanation", "")),
                 "simplified_explanation": b.get("final_explanation", ""),
+                "distractor_analysis": distractors,
+                "audit_verdict": b.get("audit_verdict", ""),
+                "audit_consensus_type": b.get("audit_consensus_type", ""),
                 "vi_explanation": b.get("vi_explanation", ""),
                 "confidence": b.get("confidence", "High"),
                 "confidence_flags": b.get("confidence_flags", []),
@@ -52,6 +68,7 @@ def update_review_metadata(sidecar_recs, review_metadata_path):
             blank_analysis_list.append(blank_item)
 
         items[key]["blankAnalysis"] = json.dumps(blank_analysis_list, ensure_ascii=False)
+        items[key]["auditStatus"] = rec.get("audit_status", "")
         updated_count += 1
 
     metadata["items"] = items

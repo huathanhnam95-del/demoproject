@@ -9,6 +9,163 @@ window.CrmTeachingSessions = (function () {
     let isInitialized = false;
     let selectedAudioFile = null;
     let pollTimer = null;
+    let pollTickCount = 0;
+    let hasProcessingSession = false;
+    let openSessionSeq = 0;
+    const diagramViewStates = new Map();
+    const renderedPanes = new Set();
+
+    function resetDiagramViewState(paneId) {
+        if (paneId) {
+            diagramViewStates.delete(paneId);
+        } else {
+            diagramViewStates.clear();
+        }
+    }
+
+    function isSessionsPaneLive() {
+        if (typeof document === 'undefined') return true;
+        const pane = document.getElementById('student-teaching-sessions');
+        if (!pane) return false;
+        if (pane.style.display === 'none') return false;
+        if (typeof window.getComputedStyle === 'function') {
+            try {
+                if (window.getComputedStyle(pane).display === 'none') return false;
+            } catch (_) {}
+        }
+        const modal = pane.closest('#crm-student-modal') || document.getElementById('crm-student-modal');
+        if (modal) {
+            if (modal.style.display === 'none' || modal.getAttribute('aria-hidden') === 'true') return false;
+            if (typeof window.getComputedStyle === 'function') {
+                try {
+                    if (window.getComputedStyle(modal).display === 'none') return false;
+                } catch (_) {}
+            }
+        }
+        return true;
+    }
+
+    function seekSessionAudio(seconds, sourceEl) {
+        const sec = Number(seconds);
+        if (Number.isNaN(sec) || sec < 0) return;
+        const audioPlayer = document.getElementById('teaching-session-audio-player');
+        if (!audioPlayer) return;
+        const seekTime = Math.max(0, sec - 3);
+        try {
+            audioPlayer.currentTime = seekTime;
+            audioPlayer.play().catch(() => {});
+        } catch (_) {}
+
+        if (typeof document !== 'undefined') {
+            document.querySelectorAll('.crm-timestamp-chip.is-playing, [data-ts-sec].is-playing').forEach((c) => {
+                c.classList.remove('is-playing');
+            });
+        }
+        if (sourceEl && sourceEl.classList) {
+            sourceEl.classList.add('is-playing');
+        }
+    }
+
+    function calculateDefaultDueDate(sessionDateStr, customNow = null) {
+        const now = customNow instanceof Date ? customNow : (customNow ? new Date(customNow) : new Date());
+        const minDue = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+        let baseDate = sessionDateStr ? new Date(sessionDateStr) : new Date(now.getTime());
+        if (Number.isNaN(baseDate.getTime())) baseDate = new Date(now.getTime());
+
+        let targetDate = new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+        targetDate.setHours(20, 0, 0, 0);
+
+        // Clamp to >= now + 1 day at 20:00 local
+        if (targetDate < minDue) {
+            targetDate = new Date(minDue.getTime());
+            targetDate.setHours(20, 0, 0, 0);
+            if (targetDate < minDue) {
+                targetDate.setDate(targetDate.getDate() + 1);
+            }
+        }
+
+        const yyyy = targetDate.getFullYear();
+        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(targetDate.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    async function fetchStudentOpenTaskTokens(studentId) {
+        const tokens = new Set();
+        if (!studentId || typeof fetch === 'undefined') return tokens;
+        try {
+            const headers = await getAuthHeaders();
+            const resp = await fetch(`/api/admin/tasks?studentId=${encodeURIComponent(studentId)}&status=open&limit=200`, { headers });
+            const data = await resp.json();
+            const tasks = Array.isArray(data?.tasks) ? data.tasks : (Array.isArray(data?.data) ? data.data : []);
+            tasks.forEach((t) => {
+                const notes = t?.notes || '';
+                const matches = notes.matchAll(/\[ts:([^#\]]+)#hw(\d+)\]/g);
+                for (const m of matches) {
+                    tokens.add(`${m[1]}#hw${m[2]}`);
+                }
+            });
+        } catch (err) {
+            console.warn('[Teaching Sessions] Error fetching existing tasks:', err);
+        }
+        return tokens;
+    }
+
+    function showTeachingToast(msg, type) {
+        if (typeof document === 'undefined') return;
+        const toastType = type || 'info';
+        let container = document.getElementById('teaching-session-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'teaching-session-toast-container';
+            container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `crm-toast ${toastType}`;
+        toast.style.cssText = 'pointer-events:auto;min-width:240px;max-width:380px;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:all 0.25s ease;transform:translateY(10px);opacity:0;';
+
+        if (toastType === 'success') {
+            toast.style.background = '#ecfdf5';
+            toast.style.border = '1px solid #10b981';
+            toast.style.color = '#065f46';
+        } else if (toastType === 'error') {
+            toast.style.background = '#fef2f2';
+            toast.style.border = '1px solid #ef4444';
+            toast.style.color = '#991b1b';
+        } else {
+            toast.style.background = '#f8fafc';
+            toast.style.border = '1px solid #cbd5e1';
+            toast.style.color = '#1e293b';
+        }
+
+        toast.textContent = msg;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            toast.style.transform = 'translateY(10px)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3200);
+    }
+
+    if (typeof document !== 'undefined' && document.addEventListener) {
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopPolling();
+            } else if (hasProcessingSession && isSessionsPaneLive() && currentStudentId) {
+                startPolling();
+                loadStudentSessions(currentStudentId, true);
+            }
+        });
+    }
 
     function resolveActiveStudentId() {
         if (currentStudentId) return currentStudentId;
@@ -89,11 +246,11 @@ window.CrmTeachingSessions = (function () {
             if (user) {
                 let token = null;
                 if (typeof user.getIdToken === 'function') {
-                    token = await user.getIdToken(true);
+                    token = await user.getIdToken();
                 } else {
                     try {
                         const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                        token = await getIdToken(user, true);
+                        token = await getIdToken(user);
                     } catch (_) {}
                 }
                 if (token) {
@@ -205,8 +362,8 @@ window.CrmTeachingSessions = (function () {
     function classifySeverity(str) {
         if (!str) return 'minor';
         const s = String(str).toLowerCase();
-        if (s.includes('critical') || s.includes('nghiêm trọng') || s.includes('🔴') || s.includes('high') || s.includes('p1')) return 'critical';
-        if (s.includes('warning') || s.includes('trung bình') || s.includes('🟡') || s.includes('medium') || s.includes('p2') || s.includes('p3')) return 'warning';
+        if (s.includes('critical') || s.includes('nghiêm trọng') || s.includes('🔴') || s.includes('high') || s.includes('p1') || s.includes('cao')) return 'critical';
+        if (s.includes('warning') || s.includes('trung bình') || s.includes('🟡') || s.includes('medium') || s.includes('p2') || s.includes('p3') || s.includes('vừa')) return 'warning';
         return 'minor';
     }
 
@@ -326,7 +483,7 @@ window.CrmTeachingSessions = (function () {
         };
     }
 
-    function renderBriefing(session) {
+    function renderBriefing(session, existingTaskTokens) {
         const norm = normalizeReport(session);
         if (!norm) {
             // Graceful fallback to legacy markdown parser
@@ -510,16 +667,38 @@ window.CrmTeachingSessions = (function () {
             }
 
             if (homework.length > 0) {
+                const defaultDue = calculateDefaultDueDate(session?.sessionDate);
+                const sid = session?.id || session?.sessionId || 'session';
+                const tokens = existingTaskTokens || session?._existingTaskTokens || new Set();
+
                 html += `
                     <div class="crm-next-plan-block">
-                        <h4 class="crm-next-plan-subtitle">Bài tập về nhà</h4>
+                        <div class="crm-hw-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                            <h4 class="crm-next-plan-subtitle" style="margin:0;">Bài tập về nhà</h4>
+                            <div class="crm-hw-actions-bar" style="display:flex;align-items:center;gap:8px;">
+                                <label style="font-size:12px;color:var(--crm-text-muted);display:flex;align-items:center;gap:4px;">
+                                    <span>Hạn nộp:</span>
+                                    <input type="date" class="crm-hw-due-input crm-input" value="${defaultDue}" min="${defaultDue}" style="padding:2px 8px;font-size:12px;height:28px;width:auto;" aria-label="Hạn nộp bài tập" />
+                                </label>
+                                <button type="button" class="crm-btn-create-all-tasks crm-btn-secondary" style="padding:3px 10px;font-size:12px;" data-session-id="${escapeHtml(sid)}">
+                                    Tạo tất cả task
+                                </button>
+                            </div>
+                        </div>
                         <div class="crm-checklist-group">
-                            ${homework.map(h => `
-                                <div class="crm-checklist-item">
-                                    <span class="crm-checklist-box">☐</span>
-                                    <span>${escapeHtml(h)}</span>
-                                </div>
-                            `).join('')}
+                            ${homework.map((h, idx) => {
+                                const tokenKey = `${sid}#hw${idx}`;
+                                const isCreated = tokens.has(tokenKey);
+                                return `
+                                    <div class="crm-checklist-item ${isCreated ? 'is-created' : ''}" data-hw-index="${idx}">
+                                        ${isCreated
+                                            ? `<span class="crm-task-created-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;background:#ecfdf5;color:#065f46;font-size:11px;font-weight:600;">✓ Đã tạo task CRM</span>`
+                                            : `<button type="button" class="crm-btn-create-task crm-btn-secondary" style="padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;" data-hw-index="${idx}" data-session-id="${escapeHtml(sid)}">+ Tạo task</button>`
+                                        }
+                                        <span class="crm-checklist-text" style="margin-left:6px;">${escapeHtml(h)}</span>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
@@ -586,13 +765,32 @@ window.CrmTeachingSessions = (function () {
             return;
         }
 
+        if (typeof document !== 'undefined' && document.fonts) {
+            try {
+                await document.fonts.load("600 14px 'Be Vietnam Pro'");
+                await document.fonts.ready;
+            } catch (err) {
+                console.warn('[Teaching Sessions] font preload failed', err);
+            }
+        }
+
         ensureMermaidInitialized();
 
         try {
             const uniqueId = `mermaid-${diagramType || 'diag'}-${Date.now()}`;
             const { svg } = await window.mermaid.render(uniqueId, mermaidCode);
-            container.innerHTML = `<div class="diagram-transform-wrapper">${svg}</div>`;
             const stageEl = container.closest('.crm-diagram-stage');
+            const owningPane = stageEl ? stageEl.closest('.teaching-session-view-pane') : null;
+            if (owningPane) {
+                resetDiagramViewState(owningPane.id);
+            }
+
+            container.innerHTML = `<div class="diagram-transform-wrapper">${svg}</div>`;
+            const svgEl = container.querySelector('svg');
+            if (svgEl && window.CrmTeachingSessionMindmap && typeof window.CrmTeachingSessionMindmap.refitDiagramLabels === 'function') {
+                window.CrmTeachingSessionMindmap.refitDiagramLabels(svgEl);
+            }
+
             if (stageEl) {
                 attachDiagramPanZoom(stageEl);
             }
@@ -661,6 +859,10 @@ window.CrmTeachingSessions = (function () {
             svg.style.maxWidth = 'none';
         }
 
+        const owningPane = stageEl.closest('.teaching-session-view-pane');
+        const paneId = owningPane ? owningPane.id : (stageEl.id || 'default-pane');
+        const existingState = diagramViewStates.get(paneId);
+
         let scale = 1.0;
         let translateX = 0;
         let translateY = 0;
@@ -678,7 +880,25 @@ window.CrmTeachingSessions = (function () {
             if (zoomResetBtn) {
                 zoomResetBtn.textContent = `${Math.round(scale * 100)}%`;
             }
+            diagramViewStates.set(paneId, { scale, translateX, translateY });
         }
+
+        function panToElement(el) {
+            if (!el || !stageEl || !wrapper) return;
+            const stageRect = stageEl.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            if (stageRect.width === 0 || stageRect.height === 0 || elRect.width === 0) return;
+            const stageCenterX = stageRect.left + stageRect.width / 2;
+            const stageCenterY = stageRect.top + stageRect.height / 2;
+            const elCenterX = elRect.left + elRect.width / 2;
+            const elCenterY = elRect.top + elRect.height / 2;
+            const dx = stageCenterX - elCenterX;
+            const dy = stageCenterY - elCenterY;
+            translateX += dx;
+            translateY += dy;
+            updateTransform();
+        }
+        stageEl._panToElement = panToElement;
 
         function fitToView() {
             const stageRect = stageEl.getBoundingClientRect();
@@ -700,6 +920,15 @@ window.CrmTeachingSessions = (function () {
             translateX = 0;
             translateY = 0;
             updateTransform();
+        }
+
+        if (existingState && typeof existingState.scale === 'number') {
+            scale = existingState.scale;
+            translateX = existingState.translateX || 0;
+            translateY = existingState.translateY || 0;
+            updateTransform();
+        } else {
+            fitToView();
         }
 
         const onZoomIn = () => {
@@ -775,9 +1004,6 @@ window.CrmTeachingSessions = (function () {
         container.addEventListener('pointermove', onPointerMove);
         container.addEventListener('pointerup', onPointerUp);
         container.addEventListener('pointercancel', onPointerUp);
-
-        // Initial fit
-        fitToView();
 
         stageEl._panZoomCleanup = () => {
             zoomInBtn?.removeEventListener('click', onZoomIn);
@@ -955,6 +1181,7 @@ window.CrmTeachingSessions = (function () {
             });
 
             // If any session is still processing, keep polling every 4s
+            hasProcessingSession = Boolean(hasProcessing);
             if (hasProcessing) {
                 startPolling();
             } else {
@@ -971,7 +1198,25 @@ window.CrmTeachingSessions = (function () {
 
     function startPolling() {
         if (pollTimer) return;
+        pollTickCount = 0;
         pollTimer = setInterval(() => {
+            if (!isSessionsPaneLive()) {
+                stopPolling();
+                return;
+            }
+            pollTickCount++;
+            if (pollTickCount >= 150) {
+                stopPolling();
+                const listEl = document.getElementById('teaching-sessions-list');
+                if (listEl && !listEl.querySelector('.crm-session-poll-cap-note')) {
+                    const note = document.createElement('div');
+                    note.className = 'crm-session-poll-cap-note';
+                    note.style.cssText = 'padding:8px 12px;margin:8px 0;background:#fffbeb;border:1px solid #fef3c7;border-radius:6px;font-size:12px;color:#92400e;text-align:center;';
+                    note.textContent = 'Đã dừng tự động cập nhật sau 10 phút. Bấm tải lại để kiểm tra tiến độ mới nhất.';
+                    listEl.prepend(note);
+                }
+                return;
+            }
             if (currentStudentId) {
                 loadStudentSessions(currentStudentId, true);
             } else {
@@ -1050,6 +1295,13 @@ window.CrmTeachingSessions = (function () {
         const modalEl = document.getElementById('crm-teaching-session-modal');
         const reportHtmlEl = document.getElementById('teaching-session-report-html');
 
+        const currentSeq = ++openSessionSeq;
+        currentSession = null;
+        renderedPanes.clear();
+        resetDiagramViewState();
+        const detailPanel = document.getElementById('teaching-session-mindmap-detail');
+        if (detailPanel) detailPanel.hidden = true;
+
         // Show modal immediately with skeleton
         if (modalEl) {
             modalEl.style.display = 'flex';
@@ -1059,12 +1311,19 @@ window.CrmTeachingSessions = (function () {
         switchSessionView('report');
 
         try {
-            const headers = await getAuthHeaders();
-            const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}`, {
-                headers
-            });
-            const json = await resp.json();
-            const session = (json && (json.session || (json.data && json.data.session))) || null;
+            let session = null;
+            if (sessionId && typeof sessionId === 'object') {
+                session = sessionId;
+            } else {
+                const headers = await getAuthHeaders();
+                if (currentSeq !== openSessionSeq) return;
+                const resp = await fetch(`/api/admin/teaching-sessions/${encodeURIComponent(sessionId)}`, {
+                    headers
+                });
+                const json = await resp.json();
+                session = (json && (json.session || (json.data && json.data.session))) || null;
+            }
+            if (currentSeq !== openSessionSeq) return;
             if (!session) throw new Error('Session data not found');
 
             currentSession = session;
@@ -1073,8 +1332,6 @@ window.CrmTeachingSessions = (function () {
             const titleEl = document.getElementById('teaching-session-modal-title');
             const statusEl = document.getElementById('teaching-session-status-badge');
             const rawJsonEl = document.getElementById('teaching-session-json-raw');
-            const mindmapContainer = document.getElementById('teaching-session-mindmap-container');
-            const flowchartContainer = document.getElementById('teaching-session-flowchart-container');
             const audioPlayer = document.getElementById('teaching-session-audio-player');
             const breadcrumbEl = document.getElementById('teaching-session-breadcrumb');
 
@@ -1097,13 +1354,11 @@ window.CrmTeachingSessions = (function () {
                 rawJsonEl.textContent = JSON.stringify(session, null, 2);
             }
 
-            // Audio Player & Docked Bar Visibility
-            const audioTab = document.getElementById('tab-teaching-session-audio');
+            // Audio Player & Docked Bar Visibility (A4: removed dead audioTab)
             const dockedAudio = document.getElementById('teaching-session-docked-audio');
             if (audioPlayer) {
                 if (session.audioUrl) {
                     audioPlayer.src = session.audioUrl;
-                    if (audioTab) audioTab.style.display = 'inline-block';
                     if (dockedAudio) dockedAudio.style.display = 'flex';
                     const audioMeta = document.getElementById('teaching-session-audio-meta');
                     if (audioMeta) {
@@ -1113,14 +1368,18 @@ window.CrmTeachingSessions = (function () {
                     }
                 } else {
                     audioPlayer.removeAttribute('src');
-                    if (audioTab) audioTab.style.display = 'none';
                     if (dockedAudio) dockedAudio.style.display = 'none';
                 }
             }
 
+            // Pre-fetch open task tokens to populate checklist buttons (Phase C)
+            const openTaskTokens = await fetchStudentOpenTaskTokens(session.studentId);
+            if (currentSeq !== openSessionSeq) return;
+            session._existingTaskTokens = openTaskTokens;
+
             // Structured Briefing HTML — replace skeleton with real content
             if (reportHtmlEl) {
-                reportHtmlEl.innerHTML = renderBriefing(session);
+                reportHtmlEl.innerHTML = renderBriefing(session, openTaskTokens);
             }
 
             // Check saved fullscreen preference
@@ -1133,15 +1392,8 @@ window.CrmTeachingSessions = (function () {
                 }
             } catch (_) {}
 
-            // Render Mindmap & Flowchart
-            if (mindmapContainer && session.mermaidMindmap) {
-                await renderMermaid(mindmapContainer, session.mermaidMindmap, 'mindmap');
-            }
-            if (flowchartContainer && session.mermaidFlowchart) {
-                await renderMermaid(flowchartContainer, session.mermaidFlowchart, 'flowchart');
-            }
-
         } catch (err) {
+            if (currentSeq !== openSessionSeq) return;
             console.error('[Teaching Sessions] Error viewing session:', err);
             if (reportHtmlEl) {
                 reportHtmlEl.innerHTML = `
@@ -1154,7 +1406,7 @@ window.CrmTeachingSessions = (function () {
         }
     }
 
-    function switchSessionView(viewName) {
+    async function switchSessionView(viewName) {
         document.querySelectorAll('.crm-session-viewer-nav .crm-tab-btn').forEach((btn) => {
             btn.classList.toggle('active', btn.dataset.view === viewName);
         });
@@ -1168,12 +1420,38 @@ window.CrmTeachingSessions = (function () {
             }
         });
 
-        // If switching to a diagram, fit/refit pan-zoom
-        if (viewName === 'mindmap' || viewName === 'flowchart') {
-            const activePane = document.getElementById(`teaching-session-view-${viewName}`);
-            const stage = activePane ? activePane.querySelector('.crm-diagram-stage') : null;
-            if (stage) {
-                attachDiagramPanZoom(stage);
+        // Lazy render on first switch to a visible diagram pane (A6)
+        if (viewName === 'mindmap' && currentSession) {
+            const mindmapContainer = document.getElementById('teaching-session-mindmap-container');
+            if (mindmapContainer && !renderedPanes.has('mindmap')) {
+                renderedPanes.add('mindmap');
+                if (window.CrmTeachingSessionMindmap && typeof window.CrmTeachingSessionMindmap.renderInteractiveMindmap === 'function') {
+                    await window.CrmTeachingSessionMindmap.renderInteractiveMindmap(mindmapContainer, currentSession, {
+                        seekSessionAudio
+                    });
+                } else if (currentSession.mermaidMindmap) {
+                    await renderMermaid(mindmapContainer, currentSession.mermaidMindmap, 'mindmap');
+                } else {
+                    mindmapContainer.innerHTML = '<div style="text-align:center;color:var(--crm-text-muted);padding:32px;">Không có sơ đồ tư duy cho buổi dạy này.</div>';
+                }
+            } else {
+                const activePane = document.getElementById('teaching-session-view-mindmap');
+                const stage = activePane ? activePane.querySelector('.crm-diagram-stage') : null;
+                if (stage) attachDiagramPanZoom(stage);
+            }
+        } else if (viewName === 'flowchart' && currentSession) {
+            const flowchartContainer = document.getElementById('teaching-session-flowchart-container');
+            if (flowchartContainer && !renderedPanes.has('flowchart')) {
+                renderedPanes.add('flowchart');
+                if (currentSession.mermaidFlowchart) {
+                    await renderMermaid(flowchartContainer, currentSession.mermaidFlowchart, 'flowchart');
+                } else {
+                    flowchartContainer.innerHTML = '<div style="text-align:center;color:var(--crm-text-muted);padding:32px;">Không có lưu đồ cho buổi dạy này.</div>';
+                }
+            } else {
+                const activePane = document.getElementById('teaching-session-view-flowchart');
+                const stage = activePane ? activePane.querySelector('.crm-diagram-stage') : null;
+                if (stage) attachDiagramPanZoom(stage);
             }
         }
     }
@@ -1437,12 +1715,42 @@ window.CrmTeachingSessions = (function () {
         const modalEl = document.getElementById('crm-teaching-session-modal');
 
         const closeModal = () => {
+            openSessionSeq++;
             if (modalEl) {
                 modalEl.style.display = 'none';
                 modalEl.setAttribute('aria-hidden', 'true');
+                modalEl.classList.remove('is-fullscreen');
+
+                // Clean up any pending search debounce timer
+                const searchInput = modalEl.querySelector('.crm-ts-mm-search-input');
+                if (searchInput && searchInput._debounceTimer) {
+                    clearTimeout(searchInput._debounceTimer);
+                    searchInput._debounceTimer = null;
+                }
+
+                // Hide tooltip if open
+                const tooltip = modalEl.querySelector('.crm-ts-mm-tooltip');
+                if (tooltip) tooltip.style.display = 'none';
+
+                // Clear filter & search attributes from diagram stages
+                modalEl.querySelectorAll('.crm-diagram-stage').forEach((stage) => {
+                    stage.removeAttribute('data-ts-filter');
+                    stage.removeAttribute('data-ts-search');
+                });
             }
             const audioPlayer = document.getElementById('teaching-session-audio-player');
-            if (audioPlayer) audioPlayer.pause();
+            if (audioPlayer) {
+                audioPlayer.pause();
+                audioPlayer.removeAttribute('src');
+            }
+            const detailPanel = document.getElementById('teaching-session-mindmap-detail');
+            if (detailPanel) {
+                detailPanel.hidden = true;
+            }
+            currentSession = null;
+            renderedPanes.clear();
+            resetDiagramViewState();
+            stopPolling();
         };
 
         if (closeBtn1) closeBtn1.addEventListener('click', closeModal);
@@ -1464,6 +1772,39 @@ window.CrmTeachingSessions = (function () {
             });
         }
 
+        // PDF Export Button (Phase D)
+        const exportPdfBtn = document.getElementById('btn-export-teaching-session-pdf');
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', async () => {
+                if (!currentSession) {
+                    showTeachingToast('Không có phiên dạy để xuất PDF', 'error');
+                    return;
+                }
+                const origText = exportPdfBtn.textContent;
+                exportPdfBtn.disabled = true;
+                exportPdfBtn.textContent = 'Đang xuất PDF...';
+                try {
+                    if (window.generateTeachingSessionPdf) {
+                        await window.generateTeachingSessionPdf({
+                            session: currentSession,
+                            norm: normalizeReport(currentSession),
+                            studentName: currentSession.studentName || resolveActiveStudentId(),
+                            teacherName: currentSession.teacherName
+                        });
+                        showTeachingToast('Đã xuất PDF báo cáo thành công!', 'success');
+                    } else {
+                        throw new Error('Trình tạo PDF chưa tải xong.');
+                    }
+                } catch (err) {
+                    console.error('[Teaching Sessions] Error exporting PDF:', err);
+                    showTeachingToast('Lỗi xuất PDF: ' + (err?.message || err), 'error');
+                } finally {
+                    exportPdfBtn.disabled = false;
+                    exportPdfBtn.textContent = origText;
+                }
+            });
+        }
+
         // Fullscreen Mode Toggle Button
         const fsBtn = document.getElementById('btn-teaching-session-fullscreen');
         if (fsBtn) {
@@ -1472,23 +1813,14 @@ window.CrmTeachingSessions = (function () {
             });
         }
 
-        // Event delegation on teaching-session-report-html (Timestamps, Clamping, Filters)
+        // Event delegation on teaching-session-report-html (Timestamps, Clamping, Filters, Homework tasks)
         const reportHtmlEl = document.getElementById('teaching-session-report-html');
         if (reportHtmlEl) {
             reportHtmlEl.addEventListener('click', (e) => {
-                // 1. Click on timestamp chip to seek audio
+                // 1. Click on timestamp chip to seek audio (A7)
                 const timeChip = e.target.closest('.crm-timestamp-chip');
                 if (timeChip && timeChip.dataset.seekSec != null) {
-                    const sec = Number(timeChip.dataset.seekSec);
-                    const audioPlayer = document.getElementById('teaching-session-audio-player');
-                    if (audioPlayer && !Number.isNaN(sec)) {
-                        const seekTime = Math.max(0, sec - 3);
-                        audioPlayer.currentTime = seekTime;
-                        audioPlayer.play().catch(() => {});
-                    }
-                    // Set active state
-                    reportHtmlEl.querySelectorAll('.crm-timestamp-chip.is-playing').forEach(c => c.classList.remove('is-playing'));
-                    timeChip.classList.add('is-playing');
+                    seekSessionAudio(timeChip.dataset.seekSec, timeChip);
                     return;
                 }
 
@@ -1516,6 +1848,23 @@ window.CrmTeachingSessions = (function () {
                     if (problemsList) {
                         problemsList.setAttribute('data-active-filter', filter);
                     }
+                    return;
+                }
+
+                // 4. Click on create single homework task button (Phase C)
+                const createTaskBtn = e.target.closest('.crm-btn-create-task');
+                if (createTaskBtn) {
+                    const hwIndex = createTaskBtn.dataset.hwIndex;
+                    const sessionId = createTaskBtn.dataset.sessionId;
+                    createSingleHomeworkTask(createTaskBtn, sessionId, hwIndex);
+                    return;
+                }
+
+                // 5. Click on create all homework tasks button (Phase C)
+                const createAllBtn = e.target.closest('.crm-btn-create-all-tasks');
+                if (createAllBtn) {
+                    const sessionId = createAllBtn.dataset.sessionId;
+                    createAllHomeworkTasks(createAllBtn, sessionId);
                     return;
                 }
             });
@@ -1547,8 +1896,117 @@ window.CrmTeachingSessions = (function () {
         });
     }
 
+    async function createSingleHomeworkTask(buttonEl, sessionId, hwIndex, opts = {}) {
+        if (!currentSession || !currentSession.studentId) {
+            showTeachingToast('Không tìm thấy thông tin học viên để tạo task', 'error');
+            return;
+        }
+
+        const norm = normalizeReport(currentSession);
+        const homeworkList = norm?.nextBriefing?.student_homework_checklist || norm?.nextBriefing?.recommended_homework || [];
+        const hwText = homeworkList[Number(hwIndex)] || '';
+        if (!hwText) {
+            showTeachingToast('Không tìm thấy nội dung bài tập', 'error');
+            return;
+        }
+
+        const dueInput = buttonEl.closest('.crm-next-plan-block')?.querySelector('.crm-hw-due-input') || document.querySelector('.crm-hw-due-input');
+        const rawDueVal = dueInput ? dueInput.value : '';
+        const defaultDueVal = calculateDefaultDueDate(currentSession.sessionDate);
+        const dueVal = (rawDueVal && !Number.isNaN(new Date(`${rawDueVal}T20:00:00`).getTime())) ? rawDueVal : defaultDueVal;
+        let dueAtIso;
+        try {
+            const parsed = new Date(`${dueVal}T20:00:00`);
+            dueAtIso = !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : new Date(Date.now() + 7 * 86400000).toISOString();
+        } catch (_) {
+            dueAtIso = new Date(Date.now() + 7 * 86400000).toISOString();
+        }
+
+        // Optimistic lock
+        buttonEl.disabled = true;
+        const origText = buttonEl.textContent;
+        buttonEl.textContent = 'Đang tạo...';
+
+        try {
+            const headers = await getAuthHeaders();
+            const sid = currentSession.id || currentSession.sessionId || sessionId;
+            const sessionDateFormatted = formatRelativeDate(currentSession.sessionDate) || '';
+            const sessionTitle = currentSession.title || 'Buổi dạy';
+
+            const payload = {
+                studentId: currentSession.studentId,
+                title: `Bài tập: ${hwText.slice(0, 120)}`,
+                notes: `Từ buổi dạy "${sessionTitle}" (${sessionDateFormatted})\n${hwText}\n[ts:${sid}#hw${hwIndex}]`,
+                dueAt: dueAtIso,
+                priority: 'medium'
+            };
+
+            const resp = await fetch('/api/admin/tasks', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            let res = null;
+            try {
+                res = await resp.json();
+            } catch (_) {}
+
+            if (!resp.ok || !res?.success) {
+                throw new Error(res?.error || res?.message || `HTTP ${resp.status}: Không thể tạo task`);
+            }
+
+            const parentItem = buttonEl.closest('.crm-checklist-item');
+            if (parentItem) {
+                parentItem.classList.add('is-created');
+            }
+            buttonEl.outerHTML = '<span class="crm-task-created-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;background:#ecfdf5;color:#065f46;font-size:11px;font-weight:600;">✓ Đã tạo task CRM</span>';
+
+            if (!currentSession._existingTaskTokens) currentSession._existingTaskTokens = new Set();
+            currentSession._existingTaskTokens.add(`${sid}#hw${hwIndex}`);
+            if (!opts.silent) {
+                showTeachingToast('Đã tạo task CRM thành công!', 'success');
+            }
+        } catch (err) {
+            console.error('[Teaching Sessions] Error creating task:', err);
+            buttonEl.disabled = false;
+            buttonEl.textContent = origText;
+            showTeachingToast(`Lỗi tạo task: ${err?.message || err}`, 'error');
+        }
+    }
+
+    async function createAllHomeworkTasks(allBtn, sessionId) {
+        const parentBlock = allBtn.closest('.crm-next-plan-block') || document.getElementById('teaching-session-report-html') || document;
+        const uncreatedButtons = Array.from(parentBlock.querySelectorAll(`.crm-btn-create-task:not(:disabled)[data-session-id="${sessionId}"]`));
+        if (uncreatedButtons.length === 0) {
+            showTeachingToast('Tất cả task bài tập đã được tạo.', 'info');
+            return;
+        }
+
+        allBtn.disabled = true;
+        allBtn.textContent = 'Đang tạo...';
+
+        let successCount = 0;
+        for (const btn of uncreatedButtons) {
+            const hwIndex = btn.dataset.hwIndex;
+            try {
+                await createSingleHomeworkTask(btn, sessionId, hwIndex, { silent: true });
+                successCount++;
+            } catch (_) {}
+        }
+
+        if (successCount > 0) {
+            allBtn.textContent = `Đã tạo ${successCount} task`;
+            showTeachingToast(`Đã tạo thành công ${successCount} task CRM!`, 'success');
+        } else {
+            allBtn.disabled = false;
+            allBtn.textContent = 'Tạo tất cả task';
+            showTeachingToast('Không thể tạo task. Vui lòng kiểm tra lại.', 'error');
+        }
+    }
+
     // Auto-init on DOM ready or immediate if ready
-    if (document.readyState === 'loading') {
+    if (typeof document !== 'undefined' && document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
@@ -1566,6 +2024,11 @@ window.CrmTeachingSessions = (function () {
         convertMarkdownToHtml,
         normalizeReport,
         renderBriefing,
-        toggleFullscreen
+        switchSessionView,
+        toggleFullscreen,
+        seekSessionAudio,
+        resetDiagramViewState,
+        attachDiagramPanZoom,
+        calculateDefaultDueDate
     };
 })();

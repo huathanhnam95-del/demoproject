@@ -468,11 +468,19 @@ const Phonetics = (function () {
      * monosyllabic stress marks are stripped.
      */
     function toOxfordAmerican(value) {
-        // Idempotent: anything already carrying length marks (the Oxford
-        // review layer, or an already-normalized value) is left untouched.
-        if (!value || /ː/.test(value)) return value;
+        if (!value) return '';
+        let cleaned = String(value)
+            .replace(/ɹ/g, 'r')
+            .replace(/:/g, 'ː')
+            .replace(/[\u0361\u035C\u0329]/g, '')
+            .replace(/ɾ/g, 't')
+            .replace(/ɡ/g, 'g')
+            .replace(/[0-9]/g, '');
+        if (/ː/.test(cleaned)) {
+            return cleaned.replace(/ɛ/g, 'e').replace(/ɚ/g, 'ər').replace(/ɝ/g, 'ɜːr');
+        }
 
-        const symbols = Array.from(value);
+        const symbols = Array.from(cleaned);
         const out = [];
         let stressPending = false;
         let primaryPending = false;
@@ -875,6 +883,7 @@ const Phonetics = (function () {
         getIPAWithSource,
         getPronunciations,
         normalizeIPA,
+        toOxfordAmerican,
         preload,
         clearCache,
 
@@ -894,4 +903,7 @@ const Phonetics = (function () {
 // Expose globally
 if (typeof window !== 'undefined') {
     window.Phonetics = Phonetics;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Phonetics;
 }

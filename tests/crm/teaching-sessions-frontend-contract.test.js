@@ -12,8 +12,12 @@ assert.ok(html.includes('id="crm-teaching-session-modal"'), 'crm-admin.html must
 assert.ok(html.includes('id="teaching-session-mindmap-container"'), 'crm-admin.html must contain teaching-session-mindmap-container');
 assert.ok(html.includes('id="teaching-session-flowchart-container"'), 'crm-admin.html must contain teaching-session-flowchart-container');
 assert.ok(html.includes('id="teaching-session-report-html"'), 'crm-admin.html must contain teaching-session-report-html');
-assert.ok(html.includes('mermaid@11'), 'crm-admin.html must load mermaid.min.js CDN');
+assert.ok(html.includes('mermaid@11.17.2'), 'crm-admin.html must load pinned mermaid@11.17.2 CDN');
+assert.ok(html.includes('js/crm/teaching-session-mindmap.js'), 'crm-admin.html must load teaching-session-mindmap.js script');
+assert.ok(html.includes('js/crm/teaching-session-pdf.js'), 'crm-admin.html must load teaching-session-pdf.js script');
 assert.ok(html.includes('js/crm/teaching-sessions.js'), 'crm-admin.html must load teaching-sessions.js script');
+assert.ok(html.includes('id="teaching-session-mindmap-detail"'), 'crm-admin.html must contain teaching-session-mindmap-detail aside');
+assert.ok(html.includes('id="btn-export-teaching-session-pdf"'), 'crm-admin.html must contain btn-export-teaching-session-pdf button');
 
 // 2. Validate student-modal.js integration
 const studentModalJsPath = path.resolve(__dirname, '../../public/js/crm/student-modal.js');
@@ -111,6 +115,10 @@ assert.ok(htmlModern.includes('crm-problem-accordion'), 'Should render problem a
 assert.ok(htmlModern.includes('crm-problem-summary'), 'Should render summary element');
 assert.ok(htmlModern.includes('crm-briefing-filters'), 'Should render filter chips toolbar');
 assert.ok(htmlModern.includes('data-filter="all"'), 'Should render all filter chip');
+assert.ok(htmlModern.includes('data-hw-index="0"'), 'Should render homework checklist item with data-hw-index');
+assert.ok(htmlModern.includes('crm-btn-create-task'), 'Should render create single task button');
+assert.ok(htmlModern.includes('crm-btn-create-all-tasks'), 'Should render create all tasks button');
+assert.ok(htmlModern.includes('crm-hw-due-input'), 'Should render homework due date input');
 
 // Test timestamp chips & clamping in modern session
 const richSession = {
@@ -232,5 +240,140 @@ assert.ok(htmlNew.includes('Identify run-on sentences in 3 examples.'));
 assert.ok(htmlNew.includes('Monitor comma splices in body paragraphs.'));
 assert.ok(htmlNew.includes('Rewrite paragraph 2 using subordination.'));
 assert.ok(htmlNew.includes('data-seek-sec="320"'));
+
+// 5. Test Interactive Mindmap module (Phase B)
+const mindmapJsPath = path.resolve(__dirname, '../../public/js/crm/teaching-session-mindmap.js');
+const mindmapJs = fs.readFileSync(mindmapJsPath, 'utf8');
+vm.runInContext(mindmapJs, domSandbox);
+const mindmapModule = domSandbox.window.CrmTeachingSessionMindmap;
+assert.ok(mindmapModule, 'window.CrmTeachingSessionMindmap must be defined');
+assert.strictEqual(typeof mindmapModule.buildMindmapModel, 'function');
+assert.strictEqual(typeof mindmapModule.assignProblemsToConcepts, 'function');
+assert.strictEqual(typeof mindmapModule.sanitizeMermaidText, 'function');
+assert.strictEqual(typeof mindmapModule.renderInteractiveMindmap, 'function');
+assert.strictEqual(typeof mindmapModule.refitDiagramLabels, 'function');
+
+// 5.1 Test sanitizeMermaidText
+const dirtyText = 'Topic: [Advanced] (Cohesion) "PEEL" & Logic; test`quote`\nNewline \t tab';
+const cleanText = mindmapModule.sanitizeMermaidText(dirtyText);
+assert.ok(!cleanText.includes('['), 'Must strip [');
+assert.ok(!cleanText.includes(']'), 'Must strip ]');
+assert.ok(!cleanText.includes('('), 'Must strip (');
+assert.ok(!cleanText.includes(')'), 'Must strip )');
+assert.ok(!cleanText.includes('"'), 'Must strip "');
+assert.ok(!cleanText.includes(';'), 'Must strip ;');
+assert.ok(!cleanText.includes('`'), 'Must strip `');
+assert.ok(!cleanText.includes('\n'), 'Must strip newline');
+
+// 5.2 Test assignProblemsToConcepts deterministic assignment
+const testConcepts = [
+    { id: 'c0', topic: 'Lexical Cohesion', category: 'Writing', approx_start_sec: 100 },
+    { id: 'c1', topic: 'Grammar Accuracy', category: 'Grammar', approx_start_sec: 300 }
+];
+const testProblems = [
+    { problem_id: 'p0', issue_summary: 'Misuse of cohesive transition words', approx_start_sec: 105 },
+    { problem_id: 'p1', issue_summary: 'Subject verb agreement error in past tense', approx_start_sec: 310 }
+];
+const assignment = mindmapModule.assignProblemsToConcepts(testConcepts, testProblems);
+assert.strictEqual(assignment.conceptProblems[0][0].problem_id, 'p0', 'p0 should assign to c0 by time proximity and cohesion match');
+assert.strictEqual(assignment.conceptProblems[1][0].problem_id, 'p1', 'p1 should assign to c1');
+assert.strictEqual(typeof assignment.assignments.get, 'function', 'assignment.assignments should be a Map');
+assert.strictEqual(assignment.assignments.get(0)[0].problem_id, 'p0');
+
+// 5.3 Test buildMindmapModel
+const sessionForMindmap = {
+    title: 'Model Building Session',
+    report: {
+        summary: { core_topic: 'Cohesion & Grammar' },
+        what_taught: [
+            { category: 'Writing', topic: 'PEEL Method', key_rule: 'Point Evidence Explanation Link', approx_start_sec: 120 }
+        ],
+        student_problems_and_solutions: [
+            {
+                issue_summary: 'Missing Explanation step',
+                student_error: 'Wrote Point and jumped to Link',
+                teacher_fix: 'Add explanation sentence',
+                severity: '🔴 Nghiêm trọng',
+                student_outcome: '✅ Mastered',
+                approx_start_sec: 130
+            }
+        ]
+    }
+};
+const model = mindmapModule.buildMindmapModel(controller.normalizeReport(sessionForMindmap));
+assert.ok(model.mermaidText.startsWith('mindmap\n  root(('), 'Mindmap code must start with root((');
+assert.ok(model.mermaidText.includes('PEEL Method'), 'Mindmap must contain concept topic');
+assert.ok(Array.isArray(model.descriptors), 'Model must contain descriptors array');
+const rootDesc = model.descriptors[0];
+assert.strictEqual(rootDesc.kind, 'root');
+assert.strictEqual(rootDesc.fullText, 'Cohesion & Grammar');
+
+const conceptDesc = model.descriptors.find(d => d.kind === 'concept');
+assert.ok(conceptDesc, 'Must have a concept descriptor');
+assert.ok(conceptDesc.label.includes('PEEL Method'));
+
+// 6. Test PDF export module (Phase D)
+const pdfJsPath = path.resolve(__dirname, '../../public/js/crm/teaching-session-pdf.js');
+const pdfJs = fs.readFileSync(pdfJsPath, 'utf8');
+vm.runInContext(pdfJs, domSandbox);
+assert.strictEqual(typeof domSandbox.window.generateTeachingSessionPdf, 'function', 'window.generateTeachingSessionPdf must be exposed');
+
+// 7. Unit Tests for calculateDefaultDueDate (Phase C)
+assert.strictEqual(typeof controller.calculateDefaultDueDate, 'function', 'controller.calculateDefaultDueDate must be exposed');
+
+// 7.1 Future session date -> 7 days later
+const fixedNow = new Date('2026-09-01T10:00:00Z');
+const currentSessionDate = '2026-09-01T10:00:00Z';
+const dueStandard = controller.calculateDefaultDueDate(currentSessionDate, fixedNow);
+assert.match(dueStandard, /^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD');
+const parsedDueStandard = new Date(`${dueStandard}T20:00:00`);
+const diffDaysStandard = Math.round((parsedDueStandard.getTime() - fixedNow.getTime()) / (24 * 60 * 60 * 1000));
+assert.ok(diffDaysStandard >= 6 && diffDaysStandard <= 8, `Due date should be ~7 days ahead, got diff ${diffDaysStandard}`);
+
+// 7.2 Stale past session date -> clamped to >= now + 24h at 20:00 local
+const oldSessionDate = '2026-08-01T10:00:00Z';
+const dueClamped = controller.calculateDefaultDueDate(oldSessionDate, fixedNow);
+const parsedDueClamped = new Date(`${dueClamped}T20:00:00`);
+assert.ok(parsedDueClamped.getTime() >= fixedNow.getTime() + 24 * 60 * 60 * 1000, 'Clamped due date must be at least 24 hours in the future');
+
+// 7.3 Invalid or null session date fallback
+const dueFallback = controller.calculateDefaultDueDate(null, fixedNow);
+assert.match(dueFallback, /^\d{4}-\d{2}-\d{2}$/, 'Fallback due date must be valid YYYY-MM-DD');
+
+// 8. Unit Tests for stripDiacritics & sanitizeMermaidText (Phase B)
+assert.strictEqual(typeof mindmapModule.stripDiacritics, 'function', 'stripDiacritics must be exposed');
+const vietnameseText = 'Đoàn Động Từ Điểm Ngữ Pháp';
+const stripped = mindmapModule.stripDiacritics(vietnameseText);
+assert.strictEqual(stripped, 'doan dong tu diem ngu phap', 'stripDiacritics must fold đ/Đ to d');
+
+const trickySyntax = '%% comment %%\n:::classStyle (nested [brackets] {braces} #tag &amp; <xml> `code` *star* |pipe| "quote" \\slash /fwd)';
+const sanitizedTricky = mindmapModule.sanitizeMermaidText(trickySyntax);
+assert.ok(!sanitizedTricky.includes('%%'), 'Must strip %%');
+assert.ok(!sanitizedTricky.includes(':::classStyle'), 'Must strip class selectors');
+assert.ok(!/[()[\]{}#&;<>`*|"\\/]/.test(sanitizedTricky), 'Must strip all Mermaid mindmap syntax breakers');
+assert.strictEqual(mindmapModule.sanitizeMermaidText('', 'Fallback Text'), 'Fallback Text');
+assert.strictEqual(mindmapModule.sanitizeMermaidText(null), 'Mục 1');
+
+// 9. Unit Test for Timestamp-less Concept Assignment (Phase B)
+const timelessConcepts = [
+    { id: 'c0', topic: 'Phát âm nguyên âm đơn', category: 'Phonics', approx_start_sec: null },
+    { id: 'c1', topic: 'Trọng âm từ hai âm tiết', category: 'Stress', approx_start_sec: null }
+];
+const timelessProblems = [
+    { problem_id: 'p0', issue_summary: 'Sai trọng âm từ hai âm tiết thứ nhất', approx_start_sec: null },
+    { problem_id: 'p1', issue_summary: 'Phát âm sai nguyên âm đơn /i:/ thành /ɪ/', approx_start_sec: null }
+];
+const timelessAssignment = mindmapModule.assignProblemsToConcepts(timelessConcepts, timelessProblems);
+assert.strictEqual(timelessAssignment.conceptProblems[0][0].problem_id, 'p1', 'p1 should match c0 on text similarity alone');
+assert.strictEqual(timelessAssignment.conceptProblems[1][0].problem_id, 'p0', 'p0 should match c1 on text similarity alone');
+
+// 10. Unit Test for PDF Student Filename ASCII Folding (Phase D)
+const testStudentName = 'Đoàn Văn Định';
+const folded = testStudentName
+    .replace(/\u0111/g, 'd').replace(/\u0110/g, 'D')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^0-9a-zA-Z\s_-]/g, '')
+    .trim().replace(/\s+/g, '-');
+assert.strictEqual(folded, 'Doan-Van-Dinh', 'Vietnamese student name with Đ/đ must fold to Doan-Van-Dinh without dropping letters');
 
 console.log('teaching sessions frontend contract and briefing rendering tests passed');

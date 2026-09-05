@@ -52,6 +52,142 @@
         return formatLocalDateYMD(today);
     }
 
+    function formatIsoToDmy(iso) {
+        if (!iso) return '';
+        const clean = String(iso).split('T')[0].trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+        const [y, m, d] = clean.split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    function validateAndBuildIso(d, m, y) {
+        const day = Number(d);
+        const month = Number(m);
+        const year = Number(y);
+        if (!Number.isFinite(day) || !Number.isFinite(month) || !Number.isFinite(year)) return '';
+        if (year < 1900 || year > 2100) return '';
+        if (month < 1 || month > 12) return '';
+        if (day < 1 || day > 31) return '';
+        const dd = String(day).padStart(2, '0');
+        const mm = String(month).padStart(2, '0');
+        const test = new Date(`${year}-${mm}-${dd}T00:00:00Z`);
+        if (isNaN(test.getTime())) return '';
+        if (test.getUTCDate() !== day || test.getUTCMonth() !== (month - 1)) return '';
+        return `${year}-${mm}-${dd}`;
+    }
+
+    function parseDmyOrIso(inputStr) {
+        if (!inputStr) return '';
+        const s = String(inputStr).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+        // Continuous 8-digit DDMMYYYY
+        if (/^\d{8}$/.test(s)) {
+            return validateAndBuildIso(s.slice(0, 2), s.slice(2, 4), s.slice(4, 8));
+        }
+
+        const parts = s.split(/[/.-]/);
+        if (parts.length === 3) {
+            let [p1, p2, p3] = parts;
+            // If YYYY/MM/DD
+            if (p1.length === 4) {
+                return validateAndBuildIso(p3, p2, p1);
+            }
+            // DD/MM/YY or DD/MM/YYYY
+            let y = p3;
+            if (y.length === 2) {
+                y = (Number(y) > 50 ? '19' : '20') + y;
+            }
+            if (y.length === 4) {
+                return validateAndBuildIso(p1, p2, y);
+            }
+        }
+        return '';
+    }
+
+    function setupSmartDateInput(textInput, nativeInput, pickerBtn, initialIso) {
+        if (!textInput) return;
+        let currentIso = '';
+
+        const originalValueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+
+        Object.defineProperty(textInput, 'value', {
+            get() {
+                return currentIso;
+            },
+            set(val) {
+                if (!val) {
+                    currentIso = '';
+                    if (nativeInput) nativeInput.value = '';
+                    if (originalValueDescriptor && originalValueDescriptor.set) {
+                        originalValueDescriptor.set.call(textInput, '');
+                    } else {
+                        textInput.setAttribute('value', '');
+                    }
+                    return;
+                }
+                const iso = parseDmyOrIso(val);
+                currentIso = iso || val;
+                if (nativeInput && iso) nativeInput.value = iso;
+                const display = iso ? formatIsoToDmy(iso) : val;
+                if (originalValueDescriptor && originalValueDescriptor.set) {
+                    originalValueDescriptor.set.call(textInput, display);
+                } else {
+                    textInput.setAttribute('value', display);
+                }
+            },
+            configurable: true
+        });
+
+        textInput.addEventListener('input', () => {
+            const raw = originalValueDescriptor && originalValueDescriptor.get
+                ? originalValueDescriptor.get.call(textInput)
+                : textInput.getAttribute('value') || '';
+            const iso = parseDmyOrIso(raw);
+            currentIso = iso;
+            if (nativeInput && iso) {
+                nativeInput.value = iso;
+            }
+        });
+
+        textInput.addEventListener('blur', () => {
+            if (currentIso && /^\d{4}-\d{2}-\d{2}$/.test(currentIso)) {
+                if (originalValueDescriptor && originalValueDescriptor.set) {
+                    originalValueDescriptor.set.call(textInput, formatIsoToDmy(currentIso));
+                }
+            }
+        });
+
+        if (nativeInput) {
+            nativeInput.addEventListener('change', () => {
+                if (nativeInput.value) {
+                    textInput.value = nativeInput.value;
+                    textInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    textInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        }
+
+        if (pickerBtn) {
+            pickerBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (nativeInput && typeof nativeInput.showPicker === 'function') {
+                    try {
+                        nativeInput.showPicker();
+                    } catch (err) {
+                        nativeInput.focus();
+                    }
+                } else if (nativeInput) {
+                    nativeInput.focus();
+                }
+            });
+        }
+
+        if (initialIso) {
+            textInput.value = initialIso;
+        }
+    }
+
     function formatHours(minutes) {
         const h = Math.max(0, Number(minutes) || 0) / 60;
         return Number.isInteger(h) ? String(h) : h.toFixed(1);
@@ -382,7 +518,18 @@
 
                     <div class="crm-form-group">
                         <label for="enroll-start-date">Start Date *</label>
-                        <input type="date" id="enroll-start-date" class="crm-input" value="${getUpcomingMondayDateString()}">
+                        <div class="crm-date-control-group">
+                            <input type="text" id="enroll-start-date" class="crm-input crm-date-text-input" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off">
+                            <button type="button" class="crm-date-picker-btn" id="enroll-start-date-picker-btn" title="Choose date" tabindex="-1" aria-label="Open calendar for start date">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </button>
+                            <input type="date" id="enroll-start-date-native" class="crm-hidden-native-date" tabindex="-1" aria-hidden="true">
+                        </div>
                     </div>
 
                     <div class="crm-form-group">
@@ -390,7 +537,18 @@
                             <span>End Date</span>
                             <span id="enroll-end-date-helper" class="crm-muted" style="font-size: 11px; font-weight: normal;">(auto-calculated)</span>
                         </label>
-                        <input type="date" id="enroll-end-date" class="crm-input">
+                        <div class="crm-date-control-group">
+                            <input type="text" id="enroll-end-date" class="crm-input crm-date-text-input" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off">
+                            <button type="button" class="crm-date-picker-btn" id="enroll-end-date-picker-btn" title="Choose date" tabindex="-1" aria-label="Open calendar for end date">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </button>
+                            <input type="date" id="enroll-end-date-native" class="crm-hidden-native-date" tabindex="-1" aria-hidden="true">
+                        </div>
                     </div>
 
                     <div class="crm-form-group crm-enroll-form-full">
@@ -436,6 +594,14 @@
         const courseSelect = containerEl.querySelector('#enroll-course-select');
         const startDateInput = containerEl.querySelector('#enroll-start-date');
         const endDateInput = containerEl.querySelector('#enroll-end-date');
+        const startDateNative = containerEl.querySelector('#enroll-start-date-native');
+        const endDateNative = containerEl.querySelector('#enroll-end-date-native');
+        const startDateBtn = containerEl.querySelector('#enroll-start-date-picker-btn');
+        const endDateBtn = containerEl.querySelector('#enroll-end-date-picker-btn');
+
+        setupSmartDateInput(startDateInput, startDateNative, startDateBtn, getUpcomingMondayDateString());
+        setupSmartDateInput(endDateInput, endDateNative, endDateBtn, '');
+
         const teacherSelect = containerEl.querySelector('#enroll-teacher-select');
         const comparisonBar = containerEl.querySelector('#enroll-comparison-bar');
         const errorBox = containerEl.querySelector('#enroll-error-box');
@@ -599,8 +765,10 @@
         }
 
         const endDateHelper = containerEl.querySelector('#enroll-end-date-helper');
+        let isEndDateManuallySet = false;
 
         function setAutoEndDate() {
+            isEndDateManuallySet = false;
             const course = getSelectedCourse();
             const dur = Number(course?.durationDays) || 30;
             if (startDateInput.value) {
@@ -613,6 +781,10 @@
         }
 
         function markEndDateManuallySet() {
+            if (isEndDateManuallySet) {
+                return;
+            }
+            isEndDateManuallySet = true;
             if (endDateHelper) {
                 endDateHelper.className = 'crm-manual-override-badge';
                 endDateHelper.innerHTML = `ⓘ Manually set <button type="button" id="btn-undo-end-date" class="crm-undo-link">Undo</button>`;

@@ -1978,3 +1978,16 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 983,2026-09-05,Investigate acoustic score discrepancy phoneme substitution diagnostics and tooltip UI scaling,Done,2026-09-05
 984,2026-09-05,Fix Firestore composite index requirement 500 error in CRM Student Courses enrollments endpoint,Done,2026-09-05
 985,2026-09-05,Release V1.8.130: Deploy CRM Student Courses Firestore 500 fix and index resilience to production,Done,2026-09-05
+986,2026-09-05,Enhance entrance test pronunciation tooltip with natural casual physical articulatory coaching tips and insights,Done,2026-09-05
+987,2026-09-05,Overhaul RFIB explanation viewing flow with 4-digit padding fix select locking and mobile bottom sheet,Done,2026-09-05
+988,2026-09-05,Audit and review V4 syllable segmentation pitch and duration measurement logic against core purpose,Done,2026-09-05
+989,2026-09-05,Format CRM Student Courses start and end date inputs to DD/MM/YYYY with smart calendar picker,Done,2026-09-05
+990,2026-09-05,Expand CRM Student Profile modal to near full screen layout,Done,2026-09-05
+991,2026-09-05,Enable Admin teacher schedule filter and fix teacher account schedule visibility,Done,2026-09-05
+992,2026-09-05,Teaching Session Viewer Round 4: Interactive mindmap and workflow integration,Done,2026-09-05
+993,2026-09-05,Comparative analysis of V4 vs Azure Speech for isolated word lexical stress coaching,Done,2026-09-05
+994,2026-09-05,Restore prompt clause analyzer for each part of prompt to fulfill hieu de bai objective,Done,2026-09-05
+995,2026-09-06,Promote 1105 audited RFIB explanations with distractor contrast UI and resolve 23 edge cases,In Progress,
+996,2026-09-06,Audit debug and refactor Teaching Session Viewer Round 4 implementation,Done,2026-09-06
+997,2026-09-06,Release V1.8.131: Deploy Teaching Session Viewer Round 4 and audit hardening to production,Done,2026-09-06
+998,2026-09-06,Fix and enforce automatic removal of (D) session tag when new development resumes,In Progress,

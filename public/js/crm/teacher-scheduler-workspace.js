@@ -86,11 +86,17 @@ window.TeacherSchedulerWorkspace = (function () {
         const {
             elements,
             showToast,
-            fetchGemmaJSON
+            fetchGemmaJSON,
+            isAdmin
         } = deps;
+
+        const isAdminMode = typeof isAdmin === 'function' ? isAdmin : () => Boolean(isAdmin);
 
         const state = {
             loaded: false,
+            selectedTeacherUid: 'all',
+            teachers: [],
+            teacherMap: new Map(),
             classrooms: [],
             sessions: [],
             fromDate: null,
@@ -109,17 +115,95 @@ window.TeacherSchedulerWorkspace = (function () {
             resizeDrag: null
         };
 
+        function updateRailLabels() {
+            if (!elements.teacherSchedulerRailTitle) return;
+            if (isAdminMode()) {
+                if (state.selectedTeacherUid === 'all') {
+                    elements.teacherSchedulerRailTitle.textContent = 'All Classes';
+                    if (elements.teacherSchedulerRailDesc) {
+                        elements.teacherSchedulerRailDesc.textContent = 'Showing classes across all teachers. Click a class to arm placement mode.';
+                    }
+                } else {
+                    const teacherName = state.teacherMap.get(state.selectedTeacherUid) || 'Teacher';
+                    elements.teacherSchedulerRailTitle.textContent = `${teacherName}'s Classes`;
+                    if (elements.teacherSchedulerRailDesc) {
+                        elements.teacherSchedulerRailDesc.textContent = `Showing classes for ${teacherName}. Click a class to arm placement mode.`;
+                    }
+                }
+            } else {
+                elements.teacherSchedulerRailTitle.textContent = 'Your Classes';
+                if (elements.teacherSchedulerRailDesc) {
+                    elements.teacherSchedulerRailDesc.textContent = 'Click a class to arm placement mode, then click slots to place sessions.';
+                }
+            }
+        }
+
+        function populateTeacherDropdown() {
+            if (!isAdminMode() || !elements.teacherSchedulerTeacherSelect) return;
+            if (Array.isArray(state.classrooms)) {
+                state.classrooms.forEach((c) => {
+                    const uid = String(c.primaryTeacherUid || '').trim();
+                    const name = c.primaryTeacherName || uid;
+                    if (uid && !state.teacherMap.has(uid)) {
+                        state.teacherMap.set(uid, name);
+                    }
+                });
+            }
+
+            let optionsHtml = '<option value="all">All Teachers</option>';
+            const renderedUids = new Set(['all']);
+            state.teachers.forEach((t) => {
+                const uid = String(t.uid || t.id || '').trim();
+                const name = t.displayName || t.name || t.email || uid;
+                if (uid && !renderedUids.has(uid)) {
+                    renderedUids.add(uid);
+                    optionsHtml += `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`;
+                }
+            });
+            state.teacherMap.forEach((name, uid) => {
+                if (uid && !renderedUids.has(uid)) {
+                    renderedUids.add(uid);
+                    optionsHtml += `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`;
+                }
+            });
+
+            elements.teacherSchedulerTeacherSelect.innerHTML = optionsHtml;
+            elements.teacherSchedulerTeacherSelect.value = state.selectedTeacherUid || 'all';
+        }
+
+        async function loadTeachersList() {
+            if (!isAdminMode() || !elements.teacherSchedulerTeacherSelect) return;
+            if (elements.teacherSchedulerAdminFilterGroup) {
+                elements.teacherSchedulerAdminFilterGroup.style.display = 'block';
+            }
+            if (window.ClassroomAPI?.fetchTeachers) {
+                try {
+                    const teachers = await window.ClassroomAPI.fetchTeachers();
+                    state.teachers = Array.isArray(teachers) ? teachers : [];
+                    state.teacherMap.clear();
+                    state.teachers.forEach((t) => {
+                        const uid = String(t.uid || t.id || '').trim();
+                        const name = t.displayName || t.name || t.email || uid;
+                        if (uid) state.teacherMap.set(uid, name);
+                    });
+                    populateTeacherDropdown();
+                } catch (e) {
+                    console.warn('[TeacherSchedulerWorkspace] Failed to load teachers:', e);
+                }
+            }
+        }
+
         function currentRange() {
             const from = state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : startOfWeek(new Date());
             const to = state.toDate ? new Date(`${state.toDate}T23:59:59`) : addDays(from, 6);
             return { from, to };
         }
 
-        function describeTeacherSchedulerError(error, targetDate = '', targetTime = '', durationMinutes = 0, excludeSessionId = '') {
+        function describeTeacherSchedulerError(error, targetDate = '', targetTime = '', durationMinutes = 0, excludeSessionId = '', targetClassId = '', targetTeacherUid = '') {
             const code = String(error?.code || '');
             const status = Number(error?.status || 0) || 0;
             if (code === 'TEACHER_CONFLICT' || status === 409) {
-                const overlap = hasClientConflict(targetDate, targetTime, durationMinutes, excludeSessionId) || null;
+                const overlap = hasClientConflict(targetDate, targetTime, durationMinutes, excludeSessionId, targetClassId, targetTeacherUid) || null;
                 const overlapClass = overlap ? getClassroomById(overlap.classId) : null;
                 const overlapTime = overlap ? getSessionLocalTime(overlap) : '';
                 if (overlap) {
@@ -162,10 +246,10 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function setToolbarDefaults() {
-            if (!elements.inputTeacherSchedulerFromDate?.value) {
+            if (elements.inputTeacherSchedulerFromDate && !elements.inputTeacherSchedulerFromDate.value) {
                 elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(startOfWeek(new Date()));
             }
-            if (!elements.inputTeacherSchedulerToDate?.value) {
+            if (elements.inputTeacherSchedulerToDate && !elements.inputTeacherSchedulerToDate.value) {
                 const end = addDays(startOfWeek(new Date()), 6);
                 elements.inputTeacherSchedulerToDate.value = toLocalDateInput(end);
             }
@@ -189,9 +273,14 @@ window.TeacherSchedulerWorkspace = (function () {
                 const assigned = Number(summary.contractedAssignedCount || 0);
                 const target = Number(summary.contractedTargetCount || 0);
                 const activeClass = state.placementClassroomId === classId ? 'is-armed' : '';
+                const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || classroom.primaryTeacherUid || '';
+                const teacherBadge = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
+                    ? `<div class="scheduler-class-card-meta" style="color:var(--crm-primary,#157a3b);font-weight:600;">👤 ${escapeHtml(teacherName)}</div>`
+                    : '';
                 return `
                     <button type="button" class="scheduler-class-card teacher-scheduler-class-card ${activeClass}" data-classroom-id="${escapeHtml(classId)}">
                         <div class="scheduler-class-card-title">${escapeHtml(classroom.name || classId)}</div>
+                        ${teacherBadge}
                         <div class="scheduler-class-card-meta">${assigned}/${target} contracted scheduled</div>
                         <div class="scheduler-class-card-meta">${activeClass ? 'Placement mode active (Esc to exit)' : 'Click to arm placement mode'}</div>
                     </button>
@@ -206,7 +295,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.inputTeacherSchedulerPatternClass.innerHTML = state.classrooms.map((classroom) => {
                     const classId = String(classroom.classroomId || '');
                     const selectedAttr = selected === classId ? ' selected' : '';
-                    return `<option value="${escapeHtml(classId)}"${selectedAttr}>${escapeHtml(classroom.name || classId)}</option>`;
+                    const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || '';
+                    const teacherSuffix = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName) ? ` (${teacherName})` : '';
+                    return `<option value="${escapeHtml(classId)}"${selectedAttr}>${escapeHtml(classroom.name || classId)}${escapeHtml(teacherSuffix)}</option>`;
                 }).join('');
             }
 
@@ -283,8 +374,13 @@ window.TeacherSchedulerWorkspace = (function () {
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
                         const heightPx = Math.max((duration / 30) * SLOT_HEIGHT_PX - 2, 18);
                         const locked = isLockedSession(session);
+                        const teacherName = session.teacherName || state.teacherMap.get(session.teacherUid) || classroom?.primaryTeacherName || state.teacherMap.get(classroom?.primaryTeacherUid) || '';
+                        const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
+                            ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
+                            : '';
                         return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending}" data-session-id="${escapeHtml(sessionId)}" style="top:0;height:${heightPx}px;">`
                             + `<span class="pill-title">${escapeHtml(title)}</span>`
+                            + teacherPill
                             + `<span class="pill-time">${escapeHtml(timeRange)}</span>`
                             + (locked ? '' : '<div class="scheduler-session-resize-handle" data-resize="1"></div>')
                             + '</button>';
@@ -343,7 +439,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.inputTeacherSchedulerQuickClass.innerHTML = state.classrooms.map((classroom) => {
                     const classId = String(classroom.classroomId || '');
                     const selected = classId === draft.classId ? ' selected' : '';
-                    return `<option value="${escapeHtml(classId)}"${selected}>${escapeHtml(classroom.name || classId)}</option>`;
+                    const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || '';
+                    const teacherSuffix = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName) ? ` (${teacherName})` : '';
+                    return `<option value="${escapeHtml(classId)}"${selected}>${escapeHtml(classroom.name || classId)}${escapeHtml(teacherSuffix)}</option>`;
                 }).join('');
             }
             if (elements.inputTeacherSchedulerQuickDate) {
@@ -381,23 +479,13 @@ window.TeacherSchedulerWorkspace = (function () {
             const suggestions = [];
             const slots = hourSlots(7, 21);
             const days = getRenderDays();
-            const sessions = state.sessions.filter((session) => String(session.sessionId || '') !== String(excludeSessionId || ''));
-
-            function conflictsWithSession(candidateDate, candidateTime, minutes) {
-                const candidateStart = parseTimeToMinutes(candidateTime);
-                const candidateEnd = candidateStart + Number(minutes || 0);
-                return sessions.some((session) => {
-                    if (getSessionLocalDate(session) !== candidateDate) return false;
-                    const start = parseTimeToMinutes(getSessionLocalTime(session));
-                    const end = start + Number(session.durationMinutes || 0);
-                    return candidateStart < end && candidateEnd > start;
-                });
-            }
+            const classroom = getClassroomById(classId);
+            const effectiveTeacherUid = classroom?.primaryTeacherUid || (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : null);
 
             for (const day of days) {
                 const date = toLocalDateInput(day);
                 for (const time of slots) {
-                    if (!conflictsWithSession(date, time, durationMinutes)) {
+                    if (!hasClientConflict(date, time, durationMinutes, excludeSessionId, classId, effectiveTeacherUid)) {
                         suggestions.push({ classId, date, time });
                         if (suggestions.length >= 5) {
                             return suggestions;
@@ -408,13 +496,25 @@ window.TeacherSchedulerWorkspace = (function () {
             return suggestions;
         }
 
-        function hasClientConflict(targetDate, targetTime, durationMinutes, excludeSessionId) {
+        function hasClientConflict(targetDate, targetTime, durationMinutes, excludeSessionId, targetClassId, targetTeacherUid) {
             const candidateStart = parseTimeToMinutes(targetTime);
             if (!Number.isFinite(candidateStart)) return null;
             const candidateEnd = candidateStart + Number(durationMinutes || 0);
+            const effectiveTeacherUid = targetTeacherUid || (targetClassId ? getClassroomById(targetClassId)?.primaryTeacherUid : null);
+
             return state.sessions.find((session) => {
                 if (excludeSessionId && String(session.sessionId || '') === String(excludeSessionId || '')) return false;
                 if (getSessionLocalDate(session) !== targetDate) return false;
+
+                if (effectiveTeacherUid) {
+                    const sessionTeacherUid = session.teacherUid || getClassroomById(session.classId)?.primaryTeacherUid;
+                    const isSameTeacher = sessionTeacherUid && sessionTeacherUid === effectiveTeacherUid;
+                    const isSameClass = targetClassId && session.classId === targetClassId;
+                    if (!isSameTeacher && !isSameClass) return false;
+                } else if (targetClassId) {
+                    if (session.classId !== targetClassId) return false;
+                }
+
                 const start = parseTimeToMinutes(getSessionLocalTime(session));
                 const end = start + Number(session.durationMinutes || 0);
                 return candidateStart < end && candidateEnd > start;
@@ -427,7 +527,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 throw new Error('Teacher scheduler API unavailable.');
             }
             const durationMinutes = Number(classroom.scheduleConfig?.sessionMinutes || 0) || 120;
-            const conflict = hasClientConflict(targetDate, targetTime, durationMinutes);
+            const teacherUid = classroom.primaryTeacherUid || (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : undefined);
+            const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, null, classId, teacherUid);
             if (conflict) {
                 const conflictClass = getClassroomById(conflict.classId);
                 const msg = `Conflict: overlaps with ${conflictClass?.name || 'another session'} at ${getSessionLocalTime(conflict)}`;
@@ -439,7 +540,8 @@ window.TeacherSchedulerWorkspace = (function () {
                     targetLocalDate: targetDate,
                     targetLocalTime: targetTime,
                     durationMinutes,
-                    timezone: classroom.scheduleConfig?.timezone || 'UTC'
+                    timezone: classroom.scheduleConfig?.timezone || 'UTC',
+                    ...(teacherUid ? { teacherUid } : {})
                 });
                 if (!options.silentToast) {
                     showToast?.('Session added.', 'success');
@@ -593,11 +695,13 @@ window.TeacherSchedulerWorkspace = (function () {
             state.classrooms.forEach((classroom) => {
                 expectedScheduleVersions[String(classroom.classroomId || '')] = Number(classroom?.scheduleConfig?.scheduleVersion || 0) || 1;
             });
+            const teacherUid = isAdminMode() ? (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : undefined) : undefined;
             try {
                 const result = await window.ClassroomAPI.teacherActivateRecurrences({
                     from: state.fromDate,
                     to: state.toDate,
-                    expectedScheduleVersions
+                    expectedScheduleVersions,
+                    ...(teacherUid ? { teacherUid } : {})
                 });
                 state.activationSummary = result;
                 renderActivationSummary();
@@ -613,6 +717,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
             const classId = String(elements.inputTeacherSchedulerPatternClass?.value || state.patternClassId || '').trim();
+            const classroom = getClassroomById(classId);
+            const teacherUid = classroom?.primaryTeacherUid || (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : undefined);
             const weekdays = Array.from(state.patternWeekdays);
             if (!classId || !weekdays.length) {
                 showToast?.('Choose a class and at least one weekday.', 'error');
@@ -623,7 +729,8 @@ window.TeacherSchedulerWorkspace = (function () {
                     weekdays,
                     startTime: state.patternStartTime,
                     from: state.fromDate,
-                    to: state.toDate
+                    to: state.toDate,
+                    ...(teacherUid ? { teacherUid } : {})
                 });
                 const createdCount = Array.isArray(result?.createdSessions) ? result.createdSessions.length : 0;
                 const skippedCount = Array.isArray(result?.skippedOccurrences) ? result.skippedOccurrences.length : 0;
@@ -638,7 +745,12 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!window.ClassroomAPI?.fetchTeacherSchedulerWorkspace) return;
             const from = String(elements.inputTeacherSchedulerFromDate?.value || '').trim();
             const to = String(elements.inputTeacherSchedulerToDate?.value || '').trim();
-            const payload = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace({ from, to });
+            const teacherUid = isAdminMode() ? state.selectedTeacherUid : undefined;
+            const payload = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace({
+                from,
+                to,
+                ...(teacherUid ? { teacherUid } : {})
+            });
             state.classrooms = Array.isArray(payload?.classrooms) ? payload.classrooms : [];
             state.sessions = Array.isArray(payload?.sessions) ? payload.sessions : [];
             state.fromDate = from || payload?.from || null;
@@ -649,6 +761,8 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!getClassroomById(state.patternClassId)) {
                 state.patternClassId = String(state.classrooms[0]?.classroomId || '');
             }
+            populateTeacherDropdown();
+            updateRailLabels();
             renderClassRail();
             renderActivationSummary();
             renderCalendarGrid();
@@ -750,7 +864,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
             const startDate = getSessionLocalDate(session);
             const startTime = getSessionLocalTime(session);
-            const conflict = hasClientConflict(startDate, startTime, rd.currentDuration, rd.sessionId);
+            const conflict = hasClientConflict(startDate, startTime, rd.currentDuration, rd.sessionId, session.classId, session.teacherUid);
             if (conflict) {
                 const conflictClass = getClassroomById(conflict.classId);
                 const msg = `Conflict: overlaps with ${conflictClass?.name || 'another session'} at ${getSessionLocalTime(conflict)}`;
@@ -775,7 +889,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 await refresh();
             } catch (error) {
                 session.durationMinutes = previousDuration;
-                const msg = describeTeacherSchedulerError(error, startDate, startTime, rd.currentDuration, rd.sessionId);
+                const msg = describeTeacherSchedulerError(error, startDate, startTime, rd.currentDuration, rd.sessionId, session.classId, session.teacherUid);
                 showToast?.(msg, 'error');
                 markSlotError(startDate, startTime, msg);
                 renderCalendarGrid();
@@ -793,7 +907,7 @@ window.TeacherSchedulerWorkspace = (function () {
             if (previousDate === targetDate && previousTime === targetTime) return;
 
             const durationMinutes = Number(session.durationMinutes || 0) || 60;
-            const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, sessionId);
+            const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
             if (conflict) {
                 const conflictClass = getClassroomById(conflict.classId);
                 const msg = `Conflict: overlaps with ${conflictClass?.name || 'another session'} at ${getSessionLocalTime(conflict)}`;
@@ -818,7 +932,7 @@ window.TeacherSchedulerWorkspace = (function () {
             } catch (error) {
                 session.scheduledLocalDate = previousDate;
                 session.scheduledLocalTime = previousTime;
-                const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId);
+                const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
                 showToast?.(message, 'error');
                 markSlotError(targetDate, targetTime, message);
                 renderCalendarGrid();
@@ -828,6 +942,12 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function bindEvents() {
+            if (elements.teacherSchedulerTeacherSelect) {
+                elements.teacherSchedulerTeacherSelect.addEventListener('change', () => {
+                    state.selectedTeacherUid = elements.teacherSchedulerTeacherSelect.value || 'all';
+                    refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                });
+            }
             if (elements.btnTeacherSchedulerRefresh) {
                 elements.btnTeacherSchedulerRefresh.addEventListener('click', () => {
                     refresh().catch((error) => showToast?.(error?.message || 'Failed to refresh teacher scheduler.', 'error'));
@@ -1244,13 +1364,14 @@ window.TeacherSchedulerWorkspace = (function () {
             }
         }
 
-        function init() {
+        async function init() {
             if (state.loaded) return;
             state.loaded = true;
             setToolbarDefaults();
             initPatternDayChips();
             bindEvents();
-            refresh().catch((error) => {
+            await loadTeachersList();
+            await refresh().catch((error) => {
                 showToast?.(error?.message || 'Failed to load teacher scheduler.', 'error');
             });
         }

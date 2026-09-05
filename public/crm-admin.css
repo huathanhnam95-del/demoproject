@@ -1191,6 +1191,32 @@ body {
   animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Near full-screen layout for CRM Student Profile Modal */
+#crm-student-modal {
+  padding: 16px;
+}
+
+#crm-student-modal .crm-modal-container {
+  width: 96vw;
+  max-width: 1760px;
+  height: 94vh;
+  max-height: 96vh;
+}
+
+@media (max-width: 768px) {
+  #crm-student-modal {
+    padding: 0;
+  }
+  #crm-student-modal .crm-modal-container {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+
 @keyframes modalSlideUp {
   from {
     opacity: 0;
@@ -1947,6 +1973,24 @@ body {
 .scheduler-center p {
   margin: 0;
   color: var(--crm-text-muted);
+}
+
+.teacher-scheduler-admin-filter-group {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--crm-bg-alt, #f8fafc);
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 10px;
+}
+
+.teacher-scheduler-admin-filter-group label {
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--crm-text-muted);
+  display: block;
+  margin-bottom: 6px;
 }
 
 .scheduler-class-list {
@@ -12466,6 +12510,401 @@ mark.crm-highlight:hover {
   max-width: none !important;
 }
 
+/* Interactive Mindmap (Round 4) - Namespaced crm-ts-mm-* */
+.crm-ts-mm-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+.crm-ts-mm-filter-segmented {
+  display: inline-flex;
+  background: var(--crm-surface-dim, #f1f5f9);
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.crm-ts-mm-filter-btn {
+  border: none;
+  background: transparent;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--crm-text-muted, #64748b);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.crm-ts-mm-filter-btn:hover {
+  color: var(--crm-text-dark, #0f172a);
+}
+
+.crm-ts-mm-filter-btn.is-active,
+.crm-ts-mm-filter-btn.active {
+  background: #ffffff;
+  color: var(--crm-text-dark, #0f172a);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.crm-ts-mm-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.crm-ts-mm-search-icon {
+  position: absolute;
+  left: 8px;
+  width: 12px;
+  height: 12px;
+  fill: var(--crm-text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+.crm-ts-mm-search-input {
+  height: 26px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 2px 8px 2px 24px;
+  font-size: 11px;
+  width: 130px;
+  background: #ffffff;
+  color: var(--crm-text-dark, #0f172a);
+  outline: none;
+  transition: width 0.2s ease, border-color 0.2s ease;
+}
+
+.crm-ts-mm-search-input:focus {
+  width: 170px;
+  border-color: var(--crm-primary, #3b82f6);
+}
+
+/* Docked Detail Panel */
+.crm-ts-mm-detail-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  max-width: 90%;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid var(--crm-border, #e2e8f0);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.crm-ts-mm-detail-panel[hidden] {
+  display: none !important;
+}
+
+.crm-ts-mm-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--crm-border, #e2e8f0);
+  background: var(--crm-surface, #ffffff);
+}
+
+.crm-ts-mm-detail-badge-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.crm-ts-mm-detail-close {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--crm-text-muted, #64748b);
+  border-radius: 4px;
+  padding: 2px 6px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.crm-ts-mm-detail-close:hover {
+  color: var(--crm-text-dark, #0f172a);
+  background: var(--crm-surface-dim, #f1f5f9);
+}
+
+.crm-ts-mm-detail-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crm-ts-mm-detail-time-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.crm-ts-mm-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crm-ts-mm-detail-lead {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--crm-text-dark, #0f172a);
+  line-height: 1.4;
+}
+
+.crm-ts-mm-detail-rule {
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
+.crm-ts-mm-detail-examples {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.crm-ts-mm-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.crm-ts-mm-field-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--crm-text-muted, #64748b);
+}
+
+.crm-ts-mm-quote {
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #991b1b;
+  line-height: 1.4;
+}
+
+.crm-ts-mm-solution {
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.crm-ts-mm-evidence {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #475569;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.crm-ts-mm-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.crm-ts-mm-outcome-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9999px;
+}
+
+.crm-ts-mm-outcome-pill.is-mastered,
+.crm-ts-mm-outcome-pill.mastered {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.crm-ts-mm-outcome-pill.is-in-progress,
+.crm-ts-mm-outcome-pill.partial {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.crm-ts-mm-outcome-pill.is-struggled,
+.crm-ts-mm-outcome-pill.practice {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.crm-ts-mm-severity {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.crm-ts-mm-severity.critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.crm-ts-mm-severity.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.crm-ts-mm-severity.minor {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.crm-ts-mm-tooltip {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  max-width: 280px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.1s ease;
+}
+
+.crm-ts-mm-tip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.crm-ts-mm-tip-kind {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.crm-ts-mm-tip-time {
+  color: #38bdf8;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+.crm-ts-mm-tip-text {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #f8fafc;
+  margin-bottom: 4px;
+}
+
+.crm-ts-mm-tip-solution {
+  font-size: 11px;
+  color: #86efac;
+  line-height: 1.35;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 4px;
+  margin-top: 4px;
+}
+
+.crm-ts-mm-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--crm-border, #e2e8f0);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Homework Actions & Status Badges (Phase C) */
+.crm-hw-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.crm-hw-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crm-hw-due-input {
+  padding: 2px 8px;
+  font-size: 12px;
+  height: 28px;
+  width: auto;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.crm-checklist-item.is-created {
+  opacity: 0.9;
+}
+
+.crm-task-created-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
 /* Audio Strip Pane */
 .teaching-session-audio-panel {
   max-width: 680px;
@@ -13115,6 +13554,59 @@ mark.crm-highlight:hover {
   color: var(--crm-danger-text);
   font-size: 13px;
   font-weight: 500;
+}
+
+/* Date Control with DD/MM/YYYY formatting */
+.crm-date-control-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.crm-date-control-group .crm-date-text-input {
+  width: 100%;
+  padding-right: 38px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.crm-date-control-group .crm-date-picker-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--crm-text-muted, #718096);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.crm-date-control-group .crm-date-picker-btn:hover {
+  color: var(--crm-primary, #1b8a4f);
+  background: var(--crm-surface-input, #edf2f7);
+}
+
+.crm-date-control-group .crm-hidden-native-date {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  z-index: -1;
 }
 
 /* ==========================================================================

@@ -169,6 +169,13 @@
   background: linear-gradient(180deg, #fff6f7, #fff0f1);
 }
 
+.rfib-blank-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.95;
+  -webkit-text-fill-color: currentColor;
+  -webkit-opacity: 0.95;
+}
+
 .rfib-support-toggle-row {
   display: flex;
   flex-wrap: wrap;
@@ -363,6 +370,19 @@
   padding: 0;
   line-height: 1;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* Enforce 44px minimum touch target for WCAG compliance */
+.rfib-hint-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
 }
 
 .rfib-hint-btn.is-visible {
@@ -374,6 +394,11 @@
   color: var(--rfib-accent);
   background: var(--rfib-accent-soft);
   transform: scale(1.12);
+}
+
+.rfib-hint-btn:focus-visible {
+  outline: 2px solid var(--rfib-accent);
+  outline-offset: 2px;
 }
 
 .rfib-hint-btn.is-active {
@@ -399,7 +424,7 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(6px);
-  transition: opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
   pointer-events: none;
 }
 
@@ -407,6 +432,7 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 0s;
   pointer-events: auto;
 }
 
@@ -442,6 +468,7 @@
   flex-shrink: 0;
   cursor: grab;
   user-select: none;
+  touch-action: none;
 }
 
 .rfib-popover.is-dragging .rfib-popover-header {
@@ -486,16 +513,28 @@
   border: 0;
   background: transparent;
   color: var(--rfib-muted);
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   cursor: pointer;
-  padding: 0 2px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0;
   line-height: 1;
-  transition: color 120ms;
+  transition: color 120ms, background-color 120ms;
   flex-shrink: 0;
 }
 
 .rfib-popover-close:hover {
   color: var(--rfib-danger);
+  background: rgba(155, 47, 58, 0.08);
+}
+
+.rfib-popover-close:focus-visible {
+  outline: 2px solid var(--rfib-accent);
+  outline-offset: 1px;
 }
 
 .rfib-popover-body {
@@ -530,6 +569,104 @@
 .rfib-popover-section-en {
   border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
   padding-bottom: 10px;
+}
+
+/* Dual Answer Comparison Grid */
+.rfib-popover-answer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: rgba(42, 31, 18, 0.04);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(42, 31, 18, 0.08);
+}
+
+.rfib-popover-answer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rfib-popover-answer-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--rfib-muted);
+}
+
+.rfib-popover-answer-val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.rfib-popover-answer-item.is-user .rfib-popover-answer-val {
+  color: var(--rfib-danger);
+}
+
+.rfib-popover-answer-item.is-correct .rfib-popover-answer-val {
+  color: var(--rfib-success);
+}
+
+/* Distractor Analysis Section */
+.rfib-popover-section-distractor {
+  background: rgba(155, 47, 58, 0.05);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(155, 47, 58, 0.15);
+  border-left: 4px solid var(--rfib-danger);
+}
+
+.rfib-popover-distractor-header {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rfib-danger);
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rfib-popover-distractors-details {
+  border: 1px solid rgba(42, 31, 18, 0.08);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 0.82rem;
+}
+
+.rfib-popover-distractors-summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--rfib-muted);
+  user-select: none;
+}
+
+.rfib-popover-distractors-summary:hover {
+  color: var(--rfib-accent);
+}
+
+.rfib-popover-distractors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(42, 31, 18, 0.1);
+}
+
+.rfib-popover-distractor-entry {
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.rfib-popover-distractor-option {
+  font-weight: 700;
+  color: #333;
 }
 
 .rfib-popover-section-vi {
@@ -580,5 +717,65 @@
   .rfib-voice-toggle {
     width: 100%;
     justify-content: space-between;
+  }
+
+  /* ── Mobile bottom drawer transformation ── */
+  .rfib-popover {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 75vh !important;
+    max-height: 75dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-top: 1px solid rgb(var(--read-accent-rgb, 154 87 34) / 0.28);
+    box-shadow: 0 -8px 36px rgba(42, 31, 18, 0.2);
+    transform: translateY(100%);
+    transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease, visibility 0s linear 260ms;
+  }
+
+  .rfib-popover.is-visible {
+    transform: translateY(0);
+    transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease, visibility 0s;
+  }
+
+  .rfib-popover.is-dragging {
+    transition: none;
+  }
+
+  .rfib-popover-arrow {
+    display: none !important;
+  }
+
+  .rfib-popover-header {
+    position: relative;
+    padding-top: 22px;
+    padding-left: 18px;
+    padding-right: 18px;
+    touch-action: none;
+    cursor: default;
+  }
+
+  /* Bottom sheet drag pill indicator */
+  .rfib-popover-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(110, 84, 54, 0.25);
+  }
+
+  .rfib-popover-body {
+    padding: 14px 18px max(24px, calc(16px + env(safe-area-inset-bottom, 0px)));
+    -webkit-overflow-scrolling: touch;
   }
 }

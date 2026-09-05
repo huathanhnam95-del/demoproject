@@ -907,6 +907,38 @@
     tooltip.style.visibility = 'visible';
   }
 
+  function normalizeToOxfordAmericanIPA(ipa) {
+    if (!ipa || typeof ipa !== 'string') return '';
+    const hasSlashes = ipa.trim().startsWith('/') && ipa.trim().endsWith('/');
+    const unslashed = ipa.trim().replace(/^\/+|\/+$/g, '');
+
+    if (typeof window !== 'undefined' && window.Phonetics && typeof window.Phonetics.toOxfordAmerican === 'function') {
+      try {
+        const norm = window.Phonetics.toOxfordAmerican(unslashed);
+        if (norm) return hasSlashes ? `/${norm}/` : norm;
+      } catch (_err) {
+        // Fallback to manual normalization
+      }
+    }
+    let cleaned = unslashed
+      .replace(/ɹ/g, 'r')
+      .replace(/:/g, 'ː')
+      .replace(/[\u0361\u035C\u0329]/g, '')
+      .replace(/ɾ/g, 't')
+      .replace(/ɡ/g, 'g')
+      .replace(/[0-9]/g, '')
+      .replace(/'/g, 'ˈ')
+      .replace(/ɛ/g, 'e')
+      .replace(/ɚ/g, 'ər')
+      .replace(/ɝ/g, 'ɜːr');
+    return hasSlashes ? `/${cleaned}/` : cleaned;
+  }
+
+  function normalizeIPAsInText(text) {
+    if (!text || typeof text !== 'string') return '';
+    return text.replace(/\/([^/\s]+)\//g, (m, ipa) => `/${normalizeToOxfordAmericanIPA(ipa).replace(/^\/+|\/+$/g, '')}/`);
+  }
+
   function showWordTooltip(token) {
     if (!token) return;
     const tooltip = ensureWordTooltip();
@@ -956,7 +988,7 @@
         let chipClass = 'syl-green';
         if (score < 60) chipClass = 'syl-red';
         else if (score < 80) chipClass = 'syl-amber';
-        const sText = escapeHtml(s.text || s.ipa || '');
+        const sText = escapeHtml(s.text || normalizeToOxfordAmericanIPA(s.ipa) || '');
         const timeAttr = (s.startMs != null && s.endMs != null)
           ? ` data-start-ms="${s.startMs}" data-end-ms="${s.endMs}" title="Click to listen to '${sText}'"`
           : '';
@@ -977,15 +1009,33 @@
     if (Array.isArray(syllables)) {
       for (const s of syllables) {
         if (s.diagnosis) {
-          const sLabel = escapeHtml(s.text || s.ipa || '');
-          diagnosticItems.push(`<div class="crm-insight-item"><strong class="crm-insight-syl">${sLabel}:</strong> ${escapeHtml(s.diagnosis)}</div>`);
+          const sLabel = escapeHtml(s.text || normalizeToOxfordAmericanIPA(s.ipa) || '');
+          const diagText = escapeHtml(normalizeIPAsInText(s.diagnosis));
+          let tipHtml = '';
+          if (s.tip) {
+            const tipText = escapeHtml(normalizeIPAsInText(s.tip));
+            tipHtml = `
+              <div class="crm-insight-tip">
+                <span class="crm-tip-badge">💡 Tip</span>
+                <span class="crm-tip-text">${tipText}</span>
+              </div>
+            `;
+          }
+          diagnosticItems.push(`
+            <div class="crm-insight-item">
+              <div class="crm-insight-obs">
+                <strong class="crm-insight-syl">${sLabel}:</strong> ${diagText}
+              </div>
+              ${tipHtml}
+            </div>
+          `);
         }
       }
     }
     if (diagnosticItems.length > 0) {
       insightHtml = `
         <div class="crm-tooltip-insight">
-          <div class="crm-insight-title">💡 Acoustic Diagnosis</div>
+          <div class="crm-insight-title">💡 Acoustic Diagnosis & Coaching</div>
           <div class="crm-insight-list">${diagnosticItems.join('')}</div>
         </div>
       `;

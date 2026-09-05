@@ -130,15 +130,86 @@ async function rescoreTestB0ee() {
     if (!Array.isArray(accWord.syllables) || accWord.syllables.length !== 4) {
         throw new Error(`FATAL: "accurately" must have 4 syllables, got: ${JSON.stringify(accWord.syllables)}`);
     }
+    const [acSyl, cuSyl, rateSyl] = accWord.syllables;
+    if (acSyl.diagnosis && acSyl.diagnosis.match(/\(\/ə\/ instead of \/æ\/\).*—.*\/ə\/ instead of \/æ\//)) {
+        throw new Error(`FATAL: "ac" diagnosis duplicated substitution in observation: ${acSyl.diagnosis}`);
+    }
+    if ((cuSyl.diagnosis && cuSyl.diagnosis.includes('Vowel was pronounced as /k/')) ||
+        (rateSyl.diagnosis && rateSyl.diagnosis.includes('Vowel was pronounced as /l/'))) {
+        throw new Error(`FATAL: Inappropriate "Vowel was pronounced as [consonant]" detected in accurately: ${cuSyl.diagnosis} | ${rateSyl.diagnosis}`);
+    }
     const indWord = q2Words.find((w) => w.word.toLowerCase() === 'indicators');
     if (!indWord || !Array.isArray(indWord.syllables) || indWord.syllables.length < 3) {
         throw new Error(`FATAL: "indicators" must have multi-syllables, got: ${JSON.stringify(indWord?.syllables)}`);
     }
     console.log(`[Q2 PASS] "accurately" (4 syllables) and "indicators" (${indWord.syllables.length} syllables) verified!`);
 
+    // Verify Q1 "after" syllables and coaching tips
+    const afterWord = q1Words.find((w) => w.word.toLowerCase() === 'after');
+    console.log(`\n[Q1 Check] "after" token:`, afterWord);
+    if (!afterWord || !Array.isArray(afterWord.syllables) || afterWord.syllables.length !== 2) {
+        throw new Error(`FATAL: "after" must have 2 syllables in Q1!`);
+    }
+    const [afSyl, terSyl] = afterWord.syllables;
+    console.log('[Q1 Check] "af" syllable:', afSyl);
+    console.log('[Q1 Check] "ter" syllable:', terSyl);
+    if (!afSyl.diagnosis || !afSyl.tip) {
+        throw new Error(`FATAL: "af" must have both diagnosis and tip! Got: ${JSON.stringify(afSyl)}`);
+    }
+    if (!afSyl.tip.toLowerCase().includes('upper teeth') && !afSyl.tip.toLowerCase().includes('lip')) {
+        throw new Error(`FATAL: "af" tip should have physical lip/teeth cue! Got: ${afSyl.tip}`);
+    }
+    if (terSyl.ipa.includes('ɚ') || terSyl.ipa.includes('ɹ')) {
+        throw new Error(`FATAL: "ter" ipa must be normalized Oxford American IPA (/tər/), got: ${terSyl.ipa}`);
+    }
+    if (!terSyl.diagnosis || !terSyl.tip) {
+        throw new Error(`FATAL: "ter" must have both diagnosis and tip! Got: ${JSON.stringify(terSyl)}`);
+    }
+    console.log(`[Q1 PASS] "after" syllables ("af", "ter") have natural coaching tips and Oxford American IPA!`);
+
+    // Verify Q1 "data" syllables ("da", "ta") - key user requirement
+    const dataWord = q1Words.find((w) => w.word.toLowerCase() === 'data');
+    console.log(`\n[Q1 Check] "data" token:`, dataWord);
+    if (!dataWord || !Array.isArray(dataWord.syllables) || dataWord.syllables.length !== 2) {
+        throw new Error(`FATAL: "data" must have 2 syllables in Q1!`);
+    }
+    const [daSyl, taSyl] = dataWord.syllables;
+    console.log('[Q1 Check] "da" syllable:', daSyl);
+    console.log('[Q1 Check] "ta" syllable:', taSyl);
+    if (!daSyl.diagnosis || !daSyl.tip) {
+        throw new Error(`FATAL: "da" must have both diagnosis and tip! Got: ${JSON.stringify(daSyl)}`);
+    }
+    if (daSyl.diagnosis.includes('ɹ') || daSyl.diagnosis.includes('ɚ')) {
+        throw new Error(`FATAL: "da" contains un-normalized IPA! Got: ${daSyl.diagnosis}`);
+    }
+    if (!taSyl.diagnosis || !taSyl.tip) {
+        throw new Error(`FATAL: "ta" must have both diagnosis and tip! Got: ${JSON.stringify(taSyl)}`);
+    }
+    if (taSyl.heardIpa && (taSyl.heardIpa.includes('ɹ') || taSyl.heardIpa.includes('ɚ'))) {
+        throw new Error(`FATAL: "ta" heardIpa contains un-normalized IPA: ${taSyl.heardIpa}`);
+    }
+    if (taSyl.diagnosis.includes('ɹ') || taSyl.diagnosis.includes('ɚ')) {
+        throw new Error(`FATAL: "ta" diagnosis contains un-normalized IPA: ${taSyl.diagnosis}`);
+    }
+    if (!taSyl.diagnosis.includes('/tr/')) {
+        throw new Error(`FATAL: "ta" diagnosis must contain Oxford American /tr/! Got: ${taSyl.diagnosis}`);
+    }
+    if (taSyl.diagnosis.includes('— Sounded like') || taSyl.diagnosis.match(/\(\/r\/ instead of \/ə\/\).*—.*\/r\/ instead of \/ə\//)) {
+        throw new Error(`FATAL: "ta" diagnosis has redundant repetition: ${taSyl.diagnosis}`);
+    }
+    console.log(`[Q1 PASS] "data" syllables ("da", "ta") verified with Oxford American IPA and clean coaching tips!`);
+
     // Verify Q3
     const q3Words = updatedData.speaking?.speaking_q3?.words || [];
     console.log(`\n[Q3 Check] Q3 has ${q3Words.length} aligned words.`);
+    const entersWord = q3Words.find((w) => w.word.toLowerCase() === 'enters');
+    if (entersWord && entersWord.syllables) {
+        const tersSyl = entersWord.syllables.find(s => s.text === 'ters');
+        if (tersSyl && tersSyl.diagnosis && tersSyl.diagnosis.includes('/ər/ instead of /ər/')) {
+            throw new Error(`FATAL: "enters" -> "ters" contains spurious "/ər/ instead of /ər/": ${tersSyl.diagnosis}`);
+        }
+        console.log(`[Q3 PASS] "enters" -> "ters" free of spurious "/ər/ instead of /ər/"!`);
+    }
 
     console.log(`\nAll Firestore verification assertions PASSED successfully!`);
 }

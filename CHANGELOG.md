@@ -1,3 +1,22 @@
+## [V1.8.131] - 2026-09-06
+
+### Added & Overhauled
+- **Teaching Session Viewer Round 4: Interactive Mindmap & Workflow Integration**:
+  - **Frontend-Generated Mindmap (`public/js/crm/teaching-session-mindmap.js`)**: Pure deterministic model generator from structured session reports; problem-to-concept assignment blending timestamp proximity with lexical Dice coefficient matching (`assignProblemsToConcepts`).
+  - **Zip-Binding & Interactive Node Inspection**: Binds SVG nodes to structured descriptors (`data-ts-*`) in parse order, featuring stage-anchored hover tooltips, click-to-seek audio navigation with 3-second lead-in, and side drawer inspection (`#teaching-session-mindmap-detail`).
+  - **Outcome Mastery Rings & Filtering**: Injected SVG CSS stroke indicators for student mastery (`mastered` / green, `partial` / amber, `practice` / red) with toolbar filtering and edge dimming.
+  - **Debounced Search & Subtree Collapse**: Search highlighting with NFD diacritic-folding and smooth auto-pan; branch collapse/expand preserving pan/zoom coordinates.
+  - **Homework Checklist to Tracked CRM Tasks (`POST /api/admin/tasks`)**: Replaced inert glyphs with interactive task creation buttons, bulk "Tạo tất cả task" action, automated due date calculation (+7 days at 20:00 local, clamped $\ge 24$h), and machine idempotency tokens (`[ts:{sessionId}#hw{index}]`).
+  - **Vietnamese-Safe Printable PDF Export (`public/js/crm/teaching-session-pdf.js`)**: Generates multi-page formatted PDF briefings embedding Roboto TrueType fonts with in-memory caching and chunked base64 conversion.
+  - **Core Stability & Diagram Fixes**: Pinned `mermaid@11.17.2`; preloaded `Be Vietnam Pro` 600 weight and dynamically refitted undersized `<foreignObject>` SVG label widths (`refitDiagramLabels`); persisted pane-level pan/zoom viewport state across tab switches and fullscreen toggles; deferred diagram rendering to visible tab activation; stopped polling on modal close with cached auth tokens.
+
+### Fixed & Hardened
+- **Security & XSS Protection**: Injected `escapeHtml()` across all dynamic node interpolations in mindmap tooltips and the side detail drawer.
+- **Async Concurrency & Race Condition Elimination**: Introduced `openSessionSeq` sequence token in `openSessionDetail` to discard stale network responses upon rapid session switching or modal closure.
+- **PDF Performance & Surrogate Pair Resilience**: Implemented `fontBase64Cache` in-memory font cache, 8KB chunking for Uint8Array base64 conversion, Helvetica fallback, and `stripEmoji()` regex to prevent jsPDF crashes on non-BMP characters.
+- **DOM & Lifecycle Hygiene**: Cleaned up SVG stage click listeners, cancelled debounced search timers on modal close, and preserved active filters during node collapse/expand.
+- **RFIB & Practice Modes**: Refined RFIB explanation flow, distractor contrast UI, and verified full practice modes browser suite.
+
 ## [V1.8.130] - 2026-09-05
 
 ### Fixed & Enhanced

@@ -43,6 +43,7 @@ const router = createTeacherSchedulerRouter({
 });
 
 const routes = collectRoutes(router);
+expectRoute(routes, 'GET /status');
 expectRoute(routes, 'GET /scheduler/workspace');
 expectRoute(routes, 'POST /classrooms/:classId/sessions/add');
 expectRoute(routes, 'POST /classrooms/:classId/sessions/add-multi');

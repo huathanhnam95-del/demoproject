@@ -2112,12 +2112,12 @@
             guidedComprehensionGapSlots = {};
             renderGuidedSupport();
         } else if (action === 'select-prompt-segment') {
-            const segId = target.dataset.segmentId;
+            const segId = target.dataset.segmentId || target.closest('[data-segment-id]')?.dataset.segmentId;
             guidedSelectedPromptSegment = guidedSelectedPromptSegment === segId ? null : segId;
             renderGuidedSupport();
             if (guidedSelectedPromptSegment) {
                 const cardNum = guidedSelectedPromptSegment.replace('seg_', '');
-                const targetCard = document.getElementById(`flowchart-card-${cardNum}`);
+                const targetCard = document.getElementById(`flowchart-card-${cardNum}`) || document.getElementById(`clause-card-${cardNum}`);
                 if (targetCard && typeof targetCard.scrollIntoView === 'function') {
                     try {
                         targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3084,21 +3084,144 @@
         </div>`;
     }
 
+    function splitPromptIntoClauses(promptText) {
+        if (!promptText || typeof promptText !== 'string') return [];
+        const text = promptText.trim();
+        if (!text) return [];
+
+        let masked = text;
+        // 1. Protect common abbreviations: e.g., i.e., etc., vs., Dr., Mr., Mrs., Ms., Prof., U.S.
+        masked = masked.replace(/\b(e\.g|i\.e|etc|vs|dr|mr|mrs|ms|prof|u\.s)\./gi, (m) => m.replace(/\./g, '§DOT§'));
+
+        // 2. Protect sentence terminators inside quotes ONLY when followed by author attribution (e.g. "..." - Author.)
+        masked = masked.replace(/([“"«][^”"»]+[”"»])(\s*(?:[-–—~]|\([A-Z]|by\s+[A-Z]|said\s+[A-Z]|according\s+to\s+[A-Z]))/gi, (match, quote, attrPrefix) => {
+            const inner = quote.slice(1, -1).replace(/([.!?])/g, (p) => '§PUNCT_' + p.charCodeAt(0) + '§');
+            return quote[0] + inner + quote[quote.length - 1] + attrPrefix;
+        });
+
+        const clauses = [];
+        // Sentence boundary: [.!?]+ followed by optional closing quotes/brackets, then whitespace or end of string, OR semicolon / newline
+        const regex = /([^.\n;!?]+?(?:[.!?]+[”"»'’\)]*(?=\s+|$)|;|\n+|$))/g;
+        let match;
+        while ((match = regex.exec(masked)) !== null) {
+            let chunk = match[0]
+                .replace(/§DOT§/g, '.')
+                .replace(/§PUNCT_(\d+)§/g, (_, c) => String.fromCharCode(Number(c)))
+                .trim();
+            if (chunk.length > 0) {
+                clauses.push(chunk);
+            }
+        }
+        return clauses.length > 0 ? clauses : [text];
+    }
+
     function parsePromptSegments(segments, promptText) {
         let segList = segments;
+        if (segList && typeof segList === 'object' && !Array.isArray(segList)) {
+            segList = segList.clauses || segList.segments || segList.promptSegments || [];
+        }
+        if (Array.isArray(segList)) {
+            segList = segList.map((item, idx) => {
+                if (typeof item === 'string') {
+                    return { id: `segment-${idx + 1}`, text: item };
+                }
+                return item;
+            }).filter(Boolean);
+        }
         if (!segList || segList.length === 0) {
             if (promptText) {
-                const rawMatches = promptText.match(/[^.!?]+[.!?]+/g) || [promptText];
+                const rawMatches = splitPromptIntoClauses(promptText);
                 segList = rawMatches.map((s, idx) => ({ id: `segment-${idx + 1}`, text: s.trim() }));
             }
         }
         if (!segList || segList.length === 0) return [];
-        
+
+        const hardVocab = (guidedPack?.common?.hardVocabulary && Array.isArray(guidedPack.common.hardVocabulary))
+            ? guidedPack.common.hardVocabulary
+            : [];
+
+        function findHardVocabMatches(clauseText) {
+            if (!hardVocab.length) return [];
+            const cLower = String(clauseText || '').toLowerCase();
+            const matched = [];
+            for (const item of hardVocab) {
+                if (!item || !item.term) continue;
+                const termLower = String(item.term).toLowerCase();
+                const regex = new RegExp(`(^|[^a-zA-Z0-9])${termLower}([^a-zA-Z0-9]|$)`, 'i');
+                if (regex.test(cLower)) {
+                    matched.push({
+                        term: item.term,
+                        enGloss: item.enGloss || 'curated key term',
+                        viGloss: item.viGloss || 'từ vựng trọng tâm'
+                    });
+                }
+            }
+            return matched.slice(0, 3);
+        }
+
+        const academicVocabGlossary = {
+            'government': { en: 'state and administrative authority', vi: 'chính quyền, nhà nước' },
+            'authorities': { en: 'governing administrative bodies', vi: 'cơ quan chức năng' },
+            'technology': { en: 'modern digital tools and systems', vi: 'công nghệ hiện đại' },
+            'technological': { en: 'advancements in digital tools', vi: 'thuộc về công nghệ' },
+            'education': { en: 'formal schooling and instruction', vi: 'giáo dục, trường học' },
+            'educational': { en: 'relating to learning and schools', vi: 'mang tính giáo dục' },
+            'environment': { en: 'natural world and living surroundings', vi: 'môi trường tự nhiên' },
+            'environmental': { en: 'relating to nature and ecology', vi: 'thuộc về môi trường' },
+            'development': { en: 'economic or social progression', vi: 'sự phát triển' },
+            'advantage': { en: 'positive benefit or upside', vi: 'lợi thế, mặt tích cực' },
+            'advantages': { en: 'beneficial aspects or upsides', vi: 'các điểm có lợi' },
+            'disadvantage': { en: 'drawback or adverse effect', vi: 'bất lợi, điểm hạn chế' },
+            'disadvantages': { en: 'drawbacks or negative impacts', vi: 'các mặt bất lợi' },
+            'society': { en: 'community and civil population', vi: 'xã hội, cộng đồng' },
+            'social': { en: 'relating to public community life', vi: 'thuộc về xã hội' },
+            'individual': { en: 'single citizen vs collective group', vi: 'cá nhân độc lập' },
+            'individuals': { en: 'individual citizens in society', vi: 'các cá nhân' },
+            'students': { en: 'learners in academic institutions', vi: 'học sinh, sinh viên' },
+            'graduates': { en: 'people completing university degrees', vi: 'sinh viên tốt nghiệp' },
+            'university': { en: 'higher education institution', vi: 'trường đại học' },
+            'universities': { en: 'higher education institutions', vi: 'các trường đại học' },
+            'workplace': { en: 'professional employment setting', vi: 'môi trường làm việc' },
+            'responsibility': { en: 'moral or civic duty', vi: 'trách nhiệm xã hội' },
+            'economy': { en: 'financial system and production', vi: 'nền kinh tế' },
+            'economic': { en: 'financial and market dynamics', vi: 'thuộc về kinh tế' },
+            'buildings': { en: 'architectural structures for living/work', vi: 'các công trình kiến trúc' },
+            'design': { en: 'architectural planning and layout', vi: 'thiết kế, quy hoạch' },
+            'fitness': { en: 'physical health and bodily stamina', vi: 'thể lực và vóc dáng' },
+            'health': { en: 'holistic physical and mental wellbeing', vi: 'sức khỏe toàn diện' }
+        };
+
+        function extractGenericKeywords(text) {
+            const stopWords = new Set([
+                'about', 'above', 'after', 'again', 'against', 'agree', 'all', 'also', 'and', 'any', 'are', 'because',
+                'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'did',
+                'disagree', 'do', 'does', 'doing', 'down', 'during', 'each', 'extent', 'few', 'for', 'from', 'further',
+                'give', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his',
+                'how', 'if', 'into', 'is', 'it', 'its', 'itself', 'let', 'me', 'more', 'most', 'my', 'myself', 'no',
+                'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'opinion', 'or', 'other', 'ought', 'our', 'ours',
+                'ourselves', 'out', 'over', 'own', 'same', 'she', 'should', 'so', 'some', 'statement', 'such', 'than',
+                'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those',
+                'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where',
+                'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'you', 'your', 'yours', 'yourself', 'yourselves'
+            ]);
+            const cleaned = text.replace(/[“"”’'.,!?:;()\-–—]/g, ' ');
+            const tokens = cleaned.split(/\s+/).filter(w => w.length >= 4 && !stopWords.has(w.toLowerCase()));
+            const uniqueTokens = [...new Set(tokens.map(t => t.toLowerCase()))].slice(0, 3);
+            return uniqueTokens.map(t => {
+                const gloss = academicVocabGlossary[t] || { en: 'key thematic term', vi: 'từ khóa trọng tâm' };
+                return {
+                    term: t,
+                    enGloss: gloss.en,
+                    viGloss: gloss.vi
+                };
+            });
+        }
+
         return segList.map((seg, idx) => {
             const text = String(seg.text || '').trim();
             const lower = text.toLowerCase();
             const pLower = String(promptText || '').toLowerCase();
-            
+
             let roleTitleEn = seg.roleTitleEn || 'Prompt Component';
             let roleTitleVi = seg.roleTitleVi || 'Thành phần đề bài';
             let roleIcon = '💡';
@@ -3106,45 +3229,74 @@
             let meaningVi = seg.meaningVi || '';
             let takeawayEn = seg.takeawayEn || '';
             let takeawayVi = seg.takeawayVi || '';
+            let trapEn = seg.trapEn || '';
+            let trapVi = seg.trapVi || '';
+            let keywords = seg.keywords || [];
 
-            // 1. Question #1: Einstein Quote
-            if (pLower.includes('einstein') || pLower.includes('interferes with my learning')) {
-                if (idx === 0 || lower.includes('interferes') || lower.includes('einstein')) {
+            // 1. Question #1: Einstein / Barrier Quote
+            if (pLower.includes('einstein') || pLower.includes('interferes with my learning') || pLower.includes('barrier to learning')) {
+                if (idx === 0 || lower.includes('interferes') || lower.includes('einstein') || lower.includes('barrier')) {
                     roleTitleEn = 'The Quote & Paradox';
-                    roleTitleVi = 'Câu danh ngôn của Einstein';
+                    roleTitleVi = 'Câu nhận định & Nghịch lý';
                     roleIcon = '📌';
-                    meaningEn = 'Einstein claimed that rigid, standardized schooling ("education") can actually stifle a person\'s natural curiosity and authentic discovery ("learning").';
-                    meaningVi = 'Einstein cho rằng trường lớp gò bó và áp lực điểm số dễ làm mất đi niềm vui tự học và tính tò mò tự nhiên.';
+                    meaningEn = 'Argues that rigid, standardized schooling ("education") can actually stifle a person\'s natural curiosity and authentic discovery ("learning").';
+                    meaningVi = 'Nhận định rằng trường lớp gò bó và áp lực điểm số dễ làm mất đi niềm vui tự học và tính tò mò tự nhiên của người học.';
                     takeawayEn = 'Core contrast: Formal schooling ("education") vs. self-driven curiosity ("learning").';
                     takeawayVi = 'Mấu chốt: Khác biệt giữa học bị ép ("education") và tự học say mê ("learning").';
+                    trapEn = 'Do not write a biographical essay about Einstein; focus strictly on evaluating the philosophical clash between schooling and learning.';
+                    trapVi = 'Tránh sa đà vào việc kể tiểu sử Einstein; trọng tâm là bàn về nghịch lý giữa trường lớp quy chuẩn và tự học.';
+                    keywords = [
+                        { term: 'education', enGloss: 'standardized schooling', viGloss: 'giáo dục trường quy, thi cử' },
+                        { term: 'interferes / barrier', enGloss: 'hinders or stifles', viGloss: 'cản trở, bóp nghẹt' },
+                        { term: 'learning', enGloss: 'intrinsic curiosity & discovery', viGloss: 'sự tự học, tò mò tự nhiên' }
+                    ];
                 } else if (lower.includes('what did he mean') || lower.includes('explain')) {
                     roleTitleEn = 'Interpretation Task';
                     roleTitleVi = 'Giải thích ý câu nói';
                     roleIcon = '🔍';
-                    meaningEn = 'Asks you to unpack Einstein\'s logic: why and how do traditional school structures restrict independent creative thought?';
-                    meaningVi = 'Đề muốn bạn chỉ ra: vì sao cách dạy rập khuôn ở trường lại cản trở sự sáng tạo?';
-                    takeawayEn = 'Explain the underlying reason why schooling can hinder creative development.';
-                    takeawayVi = 'Cần nêu: lý do trường học truyền thống hạn chế học sinh tự do tìm tòi.';
+                    meaningEn = 'Asks you to unpack the underlying rationale: why and how do traditional school structures restrict independent creative thought?';
+                    meaningVi = 'Đề muốn bạn chỉ ra cơ chế: vì sao cách dạy rập khuôn ở trường lại cản trở tư duy độc lập và sự sáng tạo?';
+                    takeawayEn = 'Explain the underlying mechanism of why schooling can hinder creative development.';
+                    takeawayVi = 'Cần nêu rõ lý do trường học truyền thống hạn chế học sinh tự do tìm tòi.';
+                    trapEn = 'Do not just repeat the quote with trivial synonyms; explain the causal mechanism behind it.';
+                    trapVi = 'Không chép lại nguyên văn câu nói; cần chỉ ra TẠI SAO trường học lại cản trở tư duy sáng tạo.';
+                    keywords = [
+                        { term: 'what did he mean', enGloss: 'unpack core mechanism', viGloss: 'giải thích cơ chế & lý do' },
+                        { term: 'underlying logic', enGloss: 'root causes in curriculum', viGloss: 'nguyên nhân trong cách dạy' }
+                    ];
                 } else {
-                    roleTitleEn = 'Your Judgment';
-                    roleTitleVi = 'Chọn phe của bạn';
+                    roleTitleEn = 'Your Judgment & Stance';
+                    roleTitleVi = 'Chọn lập trường của bạn';
                     roleIcon = '⚖️';
-                    meaningEn = 'Asks for your personal stance: Do you agree that schooling stifles learning, or do you believe structured education is essential for foundation?';
-                    meaningVi = 'Bạn thấy câu của Einstein đúng hay sai? Đồng ý, phản đối, hay thấy cả hai bên đều có lý?';
+                    meaningEn = 'Asks for your decisive personal position: Do you agree that schooling stifles learning, or do you believe structured education is essential for foundation?';
+                    meaningVi = 'Bạn thấy nhận định này đúng hay sai? Đồng ý, phản đối, hay thấy cả hai bên đều có lý?';
                     takeawayEn = 'Form a clear judgment: Agree, Disagree, or Balanced perspective.';
                     takeawayVi = 'Chốt rõ: Đồng ý, Phản đối, hoặc Dung hòa cả hai bên.';
+                    trapEn = 'Avoid ambiguous or wishy-washy statements without declaring your direction clearly in the introduction.';
+                    trapVi = 'Tránh viết chung chung không rõ quan điểm; phải nêu rõ bạn đồng tình, phản đối hay dung hòa ngay từ mở bài.';
+                    keywords = [
+                        { term: 'correct / agree or disagree', enGloss: 'decisive stance requirement', viGloss: 'yêu cầu chốt lập trường dứt khoát' },
+                        { term: 'reasoned justification', enGloss: 'grounding in real evidence', viGloss: 'bảo vệ ý kiến bằng dẫn chứng' }
+                    ];
                 }
             }
             // 2. Question #2: Diet vs Exercise
             else if (pLower.includes('exercise') && pLower.includes('diet')) {
                 if (idx === 0 || lower.includes('exercise') || lower.includes('diet')) {
-                    roleTitleEn = 'The Core Debate';
-                    roleTitleVi = 'Chủ đề so sánh';
+                    roleTitleEn = 'The Core Comparative Debate';
+                    roleTitleVi = 'Chủ đề so sánh trực diện';
                     roleIcon = '🥗';
                     meaningEn = 'Presents a common health debate: comparing regular physical workouts directly against strict dietary regimens.';
-                    meaningVi = 'Đề đặt việc ăn uống lành mạnh lên bàn cân với việc chăm chỉ tập thể dục.';
+                    meaningVi = 'Đề đặt việc ăn uống lành mạnh lên bàn cân so sánh với việc chăm chỉ tập thể dục.';
                     takeawayEn = 'Direct comparison: Physical exercise vs. nutritional control.';
                     takeawayVi = 'Mấu chốt: So sánh trực tiếp giữa Ăn uống và Tập luyện.';
+                    trapEn = 'Do not discuss only diet or only exercise; you MUST directly compare and weigh both factors.';
+                    trapVi = 'Không được chỉ viết về ăn uống hoặc chỉ viết về tập thể dục; bắt buộc phải so sánh trực diện cả hai.';
+                    keywords = [
+                        { term: 'healthy diet', enGloss: 'nutritional intake & calorie balance', viGloss: 'chế độ ăn uống dinh dưỡng' },
+                        { term: 'keeping fit', enGloss: 'vitality & physique outcome', viGloss: 'giữ gìn vóc dáng & thể lực' },
+                        { term: 'than exercise', enGloss: 'direct comparative contrast', viGloss: 'so sánh hơn với tập luyện' }
+                    ];
                 } else if (lower.includes('extent do you agree') || lower.includes('agree or disagree') || lower.includes('opinion')) {
                     roleTitleEn = 'Your Position';
                     roleTitleVi = 'Chọn lập trường';
@@ -3153,18 +3305,29 @@
                     meaningVi = 'Bạn nghiêng về bên nào hơn: ăn uống quyết định tất cả, tập luyện quan trọng hơn, hay cả hai phải đi đôi?';
                     takeawayEn = 'Take a clear side or argue that health requires an integrated combination.';
                     takeawayVi = 'Chốt rõ: Chọn một bên quan trọng hơn hoặc kết hợp cả hai.';
+                    trapEn = 'Failing to declare which factor is more decisive or how they integrate together will penalize Content.';
+                    trapVi = 'Nếu không chốt bên nào quan trọng hơn hoặc cách kết hợp cả hai sẽ bị trừ điểm Content.';
+                    keywords = [
+                        { term: 'opinion / stance', enGloss: 'take a definitive side', viGloss: 'chọn phe dứt khoát' },
+                        { term: 'evaluation', enGloss: 'comparative judgment', viGloss: 'đánh giá mức độ quan trọng' }
+                    ];
                 } else {
                     roleTitleEn = 'Evidence Requirement';
-                    roleTitleVi = 'Đưa dẫn chứng';
+                    roleTitleVi = 'Đưa dẫn chứng thực tế';
                     roleIcon = '💡';
                     meaningEn = 'Reminds you to back up your claims with realistic facts, scientific logic, or everyday observations.';
                     meaningVi = 'Đừng nói suông, hãy dùng ví dụ thực tế hoặc dẫn chứng đời thường để bảo vệ ý kiến.';
                     takeawayEn = 'Ground your opinions in believable real-world examples.';
                     takeawayVi = 'Ghi nhớ: Luôn có ví dụ thực tế đi kèm lý lẽ.';
+                    trapEn = 'Avoid fabricated scientific studies or fake statistics; use concrete lifestyle and athletic observations instead.';
+                    trapVi = 'Tránh bịa đặt số liệu thống kê giả; hãy dùng các thói quen đời sống và ví dụ thực tế quen thuộc.';
+                    keywords = [
+                        { term: 'examples / experiences', enGloss: 'concrete lifestyle facts', viGloss: 'dẫn chứng đời thực, thói quen sinh hoạt' }
+                    ];
                 }
             }
             // 3. Question #23: Extreme Sports
-            else if (pLower.includes('extreme sports') || (pLower.includes('advantages') && pLower.includes('disadvantages'))) {
+            else if (pLower.includes('extreme sports') || (pLower.includes('advantages') && pLower.includes('disadvantages')) || pLower.includes('dangerous sports')) {
                 if (lower.includes('advantages and disadvantages') || lower.includes('pros and cons') || idx === 0) {
                     roleTitleEn = 'Two-Sided Evaluation';
                     roleTitleVi = 'Phân tích hai mặt';
@@ -3173,6 +3336,27 @@
                     meaningVi = 'Nêu cả hai mặt của thể thao mạo hiểm: cảm giác phấn khích, thử thách bản thân vs nguy hiểm tính mạng.';
                     takeawayEn = 'Must examine both positive thrills and physical perils objectively.';
                     takeawayVi = 'Bắt buộc: Phải viết cả điểm tốt và điểm xấu, không bỏ sót mặt nào.';
+                    trapEn = 'Do not write only about advantages or only about disadvantages; PTE scoring requires a balanced assessment.';
+                    trapVi = 'Tuyệt đối không chỉ viết một bề khen hoặc chê; bắt buộc phải phân tích đủ cả hai mặt lợi và hại.';
+                    keywords = [
+                        { term: 'dangerous activities', enGloss: 'extreme high-risk sports', viGloss: 'thể thao mạo hiểm cảm giác mạnh' },
+                        { term: 'advantages', enGloss: 'thrills, resilience, physical mastery', viGloss: 'lợi ích (bản lĩnh, thử thách bản thân)' },
+                        { term: 'disadvantages', enGloss: 'severe physical trauma, mortality', viGloss: 'rủi ro (chấn thương nặng, tính mạng)' }
+                    ];
+                } else if (lower.includes('why do you think') || lower.includes('why')) {
+                    roleTitleEn = 'Psychological Drivers';
+                    roleTitleVi = 'Động lực tâm lý & Thôi thúc';
+                    roleIcon = '🧠';
+                    meaningEn = 'Unpack why humans seek danger: adrenaline rush, escaping routine, self-actualization, and conquering fear.';
+                    meaningVi = 'Giải thích vì sao con người lại tìm đến mạo hiểm: cảm giác hưng phấn (adrenaline), vượt qua nỗi sợ và khẳng định bản thân.';
+                    takeawayEn = 'Identify psychological motivations behind high-risk decisions.';
+                    takeawayVi = 'Chỉ rõ lý do tâm lý khiến người chơi đam mê cảm giác mạnh.';
+                    trapEn = 'Do not forget to answer "why"; explain the thrill and psychological satisfaction.';
+                    trapVi = 'Đừng bỏ qua việc giải thích lý do; cần phân tích cảm giác phấn khích và thôi thúc nội tâm.';
+                    keywords = [
+                        { term: 'why people like them', enGloss: 'psychological motivations', viGloss: 'động cơ tâm lý & khao khát thử thách' },
+                        { term: 'adrenaline thrill', enGloss: 'craving intense sensation', viGloss: 'cảm giác hưng phấn tột độ' }
+                    ];
                 } else {
                     roleTitleEn = 'Evidence & Substantiation';
                     roleTitleVi = 'Dẫn chứng thực tế';
@@ -3181,6 +3365,11 @@
                     meaningVi = 'Dùng các môn quen thuộc (nhảy dù, leo núi...) làm ví dụ minh họa cho lập luận của bạn.';
                     takeawayEn = 'Illustrate both advantages and risks with concrete real-world contexts.';
                     takeawayVi = 'Ghi nhớ: Dẫn chứng càng cụ thể, bài viết càng thuyết phục.';
+                    trapEn = 'Do not write about common leisure sports like football; ground examples in real extreme sports.';
+                    trapVi = 'Tránh lấy ví dụ môn thể thao bình thường; hãy dùng môn mạo hiểm như nhảy dù (skydiving), leo núi đá.';
+                    keywords = [
+                        { term: 'concrete examples', enGloss: 'skydiving, rock climbing, etc.', viGloss: 'ví dụ môn nhảy dù, leo núi đá' }
+                    ];
                 }
             }
             // 4. General Fallback for all other prompts
@@ -3194,6 +3383,8 @@
                     meaningVi = `Chủ đề chính cần bàn: "${text.replace(/[“”"–-]/g, '').trim()}".`;
                     takeawayEn = 'Understand the underlying context and key concept being debated.';
                     takeawayVi = 'Nắm chắc ý chính của câu nói trước khi viết.';
+                    trapEn = 'Do not copy this premise verbatim in your essay; paraphrase it with fresh academic vocabulary.';
+                    trapVi = 'Tuyệt đối không chép lại nguyên văn câu này; hãy paraphrase bằng vốn từ của bạn.';
                 } else if (lower.includes('what did he mean') || lower.includes('what do you mean') || lower.includes('explain')) {
                     roleTitleEn = 'Meaning & Interpretation';
                     roleTitleVi = 'Giải thích ý nghĩa';
@@ -3202,6 +3393,8 @@
                     meaningVi = 'Làm rõ: vì sao tác giả lại đưa ra nhận định như vậy?';
                     takeawayEn = 'Unpack the "why" and "how" behind the prompt statement.';
                     takeawayVi = 'Chỉ ra lý do và bản chất cốt lõi của vấn đề.';
+                    trapEn = 'Avoid surface-level restatements; explain the underlying mechanism in depth.';
+                    trapVi = 'Tránh giải thích qua loa; cần đi sâu vào bản chất và cơ chế thực tế.';
                 } else if (lower.includes('agree or disagree') || lower.includes('extent do you agree') || lower.includes('do you agree') || lower.includes('correct?')) {
                     roleTitleEn = 'Personal Stance Request';
                     roleTitleVi = 'Chọn phe của bạn';
@@ -3210,6 +3403,8 @@
                     meaningVi = 'Bạn đồng ý hay phản đối nhận định này? Hãy chọn rõ ràng ngay từ đầu.';
                     takeawayEn = 'Establish a clear, consistent personal position.';
                     takeawayVi = 'Giữ lập trường nhất quán từ mở bài đến kết bài.';
+                    trapEn = 'Do not waffle between both sides without taking a definitive stance in your thesis.';
+                    trapVi = 'Tránh viết nước đôi; câu thesis ở mở bài phải khẳng định rõ lập trường của bạn.';
                 } else if (lower.includes('cause') || lower.includes('solution') || lower.includes('problem') || lower.includes('measure')) {
                     roleTitleEn = 'Problem Analysis & Remedies';
                     roleTitleVi = 'Nguyên nhân & Giải pháp';
@@ -3218,6 +3413,8 @@
                     meaningVi = 'Tìm lý do vì sao vấn đề xảy ra và đề xuất cách xử lý thực tế.';
                     takeawayEn = 'Connect underlying root causes with realistic, actionable solutions.';
                     takeawayVi = 'Mỗi nguyên nhân cần đi kèm một giải pháp tương ứng.';
+                    trapEn = 'Do not list generic solutions without linking them directly to the identified causes.';
+                    trapVi = 'Tránh đưa ra giải pháp chung chung; mỗi giải pháp phải khắc phục trực tiếp một nguyên nhân đã nêu.';
                 } else if (lower.includes('example') || lower.includes('experience') || lower.includes('reasons')) {
                     roleTitleEn = 'Supporting Evidence';
                     roleTitleVi = 'Lý lẽ & Ví dụ';
@@ -3226,6 +3423,8 @@
                     meaningVi = 'Củng cố quan điểm bằng lập luận logic và ví dụ thực tế đời thường.';
                     takeawayEn = 'Back up every assertion with logical explanations and examples.';
                     takeawayVi = 'Ý nào cũng nên có ví dụ đi kèm cho thuyết phục.';
+                    trapEn = 'Ensure every body paragraph includes at least one concrete supporting example.';
+                    trapVi = 'Đảm bảo mỗi đoạn thân bài đều có ít nhất một ví dụ minh họa rõ ràng.';
                 } else {
                     roleTitleEn = 'Task Directive';
                     roleTitleVi = 'Yêu cầu của đề';
@@ -3234,9 +3433,25 @@
                     meaningVi = `Tập trung vào nhiệm vụ này: "${text}".`;
                     takeawayEn = 'Make sure this requirement is clearly understood.';
                     takeawayVi = 'Hiểu đúng yêu cầu để không bị lạc đề.';
+                    trapEn = 'Make sure your essay directly answers this specific prompt question.';
+                    trapVi = 'Đảm bảo bài viết giải quyết trọn vẹn câu hỏi này của đề.';
+                }
+
+                // If no keywords authored, check curated hard vocabulary first, then fallback
+                if (!keywords || keywords.length === 0) {
+                    const hardMatches = findHardVocabMatches(text);
+                    if (hardMatches.length > 0) {
+                        keywords = hardMatches;
+                    } else if (lower.includes('agree or disagree') || lower.includes('do you agree')) {
+                        keywords = [
+                            { term: 'agree / disagree', enGloss: 'personal stance requirement', viGloss: 'yêu cầu chốt lập trường' }
+                        ];
+                    } else {
+                        keywords = extractGenericKeywords(text);
+                    }
                 }
             }
-            
+
             const isSegSelected = guidedSelectedPromptSegment === `seg_${idx + 1}`;
             return {
                 index: idx + 1,
@@ -3248,9 +3463,106 @@
                 meaningVi,
                 takeawayEn,
                 takeawayVi,
+                trapEn,
+                trapVi,
+                keywords,
                 isSegSelected
             };
         });
+    }
+
+    function getPromptTension(promptText, parsedSegments) {
+        const pLower = String(promptText || '').toLowerCase();
+        if (pLower.includes('einstein') || pLower.includes('interferes with my learning') || pLower.includes('barrier to learning')) {
+            return {
+                titleEn: 'Core Dialectical Tension & Paradox',
+                titleVi: 'Mâu thuẫn then chốt & Nghịch lý của đề bài',
+                descEn: 'The clash between rigid institutional schooling ("education") and authentic self-driven curiosity ("learning"). You must evaluate whether formal schooling is an essential foundation or a restrictive barrier that stifles creative genius.',
+                descVi: 'Xung đột giữa khuôn mẫu trường lớp gò bó ("education") và bản năng tự học khám phá ("learning"). Cần làm rõ trường học là bệ phóng kiến thức nền tảng hay là rào cản bóp nghẹt tư duy sáng tạo.'
+            };
+        }
+        if (pLower.includes('exercise') && pLower.includes('diet')) {
+            return {
+                titleEn: 'Core Comparative Debate',
+                titleVi: 'Trọng tâm so sánh trực diện',
+                descEn: 'Comparing nutritional discipline directly against physical workout regimens. You must determine which is more fundamental for health, or how both work synergistically.',
+                descVi: 'So sánh giữa chế độ dinh dưỡng và việc tập luyện thể lực. Cần cân nhắc bên nào mang tính quyết định hơn đối với sức khỏe và vóc dáng, hoặc cách kết hợp hài hòa cả hai.'
+            };
+        }
+        if (pLower.includes('extreme sports') || (pLower.includes('advantages') && pLower.includes('disadvantages')) || pLower.includes('dangerous sports')) {
+            return {
+                titleEn: 'Two-Sided Risk vs Reward Tension',
+                titleVi: 'Xung đột giữa Trải nghiệm & Rủi ro',
+                descEn: 'Balancing psychological thrill, courage, and boundary-pushing against the tangible perils of severe physical trauma and mortality.',
+                descVi: 'Sự giằng co giữa cảm giác phấn khích tột độ, tinh thần dám thử thách và nguy cơ chấn thương nghiêm trọng hoặc trả giá bằng tính mạng.'
+            };
+        }
+        if (pLower.includes('building') && pLower.includes('design')) {
+            return {
+                titleEn: 'Architectural Impact & Living Environment',
+                titleVi: 'Tác động của thiết kế kiến trúc lên đời sống',
+                descEn: 'Evaluating how urban layout, building spaces, and architectural design shape community well-being, mood, and daily productivity positively or negatively.',
+                descVi: 'Đánh giá cách thức thiết kế không gian kiến trúc và quy hoạch tòa nhà tác động tích cực hoặc tiêu cực lên chất lượng sống, tâm lý và năng suất của con người.'
+            };
+        }
+        if (pLower.includes('agree') || pLower.includes('disagree') || pLower.includes('opinion')) {
+            const rawPremise = parsedSegments && parsedSegments[0]?.text ? parsedSegments[0].text : promptText;
+            const corePremise = String(rawPremise).replace(/^[“"']+|[”"'.!]+$/g, '').trim();
+            return {
+                titleEn: 'Core Premise & Stance Tension',
+                titleVi: 'Nhận định trọng tâm & Mâu thuẫn lập trường',
+                descEn: `The debate revolves around: "${corePremise}". You must weigh opposing arguments before committing to a decisive, well-reasoned position.`,
+                descVi: `Đề bài xoay quanh nhận định: "${corePremise}". Cần đối chiếu các góc nhìn ủng hộ và phản đối trước khi đưa ra lập trường dứt khoát.`
+            };
+        }
+        if (pLower.includes('cause') || pLower.includes('solution') || pLower.includes('problem')) {
+            return {
+                titleEn: 'Causal Roots & Actionable Remedies',
+                titleVi: 'Mối liên kết Nguyên nhân & Giải pháp',
+                descEn: 'Connecting root societal and economic causes directly to realistic, actionable countermeasures.',
+                descVi: 'Gắn kết chặt chẽ giữa các nguyên nhân gốc rễ và những giải pháp can thiệp thực tế, có tính khả thi cao.'
+            };
+        }
+        return {
+            titleEn: 'Prompt Focus & Task Scope',
+            titleVi: 'Trọng tâm & Phạm vi bàn luận',
+            descEn: 'Deconstruct the key clauses to ensure every requirement of the prompt is addressed without drifting off-topic.',
+            descVi: 'Phân tích kỹ từng vế để đảm bảo giải quyết trọn vẹn yêu cầu của đề bài, tránh lạc đề hoặc thiếu sót ý.'
+        };
+    }
+
+    function renderPromptHeroStrip(parsedSegments) {
+        if (!parsedSegments || parsedSegments.length === 0) return '';
+        return `
+        <div class="essay-guided-prompt-hero">
+            <div class="essay-guided-prompt-hero-head">
+                <div class="essay-prompt-hero-title-group">
+                    <span class="essay-prompt-hero-badge">📌 ${guidedText('Deconstructed Question Prompt', 'Đề bài tách theo từng vế')}</span>
+                    <span class="essay-prompt-hero-hint">${guidedText('Click any highlighted clause to inspect its meaning and traps below', 'Bấm vào từng vế màu bên dưới để xem giải nghĩa & lưu ý tránh bẫy')}</span>
+                </div>
+                ${guidedHelpBtn('clauses')}
+            </div>
+            <div class="essay-guided-prompt-flow-text">
+                ${parsedSegments.map(item => `
+                    <span class="essay-prompt-hl hl-${item.index}${item.isSegSelected ? ' is-selected' : ''}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" aria-pressed="${item.isSegSelected ? 'true' : 'false'}" title="${guidedText(`Click to inspect Clause ${item.index}`, `Bấm để xem chi tiết Vế ${item.index}`)}">
+                        <span class="essay-prompt-hl-num">${item.index}</span>
+                        <span class="essay-prompt-hl-body">${escapeHtml(item.text)}</span>
+                    </span>
+                `).join(' ')}
+            </div>
+        </div>`;
+    }
+
+    function renderPromptTensionBanner(tensionData) {
+        if (!tensionData || (!tensionData.titleEn && !tensionData.titleVi)) return '';
+        return `
+        <div class="essay-prompt-tension-banner" role="region" aria-label="${escapeHtml(guidedText(tensionData.titleEn, tensionData.titleVi))}">
+            <div class="essay-tension-icon" aria-hidden="true">⚡</div>
+            <div class="essay-tension-content">
+                <span class="essay-tension-label">${escapeHtml(guidedText(tensionData.titleEn, tensionData.titleVi))}</span>
+                <p class="essay-tension-text">${escapeHtml(guidedText(tensionData.descEn, tensionData.descVi))}</p>
+            </div>
+        </div>`;
     }
 
     function renderPromptClauseFlowchart(parsedSegments) {
@@ -3259,7 +3571,7 @@
         <div class="essay-guided-flowchart">
             <div class="essay-flowchart-arrow-strip" role="group" aria-label="${guidedText('Prompt clause directional flow', 'Trình tự các vế đề bài')}">
                 ${parsedSegments.map(item => `
-                    <div class="essay-flowchart-arrow-col col-${item.index}${item.isSegSelected ? ' is-selected' : ''}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" title="${guidedText(`Jump to Clause ${item.index}`, `Xem chi tiết Vế ${item.index}`)}">
+                    <div class="essay-flowchart-arrow-col col-${item.index}${item.isSegSelected ? ' is-selected' : ''}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" aria-pressed="${item.isSegSelected ? 'true' : 'false'}" title="${guidedText(`Jump to Clause ${item.index}`, `Xem chi tiết Vế ${item.index}`)}">
                         <span class="essay-flowchart-arrow-label">${guidedText('Clause', 'Vế')} ${item.index}</span>
                         <span class="essay-flowchart-arrow-icon">↓</span>
                     </div>
@@ -3271,8 +3583,26 @@
                     if (!formattedQuote.startsWith('“') && !formattedQuote.startsWith('"')) {
                         formattedQuote = `“${formattedQuote}”`;
                     }
+                    const keywordsHtml = (item.keywords && item.keywords.length > 0) ? `
+                        <div class="essay-clause-keywords">
+                            <span class="essay-clause-label">🔑 ${guidedText('Core Terms:', 'Từ khóa trọng tâm:')}</span>
+                            <div class="essay-clause-kw-tags">
+                                ${item.keywords.map(kw => `
+                                    <span class="essay-clause-kw-tag">
+                                        <strong class="essay-clause-kw-term">${escapeHtml(kw.term)}</strong>
+                                        ${kw.enGloss || kw.viGloss ? `<span class="essay-clause-kw-gloss">(${escapeHtml(guidedText(kw.enGloss, kw.viGloss))})</span>` : ''}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>` : '';
+                    const trapHtml = (item.trapEn || item.trapVi) ? `
+                        <div class="essay-clause-trap">
+                            <span class="essay-clause-trap-lbl">⚠️ ${guidedText('Trap to avoid:', 'Lưu ý tránh bẫy:')}</span>
+                            <p>${escapeHtml(guidedText(item.trapEn, item.trapVi))}</p>
+                        </div>` : '';
+
                     return `
-                <div class="essay-flowchart-card card-${item.index}${item.isSegSelected ? ' is-selected' : ''}" id="flowchart-card-${item.index}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0">
+                <div class="essay-flowchart-card card-${item.index}${item.isSegSelected ? ' is-selected' : ''}" id="flowchart-card-${item.index}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" aria-pressed="${item.isSegSelected ? 'true' : 'false'}">
                     <div class="essay-flowchart-card-head">
                         <span class="essay-flowchart-card-num num-${item.index}">${item.index}</span>
                         <div class="essay-flowchart-card-meta">
@@ -3281,6 +3611,7 @@
                     </div>
                     <div class="essay-flowchart-card-body">
                         <div class="essay-clause-quote">${escapeHtml(formattedQuote)}</div>
+                        ${keywordsHtml}
                         <div class="essay-clause-meaning">
                             <span class="essay-clause-label">📖 ${guidedText('What this means in plain terms', 'Ý đơn giản là:')}</span>
                             <p class="essay-clause-text">${escapeHtml(guidedText(item.meaningEn, item.meaningVi))}</p>
@@ -3289,6 +3620,7 @@
                             <span class="essay-clause-takeaway-label">💡 ${guidedText('Key concept', 'Điểm mấu chốt:')}</span>
                             <p class="essay-clause-takeaway-text">${escapeHtml(guidedText(item.takeawayEn, item.takeawayVi))}</p>
                         </div>
+                        ${trapHtml}
                     </div>
                 </div>`;
                 }).join('')}
@@ -3306,13 +3638,32 @@
                     formattedQuote = `“${formattedQuote}”`;
                 }
                 const isSelected = item.isSegSelected;
+                const keywordsHtml = (item.keywords && item.keywords.length > 0) ? `
+                    <div class="essay-clause-keywords">
+                        <span class="essay-cards-clause-lbl">🔑 ${guidedText('Core Terms:', 'Từ khóa trọng tâm:')}</span>
+                        <div class="essay-clause-kw-tags">
+                            ${item.keywords.map(kw => `
+                                <span class="essay-clause-kw-tag">
+                                    <strong class="essay-clause-kw-term">${escapeHtml(kw.term)}</strong>
+                                    ${kw.enGloss || kw.viGloss ? `<span class="essay-clause-kw-gloss">(${escapeHtml(guidedText(kw.enGloss, kw.viGloss))})</span>` : ''}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>` : '';
+                const trapHtml = (item.trapEn || item.trapVi) ? `
+                    <div class="essay-clause-trap">
+                        <span class="essay-clause-trap-lbl">⚠️ ${guidedText('Trap to avoid:', 'Lưu ý tránh bẫy:')}</span>
+                        <p>${escapeHtml(guidedText(item.trapEn, item.trapVi))}</p>
+                    </div>` : '';
+
                 return `
-                <div class="essay-cards-clause-card card-${item.index}${isSelected ? ' is-selected' : ''}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0">
+                <div class="essay-cards-clause-card card-${item.index}${isSelected ? ' is-selected' : ''}" id="clause-card-${item.index}" data-guided-action="select-prompt-segment" data-segment-id="seg_${item.index}" role="button" tabindex="0" aria-pressed="${isSelected ? 'true' : 'false'}">
                     <div class="essay-cards-clause-head">
                         <span class="essay-cards-clause-badge">${item.roleIcon} ${guidedText('Clause', 'Vế')} ${item.index}</span>
                         <strong class="essay-cards-clause-role">${escapeHtml(guidedText(item.roleTitleEn, item.roleTitleVi))}</strong>
                     </div>
                     <div class="essay-cards-clause-quote">${escapeHtml(formattedQuote)}</div>
+                    ${keywordsHtml}
                     <div class="essay-cards-clause-meaning">
                         <span class="essay-cards-clause-lbl">📖 ${guidedText('Plain meaning:', 'Giải nghĩa nhanh:')}</span>
                         <p>${escapeHtml(guidedText(item.meaningEn, item.meaningVi))}</p>
@@ -3321,6 +3672,7 @@
                         <span class="essay-cards-clause-lbl">💡 ${guidedText('Key focus:', 'Điểm mấu chốt:')}</span>
                         <p>${escapeHtml(guidedText(item.takeawayEn, item.takeawayVi))}</p>
                     </div>
+                    ${trapHtml}
                 </div>`;
             }).join('')}
         </div>`;
@@ -3337,7 +3689,11 @@
         const promptText = String(guidedPack.prompt || currentEntry?.prompt || '').trim();
 
         // 1. Part 1: Interactive Question Structure & Visual Flowchart
-        const segments = common.promptSegments || [];
+        const segments = common.promptSegments
+            || guidedPack.promptBreakdown
+            || guidedPack.question_breakdown
+            || guidedPack.segments
+            || [];
         const parsedSegments = parsePromptSegments(segments, promptText);
         const segmentsHtml = renderInteractivePromptStructure(segments, promptText);
 
@@ -4241,6 +4597,8 @@
     }
 
     function renderStep1Mindmap(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml) {
+        const parsedSegments = parsePromptSegments(segments, promptText);
+        const tensionData = getPromptTension(promptText, parsedSegments);
         const stanceKeys = Object.keys(grouped);
         if (!guidedStep1ActiveStance || !stanceKeys.includes(guidedStep1ActiveStance)) {
             guidedStep1ActiveStance = stanceKeys[0] || 'agree';
@@ -4251,6 +4609,22 @@
 
         return `
         <div class="essay-guided-mindmap-layout">
+            <!-- Stage 1: Deconstruct Prompt Clauses & Core Tension -->
+            <div class="essay-mindmap-stage-analyzer">
+                <div class="essay-step1-stage-header">
+                    <span class="essay-step1-stage-pill">${guidedText('Part 1: Understand Prompt', 'Phần 1: Hiểu đề bài')}</span>
+                    <h3 class="essay-step1-stage-title">${guidedText('1. Deconstruct Prompt Clauses & Underlying Tension', '1. Tách từng vế đề bài & Nhận diện mâu thuẫn then chốt')}</h3>
+                </div>
+                ${renderPromptHeroStrip(parsedSegments)}
+                ${renderPromptClauseCards(parsedSegments)}
+                ${renderPromptTensionBanner(tensionData)}
+            </div>
+
+            <!-- Stage 2: Radiating Idea Tree & Stance Selection -->
+            <div class="essay-step1-stage-header">
+                <span class="essay-step1-stage-pill">${guidedText('Part 2: Choose Stance & Arguments', 'Phần 2: Chọn phe & Luận điểm')}</span>
+                <h3 class="essay-step1-stage-title">${guidedText('2. Radiating Stance Tree & Arguments', '2. Cây ý tưởng tỏa tròn: Chọn phe & Luận điểm then chốt')}</h3>
+            </div>
             <div class="essay-mindmap-canvas" id="essay-prompt-mindmap-canvas">
                 <svg class="essay-mindmap-svg" id="essay-prompt-mindmap-svg" aria-hidden="true"></svg>
 
@@ -4321,6 +4695,7 @@
 
     function renderStep1Flowchart(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml) {
         const parsedSegments = parsePromptSegments(segments, promptText);
+        const tensionData = getPromptTension(promptText, parsedSegments);
         const stanceKeys = Object.keys(grouped);
         if (!guidedStep1ActiveStance || !stanceKeys.includes(guidedStep1ActiveStance)) {
             guidedStep1ActiveStance = stanceKeys[0] || 'agree';
@@ -4337,13 +4712,15 @@
 
         return `
         <div class="essay-guided-flowchart-layout">
-            <!-- Stage 1: Directional Clause Flowchart -->
+            <!-- Stage 1: Directional Clause Flowchart & Analyzer -->
             <div class="essay-flowchart-stage">
                 <div class="essay-flowchart-stage-header">
-                    <span class="essay-flowchart-stage-pill">Giai đoạn 1</span>
-                    <h3 class="essay-flowchart-stage-title">${guidedText('1. Deconstruct Prompt Clauses', '1. Tách và phân tích các vế của đề bài')}</h3>
+                    <span class="essay-flowchart-stage-pill">${guidedText('Stage 1', 'Giai đoạn 1')}</span>
+                    <h3 class="essay-flowchart-stage-title">${guidedText('1. Deconstruct Prompt Clauses & Core Tension', '1. Tách và phân tích các vế của đề bài & Mâu thuẫn then chốt')}</h3>
                 </div>
+                ${renderPromptHeroStrip(parsedSegments)}
                 ${renderPromptClauseFlowchart(parsedSegments)}
+                ${renderPromptTensionBanner(tensionData)}
             </div>
 
             <!-- Flow Connector 1 -->
@@ -4610,6 +4987,8 @@
     }
 
     function renderStep1Table(segments, promptText, essayTypeInfo, grouped, stanceLabels, traps, reqs, mcqHtml, gapFillHtml) {
+        const parsedSegments = parsePromptSegments(segments, promptText);
+        const tensionData = getPromptTension(promptText, parsedSegments);
         const stanceKeys = Object.keys(grouped);
         if (!guidedStep1ActiveStance || !stanceKeys.includes(guidedStep1ActiveStance)) {
             guidedStep1ActiveStance = stanceKeys[0] || 'agree';
@@ -4629,6 +5008,23 @@
 
         return `
         <div class="essay-guided-table-layout">
+            <!-- Stage 1: Deconstruct Prompt Clauses & Core Tension -->
+            <div class="essay-table-stage-analyzer">
+                <div class="essay-step1-stage-header">
+                    <span class="essay-step1-stage-pill">${guidedText('Part 1: Understand Prompt', 'Phần 1: Hiểu đề bài')}</span>
+                    <h3 class="essay-step1-stage-title">${guidedText('1. Deconstruct Prompt Clauses & Underlying Tension', '1. Tách từng vế đề bài & Nhận diện mâu thuẫn then chốt')}</h3>
+                </div>
+                ${renderPromptHeroStrip(parsedSegments)}
+                ${renderPromptClauseCards(parsedSegments)}
+                ${renderPromptTensionBanner(tensionData)}
+            </div>
+
+            <!-- Stage 2: Stance Selection & Dialectical Matrix -->
+            <div class="essay-step1-stage-header">
+                <span class="essay-step1-stage-pill">${guidedText('Part 2: Compare 2 Stances', 'Phần 2: Đối chiếu 2 phe')}</span>
+                <h3 class="essay-step1-stage-title">${guidedText('2. Dialectical Comparison Matrix (5 Dimensions)', '2. Bảng so sánh biện chứng 2 phe (5 tiêu chí)')}</h3>
+            </div>
+
             <!-- Stance Selection Ribbon -->
             <div class="essay-table-stance-bar">
                 <div class="essay-table-stance-info">
@@ -4739,18 +5135,23 @@
         const segmentsToRender = (parsedSegments && parsedSegments.length > 0)
             ? parsedSegments
             : parsePromptSegments(guidedPack?.common?.promptSegments || [], guidedPack?.prompt || currentEntry?.prompt || '');
+        const promptText = guidedPack?.prompt || currentEntry?.prompt || '';
+        const tensionData = getPromptTension(promptText, segmentsToRender);
+
         return `
         <div class="essay-guided-cards-layout">
             <div class="essay-step1-part essay-step1-part-1">
                 <div class="essay-step1-part-header">
-                    <span class="essay-step1-part-pill">Part 1</span>
-                    <h3 class="essay-step1-part-title">${guidedText('Question Breakdown & Meaning', 'Hiểu nhanh các vế của đề bài')}</h3>
+                    <span class="essay-step1-part-pill">${guidedText('Part 1', 'Phần 1')}</span>
+                    <h3 class="essay-step1-part-title">${guidedText('Question Breakdown & Meaning', 'Hiểu nhanh các vế của đề bài & Mâu thuẫn then chốt')}</h3>
                 </div>
+                ${renderPromptHeroStrip(segmentsToRender)}
                 ${renderPromptClauseCards(segmentsToRender)}
+                ${renderPromptTensionBanner(tensionData)}
             </div>
             <div class="essay-step1-part essay-step1-part-2">
                 <div class="essay-step1-part-header">
-                    <span class="essay-step1-part-pill">Part 2</span>
+                    <span class="essay-step1-part-pill">${guidedText('Part 2', 'Phần 2')}</span>
                     <h3 class="essay-step1-part-title">${guidedText('Essay Structure & Scoring Blueprint', 'Dạng bài & Khung dàn ý 4 đoạn')}</h3>
                 </div>
                 ${essayTypeCardHtml}
@@ -8122,6 +8523,9 @@
         onEnter: onEnter,
         applyGuidedTypography: applyGuidedTypography,
         restoreGuidedPreferences: restoreGuidedPreferences,
+        splitPromptIntoClauses: splitPromptIntoClauses,
+        parsePromptSegments: parsePromptSegments,
+        getPromptTension: getPromptTension,
         renderStep1Mindmap: renderStep1Mindmap,
         renderStep1Flowchart: renderStep1Flowchart,
         renderStep1Table: renderStep1Table,

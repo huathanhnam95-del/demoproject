@@ -52,6 +52,7 @@ merriam-webster api key
 # Temporary files
 *.tmp
 *.temp
+.tempmediaStorage/
 
 # Gemini Agent Folder
 .gemini/

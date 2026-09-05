@@ -629,6 +629,10 @@
     elements.teacherSchedulerWorkspace = document.getElementById('teacher-scheduler-workspace');
     elements.teacherSchedulerClassList = document.getElementById('teacher-scheduler-class-list');
     elements.teacherSchedulerCalendar = document.getElementById('teacher-scheduler-calendar');
+    elements.teacherSchedulerTeacherSelect = document.getElementById('teacher-scheduler-teacher-select');
+    elements.teacherSchedulerAdminFilterGroup = document.getElementById('teacher-scheduler-admin-filter-group');
+    elements.teacherSchedulerRailTitle = document.getElementById('teacher-scheduler-rail-title');
+    elements.teacherSchedulerRailDesc = document.getElementById('teacher-scheduler-rail-desc');
     elements.btnTeacherSchedulerRefresh = document.getElementById('btn-teacher-scheduler-refresh');
     elements.inputTeacherSchedulerFromDate = document.getElementById('teacher-scheduler-from-date');
     elements.inputTeacherSchedulerToDate = document.getElementById('teacher-scheduler-to-date');
@@ -1342,7 +1346,8 @@
       ? window.TeacherSchedulerWorkspace.createController({
         elements,
         showToast,
-        fetchGemmaJSON
+        fetchGemmaJSON,
+        isAdmin: () => state.accessMode === 'admin'
       })
       : null;
     studentFinanceController = window.CrmStudentFinance && typeof window.CrmStudentFinance.createController === 'function'
@@ -1686,23 +1691,26 @@
 
   async function isTeacherUser(user) {
     const claimOk = await isTeacherViaClaims(user);
-    if (claimOk !== null) return claimOk;
-    return isTeacherViaFirestore(user?.uid);
+    if (claimOk === true) return true;
+    const firestoreOk = await isTeacherViaFirestore(user?.uid);
+    if (firestoreOk === true) return true;
+    return isTeacherViaServer(user);
   }
 
   async function isTeacherViaClaims(user) {
     try {
-      if (!user?.getIdTokenResult) return null;
+      if (!user?.getIdTokenResult) return false;
       const tokenResult = await user.getIdTokenResult();
       const claims = tokenResult?.claims && typeof tokenResult.claims === 'object'
         ? tokenResult.claims
         : {};
-      if (claims.isTeacher === true) return true;
-      if (claims.isAdmin === true) return true;
+      if (claims.isTeacher === true || claims.teacher === true) return true;
+      if (claims.crmRole === 'teacher' || claims.role === 'teacher') return true;
+      if (claims.isAdmin === true || claims.admin === true) return true;
       return false;
     } catch (e) {
       void e;
-      return null;
+      return false;
     }
   }
 
@@ -1712,9 +1720,30 @@
       const snap = await firebase.firestore().collection('users').doc(uid).get();
       const data = snap.exists ? snap.data() : null;
       const crmRole = String(data?.crmRole || '').trim().toLowerCase();
-      return data?.isTeacher === true || crmRole === 'teacher';
+      const role = String(data?.role || '').trim().toLowerCase();
+      return data?.isTeacher === true || crmRole === 'teacher' || role === 'teacher' || data?.isAdmin === true || crmRole === 'admin' || role === 'admin';
     } catch (e) {
       console.warn('[CRM Admin] Failed to read user profile for isTeacher check:', e?.message || e);
+      return false;
+    }
+  }
+
+  async function isTeacherViaServer(user) {
+    try {
+      if (window.ClassroomAPI && typeof window.ClassroomAPI.checkTeacherStatus === 'function') {
+        const status = await window.ClassroomAPI.checkTeacherStatus();
+        return Boolean(status?.isTeacher || status?.isAdmin);
+      }
+      if (!user?.getIdToken) return false;
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/teacher/status', {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${idToken}` },
+        cache: 'no-store'
+      });
+      const json = await res.json().catch(() => null);
+      return !!(res.ok && (json?.data?.isTeacher || json?.data?.isAdmin));
+    } catch (_) {
       return false;
     }
   }
@@ -1728,6 +1757,9 @@
       btn.style.display = allow ? '' : 'none';
       btn.disabled = !allow;
       btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
+      if (allow) {
+        btn.textContent = 'Teacher Schedule';
+      }
     });
 
     elements.dropdownItems.forEach((btn) => {
@@ -1751,14 +1783,11 @@
     elements.navItems.forEach((btn) => {
       btn.addEventListener('click', () => {
         if (state.accessMode === 'teacher') {
-          const main = String(btn?.dataset?.main || '').trim();
-          if (main !== 'courses') {
-            state.main = 'courses';
-            state.sub = 'teacher-schedule';
-            updateHash();
-            render();
-            return;
-          }
+          state.main = 'courses';
+          state.sub = 'teacher-schedule';
+          updateHash();
+          render();
+          return;
         }
         if (state.studentLookup) {
           clearStudentProfileState();

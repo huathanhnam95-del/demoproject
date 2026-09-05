@@ -357,8 +357,8 @@
   }
 
   function getReviewMetadata(questionId) {
-    const key = String(questionId);
-    return state.reviewMetadata?.[key] || null;
+    const formatted = formatQuestionId(questionId);
+    return state.reviewMetadata?.[formatted] || state.reviewMetadata?.[String(questionId)] || null;
   }
 
   function getParagraphs(question) {
@@ -750,15 +750,19 @@
 
   let popoverEl = null;
   let activeHintBtn = null;
+  let isDragging = false;
 
   function ensurePopoverElement() {
     if (popoverEl) return popoverEl;
     popoverEl = document.createElement('div');
     popoverEl.className = 'rfib-popover';
+    popoverEl.setAttribute('role', 'dialog');
+    popoverEl.setAttribute('aria-modal', 'false');
+    popoverEl.setAttribute('aria-labelledby', 'rfib-popover-title');
     popoverEl.innerHTML = `
       <div class="rfib-popover-arrow arrow-top"></div>
       <div class="rfib-popover-header">
-        <span class="rfib-popover-blank-label"></span>
+        <span id="rfib-popover-title" class="rfib-popover-blank-label"></span>
         <span class="rfib-popover-grammar-badge"></span>
         <button type="button" class="rfib-popover-close" aria-label="Close explanation">&times;</button>
       </div>
@@ -766,78 +770,176 @@
     `;
     document.body.appendChild(popoverEl);
 
-    popoverEl.querySelector('.rfib-popover-close').addEventListener('click', hidePopover);
+    popoverEl.querySelector('.rfib-popover-close').addEventListener('click', () => {
+      hidePopover({ restoreFocus: true });
+    });
 
     // Close on Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && popoverEl?.classList.contains('is-visible')) {
-        hidePopover();
+        hidePopover({ restoreFocus: true });
       }
     });
 
-    // Close on click outside (skip during drag)
-    let isDragging = false;
-    document.addEventListener('mousedown', (e) => {
+    // Close on pointerdown outside (skip during drag)
+    document.addEventListener('pointerdown', (e) => {
       if (isDragging) return;
       if (!popoverEl?.classList.contains('is-visible')) return;
       if (popoverEl.contains(e.target)) return;
       if (e.target.closest('.rfib-hint-btn')) return;
-      hidePopover();
+      hidePopover({ restoreFocus: false });
     });
 
-    // Drag-to-move via header
+    // Drag-to-move via header with unified PointerEvents and pointer capture
     const header = popoverEl.querySelector('.rfib-popover-header');
+    let dragPointerId = null;
     let dragStartX = 0;
     let dragStartY = 0;
     let popStartX = 0;
     let popStartY = 0;
 
-    header.addEventListener('mousedown', (e) => {
-      // Don't drag when clicking the close button
+    header.addEventListener('pointerdown', (e) => {
+      // Don't drag when clicking the close button or with non-primary button
       if (e.target.closest('.rfib-popover-close')) return;
-      e.preventDefault();
+      if (e.button !== 0) return;
+
       isDragging = true;
+      dragPointerId = e.pointerId;
+      try {
+        header.setPointerCapture(e.pointerId);
+      } catch (_) {}
+
       dragStartX = e.clientX;
       dragStartY = e.clientY;
-      popStartX = popoverEl.offsetLeft;
-      popStartY = popoverEl.offsetTop;
+
+      const isMobile = window.innerWidth <= 640;
+      if (!isMobile) {
+        const rect = popoverEl.getBoundingClientRect();
+        popStartX = rect.left;
+        popStartY = rect.top;
+        popoverEl.dataset.dragged = 'true';
+        // Hide arrow once user drags (it no longer points at the anchor)
+        const arrow = popoverEl.querySelector('.rfib-popover-arrow');
+        if (arrow) arrow.style.display = 'none';
+      }
       popoverEl.classList.add('is-dragging');
-      // Hide arrow once user drags (it no longer points at the anchor)
-      const arrow = popoverEl.querySelector('.rfib-popover-arrow');
-      if (arrow) arrow.style.display = 'none';
     });
 
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - dragStartX;
+    header.addEventListener('pointermove', (e) => {
+      if (!isDragging || e.pointerId !== dragPointerId) return;
+      const isMobile = window.innerWidth <= 640;
       const dy = e.clientY - dragStartY;
-      popoverEl.style.left = `${popStartX + dx}px`;
-      popoverEl.style.top = `${popStartY + dy}px`;
+
+      if (isMobile) {
+        // Mobile pull-down physics for bottom drawer
+        if (dy > 0) {
+          popoverEl.style.transform = `translateY(${dy}px)`;
+        } else {
+          popoverEl.style.transform = `translateY(${dy * 0.2}px)`;
+        }
+      } else {
+        const dx = e.clientX - dragStartX;
+        popoverEl.style.left = `${popStartX + dx}px`;
+        popoverEl.style.top = `${popStartY + dy}px`;
+      }
     });
 
-    document.addEventListener('mouseup', () => {
-      if (!isDragging) return;
+    const endDrag = (e) => {
+      if (!isDragging || (dragPointerId !== null && e && e.pointerId !== dragPointerId)) return;
       isDragging = false;
       popoverEl.classList.remove('is-dragging');
-    });
+      if (dragPointerId !== null) {
+        try {
+          header.releasePointerCapture(dragPointerId);
+        } catch (_) {}
+        dragPointerId = null;
+      }
+
+      const isMobile = window.innerWidth <= 640;
+      if (isMobile) {
+        const dy = (e && typeof e.clientY === 'number') ? (e.clientY - dragStartY) : 0;
+        if (dy > 70) {
+          hidePopover({ restoreFocus: false });
+        } else {
+          // Snap back smoothly without jump
+          popoverEl.style.transform = '';
+        }
+      }
+    };
+
+    header.addEventListener('pointerup', endDrag);
+    header.addEventListener('pointercancel', endDrag);
+    header.addEventListener('lostpointercapture', endDrag);
+
+    // Passive window & passage scroll handling (re-anchors or auto-dismisses when scrolling)
+    let scrollRafId = null;
+    const handleScroll = (e) => {
+      if (!popoverEl?.classList.contains('is-visible') || !activeHintBtn) return;
+      // Do not auto-dismiss or reposition if scrolling inside the popover body itself
+      if (popoverEl.contains(e.target)) return;
+
+      const isMobile = window.innerWidth <= 640;
+      if (isMobile) return;
+
+      if (scrollRafId) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        if (!popoverEl?.classList.contains('is-visible') || !activeHintBtn) return;
+
+        const anchorRect = activeHintBtn.getBoundingClientRect();
+        const isAnchorVisible = (
+          anchorRect.bottom > 0 &&
+          anchorRect.top < window.innerHeight &&
+          anchorRect.right > 0 &&
+          anchorRect.left < window.innerWidth
+        );
+
+        if (!isAnchorVisible) {
+          hidePopover({ restoreFocus: false });
+        } else if (!popoverEl.dataset.dragged) {
+          positionPopover(activeHintBtn);
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+
+    // Passive resize handling with cross-breakpoint state reconciliation
+    let prevIsMobile = window.innerWidth <= 640;
+    window.addEventListener('resize', () => {
+      if (!popoverEl?.classList.contains('is-visible') || !activeHintBtn) return;
+      const isMobile = window.innerWidth <= 640;
+      if (isMobile !== prevIsMobile) {
+        delete popoverEl.dataset.dragged;
+        popoverEl.style.transform = '';
+        const arrow = popoverEl.querySelector('.rfib-popover-arrow');
+        if (arrow) arrow.style.display = '';
+        prevIsMobile = isMobile;
+      }
+      if (isMobile) {
+        popoverEl.style.top = '';
+        popoverEl.style.left = '';
+      } else if (!popoverEl.dataset.dragged) {
+        positionPopover(activeHintBtn);
+      }
+    }, { passive: true });
 
     return popoverEl;
   }
 
   function positionPopover(anchorEl) {
     if (!popoverEl) return;
+    if (window.innerWidth <= 640) {
+      popoverEl.style.top = '';
+      popoverEl.style.left = '';
+      return;
+    }
     const anchorRect = anchorEl.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const margin = 16;
     const arrowEl = popoverEl.querySelector('.rfib-popover-arrow');
-
-    // Temporarily make visible off-screen to measure
-    popoverEl.style.left = '-9999px';
-    popoverEl.style.top = '-9999px';
-    popoverEl.classList.add('is-visible');
     const popRect = popoverEl.getBoundingClientRect();
-    popoverEl.classList.remove('is-visible');
 
     // Default: below the anchor
     let top = anchorRect.bottom + 10;
@@ -880,7 +982,7 @@
 
     // Toggle: if clicking the same hint button, close
     if (activeHintBtn === anchorEl && popoverEl.classList.contains('is-visible')) {
-      hidePopover();
+      hidePopover({ restoreFocus: true });
       return;
     }
 
@@ -891,7 +993,7 @@
     activeHintBtn = anchorEl;
     anchorEl.classList.add('is-active');
 
-    const { grammarTag, engExp, viExp, isCorrect, displayAnswer } = analysisData;
+    const { grammarTag, engExp, viExp, distractorAnalysis, userAnswer, isCorrect, displayAnswer } = analysisData;
 
     // Header
     const blankLabel = popoverEl.querySelector('.rfib-popover-blank-label');
@@ -908,8 +1010,60 @@
     const body = popoverEl.querySelector('.rfib-popover-body');
     let bodyHtml = '';
 
-    if (!isCorrect && displayAnswer) {
-      bodyHtml += `<div class="rfib-popover-section" style="font-weight:700;color:var(--rfib-success);font-size:0.84rem;margin-bottom:2px;">✓ Correct: ${escapeHtml(displayAnswer)}</div>`;
+    const distractors = Array.isArray(distractorAnalysis) ? distractorAnalysis : [];
+
+    if (!isCorrect) {
+      // Comparison grid between user choice and correct answer
+      bodyHtml += `
+        <div class="rfib-popover-answer-grid">
+          <div class="rfib-popover-answer-item is-user">
+            <span class="rfib-popover-answer-label">Your Answer</span>
+            <span class="rfib-popover-answer-val">${userAnswer ? escapeHtml(userAnswer) + ' ❌' : '<em>(None selected)</em>'}</span>
+          </div>
+          <div class="rfib-popover-answer-item is-correct">
+            <span class="rfib-popover-answer-label">Correct Answer</span>
+            <span class="rfib-popover-answer-val">${escapeHtml(displayAnswer)} ✓</span>
+          </div>
+        </div>
+      `;
+
+      // If user selected an incorrect option and we have a specific distractor rationale
+      if (userAnswer && distractors.length > 0) {
+        const normalizedUser = normalizeAnswer(userAnswer);
+        const matched = distractors.find((d) => normalizeAnswer(d.option) === normalizedUser);
+        if (matched && (matched.why_wrong || matched.reason)) {
+          const whyWrongText = matched.why_wrong || matched.reason || '';
+          bodyHtml += `
+            <div class="rfib-popover-section rfib-popover-section-distractor">
+              <div class="rfib-popover-distractor-header">❌ Why "${escapeHtml(userAnswer)}" is incorrect</div>
+              <div class="rfib-popover-exp-text">${renderMarkdownInline(escapeHtml(whyWrongText)).replace(/\n/g, '<br>')}</div>
+            </div>
+          `;
+        }
+      }
+
+      // If other distractors exist, offer expandable option breakdown (open by default if unchosen)
+      const otherDistractors = distractors.filter((d) => normalizeAnswer(d.option) !== normalizeAnswer(userAnswer));
+      if (otherDistractors.length > 0) {
+        const summaryText = !userAnswer
+          ? `Option choices analysis (${otherDistractors.length})`
+          : `View other options breakdown (${otherDistractors.length})`;
+        bodyHtml += `
+          <details ${!userAnswer ? 'open ' : ''}class="rfib-popover-distractors-details">
+            <summary class="rfib-popover-distractors-summary">${summaryText}</summary>
+            <div class="rfib-popover-distractors-list">
+              ${otherDistractors.map((d) => `
+                <div class="rfib-popover-distractor-entry">
+                  <span class="rfib-popover-distractor-option">• <strong>${escapeHtml(d.option)}</strong>:</span>
+                  <span>${renderMarkdownInline(escapeHtml(d.why_wrong || d.reason || '')).replace(/\n/g, '<br>')}</span>
+                </div>
+              `).join('')}
+            </div>
+          </details>
+        `;
+      }
+    } else {
+      bodyHtml += `<div class="rfib-popover-section" style="font-weight:700;color:var(--rfib-success);font-size:0.86rem;margin-bottom:2px;display:flex;align-items:center;gap:6px;"><span>✓ Correct:</span> <span>${escapeHtml(displayAnswer)}</span></div>`;
     }
 
     if (engExp) {
@@ -929,31 +1083,54 @@
       `;
     }
 
-    if (!engExp && !viExp) {
+    if (!engExp && !viExp && distractors.length === 0) {
       bodyHtml = '<div class="rfib-popover-empty">No explanation available for this blank.</div>';
     }
 
     body.innerHTML = bodyHtml;
 
-    // Reset arrow (may have been hidden during drag) and position
+    // Reset drag state and arrow
+    delete popoverEl.dataset.dragged;
+    popoverEl.style.transform = '';
     const arrowReset = popoverEl.querySelector('.rfib-popover-arrow');
     if (arrowReset) arrowReset.style.display = '';
-    positionPopover(anchorEl);
     popoverEl.classList.add('is-visible');
+    positionPopover(anchorEl);
+
+    // Accessibility: Focus shifting to close button on open
+    const closeBtn = popoverEl.querySelector('.rfib-popover-close');
+    if (closeBtn && typeof closeBtn.focus === 'function') {
+      setTimeout(() => {
+        if (popoverEl?.classList.contains('is-visible')) {
+          closeBtn.focus();
+        }
+      }, 30);
+    }
   }
 
-  function hidePopover() {
+  function hidePopover({ restoreFocus = false } = {}) {
+    const prevBtn = activeHintBtn;
     if (activeHintBtn) {
       activeHintBtn.classList.remove('is-active');
       activeHintBtn = null;
     }
     if (popoverEl) {
       popoverEl.classList.remove('is-visible');
+      popoverEl.style.transform = '';
+      delete popoverEl.dataset.dragged;
+    }
+    // Accessibility: Restore focus to triggering hint button on close / Escape
+    if (restoreFocus && prevBtn && prevBtn.isConnected && typeof prevBtn.focus === 'function') {
+      setTimeout(() => {
+        try {
+          prevBtn.focus();
+        } catch (_) {}
+      }, 30);
     }
   }
 
   function removeHintButtons() {
-    hidePopover();
+    hidePopover({ restoreFocus: false });
     if (!elements.clozeView) return;
     // Fully remove injected hint buttons and correct labels from DOM
     elements.clozeView.querySelectorAll('.rfib-hint-btn, .rfib-correct-label').forEach((el) => el.remove());
@@ -977,12 +1154,18 @@
   }
 
   function clearResultBox() {
-    if (!elements.resultBox) return;
-    elements.resultBox.innerHTML = '';
-    elements.resultBox.classList.remove('is-visible');
+    if (elements.resultBox) {
+      elements.resultBox.innerHTML = '';
+      elements.resultBox.classList.remove('is-visible');
+    }
     removeHintButtons();
     resetActionButtons();
     lockAudio();
+    if (elements.clozeView) {
+      elements.clozeView.querySelectorAll('.rfib-blank-select').forEach((select) => {
+        select.disabled = false;
+      });
+    }
   }
 
   /** Pre-grade action bar: Check and Easy Reading only. */
@@ -1162,7 +1345,7 @@
   }
 
   async function checkAnswers() {
-    if (!state.currentQuestion || !state.currentAttempt) return;
+    if (!state.currentQuestion || !state.currentAttempt || !elements.clozeView) return;
 
     const selects = Array.from(elements.clozeView.querySelectorAll('.rfib-blank-select'));
     const answers = state.currentAttempt.blanks.map((blank, index) => {
@@ -1189,6 +1372,9 @@
     const isPerfect = total > 0 && correct === total;
 
     applyBlankClasses(results);
+    selects.forEach((select) => {
+      select.disabled = true;
+    });
     unlockAudio();
 
     // Load enrichment metadata for explanations
@@ -1232,12 +1418,14 @@
       const grammarTag = analysis?.grammar_tag || '';
       const engExp = analysis?.final_explanation || analysis?.detailed_explanation || analysis?.concise_explanation || analysis?.student_explanation || analysis?.simplified_explanation || '';
       const viExp = analysis?.vi_explanation || '';
+      const distractorAnalysis = Array.isArray(analysis?.distractor_analysis) ? analysis.distractor_analysis : [];
 
       // Create and append hint button
       const hintBtn = document.createElement('button');
       hintBtn.type = 'button';
       hintBtn.className = 'rfib-hint-btn is-visible';
       hintBtn.setAttribute('aria-label', `Explanation for blank ${result.index + 1}`);
+      hintBtn.setAttribute('aria-haspopup', 'dialog');
       hintBtn.title = 'Show explanation';
       hintBtn.textContent = '?';
       hintBtn.addEventListener('click', () => {
@@ -1245,6 +1433,8 @@
           grammarTag,
           engExp,
           viExp,
+          distractorAnalysis,
+          userAnswer: result.userAnswer,
           isCorrect: result.isCorrect,
           displayAnswer: result.displayAnswer || result.correctAnswer
         }, hintBtn);

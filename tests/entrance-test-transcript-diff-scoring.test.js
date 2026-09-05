@@ -309,16 +309,18 @@ test('computeTranscriptDiffHtml: preserves enriched syllable metadata with times
                     startMs: 5620,
                     endMs: 5850,
                     heardIpa: 'æt',
-                    diagnosis: 'Sounded like /æt/ (/t/ instead of /f/)'
+                    diagnosis: 'Sounded like /æt/ (/t/ instead of /f/) — You stopped the air with your tongue like "at"',
+                    tip: 'Rest your upper teeth lightly on your lower lip and blow air out steadily without stopping it.'
                 },
                 {
                     text: 'ter',
-                    ipa: 'tɚ',
+                    ipa: 'tər',
                     accuracyScore: 75,
                     startMs: 5860,
                     endMs: 6090,
                     heardIpa: null,
-                    diagnosis: 'Weak acoustic match on /ɚ/ (68%)'
+                    diagnosis: 'Weak acoustic match on /ər/ (68%) — sounded a bit flat without the American "r"',
+                    tip: 'Curl the tip of your tongue slightly backward and pull it back to get that rich American "r".'
                 }
             ]
         }
@@ -335,10 +337,78 @@ test('computeTranscriptDiffHtml: preserves enriched syllable metadata with times
     const parsed = JSON.parse(decoded);
     assert.strictEqual(parsed.length, 2);
     assert.strictEqual(parsed[0].text, 'af');
+    assert.strictEqual(parsed[0].ipa, 'æf');
     assert.strictEqual(parsed[0].startMs, 5620);
     assert.strictEqual(parsed[0].endMs, 5850);
     assert.strictEqual(parsed[0].heardIpa, 'æt');
-    assert.strictEqual(parsed[0].diagnosis, 'Sounded like /æt/ (/t/ instead of /f/)');
-    assert.strictEqual(parsed[1].diagnosis, 'Weak acoustic match on /ɚ/ (68%)');
+    assert.ok(parsed[0].diagnosis.includes('Sounded like /æt/'));
+    assert.ok(parsed[0].diagnosis.includes('stopped the air'));
+    assert.ok(parsed[0].tip.includes('upper teeth'));
+    assert.strictEqual(parsed[1].ipa, 'tər');
+    assert.ok(parsed[1].diagnosis.includes('Weak acoustic match on /ər/'));
+    assert.ok(parsed[1].tip.includes('Curl the tip of your tongue'));
 });
+
+test('computeTranscriptDiffHtml: preserves Oxford American IPA and coaching tips for data ("da", "ta")', () => {
+    const computeTranscriptDiffHtml = getDiffFunction();
+    const expected = 'Then there is a lot of data from scientists.';
+    const words = [
+        {
+            word: 'data',
+            startMs: 11000,
+            endMs: 11415,
+            accuracyScore: 46,
+            errorType: 'Mispronunciation',
+            syllables: [
+                {
+                    text: 'da',
+                    ipa: 'dæ',
+                    accuracyScore: 54,
+                    startMs: 11000,
+                    endMs: 11130,
+                    heardIpa: 'pæ',
+                    diagnosis: 'Sounded like /pæ/ (/p/ instead of /d/)',
+                    tip: 'Tap the tip of your tongue against the roof of your mouth just behind your upper front teeth—keep your lips apart.'
+                },
+                {
+                    text: 'ta',
+                    ipa: 'tə',
+                    accuracyScore: 38,
+                    startMs: 11140,
+                    endMs: 11430,
+                    heardIpa: 'tr',
+                    diagnosis: 'Sounded like /tr/ (/r/ instead of /ə/) — Curled your tongue into an "r"',
+                    tip: 'Relax your tongue flat in the middle of your mouth for a neutral "uh"—don\'t curl it backward.'
+                }
+            ]
+        }
+    ];
+
+    const html = computeTranscriptDiffHtml(expected, '', words);
+    const match = html.match(/data-syllables='([^']+)'/);
+    assert.ok(match, 'must match data-syllables');
+    const decoded = match[1]
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#039;/g, "'")
+        .replace(/&amp;/g, '&');
+    const parsed = JSON.parse(decoded);
+    assert.strictEqual(parsed.length, 2);
+    assert.strictEqual(parsed[0].text, 'da');
+    assert.strictEqual(parsed[0].ipa, 'dæ');
+    assert.strictEqual(parsed[0].heardIpa, 'pæ');
+    assert.ok(parsed[0].diagnosis.includes('Sounded like /pæ/'));
+    assert.ok(parsed[0].tip.includes('roof of your mouth'));
+
+    assert.strictEqual(parsed[1].text, 'ta');
+    assert.strictEqual(parsed[1].ipa, 'tə');
+    assert.strictEqual(parsed[1].heardIpa, 'tr');
+    assert.ok(!parsed[1].heardIpa.includes('ɹ'), 'heardIpa must not contain turned-r ɹ');
+    assert.ok(parsed[1].diagnosis.includes('/tr/'), 'diagnosis must contain Oxford American /tr/');
+    assert.ok(!parsed[1].diagnosis.includes('ɹ'), 'diagnosis must not contain turned-r ɹ');
+    assert.ok(parsed[1].diagnosis.includes('Curled your tongue into an "r"'));
+    assert.ok(!parsed[1].diagnosis.includes('— Sounded like'), 'must not have redundant repetition');
+    assert.ok(parsed[1].tip.includes('Relax your tongue flat'));
+});
+
 

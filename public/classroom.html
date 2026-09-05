@@ -26,6 +26,7 @@
             <h1>Classroom</h1>
         </div>
         <div class="header-controls">
+            <a id="btn-teacher-schedule-link" href="crm-admin.html#courses/teacher-schedule" class="teacher-schedule-header-btn" style="display:none;" title="Open Teacher Scheduler in CRM">🗓️ Teacher Schedule</a>
             <select id="class-switcher" class="class-switcher">
                 <option value="">Enroll in a class...</option>
             </select>
@@ -40,6 +41,7 @@
                 <button class="nav-tab active" data-tab="stream">Stream</button>
                 <button class="nav-tab" data-tab="modules">Modules</button>
                 <button class="nav-tab" data-tab="todo">To Do</button>
+                <button class="nav-tab" data-tab="schedule" id="tab-schedule" style="display:none;">Schedule</button>
             </nav>
         </aside>
 
@@ -72,6 +74,23 @@
                 </div>
                 <div id="todo-list-container" class="todo-list-container">
                     <p class="empty-state">No tasks pending.</p>
+                </div>
+            </section>
+
+            <!-- Schedule View -->
+            <section id="view-schedule" class="view-panel" style="display: none;">
+                <div class="schedule-view-header">
+                    <div>
+                        <h2>Teaching Schedule</h2>
+                        <p class="schedule-view-subtitle" id="schedule-view-subtitle">Upcoming classes and scheduled teaching sessions</p>
+                    </div>
+                    <div class="schedule-view-actions">
+                        <button id="btn-schedule-refresh" class="schedule-action-btn" type="button">🔄 Refresh</button>
+                        <a id="btn-schedule-full-workspace" href="crm-admin.html#courses/teacher-schedule" class="schedule-action-btn primary">Manage in Full Scheduler &rarr;</a>
+                    </div>
+                </div>
+                <div id="schedule-list-container" class="schedule-list-container">
+                    <p class="empty-state">Loading schedule...</p>
                 </div>
             </section>
         </div>

@@ -430,10 +430,158 @@ async function testTeacherApiErrorMessages() {
     );
 }
 
+async function testAdminCanManageAllTeacherSchedules() {
+    const db = createFakeDb({
+        'users/admin-1': {
+            email: 'admin@example.com',
+            isAdmin: true
+        },
+        'users/teacher-1': {
+            email: 'teacher1@example.com',
+            isTeacher: true,
+            crmRole: 'teacher'
+        },
+        'users/teacher-2': {
+            email: 'teacher2@example.com',
+            isTeacher: true,
+            crmRole: 'teacher'
+        },
+        [`${CRM_CLASSROOMS}/class-1`]: {
+            name: 'Teacher 1 Class',
+            primaryTeacherUid: 'teacher-1',
+            courseId: 'course-1',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 1200,
+                sessionMinutes: 120,
+                targetSessionCount: 10,
+                timezone: 'UTC',
+                scheduleVersion: 1
+            }
+        },
+        [`${CRM_CLASSROOMS}/class-2`]: {
+            name: 'Teacher 2 Class',
+            primaryTeacherUid: 'teacher-2',
+            courseId: 'course-2',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 1200,
+                sessionMinutes: 120,
+                targetSessionCount: 10,
+                timezone: 'UTC',
+                scheduleVersion: 1
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-t1`]: {
+            classId: 'class-1',
+            teacherUid: 'teacher-1',
+            status: 'scheduled',
+            scheduledLocalDate: '2026-04-06',
+            scheduledLocalTime: '09:00',
+            scheduledStartAtUtc: '2026-04-06T09:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-06T11:00:00.000Z',
+            durationMinutes: 120
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-t2`]: {
+            classId: 'class-2',
+            teacherUid: 'teacher-2',
+            status: 'scheduled',
+            scheduledLocalDate: '2026-04-06',
+            scheduledLocalTime: '14:00',
+            scheduledStartAtUtc: '2026-04-06T14:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-06T16:00:00.000Z',
+            durationMinutes: 120
+        }
+    });
+
+    let currentReqUser = { uid: 'admin-1', email: 'admin@example.com', isAdmin: true };
+
+    const router = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = currentReqUser;
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    // 1. Admin loads workspace for ALL teachers
+    const workspaceHandlers = getRouteHandlers(router, '/scheduler/workspace', 'get');
+    let res = buildRes();
+    await invokeHandlers(workspaceHandlers, {
+        query: { teacherUid: 'all', from: '2026-04-01', to: '2026-04-30' }
+    }, res);
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.classrooms.length, 2, 'Admin in all mode should see all classrooms');
+    assert.strictEqual(res._json.sessions.length, 2, 'Admin in all mode should see sessions from both teachers');
+
+    // 2. Admin loads workspace for specific teacher: teacher-2
+    res = buildRes();
+    await invokeHandlers(workspaceHandlers, {
+        query: { teacherUid: 'teacher-2', from: '2026-04-01', to: '2026-04-30' }
+    }, res);
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.classrooms.length, 1);
+    assert.strictEqual(res._json.classrooms[0].classroomId, 'class-2');
+    assert.strictEqual(res._json.sessions.length, 1);
+    assert.strictEqual(res._json.sessions[0].sessionId, 'session-t2');
+
+    // 3. Regular teacher cannot see other teacher's schedule
+    currentReqUser = { uid: 'teacher-1', email: 'teacher1@example.com', isTeacher: true };
+    res = buildRes();
+    await invokeHandlers(workspaceHandlers, {
+        query: { teacherUid: 'teacher-2', from: '2026-04-01', to: '2026-04-30' }
+    }, res);
+    assert.strictEqual(res._status, 200);
+    // Non-admin query is forced to caller's own uid (teacher-1)
+    assert.strictEqual(res._json.teacherUid, 'teacher-1');
+    assert.strictEqual(res._json.classrooms.length, 1);
+    assert.strictEqual(res._json.classrooms[0].classroomId, 'class-1');
+
+    // 4. Admin adds session to teacher-2's classroom
+    currentReqUser = { uid: 'admin-1', email: 'admin@example.com', isAdmin: true };
+    const addHandlers = getRouteHandlers(router, '/classrooms/:classId/sessions/add', 'post');
+    res = buildRes();
+    await invokeHandlers(addHandlers, {
+        params: { classId: 'class-2' },
+        body: {
+            targetLocalDate: '2026-04-07',
+            targetLocalTime: '10:00',
+            durationMinutes: 120
+        }
+    }, res);
+    assert.strictEqual(res._status, 200, `Admin adding session failed: ${JSON.stringify(res._json)}`);
+    assert.strictEqual(res._json.session.teacherUid, 'teacher-2', 'Session should be assigned to primary teacher of classroom');
+
+    // 5. Admin reschedules teacher-2's session
+    const rescheduleHandlers = getRouteHandlers(router, '/sessions/:sessionId/reschedule', 'patch');
+    res = buildRes();
+    await invokeHandlers(rescheduleHandlers, {
+        params: { sessionId: 'session-t2' },
+        body: {
+            targetLocalDate: '2026-04-08',
+            targetLocalTime: '15:00',
+            durationMinutes: 120
+        }
+    }, res);
+    assert.strictEqual(res._status, 200, `Admin rescheduling failed: ${JSON.stringify(res._json)}`);
+
+    // 6. Admin cancels teacher-1's session
+    const cancelHandlers = getRouteHandlers(router, '/sessions/:sessionId/cancel', 'post');
+    res = buildRes();
+    await invokeHandlers(cancelHandlers, {
+        params: { sessionId: 'session-t1' }
+    }, res);
+    assert.strictEqual(res._status, 200, `Admin cancelling failed: ${JSON.stringify(res._json)}`);
+}
+
 (async () => {
     await testAddMultiPersistsPattern();
     await testTeacherOutcomeUpdatesContractCounting();
     await testTeacherApiErrorMessages();
+    await testAdminCanManageAllTeacherSchedules();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

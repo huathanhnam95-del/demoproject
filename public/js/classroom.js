@@ -35,7 +35,15 @@
         mediaPreview: document.getElementById('media-preview-container'),
         validationNote: document.getElementById('validation-note'),
         timerText: document.getElementById('recording-timer'),
-        statusBadge: document.getElementById('submission-status-badge')
+        statusBadge: document.getElementById('submission-status-badge'),
+
+        // Teacher Schedule
+        btnTeacherScheduleLink: document.getElementById('btn-teacher-schedule-link'),
+        tabSchedule: document.getElementById('tab-schedule'),
+        viewSchedule: document.getElementById('view-schedule'),
+        scheduleContainer: document.getElementById('schedule-list-container'),
+        btnScheduleRefresh: document.getElementById('btn-schedule-refresh'),
+        btnScheduleFullWorkspace: document.getElementById('btn-schedule-full-workspace')
     };
 
     let currentUser = null;
@@ -92,6 +100,74 @@
         }
     }
 
+    async function checkTeacherOrAdmin(user) {
+        if (!user) return { isTeacher: false, isAdmin: false };
+        try {
+            const tokenResult = await user.getIdTokenResult?.();
+            const claims = tokenResult?.claims || {};
+            if (claims.admin === true || claims.isAdmin === true || claims.role === 'admin' || claims.crmRole === 'admin') {
+                return { isTeacher: true, isAdmin: true };
+            }
+            if (claims.isTeacher === true || claims.teacher === true || claims.crmRole === 'teacher' || claims.role === 'teacher') {
+                return { isTeacher: true, isAdmin: false };
+            }
+        } catch (_) {}
+
+        try {
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                const db = firebase.firestore();
+                const snap = await db.collection('users').doc(user.uid).get();
+                if (snap.exists) {
+                    const data = snap.data() || {};
+                    const crmRole = String(data.crmRole || '').trim().toLowerCase();
+                    const role = String(data.role || '').trim().toLowerCase();
+                    if (data.isAdmin === true || role === 'admin' || crmRole === 'admin') {
+                        return { isTeacher: true, isAdmin: true };
+                    }
+                    if (data.isTeacher === true || role === 'teacher' || crmRole === 'teacher') {
+                        return { isTeacher: true, isAdmin: false };
+                    }
+                }
+            }
+        } catch (_) {}
+
+        try {
+            if (window.ClassroomAPI && typeof window.ClassroomAPI.checkTeacherStatus === 'function') {
+                const status = await window.ClassroomAPI.checkTeacherStatus();
+                if (status.isAdmin) return { isTeacher: true, isAdmin: true };
+                if (status.isTeacher) return { isTeacher: true, isAdmin: false };
+            } else if (user.getIdToken) {
+                const idToken = await user.getIdToken();
+                const res = await fetch('/api/teacher/status', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${idToken}` },
+                    cache: 'no-store'
+                });
+                const json = await res.json().catch(() => null);
+                if (res.ok && json?.data?.isTeacher) {
+                    return { isTeacher: true, isAdmin: Boolean(json?.data?.isAdmin) };
+                }
+            }
+        } catch (_) {}
+
+        try {
+            if (user.getIdToken) {
+                const idToken = await user.getIdToken();
+                const res = await fetch('/api/admin/status', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${idToken}` },
+                    cache: 'no-store'
+                });
+                const result = await res.json().catch(() => null);
+                if (res.ok && result?.success && result?.isAdmin) {
+                    return { isTeacher: true, isAdmin: true };
+                }
+            }
+        } catch (_) {}
+
+        return { isTeacher: false, isAdmin: false };
+    }
+
     async function init() {
         await initFirebaseFromServer();
         currentUser = await waitForAuthUser();
@@ -108,9 +184,30 @@
 
         setupUI();
         loadClassrooms();
+
+        checkTeacherOrAdmin(currentUser).then(({ isTeacher, isAdmin }) => {
+            if (isTeacher || isAdmin) {
+                const btnHeader = document.getElementById('btn-teacher-schedule-link');
+                const tabSched = document.getElementById('tab-schedule');
+                const btnFull = document.getElementById('btn-schedule-full-workspace');
+                if (btnHeader) btnHeader.style.display = 'inline-flex';
+                if (tabSched) tabSched.style.display = 'inline-flex';
+                if (btnFull) btnFull.style.display = 'inline-flex';
+
+                if (window.location.hash === '#schedule') {
+                    tabSched?.click();
+                }
+            }
+        }).catch((err) => {
+            console.warn('[Classroom] Teacher check failed:', err);
+        });
     }
 
     function setupUI() {
+        // Re-query tabs and panels in case new tabs/views were rendered
+        elements.tabs = document.querySelectorAll('.nav-tab');
+        elements.panels = document.querySelectorAll('.view-panel');
+
         // Tabs
         elements.tabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -120,8 +217,18 @@
                 const viewId = `view-${tab.dataset.tab}`;
                 const viewEl = document.getElementById(viewId);
                 if (viewEl) viewEl.style.display = 'block';
+                if (tab.dataset.tab === 'schedule') {
+                    loadScheduleData();
+                }
             });
         });
+
+        const btnRefreshSchedule = document.getElementById('btn-schedule-refresh');
+        if (btnRefreshSchedule) {
+            btnRefreshSchedule.addEventListener('click', () => {
+                loadScheduleData();
+            });
+        }
 
         // Todo Filters
         elements.todoFilters.forEach(btn => {
@@ -276,12 +383,31 @@
     async function loadClassrooms() {
         if (!window.ClassroomAPI) return;
         try {
-            const classrooms = await window.ClassroomAPI.fetchClassrooms();
-            elements.classSwitcher.innerHTML = classrooms.map((c) => {
-                const classId = c.id || c.classroomId;
-                return `<option value="${escapeHtml(classId)}">${escapeHtml(c.name)}</option>`;
-            }).join('');
-            if (classrooms.length > 0) {
+            let classrooms = [];
+            try {
+                classrooms = await window.ClassroomAPI.fetchClassrooms();
+            } catch (e) {
+                // If not admin, fetch classrooms assigned to the teacher via scheduler workspace
+                try {
+                    const workspace = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace();
+                    if (Array.isArray(workspace?.classrooms) && workspace.classrooms.length) {
+                        classrooms = workspace.classrooms;
+                    }
+                } catch (_) {}
+            }
+            if (!classrooms.length) {
+                try {
+                    const workspace = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace();
+                    if (Array.isArray(workspace?.classrooms) && workspace.classrooms.length) {
+                        classrooms = workspace.classrooms;
+                    }
+                } catch (_) {}
+            }
+            if (elements.classSwitcher && classrooms.length > 0) {
+                elements.classSwitcher.innerHTML = classrooms.map((c) => {
+                    const classId = c.id || c.classroomId;
+                    return `<option value="${escapeHtml(classId)}">${escapeHtml(c.name || classId)}</option>`;
+                }).join('');
                 activeClassId = classrooms[0].id || classrooms[0].classroomId;
                 loadClassData();
             }
@@ -479,6 +605,119 @@
         elements.modal.style.display = 'none';
         activeWorkId = null;
         currentSubmission = null;
+    }
+
+    async function loadScheduleData() {
+        const container = document.getElementById('schedule-list-container');
+        if (!container) return;
+        container.innerHTML = '<p class="empty-state">Loading schedule...</p>';
+
+        if (!window.ClassroomAPI?.fetchTeacherSchedulerWorkspace) {
+            container.innerHTML = '<p class="empty-state">Schedule API unavailable.</p>';
+            return;
+        }
+
+        try {
+            const now = new Date();
+            const weekday = now.getDay() || 7;
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - weekday + 1);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 13); // show 2 weeks of sessions
+
+            const pad = (n) => String(n).padStart(2, '0');
+            const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+            const payload = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace({
+                from: fmtDate(weekStart),
+                to: fmtDate(weekEnd)
+            });
+
+            const classrooms = Array.isArray(payload?.classrooms) ? payload.classrooms : [];
+            const classMap = new Map();
+            classrooms.forEach((c) => {
+                const id = c.id || c.classroomId;
+                if (id) classMap.set(id, c);
+            });
+
+            const sessions = Array.isArray(payload?.sessions) ? payload.sessions : [];
+            if (!sessions.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p style="margin-bottom:8px;">No scheduled sessions in the next two weeks.</p>
+                        <a href="crm-admin.html#courses/teacher-schedule" class="schedule-action-btn primary" style="display:inline-flex; margin-top:8px;">Open Full Scheduler &rarr;</a>
+                    </div>
+                `;
+                return;
+            }
+
+            sessions.sort((a, b) => {
+                const dateA = String(a.scheduledLocalDate || '');
+                const dateB = String(b.scheduledLocalDate || '');
+                if (dateA !== dateB) return dateA.localeCompare(dateB);
+                const timeA = String(a.scheduledLocalTime || '');
+                const timeB = String(b.scheduledLocalTime || '');
+                return timeA.localeCompare(timeB);
+            });
+
+            const formatRange = (start, duration) => {
+                if (!start) return '';
+                const [h, m] = start.split(':').map(Number);
+                if (isNaN(h) || isNaN(m)) return start;
+                const totalMins = (h * 60) + m + (Number(duration) || 60);
+                const endH = Math.floor(totalMins / 60) % 24;
+                const endM = totalMins % 60;
+                return `${pad(h)}:${pad(m)} – ${pad(endH)}:${pad(endM)}`;
+            };
+
+            const formatDayLabel = (dateStr) => {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return dateStr;
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+            };
+
+            const html = sessions.map((s) => {
+                const cls = classMap.get(s.classId);
+                const className = cls?.name || s.className || s.classId || 'Class';
+                const timeRange = formatRange(s.scheduledLocalTime, s.durationMinutes);
+                const dayLabel = formatDayLabel(s.scheduledLocalDate);
+                const unitLabel = s.unitType === 'overflow'
+                    ? `Overflow ${s.overflowSequence || ''}`.trim()
+                    : (s.contractUnitIndex ? `Unit ${s.contractUnitIndex}` : '');
+                const status = String(s.status || 'scheduled').toLowerCase();
+                const badgeClass = status === 'cancelled' ? 'cancelled' : (s.sessionOutcome && s.sessionOutcome !== 'none' ? 'completed' : 'scheduled');
+                const badgeText = status === 'cancelled' ? 'Cancelled' : (s.sessionOutcome && s.sessionOutcome !== 'none' ? s.sessionOutcome : 'Scheduled');
+
+                return `
+                    <div class="schedule-card">
+                        <div class="schedule-card-info">
+                            <div class="schedule-card-header">
+                                <span class="schedule-card-title">${escapeHtml(className)}</span>
+                                <span class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</span>
+                                ${unitLabel ? `<span class="schedule-badge" style="background:#f1f5f9;color:#475569;">${escapeHtml(unitLabel)}</span>` : ''}
+                            </div>
+                            <div class="schedule-card-meta">
+                                <span class="schedule-card-time">🗓️ ${escapeHtml(dayLabel)} • ⏰ ${escapeHtml(timeRange)}</span>
+                                <span>${Number(s.durationMinutes || 60)} mins</span>
+                                ${s.primaryTeacherName ? `<span>👤 ${escapeHtml(s.primaryTeacherName)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            <a href="crm-admin.html#courses/teacher-schedule" class="schedule-action-btn" title="View details in scheduler">View in CRM &rarr;</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        } catch (err) {
+            console.error('[Classroom] Failed to load schedule data:', err);
+            container.innerHTML = `<p class="empty-state" style="color:var(--accent-missing);">Failed to load schedule: ${escapeHtml(err.message || 'Unknown error')}</p>`;
+        }
     }
 
     function escapeHtml(str) {

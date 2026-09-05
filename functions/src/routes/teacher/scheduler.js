@@ -215,6 +215,30 @@ async function listTeacherScheduledSessions(db, teacherUid, options = {}) {
     return filterSessionsByRange(sessions, from, to);
 }
 
+async function listAllScheduledSessions(db, options = {}) {
+    const from = cleanOptionalString(options.from);
+    const to = cleanOptionalString(options.to);
+
+    if (from && to) {
+        try {
+            const boundedSnap = await db.collection(CRM_SCHEDULED_SESSIONS)
+                .where('status', '==', 'scheduled')
+                .where('scheduledLocalDate', '>=', from)
+                .where('scheduledLocalDate', '<=', to)
+                .get();
+            return boundedSnap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
+        } catch (error) {
+            void error;
+        }
+    }
+
+    const snap = await db.collection(CRM_SCHEDULED_SESSIONS)
+        .where('status', '==', 'scheduled')
+        .get();
+    const sessions = snap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
+    return filterSessionsByRange(sessions, from, to);
+}
+
 async function syncClassroomScheduleState(db, classId, options = {}) {
     const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
     const classroomSnap = options.classroomSnap || await classroomRef.get();
@@ -275,13 +299,30 @@ async function listTeacherClassrooms(db, teacherUid) {
     });
 }
 
-async function loadTeacherClassroom(db, classId, teacherUid) {
+async function listAllClassrooms(db) {
+    let query = db.collection(CRM_CLASSROOMS);
+    if (typeof query.limit === 'function') {
+        query = query.limit(200);
+    }
+    const snap = await query.get();
+    const results = snap.docs.map((doc) => ({
+        id: doc.id,
+        data: doc.data() || {}
+    }));
+    return results.sort((a, b) => {
+        const timeA = a.data.createdAt?.toMillis ? a.data.createdAt.toMillis() : 0;
+        const timeB = b.data.createdAt?.toMillis ? b.data.createdAt.toMillis() : 0;
+        return timeB - timeA;
+    });
+}
+
+async function loadTeacherClassroom(db, classId, teacherUid, options = {}) {
     const classroomSnap = await db.collection(CRM_CLASSROOMS).doc(classId).get();
     if (!classroomSnap.exists) {
         return { status: 'missing', classId };
     }
     const classroom = classroomSnap.data() || {};
-    if (cleanOptionalString(classroom.primaryTeacherUid) !== cleanOptionalString(teacherUid)) {
+    if (!options.isAdmin && cleanOptionalString(classroom.primaryTeacherUid) !== cleanOptionalString(teacherUid)) {
         return { status: 'forbidden', classId };
     }
     return {
@@ -349,13 +390,13 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
         const uid = cleanOptionalString(user?.uid);
         if (!uid) return { uid: null, isTeacher: false, isAdmin: false, ok: false };
 
-        const claimTeacher = user?.isTeacher === true;
+        const claimTeacher = user?.isTeacher === true || user?.teacher === true || String(user?.role || '').trim().toLowerCase() === 'teacher' || String(user?.crmRole || '').trim().toLowerCase() === 'teacher';
         const adminEmail = cleanOptionalString(deps.adminEmail || process.env.ADMIN_EMAIL);
         const tokenEmail = cleanOptionalString(user?.email);
         const emailAdmin = !!(adminEmail && tokenEmail && tokenEmail.toLowerCase() === adminEmail.toLowerCase());
-        const claimAdmin = user?.isAdmin === true || emailAdmin;
+        const claimAdmin = user?.isAdmin === true || user?.admin === true || String(user?.role || '').trim().toLowerCase() === 'admin' || String(user?.crmRole || '').trim().toLowerCase() === 'admin' || emailAdmin;
         if (claimTeacher || claimAdmin) {
-            return { uid, isTeacher: claimTeacher, isAdmin: claimAdmin, ok: true };
+            return { uid, isTeacher: claimTeacher || claimAdmin, isAdmin: claimAdmin, ok: true };
         }
 
         const cached = getCachedTeacherAccess(uid);
@@ -366,15 +407,28 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
         try {
             const snap = await db.collection('users').doc(uid).get();
             const data = snap.exists ? (snap.data() || {}) : {};
-            profileAdmin = data.isAdmin === true;
-            profileTeacher = data.isTeacher === true || String(data.crmRole || '').trim().toLowerCase() === 'teacher';
+            const crmRole = String(data.crmRole || '').trim().toLowerCase();
+            const role = String(data.role || '').trim().toLowerCase();
+            profileAdmin = data.isAdmin === true || crmRole === 'admin' || role === 'admin';
+            profileTeacher = data.isTeacher === true || crmRole === 'teacher' || role === 'teacher';
         } catch (error) {
             void error;
         }
 
+        if (!profileTeacher && !profileAdmin) {
+            try {
+                const classSnap = await db.collection(CRM_CLASSROOMS).where('primaryTeacherUid', '==', uid).limit(1).get();
+                if (!classSnap.empty) {
+                    profileTeacher = true;
+                }
+            } catch (error) {
+                void error;
+            }
+        }
+
         const resolved = {
             uid,
-            isTeacher: profileTeacher,
+            isTeacher: profileTeacher || profileAdmin,
             isAdmin: profileAdmin,
             ok: profileTeacher || profileAdmin
         };
@@ -397,10 +451,18 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     const requireTeacherHandlers = [deps.authMiddleware, requireTeacherAccess].filter(Boolean);
 
+    router.get('/status', ...requireTeacherHandlers, (req, res) => {
+        return sendSuccess(res, {
+            isTeacher: req.teacherAccess?.isTeacher === true,
+            isAdmin: req.teacherAccess?.isAdmin === true,
+            uid: req.user?.uid || null
+        }, 'Teacher access verified.');
+    });
+
     router.get('/scheduler/workspace', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
-            if (!teacherUid) {
+            const callerUid = cleanOptionalString(req.user?.uid);
+            if (!callerUid) {
                 return sendError(res, 401, 'UNAUTHORIZED', 'Missing authenticated user.');
             }
 
@@ -408,10 +470,24 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             const from = cleanOptionalString(req.query?.from, defaultFrom);
             const to = cleanOptionalString(req.query?.to, endOfCurrentWeek(from));
 
-            const [classrooms, sessions] = await Promise.all([
-                listTeacherClassrooms(db, teacherUid),
-                listTeacherScheduledSessions(db, teacherUid, { from, to })
-            ]);
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            const requestedTeacher = cleanOptionalString(req.query?.teacherUid || req.query?.teacherId);
+            const targetTeacherUid = isAdmin && requestedTeacher ? requestedTeacher : callerUid;
+
+            let classrooms;
+            let sessions;
+            if (isAdmin && targetTeacherUid === 'all') {
+                [classrooms, sessions] = await Promise.all([
+                    listAllClassrooms(db),
+                    listAllScheduledSessions(db, { from, to })
+                ]);
+            } else {
+                [classrooms, sessions] = await Promise.all([
+                    listTeacherClassrooms(db, targetTeacherUid),
+                    listTeacherScheduledSessions(db, targetTeacherUid, { from, to })
+                ]);
+            }
+
             const classIdSet = new Set(classrooms.map((entry) => entry.id));
             const filteredSessions = sessions
                 .filter((session) => classIdSet.has(String(session.classId || '').trim()))
@@ -425,7 +501,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                     data: () => entry.data
                 }, entry.id)),
                 sessions: filteredSessions,
-                teacherUid,
+                teacherUid: targetTeacherUid,
                 from,
                 to
             }, 'Teacher scheduler workspace loaded.');
@@ -436,13 +512,14 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     router.post('/classrooms/:classId/sessions/add', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
+            const callerUid = cleanOptionalString(req.user?.uid);
             const classId = cleanOptionalString(req.params?.classId);
-            if (!teacherUid || !classId) {
+            if (!callerUid || !classId) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or class identifier.');
             }
 
-            const access = await loadTeacherClassroom(db, classId, teacherUid);
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            const access = await loadTeacherClassroom(db, classId, callerUid, { isAdmin });
             if (access.status === 'missing') {
                 return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
             }
@@ -451,13 +528,16 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const classroom = access.classroom;
+            const effectiveTeacherUid = cleanOptionalString(req.body?.teacherUid)
+                || cleanOptionalString(classroom.primaryTeacherUid)
+                || callerUid;
             const scheduleConfig = classroom.scheduleConfig || {};
             const classSessions = await listClassSessions(db, classId);
             const intent = extractLocalIntent(req.body || {}, scheduleConfig.timezone || null, scheduleConfig.sessionMinutes || null);
             const preview = buildAddSessionPreview({
                 classId,
                 courseId: classroom.courseId || null,
-                teacherUid,
+                teacherUid: effectiveTeacherUid,
                 totalInstructionMinutes: Number(scheduleConfig.totalInstructionMinutes || 0) || null,
                 targetSessionCount: Number(scheduleConfig.targetSessionCount || 0) || null,
                 sessionMinutes: Number(scheduleConfig.sessionMinutes || 0) || intent.durationMinutes || null,
@@ -478,7 +558,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const occurrence = preview.validOccurrences[0];
-            const teacherSessions = await listTeacherScheduledSessions(db, teacherUid);
+            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
             const teacherConflict = findTeacherConflict(teacherSessions, occurrence);
             if (teacherConflict) {
                 return sendError(res, 409, 'TEACHER_CONFLICT', 'Teacher conflict with an existing session.', {
@@ -489,11 +569,11 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
             const payload = {
                 ...occurrence,
-                teacherUid,
+                teacherUid: effectiveTeacherUid,
                 createdAt: serverTimestamp(),
-                createdBy: teacherUid,
+                createdBy: callerUid,
                 updatedAt: serverTimestamp(),
-                updatedBy: teacherUid
+                updatedBy: callerUid
             };
             await ref.set(payload);
             const scheduleState = await syncClassroomScheduleState(db, classId, { bumpVersion: true });
@@ -502,7 +582,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 action: 'teacher.session.add',
                 entityType: 'classroom',
                 entityId: classId,
-                metadata: { sessionId: ref.id }
+                metadata: { sessionId: ref.id, teacherUid: effectiveTeacherUid }
             }, { user: req.user });
 
             return sendSuccess(res, {
@@ -518,13 +598,14 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     router.post('/classrooms/:classId/sessions/add-multi', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
+            const callerUid = cleanOptionalString(req.user?.uid);
             const classId = cleanOptionalString(req.params?.classId);
-            if (!teacherUid || !classId) {
+            if (!callerUid || !classId) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or class identifier.');
             }
 
-            const access = await loadTeacherClassroom(db, classId, teacherUid);
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            const access = await loadTeacherClassroom(db, classId, callerUid, { isAdmin });
             if (access.status === 'missing') {
                 return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
             }
@@ -533,6 +614,9 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const classroom = access.classroom;
+            const effectiveTeacherUid = cleanOptionalString(req.body?.teacherUid)
+                || cleanOptionalString(classroom.primaryTeacherUid)
+                || callerUid;
             const scheduleConfig = classroom.scheduleConfig || {};
             const weekdays = normalizeWeekdays(req.body?.weekdays);
             if (!weekdays.length) {
@@ -550,7 +634,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const classSessions = await listClassSessions(db, classId);
-            const teacherSessions = await listTeacherScheduledSessions(db, teacherUid);
+            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
             const workingClassSessions = [...classSessions];
             const workingTeacherSessions = [...teacherSessions];
             const preparedSessions = [];
@@ -567,7 +651,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                     const preview = buildAddSessionPreview({
                         classId,
                         courseId: classroom.courseId || null,
-                        teacherUid,
+                        teacherUid: effectiveTeacherUid,
                         totalInstructionMinutes,
                         targetSessionCount,
                         sessionMinutes,
@@ -623,11 +707,11 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                     const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
                     const payload = {
                         ...session,
-                        teacherUid,
+                        teacherUid: effectiveTeacherUid,
                         createdAt: serverTimestamp(),
-                        createdBy: teacherUid,
+                        createdBy: callerUid,
                         updatedAt: serverTimestamp(),
-                        updatedBy: teacherUid
+                        updatedBy: callerUid
                     };
                     createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
                     batch.set(ref, payload);
@@ -638,11 +722,11 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                     const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
                     const payload = {
                         ...session,
-                        teacherUid,
+                        teacherUid: effectiveTeacherUid,
                         createdAt: serverTimestamp(),
-                        createdBy: teacherUid,
+                        createdBy: callerUid,
                         updatedAt: serverTimestamp(),
-                        updatedBy: teacherUid
+                        updatedBy: callerUid
                     };
                     await ref.set(payload);
                     createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
@@ -661,7 +745,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 action: 'teacher.session.add_multi',
                 entityType: 'classroom',
                 entityId: classId,
-                metadata: { createdCount: createdSessions.length, skippedCount: skippedOccurrences.length }
+                metadata: { createdCount: createdSessions.length, skippedCount: skippedOccurrences.length, teacherUid: effectiveTeacherUid }
             }, { user: req.user });
 
             return sendSuccess(res, {
@@ -677,9 +761,9 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     router.patch('/sessions/:sessionId/reschedule', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
+            const callerUid = cleanOptionalString(req.user?.uid);
             const sessionId = cleanOptionalString(req.params?.sessionId);
-            if (!teacherUid || !sessionId) {
+            if (!callerUid || !sessionId) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
             }
 
@@ -689,14 +773,15 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
             }
             const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
-            if (cleanOptionalString(existing.teacherUid) !== teacherUid) {
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only edit your own sessions.');
             }
             if (!cleanOptionalString(existing.classId)) {
                 return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
             }
 
-            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), teacherUid);
+            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
             if (access.status !== 'ok') {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
             }
@@ -718,10 +803,11 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 timezone: intent.timezone || existing.timezone || null,
                 version: Number(existing.version || 1) + 1,
                 updatedAt: serverTimestamp(),
-                updatedBy: teacherUid
+                updatedBy: callerUid
             };
 
-            const teacherSessions = await listTeacherScheduledSessions(db, teacherUid);
+            const effectiveTeacherUid = cleanOptionalString(existing.teacherUid) || cleanOptionalString(access.classroom?.primaryTeacherUid) || callerUid;
+            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
             const teacherConflict = findTeacherConflict(teacherSessions, next, [sessionId]);
             if (teacherConflict) {
                 return sendError(res, 409, 'TEACHER_CONFLICT', 'Teacher conflict with an existing session.', {
@@ -735,7 +821,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 action: 'teacher.session.reschedule',
                 entityType: 'scheduled_session',
                 entityId: sessionId,
-                metadata: { classId: existing.classId || null }
+                metadata: { classId: existing.classId || null, teacherUid: effectiveTeacherUid }
             }, { user: req.user });
 
             return sendSuccess(res, {
@@ -750,9 +836,9 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     router.post('/sessions/:sessionId/cancel', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
+            const callerUid = cleanOptionalString(req.user?.uid);
             const sessionId = cleanOptionalString(req.params?.sessionId);
-            if (!teacherUid || !sessionId) {
+            if (!callerUid || !sessionId) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
             }
 
@@ -762,14 +848,15 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
             }
             const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
-            if (cleanOptionalString(existing.teacherUid) !== teacherUid) {
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only cancel your own sessions.');
             }
             if (isLockedSession(existing)) {
                 return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be cancelled.');
             }
 
-            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), teacherUid);
+            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
             if (access.status !== 'ok') {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only cancel sessions for your own classrooms.');
             }
@@ -779,7 +866,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 contractCountState: 'does_not_count',
                 version: Number(existing.version || 1) + 1,
                 updatedAt: serverTimestamp(),
-                updatedBy: teacherUid
+                updatedBy: callerUid
             }, { merge: true });
             const scheduleState = await syncClassroomScheduleState(db, cleanOptionalString(existing.classId), { bumpVersion: true });
 
@@ -802,9 +889,9 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     router.post('/sessions/:sessionId/outcome', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
+            const callerUid = cleanOptionalString(req.user?.uid);
             const sessionId = cleanOptionalString(req.params?.sessionId);
-            if (!teacherUid || !sessionId) {
+            if (!callerUid || !sessionId) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
             }
 
@@ -816,14 +903,15 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
-            if (cleanOptionalString(existing.teacherUid) !== teacherUid) {
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
             }
             if (String(existing.status || 'scheduled') === 'cancelled' || isLockedSession(existing)) {
                 return sendError(res, 409, 'SESSION_LOCKED', 'Locked or cancelled sessions cannot be updated.');
             }
 
-            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), teacherUid);
+            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
             if (access.status !== 'ok') {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only update sessions for your own classrooms.');
             }
@@ -836,7 +924,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 }),
                 version: Number(existing.version || 1) + 1,
                 updatedAt: serverTimestamp(),
-                updatedBy: teacherUid
+                updatedBy: callerUid
             };
 
             await sessionRef.set(patch, { merge: true });

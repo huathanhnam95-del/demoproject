@@ -285,6 +285,16 @@ async function main() {
   console.log('  Diagnostic insight text:', insightText);
   assert.ok(insightText.includes('Acoustic Diagnosis'), 'Insight card must have "Acoustic Diagnosis" header');
   assert.ok(insightText.includes('/æt/'), 'Insight card must show candidate substitution /æt/');
+  assert.ok(insightText.includes('Tip'), 'Insight card must contain coaching Tip badge or label');
+  assert.ok(insightText.includes('upper teeth'), 'Insight card must contain upper teeth articulatory cue');
+  assert.ok(insightText.includes('/ər/'), 'Insight card must show Oxford American /ər/');
+  assert.ok(!insightText.includes('/ɚ/'), 'Insight card must NOT contain un-normalized /ɚ/');
+  assert.ok(!insightText.includes('/ɹ/'), 'Insight card must NOT contain un-normalized /ɹ/');
+
+  const tipsList = insightCard.locator('.crm-insight-tip');
+  const tipCount = await tipsList.count();
+  console.log('  Coaching tips count:', tipCount);
+  assert.ok(tipCount >= 2, 'Insight card must have at least 2 coaching tips for "after" syllables');
 
   // Test interactive syllable chip click
   console.log('[Browser Test] Testing click on syllable chip for audio playback...');
@@ -294,6 +304,49 @@ async function main() {
   const afterScreenshotPath = path.join(resultsDir, 'crm-entrance-test-after-tooltip.png');
   await page.screenshot({ path: afterScreenshotPath });
   console.log('[Browser Test] After tooltip screenshot captured to:', afterScreenshotPath);
+
+  // Test hovering on Q1 "data" for Oxford American IPA model verification
+  console.log('[Browser Test] Testing hover on Q1 "data" for Oxford American IPA verification...');
+  const dataBtn = await page.locator('.crm-result-question:nth-of-type(1) button.crm-word-token:has-text("data")').first();
+  assert.ok(await dataBtn.count() > 0, '"data" token must exist in Q1');
+  await dataBtn.hover();
+  await page.waitForTimeout(250);
+
+  const dataWord = await tooltipLocator.locator('.crm-tooltip-word').textContent();
+  const dataChips = tooltipLocator.locator('.crm-syl-chip');
+  const dataChipCount = await dataChips.count();
+  console.log('  Data word:', dataWord, 'chips count:', dataChipCount);
+  assert.strictEqual(dataWord.toLowerCase(), 'data', 'Tooltip word must be "data"');
+  assert.strictEqual(dataChipCount, 2, '"data" must have 2 syllable chips ("da", "ta")');
+
+  const dataChip2Text = await dataChips.nth(1).textContent();
+  console.log('  Data Chip 2 text:', dataChip2Text);
+  assert.ok(dataChip2Text.includes('ta'), 'Chip 2 must contain "ta"');
+  assert.ok(dataChip2Text.includes('38%'), 'Chip 2 must show 38%');
+
+  // Verify diagnostic insight card for data
+  const dataInsightCard = tooltipLocator.locator('.crm-tooltip-insight');
+  assert.ok(await dataInsightCard.count() > 0, 'Insight card must be rendered for "data"');
+  const dataInsightText = await dataInsightCard.textContent();
+  console.log('  Data diagnostic insight text:', dataInsightText);
+
+  // Oxford American IPA Model assertions for data
+  assert.ok(dataInsightText.includes('/pæ/'), '"da" diagnosis must show candidate /pæ/');
+  assert.ok(dataInsightText.includes('/tr/'), '"ta" diagnosis must show Oxford American /tr/');
+  assert.ok(dataInsightText.includes('/r/ instead of /ə/'), '"ta" must show /r/ instead of /ə/');
+  assert.ok(!dataInsightText.includes('/tɹ/'), '"ta" must NOT contain un-normalized /tɹ/');
+  assert.ok(!dataInsightText.includes('/ɹ/'), 'Insight text must NOT contain un-normalized /ɹ/');
+  assert.ok(!dataInsightText.includes('— Sounded like'), 'Must not contain redundant repeated observation');
+
+  // Coaching tips for data
+  const dataTips = dataInsightCard.locator('.crm-insight-tip');
+  assert.ok(await dataTips.count() >= 2, '"data" must render coaching tips for both syllables');
+  assert.ok(dataInsightText.includes('roof of your mouth') || dataInsightText.includes('lips apart'), '"da" tip must have physical cue');
+  assert.ok(dataInsightText.includes('tongue flat') || dataInsightText.includes('neutral'), '"ta" tip must have physical cue');
+
+  const dataScreenshotPath = path.join(resultsDir, 'crm-entrance-test-data-tooltip.png');
+  await page.screenshot({ path: dataScreenshotPath });
+  console.log('[Browser Test] Data tooltip screenshot captured to:', dataScreenshotPath);
 
   // Test hovering on "indicators" in Q2 (multi-syllabic with green/amber breakdown)
   console.log('[Browser Test] Testing hover on "indicators" for syllable breakdown...');

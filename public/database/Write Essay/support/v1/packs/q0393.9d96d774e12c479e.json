@@ -1,0 +1,1811 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "393",
+  "title": "#393 Pressing Climate",
+  "prompt": "Do you agree that climate change is the most pressing issue facing our generation? Support your viewpoint with reasons or examples.",
+  "source": {
+    "promptSha256": "c52c75c9549a020bc70131476516e0f3a6b1656c4104e6aef6b1afccec50f32e",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Do you agree that climate change is the most pressing issue facing our generation?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Support your viewpoint with reasons or examples.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Climate",
+      "Environment"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "climate",
+        "enGloss": "Key concept related to climate.",
+        "viGloss": "khí hậu"
+      },
+      {
+        "term": "pressing",
+        "enGloss": "Key concept related to pressing.",
+        "viGloss": "ép"
+      },
+      {
+        "term": "generation",
+        "enGloss": "Key concept related to generation.",
+        "viGloss": "thế hệ"
+      },
+      {
+        "term": "Support",
+        "enGloss": "Key concept related to support.",
+        "viGloss": "hỗ trợ"
+      },
+      {
+        "term": "viewpoint",
+        "enGloss": "Key concept related to viewpoint.",
+        "viGloss": "quan điểm"
+      },
+      {
+        "term": "reasons",
+        "enGloss": "Key concept related to reasons.",
+        "viGloss": "lý do"
+      },
+      {
+        "term": "examples",
+        "enGloss": "Key concept related to examples.",
+        "viGloss": "ví dụ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "The first point argues that individual changes in daily habits are necessary to combat climate change.",
+        "vi": "Góc nhìn: The first point argues that individual changes in daily habits are necessary to combat climate change.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "The second point argues that government action and rules are needed to help protect the climate.",
+        "vi": "Góc nhìn: The second point argues that government action and rules are needed to help protect the climate.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Human worry about climate change is too much, presenting two main points: first, climate shifts happen naturally, and second, local choices and government rules are sufficient for environmental protection.",
+        "vi": "Góc nhìn: Human worry about climate change is too much, presenting two main points: first, climate shifts happen naturally, and second, local choices and government rules are sufficient for environmental protection.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "The structure follows the required constraints: Introduction (3 sentences), Body 1 (5 sentences, PEEL), Body 2 (5 sentences, PEEL), and Conclusion (2 sentences). Vocabulary is simple (A2-B1), and advanced linking words are avoided.",
+        "vi": "Góc nhìn: The structure follows the required constraints: Introduction (3 sentences), Body 1 (5 sentences, PEEL), Body 2 (5 sentences, PEEL), and Conclusion (2 sentences). Vocabulary is simple (A2-B1), and advanced linking words are avoided.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "The first point argues that governments must take strong action to reduce pollution levels in major cities, focusing on public transport and planning.",
+        "vi": "Góc nhìn: The first point argues that governments must take strong action to reduce pollution levels in major cities, focusing on public transport and planning.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "The second point argues that individuals have a big role to play in protecting the planet, focusing on lifestyle changes like diet.",
+        "vi": "Góc nhìn: The second point argues that individuals have a big role to play in protecting the planet, focusing on lifestyle changes like diet.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Climate change is not solely caused by human activity, focusing on natural cycles and human adaptation.",
+        "vi": "Góc nhìn: Climate change is not solely caused by human activity, focusing on natural cycles and human adaptation.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Clear structural markers (In other words, For instance, As a result, Hence, etc.) and maintains a consistent B2 vocabulary level.",
+        "vi": "Góc nhìn: Clear structural markers (In other words, For instance, As a result, Hence, etc.) and maintains a consistent B2 vocabulary level.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "climate",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "action",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "habits",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "public transport",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "climate",
+            "enGloss": "weather patterns over a long time",
+            "viGloss": "khí hậu",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "action",
+            "enGloss": "steps taken to achieve something",
+            "viGloss": "hành động",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "habits",
+            "enGloss": "usual ways of doing things",
+            "viGloss": "thói quen",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "public transport",
+            "enGloss": "buses or trains for many people",
+            "viGloss": "phương tiện giao thông công cộng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "pollution",
+            "enGloss": "dirt or bad air",
+            "viGloss": "ô nhiễm",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "government",
+            "enGloss": "the ruling group of people",
+            "viGloss": "chính phủ",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "adverse reaction",
+            "enGloss": "An unfavorable, harmful response to a treatment, stimulus, or decision.",
+            "viGloss": "Cụm từ học thuật: phản ứng bất lợi / tác dụng phụ"
+          },
+          {
+            "term": "appropriate action",
+            "enGloss": "A suitable and timely response taken to address a situation.",
+            "viGloss": "Cụm từ học thuật: hành động phù hợp, kịp thời"
+          },
+          {
+            "term": "business transaction",
+            "enGloss": "An exchange of goods, services, or capital between commercial entities.",
+            "viGloss": "Cụm từ học thuật: giao dịch kinh doanh, thương mại"
+          },
+          {
+            "term": "central government",
+            "enGloss": "The national authority governing a sovereign state as distinct from local governments.",
+            "viGloss": "Cụm từ học thuật: chính phủ trung ương"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Climate ____.",
+          "point1": "The first point argues that individual changes in daily habits are necessary to combat climate change.",
+          "point2": "The second point argues that government action and rules are needed to help protect the climate.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Climate ____.",
+          "point1": "Human worry about climate change is too much, presenting two main points: first, climate shifts happen naturally, and second, local choices and government rules are sufficient for environmental protection.",
+          "point2": "The structure follows the required constraints: Introduction (3 sentences), Body 1 (5 sentences, PEEL), Body 2 (5 sentences, PEEL), and Conclusion (2 sentences). Vocabulary is simple (A2-B1), and advanced linking words are avoided.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Climate change is a big problem for the world today.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "We must take action to stop climate change.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people need to change their daily habits in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, using public transport instead of cars helps the air in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air becomes cleaner for everyone to breathe in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that changing habits helps the planet.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments must help people protect the climate.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because they can make new rules for big companies in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they can make factories use less fuel in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, pollution levels go down for many people in daily life in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that government help is needed.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that we must take action to stop climate change.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Changing habits and having government help are important steps for the planet.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Climate change is a big topic that many people talk about today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "People should not worry so much about climate change.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the Earth has natural ways to change over time in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, past ice ages show that climate shifts happen naturally in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, human actions are not the only cause of warming in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that nature plays a big part in the climate system.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments do not need to make such strict rules for everyone.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people can still live well while protecting the environment in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, many small towns use solar power for their homes in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they keep their energy use low and clean in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that local choices can help the planet.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the statement.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We know that the Earth has natural ways to change, and local choices can help the planet.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "global",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "transport",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "emissions",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pollution",
+            "enGloss": "contamination; dirt",
+            "viGloss": "ô nhiễm",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "global",
+            "enGloss": "relating to the whole world",
+            "viGloss": "toàn cầu",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "transport",
+            "enGloss": "system for moving people or goods",
+            "viGloss": "giao thông",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "emissions",
+            "enGloss": "gases released into the air",
+            "viGloss": "khí thải",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "responsibility",
+            "enGloss": "duty or accountability",
+            "viGloss": "trách nhiệm",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "habits",
+            "enGloss": "usual ways of behaving",
+            "viGloss": "thói quen",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "accept responsibility",
+            "enGloss": "To willingly acknowledge accountability for an action, decision, or outcome.",
+            "viGloss": "Cụm từ học thuật: nhận trách nhiệm về hành động của mình"
+          },
+          {
+            "term": "assume responsibility",
+            "enGloss": "To willingly take on accountability and leadership for an initiative or task.",
+            "viGloss": "Cụm từ học thuật: gánh vác trách nhiệm"
+          },
+          {
+            "term": "environmental pollution",
+            "enGloss": "The contamination of air, water, and soil by toxic industrial effluents.",
+            "viGloss": "Cụm từ học thuật: nạn ô nhiễm môi trường sống"
+          },
+          {
+            "term": "global capitalism",
+            "enGloss": "The worldwide economic framework characterized by multinational corporations and free markets.",
+            "viGloss": "Cụm từ học thuật: chủ nghĩa tư bản toàn cầu"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Climate ____.",
+          "point1": "The first point argues that governments must take strong action to reduce pollution levels in major cities, focusing on public transport and planning.",
+          "point2": "The second point argues that individuals have a big role to play in protecting the planet, focusing on lifestyle changes like diet.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Climate ____.",
+          "point1": "Climate change is not solely caused by human activity, focusing on natural cycles and human adaptation.",
+          "point2": "Clear structural markers (In other words, For instance, As a result, Hence, etc.) and maintains a consistent B2 vocabulary level.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The issue of climate change is a major global concern that needs immediate attention from all people.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments must take strong action to reduce pollution levels in major cities.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they need to change how people live and work every day.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, many cities can introduce public transport systems, such as electric buses, to reduce car use.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air quality will improve, and people will be healthier.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that government planning is very important for a better environment.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Individuals also have a big role to play in protecting the planet from climate damage.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that small changes in daily habits can make a big difference over time.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that people choosing to eat less meat helps reduce the demand on animal farming.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that greenhouse gas emissions go down, which helps slow global warming.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that personal responsibility is key to solving this problem.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that both government action and individual responsibility are necessary.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Strong government planning and personal responsibility are needed to address climate change effectively.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The idea that climate change is solely caused by human activity is a complex and often debated topic.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Natural cycles play a significant role in shaping Earth's climate over long periods.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the planet's climate has always changed due to natural factors like solar activity and volcanic eruptions.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, historical records show periods of warming and cooling that happened long before modern industrialization.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, attributing all climate shifts only to human actions ignores these powerful natural forces.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that natural processes are major contributors to climate variation.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Technological advancements also help societies adapt to changing climate conditions.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that human ingenuity allows us to develop better energy sources and farming methods.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that solar power and wind energy are becoming much more affordable and widely used.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that nations can build resilience and reduce their dependence on fossil fuels.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that human adaptation is a key factor in managing climate change.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the statement.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Climate change is influenced by natural cycles, and human adaptation through technology is also a vital part of managing the planet's climate.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "mitigate",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "fossil fuels",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "greenhouse gases",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "vulnerable",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "mitigate",
+            "enGloss": "to make less severe, serious, or painful",
+            "viGloss": "giảm nhẹ",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "fossil fuels",
+            "enGloss": "combustible materials formed from ancient organic matter",
+            "viGloss": "nhiên liệu hóa thạch",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "greenhouse gases",
+            "enGloss": "gases that trap heat in the Earth's atmosphere",
+            "viGloss": "khí nhà kính",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "vulnerable",
+            "enGloss": "exposed to the possibility of being attacked or harmed",
+            "viGloss": "dễ bị tổn thương",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "carbon footprint",
+            "enGloss": "the total amount of greenhouse gases produced by an individual, event, or product",
+            "viGloss": "dấu chân carbon",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "sustainable",
+            "enGloss": "able to be maintained at a certain rate or level",
+            "viGloss": "bền vững",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "vulnerable group",
+            "enGloss": "A demographic population exposed to elevated risks of poverty, disease, or neglect.",
+            "viGloss": "Cụm từ học thuật: nhóm đối tượng yếu thế, dễ bị tổn thương"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Climate ____.",
+          "point1": "The primary argument is that governments must take decisive action to transition away from fossil fuels to curb global warming.",
+          "point2": "The secondary argument is that individual actions and consumer choices are essential components in reducing the overall carbon footprint.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Climate ____.",
+          "point1": "The primary argument is that natural cycles and geological processes are major contributors to climate variability, meaning human activity is not the sole cause of warming.",
+          "point2": "The secondary argument is that human technological innovation and the adoption of renewable energy sources provide effective means to mitigate climate risks, challenging the idea of an inevitable crisis.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The increasing severity of climate change necessitates immediate and comprehensive global action.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments must prioritize transitioning away from fossil fuels to mitigate global warming.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, reliance on coal, oil, and gas contributes significantly to atmospheric carbon levels.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, nations adopting renewable energy sources, such as solar and wind power, demonstrate a viable alternative.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the emission of greenhouse gases decreases substantially, protecting vulnerable ecosystems.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that policy shifts are crucial for environmental stability.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, individual behavioral changes play a vital role in reducing the overall carbon footprint of society.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that consumer choices directly influence industrial demand and resource consumption.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that choosing public transportation over private vehicles reduces localized pollution.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that communities experience improved air quality and reduced traffic congestion.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that collective responsibility drives sustainable progress.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that addressing climate change requires both governmental policy shifts away from fossil fuels and individual behavioral changes in consumption patterns.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The discussion surrounding climate change often suggests that human activity is the sole determinant of global warming trends.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Natural cycles significantly influence Earth's climate patterns, suggesting that human impact is not the only factor.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, geological processes, such as solar activity and orbital variations, have historically driven significant climatic shifts.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the Medieval Warm Period and the Little Ice Age demonstrate substantial temperature fluctuations occurring long before industrialization.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, attributing all warming solely to human emissions overlooks these powerful natural drivers.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that natural forces play a crucial role in shaping the planet's climate.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Technological advancements are enabling societies to mitigate climate risks effectively, challenging the notion of inevitable crisis.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that renewable energy sources, such as wind and solar power, are becoming increasingly accessible and cost-effective.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that This can be exemplified by the rapid global deployment of photovoltaic panels and offshore wind farms across various continents.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that nations can transition away from fossil fuels at an unprecedented pace, thereby reducing carbon output substantially.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that human ingenuity provides viable solutions to environmental challenges.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the statement that human activity is the sole cause of climate change.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Recognizing the influence of natural cycles and leveraging technological advancements are essential perspectives for addressing global warming.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:39.098873+00:00"
+  }
+}

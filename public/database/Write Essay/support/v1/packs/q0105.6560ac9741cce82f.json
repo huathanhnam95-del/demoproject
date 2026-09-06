@@ -1,0 +1,1814 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "105",
+  "title": "#105 Economic Growth",
+  "prompt": "Governments promise continuous economic growth, but it's actually an illusion. Some people think that governments should abandon this. Please talk about the validity and the implications.",
+  "source": {
+    "promptSha256": "d905d3679f3b5f340aef9dca7e68b4ddc4d7f1c92e0bbf38948c31e02e551f7b",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Governments promise continuous economic growth, but it's actually an illusion.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Some people think that governments should abandon this.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Please talk about the validity and the implications.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Government, politics, and diplomacy"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Governments",
+        "enGloss": "Key concept related to governments.",
+        "viGloss": "chính phủ"
+      },
+      {
+        "term": "promise",
+        "enGloss": "Key concept related to promise.",
+        "viGloss": "lời hứa"
+      },
+      {
+        "term": "continuous",
+        "enGloss": "Key concept related to continuous.",
+        "viGloss": "liên tục"
+      },
+      {
+        "term": "economic",
+        "enGloss": "Key concept related to economic.",
+        "viGloss": "kinh tế"
+      },
+      {
+        "term": "actually",
+        "enGloss": "in reality",
+        "viGloss": "thực tế"
+      },
+      {
+        "term": "illusion",
+        "enGloss": "Key concept related to illusion.",
+        "viGloss": "ảo tưởng"
+      },
+      {
+        "term": "abandon",
+        "enGloss": "to leave something behind permanently",
+        "viGloss": "từ bỏ hoàn toàn"
+      },
+      {
+        "term": "validity",
+        "enGloss": "Key concept related to validity.",
+        "viGloss": "hiệu lực"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "abandon-point1",
+        "label": "Point 1",
+        "en": "Governments should change their plans for the economy, focusing on improving people's lives.",
+        "vi": "Góc nhìn: Governments should change their plans for the economy, focusing on improving people's lives.",
+        "sourceVariantId": "abandon"
+      },
+      {
+        "id": "abandon-point2",
+        "label": "Point 2",
+        "en": "Governments should change their spending habits, prioritizing spending on essential services.",
+        "vi": "Góc nhìn: Governments should change their spending habits, prioritizing spending on essential services.",
+        "sourceVariantId": "abandon"
+      },
+      {
+        "id": "keep-point1",
+        "label": "Point 1",
+        "en": "Economic growth is important for people who want good lives.",
+        "vi": "Góc nhìn: Economic growth is important for people who want good lives.",
+        "sourceVariantId": "keep"
+      },
+      {
+        "id": "keep-point2",
+        "label": "Point 2",
+        "en": "Governments must keep planning for economic growth.",
+        "vi": "Góc nhìn: Governments must keep planning for economic growth.",
+        "sourceVariantId": "keep"
+      },
+      {
+        "id": "abandon-point1",
+        "label": "Point 1",
+        "en": "The focus on continuous economic growth can lead governments to ignore other essential human needs, even if it initially promises job creation and improvements in daily life.",
+        "vi": "Góc nhìn: The focus on continuous economic growth can lead governments to ignore other essential human needs, even if it initially promises job creation and improvements in daily life.",
+        "sourceVariantId": "abandon"
+      },
+      {
+        "id": "abandon-point2",
+        "label": "Point 2",
+        "en": "Prioritizing growth solely causes significant environmental damage, such as pollution from factories, which negatively affects local communities' health and air quality.",
+        "vi": "Góc nhìn: Prioritizing growth solely causes significant environmental damage, such as pollution from factories, which negatively affects local communities' health and air quality.",
+        "sourceVariantId": "abandon"
+      },
+      {
+        "id": "keep-point1",
+        "label": "Point 1",
+        "en": "The first point argues that focusing only on economic growth can ignore other important needs, such as environmental health.",
+        "vi": "Góc nhìn: The first point argues that focusing only on economic growth can ignore other important needs, such as environmental health.",
+        "sourceVariantId": "keep"
+      },
+      {
+        "id": "keep-point2",
+        "label": "Point 2",
+        "en": "The second point argues that continuous economic growth can cause serious problems for the environment and natural resources.",
+        "vi": "Góc nhìn: The second point argues that continuous economic growth can cause serious problems for the environment and natural resources.",
+        "sourceVariantId": "keep"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Government, politics, and diplomacy.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Government, politics, and diplomacy."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "economy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "plan",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "growth",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "spending",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "economy",
+            "enGloss": "the system of making and using money",
+            "viGloss": "nền kinh tế",
+            "source": "approved_sample"
+          },
+          {
+            "term": "plan",
+            "enGloss": "a set of actions or ideas",
+            "viGloss": "kế hoạch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "growth",
+            "enGloss": "the process of getting bigger",
+            "viGloss": "sự tăng trưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "spending",
+            "enGloss": "using money to buy things",
+            "viGloss": "việc chi tiêu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "schools",
+            "enGloss": "buildings for learning",
+            "viGloss": "trường học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "hospitals",
+            "enGloss": "buildings for health care",
+            "viGloss": "bệnh viện",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "advanced economy",
+            "enGloss": "A highly developed national economy characterized by high technological and industrial capacity.",
+            "viGloss": "Cụm từ học thuật: nền kinh tế phát triển tiên tiến"
+          },
+          {
+            "term": "alternative explanation",
+            "enGloss": "A different hypothesis or reasoning explaining an observed phenomenon.",
+            "viGloss": "Cụm từ học thuật: cách giải thích thay thế hợp lý"
+          },
+          {
+            "term": "capitalist economy",
+            "enGloss": "An economic system characterized by private ownership, competitive markets, and profit incentives.",
+            "viGloss": "Cụm từ học thuật: nền kinh tế tư bản chủ nghĩa"
+          },
+          {
+            "term": "continued growth",
+            "enGloss": "Uninterrupted expansion and development sustained over an extended timeframe.",
+            "viGloss": "Cụm từ học thuật: sự tăng trưởng liên tục, bền bỉ"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "abandon",
+          "label": "Version 1: ABANDON GROWTH",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "Governments should change their plans for the economy, focusing on improving people's lives.",
+          "point2": "Governments should change their spending habits, prioritizing spending on essential services.",
+          "sampleVariantId": "abandon",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "keep",
+          "label": "Version 2: KEEP GROWTH",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Government, politics, and diplomacy ____.",
+          "point1": "Economic growth is important for people who want good lives.",
+          "point2": "Governments must keep planning for economic growth.",
+          "sampleVariantId": "keep",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "abandon": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many people talk about how governments promise that the economy will always get bigger.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments must change their plans for the economy.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they should focus on making people's lives better in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they can help people with jobs and services in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people will feel more safe and happy in their towns.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a good plan is more important than just getting bigger.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments should change their spending habits.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because spending money on other things is more useful for people in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they can spend money on schools and hospitals in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people will have better health and better learning chances.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that spending money wisely is better for the community.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that governments should change their plans for the economy.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Focusing on making people's lives better and spending money wisely are better ways to help the community.",
+            "level": "a2_b1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "keep": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Governments often promise that the economy will always get bigger.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Economic growth is important for people who want good lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a growing economy helps people find better jobs in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, when a country's economy grows, companies build new factories in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many people get new work opportunities in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that growth helps people live better lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments must keep planning for economic growth.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because a strong economy provides money for public services in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, when the economy is good, the government can build new schools in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, children have better places to learn in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that planning for growth is necessary.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from economic and governments.",
+            "level": "a2_b1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "continuous",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "growth",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "jobs",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "spending",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "continuous",
+            "enGloss": "without interruption",
+            "viGloss": "liên tục",
+            "source": "approved_sample"
+          },
+          {
+            "term": "growth",
+            "enGloss": "increase in size or amount",
+            "viGloss": "sự tăng trưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "jobs",
+            "enGloss": "paid employment",
+            "viGloss": "công việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "spending",
+            "enGloss": "the use of money",
+            "viGloss": "chi tiêu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "resources",
+            "enGloss": "materials available in nature",
+            "viGloss": "nguồn lực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollute",
+            "enGloss": "make something dirty or impure",
+            "viGloss": "gây ô nhiễm",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional resources",
+            "enGloss": "Supplementary funding, materials, or personnel provided to support an initiative.",
+            "viGloss": "Cụm từ học thuật: nguồn lực / tài nguyên bổ sung"
+          },
+          {
+            "term": "allocate resources",
+            "enGloss": "To distribute funding, equipment, or manpower systematically according to priorities.",
+            "viGloss": "Cụm từ học thuật: phân bổ nguồn lực hợp lý"
+          },
+          {
+            "term": "available resources",
+            "enGloss": "Existing assets, capital, materials, or personnel ready for operational deployment.",
+            "viGloss": "Cụm từ học thuật: nguồn lực sẵn có để sử dụng"
+          },
+          {
+            "term": "continued growth",
+            "enGloss": "Uninterrupted expansion and development sustained over an extended timeframe.",
+            "viGloss": "Cụm từ học thuật: sự tăng trưởng liên tục, bền bỉ"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "abandon",
+          "label": "Version 1: ABANDON GROWTH",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "The focus on continuous economic growth can lead governments to ignore other essential human needs, even if it initially promises job creation and improvements in daily life.",
+          "point2": "Prioritizing growth solely causes significant environmental damage, such as pollution from factories, which negatively affects local communities' health and air quality.",
+          "sampleVariantId": "abandon",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "keep",
+          "label": "Version 2: KEEP GROWTH",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Government, politics, and diplomacy ____.",
+          "point1": "The first point argues that focusing only on economic growth can ignore other important needs, such as environmental health.",
+          "point2": "The second point argues that continuous economic growth can cause serious problems for the environment and natural resources.",
+          "sampleVariantId": "keep",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "abandon": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many people believe that governments must always promise continuous economic growth, but this idea might be incorrect.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments often promise that continuous economic growth is always good for people.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they suggest that the economy must always get bigger in everyday life in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, they might spend money on new roads and buildings.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people might get more jobs and feel better about their lives.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that this focus on growth can ignore other important needs.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that focusing only on growth can cause big problems for the environment.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that rapid economic activity uses up natural resources quickly in everyday life in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that factories pollute the air and water.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that local communities suffer from poor air quality and health issues.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that other priorities must be considered.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from governments and another.",
+            "level": "b2",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "keep": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many people believe that governments must always promote continuous economic growth, but this idea may not be correct.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments often focus on promoting continuous economic growth for the sake of prosperity.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they believe that constant expansion of the economy is always good for citizens in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, they might spend money on new roads and bridges to boost local trade.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, local businesses see more customers and hire more workers.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that focusing only on growth can ignore other important needs.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that focusing on growth can cause serious problems for the environment.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that industrial expansion uses up natural resources quickly in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that factories pollute rivers and air in many areas.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people suffer from poor health and damage to local wildlife.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that environmental health must be a top priority.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from governments and another.",
+            "level": "b2",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "perpetual",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "stimulates",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "infrastructure",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "stagnation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "perpetual",
+            "enGloss": "never ending",
+            "viGloss": "vĩnh cửu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stimulates",
+            "enGloss": "encourages activity",
+            "viGloss": "kích thích",
+            "source": "approved_sample"
+          },
+          {
+            "term": "infrastructure",
+            "enGloss": "basic physical structures",
+            "viGloss": "cơ sở hạ tầng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stagnation",
+            "enGloss": "lack of activity or growth",
+            "viGloss": "sự trì trệ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stimulus",
+            "enGloss": "aid or encouragement",
+            "viGloss": "sự kích thích",
+            "source": "approved_sample"
+          },
+          {
+            "term": "trajectory",
+            "enGloss": "path or course",
+            "viGloss": "quỹ đạo",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "abandon",
+          "label": "Version 1: ABANDON GROWTH",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "Governments must continue promoting economic growth because it provides immediate improvements to the economy.",
+          "point2": "Furthermore, promoting economic growth is crucial as it serves as a powerful tool for maintaining political power.",
+          "sampleVariantId": "abandon",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "keep",
+          "label": "Version 2: KEEP GROWTH",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Government, politics, and diplomacy ____.",
+          "point1": "The first point argues that continuous economic growth is unsustainable because it leads to the depletion of finite natural resources.",
+          "point2": "The second point argues that continuous economic growth exacerbates social problems by increasing wealth disparity and social inequality.",
+          "sampleVariantId": "keep",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "abandon": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The notion of continuous economic expansion is a widely held belief, yet its actual sustainability is frequently questioned.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments often promise perpetual economic growth to maintain public confidence.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they suggest that continuous expansion is necessary for societal stability in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, implementing large-scale infrastructure projects requires substantial funding and labor.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this spending stimulates various sectors, creating temporary employment opportunities.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that such policies provide immediate, visible improvements to the economy.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that governments use growth narratives to justify current spending policies.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that perceived stagnation can lead to political unrest and reduced tax revenue in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that nations facing recession often increase stimulus spending.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that citizens become accustomed to government intervention, accepting increased debt levels.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that economic growth is a powerful tool for maintaining political power.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from governments and another.",
+            "level": "c1",
+            "sampleVariantId": "abandon",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "keep": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The concept of continuous economic expansion is frequently promoted by governing bodies.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A primary concern regarding perpetual growth is the depletion of natural resources.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the current economic model assumes an infinite supply of raw materials in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the excessive extraction of fossil fuels depletes finite reserves of oil and gas.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, future generations will face severe resource scarcity and environmental damage.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that unsustainable consumption patterns threaten long-term global stability.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another major issue is the increasing disparity in wealth distribution within societies.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that economic policies often favor the wealthiest segments of the population in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that automation technologies displace low-skilled workers, concentrating wealth at the top.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that social unrest increases, and the middle class struggles to maintain a comfortable standard of living.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that unchecked growth exacerbates social inequalities.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from primary and another.",
+            "level": "c1",
+            "sampleVariantId": "keep",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:06.304818+00:00"
+  }
+}

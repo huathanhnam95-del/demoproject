@@ -14550,6 +14550,12 @@ mark.crm-highlight:hover {
   gap: 20px;
 }
 
+@media (max-width: 640px) {
+  .dual-arena-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dual-arena-card {
   display: flex;
   flex-direction: column;
@@ -14781,7 +14787,7 @@ mark.crm-highlight:hover {
 
 .dual-syl-row {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 120px;
+  grid-template-columns: 1fr 1.2fr auto 100px;
   align-items: center;
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.02);
@@ -14801,6 +14807,45 @@ mark.crm-highlight:hover {
   border-color: #10b981;
   background: rgba(16, 185, 129, 0.12);
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.syl-col-slice-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dual-arena-slice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dual-arena-slice-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.dual-arena-slice-btn.btn-slice-syl:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.dual-arena-slice-btn.btn-slice-nuc:hover {
+  border-color: #34d399;
+  color: #34d399;
 }
 
 .syl-col-main {
@@ -15160,4 +15205,25 @@ mark.crm-highlight:hover {
 .dual-arena-btn-save-rating:hover:not(:disabled) {
   background: #059669;
 }
+
+@media (max-width: 640px) {
+  .dual-syl-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .syl-col-slice-actions {
+    justify-content: flex-start;
+  }
+
+  .syl-col-prominence {
+    width: 100%;
+  }
+
+  .dual-arena-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 

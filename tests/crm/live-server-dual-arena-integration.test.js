@@ -40,6 +40,7 @@ async function runLiveIntegrationTest() {
 
     const pageErrors = [];
     page.on('pageerror', (err) => pageErrors.push(err.message));
+    page.on('console', (msg) => console.log(`[PAGE ${msg.type()}]`, msg.text()));
 
     const apiRequests = [];
     page.on('response', (res) => {
@@ -143,6 +144,26 @@ async function runLiveIntegrationTest() {
     });
     // RGB for #ffffff is rgb(255, 255, 255)
     assert.strictEqual(cardTitleColor, 'rgb(255, 255, 255)', 'Card titles must be crisp white');
+
+    // 13. Verify interactive Audio Slice Buttons are rendered
+    const sylSliceBtns = await page.locator('.btn-slice-syl').count();
+    const nucSliceBtns = await page.locator('.btn-slice-nuc').count();
+    assert.ok(sylSliceBtns >= 2, `Expected at least 2 syllable slice buttons, found ${sylSliceBtns}`);
+    assert.ok(nucSliceBtns >= 2, `Expected at least 2 nucleus slice buttons, found ${nucSliceBtns}`);
+
+    // Click slice buttons to verify they trigger without page errors
+    await page.locator('.btn-slice-syl').first().click();
+    await page.locator('.btn-slice-nuc').first().click();
+    console.log('Verified: Audio slice buttons exist and are interactive.');
+
+    // 14. Mobile responsiveness check (grid columns should collapse to 1 column at <= 640px)
+    await page.setViewportSize({ width: 375, height: 667 });
+    const gridColumns = await page.locator('.dual-arena-grid').evaluate((el) => {
+      return window.getComputedStyle(el).gridTemplateColumns;
+    });
+    const colCount = gridColumns.trim().split(/\s+/).length;
+    assert.strictEqual(colCount, 1, `Mobile grid must have 1 column, got: ${gridColumns}`);
+    console.log('Verified: Mobile responsiveness grid collapses to 1 column at 375px.');
 
     assert.strictEqual(pageErrors.length, 0, `Page errors encountered: ${pageErrors.join(', ')}`);
     console.log('ALL LIVE SERVER DUAL ARENA CHECKS PASSED PERFECTLY!');

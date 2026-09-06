@@ -1,63 +1,68 @@
+/* eslint-disable no-console */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
 // Mock DOM environment
+class MockElement {
+    constructor(tag = 'DIV') {
+        this.tagName = tag.toUpperCase();
+        this.style = {};
+        this.dataset = {};
+        this.classList = {
+            classes: new Set(),
+            add(c) { this.classes.add(c); },
+            remove(c) { this.classes.delete(c); },
+            toggle(c, force) {
+                if (force === undefined) {
+                    if (this.classes.has(c)) this.classes.delete(c);
+                    else this.classes.add(c);
+                } else if (force) {
+                    this.classes.add(c);
+                } else {
+                    this.classes.delete(c);
+                }
+            },
+            contains(c) { return this.classes.has(c); }
+        };
+        this.attributes = {};
+        this.listeners = {};
+        this._val = '';
+        this._text = '';
+        this._html = '';
+    }
+    setAttribute(k, v) { this.attributes[k] = String(v); }
+    getAttribute(k) { return this.attributes[k] || null; }
+    addEventListener(evt, fn) {
+        if (!this.listeners[evt]) this.listeners[evt] = [];
+        this.listeners[evt].push(fn);
+    }
+    dispatchEvent(evt) {
+        (this.listeners[evt.type] || []).forEach(fn => fn(evt));
+    }
+    get value() { return this._val; }
+    set value(v) { this._val = String(v ?? ''); }
+    get textContent() { return this._text; }
+    set textContent(v) {
+        this._text = String(v ?? '');
+        this._html = this._text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    get innerHTML() { return this._html; }
+    set innerHTML(v) {
+        this._html = String(v ?? '');
+        this._text = this._html.replace(/<[^>]*>/g, '');
+    }
+    querySelectorAll() { return []; }
+    querySelector() { return null; }
+    closest() { return null; }
+    getBoundingClientRect() { return { left: 0, top: 0, bottom: 0, right: 0 }; }
+}
+
 function createMockDocument() {
     const elements = {};
     function createElement(tag) {
-        return {
-            tagName: tag.toUpperCase(),
-            style: {},
-            dataset: {},
-            classList: {
-                classes: new Set(),
-                add(c) { this.classes.add(c); },
-                remove(c) { this.classes.delete(c); },
-                toggle(c, force) {
-                    if (force === undefined) {
-                        if (this.classes.has(c)) this.classes.delete(c);
-                        else this.classes.add(c);
-                    } else if (force) {
-                        this.classes.add(c);
-                    } else {
-                        this.classes.delete(c);
-                    }
-                },
-                contains(c) { return this.classes.has(c); }
-            },
-            attributes: {},
-            setAttribute(k, v) { this.attributes[k] = String(v); },
-            getAttribute(k) { return this.attributes[k] || null; },
-            listeners: {},
-            addEventListener(evt, fn) {
-                if (!this.listeners[evt]) this.listeners[evt] = [];
-                this.listeners[evt].push(fn);
-            },
-            dispatchEvent(evt) {
-                (this.listeners[evt.type] || []).forEach(fn => fn(evt));
-            },
-            _val: '',
-            get value() { return this._val; },
-            set value(v) { this._val = String(v ?? ''); },
-            _text: '',
-            get textContent() { return this._text; },
-            set textContent(v) {
-                this._text = String(v ?? '');
-                this._html = this._text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            },
-            _html: '',
-            get innerHTML() { return this._html; },
-            set innerHTML(v) {
-                this._html = String(v ?? '');
-                this._text = this._html.replace(/<[^>]*>/g, '');
-            },
-            querySelectorAll() { return []; },
-            querySelector() { return null; },
-            closest() { return null; },
-            getBoundingClientRect() { return { left: 0, top: 0, bottom: 0, right: 0 }; }
-        };
+        return new MockElement(tag);
     }
 
     const doc = {
@@ -92,6 +97,7 @@ async function runTests() {
 
     let workspaceCalls = [];
     let addCalls = [];
+    let outcomeCalls = [];
 
     const mockClassroomAPI = {
         fetchTeachers: async () => mockTeachers,
@@ -112,20 +118,28 @@ async function runTests() {
         teacherAddClassroomSession: async (classId, data) => {
             addCalls.push({ classId, data });
             return { success: true };
+        },
+        teacherSetScheduledSessionOutcome: async (sessionId, data) => {
+            outcomeCalls.push({ sessionId, data });
+            return { success: true };
         }
     };
 
     const windowMock = {
         document: doc,
+        Element: MockElement,
         ClassroomAPI: mockClassroomAPI,
         setTimeout: (fn) => setTimeout(fn, 0),
         clearTimeout: () => {},
-        scrollY: 0
+        scrollX: 0,
+        scrollY: 0,
+        innerWidth: 1024
     };
 
     const context = vm.createContext({
         window: windowMock,
         document: doc,
+        Element: MockElement,
         console,
         Number,
         String,
@@ -331,6 +345,228 @@ async function runTests() {
         mockClassroomAPI.fetchTeacherSchedulerWorkspace = origFetchWorkspace;
 
         console.log('✓ Teacher discovery from classrooms and pattern option suffixes verified');
+    }
+
+    // TEST 5: Popover viewport right-edge clamping
+    {
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p'),
+            teacherSchedulerQuickAdd: doc.createElement('div'),
+            inputTeacherSchedulerQuickClass: doc.createElement('select'),
+            inputTeacherSchedulerQuickDate: doc.createElement('input'),
+            inputTeacherSchedulerQuickTime: doc.createElement('input'),
+            inputTeacherSchedulerQuickDuration: doc.createElement('input'),
+            teacherSchedulerQuickError: doc.createElement('div'),
+            teacherSchedulerQuickSuggestions: doc.createElement('div'),
+            teacherSchedulerSessionBubble: doc.createElement('div'),
+            teacherSchedulerSessionBubbleTitle: doc.createElement('div'),
+            teacherSchedulerSessionBubbleMeta: doc.createElement('div'),
+            teacherSchedulerSessionBubbleLock: doc.createElement('div')
+        };
+        adminElements.teacherSchedulerQuickAdd.offsetWidth = 340;
+        adminElements.teacherSchedulerSessionBubble.offsetWidth = 380;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        // 5a: QuickAdd near right edge (anchorLeft = 900 on 1024px viewport)
+        // With 1024px viewport, popoverWidth 340: maxLeft = 1024 - 340 - 16 = 668px
+        const slotMock = new MockElement('div');
+        slotMock.dataset.date = '2026-09-11';
+        slotMock.dataset.time = '14:00';
+        slotMock.getBoundingClientRect = () => ({ left: 900, top: 200, bottom: 240, right: 1000 });
+        slotMock.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotMock : null);
+
+        adminElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'click',
+            target: slotMock
+        });
+
+        assert.strictEqual(adminElements.teacherSchedulerQuickAdd.style.display, 'block');
+        assert.strictEqual(adminElements.teacherSchedulerQuickAdd.style.left, '668px', 'Quick add should be clamped to viewport right edge');
+
+        // 5b: Session bubble near right edge (anchorLeft = 850 on 1024px viewport)
+        // With 1024px viewport, popoverWidth 380: maxLeft = 1024 - 380 - 16 = 628px
+        const pillMock = new MockElement('div');
+        pillMock.dataset.sessionId = 's1';
+        pillMock.getBoundingClientRect = () => ({ left: 850, top: 200, bottom: 250, right: 950 });
+        pillMock.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillMock : null);
+
+        adminElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'click',
+            target: pillMock
+        });
+
+        assert.strictEqual(adminElements.teacherSchedulerSessionBubble.style.display, 'block');
+        assert.strictEqual(adminElements.teacherSchedulerSessionBubble.style.left, '628px', 'Session bubble should be clamped to viewport right edge');
+
+        console.log('✓ Popover viewport right-edge clamping verified');
+    }
+
+    // TEST 6: Multi-session side-by-side rendering in "All Teachers" mode
+    {
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p')
+        };
+
+        const origFetchWorkspace = mockClassroomAPI.fetchTeacherSchedulerWorkspace;
+        mockClassroomAPI.fetchTeacherSchedulerWorkspace = async () => ({
+            classrooms: [
+                { classroomId: 'c1', name: 'Class Alpha', primaryTeacherUid: 'teacher-1', primaryTeacherName: 'Teacher Alice' },
+                { classroomId: 'c2', name: 'Class Beta', primaryTeacherUid: 'teacher-2', primaryTeacherName: 'Teacher Bob' }
+            ],
+            sessions: [
+                { sessionId: 's1', classId: 'c1', teacherUid: 'teacher-1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60 },
+                { sessionId: 's2', classId: 'c2', teacherUid: 'teacher-2', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60 }
+            ],
+            from: '2026-09-07',
+            to: '2026-09-13'
+        });
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        const calendarHtml = adminElements.teacherSchedulerCalendar.innerHTML;
+        // Verify 50% width and offset positioning for concurrent sessions
+        assert(calendarHtml.includes('width:calc(50.00% - 2px);'), 'Concurrent sessions must render with 50% width');
+        assert(calendarHtml.includes('left:calc(0.00% + 1px);'), 'First concurrent session must start at left 0%');
+        assert(calendarHtml.includes('left:calc(50.00% + 1px);'), 'Second concurrent session must start at left 50%');
+        assert(calendarHtml.includes('Teacher Alice'), 'Concurrent session pill must show Teacher Alice badge');
+        assert(calendarHtml.includes('Teacher Bob'), 'Concurrent session pill must show Teacher Bob badge');
+
+        mockClassroomAPI.fetchTeacherSchedulerWorkspace = origFetchWorkspace;
+
+        console.log('✓ Multi-session side-by-side rendering in All Teachers mode verified');
+    }
+
+    // TEST 7: Teacher filter prioritization in session placement
+    {
+        addCalls = [];
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p')
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        // Select teacher-2 in the dropdown
+        adminElements.teacherSchedulerTeacherSelect.value = 'teacher-2';
+        adminElements.teacherSchedulerTeacherSelect.dispatchEvent({ type: 'change' });
+        await new Promise(r => setTimeout(r, 20));
+
+        // Click class card for c1 (whose primaryTeacherUid is teacher-1)
+        const classCardMock = new MockElement('div');
+        classCardMock.dataset.classroomId = 'c1';
+        classCardMock.closest = (sel) => (sel.includes('teacher-scheduler-class-card') ? classCardMock : null);
+
+        adminElements.teacherSchedulerClassList.dispatchEvent({
+            type: 'click',
+            target: classCardMock
+        });
+
+        // Click slot on 2026-09-10 at 11:00
+        const slotMock = new MockElement('div');
+        slotMock.dataset.date = '2026-09-10';
+        slotMock.dataset.time = '11:00';
+        slotMock.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotMock : null);
+
+        adminElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'click',
+            target: slotMock
+        });
+        await new Promise(r => setTimeout(r, 20));
+
+        // Verify addCalls prioritizes teacher-2
+        assert.strictEqual(addCalls.length, 1);
+        assert.strictEqual(addCalls[0].classId, 'c1');
+        assert.strictEqual(addCalls[0].data.teacherUid, 'teacher-2', 'Should prioritize selected teacher filter over classroom primary teacher');
+
+        console.log('✓ Teacher filter prioritization in session placement verified');
+    }
+
+    // TEST 8: Session outcome note persistence in client controller
+    {
+        outcomeCalls = [];
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p'),
+            teacherSchedulerSessionBubble: doc.createElement('div'),
+            inputTeacherSchedulerSessionOutcome: doc.createElement('select'),
+            inputTeacherSchedulerSessionNote: doc.createElement('textarea'),
+            btnTeacherSchedulerSaveOutcome: doc.createElement('button')
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        // Open session bubble for s1
+        const pillMock = new MockElement('div');
+        pillMock.dataset.sessionId = 's1';
+        pillMock.getBoundingClientRect = () => ({ left: 200, top: 200, bottom: 250, right: 300 });
+        pillMock.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillMock : null);
+
+        adminElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'click',
+            target: pillMock
+        });
+
+        // Set outcome and note
+        adminElements.inputTeacherSchedulerSessionOutcome.value = 'completed';
+        adminElements.inputTeacherSchedulerSessionNote.value = 'Great progress on dictation exercise.';
+
+        // Click save outcome button
+        adminElements.btnTeacherSchedulerSaveOutcome.dispatchEvent({ type: 'click' });
+        await new Promise(r => setTimeout(r, 20));
+
+        assert.strictEqual(outcomeCalls.length, 1);
+        assert.strictEqual(outcomeCalls[0].sessionId, 's1');
+        assert.strictEqual(outcomeCalls[0].data.outcome, 'completed');
+        assert.strictEqual(outcomeCalls[0].data.note, 'Great progress on dictation exercise.');
+
+        console.log('✓ Session outcome note persistence in client controller verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');

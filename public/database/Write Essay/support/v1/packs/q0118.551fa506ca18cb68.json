@@ -1,0 +1,1800 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "118",
+  "title": "#118 House or Business",
+  "prompt": "You have enough money to purchase either a house or a business. Which would you choose to buy? Give examples to support your idea.",
+  "source": {
+    "promptSha256": "657b0a66065f0ede386b5edbb8e43ac6b7169ffe1b0950ea24eecd47aef2a294",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "You have enough money to purchase either a house or a business.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Which would you choose to buy?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Give examples to support your idea.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Economy, money, and trade"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "purchase",
+        "enGloss": "Key concept related to purchase.",
+        "viGloss": "mua hàng"
+      },
+      {
+        "term": "business",
+        "enGloss": "Key concept related to business.",
+        "viGloss": "kinh doanh"
+      },
+      {
+        "term": "examples",
+        "enGloss": "Key concept related to examples.",
+        "viGloss": "ví dụ"
+      },
+      {
+        "term": "support",
+        "enGloss": "Key concept related to support.",
+        "viGloss": "hỗ trợ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "house-point1",
+        "label": "Point 1",
+        "en": "A house provides strong personal safety for a family to live in.",
+        "vi": "Góc nhìn: A house provides strong personal safety for a family to live in.",
+        "sourceVariantId": "house"
+      },
+      {
+        "id": "house-point2",
+        "label": "Point 2",
+        "en": "A business offers good earning chances, allowing people to support their family.",
+        "vi": "Góc nhìn: A business offers good earning chances, allowing people to support their family.",
+        "sourceVariantId": "house"
+      },
+      {
+        "id": "business-point1",
+        "label": "Point 1",
+        "en": "A business provides better opportunities to earn money, such as opening a bakery and selling goods.",
+        "vi": "Góc nhìn: A business provides better opportunities to earn money, such as opening a bakery and selling goods.",
+        "sourceVariantId": "business"
+      },
+      {
+        "id": "business-point2",
+        "label": "Point 2",
+        "en": "A business grants the owner greater personal control, allowing them to set their own working hours and goals.",
+        "vi": "Góc nhìn: A business grants the owner greater personal control, allowing them to set their own working hours and goals.",
+        "sourceVariantId": "business"
+      },
+      {
+        "id": "house-point1",
+        "label": "Point 1",
+        "en": "The main argument for choosing a business is its potential for financial growth and self-determination.",
+        "vi": "Góc nhìn: The main argument for choosing a business is its potential for financial growth and self-determination.",
+        "sourceVariantId": "house"
+      },
+      {
+        "id": "house-point2",
+        "label": "Point 2",
+        "en": "The counter-argument, the house, is acknowledged for its stability, but the essay argues that the business's benefits outweigh this.",
+        "vi": "Góc nhìn: The counter-argument, the house, is acknowledged for its stability, but the essay argues that the business's benefits outweigh this.",
+        "sourceVariantId": "house"
+      },
+      {
+        "id": "business-point1",
+        "label": "Point 1",
+        "en": "The primary advantage of buying a business is its potential for financial growth and building savings.",
+        "vi": "Góc nhìn: The primary advantage of buying a business is its potential for financial growth and building savings.",
+        "sourceVariantId": "business"
+      },
+      {
+        "id": "business-point2",
+        "label": "Point 2",
+        "en": "The second advantage is the increased personal control and freedom that comes with owning a business.",
+        "vi": "Góc nhìn: The second advantage is the increased personal control and freedom that comes with owning a business.",
+        "sourceVariantId": "business"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Economy, money, and trade.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Economy, money, and trade."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "house",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "business",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "safe",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "family",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "house",
+            "enGloss": "a building for people to live in",
+            "viGloss": "ngôi nhà",
+            "source": "approved_sample"
+          },
+          {
+            "term": "business",
+            "enGloss": "a place or activity to earn money",
+            "viGloss": "cơ sở kinh doanh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "safe",
+            "enGloss": "not in danger",
+            "viGloss": "an toàn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "family",
+            "enGloss": "group of people who live together",
+            "viGloss": "gia đình",
+            "source": "approved_sample"
+          },
+          {
+            "term": "work",
+            "enGloss": "to do a job",
+            "viGloss": "làm việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "money",
+            "enGloss": "cash or coins",
+            "viGloss": "tiền",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic work",
+            "enGloss": "Scholarly activity comprising formal research, academic writing, and intellectual analysis.",
+            "viGloss": "Cụm từ học thuật: công trình / hoạt động học thuật"
+          },
+          {
+            "term": "business sector",
+            "enGloss": "The commercial segment of an economy driven by private enterprise and trade.",
+            "viGloss": "Cụm từ học thuật: khu vực doanh nghiệp / kinh tế tư nhân"
+          },
+          {
+            "term": "business transaction",
+            "enGloss": "An exchange of goods, services, or capital between commercial entities.",
+            "viGloss": "Cụm từ học thuật: giao dịch kinh doanh, thương mại"
+          },
+          {
+            "term": "classic work",
+            "enGloss": "An enduring scholarly, literary, or artistic creation of recognized excellence.",
+            "viGloss": "Cụm từ học thuật: tác phẩm kinh điển có giá trị lâu dài"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "house",
+          "label": "Version 1: HOUSE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "A house provides strong personal safety for a family to live in.",
+          "point2": "A business offers good earning chances, allowing people to support their family.",
+          "sampleVariantId": "house",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "business",
+          "label": "Version 2: BUSINESS",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "A business provides better opportunities to earn money, such as opening a bakery and selling goods.",
+          "point2": "A business grants the owner greater personal control, allowing them to set their own working hours and goals.",
+          "sampleVariantId": "business",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "house": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People must choose between buying a house or starting a business.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Buying a house gives people a safe place to live.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a house offers a fixed home and a place of rest in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a family can buy a house in a quiet neighborhood in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they have a safe place for their children to grow up.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a house provides strong personal safety.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Buying a business gives people a chance to make money.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because a shop allows people to work and make a living in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person can open a small bakery store in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they can help their family with their own effort.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that a business offers good earning chances.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that buying a house is better.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "A house provides strong personal safety, and a business offers good earning chances.",
+            "level": "a2_b1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "business": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People must choose between buying a house or starting a business.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage is that a business offers better chances for making money.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a shop gives you a chance to earn your own money in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, I can open a small bakery in a local area in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, I can get money from selling bread and cakes.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a business is a good way to support my life.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that a business gives more personal control to the owner.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because running a shop means I am the boss of my own work in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, I can decide my working hours and my goals in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, I do not have to follow someone else's rules.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that a business gives good personal control.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from clear and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "residence",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "stability",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "opportunity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "earn",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "residence",
+            "enGloss": "a place where someone lives",
+            "viGloss": "nơi cư trú",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stability",
+            "enGloss": "the state of being steady or firm",
+            "viGloss": "sự ổn định",
+            "source": "approved_sample"
+          },
+          {
+            "term": "opportunity",
+            "enGloss": "a set of circumstances that makes it possible to do something",
+            "viGloss": "cơ hội",
+            "source": "approved_sample"
+          },
+          {
+            "term": "earn",
+            "enGloss": "to obtain money for work",
+            "viGloss": "kiếm được",
+            "source": "approved_sample"
+          },
+          {
+            "term": "investment",
+            "enGloss": "money put into something to make more money",
+            "viGloss": "khoản đầu tư",
+            "source": "approved_sample"
+          },
+          {
+            "term": "venture",
+            "enGloss": "a risky or unpleasant undertaking",
+            "viGloss": "sự mạo hiểm",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "career opportunity",
+            "enGloss": "A favorable circumstance enabling professional growth, promotion, or new employment.",
+            "viGloss": "Cụm từ học thuật: cơ hội phát triển nghề nghiệp"
+          },
+          {
+            "term": "collaborative learning",
+            "enGloss": "Educational methodology where students work jointly in groups to solve problems.",
+            "viGloss": "Cụm từ học thuật: học tập hợp tác nhóm"
+          },
+          {
+            "term": "create opportunity",
+            "enGloss": "To establish a distinct possibility for growth, achievement, or innovation.",
+            "viGloss": "Cụm từ học thuật: tạo cơ hội thuận lợi"
+          },
+          {
+            "term": "economic stability",
+            "enGloss": "A resilient national financial environment devoid of excessive volatility.",
+            "viGloss": "Cụm từ học thuật: sự ổn định của nền kinh tế"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "house",
+          "label": "Version 1: HOUSE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "The main argument for choosing a business is its potential for financial growth and self-determination.",
+          "point2": "The counter-argument, the house, is acknowledged for its stability, but the essay argues that the business's benefits outweigh this.",
+          "sampleVariantId": "house",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "business",
+          "label": "Version 2: BUSINESS",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "The primary advantage of buying a business is its potential for financial growth and building savings.",
+          "point2": "The second advantage is the increased personal control and freedom that comes with owning a business.",
+          "sampleVariantId": "business",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "house": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "When given enough money, people must decide whether to purchase a house or a business.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Buying a house gives people a stable place to live.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a house provides a secure and personal residence for a family.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, owning a house means you have a fixed place to raise your children.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, you do not worry about rent increases or moving out.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a house offers great long-term stability for a family.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A business also offers great chances to earn money and grow wealth.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that a business allows people to control their own work and income.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that starting a small shop lets you set your own hours.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that you can earn money based on your effort and good ideas.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a business provides better opportunities for financial growth.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that buying a business is better than buying a house.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The chance to earn money and grow wealth from a business is more valuable than the long-term stability of a house.",
+            "level": "b2",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "business": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "When given enough money, people must decide whether to purchase a house or a business.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Buying a business offers better chances for financial growth.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a business allows one to earn money through sales and services in everyday life in everyday life in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, opening a small local shop can provide steady income.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the owner can build up savings and improve their financial situation.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a business is a better investment.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Starting a business also gives people more control over their daily lives.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the owner makes all the important decisions in everyday life in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a person can set their own working hours and choose their team.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the owner feels more independent and can balance work and family life.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a business offers personal freedom.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from buying and starting.",
+            "level": "b2",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "reside",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "asset",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "appreciate",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "venture",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "reside",
+            "enGloss": "to live in a place",
+            "viGloss": "cư trú",
+            "source": "approved_sample"
+          },
+          {
+            "term": "asset",
+            "enGloss": "a valuable possession",
+            "viGloss": "tài sản",
+            "source": "approved_sample"
+          },
+          {
+            "term": "appreciate",
+            "enGloss": "to increase in value",
+            "viGloss": "tăng giá",
+            "source": "approved_sample"
+          },
+          {
+            "term": "venture",
+            "enGloss": "a business undertaking",
+            "viGloss": "dự án kinh doanh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "scalable",
+            "enGloss": "able to be increased in size",
+            "viGloss": "có thể mở rộng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "solvency",
+            "enGloss": "ability to pay debts",
+            "viGloss": "khả năng thanh toán",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "presidential election",
+            "enGloss": "The democratic national ballot held to choose the head of state.",
+            "viGloss": "Cụm từ học thuật: cuộc bầu cử tổng thống"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "house",
+          "label": "Version 1: HOUSE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "The primary argument for choosing a business is its superior potential for financial growth and independence, which surpasses the stability offered by a house.",
+          "point2": "The essay contrasts the personal security and lifestyle benefits of a house with the scalable income streams and wealth generation potential of a business.",
+          "sampleVariantId": "house",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "business",
+          "label": "Version 2: BUSINESS",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "A business offers greater potential for generating substantial income compared to a house, as revenue streams can expand beyond fixed property income.",
+          "point2": "Starting a business provides greater personal fulfillment and control over one's career because the owner dictates the operational scope and strategic direction.",
+          "sampleVariantId": "business",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "house": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The decision between purchasing a residential house or establishing a commercial business is a significant financial choice.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Acquiring a house provides a foundation for long-term stability and personal comfort.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a home offers a secure place for one's family to reside and grow.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, owning a house allows occupants to customize the living space according to their evolving needs.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the owner gains a tangible asset that can appreciate over many years.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a house provides unmatched personal security and lifestyle benefits.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Investing in a business offers substantial potential for financial growth and independence.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that a successful venture allows an individual to generate substantial income.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a small shop can create numerous job opportunities within a local community.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the owner builds a scalable enterprise that supports continuous income streams.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a business offers superior opportunities for wealth generation.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from acquiring and investing.",
+            "level": "c1",
+            "sampleVariantId": "house",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "business": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "When presented with sufficient funds, the choice between acquiring a residential house or establishing a commercial business is a significant decision.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Investing in a business presents superior opportunities for financial growth.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a commercial venture offers greater potential for generating substantial income.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, opening a specialized retail shop allows the owner to capitalize on local market demand.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the revenue stream can expand far beyond the fixed income generated by a property.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a business provides a more dynamic path toward financial solvency.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, starting a business provides greater personal fulfillment and control over one's career.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that an entrepreneurial venture allows for direct influence on daily operations.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a small business owner dictates the operational scope and strategic direction.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the individual gains a profound sense of accomplishment and self-determination.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a business offers superior personal reward.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from investing and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "business",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:08.135132+00:00"
+  }
+}

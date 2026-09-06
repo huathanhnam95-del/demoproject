@@ -1,1830 +1,3334 @@
 {
   "abstract concept": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "A theoretical idea not tied to physical objects or tangible reality.",
     "viGloss": "khái niệm trừu tượng"
   },
   "academic achievement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thành tích học tập"
+    "enGloss": "Success attained through scholarly performance, coursework, or formal exams.",
+    "viGloss": "thành tích học tập, nghiên cứu"
   },
   "academic career": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sự nghiệp học tập"
+    "enGloss": "A professional life dedicated to higher education, teaching, and research.",
+    "viGloss": "sự nghiệp học thuật / giảng dạy đại học"
   },
   "academic circles": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giới học thuật"
+    "enGloss": "The collective community of university researchers, scholars, and intellectuals.",
+    "viGloss": "giới học thuật / cộng đồng nghiên cứu"
   },
   "academic community": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cộng đồng học thuật"
+    "enGloss": "The collective network of scholars, researchers, educators, and university students.",
+    "viGloss": "cộng đồng học thuật / giới nghiên cứu"
+  },
+  "academic discipline": {
+    "enGloss": "A specialized branch of knowledge or formal field of study.",
+    "viGloss": "ngành học / chuyên ngành học thuật"
+  },
+  "academic discourse": {
+    "enGloss": "Formal scholarly discussions and debates governed by rigorous academic conventions.",
+    "viGloss": "diễn ngôn học thuật / thảo luận chuyên môn"
+  },
+  "academic institution": {
+    "enGloss": "An educational or research organization such as a university or college.",
+    "viGloss": "cơ sở giáo dục / viện nghiên cứu học thuật"
   },
   "academic life": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đời sống học tập"
+    "enGloss": "The daily routines, practices, and intellectual culture within higher education.",
+    "viGloss": "đời sống học thuật / môi trường đại học"
   },
   "academic performance": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết quả học tập"
+    "enGloss": "Measurable achievement demonstrated in academic courses, evaluations, or exams.",
+    "viGloss": "kết quả học tập / thành tích học thuật"
   },
   "academic research": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nghiên cứu học thuật"
+    "enGloss": "Systematic scientific or scholarly investigation conducted to discover new knowledge.",
+    "viGloss": "nghiên cứu học thuật chuyên sâu"
   },
   "academic skills": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kỹ năng học tập"
+    "enGloss": "Essential proficiencies required for scholarly research, analysis, and formal writing.",
+    "viGloss": "kỹ năng học thuật / nghiên cứu"
   },
   "academic study": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nghiên cứu học thuật"
+    "enGloss": "A rigorous scholarly investigation examining a specific theoretical or practical topic.",
+    "viGloss": "công trình nghiên cứu học thuật"
   },
   "academic success": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thành công trong học tập"
+    "enGloss": "Attainment of high educational standards, credentials, or scholarly milestones.",
+    "viGloss": "sự thành công trong học tập và nghiên cứu"
   },
   "academic work": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công việc học tập"
+    "enGloss": "Scholarly activity comprising formal research, academic writing, and intellectual analysis.",
+    "viGloss": "công trình / hoạt động học thuật"
   },
   "academic world": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thế giới học thuật"
+    "enGloss": "The global sphere of higher education, scholarly research, and universities.",
+    "viGloss": "giới học thuật / môi trường hàn lâm"
   },
   "academic writing": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "viết học thuật"
+    "enGloss": "Formal, objective prose structured by reasoned arguments and verifiable evidence.",
+    "viGloss": "văn phong / bài viết học thuật"
   },
   "accept responsibility": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chấp nhận trách nhiệm"
+    "enGloss": "To willingly acknowledge accountability for an action, decision, or outcome.",
+    "viGloss": "nhận trách nhiệm về hành động của mình"
   },
   "acceptable behaviour": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hành vi chấp nhận được"
+    "enGloss": "Conduct that complies with established social, legal, or institutional norms.",
+    "viGloss": "hành vi chuẩn mực, được chấp nhận"
   },
   "accurate assessment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đánh giá chính xác"
+    "enGloss": "An exact, balanced evaluation reflecting the true value or competence.",
+    "viGloss": "sự đánh giá chính xác, khách quan"
+  },
+  "accurate description": {
+    "enGloss": "A factual, precise account that depicts an event or object truthfully.",
+    "viGloss": "sự miêu tả chuẩn xác, đúng thực tế"
   },
   "accurate information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thông tin chính xác"
+    "enGloss": "Correct, verifiable data free from errors or misleading statements.",
+    "viGloss": "thông tin chính xác, đáng tin cậy"
   },
   "accurate measurement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đo lường chính xác"
+    "enGloss": "A precise quantitative determination obtained using calibrated scientific methods.",
+    "viGloss": "phép đo lường chính xác"
   },
   "achieve goal": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đạt được mục tiêu"
+    "enGloss": "To successfully reach a desired aim through concerted effort.",
+    "viGloss": "đạt được mục tiêu đã đề ra"
   },
   "achieve objective": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đạt được mục tiêu"
+    "enGloss": "To successfully accomplish a specific, planned target or milestone.",
+    "viGloss": "hoàn thành mục tiêu cụ thể"
   },
   "achieve outcome": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đạt được kết quả"
+    "enGloss": "To attain a desired or expected final result.",
+    "viGloss": "đạt được kết quả mong muốn"
   },
   "acquire knowledge": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tiếp thu kiến thức"
+    "enGloss": "To gain new understanding, intellectual insights, or practical learning over time.",
+    "viGloss": "tiếp thu và tích lũy tri thức"
   },
   "active involvement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sự tham gia tích cực"
+    "enGloss": "Direct, energetic participation and engagement in an initiative or activity.",
+    "viGloss": "sự tham gia tích cực, chủ động"
   },
   "active participant": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "người tham gia tích cực"
+    "enGloss": "An engaged individual who contributes constructively to discussions or activities.",
+    "viGloss": "người tham gia tích cực, chủ động"
   },
   "active participation": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tham gia tích cực"
+    "enGloss": "Energetic, hands-on involvement and contribution within a collaborative setting.",
+    "viGloss": "sự tham gia chủ động, nhiệt tình"
   },
   "active role": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "vai trò tích cực"
+    "enGloss": "A dynamic and influential part played in an initiative or organization.",
+    "viGloss": "vai trò tích cực, chủ động"
   },
   "actively involved": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tích cực tham gia"
+    "enGloss": "Directly and energetically engaged in a process or project.",
+    "viGloss": "chủ động tham gia tích cực"
+  },
+  "acutely aware": {
+    "enGloss": "Possessing a sharp, conscious understanding of a critical reality or issue.",
+    "viGloss": "nhận thức sâu sắc, rõ ràng"
   },
   "add information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thêm thông tin"
+    "enGloss": "To supplement existing content with additional relevant facts or data.",
+    "viGloss": "bổ sung thêm thông tin cần thiết"
   },
   "additional cost": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chi phí bổ sung"
+    "enGloss": "Extra financial expenditure incurred beyond the original estimated budget.",
+    "viGloss": "chi phí phát sinh thêm"
   },
   "additional information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thông tin bổ sung"
+    "enGloss": "Supplementary facts or details provided to enhance clarity or completeness.",
+    "viGloss": "thông tin bổ sung làm rõ"
   },
   "additional problem": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "vấn đề bổ sung"
+    "enGloss": "An extra complication or obstacle arising during a process.",
+    "viGloss": "vấn đề phát sinh thêm"
   },
   "additional resources": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tài nguyên bổ sung"
+    "enGloss": "Supplementary funding, materials, or personnel provided to support an initiative.",
+    "viGloss": "nguồn lực / tài nguyên bổ sung"
   },
   "additional support": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hỗ trợ bổ sung"
+    "enGloss": "Extra assistance, funding, or resources provided to help someone succeed.",
+    "viGloss": "sự hỗ trợ bổ sung"
   },
   "administrative practices": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thực hành hành chính"
+    "enGloss": "Standard operational procedures and management methods within an organization.",
+    "viGloss": "thông lệ / phương pháp quản lý hành chính"
+  },
+  "adopt procedure": {
+    "enGloss": "To officially approve and begin implementing a specific formal protocol.",
+    "viGloss": "áp dụng quy trình / thủ tục mới"
   },
   "advanced economy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nền kinh tế tiên tiến"
+    "enGloss": "A highly developed national economy characterized by high technological and industrial capacity.",
+    "viGloss": "nền kinh tế phát triển tiên tiến"
   },
   "advanced technology": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công nghệ tiên tiến"
+    "enGloss": "Cutting-edge tools, systems, or equipment employing modern scientific innovations.",
+    "viGloss": "công nghệ tiên tiến, hiện đại"
   },
   "adverse reaction": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phản ứng bất lợi"
+    "enGloss": "An unfavorable, harmful response to a treatment, stimulus, or decision.",
+    "viGloss": "phản ứng bất lợi / tác dụng phụ"
   },
   "affect development": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ảnh hưởng đến sự phát triển"
+    "enGloss": "To exert a direct influence on how an entity grows or evolves.",
+    "viGloss": "ảnh hưởng đến tiến trình phát triển"
+  },
+  "affect outcome": {
+    "enGloss": "To directly alter or determine the final result of an event.",
+    "viGloss": "tác động trực tiếp đến kết quả cuối cùng"
   },
   "allocate resources": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phân bổ nguồn lực"
+    "enGloss": "To distribute funding, equipment, or manpower systematically according to priorities.",
+    "viGloss": "phân bổ nguồn lực hợp lý"
   },
   "allow access": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cho phép truy cập"
+    "enGloss": "To grant formal authorization to enter a place or use data.",
+    "viGloss": "cho phép tiếp cận / cấp quyền truy cập"
   },
   "alternative approach": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cách tiếp cận thay thế"
+    "enGloss": "A different, innovative strategy adopted to tackle a particular challenge.",
+    "viGloss": "cách tiếp cận thay thế, mới mẻ"
   },
   "alternative explanation": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lời giải thích thay thế"
+    "enGloss": "A different hypothesis or reasoning explaining an observed phenomenon.",
+    "viGloss": "cách giải thích thay thế hợp lý"
   },
   "alternative form": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "A substitute manifestation or variation of an existing concept or object.",
     "viGloss": "hình thức thay thế"
   },
   "alternative interpretation": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giải thích thay thế"
+    "enGloss": "A contrasting way of understanding and analyzing a text or evidence.",
+    "viGloss": "cách diễn giải khác / cách hiểu thay thế"
   },
   "alternative method": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phương pháp thay thế"
+    "enGloss": "An unconventional or substitute procedure used to achieve a specific result.",
+    "viGloss": "phương pháp thay thế khả thi"
   },
   "alternative solution": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giải pháp thay thế"
+    "enGloss": "A substitute answer or resolution proposed for a complex problem.",
+    "viGloss": "giải pháp thay thế tối ưu"
   },
   "alternative source": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nguồn thay thế"
+    "enGloss": "A different provider or origin of data, goods, or energy.",
+    "viGloss": "nguồn thay thế đáng tin cậy"
+  },
+  "alternative view": {
+    "enGloss": "A contrasting perspective or counter-argument on a controversial issue.",
+    "viGloss": "quan điểm khác biệt / góc nhìn đối lập"
+  },
+  "ample evidence": {
+    "enGloss": "Abundant, convincing factual data that solidly substantiates a claim.",
+    "viGloss": "bằng chứng dồi dào, xác thực"
   },
   "annual meeting": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cuộc họp thường niên"
+    "enGloss": "A formal gathering held once a year by members of an organization.",
+    "viGloss": "cuộc họp thường niên định kỳ"
   },
   "annual report": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "báo cáo thường niên"
+    "enGloss": "A comprehensive publication detailing an organization's activities and finances over a year.",
+    "viGloss": "báo cáo tổng kết thường niên"
   },
   "annual review": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đánh giá hàng năm"
+    "enGloss": "A yearly systematic evaluation of progress, performance, or financial operations.",
+    "viGloss": "đánh giá tổng kết hàng năm"
   },
   "apply equally": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "áp dụng như nhau"
+    "enGloss": "To implement rules, standards, or rights uniformly to all parties.",
+    "viGloss": "áp dụng bình đẳng như nhau cho mọi trường hợp"
   },
   "apply method": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "áp dụng phương pháp"
+    "enGloss": "To utilize a specific procedure or technique to solve a problem.",
+    "viGloss": "áp dụng phương pháp nghiên cứu vào thực tế"
   },
   "appropriate action": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hành động thích hợp"
+    "enGloss": "A suitable and timely response taken to address a situation.",
+    "viGloss": "hành động phù hợp, kịp thời"
+  },
+  "appropriate behaviour": {
+    "enGloss": "Conduct that is fitting and respectful in a specific social context.",
+    "viGloss": "hành vi ứng xử đúng mực"
   },
   "appropriate data": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "dữ liệu thích hợp"
+    "enGloss": "Relevant, valid factual information suited to the needs of a study.",
+    "viGloss": "dữ liệu phù hợp, có giá trị"
   },
   "appropriate language": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ngôn ngữ thích hợp"
+    "enGloss": "Vocabulary and tone suited to the audience, purpose, and setting.",
+    "viGloss": "ngôn ngữ phù hợp với ngữ cảnh"
   },
   "appropriate skills": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kỹ năng phù hợp"
+    "enGloss": "Competencies that closely match the requirements of a task or role.",
+    "viGloss": "kỹ năng phù hợp với yêu cầu"
   },
   "appropriate treatment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "điều trị thích hợp"
+    "enGloss": "Suitable medical therapy or ethical conduct directed toward a recipient.",
+    "viGloss": "phương pháp điều trị / cách đối xử phù hợp"
+  },
+  "armed conflict": {
+    "enGloss": "Organized warfare or military combat between opposing state or non-state forces.",
+    "viGloss": "xung đột vũ trang / chiến tranh cục bộ"
   },
   "artificial intelligence": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Computer systems designed to perform cognitive tasks that typically require human intellect.",
     "viGloss": "trí tuệ nhân tạo"
   },
   "assess impact": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đánh giá tác động"
+    "enGloss": "To evaluate the qualitative and quantitative consequences of an action or policy.",
+    "viGloss": "đánh giá mức độ tác động"
+  },
+  "assessment process": {
+    "enGloss": "A structured sequence of evaluations measuring skills, performance, or quality.",
+    "viGloss": "quy trình đánh giá năng lực"
   },
   "associated factors": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yếu tố liên quan"
+    "enGloss": "Variables or conditions that are closely linked to an observed outcome.",
+    "viGloss": "các yếu tố liên quan mật thiết"
   },
   "assume responsibility": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chịu trách nhiệm"
+    "enGloss": "To willingly take on accountability and leadership for an initiative or task.",
+    "viGloss": "gánh vác trách nhiệm"
+  },
+  "assume role": {
+    "enGloss": "To accept and perform the duties of a particular position or function.",
+    "viGloss": "đảm nhận vai trò, trọng trách"
   },
   "atomic energy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Nuclear power released through nuclear reactions used for energy generation.",
     "viGloss": "năng lượng nguyên tử"
   },
   "available data": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "dữ liệu có sẵn"
+    "enGloss": "Empirical facts, statistics, or records accessible for scholarly examination.",
+    "viGloss": "dữ liệu sẵn có để nghiên cứu"
   },
   "available evidence": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "bằng chứng sẵn có"
+    "enGloss": "Existing documentation or proof that can be examined to substantiate claims.",
+    "viGloss": "bằng chứng hiện có"
   },
   "available information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thông tin có sẵn"
+    "enGloss": "Accessible facts and knowledge that can be utilized to make decisions.",
+    "viGloss": "thông tin hiện có"
   },
   "available resources": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nguồn lực sẵn có"
+    "enGloss": "Existing assets, capital, materials, or personnel ready for operational deployment.",
+    "viGloss": "nguồn lực sẵn có để sử dụng"
   },
   "average score": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "điểm trung bình"
+    "enGloss": "The arithmetic mean of marks achieved by a group on an assessment.",
+    "viGloss": "điểm số trung bình"
   },
   "background knowledge": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kiến thức nền tảng"
+    "enGloss": "Prior information and foundational understanding necessary to grasp a new concept.",
+    "viGloss": "kiến thức nền tảng cần thiết"
   },
   "basic assumption": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giả định cơ bản"
+    "enGloss": "A foundational belief accepted as true without immediate proof to build arguments.",
+    "viGloss": "giả định cơ bản ban đầu"
   },
   "basic component": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thành phần cơ bản"
+    "enGloss": "A fundamental, indispensable element constituting part of a larger system.",
+    "viGloss": "thành phần cốt lõi cơ bản"
   },
   "basic concept": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khái niệm cơ bản"
+    "enGloss": "An elementary, foundational idea essential for understanding a broader subject.",
+    "viGloss": "khái niệm nền tảng cơ bản"
   },
   "basic function": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chức năng cơ bản"
+    "enGloss": "A core, essential duty or operational purpose performed by a mechanism.",
+    "viGloss": "chức năng cơ bản cốt yếu"
   },
   "basic research": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Scientific inquiry aimed at expanding fundamental theoretical knowledge rather than immediate commercial application.",
     "viGloss": "nghiên cứu cơ bản"
   },
   "basic structure": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cấu trúc cơ bản"
+    "enGloss": "The primary underlying framework supporting an organization, system, or argument.",
+    "viGloss": "cấu trúc nền tảng cơ bản"
   },
   "become apparent": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trở nên rõ ràng"
+    "enGloss": "To be clearly recognized, revealed, or understood through emergent facts.",
+    "viGloss": "trở nên rõ ràng, dễ thấy"
+  },
+  "become evident": {
+    "enGloss": "To become unmistakably clear, visible, or proven beyond reasonable doubt.",
+    "viGloss": "hiển hiện rõ ràng qua chứng cứ"
   },
   "become focus": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trở thành trọng tâm"
+    "enGloss": "To draw primary attention and concern within a discussion or investigation.",
+    "viGloss": "trở thành trọng tâm chú ý"
   },
   "become independent": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trở nên độc lập"
+    "enGloss": "To gain complete autonomy and self-governance free from external control.",
+    "viGloss": "trở nên độc lập, tự chủ"
   },
   "become involved": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tham gia"
+    "enGloss": "To begin taking an active role or participating in an activity.",
+    "viGloss": "tham gia, can dự vào hoạt động"
   },
   "become widespread": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trở nên phổ biến"
+    "enGloss": "To spread extensively across a population, geographic area, or culture.",
+    "viGloss": "trở nên phổ biến rộng rãi"
+  },
+  "begin process": {
+    "enGloss": "To initiate the initial sequence of planned actions toward a goal.",
+    "viGloss": "bắt đầu quy trình thực hiện"
   },
   "behave differently": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cư xử khác đi"
+    "enGloss": "To act or react in a distinct, unconventional, or modified manner.",
+    "viGloss": "ứng xử, thể hiện khác biệt"
   },
   "beneficial effect": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tác dụng có lợi"
+    "enGloss": "A favorable, advantageous outcome produced by an action, policy, or treatment.",
+    "viGloss": "tác động có lợi, tích cực"
   },
   "binary system": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hệ nhị phân"
+    "enGloss": "A framework evaluating situations through rigid opposing categories like right or wrong.",
+    "viGloss": "hệ thống nhị phân / phân loại đúng sai cứng nhắc"
   },
   "biological science": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khoa học sinh học"
+    "enGloss": "The branch of natural sciences that systematically investigates living organisms.",
+    "viGloss": "khoa học sinh học / sinh vật học"
   },
   "brief account": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tài khoản ngắn gọn"
+    "enGloss": "A concise, factual narrative describing the essential highlights of an event.",
+    "viGloss": "bản tường thuật / bản tóm lược ngắn gọn"
   },
   "brief discussion": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thảo luận ngắn gọn"
+    "enGloss": "A short, focused dialogue or written analysis addressing a key topic.",
+    "viGloss": "thảo luận ngắn gọn, súc tích"
   },
   "brief history": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lịch sử tóm tắt"
+    "enGloss": "A concise chronological summary highlighting the major milestones of an event.",
+    "viGloss": "tóm tắt sơ lược lịch sử"
+  },
+  "brief overview": {
+    "enGloss": "A concise synopsis summarizing the main themes and structural outline of an issue.",
+    "viGloss": "cái nhìn tổng quan ngắn gọn"
+  },
+  "brief period": {
+    "enGloss": "A short, limited duration or temporary span of time.",
+    "viGloss": "khoảng thời gian ngắn"
   },
   "brief review": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đánh giá ngắn gọn"
+    "enGloss": "A short evaluative summary assessing the primary findings of research or literature.",
+    "viGloss": "đánh giá ngắn gọn, cô đọng"
   },
   "brief time": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thời gian ngắn"
+    "enGloss": "A momentary, short interval or duration.",
+    "viGloss": "khoảng thời gian ngắn ngủi"
   },
   "briefly discuss": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thảo luận ngắn gọn"
+    "enGloss": "To mention and analyze a subject concisely without exhaustive detail.",
+    "viGloss": "thảo luận sơ lược, ngắn gọn"
   },
   "broad agreement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thỏa thuận rộng rãi"
+    "enGloss": "General consensus and wide accord shared by the majority of stakeholders.",
+    "viGloss": "sự đồng thuận rộng rãi"
   },
   "broad category": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "danh mục rộng"
+    "enGloss": "A wide classification group encompassing many related sub-types.",
+    "viGloss": "nhóm phân loại rộng"
   },
   "broad definition": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "định nghĩa rộng"
+    "enGloss": "A comprehensive explanation capturing wide-ranging nuances of a concept.",
+    "viGloss": "định nghĩa khái quát, rộng mở"
   },
   "broad range": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phạm vi rộng"
+    "enGloss": "A diverse, wide-reaching spectrum of items, options, or variations.",
+    "viGloss": "phạm vi rộng lớn, đa dạng"
+  },
+  "broader context": {
+    "enGloss": "The wider societal, historical, or intellectual setting framing a specific issue.",
+    "viGloss": "bối cảnh rộng lớn hơn"
   },
   "business sector": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lĩnh vực kinh doanh"
+    "enGloss": "The commercial segment of an economy driven by private enterprise and trade.",
+    "viGloss": "khu vực doanh nghiệp / kinh tế tư nhân"
   },
   "business transaction": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giao dịch kinh doanh"
+    "enGloss": "An exchange of goods, services, or capital between commercial entities.",
+    "viGloss": "giao dịch kinh doanh, thương mại"
   },
   "capitalist economy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kinh tế tư bản chủ nghĩa"
+    "enGloss": "An economic system characterized by private ownership, competitive markets, and profit incentives.",
+    "viGloss": "nền kinh tế tư bản chủ nghĩa"
   },
   "capitalist society": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xã hội tư bản"
+    "enGloss": "A community organized around market-driven resource allocation and private capital.",
+    "viGloss": "xã hội tư bản chủ nghĩa"
   },
   "capitalist system": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hệ thống tư bản chủ nghĩa"
+    "enGloss": "A socio-economic framework prioritizing free markets, capital accumulation, and enterprise.",
+    "viGloss": "hệ thống kinh tế tư bản"
   },
   "capitalist world": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thế giới tư bản"
+    "enGloss": "The collective global nations functioning under free-market and private capital systems.",
+    "viGloss": "thế giới các nước tư bản"
   },
   "career development": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phát triển nghề nghiệp"
+    "enGloss": "The ongoing progression of professional skills, experience, and occupational advancement.",
+    "viGloss": "phát triển sự nghiệp lâu dài"
   },
   "career opportunity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cơ hội nghề nghiệp"
+    "enGloss": "A favorable circumstance enabling professional growth, promotion, or new employment.",
+    "viGloss": "cơ hội phát triển nghề nghiệp"
   },
   "careful analysis": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phân tích cẩn thận"
+    "enGloss": "A thorough, methodical examination dissecting every nuance of evidence.",
+    "viGloss": "phân tích cẩn trọng, tỉ mỉ"
   },
   "careful attention": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chú ý cẩn thận"
+    "enGloss": "Focused concentration and rigorous scrutiny directed at critical details.",
+    "viGloss": "sự chú ý cẩn trọng, chu đáo"
   },
   "careful consideration": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cân nhắc cẩn thận"
+    "enGloss": "Deliberate, thoughtful reflection evaluating all potential implications before deciding.",
+    "viGloss": "sự cân nhắc kỹ lưỡng, thận trọng"
   },
   "carefully controlled": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "được kiểm soát cẩn thận"
+    "enGloss": "Strictly monitored and regulated to eliminate confounding factors in an experiment.",
+    "viGloss": "được kiểm soát chặt chẽ, thận trọng"
   },
   "carry out research": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thực hiện nghiên cứu"
+    "enGloss": "To conduct systematic scholarly investigation and collect empirical evidence.",
+    "viGloss": "tiến hành nghiên cứu khoa học"
   },
   "carry out task": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thực hiện nhiệm vụ"
+    "enGloss": "To execute and successfully complete an assigned duty or operational procedure.",
+    "viGloss": "thực hiện nhiệm vụ được giao"
   },
   "causal relationship": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "A direct connection where changes in one variable produce effects in another.",
     "viGloss": "mối quan hệ nhân quả"
   },
   "cause consequences": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "gây ra hậu quả"
+    "enGloss": "To trigger chain reactions resulting in significant subsequent effects.",
+    "viGloss": "dẫn tới những hậu quả nghiêm trọng"
   },
   "cause stress": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "gây căng thẳng"
+    "enGloss": "To induce physical strain, anxiety, or cognitive pressure in individuals.",
+    "viGloss": "gây ra căng thẳng, áp lực"
   },
   "central characteristics": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đặc điểm trung tâm"
+    "enGloss": "The most vital, defining qualities that distinguish an entity or phenomenon.",
+    "viGloss": "những đặc điểm cốt lõi"
   },
   "central control": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "điều khiển trung tâm"
+    "enGloss": "Concentrated authority exercised from a single unified governing entity.",
+    "viGloss": "sự kiểm soát tập trung từ trung ương"
   },
   "central focus": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trọng tâm trung tâm"
+    "enGloss": "The primary core issue attracting concentrated attention and analytical priority.",
+    "viGloss": "trọng tâm cốt lõi của vấn đề"
   },
   "central government": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chính quyền trung ương"
+    "enGloss": "The national authority governing a sovereign state as distinct from local governments.",
+    "viGloss": "chính phủ trung ương"
   },
   "central problem": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "vấn đề trung tâm"
+    "enGloss": "The foremost, crucial dilemma requiring urgent analysis and resolution.",
+    "viGloss": "vấn đề nan giải trọng tâm"
+  },
+  "central role": {
+    "enGloss": "A primary, leading part that exerts dominant influence over outcomes.",
+    "viGloss": "vai trò trung tâm / then chốt"
+  },
+  "change attitude": {
+    "enGloss": "To revise one's mindset, feelings, or disposition toward a specific matter.",
+    "viGloss": "thay đổi thái độ, góc nhìn"
+  },
+  "change constantly": {
+    "enGloss": "To fluctuate or evolve continuously without remaining in a fixed state.",
+    "viGloss": "thay đổi liên tục, không ngừng"
   },
   "change dramatically": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thay đổi đáng kể"
+    "enGloss": "To undergo radical, profound transformation in nature, scale, or appearance.",
+    "viGloss": "thay đổi sâu sắc, rõ rệt"
+  },
+  "changing attitudes": {
+    "enGloss": "Evolving public opinions, societal norms, and cultural viewpoints over time.",
+    "viGloss": "sự chuyển biến trong thái độ của xã hội"
   },
   "changing nature": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thay đổi bản chất"
+    "enGloss": "The continuously evolving character or shifting dynamics of an entity.",
+    "viGloss": "bản chất luôn biến đổi"
   },
   "changing needs": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhu cầu thay đổi"
+    "enGloss": "Evolving requirements and expectations that arise as circumstances shift.",
+    "viGloss": "nhu cầu không ngừng thay đổi"
   },
   "changing world": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thế giới đang thay đổi"
+    "enGloss": "The global environment undergoing continuous geopolitical, social, and technological transformation.",
+    "viGloss": "thế giới biến chuyển không ngừng"
   },
   "characteristic feature": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tính năng đặc trưng"
+    "enGloss": "A distinct, prominent attribute that uniquely identifies an entity.",
+    "viGloss": "đặc điểm đặc trưng tiêu biểu"
   },
   "chemical reaction": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "A process involving the rearrangement of molecular or ionic structures.",
     "viGloss": "phản ứng hóa học"
   },
   "civil society": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "The collective sphere of non-governmental organizations, institutions, and civic community groups.",
     "viGloss": "xã hội dân sự"
   },
   "class consciousness": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "An awareness of one's social and economic standing within societal hierarchy.",
     "viGloss": "ý thức giai cấp"
   },
   "classic example": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ví dụ cổ điển"
+    "enGloss": "A timeless, archetypal illustration demonstrating a recognized principle clearly.",
+    "viGloss": "ví dụ kinh điển, điển hình"
   },
   "classic study": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nghiên cứu cổ điển"
+    "enGloss": "A foundational, pioneering research paper recognized as a benchmark in its field.",
+    "viGloss": "nghiên cứu kinh điển, mẫu mực"
   },
   "classic work": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tác phẩm kinh điển"
+    "enGloss": "An enduring scholarly, literary, or artistic creation of recognized excellence.",
+    "viGloss": "tác phẩm kinh điển có giá trị lâu dài"
+  },
+  "clear boundary": {
+    "enGloss": "A distinct, unambiguous line dividing separate domains, duties, or categories.",
+    "viGloss": "ranh giới phân định rõ ràng"
+  },
+  "clear distinction": {
+    "enGloss": "An unmistakable, sharp difference separating two related concepts.",
+    "viGloss": "sự phân biệt rạch ròi, minh bạch"
+  },
+  "clear evidence": {
+    "enGloss": "Unambiguous, verifiable factual proof that leaves no room for doubt.",
+    "viGloss": "bằng chứng rõ ràng, xác thực"
   },
   "clear focus": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tập trung rõ ràng"
+    "enGloss": "A well-defined analytical direction or unambiguous strategic priority.",
+    "viGloss": "định hướng / trọng tâm rõ ràng"
   },
   "clear relationship": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mối quan hệ rõ ràng"
+    "enGloss": "An evident, easily identifiable connection linking two variables or entities.",
+    "viGloss": "mối quan hệ rõ ràng, minh bạch"
   },
   "clear structure": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cấu trúc rõ ràng"
+    "enGloss": "A well-organized, logical arrangement of ideas, sentences, or institutional components.",
+    "viGloss": "cấu trúc bài viết mạch lạc, rõ ràng"
   },
   "clearly defined": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "được xác định rõ ràng"
+    "enGloss": "Formulated with exact boundaries, terms, and unambiguous specifications.",
+    "viGloss": "được định nghĩa rõ ràng, chính xác"
   },
   "clearly demonstrated": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chứng minh rõ ràng"
+    "enGloss": "Proven unmistakably through empirical data, rigorous testing, or visual proof.",
+    "viGloss": "được chứng minh rõ ràng qua dữ liệu"
+  },
+  "clearly evident": {
+    "enGloss": "Obvious, noticeable, and easily perceived beyond all reasonable doubt.",
+    "viGloss": "rõ ràng, hiển nhiên trước mắt"
   },
   "clearly important": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "rõ ràng là quan trọng"
+    "enGloss": "Manifestly significant and possessing indisputable value in an argument.",
+    "viGloss": "rõ ràng đóng vai trò quan trọng"
   },
   "clearly understand": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hiểu rõ ràng"
+    "enGloss": "To grasp concepts, instructions, or implications with thorough comprehension.",
+    "viGloss": "hiểu thấu đáo, rõ ràng"
   },
   "climate change": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "biến đổi khí hậu"
+    "enGloss": "Long-term shifts in global temperatures and weather patterns caused by human activity.",
+    "viGloss": "biến đổi khí hậu toàn cầu"
+  },
+  "close proximity": {
+    "enGloss": "Immediate nearness in physical location, spatial arrangement, or time.",
+    "viGloss": "khoảng cách rất gần về không gian"
   },
   "close relationship": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mối quan hệ thân thiết"
+    "enGloss": "An intimate, strong emotional bond or tight functional interconnection.",
+    "viGloss": "mối quan hệ gắn bó, chặt chẽ"
+  },
+  "close scrutiny": {
+    "enGloss": "Intense, meticulous examination and rigorous inspection of facts.",
+    "viGloss": "sự xem xét / giám sát kỹ lưỡng"
   },
   "closely connected": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết nối chặt chẽ"
+    "enGloss": "Tightly linked through functional dependencies or shared characteristics.",
+    "viGloss": "gắn kết chặt chẽ với nhau"
+  },
+  "closer examination": {
+    "enGloss": "An in-depth, meticulous re-investigation uncovering deeper insights.",
+    "viGloss": "sự xem xét / khảo sát kỹ lưỡng hơn"
   },
   "cognitive ability": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khả năng nhận thức"
+    "enGloss": "The mental capacity to perceive, reason, learn, remember, and solve problems.",
+    "viGloss": "khả năng nhận thức và xử lý thông tin"
   },
   "cognitive development": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phát triển nhận thức"
+    "enGloss": "The growth and maturation of thought processes, memory, and reasoning over life.",
+    "viGloss": "sự phát triển năng lực nhận thức"
   },
   "cognitive skills": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kỹ năng nhận thức"
+    "enGloss": "Mental capabilities utilized to absorb information, analyze data, and solve problems.",
+    "viGloss": "kỹ năng nhận thức và tư duy"
   },
   "collaborative learning": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "học tập hợp tác"
+    "enGloss": "Educational methodology where students work jointly in groups to solve problems.",
+    "viGloss": "học tập hợp tác nhóm"
   },
   "collect data": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thu thập dữ liệu"
+    "enGloss": "To systematically gather empirical observations, surveys, or scientific measurements.",
+    "viGloss": "thu thập dữ liệu thực nghiệm"
   },
   "collective identity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "bản sắc tập thể"
+    "enGloss": "A shared sense of belonging and cultural self-definition within a social group.",
+    "viGloss": "bản sắc chung của tập thể"
   },
   "collective memory": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ký ức tập thể"
+    "enGloss": "The shared pool of memories, knowledge, and historical narratives of a community.",
+    "viGloss": "ký ức tập thể của cộng đồng"
+  },
+  "combined effect": {
+    "enGloss": "The cumulative joint impact generated by multiple factors acting together.",
+    "viGloss": "tác động tổng hợp / hiệu ứng cộng hưởng"
+  },
+  "come into conflict": {
+    "enGloss": "To collide, dispute, or experience sharp disagreement with another entity.",
+    "viGloss": "nảy sinh xung đột, bất đồng"
   },
   "commercial activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Operations involving buying, selling, or providing goods and services for profit.",
     "viGloss": "hoạt động thương mại"
   },
+  "commercial transaction": {
+    "enGloss": "A formal financial or legal exchange involving goods, services, or funds.",
+    "viGloss": "giao dịch thương mại, mua bán"
+  },
+  "commit crime": {
+    "enGloss": "To perform an illegal act that breaches codified criminal law.",
+    "viGloss": "hành vi phạm tội"
+  },
+  "commit offence": {
+    "enGloss": "To violate a formal legal regulation, disciplinary code, or civil statute.",
+    "viGloss": "vi phạm pháp luật / quy định"
+  },
   "common characteristic": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đặc điểm chung"
+    "enGloss": "A shared quality or attribute observed across multiple individuals or cases.",
+    "viGloss": "đặc điểm chung phổ biến"
   },
   "common culture": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "văn hóa chung"
+    "enGloss": "Shared values, traditions, and artistic expressions binding members of a community.",
+    "viGloss": "văn hóa chung của cộng đồng"
+  },
+  "common feature": {
+    "enGloss": "A recognizable attribute frequently found across diverse examples.",
+    "viGloss": "đặc điểm chung dễ nhận thấy"
   },
   "common goal": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mục tiêu chung"
+    "enGloss": "A shared objective that motivates collaborative teamwork toward a mutual end.",
+    "viGloss": "mục tiêu phấn đấu chung"
   },
   "commonly accepted": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thường được chấp nhận"
+    "enGloss": "Widely acknowledged, believed, or endorsed by the general populace.",
+    "viGloss": "được chấp nhận rộng rãi trong xã hội"
   },
   "commonly called": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Frequently referred to by a specific colloquial or customary name.",
     "viGloss": "thường được gọi là"
   },
   "communicate effectively": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giao tiếp hiệu quả"
+    "enGloss": "To convey thoughts, instructions, or emotions clearly and persuasively to others.",
+    "viGloss": "giao tiếp hiệu quả, truyền cảm"
   },
   "comparative research": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nghiên cứu so sánh"
+    "enGloss": "A scholarly methodology comparing two or more systems, groups, or cultures.",
+    "viGloss": "nghiên cứu so sánh đối chiếu"
+  },
+  "compelling argument": {
+    "enGloss": "A logically rigorous, persuasive reasoning that commands intellectual agreement.",
+    "viGloss": "lập luận thuyết phục, đanh thép"
+  },
+  "compelling evidence": {
+    "enGloss": "Strong, undeniable factual proof that convincingly substantiates an assertion.",
+    "viGloss": "bằng chứng xác thực, đầy sức thuyết phục"
+  },
+  "compelling reason": {
+    "enGloss": "A powerful, undeniable justification that motivates decisive action or belief.",
+    "viGloss": "lý do thuyết phục, xác đáng"
   },
   "competitive market": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thị trường cạnh tranh"
+    "enGloss": "An economic environment where multiple businesses contend to win consumers.",
+    "viGloss": "thị trường cạnh tranh khốc liệt"
   },
   "competitive pressure": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "áp lực cạnh tranh"
+    "enGloss": "The urgent demands placed on organizations to innovate and reduce costs.",
+    "viGloss": "áp lực cạnh tranh gay gắt"
+  },
+  "complex area": {
+    "enGloss": "An intricate, multifaceted subject featuring challenging issues and interconnected factors.",
+    "viGloss": "lĩnh vực phức tạp, đa chiều"
+  },
+  "complex interaction": {
+    "enGloss": "An intricate, dynamic relationship involving mutually influencing variables.",
+    "viGloss": "sự tương tác phức tạp qua lại"
+  },
+  "complex issue": {
+    "enGloss": "A multifaceted, controversial question requiring nuanced multi-dimensional analysis.",
+    "viGloss": "vấn đề phức tạp, khó giải quyết"
+  },
+  "complex pattern": {
+    "enGloss": "An intricate design or sequence of events exhibiting subtle recurring variations.",
+    "viGloss": "mô hình diễn biến phức tạp"
+  },
+  "complex process": {
+    "enGloss": "A multifaceted series of actions comprising multiple interconnected stages.",
+    "viGloss": "quy trình phức tạp nhiều bước"
+  },
+  "complex structure": {
+    "enGloss": "An intricate framework built from numerous interdependent components.",
+    "viGloss": "cấu trúc phức tạp đa tầng"
   },
   "complex system": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hệ thống phức tạp"
+    "enGloss": "A network of diverse, interacting elements generating non-linear overall behavior.",
+    "viGloss": "hệ thống phức tạp nhiều mắt xích"
   },
   "comprehensive account": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tài khoản toàn diện"
+    "enGloss": "An all-inclusive, detailed narrative or report covering every pertinent detail.",
+    "viGloss": "bản báo cáo / tường thuật toàn diện"
+  },
+  "comprehensive approach": {
+    "enGloss": "A broad, holistic strategy addressing all dimensions of a challenge.",
+    "viGloss": "cách tiếp cận toàn diện mọi mặt"
+  },
+  "comprehensive overview": {
+    "enGloss": "A thorough summary presenting both big-picture structure and essential details.",
+    "viGloss": "cái nhìn tổng quan toàn diện"
   },
   "comprehensive review": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đánh giá toàn diện"
+    "enGloss": "An exhaustive, rigorous critique examining all published scholarly literature on a topic.",
+    "viGloss": "bài tổng quan / đánh giá toàn diện"
   },
   "comprehensive system": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hệ thống toàn diện"
+    "enGloss": "An integrated, well-coordinated framework designed to manage all operations.",
+    "viGloss": "hệ thống toàn diện, đồng bộ"
   },
   "conceptual framework": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khung khái niệm"
+    "enGloss": "A theoretical structure outlining key concepts and their interconnected relationships.",
+    "viGloss": "khung lý thuyết / khung khái niệm"
   },
   "concerted effort": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nỗ lực phối hợp"
+    "enGloss": "A determined, unified endeavor carried out jointly by multiple parties.",
+    "viGloss": "nỗ lực phối hợp chung"
   },
   "concluding probability": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xác suất kết luận"
+    "enGloss": "The final estimated likelihood derived after analyzing all available statistical evidence.",
+    "viGloss": "xác suất suy đoán cuối cùng"
+  },
+  "concluding remarks": {
+    "enGloss": "Final summarising observations delivered at the close of an essay or speech.",
+    "viGloss": "lời phát biểu / nhận định kết luận"
+  },
+  "conduct analysis": {
+    "enGloss": "To perform systematic, rigorous examination of data to discover insights.",
+    "viGloss": "tiến hành phân tích số liệu"
+  },
+  "conduct interview": {
+    "enGloss": "To question participants systematically to gather qualitative empirical data.",
+    "viGloss": "thực hiện phỏng vấn thu thập thông tin"
+  },
+  "conduct research": {
+    "enGloss": "To design and execute rigorous scholarly inquiry to advance academic knowledge.",
+    "viGloss": "tiến hành nghiên cứu khoa học"
+  },
+  "conduct study": {
+    "enGloss": "To execute a structured scientific or academic investigation into a phenomenon.",
+    "viGloss": "thực hiện công trình nghiên cứu"
   },
   "conflict resolution": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giải quyết xung đột"
+    "enGloss": "The formal methods and processes involved in peacefully resolving disputes.",
+    "viGloss": "giải quyết xung đột, tranh chấp"
   },
   "conflicting interests": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xung đột lợi ích"
+    "enGloss": "Divergent goals and opposing priorities held by competing stakeholders.",
+    "viGloss": "các lợi ích xung đột, mâu thuẫn"
+  },
+  "consider appropriate": {
+    "enGloss": "To evaluate an action and judge it as fitting for a situation.",
+    "viGloss": "cân nhắc mức độ phù hợp"
   },
   "consider impact": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xem xét tác động"
+    "enGloss": "To analyze the potential ramifications and outcomes of a policy or decision.",
+    "viGloss": "cân nhắc các tác động tiềm tàng"
+  },
+  "consider role": {
+    "enGloss": "To deliberate upon the specific contributions and functions played by an entity.",
+    "viGloss": "xem xét vai trò cụ thể"
   },
   "considerable attention": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sự chú ý đáng kể"
+    "enGloss": "Substantial, focused notice and rigorous investigation devoted to an issue.",
+    "viGloss": "sự quan tâm, chú ý đáng kể"
   },
   "considerable degree": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mức độ đáng kể"
+    "enGloss": "A significant, measurable extent or proportion of a phenomenon.",
+    "viGloss": "mức độ đáng kể, rõ rệt"
   },
   "considerable effort": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nỗ lực đáng kể"
+    "enGloss": "Substantial energetic labor and persistence invested in accomplishing a goal.",
+    "viGloss": "nỗ lực to lớn, đáng ghi nhận"
   },
   "considerable influence": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ảnh hưởng đáng kể"
+    "enGloss": "Significant power to affect beliefs, decisions, or institutional trajectories.",
+    "viGloss": "sức ảnh hưởng đáng kể"
   },
   "considerable interest": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lãi suất đáng kể"
+    "enGloss": "A high level of curiosity, engagement, or scholarly attention toward a subject.",
+    "viGloss": "sự quan tâm / chú ý sâu sắc"
   },
   "considerable support": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hỗ trợ đáng kể"
+    "enGloss": "Substantial backing, resources, or public approval provided to an initiative.",
+    "viGloss": "sự ủng hộ, hỗ trợ to lớn"
+  },
+  "consistent pattern": {
+    "enGloss": "A regular, dependable sequence or trend that recurs reliably over time.",
+    "viGloss": "khuynh hướng / mô hình nhất quán"
   },
   "consistent results": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết quả nhất quán"
+    "enGloss": "Empirical findings that remain stable, replicable, and coherent across experiments.",
+    "viGloss": "kết quả nhất quán qua các lần kiểm tra"
+  },
+  "constant rate": {
+    "enGloss": "An unwavering, steady speed or ratio that stays uniform over time.",
+    "viGloss": "tỷ lệ duy trì ổn định không đổi"
   },
   "constituent parts": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "bộ phận cấu thành"
+    "enGloss": "The individual components that collectively combine to make up a complete whole.",
+    "viGloss": "các bộ phận cấu thành nên tổng thể"
+  },
+  "contemporary debate": {
+    "enGloss": "Current public or academic discussions addressing pressing modern controversies.",
+    "viGloss": "tranh luận đương đại sôi nổi"
+  },
+  "contemporary issue": {
+    "enGloss": "A modern socio-political or cultural matter attracting active current debate.",
+    "viGloss": "vấn đề mang tính thời sự đương đại"
   },
   "contemporary life": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cuộc sống đương đại"
+    "enGloss": "The lifestyle, habits, and conditions of people living in the modern era.",
+    "viGloss": "nhịp sống đương đại hôm nay"
   },
   "contemporary society": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xã hội đương đại"
+    "enGloss": "Modern civilized human communities living and functioning in the present age.",
+    "viGloss": "xã hội đương đại ngày nay"
   },
   "contextual factors": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yếu tố bối cảnh"
+    "enGloss": "Environmental, historical, or social circumstances that shape meaning and outcomes.",
+    "viGloss": "các yếu tố thuộc về bối cảnh"
   },
   "continued growth": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tiếp tục tăng trưởng"
+    "enGloss": "Uninterrupted expansion and development sustained over an extended timeframe.",
+    "viGloss": "sự tăng trưởng liên tục, bền bỉ"
+  },
+  "continuous process": {
+    "enGloss": "An unbroken, ongoing progression of actions that operates without disruption.",
+    "viGloss": "quá trình liên tục, không ngắt quãng"
+  },
+  "contribute significantly": {
+    "enGloss": "To make a major, impactful addition toward achieving an overall goal.",
+    "viGloss": "đóng góp đáng kể vào thành công"
+  },
+  "contribute to development": {
+    "enGloss": "To actively foster and advance positive socio-economic or intellectual growth.",
+    "viGloss": "đóng góp tích cực vào sự phát triển"
   },
   "convey information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truyền tải thông tin"
+    "enGloss": "To communicate facts, instructions, or knowledge clearly to recipients.",
+    "viGloss": "truyền tải thông tin chính xác"
   },
   "convey meaning": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truyền đạt ý nghĩa"
+    "enGloss": "To transmit an intended conceptual significance or emotion through words or symbols.",
+    "viGloss": "truyền tải ý nghĩa sâu sắc"
   },
   "convey message": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truyền tải thông điệp"
+    "enGloss": "To effectively deliver an inspiring, informative, or warning idea to an audience.",
+    "viGloss": "truyền tải thông điệp nhân văn"
+  },
+  "coping strategy": {
+    "enGloss": "A cognitive or behavioral mechanism employed to manage stressful or adverse situations.",
+    "viGloss": "chiến lược thích ứng, giải tỏa áp lực"
   },
   "core skills": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kỹ năng cốt lõi"
+    "enGloss": "Fundamental competencies indispensable for professional success and general literacy.",
+    "viGloss": "các kỹ năng cốt lõi nền tảng"
+  },
+  "cover range": {
+    "enGloss": "To encompass a broad spectrum of topics, abilities, or demographic groups.",
+    "viGloss": "bao quát phạm vi nhiều lĩnh vực"
   },
   "cover topic": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chủ đề bìa"
+    "enGloss": "To comprehensively discuss, examine, and address an assigned academic subject.",
+    "viGloss": "bao quát và làm rõ chủ đề"
+  },
+  "create conditions": {
+    "enGloss": "To establish favorable circumstances that enable events or learning to happen.",
+    "viGloss": "tạo điều kiện thuận lợi"
   },
   "create environment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tạo môi trường"
+    "enGloss": "To cultivate an atmosphere and physical setting that promotes growth and well-being.",
+    "viGloss": "xây dựng môi trường lý tưởng"
+  },
+  "create impression": {
+    "enGloss": "To produce a lasting cognitive perception or emotional feeling in others.",
+    "viGloss": "tạo ấn tượng sâu sắc ban đầu"
+  },
+  "create opportunities": {
+    "enGloss": "To generate favorable openings and chances for personal or career advancement.",
+    "viGloss": "tạo ra nhiều cơ hội phát triển"
+  },
+  "create opportunity": {
+    "enGloss": "To establish a distinct possibility for growth, achievement, or innovation.",
+    "viGloss": "tạo cơ hội thuận lợi"
   },
   "create problems": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tạo ra vấn đề"
+    "enGloss": "To cause unexpected obstacles, dysfunctions, or difficulties in a situation.",
+    "viGloss": "làm phát sinh rắc rối, trở ngại"
+  },
+  "creative process": {
+    "enGloss": "The cognitive journey involved in generating original ideas, concepts, and artworks.",
+    "viGloss": "tiến trình sáng tạo nghệ thuật"
   },
   "creative thinking": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tư duy sáng tạo"
+    "enGloss": "The ability to conceive novel, imaginative solutions and perceive unexpected connections.",
+    "viGloss": "tư duy sáng tạo, đột phá"
   },
   "creative work": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công việc sáng tạo"
+    "enGloss": "Original artistic, literary, or intellectual productions resulting from imagination.",
+    "viGloss": "công trình / tác phẩm sáng tạo"
+  },
+  "critical analysis": {
+    "enGloss": "A rigorous, objective critique dissecting arguments, evidence, and underlying assumptions.",
+    "viGloss": "phân tích phản biện sắc sảo"
+  },
+  "critical approach": {
+    "enGloss": "An analytical mindset questioning standard assumptions and seeking objective evidence.",
+    "viGloss": "cách tiếp cận phản biện khoa học"
   },
   "critical attention": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sự chú ý quan trọng"
+    "enGloss": "Intense, focused scrutiny and evaluative thought focused on an argument.",
+    "viGloss": "sự nghiên cứu, mổ xẻ kỹ lưỡng"
+  },
+  "critical essay": {
+    "enGloss": "A formal academic paper presenting an objective, evidence-based critique of a topic.",
+    "viGloss": "bài tiểu luận phê bình, phản biện"
   },
   "critical factor": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yếu tố quan trọng"
+    "enGloss": "A decisive variable that directly determines whether an enterprise succeeds or fails.",
+    "viGloss": "yếu tố then chốt quyết định"
   },
   "critical inquiry": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cuộc điều tra quan trọng"
+    "enGloss": "A disciplined investigation that questions assumptions to reach verifiable truths.",
+    "viGloss": "sự tìm tòi, tra vấn phản biện"
+  },
+  "critical perspective": {
+    "enGloss": "An evaluative viewpoint that interrogates orthodox narratives and accepted truths.",
+    "viGloss": "góc nhìn phê phán, phản biện khách quan"
+  },
+  "critical reflection": {
+    "enGloss": "Deep, structured contemplation examining one's own practices, beliefs, and reasoning.",
+    "viGloss": "sự suy ngẫm, tự soi chiếu phản biện"
+  },
+  "critical scrutiny": {
+    "enGloss": "Meticulous, skeptical inspection conducted to verify integrity and factual truth.",
+    "viGloss": "sự xem xét, thẩm định khắt khe"
   },
   "critical thinking": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tư duy phản biện"
+    "enGloss": "Objective, disciplined reasoning that evaluates evidence before arriving at conclusions.",
+    "viGloss": "tư duy phản biện độc lập"
   },
   "critical writing": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "viết phê bình"
+    "enGloss": "Academic composition characterized by evaluative arguments, evidence, and objective debate.",
+    "viGloss": "lối viết phản biện sắc bén"
+  },
+  "crucial difference": {
+    "enGloss": "A pivotal distinction that fundamentally alters the nature of a comparison.",
+    "viGloss": "sự khác biệt mang tính quyết định"
   },
   "crucial factor": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yếu tố quyết định"
+    "enGloss": "An indispensable, decisive condition that heavily influences final outcomes.",
+    "viGloss": "yếu tố mang tính then chốt"
+  },
+  "crucial importance": {
+    "enGloss": "A supreme degree of significance that dictates survival or success.",
+    "viGloss": "tầm quan trọng sống còn, cốt yếu"
+  },
+  "crucial part": {
+    "enGloss": "An indispensable component without which a whole system cannot function.",
+    "viGloss": "phần thiết yếu không thể tách rời"
   },
   "cultural activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hoạt động văn hóa"
+    "enGloss": "Events and traditions celebrating music, arts, heritage, and social customs.",
+    "viGloss": "hoạt động văn hóa truyền thống"
+  },
+  "cultural aspect": {
+    "enGloss": "A specific feature or custom unique to a particular civilization or group.",
+    "viGloss": "khía cạnh văn hóa đặc thù"
+  },
+  "cultural attitudes": {
+    "enGloss": "Mindsets, values, and perceptions shaped by upbringing within a culture.",
+    "viGloss": "thái độ và quan niệm văn hóa"
+  },
+  "cultural background": {
+    "enGloss": "The historical, ethnic, and social traditions that shape an individual's worldview.",
+    "viGloss": "nền tảng văn hóa xuất thân"
+  },
+  "cultural context": {
+    "enGloss": "The historical and societal environment that imbues events with meaning.",
+    "viGloss": "bối cảnh văn hóa xã hội"
+  },
+  "cultural diversity": {
+    "enGloss": "The coexistence of varied racial, ethnic, and societal groups within a society.",
+    "viGloss": "sự đa dạng bản sắc văn hóa"
+  },
+  "cultural heritage": {
+    "enGloss": "Traditions, historical monuments, and values passed down through generations.",
+    "viGloss": "di sản văn hóa quý báu"
   },
   "cultural history": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lịch sử văn hóa"
+    "enGloss": "The scholarly study of human thought, customs, and arts across time.",
+    "viGloss": "tiến trình lịch sử văn hóa"
+  },
+  "cultural identity": {
+    "enGloss": "The sense of belonging to a group defined by shared traditions and language.",
+    "viGloss": "bản sắc văn hóa dân tộc"
+  },
+  "cultural influence": {
+    "enGloss": "The effect of cultural values and artistic creations on beliefs and behaviors.",
+    "viGloss": "ảnh hưởng văn hóa sâu rộng"
   },
   "cultural life": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đời sống văn hóa"
+    "enGloss": "Participation in arts, literature, traditions, and communal events within society.",
+    "viGloss": "đời sống văn hóa tinh thần"
+  },
+  "cultural perspective": {
+    "enGloss": "An analytical standpoint informed by cultural traditions and societal values.",
+    "viGloss": "góc nhìn dựa trên bản sắc văn hóa"
+  },
+  "cultural practice": {
+    "enGloss": "A customary pattern of behavior, ritual, or tradition observed by a community.",
+    "viGloss": "tập tục, phong tục văn hóa"
   },
   "cultural values": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giá trị văn hóa"
+    "enGloss": "Core ethical beliefs, ideals, and principles revered across a society.",
+    "viGloss": "các giá trị văn hóa cốt lõi"
   },
   "current climate": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khí hậu hiện tại"
+    "enGloss": "The prevailing social, economic, or political atmosphere of the present moment.",
+    "viGloss": "bối cảnh / bầu không khí xã hội hiện nay"
+  },
+  "current status": {
+    "enGloss": "The real-time condition, position, or operational state of an enterprise.",
+    "viGloss": "tình trạng hiện tại của sự việc"
   },
   "current technology": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công nghệ hiện tại"
+    "enGloss": "The contemporary tools, hardware, and digital algorithms currently in use.",
+    "viGloss": "công nghệ hiện hành đang áp dụng"
   },
   "daily living": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cuộc sống hàng ngày"
+    "enGloss": "The routine activities, chores, and lifestyle patterns of everyday existence.",
+    "viGloss": "sinh hoạt thường nhật hàng ngày"
+  },
+  "data gathering": {
+    "enGloss": "The methodical process of measuring and assembling research information.",
+    "viGloss": "quá trình thu thập số liệu"
   },
   "deep understanding": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hiểu biết sâu sắc"
+    "enGloss": "Thorough, profound insight into the core mechanisms governing a phenomenon.",
+    "viGloss": "sự thấu hiểu sâu sắc bản chất"
   },
   "defining characteristic": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đặc điểm xác định"
+    "enGloss": "An essential hallmark that distinguishes and characterizes an entity.",
+    "viGloss": "đặc trưng cốt lõi giúp định danh"
+  },
+  "deliberate attempt": {
+    "enGloss": "An intentional, calculated effort aimed at achieving a specific objective.",
+    "viGloss": "nỗ lực có chủ đích rõ ràng"
   },
   "democratic society": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xã hội dân chủ"
+    "enGloss": "A community governed by democratic principles, human rights, and rule of law.",
+    "viGloss": "xã hội dân chủ, văn minh"
+  },
+  "demographic change": {
+    "enGloss": "Statistically measurable shifts in population composition, age, and migration.",
+    "viGloss": "sự biến động nhân khẩu học"
+  },
+  "demographic characteristics": {
+    "enGloss": "Statistical attributes of populations including age, gender, education, and income.",
+    "viGloss": "đặc điểm nhân khẩu học"
+  },
+  "demographic factor": {
+    "enGloss": "A population-based variable influencing broader economic or social trends.",
+    "viGloss": "yếu tố biến đổi nhân khẩu học"
+  },
+  "demonstrate competence": {
+    "enGloss": "To provide convincing proof of practical skill, ability, and knowledge.",
+    "viGloss": "thể hiện năng lực chuyên môn"
+  },
+  "deny access": {
+    "enGloss": "To refuse entry or block authorization to visit a facility or view data.",
+    "viGloss": "từ chối quyền tiếp cận, sử dụng"
   },
   "dependent variable": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "biến phụ thuộc"
+    "enGloss": "The experimental factor measured to observe the effects of manipulated conditions.",
+    "viGloss": "biến số phụ thuộc trong thí nghiệm"
+  },
+  "describe procedure": {
+    "enGloss": "To explain the sequential steps required to carry out an operation.",
+    "viGloss": "mô tả quy trình thực hiện cụ thể"
+  },
+  "desired outcome": {
+    "enGloss": "The targeted, optimal result anticipated from an action or policy.",
+    "viGloss": "kết quả mong đợi cuối cùng"
+  },
+  "developmental process": {
+    "enGloss": "The orderly progression of biological or cognitive growth over time.",
+    "viGloss": "tiến trình phát triển tự nhiên"
   },
   "diagnostic test": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "xét nghiệm chẩn đoán"
+    "enGloss": "An assessment designed to identify specific strengths, deficits, or illnesses.",
+    "viGloss": "bài kiểm tra chẩn đoán năng lực"
+  },
+  "differ significantly": {
+    "enGloss": "To show clear, statistically significant divergence in measurable qualities.",
+    "viGloss": "khác biệt rõ rệt về bản chất"
   },
   "digital information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thông tin số"
+    "enGloss": "Data encoded and stored in binary digital format for computer processing.",
+    "viGloss": "thông tin kỹ thuật số"
   },
   "digital media": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phương tiện truyền thông kỹ thuật số"
+    "enGloss": "Electronic content delivered via the internet, computers, and portable devices.",
+    "viGloss": "truyền thông kỹ thuật số hiện đại"
   },
   "digital technology": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công nghệ số"
+    "enGloss": "Electronic devices, software, and systems that process digital data.",
+    "viGloss": "công nghệ số tiên tiến"
+  },
+  "direct access": {
+    "enGloss": "Immediate, unhindered entry to resources or information without intermediaries.",
+    "viGloss": "quyền tiếp cận trực tiếp không qua trung gian"
   },
   "direct communication": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giao tiếp trực tiếp"
+    "enGloss": "Straightforward, face-to-face or real-time exchange of thoughts and facts.",
+    "viGloss": "giao tiếp trực tiếp đối thoại"
+  },
+  "direct consequences": {
+    "enGloss": "Immediate, unmediated repercussions that follow directly from an action.",
+    "viGloss": "hệ quả trực tiếp nhãn tiền"
   },
   "direct impact": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tác động trực tiếp"
+    "enGloss": "An unbuffered, immediate effect exerted on a targeted recipient or system.",
+    "viGloss": "tác động trực tiếp ngay tức thì"
   },
   "directly connected": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết nối trực tiếp"
+    "enGloss": "Linked without intervening stages or third-party intermediaries.",
+    "viGloss": "kết nối trực tiếp với nhau"
   },
   "directly responsible": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Holding primary personal or institutional accountability for an event.",
     "viGloss": "chịu trách nhiệm trực tiếp"
   },
   "discuss issue": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thảo luận vấn đề"
+    "enGloss": "To debate and evaluate different sides of a contentious topic thoroughly.",
+    "viGloss": "thảo luận chuyên sâu về vấn đề"
   },
   "discuss topic": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thảo luận chủ đề"
+    "enGloss": "To examine, elaborate on, and critically evaluate an assigned subject.",
+    "viGloss": "thảo luận xoay quanh chủ đề"
   },
   "disposable income": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thu nhập khả dụng"
+    "enGloss": "The remaining personal earnings available for spending or saving after taxes.",
+    "viGloss": "thu nhập khả dụng sau thuế"
   },
   "distinct group": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhóm riêng biệt"
+    "enGloss": "A clearly identifiable cohort possessing unique characteristics.",
+    "viGloss": "nhóm đối tượng riêng biệt"
+  },
+  "diverse background": {
+    "enGloss": "Varied cultural, academic, or socio-economic origins among members.",
+    "viGloss": "hoàn cảnh xuất thân đa dạng"
   },
   "diverse group": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhóm đa dạng"
+    "enGloss": "A collective gathering composed of individuals from varied walks of life.",
+    "viGloss": "tập hợp nhóm người đa dạng"
+  },
+  "diverse range": {
+    "enGloss": "A wide spectrum containing many different types or variations.",
+    "viGloss": "phạm vi phong phú, đa dạng"
+  },
+  "documentary evidence": {
+    "enGloss": "Proof established through official records, manuscripts, or written archives.",
+    "viGloss": "chứng cứ trên tài liệu, văn bản"
   },
   "domestic market": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thị trường nội địa"
+    "enGloss": "The internal commercial market located within the borders of a nation.",
+    "viGloss": "thị trường nội địa trong nước"
+  },
+  "domestic sphere": {
+    "enGloss": "The private realm centered around home life, parenting, and family duties.",
+    "viGloss": "phạm vi gia đình / đời sống nội bộ"
+  },
+  "domestic violence": {
+    "enGloss": "Abusive, aggressive behavior occurring within the home and intimate relationships.",
+    "viGloss": "nạn bạo lực gia đình"
   },
   "dominant culture": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "văn hóa thống trị"
+    "enGloss": "The prevailing cultural norms, values, and practices controlling a society.",
+    "viGloss": "văn hóa chủ đạo chiếm ưu thế"
+  },
+  "dominant discourse": {
+    "enGloss": "The leading narrative and conceptual framework shaping public perception.",
+    "viGloss": "luồng quan điểm chi phối xã hội"
   },
   "dominant group": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhóm thống trị"
+    "enGloss": "The demographic segment possessing superior political, cultural, or economic power.",
+    "viGloss": "nhóm có vị thế chi phối"
+  },
+  "draw attention": {
+    "enGloss": "To intentionally highlight or direct audience focus toward a vital matter.",
+    "viGloss": "thu hút sự chú ý của dư luận"
   },
   "driving force": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "động lực"
+    "enGloss": "The primary catalyst, motivation, or energy propelling a movement forward.",
+    "viGloss": "động lực chính thúc đẩy phát triển"
+  },
+  "dynamic equilibrium": {
+    "enGloss": "A stable state where continuous opposing reactions occur at equal rates.",
+    "viGloss": "trạng thái cân bằng động"
   },
   "dynamic nature": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tính chất năng động"
+    "enGloss": "A character marked by continuous movement, energy, and constant evolution.",
+    "viGloss": "bản chất năng động, luôn biến chuyển"
   },
   "earlier discussion": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cuộc thảo luận trước đó"
+    "enGloss": "The analytical points mentioned in previous passages or meetings.",
+    "viGloss": "cuộc thảo luận đã nêu ở phần trước"
   },
   "earlier times": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lần trước"
+    "enGloss": "Historical eras and preceding generations in human civilization.",
+    "viGloss": "thời kỳ trước đây trong lịch sử"
   },
   "easily accessible": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "dễ dàng truy cập"
+    "enGloss": "Conveniently reached, acquired, or understood with minimal impediment.",
+    "viGloss": "dễ dàng tiếp cận và sử dụng"
   },
   "easily identified": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "dễ dàng xác định"
+    "enGloss": "Readily recognized, distinguished, or categorized without confusion.",
+    "viGloss": "dễ dàng nhận biết, xác định"
   },
   "easy access": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truy cập dễ dàng"
+    "enGloss": "Convenient, frictionless opportunity to enter or utilize resources.",
+    "viGloss": "khả năng tiếp cận thuận tiện"
   },
   "economic activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hoạt động kinh tế"
+    "enGloss": "The production, distribution, and consumption of goods and financial services.",
+    "viGloss": "hoạt động kinh tế sôi nổi"
   },
   "economic affairs": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "vấn đề kinh tế"
+    "enGloss": "The broad domain of financial policies, commerce, and national wealth.",
+    "viGloss": "các vấn đề kinh tế xã hội"
+  },
+  "economic analysis": {
+    "enGloss": "The systematic study of production, markets, inflation, and fiscal dynamics.",
+    "viGloss": "phân tích kinh tế chuyên sâu"
   },
   "economic benefits": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lợi ích kinh tế"
+    "enGloss": "Positive financial gains, cost reductions, or material advantages.",
+    "viGloss": "lợi ích kinh tế thiết thực"
+  },
+  "economic consequences": {
+    "enGloss": "The financial and material repercussions stemming from policy decisions.",
+    "viGloss": "hệ quả kinh tế lâu dài"
+  },
+  "economic context": {
+    "enGloss": "The prevailing financial, inflationary, and commercial backdrop framing events.",
+    "viGloss": "bối cảnh kinh tế vĩ mô"
   },
   "economic forces": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lực lượng kinh tế"
+    "enGloss": "Market mechanisms, supply, demand, and capital flows driving trends.",
+    "viGloss": "các động lực kinh tế chi phối"
   },
   "economic goal": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mục tiêu kinh tế"
+    "enGloss": "A targeted financial milestone or growth objective set by governments.",
+    "viGloss": "mục tiêu kinh tế trọng tâm"
   },
   "economic growth": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tăng trưởng kinh tế"
+    "enGloss": "A measurable expansion in the productive capacity and gross domestic product.",
+    "viGloss": "sự tăng trưởng kinh tế vững chắc"
   },
   "economic inequality": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "bất bình đẳng kinh tế"
+    "enGloss": "Disproportionate disparities in income, wealth, and living standards among citizens.",
+    "viGloss": "sự bất bình đẳng về kinh tế"
+  },
+  "economic integration": {
+    "enGloss": "The unification of economic policies and free trade across nations.",
+    "viGloss": "tiến trình hội nhập kinh tế"
   },
   "economic interests": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lợi ích kinh tế"
+    "enGloss": "Financial stakes and commercial advantages prioritized by individuals or firms.",
+    "viGloss": "lợi ích kinh tế cốt lõi"
   },
   "economic power": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sức mạnh kinh tế"
+    "enGloss": "The geopolitical leverage and dominance exerted through financial wealth.",
+    "viGloss": "tiềm lực và sức mạnh kinh tế"
+  },
+  "economic prosperity": {
+    "enGloss": "A widespread state of financial security, flourishing business, and affluence.",
+    "viGloss": "sự thịnh vượng về kinh tế"
   },
   "economic relationships": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quan hệ kinh tế"
+    "enGloss": "Commercial, trading, and financial interactions connecting global entities.",
+    "viGloss": "các mối quan hệ kinh tế song phương"
   },
   "economic resources": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nguồn lực kinh tế"
+    "enGloss": "Financial capital, labor, infrastructure, and natural wealth used in production.",
+    "viGloss": "nguồn lực kinh tế dồi dào"
+  },
+  "economic sector": {
+    "enGloss": "A distinct subdivision of the economy such as manufacturing or services.",
+    "viGloss": "khu vực kinh tế trọng điểm"
+  },
+  "economic stability": {
+    "enGloss": "A resilient national financial environment devoid of excessive volatility.",
+    "viGloss": "sự ổn định của nền kinh tế"
+  },
+  "economic status": {
+    "enGloss": "An individual's or nation's relative financial position and wealth rank.",
+    "viGloss": "vị thế kinh tế trong xã hội"
+  },
+  "economic structure": {
+    "enGloss": "The organizational framework of an economy across industries and sectors.",
+    "viGloss": "cơ cấu nền kinh tế"
   },
   "economic success": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thành công kinh tế"
+    "enGloss": "Outstanding achievement measured in profitability, productivity, and wealth creation.",
+    "viGloss": "thành công rực rỡ về kinh tế"
+  },
+  "economic welfare": {
+    "enGloss": "The overall material well-being and financial safety of a population.",
+    "viGloss": "phúc lợi kinh tế của người dân"
   },
   "educational institution": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cơ sở giáo dục"
+    "enGloss": "A structured school, academy, college, or university dedicated to learning.",
+    "viGloss": "cơ sở giáo dục / trường học"
   },
   "educational opportunity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cơ hội giáo dục"
+    "enGloss": "A chance for citizens to receive schooling, qualifications, and intellectual growth.",
+    "viGloss": "cơ hội học tập rộng mở"
   },
   "educational policy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chính sách giáo dục"
+    "enGloss": "The government principles and statutory rules guiding school systems.",
+    "viGloss": "chính sách đổi mới giáo dục"
   },
   "educational programme": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chương trình giáo dục"
+    "enGloss": "A structured curriculum designed to deliver instruction and skills.",
+    "viGloss": "chương trình đào tạo giáo dục"
+  },
+  "educational qualification": {
+    "enGloss": "An academic degree, diploma, or certificate validating acquired competence.",
+    "viGloss": "văn bằng / trình độ học vấn"
   },
   "effective communication": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giao tiếp hiệu quả"
+    "enGloss": "The successful, clear transmission of ideas producing mutual comprehension.",
+    "viGloss": "giao tiếp hiệu quả, thuyết phục"
   },
   "effective implementation": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thực hiện hiệu quả"
+    "enGloss": "The competent execution of a plan that turns strategy into results.",
+    "viGloss": "triển khai thực thi hiệu quả"
   },
   "effective intervention": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "can thiệp hiệu quả"
+    "enGloss": "A timely, impactful action that rectifies an escalating crisis or deficit.",
+    "viGloss": "sự can thiệp kịp thời và hiệu quả"
   },
   "effective management": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quản lý hiệu quả"
+    "enGloss": "Competent leadership directing organizational resources to achieve strategic goals.",
+    "viGloss": "công tác quản lý hiệu quả"
+  },
+  "effective participation": {
+    "enGloss": "Meaningful, constructive engagement that genuinely shapes decision-making.",
+    "viGloss": "sự tham gia mang lại hiệu quả thực chất"
+  },
+  "electronic access": {
+    "enGloss": "The ability to retrieve digital information and web services over networks.",
+    "viGloss": "tiếp cận thông tin qua môi trường mạng"
   },
   "electronic communication": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truyền thông điện tử"
+    "enGloss": "The exchange of messages and files via digital networks and devices.",
+    "viGloss": "giao tiếp qua phương tiện điện tử"
   },
   "electronic media": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Broadcast, internet, and digital formats utilized to disseminate news and entertainment.",
     "viGloss": "phương tiện truyền thông điện tử"
   },
+  "electronic resources": {
+    "enGloss": "Digital databases, online libraries, and electronic books supporting study.",
+    "viGloss": "nguồn học liệu điện tử phong phú"
+  },
   "emotional impact": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tác động cảm xúc"
+    "enGloss": "The profound psychological and affective reaction elicited by an experience.",
+    "viGloss": "tác động mạnh mẽ đến cảm xúc"
+  },
+  "emotional intelligence": {
+    "enGloss": "The capacity to perceive, regulate, and express emotions empathetically and constructively.",
+    "viGloss": "trí tuệ cảm xúc (EQ)"
+  },
+  "emotional reaction": {
+    "enGloss": "A spontaneous, feelings-based response triggered by a poignant stimulus.",
+    "viGloss": "phản ứng cảm xúc bột phát"
+  },
+  "emotional response": {
+    "enGloss": "An affective internal reaction provoked by words, actions, or memories.",
+    "viGloss": "sự hồi đáp về mặt cảm xúc"
   },
   "emotional support": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hỗ trợ tinh thần"
+    "enGloss": "Empathy, compassion, and reassurance provided to comfort someone in distress.",
+    "viGloss": "sự chia sẻ, nâng đỡ tinh thần"
+  },
+  "empirical investigation": {
+    "enGloss": "Scientific research relying on systematic direct observation and measurable experimentation.",
+    "viGloss": "cuộc điều tra thực nghiệm thực tế"
   },
   "empirical support": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hỗ trợ thực nghiệm"
+    "enGloss": "Observable, replicable evidence confirming the validity of a theoretical claim.",
+    "viGloss": "bằng chứng thực nghiệm củng cố lý thuyết"
+  },
+  "employment opportunities": {
+    "enGloss": "Job openings and prospects for securing remunerated work.",
+    "viGloss": "cơ hội việc làm rộng mở"
   },
   "encounter difficulties": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "gặp khó khăn"
+    "enGloss": "To run into unforeseen complications or setbacks while pursuing a task.",
+    "viGloss": "gặp phải những khó khăn thử thách"
   },
   "encounter problems": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "gặp phải vấn đề"
+    "enGloss": "To come across operational challenges or structural faults in a system.",
+    "viGloss": "đối mặt với những sự cố phát sinh"
+  },
+  "encourage development": {
+    "enGloss": "To actively stimulate, support, and nurture constructive growth.",
+    "viGloss": "khuyến khích sự phát triển sáng tạo"
   },
   "engage in activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tham gia vào hoạt động"
+    "enGloss": "To take an active part and immerse oneself in an event or task.",
+    "viGloss": "tích cực tham gia vào hoạt động"
   },
   "enhance learning": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tăng cường học tập"
+    "enGloss": "To boost the depth, retention, and speed of educational acquisition.",
+    "viGloss": "nâng cao chất lượng học tập"
   },
   "enhance performance": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nâng cao hiệu suất"
+    "enGloss": "To elevate productivity, quality, and effectiveness in sports or work.",
+    "viGloss": "nâng cao hiệu suất làm việc"
+  },
+  "entire range": {
+    "enGloss": "The whole extensive variety or spectrum of options available.",
+    "viGloss": "toàn bộ dải quang phổ / phổ rộng"
+  },
+  "entirely clear": {
+    "enGloss": "Unambiguous, transparent, and completely free from doubt or obscurity.",
+    "viGloss": "hoàn toàn sáng tỏ, không mơ hồ"
+  },
+  "entirely different": {
+    "enGloss": "Wholly distinct and showing no shared qualities with a comparator.",
+    "viGloss": "hoàn toàn khác biệt về bản chất"
   },
   "environmental changes": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thay đổi môi trường"
+    "enGloss": "Transformations affecting climate, biodiversity, and habitats across ecosystems.",
+    "viGloss": "những biến đổi của môi trường"
   },
   "environmental concern": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mối quan tâm về môi trường"
+    "enGloss": "Apprehension and urgency regarding climate change, pollution, and resource loss.",
+    "viGloss": "mối quan ngại sâu sắc về môi trường"
   },
   "environmental consequences": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hậu quả môi trường"
+    "enGloss": "The ecological disruptions and damages resulting from human industrial projects.",
+    "viGloss": "hậu quả môi trường nặng nề"
   },
   "environmental damage": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thiệt hại môi trường"
+    "enGloss": "Degradation and destruction inflicted upon natural habitats and atmospheric balances.",
+    "viGloss": "tổn hại nghiêm trọng đến môi trường"
+  },
+  "environmental degradation": {
+    "enGloss": "The deterioration of natural ecosystems through pollution and unsustainable depletion.",
+    "viGloss": "sự suy thoái môi trường sinh thái"
+  },
+  "environmental impact": {
+    "enGloss": "The overall footprint and ecological ramifications of human activities.",
+    "viGloss": "tác động môi trường trên diện rộng"
   },
   "environmental pollution": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ô nhiễm môi trường"
+    "enGloss": "The contamination of air, water, and soil by toxic industrial effluents.",
+    "viGloss": "nạn ô nhiễm môi trường sống"
+  },
+  "environmental protection": {
+    "enGloss": "The conservation and safeguarding of natural ecosystems through sustainable policies.",
+    "viGloss": "bảo vệ môi trường thiên nhiên"
+  },
+  "equal status": {
+    "enGloss": "Identical standing, rights, and prestige conferred to all individuals equally.",
+    "viGloss": "địa vị bình đẳng trong xã hội"
   },
   "equally important": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quan trọng như nhau"
+    "enGloss": "Possessing the exact same degree of significance and analytical priority.",
+    "viGloss": "quan trọng tương đương nhau"
   },
   "essential component": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thành phần thiết yếu"
+    "enGloss": "An indispensable, foundational part vital to the completion of a whole.",
+    "viGloss": "thành phần thiết yếu không thể thiếu"
   },
   "essential element": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yếu tố thiết yếu"
+    "enGloss": "A core ingredient or prerequisite without which a system cannot function.",
+    "viGloss": "yếu tố cốt lõi mang tính quyết định"
   },
   "essential feature": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tính năng thiết yếu"
+    "enGloss": "A fundamental characteristic that defines the core identity of an entity.",
+    "viGloss": "đặc điểm thiết yếu đặc trưng"
   },
   "essential function": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chức năng thiết yếu"
+    "enGloss": "An imperative operational duty that an institution or mechanism must fulfill.",
+    "viGloss": "chức năng cốt yếu phục vụ mục tiêu"
+  },
+  "established practice": {
+    "enGloss": "A customary, time-tested convention widely adopted across a profession.",
+    "viGloss": "thông lệ lâu đời / tập quán đã định hình"
+  },
+  "ethical consideration": {
+    "enGloss": "Moral principles and values that must be weighed when deciding policies.",
+    "viGloss": "sự cân nhắc về mặt đạo đức"
+  },
+  "ethical dilemma": {
+    "enGloss": "A complex quandary where choosing between moral principles proves exceptionally difficult.",
+    "viGloss": "tình huống nan giải về mặt đạo đức"
+  },
+  "ethical issue": {
+    "enGloss": "A contentious problem touching upon moral duties, fairness, and human rights.",
+    "viGloss": "vấn đề liên quan đến chuẩn mực đạo đức"
+  },
+  "ethical principle": {
+    "enGloss": "A foundational moral rule that guides upright and honorable behavior.",
+    "viGloss": "nguyên tắc đạo đức cốt lõi"
   },
   "ethnic community": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cộng đồng dân tộc"
+    "enGloss": "A social population sharing a common racial, linguistic, or cultural heritage.",
+    "viGloss": "cộng đồng người dân tộc"
+  },
+  "ethnic diversity": {
+    "enGloss": "The varied coexistence of multiple ethnic and cultural groups in a nation.",
+    "viGloss": "sự đa dạng về thành phần sắc tộc"
   },
   "ethnic group": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhóm dân tộc"
+    "enGloss": "A distinct community identified by shared ancestry, culture, or historical traditions.",
+    "viGloss": "nhóm sắc tộc / dân tộc thiểu số"
+  },
+  "ethnic identity": {
+    "enGloss": "An individual's psychological sense of belonging to a particular ethnic group.",
+    "viGloss": "bản sắc văn hóa của dân tộc"
   },
   "exercise authority": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quyền thực thi"
+    "enGloss": "To officially exert legitimate institutional, legal, or governmental power.",
+    "viGloss": "thực thi quyền hạn / thẩm quyền hợp pháp"
   },
   "expand rapidly": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mở rộng nhanh chóng"
+    "enGloss": "To grow in physical dimensions, volume, or market footprint very swiftly.",
+    "viGloss": "mở rộng quy mô nhanh chóng"
   },
   "experience difficulties": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trải qua khó khăn"
+    "enGloss": "To undergo hardships, operational friction, or periods of severe distress.",
+    "viGloss": "trải qua những giai đoạn khó khăn"
   },
   "experience problems": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "gặp vấn đề"
+    "enGloss": "To encounter structural hurdles or defects that impede normal progress.",
+    "viGloss": "gặp phải các vướng mắc trở ngại"
   },
   "experiential learning": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "học tập trải nghiệm"
+    "enGloss": "Acquiring practical wisdom and mastery by doing and reflecting on action.",
+    "viGloss": "học tập qua trải nghiệm thực tế"
   },
   "experimental design": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thiết kế thử nghiệm"
+    "enGloss": "The structured plan detailing variables, controls, and protocols in a test.",
+    "viGloss": "thiết kế quy trình thực nghiệm"
   },
   "experimental results": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết quả thí nghiệm"
+    "enGloss": "Empirical data and findings gathered after running laboratory experiments.",
+    "viGloss": "kết quả thí nghiệm thực nghiệm"
   },
   "explanatory power": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sức mạnh giải thích"
+    "enGloss": "The capacity of a scientific theory to account for and clarify phenomena.",
+    "viGloss": "khả năng / giá trị giải thích của lý thuyết"
   },
   "explore further": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khám phá thêm"
+    "enGloss": "To investigate a subject in greater depth and uncover deeper nuances.",
+    "viGloss": "tìm hiểu và đào sâu nghiên cứu thêm"
   },
   "explore issue": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tìm hiểu vấn đề"
+    "enGloss": "To conduct an open, thorough investigation into a contentious problem.",
+    "viGloss": "khảo sát toàn diện về vấn đề"
   },
   "external forces": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ngoại lực"
+    "enGloss": "Influences and pressures that originate outside an organization or nation.",
+    "viGloss": "các thế lực tác động từ bên ngoài"
+  },
+  "external threat": {
+    "enGloss": "A danger or hostile intention originating from outside a community.",
+    "viGloss": "mối đe dọa tiềm ẩn từ bên ngoài"
   },
   "extract data": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trích xuất dữ liệu"
+    "enGloss": "To pull out and isolate specific data points from larger repositories.",
+    "viGloss": "trích xuất và chọn lọc dữ liệu"
   },
   "extract information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trích xuất thông tin"
+    "enGloss": "To distill and retrieve key facts from extensive documents or datasets.",
+    "viGloss": "chắt lọc thông tin hữu ích"
   },
   "extremely powerful": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cực kỳ mạnh mẽ"
+    "enGloss": "Possessing immense potency, influence, or mechanical capability.",
+    "viGloss": "vô cùng mạnh mẽ và hiệu lực"
   },
   "extremely useful": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cực kỳ hữu ích"
+    "enGloss": "Providing immense practical assistance, utility, and convenience.",
+    "viGloss": "cực kỳ hữu ích trong thực tế"
   },
   "extremely valuable": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cực kỳ có giá trị"
+    "enGloss": "Worth an extraordinary amount financially or holding supreme intellectual importance.",
+    "viGloss": "vô cùng quý giá và đáng trân trọng"
   },
   "face challenge": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đối mặt với thử thách"
+    "enGloss": "To confront a demanding hurdle with resolve and strategic preparation.",
+    "viGloss": "đối mặt với thách thức to lớn"
   },
   "face difficulties": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đối mặt với khó khăn"
+    "enGloss": "To deal courageously with arduous hardships and roadblocks.",
+    "viGloss": "đối diện với muôn vàn khó khăn"
   },
   "face dilemma": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đối mặt với vấn đề nan giải"
+    "enGloss": "To find oneself trapped between equally undesirable alternatives.",
+    "viGloss": "đứng trước tình thế tiến thoái lưỡng nan"
   },
   "face discrimination": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đối mặt với sự phân biệt đối xử"
+    "enGloss": "To endure unjust prejudice and unequal treatment based on demographic traits.",
+    "viGloss": "đối mặt với nạn phân biệt đối xử"
+  },
+  "facial expression": {
+    "enGloss": "The visual motions and positioning of facial muscles conveying emotion.",
+    "viGloss": "biểu cảm qua nét mặt"
+  },
+  "facilitate development": {
+    "enGloss": "To ease bottlenecks and make growth smoother, faster, and more accessible.",
+    "viGloss": "tạo điều kiện thuận lợi cho sự phát triển"
   },
   "fair treatment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đối xử công bằng"
+    "enGloss": "Impartial, just, and dignified consideration extended to every person.",
+    "viGloss": "sự đối xử công bằng, văn minh"
   },
   "fairly clear": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khá rõ ràng"
+    "enGloss": "Reasonably understandable, evident, and accessible to normal discernment.",
+    "viGloss": "tương đối rõ ràng, dễ hiểu"
   },
   "fairly common": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khá phổ biến"
+    "enGloss": "Occurring frequently enough to be recognized as regular rather than exceptional.",
+    "viGloss": "khá phổ biến trong đời sống"
   },
   "federal government": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "The national authority governing a political federation of individual states.",
     "viGloss": "chính phủ liên bang"
   },
   "final decision": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quyết định cuối cùng"
+    "enGloss": "The definitive, irrevocable judgment rendered after all deliberation concludes.",
+    "viGloss": "quyết định mang tính chung cuộc"
+  },
+  "final outcome": {
+    "enGloss": "The definitive, terminal result arrived at the culmination of an event.",
+    "viGloss": "kết quả chung cuộc cuối cùng"
   },
   "final product": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sản phẩm cuối cùng"
+    "enGloss": "The completely finished article ready for consumer distribution or grading.",
+    "viGloss": "thành phẩm cuối cùng hoàn chỉnh"
   },
   "final result": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết quả cuối cùng"
+    "enGloss": "The concluding finding, metric, or status attained at the process end.",
+    "viGloss": "kết quả cuối cùng đạt được"
   },
   "financial affairs": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "vấn đề tài chính"
+    "enGloss": "Matters and policies dealing with capital, income, investments, and accounting.",
+    "viGloss": "các vấn đề quản lý tài chính"
   },
   "financial assistance": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hỗ trợ tài chính"
+    "enGloss": "Direct funding, monetary subsidies, or low-interest loans given to help recipients.",
+    "viGloss": "hỗ trợ tài chính kịp thời"
   },
   "financial institution": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tổ chức tài chính"
+    "enGloss": "A licensed bank, credit union, or fund facilitating monetary transactions.",
+    "viGloss": "tổ chức / định chế tài chính"
   },
   "financial management": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quản lý tài chính"
+    "enGloss": "The planning, organizing, and monitoring of monetary resources to achieve targets.",
+    "viGloss": "công tác quản lý tài chính"
   },
   "financial market": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thị trường tài chính"
+    "enGloss": "An exchange mechanism where buyers and sellers trade financial securities and capital.",
+    "viGloss": "thị trường tài chính sôi động"
   },
   "find evidence": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tìm bằng chứng"
+    "enGloss": "To uncover verifiable data or documents that confirm or refute a hypothesis.",
+    "viGloss": "tìm kiếm chứng cứ xác thực"
   },
   "find information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tìm thông tin"
+    "enGloss": "To locate, search out, and identify pertinent facts across sources.",
+    "viGloss": "tìm kiếm dữ liệu thông tin"
+  },
+  "finite number": {
+    "enGloss": "A countable, limited quantity that has definite boundaries.",
+    "viGloss": "số lượng hữu hạn có thể đếm được"
+  },
+  "flexible approach": {
+    "enGloss": "An adaptable, versatile methodology responsive to changing conditions.",
+    "viGloss": "cách tiếp cận linh hoạt, tùy biến"
   },
   "focus attention": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tập trung chú ý"
+    "enGloss": "To concentrate intellectual energy and observation sharply onto a priority.",
+    "viGloss": "tập trung cao độ sự chú ý"
+  },
+  "follow instructions": {
+    "enGloss": "To comply obediently and precisely with directives and operational guidelines.",
+    "viGloss": "tuân thủ nghiêm ngặt chỉ dẫn"
+  },
+  "follow procedure": {
+    "enGloss": "To observe each established step of a formal administrative protocol rigorously.",
+    "viGloss": "thực hiện đúng quy trình thủ tục"
+  },
+  "foreign currency": {
+    "enGloss": "The monetary denomination of another country held for international settlements.",
+    "viGloss": "ngoại tệ dự trữ"
   },
   "foster self-efficacy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nuôi dưỡng năng lực bản thân"
+    "enGloss": "To nurture an individual's confidence in their ability to succeed.",
+    "viGloss": "nuôi dưỡng niềm tin vào năng lực bản thân"
+  },
+  "free access": {
+    "enGloss": "Unrestricted, complimentary permission to enter facilities or utilize resources.",
+    "viGloss": "quyền tự do tiếp cận không giới hạn"
+  },
+  "free movement": {
+    "enGloss": "The sovereign legal right of citizens to travel and reside without restrictions.",
+    "viGloss": "quyền tự do đi lại / lưu thông tự do"
+  },
+  "freely available": {
+    "enGloss": "Provided without charge and accessible to anyone without impediment.",
+    "viGloss": "được cung cấp miễn phí rộng rãi"
+  },
+  "fulfil obligation": {
+    "enGloss": "To satisfy a moral, commercial, or statutory duty completely.",
+    "viGloss": "hoàn thành trọn vẹn nghĩa vụ"
+  },
+  "full employment": {
+    "enGloss": "An economic state where virtually all skilled individuals who want work have jobs.",
+    "viGloss": "trạng thái toàn dụng việc làm"
+  },
+  "full participation": {
+    "enGloss": "Comprehensive, inclusive involvement by all community members in collective life.",
+    "viGloss": "sự tham gia đầy đủ của các bên"
+  },
+  "full potential": {
+    "enGloss": "The complete, highest level of capability and excellence an entity can achieve.",
+    "viGloss": "phát huy trọn vẹn tiềm năng"
+  },
+  "fully informed": {
+    "enGloss": "Furnished with comprehensive, verified facts before making a commitment.",
+    "viGloss": "được cung cấp đầy đủ thông tin"
   },
   "functional requirement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yêu cầu chức năng"
+    "enGloss": "A technical stipulation defining specific actions a system must be able to perform.",
+    "viGloss": "yêu cầu chức năng của hệ thống"
   },
   "fundamental aspect": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khía cạnh cơ bản"
+    "enGloss": "A prime, foundational dimension of an issue that cannot be disregarded.",
+    "viGloss": "khía cạnh nền tảng cơ bản"
+  },
+  "fundamental assumption": {
+    "enGloss": "A core, axiomatic belief taken as granted to build an argument.",
+    "viGloss": "giả định nền tảng ban đầu"
+  },
+  "fundamental change": {
+    "enGloss": "A structural, sweeping transformation redefining the baseline reality of a system.",
+    "viGloss": "sự thay đổi mang tính căn bản"
+  },
+  "fundamentally different": {
+    "enGloss": "Diverging completely at the deepest conceptual and operational level.",
+    "viGloss": "khác biệt một cách căn bản"
   },
   "further explanation": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giải thích thêm"
+    "enGloss": "Supplementary details and clarification delivered to dispel lingering ambiguity.",
+    "viGloss": "lời giải thích tường minh hơn"
+  },
+  "future prospects": {
+    "enGloss": "The potential outlook, possibilities, and opportunities expected in years ahead.",
+    "viGloss": "triển vọng xán lạn trong tương lai"
+  },
+  "gender equality": {
+    "enGloss": "The state of equal rights, opportunities, and respect for all genders.",
+    "viGloss": "bình đẳng giới thực chất"
+  },
+  "geographic distribution": {
+    "enGloss": "The spatial arrangement and dispersion of populations or resources across an area.",
+    "viGloss": "sự phân bố theo không gian địa lý"
   },
   "give access": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cấp quyền truy cập"
+    "enGloss": "To bestow authorization allowing users to enter a space or network.",
+    "viGloss": "cấp quyền tiếp cận hệ thống"
   },
   "give consent": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đồng ý"
+    "enGloss": "To formally and willingly express agreement for an action to proceed.",
+    "viGloss": "chấp thuận / đưa ra sự đồng thuận"
   },
   "give consideration": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cân nhắc"
+    "enGloss": "To reflectively evaluate a suggestion or proposal before rendering judgment.",
+    "viGloss": "xem xét / cân nhắc kỹ lưỡng"
   },
   "give emphasis": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhấn mạnh"
+    "enGloss": "To stress, underscore, or allocate prominent importance to a key point.",
+    "viGloss": "nhấn mạnh / đặt trọng tâm vào"
   },
   "give explanation": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đưa ra lời giải thích"
+    "enGloss": "To state the rationale, motivations, and causes behind a phenomenon.",
+    "viGloss": "đưa ra lời giải thích thuyết phục"
+  },
+  "give feedback": {
+    "enGloss": "To offer constructive critique and evaluative advice on someone's work.",
+    "viGloss": "đưa ra phản hồi mang tính xây dựng"
+  },
+  "give guidance": {
+    "enGloss": "To provide authoritative counseling, coaching, and direction to assist navigation.",
+    "viGloss": "đưa ra lời khuyên chỉ dẫn tận tình"
+  },
+  "global capitalism": {
+    "enGloss": "The worldwide economic framework characterized by multinational corporations and free markets.",
+    "viGloss": "chủ nghĩa tư bản toàn cầu"
+  },
+  "global context": {
+    "enGloss": "The international, cross-border perspective framing contemporary political developments.",
+    "viGloss": "bối cảnh toàn cầu hóa"
   },
   "global culture": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "văn hóa toàn cầu"
+    "enGloss": "Shared international trends, languages, and media consumed universally across nations.",
+    "viGloss": "văn hóa mang tầm ảnh hưởng toàn cầu"
   },
   "global economy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nền kinh tế toàn cầu"
+    "enGloss": "The worldwide interdependent economic activities across sovereign nations.",
+    "viGloss": "nền kinh tế toàn cầu gắn kết"
   },
   "global marketplace": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thị trường toàn cầu"
+    "enGloss": "The international arena where countries trade goods, talent, and digital services.",
+    "viGloss": "thị trường thương mại toàn cầu"
   },
   "global media": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truyền thông toàn cầu"
+    "enGloss": "International news networks and internet platforms broadcasting across borders.",
+    "viGloss": "mạng lưới truyền thông toàn cầu"
+  },
+  "global perspective": {
+    "enGloss": "A broad viewpoint considering world-scale trends rather than parochial concerns.",
+    "viGloss": "tầm nhìn / góc nhìn toàn cầu"
   },
   "global trade": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thương mại toàn cầu"
+    "enGloss": "The international import and export of goods and services between countries.",
+    "viGloss": "thương mại quốc tế toàn cầu"
   },
   "global village": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "làng toàn cầu"
+    "enGloss": "The world viewed as a closely interconnected community due to telecommunications.",
+    "viGloss": "ngôi làng toàn cầu kết nối"
+  },
+  "governing body": {
+    "enGloss": "An official council or board regulating policies and operations of an institution.",
+    "viGloss": "cơ quan quản trị / điều hành"
   },
   "government control": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kiểm soát của chính phủ"
+    "enGloss": "Statutory regulation, oversight, and restrictions administered by state authorities.",
+    "viGloss": "sự kiểm soát của chính phủ"
+  },
+  "government department": {
+    "enGloss": "An administrative ministry within government managing a sector like health or transport.",
+    "viGloss": "cơ quan / bộ phận trực thuộc chính phủ"
+  },
+  "government expenditure": {
+    "enGloss": "The total public funds allocated by state authorities for infrastructure and services.",
+    "viGloss": "ngân sách chi tiêu của chính phủ"
+  },
+  "graphical representation": {
+    "enGloss": "The visual depiction of numerical data using charts, graphs, and diagrams.",
+    "viGloss": "biểu diễn trực quan bằng đồ họa"
+  },
+  "great diversity": {
+    "enGloss": "An immense, rich variety of cultures, opinions, or species in an environment.",
+    "viGloss": "sự đa dạng phong phú to lớn"
   },
   "great majority": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đại đa số"
+    "enGloss": "The overwhelming preponderance of a group, exceeding eighty or ninety percent.",
+    "viGloss": "đại đa số áp đảo"
+  },
+  "great potential": {
+    "enGloss": "Exceptional, promising latent capacity for future achievement or expansion.",
+    "viGloss": "tiềm năng phát triển to lớn"
+  },
+  "greater autonomy": {
+    "enGloss": "Increased independence and freedom from top-down control in decision-making.",
+    "viGloss": "quyền tự chủ lớn hơn cho cá nhân"
+  },
+  "greater awareness": {
+    "enGloss": "Heightened public understanding and sensitivity surrounding an issue.",
+    "viGloss": "nhận thức xã hội được nâng cao"
+  },
+  "greater equality": {
+    "enGloss": "More equitable distribution of rights, income, and social respect across citizens.",
+    "viGloss": "sự công bằng lớn hơn cho mọi người"
+  },
+  "greater flexibility": {
+    "enGloss": "Enhanced capacity to adapt, alter schedules, and pivot to new circumstances.",
+    "viGloss": "tính linh hoạt cao hơn trong hành động"
+  },
+  "greatly enhance": {
+    "enGloss": "To substantially improve the quality, value, or efficacy of something.",
+    "viGloss": "nâng cao và cải thiện đáng kể"
   },
   "greatly reduced": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giảm đi rất nhiều"
+    "enGloss": "Diminished substantially in volume, intensity, or magnitude.",
+    "viGloss": "được giảm thiểu một cách đáng kể"
+  },
+  "growing awareness": {
+    "enGloss": "An expanding recognition among the public about an emergent problem.",
+    "viGloss": "nhận thức ngày càng gia tăng"
+  },
+  "have limitations": {
+    "enGloss": "To display distinct weaknesses, restricted boundaries, or functional constraints.",
+    "viGloss": "bộc lộ những điểm hạn chế nhất định"
+  },
+  "have obligation": {
+    "enGloss": "To be bound by ethical, social, or legal duty to act.",
+    "viGloss": "có nghĩa vụ và trách nhiệm pháp lý"
+  },
+  "have potential": {
+    "enGloss": "To possess intrinsic capabilities that can blossom into major success.",
+    "viGloss": "sở hữu tiềm năng phát triển"
+  },
+  "high concentration": {
+    "enGloss": "A dense clustering or high proportion of a substance within an area.",
+    "viGloss": "mức độ tập trung mật độ cao"
+  },
+  "high expectations": {
+    "enGloss": "Demanding performance standards anticipated by mentors, parents, or society.",
+    "viGloss": "kỳ vọng lớn lao vào thành tích"
+  },
+  "high incidence": {
+    "enGloss": "A frequently observed occurrence rate of a condition, disease, or crime.",
+    "viGloss": "tỷ lệ xuất hiện / mắc bệnh cao"
+  },
+  "high probability": {
+    "enGloss": "A strong mathematical likelihood that a particular event will occur.",
+    "viGloss": "xác suất xảy ra rất cao"
   },
   "high score": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "điểm cao"
+    "enGloss": "An exemplary, elevated mark attained on a standardized test or rubric.",
+    "viGloss": "điểm số xuất sắc vượt trội"
+  },
+  "high status": {
+    "enGloss": "Prestige, elevated ranking, and honor recognized within a social hierarchy.",
+    "viGloss": "vị thế xã hội cao, được trọng vọng"
   },
   "high unemployment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tỷ lệ thất nghiệp cao"
+    "enGloss": "A distressing economic situation where many willing workers cannot find jobs.",
+    "viGloss": "tỷ lệ thất nghiệp ở mức cao"
   },
   "highly dependent": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phụ thuộc nhiều"
+    "enGloss": "Relying overwhelmingly on another party for financial or operational survival.",
+    "viGloss": "phụ thuộc nặng nề vào đối tượng khác"
+  },
+  "highly efficient": {
+    "enGloss": "Operating with minimal waste of energy, time, and financial capital.",
+    "viGloss": "đạt hiệu suất làm việc rất cao"
+  },
+  "highly significant": {
+    "enGloss": "Possessing supreme statistical validity or extraordinary real-world importance.",
+    "viGloss": "có ý nghĩa khoa học và thực tiễn rất cao"
+  },
+  "highly skilled": {
+    "enGloss": "Endowed with exceptional technical training, dexterity, and professional expertise.",
+    "viGloss": "tay nghề cao, trình độ chuyên môn tốt"
+  },
+  "highly sophisticated": {
+    "enGloss": "Extremely refined, technologically advanced, and structurally complex.",
+    "viGloss": "cực kỳ tinh vi, phức tạp và hiện đại"
+  },
+  "highly successful": {
+    "enGloss": "Achieving outstanding triumphs, profitability, or widespread social acclaim.",
+    "viGloss": "gặt hái thành công vang dội"
   },
   "historical account": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tài khoản lịch sử"
+    "enGloss": "A documented, chronological narrative describing past human events factually.",
+    "viGloss": "tài liệu / ghi chép lịch sử chân thực"
+  },
+  "historical context": {
+    "enGloss": "The prevailing social and political climate existing at a specific past time.",
+    "viGloss": "bối cảnh lịch sử của thời đại"
   },
   "historical knowledge": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kiến thức lịch sử"
+    "enGloss": "Documented familiarity with past civilizations, events, and their interpretations.",
+    "viGloss": "tri thức lịch sử quý giá"
+  },
+  "historical perspective": {
+    "enGloss": "Analyzing present challenges through an understanding of historical precedents.",
+    "viGloss": "góc nhìn thấu suốt qua lăng kính lịch sử"
   },
   "historical writing": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "viết lịch sử"
+    "enGloss": "Scholarly historiography and prose chronicling past human affairs.",
+    "viGloss": "tác phẩm sử học / công trình nghiên cứu lịch sử"
+  },
+  "holistic approach": {
+    "enGloss": "A philosophy analyzing all interconnected parts of an entity rather than fragments.",
+    "viGloss": "cách tiếp cận toàn diện, đa chiều"
+  },
+  "human activity": {
+    "enGloss": "Intentional labor, consumption, and cultural creations performed by mankind.",
+    "viGloss": "hoạt động của con người tác động lên tự nhiên"
+  },
+  "human behaviour": {
+    "enGloss": "The collective conduct, reactions, and choices exhibited by individuals and groups.",
+    "viGloss": "hành vi ứng xử của con người"
+  },
+  "human interaction": {
+    "enGloss": "Social exchange, dialogue, and relational contact between people.",
+    "viGloss": "sự tương tác xã hội giữa con người"
+  },
+  "human society": {
+    "enGloss": "Organized communities of people united by common laws, culture, and institutions.",
+    "viGloss": "xã hội loài người văn minh"
+  },
+  "human species": {
+    "enGloss": "Homo sapiens, considered biologically in contrast to other living organisms.",
+    "viGloss": "loài người trong sinh giới"
   },
   "ideally suited": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lý tưởng phù hợp"
+    "enGloss": "Possessing attributes that make an entity the absolute best fit for a role.",
+    "viGloss": "hoàn toàn phù hợp / lựa chọn lý tưởng nhất"
   },
   "immediate environment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "môi trường ngay lập tức"
+    "enGloss": "The physical and social surroundings directly adjoining an individual.",
+    "viGloss": "môi trường xung quanh / trực tiếp"
+  },
+  "immediately apparent": {
+    "enGloss": "Obvious and visible to anyone at the very first glance.",
+    "viGloss": "hiển hiện rõ ràng ngay trước mắt"
+  },
+  "immediately following": {
+    "enGloss": "Occurring immediately subsequent to an event without elapsed delay.",
+    "viGloss": "ngay tiếp sau / diễn ra liền sau"
   },
   "imported goods": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hàng nhập khẩu"
+    "enGloss": "Merchandise produced in foreign countries and purchased domestically.",
+    "viGloss": "hàng hóa nhập khẩu từ nước ngoài"
   },
   "imported products": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sản phẩm nhập khẩu"
+    "enGloss": "Finished manufactured items shipped from overseas for retail consumption.",
+    "viGloss": "sản phẩm ngoại nhập chất lượng"
   },
   "impose constraints": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "áp đặt những hạn chế"
+    "enGloss": "To enforce boundaries that restrict behavior, expenditures, or design freedom.",
+    "viGloss": "áp đặt những rào cản hạn chế"
+  },
+  "impose limitations": {
+    "enGloss": "To introduce mandatory restrictions that cap freedom or capabilities.",
+    "viGloss": "áp đặt các giới hạn nghiêm ngặt"
   },
   "improved performance": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hiệu suất được cải thiện"
+    "enGloss": "Measurable enhancement in speed, accuracy, or quality compared to baselines.",
+    "viGloss": "hiệu suất được cải thiện rõ rệt"
+  },
+  "increase awareness": {
+    "enGloss": "To actively educate the public to heighten understanding of an issue.",
+    "viGloss": "nâng cao nhận thức của cộng đồng"
+  },
+  "increased awareness": {
+    "enGloss": "Elevated public mindfulness regarding a societal or scientific topic.",
+    "viGloss": "nhận thức được nâng cao rõ rệt"
   },
   "increased competition": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tăng cường cạnh tranh"
+    "enGloss": "More intense rivalry among businesses or candidates contending for success.",
+    "viGloss": "sự cạnh tranh ngày càng gay gắt"
+  },
+  "increased demand": {
+    "enGloss": "A rising consumer appetite or market requirement for specific products.",
+    "viGloss": "nhu cầu tiêu dùng tăng cao"
   },
   "increased pressure": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tăng áp lực"
+    "enGloss": "Mounting psychological stress or political demands bearing down on leaders.",
+    "viGloss": "áp lực đè nặng ngày càng lớn"
+  },
+  "increased productivity": {
+    "enGloss": "A higher output of goods and services generated per unit of labor.",
+    "viGloss": "năng suất lao động được nâng cao"
   },
   "increased risk": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tăng nguy cơ"
+    "enGloss": "A heightened probability of sustaining injury, financial loss, or failure.",
+    "viGloss": "nguy cơ rủi ro gia tăng"
+  },
+  "increasing demand": {
+    "enGloss": "A steady, continuing upward trend in the need for resources.",
+    "viGloss": "nhu cầu thị trường không ngừng gia tăng"
+  },
+  "increasing pressure": {
+    "enGloss": "Progressively intensifying demands compelling organizations to take action.",
+    "viGloss": "áp lực xã hội ngày càng gia tăng"
   },
   "increasingly popular": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ngày càng phổ biến"
+    "enGloss": "Winning the affection and adoption of a steadily expanding audience.",
+    "viGloss": "ngày càng được đón nhận và ưa chuộng"
+  },
+  "increasingly sophisticated": {
+    "enGloss": "Evolving rapidly toward greater intricacy, precision, and technological power.",
+    "viGloss": "ngày càng trở nên tinh vi và hiện đại"
   },
   "independent state": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhà nước độc lập"
+    "enGloss": "A self-governing sovereign nation recognized under international law.",
+    "viGloss": "nhà nước độc lập, có chủ quyền"
   },
   "indigenous people": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "người bản địa"
+    "enGloss": "The original ethnic inhabitants residing in a land prior to colonization.",
+    "viGloss": "người dân bản địa địa phương"
   },
   "indigenous population": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "dân số bản địa"
+    "enGloss": "The collective native inhabitants of an ancestral territory.",
+    "viGloss": "quần thể dân cư bản địa"
   },
   "individual behaviour": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hành vi cá nhân"
+    "enGloss": "The personal actions and choices made by a specific person.",
+    "viGloss": "hành vi ứng xử của từng cá nhân"
   },
   "individual case": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trường hợp cá nhân"
+    "enGloss": "A solitary, distinct situation evaluated on its own specific merits.",
+    "viGloss": "từng trường hợp cụ thể, cá biệt"
   },
   "individual characteristics": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đặc điểm cá nhân"
+    "enGloss": "The idiosyncratic traits and personality features belonging to a person.",
+    "viGloss": "nét đặc trưng riêng của mỗi cá nhân"
   },
   "individual choice": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sự lựa chọn cá nhân"
+    "enGloss": "The personal prerogative to select preferences without external coercion.",
+    "viGloss": "sự lựa chọn tự do của cá nhân"
   },
   "individual experience": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kinh nghiệm cá nhân"
+    "enGloss": "The lived events and firsthand perceptions accumulated by a single person.",
+    "viGloss": "trải nghiệm thực tế của riêng mỗi người"
+  },
+  "individual interests": {
+    "enGloss": "The personal hobbies, passions, or commercial benefits sought by an individual.",
+    "viGloss": "lợi ích riêng của từng cá nhân"
   },
   "individual needs": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhu cầu cá nhân"
+    "enGloss": "The physical, emotional, and intellectual requirements of a specific person.",
+    "viGloss": "nhu cầu thiết thực của từng cá nhân"
   },
   "individual responsibility": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trách nhiệm cá nhân"
+    "enGloss": "Personal moral and legal accountability for one's choices and deeds.",
+    "viGloss": "trách nhiệm của mỗi cá nhân với cộng đồng"
   },
   "industrial capitalism": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "An economic stage where mechanized factory production forms the primary basis of wealth.",
     "viGloss": "chủ nghĩa tư bản công nghiệp"
   },
+  "infinite number": {
+    "enGloss": "A boundless, limitless quantity that continues without end.",
+    "viGloss": "số lượng vô hạn, không cùng"
+  },
   "information sharing": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chia sẻ thông tin"
+    "enGloss": "The collaborative exchange of data and insights among researchers or institutions.",
+    "viGloss": "sự chia sẻ thông tin cởi mở"
+  },
+  "informed consent": {
+    "enGloss": "Voluntary authorization granted after being thoroughly briefed on all risks.",
+    "viGloss": "sự đồng thuận trên cơ sở hiểu rõ thông tin"
   },
   "institutional arrangement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sắp xếp thể chế"
+    "enGloss": "The formal setup and rules governing relations between administrative bodies.",
+    "viGloss": "cơ chế / sắp xếp thể chế"
+  },
+  "institutional context": {
+    "enGloss": "The prevailing organizational culture, rules, and structures framing work.",
+    "viGloss": "bối cảnh thuộc về thể chế"
+  },
+  "institutional framework": {
+    "enGloss": "The formal legal and organizational infrastructure supporting a domain.",
+    "viGloss": "khung pháp lý và thể chế"
+  },
+  "institutional structure": {
+    "enGloss": "The hierarchical chain of command and departments inside an organization.",
+    "viGloss": "cơ cấu tổ chức thể chế"
+  },
+  "integral part": {
+    "enGloss": "A component so essential that the whole cannot be complete without it.",
+    "viGloss": "phần không thể thiếu của tổng thể"
   },
   "intellectual curiosity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trí tò mò trí tuệ"
+    "enGloss": "An intrinsic eagerness to learn, question concepts, and explore new knowledge.",
+    "viGloss": "trí tò mò và niềm say mê khám phá tri thức"
   },
   "intellectual property": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sở hữu trí tuệ"
+    "enGloss": "Legally protected creations of human intellect like patents, trademarks, and copyright.",
+    "viGloss": "quyền sở hữu trí tuệ"
+  },
+  "intellectual work": {
+    "enGloss": "Labor demanding intense cognitive analysis, creativity, and critical thinking.",
+    "viGloss": "hoạt động lao động trí óc"
   },
   "interested party": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "bên quan tâm"
+    "enGloss": "A stakeholder who holds a tangible legal or financial interest in an outcome.",
+    "viGloss": "bên có quyền lợi liên quan / các bên hữu quan"
   },
   "internal control": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kiểm soát nội bộ"
+    "enGloss": "Auditing and supervisory procedures established inside a company to prevent fraud.",
+    "viGloss": "công tác kiểm soát nội bộ"
   },
   "internal organ": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cơ quan nội tạng"
+    "enGloss": "An anatomical structure like the heart or liver positioned within the body.",
+    "viGloss": "cơ quan nội tạng trong cơ thể"
   },
   "international body": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cơ quan quốc tế"
+    "enGloss": "A global organization coordinating policies and treaties across sovereign nations.",
+    "viGloss": "tổ chức quốc tế"
   },
   "international community": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cộng đồng quốc tế"
+    "enGloss": "The global assemblage of sovereign states acting collectively on world issues.",
+    "viGloss": "cộng đồng quốc tế các quốc gia"
   },
   "interpersonal relationships": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mối quan hệ giữa các cá nhân"
+    "enGloss": "Social and emotional associations formed between two or more individuals.",
+    "viGloss": "mối quan hệ tương tác giữa các cá nhân"
   },
   "interpersonal skills": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kỹ năng giao tiếp"
+    "enGloss": "Verbal and non-verbal competencies used to collaborate and interact smoothly.",
+    "viGloss": "kỹ năng giao tiếp và ứng xử giữa người với người"
   },
   "intimately connected": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kết nối mật thiết"
+    "enGloss": "Bound together by profound, direct, and inseparable interconnections.",
+    "viGloss": "gắn bó mật thiết, khăng khít"
+  },
+  "intrinsic value": {
+    "enGloss": "Worth that belongs naturally to an object or idea for its own sake.",
+    "viGloss": "giá trị nội tại vốn có"
   },
   "irreversible physical trauma": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Severe, permanent bodily harm that cannot be medically cured or reversed.",
     "viGloss": "chấn thương thể chất không thể phục hồi"
   },
   "key area": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khu vực trọng điểm"
+    "enGloss": "A prominent, vital sector that demands strategic attention.",
+    "viGloss": "lĩnh vực trọng tâm / then chốt"
   },
   "key aspect": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khía cạnh quan trọng"
+    "enGloss": "A pivotal dimension or component of an issue requiring careful analysis.",
+    "viGloss": "khía cạnh trọng tâm cốt yếu"
   },
   "key characteristic": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đặc điểm chính"
+    "enGloss": "A prominent defining trait that epitomizes an object or personality.",
+    "viGloss": "đặc điểm then chốt nổi bật"
   },
   "key findings": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "những phát hiện quan trọng"
+    "enGloss": "The foremost empirical discoveries summarized from a scholarly investigation.",
+    "viGloss": "những phát hiện nghiên cứu then chốt"
+  },
+  "large majority": {
+    "enGloss": "A substantial proportion comprising the predominant part of a group.",
+    "viGloss": "đại đa số / phần lớn áp đảo"
+  },
+  "largely confined": {
+    "enGloss": "Restricted in practice almost exclusively to a specified domain or area.",
+    "viGloss": "phần lớn bị giới hạn trong phạm vi hẹp"
   },
   "largely responsible": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chịu trách nhiệm phần lớn"
+    "enGloss": "Bearing the primary burden of causation or blame for an outcome.",
+    "viGloss": "chịu phần lớn trách nhiệm"
   },
   "learning activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hoạt động học tập"
+    "enGloss": "A structured exercise designed to foster comprehension and skill acquisition.",
+    "viGloss": "hoạt động học tập tương tác"
   },
   "learning process": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quá trình học tập"
+    "enGloss": "The cognitive journey through which an individual internalizes new knowledge.",
+    "viGloss": "tiến trình học tập và tích lũy"
+  },
+  "legal action": {
+    "enGloss": "Formal proceedings initiated in a court of law to assert a right.",
+    "viGloss": "hành động pháp lý khởi kiện"
+  },
+  "legal basis": {
+    "enGloss": "The statutory foundation or constitutional grounding that validates an action.",
+    "viGloss": "cơ sở pháp lý vững chắc"
+  },
+  "legal obligation": {
+    "enGloss": "A mandatory duty imposed upon a citizen or entity by statutory law.",
+    "viGloss": "nghĩa vụ tuân thủ theo luật định"
   },
   "legal requirement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "yêu cầu pháp lý"
+    "enGloss": "A condition mandated by legislation that must be fulfilled to be compliant.",
+    "viGloss": "yêu cầu bắt buộc của pháp luật"
+  },
+  "liberal democracy": {
+    "enGloss": "A democratic political system upholding the rule of law and individual liberties.",
+    "viGloss": "nền dân chủ tự do tiến bộ"
+  },
+  "lifelong learning": {
+    "enGloss": "Continuous, voluntary self-education pursued throughout a person's lifespan.",
+    "viGloss": "tinh thần học tập suốt đời"
+  },
+  "limited access": {
+    "enGloss": "Restricted ability to enter, inspect, or utilize resources.",
+    "viGloss": "sự tiếp cận bị hạn chế"
   },
   "limited capacity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "năng lực hạn chế"
+    "enGloss": "A ceiling capping the volume, performance, or intake of an organization.",
+    "viGloss": "quy mô / năng lực bị giới hạn"
+  },
+  "literal sense": {
+    "enGloss": "The explicit, plain meaning of words devoid of metaphor or exaggeration.",
+    "viGloss": "hiểu theo đúng nghĩa đen của từ"
+  },
+  "little impact": {
+    "enGloss": "A negligible, minimal influence that produces no noticeable change.",
+    "viGloss": "tác động mờ nhạt, không đáng kể"
   },
   "local area": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khu vực địa phương"
+    "enGloss": "The immediate geographic neighborhood surrounding a community.",
+    "viGloss": "địa bàn khu vực địa phương"
   },
   "local authority": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chính quyền địa phương"
+    "enGloss": "The municipal or county government governing a district.",
+    "viGloss": "chính quyền địa phương sở tại"
   },
   "local circumstances": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hoàn cảnh địa phương"
+    "enGloss": "The practical conditions and constraints unique to a given locality.",
+    "viGloss": "hoàn cảnh thực tế tại địa phương"
   },
   "local community": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cộng đồng địa phương"
+    "enGloss": "The residents and organizations inhabiting a shared geographic town.",
+    "viGloss": "cộng đồng dân cư địa phương"
+  },
+  "local culture": {
+    "enGloss": "The indigenous customs, dialect, and social practices of a district.",
+    "viGloss": "văn hóa bản địa đặc trưng"
   },
   "local economy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kinh tế địa phương"
+    "enGloss": "The financial activities, jobs, and commerce situated within a town.",
+    "viGloss": "kinh tế địa phương tự cường"
+  },
+  "low income": {
+    "enGloss": "Earnings falling substantially below national median household income levels.",
+    "viGloss": "mức thu nhập thấp trong xã hội"
   },
   "low unemployment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tỷ lệ thất nghiệp thấp"
+    "enGloss": "An economic condition where almost all job seekers can secure employment.",
+    "viGloss": "tỷ lệ thất nghiệp ở mức thấp"
+  },
+  "maintain contact": {
+    "enGloss": "To stay in regular communication with colleagues or institutions.",
+    "viGloss": "duy trì liên lạc thường xuyên"
+  },
+  "major advantage": {
+    "enGloss": "A prominent, decisive superiority or benefit that aids success.",
+    "viGloss": "lợi thế nổi bật to lớn"
+  },
+  "major area": {
+    "enGloss": "A significant, expansive subdivision within a discipline or economy.",
+    "viGloss": "lĩnh vực chính / trọng tâm"
+  },
+  "major cause": {
+    "enGloss": "The primary factor directly provoking an event or crisis.",
+    "viGloss": "nguyên nhân chính dẫn tới sự việc"
+  },
+  "major challenge": {
+    "enGloss": "A daunting, formidable obstacle requiring comprehensive problem-solving.",
+    "viGloss": "thử thách lớn cần vượt qua"
   },
   "major reason": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lý do chính"
+    "enGloss": "The principal justification or motivation behind a choice or belief.",
+    "viGloss": "lý do căn bản, chủ chốt"
+  },
+  "make adjustments": {
+    "enGloss": "To fine-tune and slightly modify settings or behaviors to improve results.",
+    "viGloss": "thực hiện điều chỉnh linh hoạt"
+  },
+  "make arrangements": {
+    "enGloss": "To plan and organize preparatory details needed for an event.",
+    "viGloss": "chuẩn bị và sắp xếp chu đáo"
+  },
+  "make assessment": {
+    "enGloss": "To carefully evaluate and score the quality, risk, or value of something.",
+    "viGloss": "đưa ra sự đánh giá khách quan"
+  },
+  "make prediction": {
+    "enGloss": "To forecast future trends based on empirical indicators and models.",
+    "viGloss": "đưa ra dự đoán có căn cứ khoa học"
+  },
+  "make transition": {
+    "enGloss": "To navigate a shift smoothly from an established state to a new one.",
+    "viGloss": "thực hiện bước chuyển đổi chiến lược"
+  },
+  "male dominance": {
+    "enGloss": "The historical and cultural concentration of societal power within men.",
+    "viGloss": "sự gia trưởng / áp đảo của nam giới"
   },
   "manual worker": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công nhân chân tay"
+    "enGloss": "A laborer who performs physically demanding tasks rather than office work.",
+    "viGloss": "lao động chân tay / công nhân phổ thông"
+  },
+  "manufacturing sector": {
+    "enGloss": "The economic division devoted to processing raw materials into goods.",
+    "viGloss": "khu vực ngành công nghiệp chế tạo"
+  },
+  "markedly different": {
+    "enGloss": "Distinguished by conspicuous, undeniable variations from a baseline.",
+    "viGloss": "khác biệt một cách rõ rệt"
   },
   "mean score": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "điểm trung bình"
+    "enGloss": "The statistical average obtained by dividing total marks by test takers.",
+    "viGloss": "điểm số trung bình cộng"
+  },
+  "media coverage": {
+    "enGloss": "The extent and tone of news broadcasting focused on a story.",
+    "viGloss": "sự đưa tin rộng rãi của truyền thông"
+  },
+  "meet expectations": {
+    "enGloss": "To fulfill standards and hopes anticipated by mentors, parents, or clients.",
+    "viGloss": "đáp ứng kỳ vọng của mọi người"
   },
   "mental health": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sức khỏe tâm thần"
+    "enGloss": "An individual's cognitive, emotional, and psychological well-being.",
+    "viGloss": "sức khỏe tinh thần của con người"
   },
   "mental state": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trạng thái tinh thần"
+    "enGloss": "A person's current emotional mood, psychological condition, and mindset.",
+    "viGloss": "trạng thái tâm lý tinh thần"
+  },
+  "metropolitan area": {
+    "enGloss": "A densely populated urban core surrounded by linked suburban territories.",
+    "viGloss": "vùng đại đô thị phát triển"
   },
   "middle management": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "quản lý cấp trung"
+    "enGloss": "Subordinate directors who execute executive directives across teams.",
+    "viGloss": "đội ngũ quản lý cấp trung"
   },
   "military force": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lực lượng quân sự"
+    "enGloss": "The armed troops and defensive hardware deployed by a nation.",
+    "viGloss": "lực lượng quân sự quốc gia"
   },
   "military service": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nghĩa vụ quân sự"
+    "enGloss": "Service rendered in the armed forces of a sovereign state.",
+    "viGloss": "nghĩa vụ quân sự vẻ vang"
+  },
+  "modern culture": {
+    "enGloss": "Contemporary lifestyles, arts, and values characteristic of 21st-century society.",
+    "viGloss": "nền văn hóa hiện đại văn minh"
+  },
+  "modern method": {
+    "enGloss": "An innovative, contemporary technique replacing outdated traditional procedures.",
+    "viGloss": "phương pháp hiện đại, tiên tiến"
+  },
+  "modern society": {
+    "enGloss": "Industrialized, technologically advanced human communities existing in the present era.",
+    "viGloss": "xã hội hiện đại ngày nay"
   },
   "modern technology": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "công nghệ hiện đại"
+    "enGloss": "Sophisticated electronic, digital, and engineering tools produced recently.",
+    "viGloss": "công nghệ hiện đại tối tân"
+  },
+  "moral dilemma": {
+    "enGloss": "A distressing quandary where every possible choice violates a moral duty.",
+    "viGloss": "tình huống khó xử về mặt lương tâm"
+  },
+  "municipal government": {
+    "enGloss": "The local city council and administration managing town services.",
+    "viGloss": "chính quyền thành phố sở tại"
+  },
+  "mutual recognition": {
+    "enGloss": "Reciprocal respect and official validation shared between two parties.",
+    "viGloss": "sự công nhận và tôn trọng lẫn nhau"
+  },
+  "mutual support": {
+    "enGloss": "Reciprocal assistance and aid rendered between cooperating allies or friends.",
+    "viGloss": "sự tương trợ, đùm bọc lẫn nhau"
+  },
+  "mutual trust": {
+    "enGloss": "Shared confidence and reliable faith built between cooperating entities.",
+    "viGloss": "sự tin tưởng, tín nhiệm lẫn nhau"
   },
   "mutual understanding": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hiểu biết lẫn nhau"
+    "enGloss": "Shared empathy and reciprocal comprehension uniting diverse groups.",
+    "viGloss": "sự thấu hiểu và sẻ chia lẫn nhau"
+  },
+  "national identity": {
+    "enGloss": "A citizen's collective pride and sense of belonging to their homeland.",
+    "viGloss": "bản sắc dân tộc độc đáo"
+  },
+  "national language": {
+    "enGloss": "The officially codified language spoken and recognized across a nation.",
+    "viGloss": "ngôn ngữ quốc gia chính thức"
+  },
+  "national security": {
+    "enGloss": "The defense and safety of a sovereign nation against external and internal threats.",
+    "viGloss": "an ninh quốc gia thiêng liêng"
   },
   "natural conditions": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "điều kiện tự nhiên"
+    "enGloss": "The climatic, topographical, and biological features naturally present in an area.",
+    "viGloss": "điều kiện tự nhiên của vùng miền"
   },
   "natural disaster": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thiên tai"
+    "enGloss": "A devastating catastrophic event caused by forces of nature like floods.",
+    "viGloss": "thiên tai khắc nghiệt"
   },
   "natural environment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "môi trường tự nhiên"
+    "enGloss": "The pristine physical world of oceans, forests, and wildlife untouched by urban sprawl.",
+    "viGloss": "môi trường sinh thái tự nhiên"
   },
   "natural history": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lịch sử tự nhiên"
+    "enGloss": "The scientific observation and taxonomy of animals, plants, and geology.",
+    "viGloss": "lịch sử tự nhiên của trái đất"
   },
   "natural resources": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tài nguyên thiên nhiên"
+    "enGloss": "Raw mineral, water, and timber assets supplied by the planet.",
+    "viGloss": "nguồn tài nguyên thiên nhiên phong phú"
   },
   "natural science": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khoa học tự nhiên"
+    "enGloss": "Disciplines like physics and biology studying the physical universe empirically.",
+    "viGloss": "các ngành khoa học tự nhiên"
+  },
+  "negative aspect": {
+    "enGloss": "A disadvantageous, undesirable facet of an idea or policy.",
+    "viGloss": "khía cạnh tiêu cực bất lợi"
+  },
+  "negative attitude": {
+    "enGloss": "A pessimistic, uncooperative, or cynical mindset toward experiences.",
+    "viGloss": "thái độ tiêu cực, bi quan"
+  },
+  "negative effect": {
+    "enGloss": "A deleterious outcome that degrades health, performance, or happiness.",
+    "viGloss": "tác động tiêu cực xấu đi"
+  },
+  "negative feedback": {
+    "enGloss": "Critical evaluative input alerting performers to errors requiring correction.",
+    "viGloss": "phản hồi tiêu cực cần khắc phục"
+  },
+  "negative impact": {
+    "enGloss": "Harmful repercussions that damage economic, social, or environmental systems.",
+    "viGloss": "tác động tiêu cực gây tổn hại"
+  },
+  "negatively correlated": {
+    "enGloss": "Displaying a mathematical relationship where one variable rises as another falls.",
+    "viGloss": "tương quan nghịch biến"
+  },
+  "new initiative": {
+    "enGloss": "A fresh, innovative policy project launched to address a problem.",
+    "viGloss": "sáng kiến mới mang tính đột phá"
+  },
+  "newly acquired": {
+    "enGloss": "Obtained or learned very recently through effort or purchase.",
+    "viGloss": "mới đạt được / vừa mới sở hữu"
+  },
+  "normal distribution": {
+    "enGloss": "The bell-shaped symmetrical probability distribution common in statistical populations.",
+    "viGloss": "phân phối chuẩn (trong lý thuyết xác suất)"
   },
   "nuclear energy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "năng lượng hạt nhân"
+    "enGloss": "Power generated through controlled nuclear fission inside atomic reactors.",
+    "viGloss": "năng lượng hạt nhân nguyên tử"
   },
   "nuclear family": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "gia đình hạt nhân"
+    "enGloss": "A traditional family unit consisting solely of two parents and their children.",
+    "viGloss": "mô hình gia đình hạt nhân hai thế hệ"
   },
   "numerous studies": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhiều nghiên cứu"
+    "enGloss": "A large body of peer-reviewed research confirming a shared finding.",
+    "viGloss": "rất nhiều công trình nghiên cứu khoa học"
   },
   "obtain result": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đạt được kết quả"
+    "enGloss": "To secure verifiable findings or data at the conclusion of testing.",
+    "viGloss": "thu được kết quả cụ thể"
   },
   "optimal solution": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giải pháp tối ưu"
+    "enGloss": "The most effective, efficient answer that maximizes gains while minimizing costs.",
+    "viGloss": "giải pháp tối ưu nhất"
+  },
+  "paramount importance": {
+    "enGloss": "A superior status of critical significance overriding all competing concerns.",
+    "viGloss": "tầm quan trọng tối thượng hàng đầu"
+  },
+  "particularly evident": {
+    "enGloss": "Conspicuously noticeable and impossible to overlook in an investigation.",
+    "viGloss": "đặc biệt rõ nét, dễ nhận thấy"
+  },
+  "particularly significant": {
+    "enGloss": "Carrying extraordinary weight and noteworthy meaning in a context.",
+    "viGloss": "đặc biệt có ý nghĩa to lớn"
+  },
+  "particularly valuable": {
+    "enGloss": "Endowed with exceptional utility, worth, or intellectual insight.",
+    "viGloss": "đặc biệt có giá trị hữu ích"
+  },
+  "partly responsible": {
+    "enGloss": "Sharing in the accountability or causation of an event alongside others.",
+    "viGloss": "chịu một phần trách nhiệm"
   },
   "perceived need": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nhu cầu nhận thức"
+    "enGloss": "A requirement or desire felt and recognized as vital by a community.",
+    "viGloss": "nhu cầu được cảm nhận / nhìn nhận"
+  },
+  "perceived threat": {
+    "enGloss": "A danger regarded as alarming and imminent by observers.",
+    "viGloss": "mối đe dọa được cảm nhận"
   },
   "personal choice": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sự lựa chọn cá nhân"
+    "enGloss": "An individual's autonomous decision based on private taste and values.",
+    "viGloss": "sự lựa chọn tự do của cá nhân"
   },
   "personal communication": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giao tiếp cá nhân"
+    "enGloss": "Private correspondence conducted between individuals via phone or letter.",
+    "viGloss": "giao tiếp trao đổi riêng tư"
   },
   "personal experience": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kinh nghiệm cá nhân"
+    "enGloss": "Direct, firsthand encounters and emotional milestones in an individual's life.",
+    "viGloss": "kinh nghiệm sống thực tế của bản thân"
+  },
+  "personal interest": {
+    "enGloss": "A personal passion, curiosity, or financial stake held in an outcome.",
+    "viGloss": "sở thích và đam mê riêng của cá nhân"
   },
   "personal knowledge": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kiến thức cá nhân"
+    "enGloss": "Direct insights and facts retained through personal observation.",
+    "viGloss": "vốn tri thức tích lũy của cá nhân"
   },
   "personal responsibility": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "trách nhiệm cá nhân"
+    "enGloss": "The ethical obligation of an individual to govern their actions.",
+    "viGloss": "trách nhiệm tự thân của mỗi người"
   },
   "personal safety": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "an toàn cá nhân"
+    "enGloss": "Freedom from bodily assault, accidents, and life-threatening dangers.",
+    "viGloss": "sự an toàn tính mạng của cá nhân"
   },
   "personal space": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "không gian cá nhân"
+    "enGloss": "The physical buffer zone around an individual's body they expect respected.",
+    "viGloss": "không gian riêng tư của cá nhân"
   },
   "physical activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hoạt động thể chất"
+    "enGloss": "Bodily movement generated by muscles that consumes energy and promotes health.",
+    "viGloss": "hoạt động thể chất, vận động cơ thể"
   },
   "physical appearance": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "ngoại hình"
+    "enGloss": "The external look, attire, and features presented by an individual.",
+    "viGloss": "diện mạo ngoại hình bên ngoài"
   },
   "physical characteristics": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đặc điểm vật lý"
+    "enGloss": "The biological, structural, and mechanical traits of an organism.",
+    "viGloss": "đặc điểm thể chất / tính chất vật lý"
   },
   "physical contact": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tiếp xúc cơ thể"
+    "enGloss": "Direct bodily touch between individuals during communication or sports.",
+    "viGloss": "tiếp xúc thể chất trực tiếp"
   },
   "physical health": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "sức khỏe thể chất"
+    "enGloss": "The sound physiological functioning and vitality of the human body.",
+    "viGloss": "sức khỏe thể chất tráng kiện"
+  },
+  "physical proximity": {
+    "enGloss": "Close spatial distance separating two people or buildings.",
+    "viGloss": "khoảng cách gần gũi về không gian"
   },
   "physical space": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "không gian vật lý"
+    "enGloss": "The tangible three-dimensional expanse where matter exists and moves.",
+    "viGloss": "không gian vật lý thực tế"
+  },
+  "pioneering work": {
+    "enGloss": "Groundbreaking initial research that paves new frontiers in a field.",
+    "viGloss": "công trình nghiên cứu tiên phong"
+  },
+  "pivotal role": {
+    "enGloss": "A central, decisive position that dictates the trajectory of an initiative.",
+    "viGloss": "vai trò then chốt, xoay chuyển tình thế"
+  },
+  "political instability": {
+    "enGloss": "A volatile national condition marked by civil unrest and weak governance.",
+    "viGloss": "sự bất ổn định về chính trị"
+  },
+  "political participation": {
+    "enGloss": "Civic engagement in voting, campaigning, and community advocacy.",
+    "viGloss": "sự tham gia vào đời sống chính trị"
+  },
+  "political representation": {
+    "enGloss": "The election of leaders who voice the interests of citizens in parliament.",
+    "viGloss": "sự đại diện tiếng nói chính trị"
+  },
+  "political stability": {
+    "enGloss": "A peaceful, predictable civic climate characterized by legitimate rule.",
+    "viGloss": "sự ổn định chính trị vững vàng"
   },
   "poorly understood": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hiểu kém"
+    "enGloss": "Inadequately investigated or explained by current scientific theories.",
+    "viGloss": "chưa được thấu hiểu đầy đủ và cặn kẽ"
   },
   "popular culture": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "văn hóa đại chúng"
+    "enGloss": "Mass-market entertainment, fashion, and memes consumed by the broader public.",
+    "viGloss": "nền văn hóa đại chúng phổ biến"
   },
   "popular media": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "phương tiện truyền thông đại chúng"
+    "enGloss": "Television, tabloids, and social networks aimed at mainstream audiences.",
+    "viGloss": "các phương tiện truyền thông đại chúng"
+  },
+  "pose challenge": {
+    "enGloss": "To create a tough dilemma or formidable hurdle requiring resolution.",
+    "viGloss": "đặt ra thử thách nan giải"
+  },
+  "pose threat": {
+    "enGloss": "To endanger the safety, sovereignty, or health of a system.",
+    "viGloss": "đặt ra mối đe dọa nghiêm trọng"
+  },
+  "potential benefits": {
+    "enGloss": "Favorable rewards and positive developments that may materialize in the future.",
+    "viGloss": "những lợi ích tiềm năng to lớn"
   },
   "potential risk": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nguy cơ tiềm ẩn"
+    "enGloss": "Possible pitfalls and liabilities that could cause harm if unmitigated.",
+    "viGloss": "những rủi ro tiềm ẩn nguy hiểm"
   },
   "potentially dangerous": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "có khả năng nguy hiểm"
+    "enGloss": "Capable of inflicting severe harm, injury, or catastrophic disaster.",
+    "viGloss": "tiềm ẩn nguy cơ nguy hiểm"
+  },
+  "practical consideration": {
+    "enGloss": "Pragmatic factors such as budget, logistics, and manpower that constrain plans.",
+    "viGloss": "sự cân nhắc về mặt thực tế"
+  },
+  "practical difficulties": {
+    "enGloss": "Real-world friction and implementation challenges encountered on the ground.",
+    "viGloss": "những khó khăn phát sinh trong thực tế"
+  },
+  "practical issue": {
+    "enGloss": "A tangible, operational problem that requires down-to-earth solutions.",
+    "viGloss": "vấn đề thực tiễn cần giải quyết"
+  },
+  "practical significance": {
+    "enGloss": "Real-world utility and relevance in solving concrete problems.",
+    "viGloss": "ý nghĩa thực tiễn to lớn"
+  },
+  "predictive power": {
+    "enGloss": "The quantitative capability of a statistical model to forecast future data accurately.",
+    "viGloss": "khả năng dự báo chuẩn xác của mô hình"
+  },
+  "present challenge": {
+    "enGloss": "To introduce a demanding, formidable obstacle that tests skills and stamina.",
+    "viGloss": "đặt ra thử thách / thách thức lớn"
+  },
+  "presidential election": {
+    "enGloss": "The democratic national ballot held to choose the head of state.",
+    "viGloss": "cuộc bầu cử tổng thống"
   },
   "primary purpose": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "mục đích chính"
+    "enGloss": "The main, foremost objective for which an initiative was launched.",
+    "viGloss": "mục đích chính yếu ban đầu"
   },
   "prime time": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giờ vàng"
+    "enGloss": "The peak television evening broadcasting hours commanding the largest audience.",
+    "viGloss": "khung giờ vàng phát sóng truyền hình"
+  },
+  "private individual": {
+    "enGloss": "A citizen acting in a personal capacity rather than representing the state.",
+    "viGloss": "cá nhân công dân bình thường"
+  },
+  "private investment": {
+    "enGloss": "Capital contributed by private citizens and businesses into commercial ventures.",
+    "viGloss": "dòng vốn đầu tư tư nhân"
+  },
+  "private sector": {
+    "enGloss": "The portion of the national economy operated by private businesses for profit.",
+    "viGloss": "khu vực kinh tế tư nhân năng động"
+  },
+  "private sphere": {
+    "enGloss": "The sacred realm of personal and family life shielded from state scrutiny.",
+    "viGloss": "không gian đời tư cá nhân"
+  },
+  "professional activity": {
+    "enGloss": "Work and services rendered in accordance with recognized professional standards.",
+    "viGloss": "hoạt động chuyên môn nghiệp vụ"
   },
   "professional body": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cơ thể chuyên nghiệp"
+    "enGloss": "A formal organization that regulates standards and represents members of a profession.",
+    "viGloss": "tổ chức / hiệp hội chuyên môn"
+  },
+  "professional colleague": {
+    "enGloss": "A peer working in the same specialized discipline or vocation.",
+    "viGloss": "đồng nghiệp trong ngành / cùng chuyên môn"
+  },
+  "professional development": {
+    "enGloss": "Continuing training and mentoring to refine occupational proficiencies.",
+    "viGloss": "phát triển kỹ năng nghề nghiệp chuyên môn"
+  },
+  "professional staff": {
+    "enGloss": "Employees possessing formal university credentials and specialized skills.",
+    "viGloss": "đội ngũ nhân sự chuyên nghiệp"
   },
   "professional training": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đào tạo chuyên nghiệp"
+    "enGloss": "Specialized vocational education aimed at preparing individuals for a specific career.",
+    "viGloss": "đào tạo nghiệp vụ chuyên môn"
+  },
+  "profound effect": {
+    "enGloss": "A deep, transformative, and enduring influence on thought or society.",
+    "viGloss": "ảnh hưởng sâu rộng lâu dài"
+  },
+  "profound impact": {
+    "enGloss": "A life-altering, monumental consequence produced upon a system.",
+    "viGloss": "tác động sâu sắc đến nhận thức"
+  },
+  "provide benefit": {
+    "enGloss": "To confer helpful advantages, wellness, or financial rewards onto others.",
+    "viGloss": "mang lại lợi ích thiết thực"
+  },
+  "provide foundation": {
+    "enGloss": "To build the core framework and factual groundwork for future progress.",
+    "viGloss": "tạo dựng nền tảng vững chắc"
+  },
+  "provide guidance": {
+    "enGloss": "To furnish authoritative direction, advice, and counseling to students.",
+    "viGloss": "cung cấp hướng dẫn, định hướng chu đáo"
   },
   "provide material": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cung cấp vật liệu"
+    "enGloss": "To supply documentation, study resources, and raw evidence for research.",
+    "viGloss": "cung cấp tài liệu / tư liệu học tập"
   },
   "provide service": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cung cấp dịch vụ"
+    "enGloss": "To deliver useful assistance and professional utilities to consumers.",
+    "viGloss": "cung cấp dịch vụ chất lượng cao"
   },
   "public access": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "truy cập công cộng"
+    "enGloss": "The legal right of the citizenry to visit public facilities or view public archives.",
+    "viGloss": "quyền tiếp cận công cộng của người dân"
   },
   "public administration": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hành chính công"
+    "enGloss": "The implementation of government policy and management of civil services.",
+    "viGloss": "công tác quản lý hành chính công"
   },
   "public attitudes": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thái độ của công chúng"
+    "enGloss": "The prevailing sentiment and collective mindset held by the general populace.",
+    "viGloss": "thái độ và cách nhìn của công chúng"
+  },
+  "public authority": {
+    "enGloss": "A statutory agency or municipal council endowed with legal enforcement powers.",
+    "viGloss": "cơ quan công quyền thực thi pháp luật"
+  },
+  "public discourse": {
+    "enGloss": "Civilized, open debate conducted in civic arenas regarding public interests.",
+    "viGloss": "các cuộc thảo luận cởi mở nơi công cộng"
+  },
+  "public expenditure": {
+    "enGloss": "Money spent by government authorities to provide healthcare, roads, and education.",
+    "viGloss": "chi tiêu ngân sách công của nhà nước"
   },
   "public transport": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
+    "enGloss": "Communal bus, tram, and train systems provided for general passenger transit.",
     "viGloss": "phương tiện giao thông công cộng"
   },
+  "public welfare": {
+    "enGloss": "The health, happiness, and economic fortunes of a nation's populace.",
+    "viGloss": "phúc lợi công cộng cho toàn xã hội"
+  },
   "published material": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tài liệu đã xuất bản"
+    "enGloss": "Academic books, papers, and journals made available to the wider public.",
+    "viGloss": "tài liệu đã được xuất bản chính thức"
   },
   "push physiological boundaries": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đẩy ranh giới sinh lý"
+    "enGloss": "To exceed normal bodily thresholds through intense athletic conditioning.",
+    "viGloss": "vượt qua các giới hạn sinh lý của cơ thể"
+  },
+  "readily accessible": {
+    "enGloss": "Available within easy reach without encountering administrative or physical hurdles.",
+    "viGloss": "dễ dàng tiếp cận mà không gặp trở ngại"
   },
   "reduce emissions": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giảm khí thải"
+    "enGloss": "To curtail the discharge of greenhouse gases into the atmosphere.",
+    "viGloss": "cắt giảm lượng khí thải nhà kính"
+  },
+  "reduce likelihood": {
+    "enGloss": "To lower the statistical probability that an adverse event will materialize.",
+    "viGloss": "giảm thiểu nguy cơ xảy ra sự cố"
   },
   "reduce stress": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "giảm căng thẳng"
+    "enGloss": "To diminish physical strain and psychological pressure through calming practices.",
+    "viGloss": "giải tỏa căng thẳng và lo âu"
+  },
+  "reflective practice": {
+    "enGloss": "The disciplined habit of introspecting on one's performance to improve.",
+    "viGloss": "thực hành tự soi chiếu / chiêm nghiệm bản thân"
+  },
+  "reflective question": {
+    "enGloss": "A provocative query designed to spark introspection and deep contemplation.",
+    "viGloss": "câu hỏi gợi mở tư duy chiêm nghiệm"
+  },
+  "regulatory framework": {
+    "enGloss": "The overarching set of laws and mandates governing an industry.",
+    "viGloss": "khung khổ pháp lý và quy định"
+  },
+  "relative autonomy": {
+    "enGloss": "A limited degree of operational independence permitted within higher oversight.",
+    "viGloss": "quyền tự chủ tương đối trong hành động"
+  },
+  "relatively constant": {
+    "enGloss": "Staying approximately uniform with only negligible minor fluctuations.",
+    "viGloss": "duy trì ở mức tương đối ổn định"
   },
   "relatively simple": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tương đối đơn giản"
+    "enGloss": "Uncomplicated and easily grasped without needing advanced technical training.",
+    "viGloss": "tương đối đơn giản và dễ thực hiện"
+  },
+  "relatively stable": {
+    "enGloss": "Exhibiting steady equilibrium and resilience against external disturbances.",
+    "viGloss": "tương đối ổn định qua thời gian"
+  },
+  "religious freedom": {
+    "enGloss": "The fundamental right to practice, teach, and worship any religion without persecution.",
+    "viGloss": "quyền tự do tín ngưỡng, tôn giáo"
+  },
+  "remain constant": {
+    "enGloss": "To continue staying at the exact same value or state without changing.",
+    "viGloss": "duy trì không đổi qua thời gian"
+  },
+  "remain stable": {
+    "enGloss": "To preserve steady balance, resilience, and function under stressful conditions.",
+    "viGloss": "giữ vững sự ổn định lâu dài"
   },
   "renewable energy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "năng lượng tái tạo"
+    "enGloss": "Clean energy harnessed from inexhaustible natural sources like wind and sun.",
+    "viGloss": "nguồn năng lượng sạch tái tạo"
+  },
+  "representative government": {
+    "enGloss": "A democratic system where citizens elect delegates to formulate laws.",
+    "viGloss": "chính phủ đại diện cho ý chí của nhân dân"
   },
   "research effort": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "nỗ lực nghiên cứu"
+    "enGloss": "The scholarly dedication and labor invested in discovering scientific truths.",
+    "viGloss": "nỗ lực nghiên cứu khoa học bền bỉ"
   },
   "risk assessment": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đánh giá rủi ro"
+    "enGloss": "A methodical analysis identifying potential hazards and evaluating their likelihood.",
+    "viGloss": "công tác đánh giá mức độ rủi ro"
   },
   "rote memorization": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "học thuộc lòng"
+    "enGloss": "The mechanical repetition of words to memorize facts without comprehending meaning.",
+    "viGloss": "học vẹt máy móc, không hiểu sâu bản chất"
+  },
+  "rural area": {
+    "enGloss": "Sparsely settled countryside located outside urban centers and metropolitan sprawl.",
+    "viGloss": "khu vực nông thôn thanh bình"
+  },
+  "rural community": {
+    "enGloss": "A close-knit population residing in agricultural villages and pastoral towns.",
+    "viGloss": "cộng đồng cư dân nông thôn"
+  },
+  "rural economy": {
+    "enGloss": "The economic framework dependent primarily upon farming, forestry, and rural trades.",
+    "viGloss": "nền kinh tế nông nghiệp nông thôn"
   },
   "rural population": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "dân số nông thôn"
+    "enGloss": "The demographic segment of a nation dwelling in pastoral countryside zones.",
+    "viGloss": "dân cư sinh sống tại vùng nông thôn"
   },
   "safe sex": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tình dục an toàn"
+    "enGloss": "Sexual activity conducted using barrier contraception to prevent disease transmission.",
+    "viGloss": "quan hệ tình dục an toàn"
+  },
+  "scholarly journal": {
+    "enGloss": "A peer-reviewed academic serial publication publishing original research papers.",
+    "viGloss": "tạp chí nghiên cứu học thuật uy tín"
+  },
+  "scholarly literature": {
+    "enGloss": "The collective body of academic monographs, essays, and studies on a topic.",
+    "viGloss": "tài liệu / các công trình nghiên cứu học thuật"
+  },
+  "scholarly research": {
+    "enGloss": "Methodical, evidence-based academic investigation intended to advance knowledge.",
+    "viGloss": "nghiên cứu học thuật chuyên sâu"
+  },
+  "scholarly work": {
+    "enGloss": "Academic articles, books, and scientific dissertations produced by scholars.",
+    "viGloss": "công trình nghiên cứu học thuật"
+  },
+  "scientific discourse": {
+    "enGloss": "Rigorous debates and communication carried out within the scientific community.",
+    "viGloss": "diễn ngôn / thảo luận khoa học nghiêm túc"
   },
   "seek help": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tìm kiếm sự giúp đỡ"
+    "enGloss": "To proactively solicit guidance or assistance from experts and mentors.",
+    "viGloss": "chủ động tìm kiếm sự giúp đỡ"
+  },
+  "senior management": {
+    "enGloss": "The executive directors and c-suite officers orchestrating organizational strategy.",
+    "viGloss": "ban lãnh đạo cấp cao của tổ chức"
   },
   "service sector": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lĩnh vực dịch vụ"
+    "enGloss": "The economic segment providing commercial services rather than extracting commodities.",
+    "viGloss": "khu vực ngành dịch vụ"
+  },
+  "sexual orientation": {
+    "enGloss": "An individual's enduring emotional and romantic attraction toward particular genders.",
+    "viGloss": "xu hướng tính dục tự nhiên"
   },
   "share information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "chia sẻ thông tin"
+    "enGloss": "To distribute and disseminate data transparently across teams and collaborators.",
+    "viGloss": "chia sẻ thông tin một cách cởi mở"
   },
   "short duration": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thời gian ngắn"
+    "enGloss": "A brief, transient interval of time that concludes quickly.",
+    "viGloss": "khoảng thời gian diễn ra ngắn ngủi"
   },
   "short period": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thời gian ngắn"
+    "enGloss": "A temporary span of days, weeks, or months of limited length.",
+    "viGloss": "khoảng thời gian ngắn"
   },
   "significant growth": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "tăng trưởng đáng kể"
+    "enGloss": "Substantial, impressive quantitative expansion observed across metrics.",
+    "viGloss": "sự tăng trưởng nhảy vọt đáng kể"
   },
   "significant improvement": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "cải thiện đáng kể"
+    "enGloss": "A marked, noteworthy enhancement in performance, health, or quality.",
+    "viGloss": "sự cải thiện vượt bậc đáng ghi nhận"
+  },
+  "significant interaction": {
+    "enGloss": "A meaningful reciprocal dynamic that generates noticeable mutual effects.",
+    "viGloss": "sự tương tác đáng kể qua lại"
   },
   "simple majority": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "đa số đơn giản"
+    "enGloss": "More than half of the votes cast by participants in a ballot.",
+    "viGloss": "đa số quá bán giản đơn"
+  },
+  "skilled worker": {
+    "enGloss": "A tradesperson possessing formal technical qualifications and practical expertise.",
+    "viGloss": "công nhân có tay nghề chuyên môn cao"
   },
   "social activity": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hoạt động xã hội"
+    "enGloss": "Engaging in communal pastimes, gatherings, and recreation with others.",
+    "viGloss": "hoạt động giao lưu xã hội"
   },
   "social aspect": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "khía cạnh xã hội"
+    "enGloss": "A specific dimension of human relationships, customs, or societal structures.",
+    "viGloss": "khía cạnh đời sống xã hội"
   },
   "social attitudes": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thái độ xã hội"
+    "enGloss": "Prevailing cultural feelings and judgments held toward groups or behaviors.",
+    "viGloss": "thái độ và định kiến của xã hội"
+  },
+  "social background": {
+    "enGloss": "The family lineage, upbringing, and community culture that shaped a person.",
+    "viGloss": "nền tảng xuất thân xã hội"
+  },
+  "social democracy": {
+    "enGloss": "A political philosophy combining representative democracy with extensive welfare provisions.",
+    "viGloss": "chủ nghĩa dân chủ xã hội"
+  },
+  "social expectations": {
+    "enGloss": "The unwritten behavioral norms and standards demanded by society.",
+    "viGloss": "kỳ vọng và chuẩn mực của xã hội"
+  },
+  "social integration": {
+    "enGloss": "The harmonious assimilation and inclusion of minority groups into mainstream society.",
+    "viGloss": "tiến trình hòa nhập xã hội"
+  },
+  "social interaction": {
+    "enGloss": "The dynamic mutual communication and behavioral exchanges between individuals.",
+    "viGloss": "sự giao tiếp và tương tác xã hội"
+  },
+  "social isolation": {
+    "enGloss": "The distressing condition of being cut off from human relationships and support.",
+    "viGloss": "sự cô lập / xa lánh xã hội"
+  },
+  "social mobility": {
+    "enGloss": "The capacity of individuals to shift their socio-economic status upward.",
+    "viGloss": "sự dịch chuyển địa vị xã hội"
+  },
+  "social welfare": {
+    "enGloss": "Government programs and community safety nets supporting vulnerable citizens.",
+    "viGloss": "chính sách phúc lợi xã hội toàn dân"
+  },
+  "socially acceptable": {
+    "enGloss": "Conforming politely to the approved behavioral etiquette of a society.",
+    "viGloss": "phù hợp với chuẩn mực chung của xã hội"
+  },
+  "socioeconomic status": {
+    "enGloss": "An aggregate measure reflecting a person's income, education, and occupational standing.",
+    "viGloss": "vị thế kinh tế - xã hội của cá nhân"
   },
   "solar energy": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "năng lượng mặt trời"
+    "enGloss": "Radiant heat and light emitted by the sun converted into electrical power.",
+    "viGloss": "năng lượng mặt trời dồi dào"
+  },
+  "specific knowledge": {
+    "enGloss": "Specialized, exact information relevant to a distinct technical discipline.",
+    "viGloss": "kiến thức chuyên sâu đặc thù"
+  },
+  "specific sense": {
+    "enGloss": "Interpreted according to an exact, narrow conceptual nuance.",
+    "viGloss": "theo một hàm ý cụ thể"
   },
   "specifically designed": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "được thiết kế đặc biệt"
+    "enGloss": "Engineered deliberately to fulfill a bespoke set of functional criteria.",
+    "viGloss": "được thiết kế chuyên biệt theo yêu cầu"
   },
   "standardized testing": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "kiểm tra tiêu chuẩn hóa"
+    "enGloss": "Evaluations administered and scored under identical, uniform conditions for all students.",
+    "viGloss": "thi cử / kiểm tra chuẩn hóa"
   },
   "store data": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lưu trữ dữ liệu"
+    "enGloss": "To record and preserve digital information securely in databases.",
+    "viGloss": "lưu trữ dữ liệu an toàn"
   },
   "store information": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "lưu trữ thông tin"
+    "enGloss": "To house and maintain factual archives for subsequent systematic retrieval.",
+    "viGloss": "lưu trữ thông tin có hệ thống"
   },
   "strain on public resources": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "căng thẳng về nguồn lực công"
+    "enGloss": "An overwhelming burden depleting tax revenues, hospitals, and public services.",
+    "viGloss": "gánh nặng lên các nguồn lực công"
+  },
+  "stress level": {
+    "enGloss": "The measured intensity of physiological and mental pressure borne by a person.",
+    "viGloss": "mức độ căng thẳng tinh thần"
   },
   "strongly agree": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "rất đồng ý"
+    "enGloss": "To endorse an opinion or proposition with complete intellectual and moral conviction.",
+    "viGloss": "hoàn toàn đồng tình với quan điểm"
+  },
+  "substantial amount": {
+    "enGloss": "A sizable, consequential quantity that exerts significant practical impact.",
+    "viGloss": "một lượng lớn / đáng kể"
+  },
+  "substantial difference": {
+    "enGloss": "A marked, dramatic variation distinguishing two compared items.",
+    "viGloss": "sự khác biệt rất lớn về bản chất"
+  },
+  "substantial evidence": {
+    "enGloss": "A heavy body of corroborated proof that decisively settles a question.",
+    "viGloss": "chứng cứ xác thực, đầy sức nặng"
+  },
+  "substantial number": {
+    "enGloss": "A large, impressive quantity of people, items, or recorded incidents.",
+    "viGloss": "một số lượng lớn đáng kể"
+  },
+  "successful implementation": {
+    "enGloss": "The triumphant execution of a program that delivers all intended goals.",
+    "viGloss": "triển khai thực thi thành công mỹ mãn"
+  },
+  "superior performance": {
+    "enGloss": "Exceptional capability and results surpassing standard benchmarks and competitors.",
+    "viGloss": "hiệu suất vượt trội hơn hẳn"
+  },
+  "take initiative": {
+    "enGloss": "To act independently and boldly without awaiting instructions from others.",
+    "viGloss": "chủ động tiên phong nắm bắt cơ hội"
+  },
+  "take precedence": {
+    "enGloss": "To claim higher priority and urgent attention over competing matters.",
+    "viGloss": "chiếm ưu tiên hàng đầu / được ưu tiên trước"
+  },
+  "technological advances": {
+    "enGloss": "Major scientific and engineering breakthroughs that transform industrial capabilities.",
+    "viGloss": "những bước tiến bộ vượt bậc của công nghệ"
+  },
+  "technological innovation": {
+    "enGloss": "The pioneering creation and application of new digital or mechanical tools.",
+    "viGloss": "đổi mới sáng tạo trong công nghệ"
+  },
+  "technological progress": {
+    "enGloss": "The cumulative evolution and betterment of tools and techniques over history.",
+    "viGloss": "tiến trình phát triển của công nghệ"
+  },
+  "theoretical analysis": {
+    "enGloss": "The systematic examination of a question using abstract models and logic.",
+    "viGloss": "phân tích dựa trên nền tảng lý thuyết"
+  },
+  "theoretical approach": {
+    "enGloss": "A research perspective grounded in conceptual frameworks and deductive hypotheses.",
+    "viGloss": "cách tiếp cận dựa trên lý luận"
+  },
+  "theoretical basis": {
+    "enGloss": "The foundational principles and conceptual assumptions supporting an academic theory.",
+    "viGloss": "cơ sở lý luận vững chắc"
+  },
+  "theoretical concept": {
+    "enGloss": "An abstract, generalized mental construct formulating relationships between phenomena.",
+    "viGloss": "khái niệm mang tính lý thuyết trừu tượng"
   },
   "theoretical understanding": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hiểu biết lý thuyết"
+    "enGloss": "Deep intellectual comprehension of the laws and axioms governing a system.",
+    "viGloss": "sự hiểu biết sâu về mặt lý thuyết"
+  },
+  "traditional approach": {
+    "enGloss": "A conventional methodology relying on historical habits and established customs.",
+    "viGloss": "cách tiếp cận theo lề lối truyền thống"
+  },
+  "transferable skill": {
+    "enGloss": "A versatile capability applicable across varied industries, projects, and careers.",
+    "viGloss": "kỹ năng có thể áp dụng linh hoạt vào nhiều công việc"
   },
   "transport system": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "hệ thống giao thông"
+    "enGloss": "The interconnected network of roads, railways, ports, and transit vehicles.",
+    "viGloss": "hệ thống mạng lưới giao thông"
+  },
+  "universally accepted": {
+    "enGloss": "Acknowledged and respected as incontrovertible truth across all human cultures.",
+    "viGloss": "được thừa nhận rộng rãi trên toàn cầu"
+  },
+  "urban area": {
+    "enGloss": "A densely populated town or city environment marked by high-rise buildings.",
+    "viGloss": "khu vực đô thị sầm uất"
   },
   "urban design": {
-    "enGloss": "Natural academic collocation enhancing coherence.",
-    "viGloss": "thiết kế đô thị"
+    "enGloss": "The discipline shaping the physical layout, architecture, and aesthetics of cities.",
+    "viGloss": "quy hoạch và thiết kế kiến trúc đô thị"
+  },
+  "urban development": {
+    "enGloss": "The growth, modernisation, and infrastructure expansion of metropolitan centers.",
+    "viGloss": "tiến trình phát triển và hiện đại hóa đô thị"
+  },
+  "urban environment": {
+    "enGloss": "The built human habitat characterized by high population density and commerce.",
+    "viGloss": "môi trường sống tại các đô thị"
+  },
+  "useful information": {
+    "enGloss": "Actionable, valuable facts that help resolve dilemmas and guide decisions.",
+    "viGloss": "thông tin hữu ích, có giá trị ứng dụng"
+  },
+  "vast amount": {
+    "enGloss": "An extraordinarily immense volume, quantity, or expanse.",
+    "viGloss": "một số lượng vô cùng khổng lồ"
+  },
+  "virtual community": {
+    "enGloss": "An online network of people interacting across platforms around shared passions.",
+    "viGloss": "cộng đồng trực tuyến trên không gian mạng"
+  },
+  "vital importance": {
+    "enGloss": "A supreme degree of indispensability upon which whole systems depend.",
+    "viGloss": "tầm quan trọng sống còn, mang tính quyết định"
+  },
+  "vital part": {
+    "enGloss": "An indispensable organ or component critical for systemic survival.",
+    "viGloss": "bộ phận cốt yếu không thể tách rời"
+  },
+  "vulnerable group": {
+    "enGloss": "A demographic population exposed to elevated risks of poverty, disease, or neglect.",
+    "viGloss": "nhóm đối tượng yếu thế, dễ bị tổn thương"
+  },
+  "welfare reform": {
+    "enGloss": "Structural legislative restructuring of state safety nets and social assistance programs.",
+    "viGloss": "cải cách hệ thống chính sách phúc lợi"
   }
 }

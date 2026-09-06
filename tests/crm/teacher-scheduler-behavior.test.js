@@ -301,15 +301,20 @@ async function testTeacherOutcomeUpdatesContractCounting() {
     const res = buildRes();
     await invokeHandlers(handlers, {
         params: { sessionId: 'session-1' },
-        body: { outcome: 'absent_makeup' }
+        body: {
+            outcome: 'absent_makeup',
+            note: 'Spoken pronunciation dictation note'
+        }
     }, res);
 
     assert.strictEqual(res._status, 200);
     assert.strictEqual(res._json.success, true);
     assert.strictEqual(res._json.sessionId, 'session-1');
+    assert.strictEqual(res._json.sessionNote, 'Spoken pronunciation dictation note');
 
     const session = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/session-1`);
     assert.strictEqual(session.sessionOutcome, 'absent_makeup');
+    assert.strictEqual(session.sessionNote, 'Spoken pronunciation dictation note');
     assert.strictEqual(session.contractCountState, 'does_not_count');
 
     const classroom = db.docs.get(`${CRM_CLASSROOMS}/class-1`);
@@ -577,11 +582,99 @@ async function testAdminCanManageAllTeacherSchedules() {
     assert.strictEqual(res._status, 200, `Admin cancelling failed: ${JSON.stringify(res._json)}`);
 }
 
+async function testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking() {
+    const batchSizes = [];
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-target`]: {
+            name: 'Target Teacher Class',
+            primaryTeacherUid: 'teacher-target',
+            courseId: 'course-target',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 240,
+                sessionMinutes: 120,
+                targetSessionCount: 2,
+                timezone: 'Asia/Bangkok',
+                durationStepMinutes: 30,
+                seedWeekdays: ['mon', 'wed'],
+                seedStartTime: '10:00',
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 2,
+                contractedAssignedCount: 0,
+                contractedCompletedCount: 0,
+                remainingToScheduleCount: 2,
+                overflowCount: 0
+            }
+        }
+    });
+
+    const originalBatch = db.batch.bind(db);
+    db.batch = function () {
+        const batchInst = originalBatch();
+        const originalSet = batchInst.set.bind(batchInst);
+        let count = 0;
+        batchInst.set = function (ref, payload) {
+            count += 1;
+            return originalSet(ref, payload);
+        };
+        const originalCommit = batchInst.commit.bind(batchInst);
+        batchInst.commit = async function () {
+            batchSizes.push(count);
+            return originalCommit();
+        };
+        return batchInst;
+    };
+
+    const router = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'admin-super', email: 'admin@example.com', isAdmin: true };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    const activateHandlers = getRouteHandlers(router, '/scheduler/activate-recurrences', 'post');
+    const res = buildRes();
+    await invokeHandlers(activateHandlers, {
+        body: {
+            teacherUid: 'teacher-target',
+            from: '2026-04-06',
+            to: '2026-04-12'
+        }
+    }, res);
+
+    assert.strictEqual(res._status, 200, `Activation failed: ${JSON.stringify(res._json)}`);
+    assert.strictEqual(res._json.success, true);
+    assert(res._json.details && res._json.details.length > 0, 'Should have activation details');
+    assert.strictEqual(res._json.details[0].status, 'success');
+    assert.strictEqual(res._json.details[0].createdCount, 2);
+
+    const createdSessions = Array.from(db.docs.entries())
+        .filter(([key]) => key.startsWith(`${CRM_SCHEDULED_SESSIONS}/`))
+        .map(([, val]) => val);
+    assert.strictEqual(createdSessions.length, 2, 'Should create 2 sessions');
+    for (const session of createdSessions) {
+        assert.strictEqual(session.teacherUid, 'teacher-target', 'Session must be assigned to target teacher, not admin');
+        assert.strictEqual(session.createdBy, 'admin-super', 'Created by should track admin caller');
+    }
+
+    assert(batchSizes.length > 0, 'Should have used batch commits');
+    for (const size of batchSizes) {
+        assert(size <= 400, `Batch size ${size} exceeded maximum limit of 400`);
+    }
+}
+
 (async () => {
     await testAddMultiPersistsPattern();
     await testTeacherOutcomeUpdatesContractCounting();
     await testTeacherApiErrorMessages();
     await testAdminCanManageAllTeacherSchedules();
+    await testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

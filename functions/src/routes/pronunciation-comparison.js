@@ -9,10 +9,14 @@ if (process.env.NODE_ENV !== 'production') {
   try {
     const { Agent } = require('undici');
     devHttpsDispatcher = new Agent({ connect: { rejectUnauthorized: false } });
-  } catch (_) {}
+  } catch (_) {
+    // Ignore optional undici requirement in dev
+  }
   try {
     devHttpsAgent = new https.Agent({ rejectUnauthorized: false });
-  } catch (_) {}
+  } catch (_) {
+    // Ignore optional https agent creation error in dev
+  }
 }
 
 function getFetchOptions(url, baseOptions = {}) {
@@ -198,6 +202,7 @@ function buildSyntheticOptionB(word, referenceIpa = '', expectedSyllables = null
     const intensity = isStressed ? 78.5 : 65.0;
     const vStart = Math.round((startTime + (sylDur - vowelDur) / 2) * 1000) / 1000;
     const vEnd = Math.round((vStart + vowelDur) * 1000) / 1000;
+    const prominence = syllableCount === 1 ? 100 : (isStressed ? 60 : Math.round(40 / Math.max(1, syllableCount - 1)));
 
     syllables.push({
       syllable: i + 1,

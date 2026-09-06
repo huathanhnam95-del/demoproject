@@ -361,7 +361,10 @@ async function main() {
 
     // Run Dual Analysis button should become enabled
     const runBtn = page.locator('#dual-arena-btn-run');
-    await runBtn.waitFor({ state: 'visible' });
+    await page.waitForFunction(() => {
+      const btn = document.getElementById('dual-arena-btn-run');
+      return btn && !btn.disabled;
+    }, { timeout: 5000 });
     assert.strictEqual(await runBtn.isDisabled(), false, 'Run Dual Analysis button should be enabled after audio is uploaded.');
 
     // 7b. Verify Waveform Visualization Display is mounted and visible
@@ -419,7 +422,11 @@ async function main() {
   } finally {
     const fakeWavPath = path.join(__dirname, 'test-temp.wav');
     if (fs.existsSync(fakeWavPath)) {
-      try { fs.unlinkSync(fakeWavPath); } catch (_) {}
+      try {
+        fs.unlinkSync(fakeWavPath);
+      } catch (_) {
+        // Ignore unlink cleanup errors
+      }
     }
     await browser.close();
   }

@@ -1,0 +1,2461 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "23",
+  "title": "#23 Extreme Sports",
+  "prompt": "In your opinion, what are the advantages and disadvantages of extreme or adventure sports?",
+  "source": {
+    "promptSha256": "e3e908522d418e83504920c53e7dacd1f0276e9b1555ef2a029d9bb023724404",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "what are the advantages",
+        "role": "prompt_clause",
+        "labelEn": "Requirement 1: Advantages / Benefits",
+        "labelVi": "Yêu cầu 1: Phân tích ưu điểm / lợi ích",
+        "targetParagraphEn": "Body Paragraph 1",
+        "targetParagraphVi": "Thân bài 1 (Ưu điểm)"
+      },
+      {
+        "id": "segment-2",
+        "text": "and disadvantages",
+        "role": "prompt_clause",
+        "labelEn": "Requirement 2: Disadvantages / Drawbacks",
+        "labelVi": "Yêu cầu 2: Phân tích nhược điểm / rủi ro",
+        "targetParagraphEn": "Body Paragraph 2",
+        "targetParagraphVi": "Thân bài 2 (Nhược điểm)"
+      },
+      {
+        "id": "segment-3",
+        "text": "In your opinion",
+        "role": "prompt_clause",
+        "labelEn": "Requirement 3: Personal Opinion & Evaluation",
+        "labelVi": "Yêu cầu 3: Quan điểm cá nhân & Đánh giá mặt nào chiếm ưu thế",
+        "targetParagraphEn": "Introduction (Thesis) & Conclusion",
+        "targetParagraphVi": "Mở bài (Luận đề) & Kết bài"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "Leisure, sports, and hobbies"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "opinion",
+        "enGloss": "Key concept related to opinion.",
+        "viGloss": "ý kiến"
+      },
+      {
+        "term": "advantages",
+        "enGloss": "beneficial conditions or circumstances",
+        "viGloss": "những lợi thế"
+      },
+      {
+        "term": "disadvantages",
+        "enGloss": "Key concept related to disadvantages.",
+        "viGloss": "nhược điểm"
+      },
+      {
+        "term": "extreme",
+        "enGloss": "Key concept related to extreme.",
+        "viGloss": "cực đoan"
+      },
+      {
+        "term": "adventure",
+        "enGloss": "an unusual or exciting experience",
+        "viGloss": "phiêu lưu"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "req-1",
+        "required": true,
+        "en": "Discuss both advantages and disadvantages with balanced analysis.",
+        "vi": "Thảo luận cả ưu điểm và nhược điểm với lập luận cân bằng."
+      },
+      {
+        "id": "req-2",
+        "required": true,
+        "en": "State a clear, decisive personal stance on which side outweighs.",
+        "vi": "Tuyên bố lập trường rõ ràng, dứt khoát xem mặt nào chiếm ưu thế hơn."
+      },
+      {
+        "id": "req-3",
+        "required": true,
+        "en": "Support each body argument with specific reasoning and real-world examples.",
+        "vi": "Hỗ trợ từng luận điểm thân bài bằng giải thích nguyên nhân và ví dụ thực tế."
+      }
+    ],
+    "angles": [
+      {
+        "id": "pos_1",
+        "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+        "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+        "sourceVariantId": "advantage"
+      },
+      {
+        "id": "pos_2",
+        "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+        "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+        "sourceVariantId": "advantage"
+      },
+      {
+        "id": "pos_3",
+        "en": "Overcoming primal fears during high-risk activities fosters deep self-efficacy and boosts personal confidence in overcoming life challenges.",
+        "vi": "Vượt qua nỗi sợ bản năng trong các hoạt động mạo hiểm giúp xây dựng niềm tin mãnh liệt vào bản thân và tăng sự tự tin trước các thử thách cuộc sống.",
+        "sourceVariantId": "advantage"
+      },
+      {
+        "id": "pos_4",
+        "en": "Contrary to reckless behavior, true adventure sports demand meticulous risk assessment, technical discipline, and strict adherence to safety protocols.",
+        "vi": "Trái với suy nghĩ liều lĩnh, thể thao mạo hiểm thực thụ đòi hỏi khả năng đánh giá rủi ro tỉ mỉ, kỷ luật kỹ thuật và việc tuân thủ nghiêm ngặt quy trình an toàn.",
+        "sourceVariantId": "advantage"
+      },
+      {
+        "id": "pos_5",
+        "en": "The growing popularity of adventure tourism generates significant economic revenue, job opportunities, and investments in safety gear innovation.",
+        "vi": "Sự phát triển của du lịch mạo hiểm tạo ra nguồn doanh thu kinh tế đáng kể, cơ hội việc làm và thúc đẩy đổi mới công nghệ đồ bảo hộ an toàn.",
+        "sourceVariantId": "advantage"
+      },
+      {
+        "id": "pos_6",
+        "en": "Engaging in perilous outdoor pursuits fosters strong bonds of camaraderie and reciprocal trust among climbing and expedition partners.",
+        "vi": "Tham gia các hoạt động nguy hiểm ngoài trời xây dựng tình đồng đội sâu sắc và sự tin tưởng tuyệt đối giữa các bạn đồng hành leo núi và thám hiểm.",
+        "sourceVariantId": "advantage"
+      },
+      {
+        "id": "neg_1",
+        "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+        "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+        "sourceVariantId": "disadvantage"
+      },
+      {
+        "id": "neg_2",
+        "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+        "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+        "sourceVariantId": "disadvantage"
+      },
+      {
+        "id": "neg_3",
+        "en": "Specialized certified gear, mandatory professional training, travel logistics, and high-risk medical insurance require substantial financial expenditure.",
+        "vi": "Trang thiết bị chuyên dụng đạt chuẩn, khóa đào tạo chuyên nghiệp, chi phí di chuyển và bảo hiểm rủi ro cao đòi hỏi nguồn tài chính vô cùng đắt đỏ.",
+        "sourceVariantId": "disadvantage"
+      },
+      {
+        "id": "neg_4",
+        "en": "Frequent thrill-seeking can desensitize participants to danger, encouraging a false sense of invulnerability and increasingly reckless decision-making.",
+        "vi": "Cảm giác phấn khích lặp đi lặp lại có thể làm mòn phản xạ sợ hãi, khiến người chơi ảo tưởng về sự bất bại và có những quyết định ngày càng liều lĩnh hơn.",
+        "sourceVariantId": "disadvantage"
+      },
+      {
+        "id": "neg_5",
+        "en": "Unregulated adventure expeditions frequently cause severe environmental degradation, trail erosion, alpine littering, and wildlife disturbance.",
+        "vi": "Các chuyến thám hiểm mạo hiểm tự phát thường gây xói mòn đường mòn, xả rác tại các đỉnh núi cao và làm xáo trộn nghiêm trọng hệ sinh thái hoang dã.",
+        "sourceVariantId": "disadvantage"
+      },
+      {
+        "id": "neg_6",
+        "en": "The constant proximity to life-threatening perils inflicts chronic anxiety, emotional stress, and long-term trauma on the families and loved ones of participants.",
+        "vi": "Nguy cơ cận kề cái chết liên tục tạo ra gánh nặng lo âu mãn tính, căng thẳng tâm lý và tổn thương tinh thần lâu dài cho gia đình và người thân.",
+        "sourceVariantId": "disadvantage"
+      }
+    ],
+    "promptTraps": [
+      {
+        "titleEn": "One-Sided Bias Without Analyzing Both Angles",
+        "titleVi": "Viết lệch một bên mà không phân tích cả hai mặt",
+        "mistakeEn": "Focusing exclusively on thrilling adventures and adrenaline rushes, completely ignoring life-threatening perils, injuries, or emergency rescue costs.",
+        "mistakeVi": "Chỉ tập trung viết về sự phấn khích và rèn luyện bản lĩnh, bỏ qua hoàn toàn các mối nguy hiểm tính mạng, chấn thương hay chi phí cứu hộ.",
+        "whyEn": "In an 'Advantages vs Disadvantages' essay, omitting either side immediately violates PTE Content criteria, resulting in a heavy Task Achievement deduction.",
+        "whyVi": "Với dạng bài Ưu & Nhược điểm, bỏ qua một trong hai mặt sẽ vi phạm trực tiếp tiêu chí Content của PTE và bị trừ điểm rất nặng.",
+        "fixEn": "Dedicate Body Paragraph 1 to psychological benefits (resilience, courage) and Body Paragraph 2 to grave hazards (fatal accidents, physical trauma).",
+        "fixVi": "Chia đều: Đoạn Thân bài 1 viết về lợi ích tinh thần (bản lĩnh, dũng cảm), Đoạn Thân bài 2 viết về rủi ro nghiêm trọng (tai nạn chết người, chấn thương).",
+        "en": "One-Sided Bias: Discussing only advantages or only disadvantages fails PTE Content requirements. Better approach: Analyze benefits in Body 1 and hazards in Body 2.",
+        "vi": "Viết lệch một bên: Chỉ viết ưu điểm hoặc chỉ viết nhược điểm sẽ bị trừ điểm Content. Cách viết chuẩn: Phân tích mặt tốt ở Thân bài 1 và nguy cơ ở Thân bài 2."
+      },
+      {
+        "titleEn": "Failure to Deliver a Decisive Outweigh Verdict",
+        "titleVi": "Liệt kê ưu nhược điểm nhưng không chốt bên nào hơn",
+        "mistakeEn": "Listing pros and cons neutrally and concluding with 'there are good and bad points' without declaring which side outweighs the other.",
+        "mistakeVi": "Liệt kê điểm tốt điểm xấu rồi kết luận chung chung 'cái gì cũng có hai mặt' mà không chốt rõ mặt nào áp đảo hơn.",
+        "whyEn": "The prompt explicitly asks whether advantages OUTWEIGH disadvantages. An indecisive essay fails to answer the main prompt question.",
+        "whyVi": "Đề bài hỏi rõ mặt lợi có ÁP ĐẢO (outweigh) mặt hại không. Kết bài nước đôi đồng nghĩa với việc chưa hoàn thành nhiệm vụ của đề.",
+        "fixEn": "Explicitly declare in both your thesis and conclusion that one side decisively outweighs the other (e.g., benefits to personal growth far outweigh managed risks).",
+        "fixVi": "Khẳng định dứt khoát ở cả Mở bài và Kết bài rằng mặt nào chiếm ưu thế hơn (ví dụ: giá trị phát triển bản thân vượt trội so với các rủi ro có thể kiểm soát).",
+        "en": "Missing Outweigh Verdict: Simply listing pros and cons without declaring which side outweighs fails the prompt. Better approach: State decisively which side prevails in both intro and conclusion.",
+        "vi": "Không chốt bên nào hơn: Liệt kê hai mặt mà không kết luận bên nào vượt trội sẽ mất điểm. Cách viết chuẩn: Khẳng định rõ mặt chiếm ưu thế ở cả Mở bài và Kết bài."
+      },
+      {
+        "titleEn": "Abstract Generalizations Lacking Extreme Sports Context",
+        "titleVi": "Dẫn chứng sáo rỗng thiếu ngữ cảnh thể thao mạo hiểm cụ thể",
+        "mistakeEn": "Writing abstract platitudes about 'doing sports is healthy' rather than discussing high-consequence pursuits like mountaineering, skydiving, or white-water kayaking.",
+        "mistakeVi": "Bàn chung chung về việc 'chơi thể thao giúp khỏe người' thay vì phân tích các môn có độ rủi ro cao như leo núi tuyết, nhảy dù hay chèo thuyền vượt thác.",
+        "whyEn": "Generic sports discussion turns the essay away from 'extreme sports', weakening topic specificity and Vocabulary scoring.",
+        "whyVi": "Nói về thể thao thông thường sẽ làm bài viết bị lệch khỏi trọng tâm 'thể thao mạo hiểm', làm giảm điểm từ vựng và tính thuyết phục.",
+        "fixEn": "Anchor your claims and examples firmly in authentic extreme sports scenarios with appropriate safety and rescue terminology.",
+        "fixVi": "Gắn chặt các lập luận và ví dụ vào đúng bối cảnh thể thao mạo hiểm với các thuật ngữ chuyên biệt về an toàn và cứu hộ.",
+        "en": "Generic Clichés: Talking about ordinary exercise dilutes the extreme sports topic. Better approach: Use concrete extreme sports examples like skydiving or rock climbing.",
+        "vi": "Dẫn chứng chung chung: Bàn về thể thao bình thường sẽ làm loãng đề. Cách viết chuẩn: Dùng ví dụ thể thao mạo hiểm cụ thể như nhảy dù, leo núi."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    },
+    "comprehensionCheck": {
+      "mcq": {
+        "questionEn": "What is the mandatory structural requirement for this Advantages & Disadvantages prompt?",
+        "questionVi": "Yêu cầu cấu trúc bắt buộc đối với dạng đề Ưu điểm & Nhược điểm này là gì?",
+        "correct": "a",
+        "options": [
+          {
+            "id": "a",
+            "textEn": "Objectively analyze both major benefits and serious drawbacks in separate body paragraphs, and state which side outweighs.",
+            "textVi": "Phân tích khách quan cả ưu điểm và nhược điểm trong hai đoạn thân bài riêng biệt, đồng thời nêu rõ mặt nào chiếm ưu thế hơn.",
+            "feedbackEn": "✓ Correct! Full task achievement requires comprehensive treatment of both sides with an explicit personal evaluation.",
+            "feedbackVi": "✓ Chính xác! Tiêu chí chấm điểm đòi hỏi phân tích đầy đủ cả 2 mặt kèm theo đánh giá cá nhân rõ ràng."
+          },
+          {
+            "id": "b",
+            "textEn": "Describe the thrilling sensation of extreme sports and avoid discussing injuries or emergency rescue costs.",
+            "textVi": "Chỉ miêu tả cảm giác hưng phấn khi chơi thể thao mạo hiểm mà bỏ qua chấn thương hay chi phí cứu hộ.",
+            "feedbackEn": "❌ Incomplete essay content: You must address the disadvantages to satisfy the prompt.",
+            "feedbackVi": "❌ Thiếu nửa đề bài: Bắt buộc phải phân tích mặt hạn chế/rủi ro."
+          },
+          {
+            "id": "c",
+            "textEn": "Write exclusively about traditional school athletics like track and swimming.",
+            "textVi": "Chỉ viết về các môn thể thao học đường truyền thống như chạy bộ hay bơi lội.",
+            "feedbackEn": "❌ Prompt drift: The prompt explicitly specifies extreme or adventure sports.",
+            "feedbackVi": "❌ Lệch đề: Đề bài chỉ định rõ thể thao mạo hiểm (extreme/adventure sports)."
+          }
+        ]
+      },
+      "gapFill": {
+        "instructionsEn": "Select the correct strategic blocks below to lock in the core essay execution plan:",
+        "instructionsVi": "Chọn các mảnh ghép chiến lược bên dưới để hoàn thiện khung chiến lược bài viết:",
+        "sentenceTemplateEn": "In this essay, I must examine the {slot1} alongside the {slot2} of adventure sports before deciding which aspect {slot3}.",
+        "sentenceTemplateVi": "Trong bài viết này, tôi phải phân tích {slot1} song song với {slot2} của thể thao mạo hiểm trước khi quyết định mặt nào {slot3}.",
+        "slots": [
+          {
+            "id": "slot1",
+            "labelEn": "Side 1: Advantages",
+            "labelVi": "Mặt 1: Lợi ích",
+            "correctId": "c1",
+            "options": [
+              {
+                "id": "c1",
+                "textEn": "psychological & physical benefits",
+                "textVi": "lợi ích tâm lý & thể chất"
+              },
+              {
+                "id": "w1",
+                "textEn": "cheap equipment costs",
+                "textVi": "chi phí dụng cụ rẻ",
+                "hintEn": "Focus on authentic personal and societal benefits.",
+                "hintVi": "Tập trung vào lợi ích tâm lý và rèn luyện thể chất."
+              }
+            ]
+          },
+          {
+            "id": "slot2",
+            "labelEn": "Side 2: Disadvantages",
+            "labelVi": "Mặt 2: Rủi ro",
+            "correctId": "c2",
+            "options": [
+              {
+                "id": "c2",
+                "textEn": "life-threatening injury hazards",
+                "textVi": "nguy cơ chấn thương nguy hiểm tính mạng"
+              },
+              {
+                "id": "w2",
+                "textEn": "minor scheduling conflicts",
+                "textVi": "bất tiện nhỏ về lịch trình",
+                "hintEn": "Extreme sports carry severe, catastrophic physical perils.",
+                "hintVi": "Thể thao mạo hiểm gắn liền với rủi ro chấn thương nghiêm trọng."
+              }
+            ]
+          },
+          {
+            "id": "slot3",
+            "labelEn": "Personal Stance",
+            "labelVi": "Lập trường cá nhân",
+            "correctId": "c3",
+            "options": [
+              {
+                "id": "c3",
+                "textEn": "decisively outweighs the other",
+                "textVi": "chiếm ưu thế áp đảo hơn"
+              },
+              {
+                "id": "w3",
+                "textEn": "is completely irrelevant",
+                "textVi": "hoàn toàn không quan trọng",
+                "hintEn": "State clearly whether benefits exceed drawbacks or vice versa.",
+                "hintVi": "Nêu rõ ưu điểm vượt trội nhược điểm hay ngược lại."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "strongly agree",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "dangerous sports",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "more benefits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "adrenaline surge",
+            "enGloss": "a sudden rush of intense energy and heightened alertness",
+            "viGloss": "sự bùng nổ adrenaline tạo cảm giác phấn khích tột độ",
+            "example": "The intense adrenaline surge experienced during skydiving provides a profound psychological release from routine stress.",
+            "exampleVi": "Sự bùng nổ adrenaline mạnh mẽ khi nhảy dù mang lại cảm giác giải tỏa tâm lý sâu sắc khỏi những căng thẳng thường nhật."
+          },
+          {
+            "term": "physical endurance",
+            "enGloss": "the ability of the body to sustain prolonged stressful exertion",
+            "viGloss": "sức bền thể chất dẻo dai",
+            "example": "Navigating treacherous mountain terrains demands exceptional physical endurance and muscular strength.",
+            "exampleVi": "Vượt qua các địa hình đồi núi hiểm trở đòi hỏi sức bền thể chất đặc biệt và sức mạnh cơ bắp dẻo dai."
+          },
+          {
+            "term": "calculated risk",
+            "enGloss": "a hazard taken only after careful assessment of possible consequences",
+            "viGloss": "rủi ro đã được tính toán kỹ lưỡng",
+            "example": "Professional mountaineers treat danger as a calculated risk rather than an act of pure recklessness.",
+            "exampleVi": "Các vận động viên leo núi chuyên nghiệp xem nguy hiểm là rủi ro đã được tính toán cẩn thận thay vì một hành động liều lĩnh mù quáng."
+          },
+          {
+            "term": "life-threatening injury",
+            "enGloss": "severe physical trauma capable of causing death or permanent damage",
+            "viGloss": "chấn thương nguy hiểm đến tính mạng",
+            "example": "Without certified safety helmets, a sudden slip can result in a life-threatening injury.",
+            "exampleVi": "Nếu không có mũ bảo hiểm đạt chuẩn, một cú trượt chân bất ngờ có thể dẫn đến chấn thương nguy hiểm đến tính mạng."
+          },
+          {
+            "term": "stringent safety protocols",
+            "enGloss": "strictly enforced procedures designed to prevent accidents",
+            "viGloss": "các quy trình an toàn nghiêm ngặt",
+            "example": "Adventure sporting companies must enforce stringent safety protocols before allowing novices to participate.",
+            "exampleVi": "Các công ty tổ chức thể thao mạo hiểm phải áp dụng quy trình an toàn nghiêm ngặt trước khi cho người mới tham gia."
+          },
+          {
+            "term": "emergency rescue infrastructure",
+            "enGloss": "specialized public systems and personnel used to save people in peril",
+            "viGloss": "hạ tầng và lực lượng cứu hộ khẩn cấp",
+            "example": "Extricating stranded athletes from remote peaks places a heavy burden on public emergency rescue infrastructure.",
+            "exampleVi": "Giải cứu các vận động viên mắc kẹt trên những đỉnh núi hẻo lánh tạo gánh nặng lớn lên lực lượng cứu hộ khẩn cấp của công chúng."
+          },
+          {
+            "term": "psychological resilience",
+            "enGloss": "the mental capacity to adapt positively under high stress or adversity",
+            "viGloss": "bản lĩnh và khả năng phục hồi tâm lý",
+            "example": "Overcoming extreme challenges cultivates psychological resilience that benefits individuals in all walks of life.",
+            "exampleVi": "Vượt qua thử thách khắc nghiệt giúp tôi luyện bản lĩnh tâm lý vững vàng, mang lại lợi ích lâu dài trong mọi mặt của cuộc sống."
+          },
+          {
+            "term": "reckless thrill-seeking",
+            "enGloss": "dangerous behavior pursued purely for excitement without regard for consequences",
+            "viGloss": "hành vi tìm kiếm cảm giác mạnh một cách liều lĩnh",
+            "example": "Novices often confuse disciplined athletic pursuit with reckless thrill-seeking, leading to preventable casualties.",
+            "exampleVi": "Người mới thường nhầm lẫn giữa sự rèn luyện thể thao có kỷ luật với việc tìm kiếm cảm giác mạnh liều lĩnh, dẫn đến những tai nạn đáng tiếc."
+          }
+        ],
+        "collocations": [
+          {
+            "term": "push physiological boundaries",
+            "enGloss": "To exceed normal bodily thresholds through intense athletic conditioning.",
+            "viGloss": "Cụm từ học thuật: vượt qua các giới hạn sinh lý của cơ thể",
+            "meaning": "Vượt qua các giới hạn thể chất thông thường",
+            "example": "Adventure athletes regularly push physiological boundaries in high-altitude environments.",
+            "exampleVi": "Các vận động viên mạo hiểm thường xuyên vượt qua giới hạn thể chất trong môi trường độ cao khắc nghiệt."
+          },
+          {
+            "term": "irreversible physical trauma",
+            "enGloss": "Severe, permanent bodily harm that cannot be medically cured or reversed.",
+            "viGloss": "Cụm từ học thuật: chấn thương thể chất không thể phục hồi",
+            "meaning": "Tổn thương thể chất vĩnh viễn không thể hồi phục",
+            "example": "A catastrophic parachute failure can inflict irreversible physical trauma or fatal consequences.",
+            "exampleVi": "Sự cố dù bung không thành công có thể gây ra tổn thương thể chất vĩnh viễn hoặc tai nạn tử vong."
+          },
+          {
+            "term": "strain on public resources",
+            "enGloss": "An overwhelming burden depleting tax revenues, hospitals, and public services.",
+            "viGloss": "Cụm từ học thuật: gánh nặng lên các nguồn lực công",
+            "meaning": "Gây áp lực nặng nề lên nguồn lực công cộng",
+            "example": "High-risk rescue operations place an undue strain on public resources and taxpayer funding.",
+            "exampleVi": "Các chiến dịch cứu hộ rủi ro cao gây áp lực bất công lên nguồn lực công cộng và tiền thuế của người dân."
+          },
+          {
+            "term": "foster self-efficacy",
+            "enGloss": "To nurture an individual's confidence in their ability to succeed.",
+            "viGloss": "Cụm từ học thuật: nuôi dưỡng niềm tin vào năng lực bản thân",
+            "meaning": "Xây dựng niềm tin vững chắc vào năng lực bản thân",
+            "example": "Navigating rough white-water rapids helps foster self-efficacy in young adults.",
+            "exampleVi": "Chèo xuồng vượt qua các dòng ghềnh hiểm trở giúp xây dựng niềm tin vững chắc vào bản thân cho thanh thiếu niên."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "pattern-concession",
+            "purpose": "concession & balanced thesis",
+            "en": "Although [Concession X], I contend that [Your Stance Y] because [Reason Z].",
+            "vi": "Mặc dù [Thừa nhận X], tôi khẳng định rằng [Lập trường Y] bởi vì [Lý do Z].",
+            "exampleEn": "Although extreme sports offer exhilarating benefits and personal resilience [X], I contend that their severe physical hazards are unacceptable [Y] because a momentary mistake can lead to fatal consequences [Z].",
+            "exampleVi": "Mặc dù thể thao mạo hiểm mang lại cảm giác phấn khích và rèn luyện bản lĩnh [X], tôi cho rằng những rủi ro thể chất là quá lớn [Y] vì chỉ một sơ suất nhỏ cũng có thể dẫn tới hậu quả chết người [Z]."
+          },
+          {
+            "id": "pattern-cause-effect",
+            "purpose": "cause & consequence analysis",
+            "en": "Given that [Condition X], it follows that [Consequence Y], which ultimately results in [Impact Z].",
+            "vi": "Do [Điều kiện X], hệ quả tất yếu là [Hệ quả Y], điều này cuối cùng dẫn tới [Tác động Z].",
+            "exampleEn": "Given that participants undergo rigorous technical preparation [X], it follows that they develop heightened risk-assessment capabilities [Y], which ultimately fosters superior mental composure [Z].",
+            "exampleVi": "Do người tham gia phải trải qua quá trình chuẩn bị kỹ thuật nghiêm ngặt [X], hệ quả tất yếu là họ phát triển năng lực đánh giá rủi ro vượt trội [Y], điều này cuối cùng giúp rèn luyện sự điềm tĩnh và bản lĩnh tâm lý vững vàng [Z]."
+          },
+          {
+            "id": "pattern-inversion",
+            "purpose": "emphatic synthesis in conclusion",
+            "en": "Not only do these sports [Benefit X], but they also [Benefit Y]; nevertheless, [Constraint Z] remains paramount.",
+            "vi": "Không những môn thể thao này [Lợi ích X] mà chúng còn [Lợi ích Y]; tuy nhiên, [Ràng buộc Z] vẫn là điều tối quan trọng.",
+            "exampleEn": "Not only do adventure sports push physiological boundaries [X], but they also cultivate unmatched mental grit [Y]; nevertheless, strict adherence to certified safety measures [Z] remains paramount.",
+            "exampleVi": "Các môn thể thao mạo hiểm không chỉ vượt qua giới hạn thể chất [X] mà còn tôi luyện ý chí kiên cường [Y]; tuy vậy, việc tuân thủ tuyệt đối các biện pháp an toàn đạt chuẩn [Z] vẫn là điều tối quan trọng."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-a2_b1",
+          "stance": "advantages",
+          "stanceLabelEn": "Version 1: Advantages Outweigh",
+          "stanceLabelVi": "Phiên bản 1: Lợi ích vượt trội",
+          "candidatePoints": [
+            {
+              "id": "pos_1",
+              "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+              "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+              "explEn": "Athletes develop elite physical conditioning through rigorous demands that standard gym exercises cannot match.",
+              "explVi": "Người chơi đạt được nền tảng thể lực và sức bền đỉnh cao thông qua những thử thách khắc nghiệt mà các bài tập thể thao thông thường không thể mang lại."
+            },
+            {
+              "id": "pos_2",
+              "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+              "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+              "explEn": "Surviving high-pressure situations trains the brain to remain calm, focused, and resilient during stressful real-world crises.",
+              "explVi": "Vượt qua tình huống áp lực cao rèn luyện cho não bộ khả năng giữ bình tĩnh, tập trung và kiên cường trước những khủng hoảng trong cuộc sống."
+            },
+            {
+              "id": "pos_3",
+              "en": "Overcoming primal fears during high-risk activities fosters deep self-efficacy and boosts personal confidence in overcoming life challenges.",
+              "vi": "Vượt qua nỗi sợ bản năng trong các hoạt động mạo hiểm giúp xây dựng niềm tin mãnh liệt vào bản thân và tăng sự tự tin trước các thử thách cuộc sống.",
+              "explEn": "Mastering fear transforms a person's mindset, proving that perceived limits can be shattered through courage and discipline.",
+              "explVi": "Làm chủ nỗi sợ biến đổi tư duy của người tham gia, chứng minh rằng những giới hạn tưởng chừng không thể vượt qua đều có thể chinh phục bằng lòng dũng cảm."
+            },
+            {
+              "id": "pos_4",
+              "en": "Contrary to reckless behavior, true adventure sports demand meticulous risk assessment, technical discipline, and strict adherence to safety protocols.",
+              "vi": "Trái với suy nghĩ liều lĩnh, thể thao mạo hiểm thực thụ đòi hỏi khả năng đánh giá rủi ro tỉ mỉ, kỷ luật kỹ thuật và việc tuân thủ nghiêm ngặt quy trình an toàn.",
+              "explEn": "Participants must analyze weather forecasts, inspect specialized equipment, and evaluate volatile terrain before acting.",
+              "explVi": "Vận động viên phải học cách phân tích thời tiết, kiểm tra thiết bị chuyên dụng và đánh giá địa hình hiểm trở một cách khoa học trước khi hành động."
+            },
+            {
+              "id": "pos_5",
+              "en": "The growing popularity of adventure tourism generates significant economic revenue, job opportunities, and investments in safety gear innovation.",
+              "vi": "Sự phát triển của du lịch mạo hiểm tạo ra nguồn doanh thu kinh tế đáng kể, cơ hội việc làm và thúc đẩy đổi mới công nghệ đồ bảo hộ an toàn.",
+              "explEn": "Mountainous and coastal regions benefit tremendously from adventure travelers supporting local instructors, guides, and hospitality sectors.",
+              "explVi": "Các vùng núi và ven biển hưởng lợi lớn từ du khách mạo hiểm, tạo sinh kế cho hướng dẫn viên địa phương và ngành dịch vụ lưu trú."
+            },
+            {
+              "id": "pos_6",
+              "en": "Engaging in perilous outdoor pursuits fosters strong bonds of camaraderie and reciprocal trust among climbing and expedition partners.",
+              "vi": "Tham gia các hoạt động nguy hiểm ngoài trời xây dựng tình đồng đội sâu sắc và sự tin tưởng tuyệt đối giữa các bạn đồng hành leo núi và thám hiểm.",
+              "explEn": "When safety depends on a partner belaying a rope or navigating rapids, teamwork reaches an unmatched level of depth and responsibility.",
+              "explVi": "Khi sự an toàn phụ thuộc vào người giữ dây hay chèo thuyền vượt thác cùng mình, tinh thần đồng đội đạt tới mức độ gắn kết và trách nhiệm cao nhất."
+            }
+          ],
+          "points": [
+            {
+              "id": "pos_1",
+              "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+              "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+              "explEn": "Athletes develop elite physical conditioning through rigorous demands that standard gym exercises cannot match.",
+              "explVi": "Người chơi đạt được nền tảng thể lực và sức bền đỉnh cao thông qua những thử thách khắc nghiệt mà các bài tập thể thao thông thường không thể mang lại."
+            },
+            {
+              "id": "pos_2",
+              "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+              "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+              "explEn": "Surviving high-pressure situations trains the brain to remain calm, focused, and resilient during stressful real-world crises.",
+              "explVi": "Vượt qua tình huống áp lực cao rèn luyện cho não bộ khả năng giữ bình tĩnh, tập trung và kiên cường trước những khủng hoảng trong cuộc sống."
+            }
+          ]
+        },
+        {
+          "id": "plan-2-a2_b1",
+          "stance": "disadvantages",
+          "stanceLabelEn": "Version 2: Disadvantages Outweigh",
+          "stanceLabelVi": "Phiên bản 2: Bất lợi vượt trội",
+          "candidatePoints": [
+            {
+              "id": "neg_1",
+              "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+              "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+              "explEn": "High speeds, immense heights, and treacherous terrain leave virtually zero margin for human error or equipment failure.",
+              "explVi": "Tốc độ cao, độ cao lớn và địa hình hiểm trở khiến người chơi gần như không có cơ hội sửa sai nếu xảy ra lỗi kỹ thuật hoặc sự cố thiết bị."
+            },
+            {
+              "id": "neg_2",
+              "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+              "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+              "explEn": "Public rescue teams frequently risk their own lives in treacherous blizzards or avalanches to retrieve reckless individuals.",
+              "explVi": "Các đội cứu hộ công cộng thường phải mạo hiểm mạng sống trong bão tuyết hoặc lở đất chỉ để cứu những cá nhân tự đặt mình vào nguy hiểm."
+            },
+            {
+              "id": "neg_3",
+              "en": "Specialized certified gear, mandatory professional training, travel logistics, and high-risk medical insurance require substantial financial expenditure.",
+              "vi": "Trang thiết bị chuyên dụng đạt chuẩn, khóa đào tạo chuyên nghiệp, chi phí di chuyển và bảo hiểm rủi ro cao đòi hỏi nguồn tài chính vô cùng đắt đỏ.",
+              "explEn": "This high cost makes adventure sports an exclusive luxury and tempts inexperienced amateurs to cut corners on cheap, uncertified equipment.",
+              "explVi": "Chi phí đắt đỏ này biến thể thao mạo hiểm thành thú vui xa xỉ và dễ khiến những người thiếu kinh nghiệm dùng đồ rẻ kém chất lượng dẫn tới tai nạn."
+            },
+            {
+              "id": "neg_4",
+              "en": "Frequent thrill-seeking can desensitize participants to danger, encouraging a false sense of invulnerability and increasingly reckless decision-making.",
+              "vi": "Cảm giác phấn khích lặp đi lặp lại có thể làm mòn phản xạ sợ hãi, khiến người chơi ảo tưởng về sự bất bại và có những quyết định ngày càng liều lĩnh hơn.",
+              "explEn": "Athletes often push beyond their certified skill level in pursuit of greater social media validation or personal adrenaline rushes.",
+              "explVi": "Vận động viên dễ bị cuốn vào việc vượt quá giới hạn kỹ năng cho phép chỉ để tìm kiếm cảm giác mạnh hơn hoặc sự tán thưởng trên mạng xã hội."
+            },
+            {
+              "id": "neg_5",
+              "en": "Unregulated adventure expeditions frequently cause severe environmental degradation, trail erosion, alpine littering, and wildlife disturbance.",
+              "vi": "Các chuyến thám hiểm mạo hiểm tự phát thường gây xói mòn đường mòn, xả rác tại các đỉnh núi cao và làm xáo trộn nghiêm trọng hệ sinh thái hoang dã.",
+              "explEn": "Popular extreme destinations, such as Mount Everest, suffer from accumulated oxygen canisters, abandoned tents, and severe ecological strain.",
+              "explVi": "Những điểm đến mạo hiểm nổi tiếng như đỉnh Everest đang phải gánh chịu hàng tấn bình oxy cũ, lều bạt bỏ hoang và tổn hại sinh thái nặng nề."
+            },
+            {
+              "id": "neg_6",
+              "en": "The constant proximity to life-threatening perils inflicts chronic anxiety, emotional stress, and long-term trauma on the families and loved ones of participants.",
+              "vi": "Nguy cơ cận kề cái chết liên tục tạo ra gánh nặng lo âu mãn tính, căng thẳng tâm lý và tổn thương tinh thần lâu dài cho gia đình và người thân.",
+              "explEn": "Spouses, parents, and children endure agonizing uncertainty every time an athlete embarks on a dangerous solo expedition.",
+              "explVi": "Gia đình và người thân luôn phải sống trong tâm trạng bất an, lo lắng tột cùng mỗi khi vận động viên dấn thân vào các chuyến thám hiểm sinh tử."
+            }
+          ],
+          "points": [
+            {
+              "id": "neg_1",
+              "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+              "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+              "explEn": "High speeds, immense heights, and treacherous terrain leave virtually zero margin for human error or equipment failure.",
+              "explVi": "Tốc độ cao, độ cao lớn và địa hình hiểm trở khiến người chơi gần như không có cơ hội sửa sai nếu xảy ra lỗi kỹ thuật hoặc sự cố thiết bị."
+            },
+            {
+              "id": "neg_2",
+              "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+              "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+              "explEn": "Public rescue teams frequently risk their own lives in treacherous blizzards or avalanches to retrieve reckless individuals.",
+              "explVi": "Các đội cứu hộ công cộng thường phải mạo hiểm mạng sống trong bão tuyết hoặc lở đất chỉ để cứu những cá nhân tự đặt mình vào nguy hiểm."
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Extreme sports are fun activities that many people enjoy doing outside.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that dangerous sports bring more benefits than problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that these sports help people build a strong body.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they make people more fit and strong in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, mountain biking requires much muscle power and good balance in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, participants become much stronger and more skilled in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that these activities improve physical fitness.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that these sports have a clear disadvantage: the risk of injury.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the activities involve high speeds and big falls in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, jumping from a plane carries a chance of serious hurt if things go wrong in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people need special training and good equipment in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that the risk of injury is a major problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that extreme sports bring more benefits than drawbacks.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because these sports improve physical fitness and participants must take special care to manage the risk of injury.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Extreme sports are activities that involve great danger and high levels of risk.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that dangerous sports bring more problems than benefits.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that these sports help people build a strong body.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they require physical effort and skill in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, cycling long distances makes people use their legs and arms a lot in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people become much stronger and more fit in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that these activities help people improve their physical fitness.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that these sports have many negative drawbacks.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the chance of getting hurt is very high in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a fall from a high place can cause serious injury in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people might need a long time in the hospital in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that the risks are too big.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that extreme sports bring more drawbacks than benefits.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because they pose high risks of injury and do not outweigh the benefits of improving physical fitness.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "physical fitness",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "confidence",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "participants",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "drawbacks",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "adrenaline surge",
+            "enGloss": "a sudden rush of intense energy and heightened alertness",
+            "viGloss": "sự bùng nổ adrenaline tạo cảm giác phấn khích tột độ",
+            "example": "The intense adrenaline surge experienced during skydiving provides a profound psychological release from routine stress.",
+            "exampleVi": "Sự bùng nổ adrenaline mạnh mẽ khi nhảy dù mang lại cảm giác giải tỏa tâm lý sâu sắc khỏi những căng thẳng thường nhật."
+          },
+          {
+            "term": "physical endurance",
+            "enGloss": "the ability of the body to sustain prolonged stressful exertion",
+            "viGloss": "sức bền thể chất dẻo dai",
+            "example": "Navigating treacherous mountain terrains demands exceptional physical endurance and muscular strength.",
+            "exampleVi": "Vượt qua các địa hình đồi núi hiểm trở đòi hỏi sức bền thể chất đặc biệt và sức mạnh cơ bắp dẻo dai."
+          },
+          {
+            "term": "calculated risk",
+            "enGloss": "a hazard taken only after careful assessment of possible consequences",
+            "viGloss": "rủi ro đã được tính toán kỹ lưỡng",
+            "example": "Professional mountaineers treat danger as a calculated risk rather than an act of pure recklessness.",
+            "exampleVi": "Các vận động viên leo núi chuyên nghiệp xem nguy hiểm là rủi ro đã được tính toán cẩn thận thay vì một hành động liều lĩnh mù quáng."
+          },
+          {
+            "term": "life-threatening injury",
+            "enGloss": "severe physical trauma capable of causing death or permanent damage",
+            "viGloss": "chấn thương nguy hiểm đến tính mạng",
+            "example": "Without certified safety helmets, a sudden slip can result in a life-threatening injury.",
+            "exampleVi": "Nếu không có mũ bảo hiểm đạt chuẩn, một cú trượt chân bất ngờ có thể dẫn đến chấn thương nguy hiểm đến tính mạng."
+          },
+          {
+            "term": "stringent safety protocols",
+            "enGloss": "strictly enforced procedures designed to prevent accidents",
+            "viGloss": "các quy trình an toàn nghiêm ngặt",
+            "example": "Adventure sporting companies must enforce stringent safety protocols before allowing novices to participate.",
+            "exampleVi": "Các công ty tổ chức thể thao mạo hiểm phải áp dụng quy trình an toàn nghiêm ngặt trước khi cho người mới tham gia."
+          },
+          {
+            "term": "emergency rescue infrastructure",
+            "enGloss": "specialized public systems and personnel used to save people in peril",
+            "viGloss": "hạ tầng và lực lượng cứu hộ khẩn cấp",
+            "example": "Extricating stranded athletes from remote peaks places a heavy burden on public emergency rescue infrastructure.",
+            "exampleVi": "Giải cứu các vận động viên mắc kẹt trên những đỉnh núi hẻo lánh tạo gánh nặng lớn lên lực lượng cứu hộ khẩn cấp của công chúng."
+          },
+          {
+            "term": "psychological resilience",
+            "enGloss": "the mental capacity to adapt positively under high stress or adversity",
+            "viGloss": "bản lĩnh và khả năng phục hồi tâm lý",
+            "example": "Overcoming extreme challenges cultivates psychological resilience that benefits individuals in all walks of life.",
+            "exampleVi": "Vượt qua thử thách khắc nghiệt giúp tôi luyện bản lĩnh tâm lý vững vàng, mang lại lợi ích lâu dài trong mọi mặt của cuộc sống."
+          },
+          {
+            "term": "reckless thrill-seeking",
+            "enGloss": "dangerous behavior pursued purely for excitement without regard for consequences",
+            "viGloss": "hành vi tìm kiếm cảm giác mạnh một cách liều lĩnh",
+            "example": "Novices often confuse disciplined athletic pursuit with reckless thrill-seeking, leading to preventable casualties.",
+            "exampleVi": "Người mới thường nhầm lẫn giữa sự rèn luyện thể thao có kỷ luật với việc tìm kiếm cảm giác mạnh liều lĩnh, dẫn đến những tai nạn đáng tiếc."
+          }
+        ],
+        "collocations": [
+          {
+            "term": "push physiological boundaries",
+            "enGloss": "To exceed normal bodily thresholds through intense athletic conditioning.",
+            "viGloss": "Cụm từ học thuật: vượt qua các giới hạn sinh lý của cơ thể",
+            "meaning": "Vượt qua các giới hạn thể chất thông thường",
+            "example": "Adventure athletes regularly push physiological boundaries in high-altitude environments.",
+            "exampleVi": "Các vận động viên mạo hiểm thường xuyên vượt qua giới hạn thể chất trong môi trường độ cao khắc nghiệt."
+          },
+          {
+            "term": "irreversible physical trauma",
+            "enGloss": "Severe, permanent bodily harm that cannot be medically cured or reversed.",
+            "viGloss": "Cụm từ học thuật: chấn thương thể chất không thể phục hồi",
+            "meaning": "Tổn thương thể chất vĩnh viễn không thể hồi phục",
+            "example": "A catastrophic parachute failure can inflict irreversible physical trauma or fatal consequences.",
+            "exampleVi": "Sự cố dù bung không thành công có thể gây ra tổn thương thể chất vĩnh viễn hoặc tai nạn tử vong."
+          },
+          {
+            "term": "strain on public resources",
+            "enGloss": "An overwhelming burden depleting tax revenues, hospitals, and public services.",
+            "viGloss": "Cụm từ học thuật: gánh nặng lên các nguồn lực công",
+            "meaning": "Gây áp lực nặng nề lên nguồn lực công cộng",
+            "example": "High-risk rescue operations place an undue strain on public resources and taxpayer funding.",
+            "exampleVi": "Các chiến dịch cứu hộ rủi ro cao gây áp lực bất công lên nguồn lực công cộng và tiền thuế của người dân."
+          },
+          {
+            "term": "foster self-efficacy",
+            "enGloss": "To nurture an individual's confidence in their ability to succeed.",
+            "viGloss": "Cụm từ học thuật: nuôi dưỡng niềm tin vào năng lực bản thân",
+            "meaning": "Xây dựng niềm tin vững chắc vào năng lực bản thân",
+            "example": "Navigating rough white-water rapids helps foster self-efficacy in young adults.",
+            "exampleVi": "Chèo xuồng vượt qua các dòng ghềnh hiểm trở giúp xây dựng niềm tin vững chắc vào bản thân cho thanh thiếu niên."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "pattern-concession",
+            "purpose": "concession & balanced thesis",
+            "en": "Although [Concession X], I contend that [Your Stance Y] because [Reason Z].",
+            "vi": "Mặc dù [Thừa nhận X], tôi khẳng định rằng [Lập trường Y] bởi vì [Lý do Z].",
+            "exampleEn": "Although extreme sports offer exhilarating benefits and personal resilience [X], I contend that their severe physical hazards are unacceptable [Y] because a momentary mistake can lead to fatal consequences [Z].",
+            "exampleVi": "Mặc dù thể thao mạo hiểm mang lại cảm giác phấn khích và rèn luyện bản lĩnh [X], tôi cho rằng những rủi ro thể chất là quá lớn [Y] vì chỉ một sơ suất nhỏ cũng có thể dẫn tới hậu quả chết người [Z]."
+          },
+          {
+            "id": "pattern-cause-effect",
+            "purpose": "cause & consequence analysis",
+            "en": "Given that [Condition X], it follows that [Consequence Y], which ultimately results in [Impact Z].",
+            "vi": "Do [Điều kiện X], hệ quả tất yếu là [Hệ quả Y], điều này cuối cùng dẫn tới [Tác động Z].",
+            "exampleEn": "Given that participants undergo rigorous technical preparation [X], it follows that they develop heightened risk-assessment capabilities [Y], which ultimately fosters superior mental composure [Z].",
+            "exampleVi": "Do người tham gia phải trải qua quá trình chuẩn bị kỹ thuật nghiêm ngặt [X], hệ quả tất yếu là họ phát triển năng lực đánh giá rủi ro vượt trội [Y], điều này cuối cùng giúp rèn luyện sự điềm tĩnh và bản lĩnh tâm lý vững vàng [Z]."
+          },
+          {
+            "id": "pattern-inversion",
+            "purpose": "emphatic synthesis in conclusion",
+            "en": "Not only do these sports [Benefit X], but they also [Benefit Y]; nevertheless, [Constraint Z] remains paramount.",
+            "vi": "Không những môn thể thao này [Lợi ích X] mà chúng còn [Lợi ích Y]; tuy nhiên, [Ràng buộc Z] vẫn là điều tối quan trọng.",
+            "exampleEn": "Not only do adventure sports push physiological boundaries [X], but they also cultivate unmatched mental grit [Y]; nevertheless, strict adherence to certified safety measures [Z] remains paramount.",
+            "exampleVi": "Các môn thể thao mạo hiểm không chỉ vượt qua giới hạn thể chất [X] mà còn tôi luyện ý chí kiên cường [Y]; tuy vậy, việc tuân thủ tuyệt đối các biện pháp an toàn đạt chuẩn [Z] vẫn là điều tối quan trọng."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-b2",
+          "stance": "advantages",
+          "stanceLabelEn": "Version 1: Advantages Outweigh",
+          "stanceLabelVi": "Phiên bản 1: Lợi ích vượt trội",
+          "candidatePoints": [
+            {
+              "id": "pos_1",
+              "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+              "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+              "explEn": "Athletes develop elite physical conditioning through rigorous demands that standard gym exercises cannot match.",
+              "explVi": "Người chơi đạt được nền tảng thể lực và sức bền đỉnh cao thông qua những thử thách khắc nghiệt mà các bài tập thể thao thông thường không thể mang lại."
+            },
+            {
+              "id": "pos_2",
+              "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+              "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+              "explEn": "Surviving high-pressure situations trains the brain to remain calm, focused, and resilient during stressful real-world crises.",
+              "explVi": "Vượt qua tình huống áp lực cao rèn luyện cho não bộ khả năng giữ bình tĩnh, tập trung và kiên cường trước những khủng hoảng trong cuộc sống."
+            },
+            {
+              "id": "pos_3",
+              "en": "Overcoming primal fears during high-risk activities fosters deep self-efficacy and boosts personal confidence in overcoming life challenges.",
+              "vi": "Vượt qua nỗi sợ bản năng trong các hoạt động mạo hiểm giúp xây dựng niềm tin mãnh liệt vào bản thân và tăng sự tự tin trước các thử thách cuộc sống.",
+              "explEn": "Mastering fear transforms a person's mindset, proving that perceived limits can be shattered through courage and discipline.",
+              "explVi": "Làm chủ nỗi sợ biến đổi tư duy của người tham gia, chứng minh rằng những giới hạn tưởng chừng không thể vượt qua đều có thể chinh phục bằng lòng dũng cảm."
+            },
+            {
+              "id": "pos_4",
+              "en": "Contrary to reckless behavior, true adventure sports demand meticulous risk assessment, technical discipline, and strict adherence to safety protocols.",
+              "vi": "Trái với suy nghĩ liều lĩnh, thể thao mạo hiểm thực thụ đòi hỏi khả năng đánh giá rủi ro tỉ mỉ, kỷ luật kỹ thuật và việc tuân thủ nghiêm ngặt quy trình an toàn.",
+              "explEn": "Participants must analyze weather forecasts, inspect specialized equipment, and evaluate volatile terrain before acting.",
+              "explVi": "Vận động viên phải học cách phân tích thời tiết, kiểm tra thiết bị chuyên dụng và đánh giá địa hình hiểm trở một cách khoa học trước khi hành động."
+            },
+            {
+              "id": "pos_5",
+              "en": "The growing popularity of adventure tourism generates significant economic revenue, job opportunities, and investments in safety gear innovation.",
+              "vi": "Sự phát triển của du lịch mạo hiểm tạo ra nguồn doanh thu kinh tế đáng kể, cơ hội việc làm và thúc đẩy đổi mới công nghệ đồ bảo hộ an toàn.",
+              "explEn": "Mountainous and coastal regions benefit tremendously from adventure travelers supporting local instructors, guides, and hospitality sectors.",
+              "explVi": "Các vùng núi và ven biển hưởng lợi lớn từ du khách mạo hiểm, tạo sinh kế cho hướng dẫn viên địa phương và ngành dịch vụ lưu trú."
+            },
+            {
+              "id": "pos_6",
+              "en": "Engaging in perilous outdoor pursuits fosters strong bonds of camaraderie and reciprocal trust among climbing and expedition partners.",
+              "vi": "Tham gia các hoạt động nguy hiểm ngoài trời xây dựng tình đồng đội sâu sắc và sự tin tưởng tuyệt đối giữa các bạn đồng hành leo núi và thám hiểm.",
+              "explEn": "When safety depends on a partner belaying a rope or navigating rapids, teamwork reaches an unmatched level of depth and responsibility.",
+              "explVi": "Khi sự an toàn phụ thuộc vào người giữ dây hay chèo thuyền vượt thác cùng mình, tinh thần đồng đội đạt tới mức độ gắn kết và trách nhiệm cao nhất."
+            }
+          ],
+          "points": [
+            {
+              "id": "pos_1",
+              "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+              "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+              "explEn": "Athletes develop elite physical conditioning through rigorous demands that standard gym exercises cannot match.",
+              "explVi": "Người chơi đạt được nền tảng thể lực và sức bền đỉnh cao thông qua những thử thách khắc nghiệt mà các bài tập thể thao thông thường không thể mang lại."
+            },
+            {
+              "id": "pos_2",
+              "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+              "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+              "explEn": "Surviving high-pressure situations trains the brain to remain calm, focused, and resilient during stressful real-world crises.",
+              "explVi": "Vượt qua tình huống áp lực cao rèn luyện cho não bộ khả năng giữ bình tĩnh, tập trung và kiên cường trước những khủng hoảng trong cuộc sống."
+            }
+          ]
+        },
+        {
+          "id": "plan-2-b2",
+          "stance": "disadvantages",
+          "stanceLabelEn": "Version 2: Disadvantages Outweigh",
+          "stanceLabelVi": "Phiên bản 2: Bất lợi vượt trội",
+          "candidatePoints": [
+            {
+              "id": "neg_1",
+              "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+              "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+              "explEn": "High speeds, immense heights, and treacherous terrain leave virtually zero margin for human error or equipment failure.",
+              "explVi": "Tốc độ cao, độ cao lớn và địa hình hiểm trở khiến người chơi gần như không có cơ hội sửa sai nếu xảy ra lỗi kỹ thuật hoặc sự cố thiết bị."
+            },
+            {
+              "id": "neg_2",
+              "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+              "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+              "explEn": "Public rescue teams frequently risk their own lives in treacherous blizzards or avalanches to retrieve reckless individuals.",
+              "explVi": "Các đội cứu hộ công cộng thường phải mạo hiểm mạng sống trong bão tuyết hoặc lở đất chỉ để cứu những cá nhân tự đặt mình vào nguy hiểm."
+            },
+            {
+              "id": "neg_3",
+              "en": "Specialized certified gear, mandatory professional training, travel logistics, and high-risk medical insurance require substantial financial expenditure.",
+              "vi": "Trang thiết bị chuyên dụng đạt chuẩn, khóa đào tạo chuyên nghiệp, chi phí di chuyển và bảo hiểm rủi ro cao đòi hỏi nguồn tài chính vô cùng đắt đỏ.",
+              "explEn": "This high cost makes adventure sports an exclusive luxury and tempts inexperienced amateurs to cut corners on cheap, uncertified equipment.",
+              "explVi": "Chi phí đắt đỏ này biến thể thao mạo hiểm thành thú vui xa xỉ và dễ khiến những người thiếu kinh nghiệm dùng đồ rẻ kém chất lượng dẫn tới tai nạn."
+            },
+            {
+              "id": "neg_4",
+              "en": "Frequent thrill-seeking can desensitize participants to danger, encouraging a false sense of invulnerability and increasingly reckless decision-making.",
+              "vi": "Cảm giác phấn khích lặp đi lặp lại có thể làm mòn phản xạ sợ hãi, khiến người chơi ảo tưởng về sự bất bại và có những quyết định ngày càng liều lĩnh hơn.",
+              "explEn": "Athletes often push beyond their certified skill level in pursuit of greater social media validation or personal adrenaline rushes.",
+              "explVi": "Vận động viên dễ bị cuốn vào việc vượt quá giới hạn kỹ năng cho phép chỉ để tìm kiếm cảm giác mạnh hơn hoặc sự tán thưởng trên mạng xã hội."
+            },
+            {
+              "id": "neg_5",
+              "en": "Unregulated adventure expeditions frequently cause severe environmental degradation, trail erosion, alpine littering, and wildlife disturbance.",
+              "vi": "Các chuyến thám hiểm mạo hiểm tự phát thường gây xói mòn đường mòn, xả rác tại các đỉnh núi cao và làm xáo trộn nghiêm trọng hệ sinh thái hoang dã.",
+              "explEn": "Popular extreme destinations, such as Mount Everest, suffer from accumulated oxygen canisters, abandoned tents, and severe ecological strain.",
+              "explVi": "Những điểm đến mạo hiểm nổi tiếng như đỉnh Everest đang phải gánh chịu hàng tấn bình oxy cũ, lều bạt bỏ hoang và tổn hại sinh thái nặng nề."
+            },
+            {
+              "id": "neg_6",
+              "en": "The constant proximity to life-threatening perils inflicts chronic anxiety, emotional stress, and long-term trauma on the families and loved ones of participants.",
+              "vi": "Nguy cơ cận kề cái chết liên tục tạo ra gánh nặng lo âu mãn tính, căng thẳng tâm lý và tổn thương tinh thần lâu dài cho gia đình và người thân.",
+              "explEn": "Spouses, parents, and children endure agonizing uncertainty every time an athlete embarks on a dangerous solo expedition.",
+              "explVi": "Gia đình và người thân luôn phải sống trong tâm trạng bất an, lo lắng tột cùng mỗi khi vận động viên dấn thân vào các chuyến thám hiểm sinh tử."
+            }
+          ],
+          "points": [
+            {
+              "id": "neg_1",
+              "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+              "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+              "explEn": "High speeds, immense heights, and treacherous terrain leave virtually zero margin for human error or equipment failure.",
+              "explVi": "Tốc độ cao, độ cao lớn và địa hình hiểm trở khiến người chơi gần như không có cơ hội sửa sai nếu xảy ra lỗi kỹ thuật hoặc sự cố thiết bị."
+            },
+            {
+              "id": "neg_2",
+              "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+              "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+              "explEn": "Public rescue teams frequently risk their own lives in treacherous blizzards or avalanches to retrieve reckless individuals.",
+              "explVi": "Các đội cứu hộ công cộng thường phải mạo hiểm mạng sống trong bão tuyết hoặc lở đất chỉ để cứu những cá nhân tự đặt mình vào nguy hiểm."
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Extreme or adventure sports involve challenging activities done in natural or difficult environments.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that extreme sports bring more benefits than drawbacks.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these activities help people build physical fitness and confidence.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, participants must use many muscles and learn to manage their bodies in tough spots.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, rock climbing requires great strength and careful planning to reach the top.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel stronger and more capable after completing such a difficult task.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these sports are excellent for improving physical fitness.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, these sports carry serious risks and potential physical drawbacks.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the environment is often unpredictable and dangerous.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that bad weather or poor equipment can cause serious accidents.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that participants might suffer from severe injuries, needing long recovery times.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the risks are a major drawback.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that extreme sports bring more benefits than drawbacks.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the risks of these activities are real, the advantages, such as improving physical fitness, make them worthwhile.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Extreme or adventure sports involve challenging physical activities in outdoor settings.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that extreme sports bring more drawbacks than benefits.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these activities can greatly improve physical fitness.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people must use many muscles and move their bodies in difficult ways in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, rock climbing requires great strength and good balance.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, participants build strong muscles and improve their overall health.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these sports are good for keeping the body fit.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, these sports carry significant risks and drawbacks.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the environment is often unpredictable and dangerous.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that bad weather can cause accidents on a mountain trail.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people might suffer serious injuries, needing long hospital stays.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the risks are too high.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while these sports can improve physical fitness, I strongly agree that the drawbacks are greater.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The high risks associated with these activities outweigh the benefits of improving physical fitness.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "resilience",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "pursuits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "enhances",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "resilience",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "adrenaline surge",
+            "enGloss": "a sudden rush of intense energy and heightened alertness",
+            "viGloss": "sự bùng nổ adrenaline tạo cảm giác phấn khích tột độ",
+            "example": "The intense adrenaline surge experienced during skydiving provides a profound psychological release from routine stress.",
+            "exampleVi": "Sự bùng nổ adrenaline mạnh mẽ khi nhảy dù mang lại cảm giác giải tỏa tâm lý sâu sắc khỏi những căng thẳng thường nhật."
+          },
+          {
+            "term": "physical endurance",
+            "enGloss": "the ability of the body to sustain prolonged stressful exertion",
+            "viGloss": "sức bền thể chất dẻo dai",
+            "example": "Navigating treacherous mountain terrains demands exceptional physical endurance and muscular strength.",
+            "exampleVi": "Vượt qua các địa hình đồi núi hiểm trở đòi hỏi sức bền thể chất đặc biệt và sức mạnh cơ bắp dẻo dai."
+          },
+          {
+            "term": "calculated risk",
+            "enGloss": "a hazard taken only after careful assessment of possible consequences",
+            "viGloss": "rủi ro đã được tính toán kỹ lưỡng",
+            "example": "Professional mountaineers treat danger as a calculated risk rather than an act of pure recklessness.",
+            "exampleVi": "Các vận động viên leo núi chuyên nghiệp xem nguy hiểm là rủi ro đã được tính toán cẩn thận thay vì một hành động liều lĩnh mù quáng."
+          },
+          {
+            "term": "life-threatening injury",
+            "enGloss": "severe physical trauma capable of causing death or permanent damage",
+            "viGloss": "chấn thương nguy hiểm đến tính mạng",
+            "example": "Without certified safety helmets, a sudden slip can result in a life-threatening injury.",
+            "exampleVi": "Nếu không có mũ bảo hiểm đạt chuẩn, một cú trượt chân bất ngờ có thể dẫn đến chấn thương nguy hiểm đến tính mạng."
+          },
+          {
+            "term": "stringent safety protocols",
+            "enGloss": "strictly enforced procedures designed to prevent accidents",
+            "viGloss": "các quy trình an toàn nghiêm ngặt",
+            "example": "Adventure sporting companies must enforce stringent safety protocols before allowing novices to participate.",
+            "exampleVi": "Các công ty tổ chức thể thao mạo hiểm phải áp dụng quy trình an toàn nghiêm ngặt trước khi cho người mới tham gia."
+          },
+          {
+            "term": "emergency rescue infrastructure",
+            "enGloss": "specialized public systems and personnel used to save people in peril",
+            "viGloss": "hạ tầng và lực lượng cứu hộ khẩn cấp",
+            "example": "Extricating stranded athletes from remote peaks places a heavy burden on public emergency rescue infrastructure.",
+            "exampleVi": "Giải cứu các vận động viên mắc kẹt trên những đỉnh núi hẻo lánh tạo gánh nặng lớn lên lực lượng cứu hộ khẩn cấp của công chúng."
+          },
+          {
+            "term": "psychological resilience",
+            "enGloss": "the mental capacity to adapt positively under high stress or adversity",
+            "viGloss": "bản lĩnh và khả năng phục hồi tâm lý",
+            "example": "Overcoming extreme challenges cultivates psychological resilience that benefits individuals in all walks of life.",
+            "exampleVi": "Vượt qua thử thách khắc nghiệt giúp tôi luyện bản lĩnh tâm lý vững vàng, mang lại lợi ích lâu dài trong mọi mặt của cuộc sống."
+          },
+          {
+            "term": "reckless thrill-seeking",
+            "enGloss": "dangerous behavior pursued purely for excitement without regard for consequences",
+            "viGloss": "hành vi tìm kiếm cảm giác mạnh một cách liều lĩnh",
+            "example": "Novices often confuse disciplined athletic pursuit with reckless thrill-seeking, leading to preventable casualties.",
+            "exampleVi": "Người mới thường nhầm lẫn giữa sự rèn luyện thể thao có kỷ luật với việc tìm kiếm cảm giác mạnh liều lĩnh, dẫn đến những tai nạn đáng tiếc."
+          }
+        ],
+        "collocations": [
+          {
+            "term": "push physiological boundaries",
+            "enGloss": "To exceed normal bodily thresholds through intense athletic conditioning.",
+            "viGloss": "Cụm từ học thuật: vượt qua các giới hạn sinh lý của cơ thể",
+            "meaning": "Vượt qua các giới hạn thể chất thông thường",
+            "example": "Adventure athletes regularly push physiological boundaries in high-altitude environments.",
+            "exampleVi": "Các vận động viên mạo hiểm thường xuyên vượt qua giới hạn thể chất trong môi trường độ cao khắc nghiệt."
+          },
+          {
+            "term": "irreversible physical trauma",
+            "enGloss": "Severe, permanent bodily harm that cannot be medically cured or reversed.",
+            "viGloss": "Cụm từ học thuật: chấn thương thể chất không thể phục hồi",
+            "meaning": "Tổn thương thể chất vĩnh viễn không thể hồi phục",
+            "example": "A catastrophic parachute failure can inflict irreversible physical trauma or fatal consequences.",
+            "exampleVi": "Sự cố dù bung không thành công có thể gây ra tổn thương thể chất vĩnh viễn hoặc tai nạn tử vong."
+          },
+          {
+            "term": "strain on public resources",
+            "enGloss": "An overwhelming burden depleting tax revenues, hospitals, and public services.",
+            "viGloss": "Cụm từ học thuật: gánh nặng lên các nguồn lực công",
+            "meaning": "Gây áp lực nặng nề lên nguồn lực công cộng",
+            "example": "High-risk rescue operations place an undue strain on public resources and taxpayer funding.",
+            "exampleVi": "Các chiến dịch cứu hộ rủi ro cao gây áp lực bất công lên nguồn lực công cộng và tiền thuế của người dân."
+          },
+          {
+            "term": "foster self-efficacy",
+            "enGloss": "To nurture an individual's confidence in their ability to succeed.",
+            "viGloss": "Cụm từ học thuật: nuôi dưỡng niềm tin vào năng lực bản thân",
+            "meaning": "Xây dựng niềm tin vững chắc vào năng lực bản thân",
+            "example": "Navigating rough white-water rapids helps foster self-efficacy in young adults.",
+            "exampleVi": "Chèo xuồng vượt qua các dòng ghềnh hiểm trở giúp xây dựng niềm tin vững chắc vào bản thân cho thanh thiếu niên."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "pattern-concession",
+            "purpose": "concession & balanced thesis",
+            "en": "Although [Concession X], I contend that [Your Stance Y] because [Reason Z].",
+            "vi": "Mặc dù [Thừa nhận X], tôi khẳng định rằng [Lập trường Y] bởi vì [Lý do Z].",
+            "exampleEn": "Although extreme sports offer exhilarating benefits and personal resilience [X], I contend that their severe physical hazards are unacceptable [Y] because a momentary mistake can lead to fatal consequences [Z].",
+            "exampleVi": "Mặc dù thể thao mạo hiểm mang lại cảm giác phấn khích và rèn luyện bản lĩnh [X], tôi cho rằng những rủi ro thể chất là quá lớn [Y] vì chỉ một sơ suất nhỏ cũng có thể dẫn tới hậu quả chết người [Z]."
+          },
+          {
+            "id": "pattern-cause-effect",
+            "purpose": "cause & consequence analysis",
+            "en": "Given that [Condition X], it follows that [Consequence Y], which ultimately results in [Impact Z].",
+            "vi": "Do [Điều kiện X], hệ quả tất yếu là [Hệ quả Y], điều này cuối cùng dẫn tới [Tác động Z].",
+            "exampleEn": "Given that participants undergo rigorous technical preparation [X], it follows that they develop heightened risk-assessment capabilities [Y], which ultimately fosters superior mental composure [Z].",
+            "exampleVi": "Do người tham gia phải trải qua quá trình chuẩn bị kỹ thuật nghiêm ngặt [X], hệ quả tất yếu là họ phát triển năng lực đánh giá rủi ro vượt trội [Y], điều này cuối cùng giúp rèn luyện sự điềm tĩnh và bản lĩnh tâm lý vững vàng [Z]."
+          },
+          {
+            "id": "pattern-inversion",
+            "purpose": "emphatic synthesis in conclusion",
+            "en": "Not only do these sports [Benefit X], but they also [Benefit Y]; nevertheless, [Constraint Z] remains paramount.",
+            "vi": "Không những môn thể thao này [Lợi ích X] mà chúng còn [Lợi ích Y]; tuy nhiên, [Ràng buộc Z] vẫn là điều tối quan trọng.",
+            "exampleEn": "Not only do adventure sports push physiological boundaries [X], but they also cultivate unmatched mental grit [Y]; nevertheless, strict adherence to certified safety measures [Z] remains paramount.",
+            "exampleVi": "Các môn thể thao mạo hiểm không chỉ vượt qua giới hạn thể chất [X] mà còn tôi luyện ý chí kiên cường [Y]; tuy vậy, việc tuân thủ tuyệt đối các biện pháp an toàn đạt chuẩn [Z] vẫn là điều tối quan trọng."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "id": "plan-1-c1",
+          "stance": "advantages",
+          "stanceLabelEn": "Version 1: Advantages Outweigh",
+          "stanceLabelVi": "Phiên bản 1: Lợi ích vượt trội",
+          "candidatePoints": [
+            {
+              "id": "pos_1",
+              "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+              "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+              "explEn": "Athletes develop elite physical conditioning through rigorous demands that standard gym exercises cannot match.",
+              "explVi": "Người chơi đạt được nền tảng thể lực và sức bền đỉnh cao thông qua những thử thách khắc nghiệt mà các bài tập thể thao thông thường không thể mang lại."
+            },
+            {
+              "id": "pos_2",
+              "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+              "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+              "explEn": "Surviving high-pressure situations trains the brain to remain calm, focused, and resilient during stressful real-world crises.",
+              "explVi": "Vượt qua tình huống áp lực cao rèn luyện cho não bộ khả năng giữ bình tĩnh, tập trung và kiên cường trước những khủng hoảng trong cuộc sống."
+            },
+            {
+              "id": "pos_3",
+              "en": "Overcoming primal fears during high-risk activities fosters deep self-efficacy and boosts personal confidence in overcoming life challenges.",
+              "vi": "Vượt qua nỗi sợ bản năng trong các hoạt động mạo hiểm giúp xây dựng niềm tin mãnh liệt vào bản thân và tăng sự tự tin trước các thử thách cuộc sống.",
+              "explEn": "Mastering fear transforms a person's mindset, proving that perceived limits can be shattered through courage and discipline.",
+              "explVi": "Làm chủ nỗi sợ biến đổi tư duy của người tham gia, chứng minh rằng những giới hạn tưởng chừng không thể vượt qua đều có thể chinh phục bằng lòng dũng cảm."
+            },
+            {
+              "id": "pos_4",
+              "en": "Contrary to reckless behavior, true adventure sports demand meticulous risk assessment, technical discipline, and strict adherence to safety protocols.",
+              "vi": "Trái với suy nghĩ liều lĩnh, thể thao mạo hiểm thực thụ đòi hỏi khả năng đánh giá rủi ro tỉ mỉ, kỷ luật kỹ thuật và việc tuân thủ nghiêm ngặt quy trình an toàn.",
+              "explEn": "Participants must analyze weather forecasts, inspect specialized equipment, and evaluate volatile terrain before acting.",
+              "explVi": "Vận động viên phải học cách phân tích thời tiết, kiểm tra thiết bị chuyên dụng và đánh giá địa hình hiểm trở một cách khoa học trước khi hành động."
+            },
+            {
+              "id": "pos_5",
+              "en": "The growing popularity of adventure tourism generates significant economic revenue, job opportunities, and investments in safety gear innovation.",
+              "vi": "Sự phát triển của du lịch mạo hiểm tạo ra nguồn doanh thu kinh tế đáng kể, cơ hội việc làm và thúc đẩy đổi mới công nghệ đồ bảo hộ an toàn.",
+              "explEn": "Mountainous and coastal regions benefit tremendously from adventure travelers supporting local instructors, guides, and hospitality sectors.",
+              "explVi": "Các vùng núi và ven biển hưởng lợi lớn từ du khách mạo hiểm, tạo sinh kế cho hướng dẫn viên địa phương và ngành dịch vụ lưu trú."
+            },
+            {
+              "id": "pos_6",
+              "en": "Engaging in perilous outdoor pursuits fosters strong bonds of camaraderie and reciprocal trust among climbing and expedition partners.",
+              "vi": "Tham gia các hoạt động nguy hiểm ngoài trời xây dựng tình đồng đội sâu sắc và sự tin tưởng tuyệt đối giữa các bạn đồng hành leo núi và thám hiểm.",
+              "explEn": "When safety depends on a partner belaying a rope or navigating rapids, teamwork reaches an unmatched level of depth and responsibility.",
+              "explVi": "Khi sự an toàn phụ thuộc vào người giữ dây hay chèo thuyền vượt thác cùng mình, tinh thần đồng đội đạt tới mức độ gắn kết và trách nhiệm cao nhất."
+            }
+          ],
+          "points": [
+            {
+              "id": "pos_1",
+              "en": "Extreme sports push physiological boundaries, cultivating superior cardiovascular stamina, core muscle strength, and fine motor coordination.",
+              "vi": "Các môn thể thao mạo hiểm vượt qua giới hạn thể chất thông thường, giúp rèn luyện sức bền tim mạch, sức mạnh cơ bắp và sự phối hợp vận động vượt trội.",
+              "explEn": "Athletes develop elite physical conditioning through rigorous demands that standard gym exercises cannot match.",
+              "explVi": "Người chơi đạt được nền tảng thể lực và sức bền đỉnh cao thông qua những thử thách khắc nghiệt mà các bài tập thể thao thông thường không thể mang lại."
+            },
+            {
+              "id": "pos_2",
+              "en": "Confronting intense physical challenges stimulates adrenaline release and builds psychological resilience, helping individuals manage daily occupational stress.",
+              "vi": "Đối mặt với thử thách cường độ cao kích thích giải phóng adrenaline và tôi luyện bản lĩnh tinh thần, giúp người chơi giải tỏa áp lực công việc hàng ngày hiệu quả.",
+              "explEn": "Surviving high-pressure situations trains the brain to remain calm, focused, and resilient during stressful real-world crises.",
+              "explVi": "Vượt qua tình huống áp lực cao rèn luyện cho não bộ khả năng giữ bình tĩnh, tập trung và kiên cường trước những khủng hoảng trong cuộc sống."
+            }
+          ]
+        },
+        {
+          "id": "plan-2-c1",
+          "stance": "disadvantages",
+          "stanceLabelEn": "Version 2: Disadvantages Outweigh",
+          "stanceLabelVi": "Phiên bản 2: Bất lợi vượt trội",
+          "candidatePoints": [
+            {
+              "id": "neg_1",
+              "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+              "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+              "explEn": "High speeds, immense heights, and treacherous terrain leave virtually zero margin for human error or equipment failure.",
+              "explVi": "Tốc độ cao, độ cao lớn và địa hình hiểm trở khiến người chơi gần như không có cơ hội sửa sai nếu xảy ra lỗi kỹ thuật hoặc sự cố thiết bị."
+            },
+            {
+              "id": "neg_2",
+              "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+              "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+              "explEn": "Public rescue teams frequently risk their own lives in treacherous blizzards or avalanches to retrieve reckless individuals.",
+              "explVi": "Các đội cứu hộ công cộng thường phải mạo hiểm mạng sống trong bão tuyết hoặc lở đất chỉ để cứu những cá nhân tự đặt mình vào nguy hiểm."
+            },
+            {
+              "id": "neg_3",
+              "en": "Specialized certified gear, mandatory professional training, travel logistics, and high-risk medical insurance require substantial financial expenditure.",
+              "vi": "Trang thiết bị chuyên dụng đạt chuẩn, khóa đào tạo chuyên nghiệp, chi phí di chuyển và bảo hiểm rủi ro cao đòi hỏi nguồn tài chính vô cùng đắt đỏ.",
+              "explEn": "This high cost makes adventure sports an exclusive luxury and tempts inexperienced amateurs to cut corners on cheap, uncertified equipment.",
+              "explVi": "Chi phí đắt đỏ này biến thể thao mạo hiểm thành thú vui xa xỉ và dễ khiến những người thiếu kinh nghiệm dùng đồ rẻ kém chất lượng dẫn tới tai nạn."
+            },
+            {
+              "id": "neg_4",
+              "en": "Frequent thrill-seeking can desensitize participants to danger, encouraging a false sense of invulnerability and increasingly reckless decision-making.",
+              "vi": "Cảm giác phấn khích lặp đi lặp lại có thể làm mòn phản xạ sợ hãi, khiến người chơi ảo tưởng về sự bất bại và có những quyết định ngày càng liều lĩnh hơn.",
+              "explEn": "Athletes often push beyond their certified skill level in pursuit of greater social media validation or personal adrenaline rushes.",
+              "explVi": "Vận động viên dễ bị cuốn vào việc vượt quá giới hạn kỹ năng cho phép chỉ để tìm kiếm cảm giác mạnh hơn hoặc sự tán thưởng trên mạng xã hội."
+            },
+            {
+              "id": "neg_5",
+              "en": "Unregulated adventure expeditions frequently cause severe environmental degradation, trail erosion, alpine littering, and wildlife disturbance.",
+              "vi": "Các chuyến thám hiểm mạo hiểm tự phát thường gây xói mòn đường mòn, xả rác tại các đỉnh núi cao và làm xáo trộn nghiêm trọng hệ sinh thái hoang dã.",
+              "explEn": "Popular extreme destinations, such as Mount Everest, suffer from accumulated oxygen canisters, abandoned tents, and severe ecological strain.",
+              "explVi": "Những điểm đến mạo hiểm nổi tiếng như đỉnh Everest đang phải gánh chịu hàng tấn bình oxy cũ, lều bạt bỏ hoang và tổn hại sinh thái nặng nề."
+            },
+            {
+              "id": "neg_6",
+              "en": "The constant proximity to life-threatening perils inflicts chronic anxiety, emotional stress, and long-term trauma on the families and loved ones of participants.",
+              "vi": "Nguy cơ cận kề cái chết liên tục tạo ra gánh nặng lo âu mãn tính, căng thẳng tâm lý và tổn thương tinh thần lâu dài cho gia đình và người thân.",
+              "explEn": "Spouses, parents, and children endure agonizing uncertainty every time an athlete embarks on a dangerous solo expedition.",
+              "explVi": "Gia đình và người thân luôn phải sống trong tâm trạng bất an, lo lắng tột cùng mỗi khi vận động viên dấn thân vào các chuyến thám hiểm sinh tử."
+            }
+          ],
+          "points": [
+            {
+              "id": "neg_1",
+              "en": "The most critical disadvantage is the severe risk of irreversible physical trauma, spinal injuries, permanent paralysis, or fatal accidents.",
+              "vi": "Bất lợi nghiêm trọng nhất là nguy cơ chấn thương thể chất không thể phục hồi, tổn thương cột sống, liệt vĩnh viễn hoặc thậm chí tai nạn tử vong.",
+              "explEn": "High speeds, immense heights, and treacherous terrain leave virtually zero margin for human error or equipment failure.",
+              "explVi": "Tốc độ cao, độ cao lớn và địa hình hiểm trở khiến người chơi gần như không có cơ hội sửa sai nếu xảy ra lỗi kỹ thuật hoặc sự cố thiết bị."
+            },
+            {
+              "id": "neg_2",
+              "en": "Rescuing stranded or injured extreme athletes consumes exorbitant taxpayer funds, specialized aircraft, and strains medical emergency personnel.",
+              "vi": "Việc cứu hộ những vận động viên mạo hiểm bị nạn làm tiêu tốn ngân sách công khổng lồ, huy động trực thăng cứu nạn và gây áp lực lên lực lượng y tế khẩn cấp.",
+              "explEn": "Public rescue teams frequently risk their own lives in treacherous blizzards or avalanches to retrieve reckless individuals.",
+              "explVi": "Các đội cứu hộ công cộng thường phải mạo hiểm mạng sống trong bão tuyết hoặc lở đất chỉ để cứu những cá nhân tự đặt mình vào nguy hiểm."
+            }
+          ]
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Extreme or adventure sports encompass a wide range of outdoor pursuits that challenge participants physically and mentally.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that extreme sports bring more benefits than drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these activities significantly enhance physical fitness and mental resilience.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, engaging in high-intensity outdoor adventures requires the body to operate at peak capacity.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, rock climbing demands immense upper body strength and careful strategic planning.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, participants develop a profound sense of accomplishment and improved coordination.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these sports are excellent avenues for holistic personal development.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the inherent risks associated with extreme sports present serious disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the environments are often unpredictable and unforgiving.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a sudden change in weather during mountain biking can lead to severe accidents.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that participants face the possibility of serious injury or even fatality.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that careful preparation is paramount to mitigating these risks.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that extreme sports bring more benefits than drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because these activities promote holistic personal development through enhanced physical fitness and mental resilience, while also necessitating careful preparation to mitigate inherent risks.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Extreme or adventure sports involve engaging in physically demanding activities in challenging natural environments.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that extreme sports bring more drawbacks than benefits.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these pursuits offer substantial benefits for physical and mental development.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, participants build considerable physical fitness and mental fortitude.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, rock climbing requires immense upper body strength and strategic problem-solving.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals develop a profound sense of accomplishment and self-efficacy.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these activities contribute significantly to overall personal growth.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the inherent risks associated with extreme sports present serious drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the activities often push participants beyond their physiological limits.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that white-water rafting carries a high probability of severe injury from unpredictable currents.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that participants face the constant threat of acute trauma and long-term disability.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the potential for harm outweighs the perceived benefits.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that extreme sports bring more drawbacks than benefits.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because while these activities contribute to physical fitness and personal growth, the inherent risks of acute trauma and long-term disability are significantly more concerning.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode",
+    "naturalizerPass": true
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:52.770659+00:00"
+  }
+}

@@ -1,0 +1,1200 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "114",
+  "title": "#114 Negative Impact",
+  "prompt": "Poor lifestyles have a negative impact on people's health. List some unhealthy lifestyles and discuss what government services could help?",
+  "source": {
+    "promptSha256": "f5020c5194f8dce1a0ceec95190b6652829611dd49f49bfbeeaac40aa4ee393a",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Poor lifestyles have a negative impact on people's health.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "List some unhealthy lifestyles and discuss what government services could help?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Lifestyle",
+      "Food and health"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "lifestyles",
+        "enGloss": "Key concept related to lifestyles.",
+        "viGloss": "lối sống"
+      },
+      {
+        "term": "negative",
+        "enGloss": "Key concept related to negative.",
+        "viGloss": "tiêu cực"
+      },
+      {
+        "term": "people's",
+        "enGloss": "Key concept related to people's.",
+        "viGloss": "của mọi người"
+      },
+      {
+        "term": "unhealthy",
+        "enGloss": "Key concept related to unhealthy.",
+        "viGloss": "không khỏe mạnh"
+      },
+      {
+        "term": "discuss",
+        "enGloss": "Key concept related to discuss.",
+        "viGloss": "thảo luận"
+      },
+      {
+        "term": "government",
+        "enGloss": "Key concept related to government.",
+        "viGloss": "chính phủ"
+      },
+      {
+        "term": "services",
+        "enGloss": "Key concept related to services.",
+        "viGloss": "dịch vụ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "lifestyles_solutions-point1",
+        "label": "Point 1",
+        "en": "The main cause of poor health is poor eating habits and lack of exercise, as people often consume bad food and do not move enough in daily life.",
+        "vi": "Góc nhìn: The main cause of poor health is poor eating habits and lack of exercise, as people often consume bad food and do not move enough in daily life.",
+        "sourceVariantId": "lifestyles_solutions"
+      },
+      {
+        "id": "lifestyles_solutions-point2",
+        "label": "Point 2",
+        "en": "The government can offer better health services, such as building parks and offering free fitness classes, to encourage people to stay active.",
+        "vi": "Góc nhìn: The government can offer better health services, such as building parks and offering free fitness classes, to encourage people to stay active.",
+        "sourceVariantId": "lifestyles_solutions"
+      },
+      {
+        "id": "lifestyles_solutions-point1",
+        "label": "Point 1",
+        "en": "Poor eating habits and lack of physical activity are common problems, leading to a higher risk of chronic illnesses like diabetes.",
+        "vi": "Góc nhìn: Poor eating habits and lack of physical activity are common problems, leading to a higher risk of chronic illnesses like diabetes.",
+        "sourceVariantId": "lifestyles_solutions"
+      },
+      {
+        "id": "lifestyles_solutions-point2",
+        "label": "Point 2",
+        "en": "The government should run public health initiatives, such as free classes on healthy cooking, to teach people how to live better.",
+        "vi": "Góc nhìn: The government should run public health initiatives, such as free classes on healthy cooking, to teach people how to live better.",
+        "sourceVariantId": "lifestyles_solutions"
+      },
+      {
+        "id": "lifestyles_solutions-point1",
+        "label": "Point 1",
+        "en": "The essay identifies sedentary habits and poor diet as the primary causes of poor health.",
+        "vi": "Góc nhìn: The essay identifies sedentary habits and poor diet as the primary causes of poor health.",
+        "sourceVariantId": "lifestyles_solutions"
+      },
+      {
+        "id": "lifestyles_solutions-point2",
+        "label": "Point 2",
+        "en": "The essay proposes government-led public health initiatives as a key solution.",
+        "vi": "Góc nhìn: The essay proposes government-led public health initiatives as a key solution.",
+        "sourceVariantId": "lifestyles_solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Lifestyle.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Lifestyle."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "poor lifestyles",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "negatively impact",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "government",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "poor lifestyles",
+            "enGloss": "poor ways of living",
+            "viGloss": "lối sống kém",
+            "source": "approved_sample"
+          },
+          {
+            "term": "negatively impact",
+            "enGloss": "have a negative effect on",
+            "viGloss": "ảnh hưởng tiêu cực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "government",
+            "enGloss": "the governing body",
+            "viGloss": "chính phủ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "daily life",
+            "enGloss": "everyday existence",
+            "viGloss": "cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "poor eating",
+            "enGloss": "bad dietary habits",
+            "viGloss": "ăn uống kém",
+            "source": "approved_sample"
+          },
+          {
+            "term": "exercise",
+            "enGloss": "physical activity",
+            "viGloss": "tập thể dục",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "central government",
+            "enGloss": "The national authority governing a sovereign state as distinct from local governments.",
+            "viGloss": "Cụm từ học thuật: chính phủ trung ương"
+          },
+          {
+            "term": "exercise authority",
+            "enGloss": "To officially exert legitimate institutional, legal, or governmental power.",
+            "viGloss": "Cụm từ học thuật: thực thi quyền hạn / thẩm quyền hợp pháp"
+          },
+          {
+            "term": "federal government",
+            "enGloss": "The national authority governing a political federation of individual states.",
+            "viGloss": "Cụm từ học thuật: chính phủ liên bang"
+          },
+          {
+            "term": "government control",
+            "enGloss": "Statutory regulation, oversight, and restrictions administered by state authorities.",
+            "viGloss": "Cụm từ học thuật: sự kiểm soát của chính phủ"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "lifestyles_solutions",
+          "label": "Version 1: UNHEALTHY LIFESTYLES & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The main cause of poor health is poor eating habits and lack of exercise, as people often consume bad food and do not move enough in daily life.",
+          "point2": "The government can offer better health services, such as building parks and offering free fitness classes, to encourage people to stay active.",
+          "sampleVariantId": "lifestyles_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "lifestyles_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Poor ways of living can make people sick and affect their health.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that poor lifestyles negatively impact health and government must help.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The main cause is poor eating habits and lack of exercise.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people often eat too much bad food and do not move enough in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, many people prefer sweet drinks and chips instead of fresh fruit in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they might get overweight and have bad health problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that poor diet and little activity are major problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is that the government must offer better health services.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because these services can teach people how to eat well and stay active in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, the government can build more parks and offer free fitness classes in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people will feel more motivated to walk and exercise outside.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that government help is very important.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that poor lifestyles negatively impact health and government must help.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because poor diet and lack of activity cause health issues, and government help can provide better services and facilities.",
+            "level": "a2_b1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "poor ways",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "negative effect",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "person's health",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "poor eating",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "poor ways",
+            "enGloss": "poor",
+            "viGloss": "tệ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "negative effect",
+            "enGloss": "negative",
+            "viGloss": "tiêu cực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "person's health",
+            "enGloss": "person's",
+            "viGloss": "của người",
+            "source": "approved_sample"
+          },
+          {
+            "term": "poor eating",
+            "enGloss": "poor",
+            "viGloss": "tệ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "eating habits",
+            "enGloss": "eating",
+            "viGloss": "ăn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "healthy",
+            "enGloss": "healthy",
+            "viGloss": "khỏe mạnh",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "negative effect",
+            "enGloss": "A deleterious outcome that degrades health, performance, or happiness.",
+            "viGloss": "Cụm từ học thuật: tác động tiêu cực xấu đi"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "lifestyles_solutions",
+          "label": "Version 1: UNHEALTHY LIFESTYLES & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Poor eating habits and lack of physical activity are common problems, leading to a higher risk of chronic illnesses like diabetes.",
+          "point2": "The government should run public health initiatives, such as free classes on healthy cooking, to teach people how to live better.",
+          "sampleVariantId": "lifestyles_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "lifestyles_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Poor ways of living can have a negative effect on a person's health.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that poor lifestyles negatively impact health and government must help.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that poor eating habits and lack of physical activity are common problems.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, many people do not eat enough healthy food, and they do not exercise enough.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a diet high in sugar and processed food leads to weight gain.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people face a higher risk of getting chronic illnesses like diabetes.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that poor lifestyle choices are a major health risk.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is for the government to run public health initiatives.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that these programs can teach people how to live better.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that local councils can offer free classes on healthy cooking.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people learn good habits and change their daily routines.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that government support is needed for better health.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that poor lifestyles negatively impact health and government must help.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because poor eating habits and lack of physical activity pose significant health risks, and government initiatives can effectively educate people on adopting healthier routines.",
+            "level": "b2",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "sedentary",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "dietary",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "prevalence",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "chronic",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "sedentary",
+            "enGloss": "spending much time sitting",
+            "viGloss": "ít vận động",
+            "source": "approved_sample"
+          },
+          {
+            "term": "dietary",
+            "enGloss": "relating to food and eating",
+            "viGloss": "thuộc về chế độ ăn uống",
+            "source": "approved_sample"
+          },
+          {
+            "term": "prevalence",
+            "enGloss": "the fact or condition of being widespread",
+            "viGloss": "tính phổ biến",
+            "source": "approved_sample"
+          },
+          {
+            "term": "chronic",
+            "enGloss": "lasting for a long time",
+            "viGloss": "mãn tính",
+            "source": "approved_sample"
+          },
+          {
+            "term": "initiatives",
+            "enGloss": "new plans or actions",
+            "viGloss": "sáng kiến",
+            "source": "approved_sample"
+          },
+          {
+            "term": "modification",
+            "enGloss": "the process of changing something",
+            "viGloss": "sự thay đổi",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "lifestyles_solutions",
+          "label": "Version 1: UNHEALTHY LIFESTYLES & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The essay identifies sedentary habits and poor diet as the primary causes of poor health.",
+          "point2": "The essay proposes government-led public health initiatives as a key solution.",
+          "sampleVariantId": "lifestyles_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "lifestyles_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Maintaining a healthy lifestyle is crucial for overall well-being, and poor habits can significantly compromise physical health.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that poor lifestyles negatively impact health and government must help.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the increasing prevalence of sedentary habits and poor dietary choices.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, many people spend excessive time sitting and consume highly processed foods.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, office workers often neglect physical activity, choosing to sit for extended periods.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the risk of developing chronic illnesses, such as heart disease, significantly increases.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that poor physical activity levels are a major health concern.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is for governments to implement comprehensive public health initiatives.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that such programs can educate citizens on proper nutrition and exercise routines.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that subsidized community gyms and walking trails are made available to all residents.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people are encouraged to adopt healthier habits, thereby improving community wellness.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that governmental support is essential for lifestyle modification.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that poor lifestyles negatively impact health and government must help.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because sedentary habits and poor dietary choices contribute to chronic illnesses, necessitating governmental initiatives to educate citizens and promote physical activity.",
+            "level": "c1",
+            "sampleVariantId": "lifestyles_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:07.615679+00:00"
+  }
+}

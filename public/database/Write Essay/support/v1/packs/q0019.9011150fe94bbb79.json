@@ -1,0 +1,1206 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "19",
+  "title": "#19 Birth Rate",
+  "prompt": "In many countries, the birth rates are lowering, and the problems of an ageing population are serious. What are the causes and the effects of this phenomenon? what should we do to address these issues?",
+  "source": {
+    "promptSha256": "4833f2419d545e16647ae9529d3e6d4f25da0a4ee3b96fcfd743da4b17728392",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "In many countries, the birth rates are lowering, and the problems of an ageing population are serious.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What are the causes and the effects of this phenomenon?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "what should we do to address these issues?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "problems_solutions",
+    "topics": [
+      "Population",
+      "Age, generation, and gender"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "countries",
+        "enGloss": "Key concept related to countries.",
+        "viGloss": "các nước"
+      },
+      {
+        "term": "lowering",
+        "enGloss": "Key concept related to lowering.",
+        "viGloss": "hạ thấp"
+      },
+      {
+        "term": "problems",
+        "enGloss": "Key concept related to problems.",
+        "viGloss": "vấn đề"
+      },
+      {
+        "term": "population",
+        "enGloss": "Key concept related to population.",
+        "viGloss": "dân số"
+      },
+      {
+        "term": "serious",
+        "enGloss": "Key concept related to serious.",
+        "viGloss": "nghiêm trọng"
+      },
+      {
+        "term": "effects",
+        "enGloss": "Key concept related to effects.",
+        "viGloss": "hiệu ứng"
+      },
+      {
+        "term": "phenomenon",
+        "enGloss": "Key concept related to phenomenon.",
+        "viGloss": "hiện tượng"
+      },
+      {
+        "term": "address",
+        "enGloss": "to deal with or mention something",
+        "viGloss": "đề cập đến"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "problems",
+        "required": true,
+        "en": "Identify the main problems or causes.",
+        "vi": "Xác định các vấn đề hoặc nguyên nhân chính."
+      },
+      {
+        "id": "solutions",
+        "required": true,
+        "en": "Propose practical solutions.",
+        "vi": "Đề xuất các giải pháp thực tế."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Explain why the solutions could work.",
+        "vi": "Giải thích vì sao các giải pháp có thể hiệu quả."
+      }
+    ],
+    "angles": [
+      {
+        "id": "solutions-point1",
+        "label": "Point 1",
+        "en": "The main cause of low birth rates is the difficulty of raising children in modern life, which is shown by the focus on careers and high living costs.",
+        "vi": "Góc nhìn: The main cause of low birth rates is the difficulty of raising children in modern life, which is shown by the focus on careers and high living costs.",
+        "sourceVariantId": "solutions"
+      },
+      {
+        "id": "solutions-point2",
+        "label": "Point 2",
+        "en": "Government policies and immigration are effective solutions because they provide financial support and help maintain a strong population structure.",
+        "vi": "Góc nhìn: Government policies and immigration are effective solutions because they provide financial support and help maintain a strong population structure.",
+        "sourceVariantId": "solutions"
+      },
+      {
+        "id": "solutions-point1",
+        "label": "Point 1",
+        "en": "Government policies and immigration are necessary solutions to declining birth rates and aging populations.",
+        "vi": "Góc nhìn: Government policies and immigration are necessary solutions to declining birth rates and aging populations.",
+        "sourceVariantId": "solutions"
+      },
+      {
+        "id": "solutions-point2",
+        "label": "Point 2",
+        "en": "The first body paragraph identifies the problem (declining birth rates straining social services), and the second body paragraph proposes solutions (policies and immigration).",
+        "vi": "Góc nhìn: The first body paragraph identifies the problem (declining birth rates straining social services), and the second body paragraph proposes solutions (policies and immigration).",
+        "sourceVariantId": "solutions"
+      },
+      {
+        "id": "solutions-point1",
+        "label": "Point 1",
+        "en": "The primary challenge is the declining fertility rates, which undermine the sustainability of current social structures.",
+        "vi": "Góc nhìn: The primary challenge is the declining fertility rates, which undermine the sustainability of current social structures.",
+        "sourceVariantId": "solutions"
+      },
+      {
+        "id": "solutions-point2",
+        "label": "Point 2",
+        "en": "Implementing targeted government policies alongside managed immigration streams offers a viable path to mitigate demographic decline.",
+        "vi": "Góc nhìn: Implementing targeted government policies alongside managed immigration streams offers a viable path to mitigate demographic decline.",
+        "sourceVariantId": "solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not list abstract solutions without directly linking each solution to a specific root cause mentioned.",
+        "vi": "Không liệt kê giải pháp chung chung mà không gắn kết trực tiếp với từng nguyên nhân cụ thể đã nêu."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "low birth rates",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "ageing populations",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "government policies",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "major reason",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "One major problem is X, which can be addressed by Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "low birth rates",
+            "enGloss": "low birth rates",
+            "viGloss": "tỷ lệ sinh thấp",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "ageing populations",
+            "enGloss": "ageing populations",
+            "viGloss": "dân số già hóa",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "government policies",
+            "enGloss": "government policies",
+            "viGloss": "chính sách của chính phủ",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "major reason",
+            "enGloss": "major reason",
+            "viGloss": "lý do chính",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "secure",
+            "enGloss": "secure",
+            "viGloss": "an toàn",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "immigration",
+            "enGloss": "immigration",
+            "viGloss": "nhập cư",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "major reason",
+            "enGloss": "The principal justification or motivation behind a choice or belief.",
+            "viGloss": "Cụm từ học thuật: lý do căn bản, chủ chốt"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "problem-solution link",
+            "en": "One major problem is X, which can be addressed by Y.",
+            "vi": "Một vấn đề lớn là X, có thể được giải quyết bằng Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "solutions",
+          "label": "Version 1: SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Population ____.",
+          "point1": "The main cause of low birth rates is the difficulty of raising children in modern life, which is shown by the focus on careers and high living costs.",
+          "point2": "Government policies and immigration are effective solutions because they provide financial support and help maintain a strong population structure.",
+          "sampleVariantId": "solutions",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Low birth rates and older populations are big issues for many countries today.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that lowering birth rates and ageing populations can be addressed through government policies and immigration.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that people have fewer children now.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, many young people choose to have fewer babies in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, people live in big cities and focus on their jobs in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they spend more money on education and housing in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that modern life makes having children difficult.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is to use government policies.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the government can help families with money and support in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they can give money for new parents or build more schools in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, families feel more secure and can have more children in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that policies help people have families.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that addressing low birth rates and ageing populations is possible.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Government policies can help people have children, and immigration can help keep the population strong.",
+            "level": "a2_b1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "declining",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "pensions",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "workforce",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "targeted",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "One major problem is X, which can be addressed by Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "declining",
+            "enGloss": "going down in amount or number",
+            "viGloss": "giảm dần",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "pensions",
+            "enGloss": "money paid to people who have stopped working",
+            "viGloss": "lương hưu",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "workforce",
+            "enGloss": "people who are able to work",
+            "viGloss": "lực lượng lao động",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "targeted",
+            "enGloss": "aimed at a specific group or area",
+            "viGloss": "có mục tiêu",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "affordable",
+            "enGloss": "able to be paid for",
+            "viGloss": "có khả năng chi trả",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "sustainable",
+            "enGloss": "able to continue for a long time",
+            "viGloss": "bền vững",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "problem-solution link",
+            "en": "One major problem is X, which can be addressed by Y.",
+            "vi": "Một vấn đề lớn là X, có thể được giải quyết bằng Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "solutions",
+          "label": "Version 1: SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Population ____.",
+          "point1": "Government policies and immigration are necessary solutions to declining birth rates and aging populations.",
+          "point2": "The first body paragraph identifies the problem (declining birth rates straining social services), and the second body paragraph proposes solutions (policies and immigration).",
+          "sampleVariantId": "solutions",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The issue of falling birth rates and aging populations presents a major challenge to modern societies worldwide.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that lowering birth rates and ageing populations can be addressed through government policies and immigration.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that declining birth rates put pressure on the working population and social services.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, fewer young people mean fewer workers to support the elderly.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, countries like Japan have very few people entering the workforce each year.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the tax base shrinks, making it hard to pay for pensions and healthcare.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that government policies must help people have more children.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is to use targeted government policies and encourage immigration.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that financial support can help couples plan for a family.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that offering tax breaks for new parents makes having children more affordable.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the population structure becomes more balanced and sustainable.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that policies and immigration can solve this problem.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that addressing low birth rates and aging populations requires action.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Government policies can help boost birth rates, and immigration can help support the workforce and social services.",
+            "level": "b2",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "demographic",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "sustainability",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "fertility",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "strains",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "One major problem is X, which can be addressed by Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "demographic",
+            "enGloss": "relating to the structure of populations",
+            "viGloss": "thuộc về nhân khẩu học",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "sustainability",
+            "enGloss": "the ability to be maintained at a certain rate or level",
+            "viGloss": "sự bền vững",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "fertility",
+            "enGloss": "the ability to conceive and bear children",
+            "viGloss": "khả năng sinh sản",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "strains",
+            "enGloss": "puts pressure on",
+            "viGloss": "gây áp lực",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "mitigated",
+            "enGloss": "reduced the severity or seriousness of",
+            "viGloss": "giảm bớt",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "incentivize",
+            "enGloss": "encourage or motivate",
+            "viGloss": "khuyến khích",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "demographic change",
+            "enGloss": "Statistically measurable shifts in population composition, age, and migration.",
+            "viGloss": "Cụm từ học thuật: sự biến động nhân khẩu học"
+          },
+          {
+            "term": "demographic characteristics",
+            "enGloss": "Statistical attributes of populations including age, gender, education, and income.",
+            "viGloss": "Cụm từ học thuật: đặc điểm nhân khẩu học"
+          },
+          {
+            "term": "demographic factor",
+            "enGloss": "A population-based variable influencing broader economic or social trends.",
+            "viGloss": "Cụm từ học thuật: yếu tố biến đổi nhân khẩu học"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "problem-solution link",
+            "en": "One major problem is X, which can be addressed by Y.",
+            "vi": "Một vấn đề lớn là X, có thể được giải quyết bằng Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "solutions",
+          "label": "Version 1: SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Population ____.",
+          "point1": "The primary challenge is the declining fertility rates, which undermine the sustainability of current social structures.",
+          "point2": "Implementing targeted government policies alongside managed immigration streams offers a viable path to mitigate demographic decline.",
+          "sampleVariantId": "solutions",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Declining birth rates and the resulting demographic shifts toward aging populations present significant socioeconomic challenges globally.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that lowering birth rates and ageing populations can be addressed through government policies and immigration.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the declining fertility rates, which undermine the sustainability of current social structures.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, fewer young people entering the workforce strain the existing pension and healthcare systems.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, nations with low birth rates face a shrinking pool of working-age individuals supporting a growing number of retirees.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the economic burden on the productive population increases substantially, potentially leading to reduced national savings.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that proactive measures are necessary to stabilize population dynamics.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is implementing targeted government policies alongside managed immigration streams.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that policies can incentivize family formation and support working parents.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that offering generous parental leave and tax credits encourages larger family sizes.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the workforce remains robust and the dependency ratio is mitigated effectively.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that comprehensive governmental support and controlled migration are viable strategies.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that addressing demographic decline requires both governmental intervention and managed immigration.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Population.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Stabilizing fertility rates and integrating new populations are crucial steps toward maintaining a healthy socioeconomic balance.",
+            "level": "c1",
+            "sampleVariantId": "solutions",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode",
+    "naturalizerPass": true
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:52.040796+00:00"
+  }
+}

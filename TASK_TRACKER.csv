@@ -2001,3 +2001,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1006,2026-09-06,Harden AudioDspPipeline memory race protection in SGD DI and fix ESLint empty catch blocks,Done,2026-09-06
 1007,2026-09-06,Release V1.8.134: Deploy Universal Client-Side Audio DSP Pipeline and Practice Mode Hardening to production,Done,2026-09-06
 1008,2026-09-06,Audit debug refactor Read Aloud and Repeat Sentence pronunciation coaching and deploy V1.8.134 to production,Done,2026-09-06
+1009,2026-09-06,Audit and fix Pronunciation Dual Arena AudioDspPipeline return handling CSP HTTPS rules and test suites,Done,2026-09-06

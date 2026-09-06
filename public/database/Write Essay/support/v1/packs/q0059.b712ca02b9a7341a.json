@@ -1,0 +1,1837 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "59",
+  "title": "#59 School Advertisements",
+  "prompt": "Some people think placing advertisements in school is a great resource for public schools that need additional funding, but others think it exploits children by treating them as a captive audience for corporate sponsors. Choose which position you most agree with and discuss why you choose that position. Support your point of view with details from your own experiences, observations or reading.",
+  "source": {
+    "promptSha256": "64eb6e007a81d56fa95a05591aa5802047723bd6e0c241bfbc9885c1cde15f79",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people think placing advertisements in school is a great resource for public schools that need additional funding, but others think it exploits children by treating them as a captive audience for corporate sponsors.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Choose which position you most agree with and discuss why you choose that position.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Support your point of view with details from your own experiences, observations or reading.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Ethics",
+      "Education",
+      "Media and communication"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "placing",
+        "enGloss": "Key concept related to placing.",
+        "viGloss": "đặt"
+      },
+      {
+        "term": "advertisements",
+        "enGloss": "public announcements promoting products or services",
+        "viGloss": "quảng cáo"
+      },
+      {
+        "term": "resource",
+        "enGloss": "Key concept related to resource.",
+        "viGloss": "tài nguyên"
+      },
+      {
+        "term": "schools",
+        "enGloss": "Key concept related to schools.",
+        "viGloss": "trường học"
+      },
+      {
+        "term": "additional",
+        "enGloss": "extra or supplementary",
+        "viGloss": "thêm"
+      },
+      {
+        "term": "funding",
+        "enGloss": "Key concept related to funding.",
+        "viGloss": "tài trợ"
+      },
+      {
+        "term": "exploits",
+        "enGloss": "Key concept related to exploits.",
+        "viGloss": "khai thác"
+      },
+      {
+        "term": "children",
+        "enGloss": "Key concept related to children.",
+        "viGloss": "bọn trẻ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "support-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph argues that advertisements provide necessary funding for schools to buy new resources and equipment.",
+        "vi": "Góc nhìn: The first body paragraph argues that advertisements provide necessary funding for schools to buy new resources and equipment.",
+        "sourceVariantId": "support"
+      },
+      {
+        "id": "support-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the opposing view, stating that advertisements might distract students and negatively affect their focus on learning.",
+        "vi": "Góc nhìn: The second body paragraph discusses the opposing view, stating that advertisements might distract students and negatively affect their focus on learning.",
+        "sourceVariantId": "support"
+      },
+      {
+        "id": "oppose-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph argues that ads create discomfort and distraction for students, supporting the view that ads exploit children.",
+        "vi": "Góc nhìn: The first body paragraph argues that ads create discomfort and distraction for students, supporting the view that ads exploit children.",
+        "sourceVariantId": "oppose"
+      },
+      {
+        "id": "oppose-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph addresses the opposing view that ads help schools earn money, but the conclusion maintains the original stance.",
+        "vi": "Góc nhìn: The second body paragraph addresses the opposing view that ads help schools earn money, but the conclusion maintains the original stance.",
+        "sourceVariantId": "oppose"
+      },
+      {
+        "id": "support-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph argues that ads provide financial support, using the example of a local bank. The structure follows PEEL: Point (financial support), Explain (money for equipment), Example (local bank ad), Effect (buying computers), Link (advertising helps improve resources).",
+        "vi": "Góc nhìn: The first body paragraph argues that ads provide financial support, using the example of a local bank. The structure follows PEEL: Point (financial support), Explain (money for equipment), Example (local bank ad), Effect (buying computers), Link (advertising helps improve resources).",
+        "sourceVariantId": "support"
+      },
+      {
+        "id": "support-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the opposing view, arguing that ads distract students. The structure follows PEEL: Point (ads distract), Explain (too many ads might distract), Example (posters about goods), Effect (spending time looking at ads), Link (negative learning environment).",
+        "vi": "Góc nhìn: The second body paragraph discusses the opposing view, arguing that ads distract students. The structure follows PEEL: Point (ads distract), Explain (too many ads might distract), Example (posters about goods), Effect (spending time looking at ads), Link (negative learning environment).",
+        "sourceVariantId": "support"
+      },
+      {
+        "id": "oppose-point1",
+        "label": "Point 1",
+        "en": "The argument focuses on how ads exploit students' feelings and sense of self-worth.",
+        "vi": "Góc nhìn: The argument focuses on how ads exploit students' feelings and sense of self-worth.",
+        "sourceVariantId": "oppose"
+      },
+      {
+        "id": "oppose-point2",
+        "label": "Point 2",
+        "en": "The counter-argument discusses how ads can raise awareness and teach students about products.",
+        "vi": "Góc nhìn: The counter-argument discusses how ads can raise awareness and teach students about products.",
+        "sourceVariantId": "oppose"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "advertisements",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "funding",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "distract",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "equipment",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "advertisements",
+            "enGloss": "public notices",
+            "viGloss": "quảng cáo",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "funding",
+            "enGloss": "money for a project",
+            "viGloss": "nguồn vốn",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "distract",
+            "enGloss": "take attention away",
+            "viGloss": "gây mất tập trung",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "equipment",
+            "enGloss": "things for a job",
+            "viGloss": "thiết bị",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "resource",
+            "enGloss": "thing that helps",
+            "viGloss": "nguồn lực",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "students",
+            "enGloss": "people who learn",
+            "viGloss": "học sinh",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional resources",
+            "enGloss": "Supplementary funding, materials, or personnel provided to support an initiative.",
+            "viGloss": "Cụm từ học thuật: nguồn lực / tài nguyên bổ sung"
+          },
+          {
+            "term": "allocate resources",
+            "enGloss": "To distribute funding, equipment, or manpower systematically according to priorities.",
+            "viGloss": "Cụm từ học thuật: phân bổ nguồn lực hợp lý"
+          },
+          {
+            "term": "available resources",
+            "enGloss": "Existing assets, capital, materials, or personnel ready for operational deployment.",
+            "viGloss": "Cụm từ học thuật: nguồn lực sẵn có để sử dụng"
+          },
+          {
+            "term": "economic resources",
+            "enGloss": "Financial capital, labor, infrastructure, and natural wealth used in production.",
+            "viGloss": "Cụm từ học thuật: nguồn lực kinh tế dồi dào"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "support",
+          "label": "Version 1: SUPPORT ADS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Ethics ____.",
+          "point1": "The first body paragraph argues that advertisements provide necessary funding for schools to buy new resources and equipment.",
+          "point2": "The second body paragraph discusses the opposing view, stating that advertisements might distract students and negatively affect their focus on learning.",
+          "sampleVariantId": "support",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "oppose",
+          "label": "Version 2: OPPOSE ADS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Ethics ____.",
+          "point1": "The first body paragraph argues that ads create discomfort and distraction for students, supporting the view that ads exploit children.",
+          "point2": "The second body paragraph addresses the opposing view that ads help schools earn money, but the conclusion maintains the original stance.",
+          "sampleVariantId": "oppose",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "support": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People have two different views about putting advertisements in schools.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that placing advertisements in schools is a great resource for additional funding.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, advertisements can help schools get extra money.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this money can pay for new things the school needs.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a local shop can pay money to put up a poster in the school hall.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the school can buy new books or better sports equipment.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that ads help schools buy needed items.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, some people think ads are bad for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because ads might distract students from their studies.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a poster for a sugary drink might be seen by a young student.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the student might want to buy that drink, which is not good for health.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that ads might distract students.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that placing advertisements in schools is a great resource for additional funding.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Ads help schools buy needed items, and while ads might distract students, the financial help is more important.",
+            "level": "a2_b1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "oppose": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people have different ideas about putting advertisements in schools.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that placing advertisements in schools exploits children.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, advertisements in schools can make students feel uncomfortable.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these ads take up space that should be for learning in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a poster for a sugary drink might be near the reading area in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, students might think that learning is less important than buying things in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that ads distract students from their studies.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, some people say ads help schools earn money.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because schools need money to buy books and run programs in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a local shop might pay money to put up a sign in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the school gets funds for better facilities in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that ads are useful for school funding.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that placing advertisements in schools exploits children.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Ads make students feel uncomfortable, and they are not always useful for school funding.",
+            "level": "a2_b1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "financial",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "resource",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "distract",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "institution",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "financial",
+            "enGloss": "relating to money",
+            "viGloss": "thuộc về tài chính",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "resource",
+            "enGloss": "a source of help or materials",
+            "viGloss": "nguồn lực",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "distract",
+            "enGloss": "to pull attention away from something",
+            "viGloss": "làm mất tập trung",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "institution",
+            "enGloss": "a large organization, like a school",
+            "viGloss": "tổ chức",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "equipment",
+            "enGloss": "necessary items for a job",
+            "viGloss": "thiết bị",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "outweigh",
+            "enGloss": "to be more important than",
+            "viGloss": "vượt trội hơn",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic institution",
+            "enGloss": "An educational or research organization such as a university or college.",
+            "viGloss": "Cụm từ học thuật: cơ sở giáo dục / viện nghiên cứu học thuật"
+          },
+          {
+            "term": "additional resources",
+            "enGloss": "Supplementary funding, materials, or personnel provided to support an initiative.",
+            "viGloss": "Cụm từ học thuật: nguồn lực / tài nguyên bổ sung"
+          },
+          {
+            "term": "allocate resources",
+            "enGloss": "To distribute funding, equipment, or manpower systematically according to priorities.",
+            "viGloss": "Cụm từ học thuật: phân bổ nguồn lực hợp lý"
+          },
+          {
+            "term": "available resources",
+            "enGloss": "Existing assets, capital, materials, or personnel ready for operational deployment.",
+            "viGloss": "Cụm từ học thuật: nguồn lực sẵn có để sử dụng"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "support",
+          "label": "Version 1: SUPPORT ADS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Ethics ____.",
+          "point1": "The first body paragraph argues that ads provide financial support, using the example of a local bank. The structure follows PEEL: Point (financial support), Explain (money for equipment), Example (local bank ad), Effect (buying computers), Link (advertising helps improve resources).",
+          "point2": "The second body paragraph discusses the opposing view, arguing that ads distract students. The structure follows PEEL: Point (ads distract), Explain (too many ads might distract), Example (posters about goods), Effect (spending time looking at ads), Link (negative learning environment).",
+          "sampleVariantId": "support",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "oppose",
+          "label": "Version 2: OPPOSE ADS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Ethics ____.",
+          "point1": "The argument focuses on how ads exploit students' feelings and sense of self-worth.",
+          "point2": "The counter-argument discusses how ads can raise awareness and teach students about products.",
+          "sampleVariantId": "oppose",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "support": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "There are two different views regarding the placement of advertisements within educational institutions.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that placing advertisements in schools is a great resource for additional funding.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, placing advertisements in schools can provide much-needed financial support.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this money can help pay for better equipment and school programs.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a local bank might place an ad for a new savings account.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the school can buy new computers for the library.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that advertising helps improve the school's resources.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, some people worry about the effect of ads on students' learning.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that too many ads might distract students from their studies.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that posters about consumer goods might take up wall space.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that students might spend time looking at the ads instead of reading books.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that advertising can create a negative learning environment.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that placing advertisements in schools is a great resource for additional funding.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The financial support from ads is important, and while concerns about the learning environment exist, the benefits outweigh the risks.",
+            "level": "b2",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "oppose": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The topic of placing advertisements in schools has generated two different views among people.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that placing advertisements in schools exploits children.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, placing advertisements in schools can exploit students' minds.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these ads make children feel pressure to buy things.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, ads for expensive gadgets show students what they should own.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, students might feel bad about their family's money or possessions.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that this practice harms the students' sense of self-worth.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, some people argue that ads help raise awareness about products.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that schools are places where many people gather.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that health product ads teach students about good habits.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that students learn about different items and services available.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that advertising can be useful for education.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that placing advertisements in schools exploits children.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The negative impact on students' self-worth and the potential for commercial pressure are greater than the educational benefits of product awareness.",
+            "level": "b2",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "supplement",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "substantial",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "commercialization",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "integrity",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "supplement",
+            "enGloss": "to add to",
+            "viGloss": "bổ sung",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "substantial",
+            "enGloss": "large in size, amount, or value",
+            "viGloss": "đáng kể",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "commercialization",
+            "enGloss": "the process of converting something into a commodity",
+            "viGloss": "thương mại hóa",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "integrity",
+            "enGloss": "the quality of being whole and undivided",
+            "viGloss": "tính toàn vẹn",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "sanctuary",
+            "enGloss": "a place of refuge or safety",
+            "viGloss": "nơi trú ẩn",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "compromises",
+            "enGloss": "to damage or undermine the quality or value of",
+            "viGloss": "làm tổn hại",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "substantial amount",
+            "enGloss": "A sizable, consequential quantity that exerts significant practical impact.",
+            "viGloss": "Cụm từ học thuật: một lượng lớn / đáng kể"
+          },
+          {
+            "term": "substantial difference",
+            "enGloss": "A marked, dramatic variation distinguishing two compared items.",
+            "viGloss": "Cụm từ học thuật: sự khác biệt rất lớn về bản chất"
+          },
+          {
+            "term": "substantial evidence",
+            "enGloss": "A heavy body of corroborated proof that decisively settles a question.",
+            "viGloss": "Cụm từ học thuật: chứng cứ xác thực, đầy sức nặng"
+          },
+          {
+            "term": "substantial number",
+            "enGloss": "A large, impressive quantity of people, items, or recorded incidents.",
+            "viGloss": "Cụm từ học thuật: một số lượng lớn đáng kể"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "support",
+          "label": "Version 1: SUPPORT ADS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Ethics ____.",
+          "point1": "The primary argument supporting the use of advertisements is the substantial financial benefit they provide to schools, which can fund necessary resources and facilities.",
+          "point2": "The counterargument focuses on the potential negative impact of commercialization, suggesting that advertisements might compromise the academic focus and integrity of the educational environment.",
+          "sampleVariantId": "support",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "oppose",
+          "label": "Version 2: OPPOSE ADS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Ethics ____.",
+          "point1": "The primary argument is that school advertisements are detrimental because they distract students and promote consumerism, thereby undermining the core educational mission.",
+          "point2": "The counterargument suggests that advertisements are beneficial because they provide essential financial resources needed for school maintenance and program enhancement.",
+          "sampleVariantId": "oppose",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "support": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The placement of advertisements within educational institutions is a topic that generates two distinct viewpoints.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that placing advertisements in schools is a great resource for additional funding.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, integrating advertisements into schools can provide substantial financial resources for educational programs.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these revenue streams can supplement limited public funding, allowing for enhanced facilities and resources.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a local corporation might sponsor a wing of the library in exchange for prominent signage.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the school can afford to purchase advanced technological equipment or hire specialized staff.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that such partnerships greatly benefit the overall educational environment.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, critics argue that commercialization compromises the academic integrity of the learning space.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant commercial messaging can distract students from their primary educational focus.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that excessive branding might overshadow the scholarly atmosphere of the campus.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that students may perceive the school as a commercial enterprise rather than a sanctuary for knowledge.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that such advertising diminishes the educational value.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that placing advertisements in schools is a valuable resource for additional funding.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The financial benefits derived from advertising, alongside the need to consider the academic integrity of the learning space, confirm this position.",
+            "level": "c1",
+            "sampleVariantId": "support",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "oppose": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The placement of advertisements within educational institutions has generated considerable debate, with people holding two differing perspectives.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that placing advertisements in schools exploits children.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, the presence of advertisements in schools poses a significant threat to the learning environment.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these commercial displays distract students from their academic pursuits.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a poster promoting sugary drinks might divert attention away from a history lesson.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, students may become more focused on consumerism than on scholarly knowledge.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that such advertising undermines the educational mission of the school.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, some argue that advertisements can provide necessary funding for school improvements.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that schools require substantial financial resources for maintenance and programs.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a local business might sponsor a science fair through advertising.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the school gains much-needed capital to enhance facilities and educational activities.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that advertising can support institutional growth.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that placing advertisements in schools exploits children because the distraction they cause outweighs the financial support they might provide.",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Ethics.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "oppose",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:59.071063+00:00"
+  }
+}

@@ -1,0 +1,1759 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "83",
+  "title": "#83 Social Media",
+  "prompt": "What are the pros and cons of staying connected on social media 24 hours a day?",
+  "source": {
+    "promptSha256": "31d4ba725baa0585faea4a446c543bde628dcad376a7bab4569e3c3a890e350b",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "What are the pros and cons of staying connected on social media 24 hours a day?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Media and communication"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "staying",
+        "enGloss": "Key concept related to staying.",
+        "viGloss": "ở lại"
+      },
+      {
+        "term": "connected",
+        "enGloss": "Key concept related to connected.",
+        "viGloss": "đã kết nối"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "pros-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph focuses on the positive aspect of social media: connecting people. It explains how it helps maintain relationships across distances.",
+        "vi": "Góc nhìn: The first body paragraph focuses on the positive aspect of social media: connecting people. It explains how it helps maintain relationships across distances.",
+        "sourceVariantId": "pros"
+      },
+      {
+        "id": "pros-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph focuses on the negative aspect of social media: mental health issues. It explains that excessive use can lead to feelings of sadness and comparison.",
+        "vi": "Góc nhìn: The second body paragraph focuses on the negative aspect of social media: mental health issues. It explains that excessive use can lead to feelings of sadness and comparison.",
+        "sourceVariantId": "pros"
+      },
+      {
+        "id": "cons-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspect of social media: keeping people connected.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspect of social media: keeping people connected.",
+        "sourceVariantId": "cons"
+      },
+      {
+        "id": "cons-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspect of social media: its impact on mental health.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspect of social media: its impact on mental health.",
+        "sourceVariantId": "cons"
+      },
+      {
+        "id": "pros-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspect of social media, focusing on its role in improving global connectivity and maintaining personal relationships.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspect of social media, focusing on its role in improving global connectivity and maintaining personal relationships.",
+        "sourceVariantId": "pros"
+      },
+      {
+        "id": "pros-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspect of social media, focusing on the risk of mental health problems caused by constant comparison.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspect of social media, focusing on the risk of mental health problems caused by constant comparison.",
+        "sourceVariantId": "pros"
+      },
+      {
+        "id": "cons-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive role of social media in maintaining connections and relationships.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive role of social media in maintaining connections and relationships.",
+        "sourceVariantId": "cons"
+      },
+      {
+        "id": "cons-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph focuses on the negative effects, such as the risk to mental health and self-esteem, from excessive social media use.",
+        "vi": "Góc nhìn: The second body paragraph focuses on the negative effects, such as the risk to mental health and self-esteem, from excessive social media use.",
+        "sourceVariantId": "cons"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Media and communication.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Media and communication."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "connected",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "easily",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "relative",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "relationships",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "connected",
+            "enGloss": "linked or joined",
+            "viGloss": "kết nối",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "easily",
+            "enGloss": "without difficulty",
+            "viGloss": "dễ dàng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "relative",
+            "enGloss": "a family member",
+            "viGloss": "người thân",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "relationships",
+            "enGloss": "bonds between people",
+            "viGloss": "mối quan hệ",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "negative",
+            "enGloss": "bad or harmful",
+            "viGloss": "tiêu cực",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "mental health",
+            "enGloss": "the state of mind",
+            "viGloss": "sức khỏe tinh thần",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "closely connected",
+            "enGloss": "Tightly linked through functional dependencies or shared characteristics.",
+            "viGloss": "Cụm từ học thuật: gắn kết chặt chẽ với nhau"
+          },
+          {
+            "term": "directly connected",
+            "enGloss": "Linked without intervening stages or third-party intermediaries.",
+            "viGloss": "Cụm từ học thuật: kết nối trực tiếp với nhau"
+          },
+          {
+            "term": "easily accessible",
+            "enGloss": "Conveniently reached, acquired, or understood with minimal impediment.",
+            "viGloss": "Cụm từ học thuật: dễ dàng tiếp cận và sử dụng"
+          },
+          {
+            "term": "easily identified",
+            "enGloss": "Readily recognized, distinguished, or categorized without confusion.",
+            "viGloss": "Cụm từ học thuật: dễ dàng nhận biết, xác định"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "pros",
+          "label": "Version 1: PROS",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Media and communication far outweigh the drawbacks because ____.",
+          "point1": "The first body paragraph focuses on the positive aspect of social media: connecting people. It explains how it helps maintain relationships across distances.",
+          "point2": "The second body paragraph focuses on the negative aspect of social media: mental health issues. It explains that excessive use can lead to feelings of sadness and comparison.",
+          "sampleVariantId": "pros",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "cons",
+          "label": "Version 2: CONS",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Media and communication are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspect of social media: keeping people connected.",
+          "point2": "The second body paragraph discusses the negative aspect of social media: its impact on mental health.",
+          "sampleVariantId": "cons",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "pros": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Social media platforms are a big part of modern life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that staying connected on social media 24 hours a day has benefits.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, social media helps people stay connected with friends and family.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it lets us talk to people far away easily.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can talk to a relative who lives in another country.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel close to their loved ones even when they are apart.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that social media is good for keeping relationships strong.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, social media has a negative impact on people's mental health.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because spending too much time online can make people feel bad about themselves.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, seeing perfect pictures from others can make users feel sad.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people might compare their lives and feel low.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that too much use is a problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with the view that staying connected on social media 24 hours a day has benefits.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because it helps people keep strong relationships and also provides a platform for sharing information.",
+            "level": "a2_b1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "cons": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Social media platforms are a big part of modern life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the view that staying connected on social media 24 hours a day has drawbacks.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, social media helps people keep in touch with friends and family.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can share updates and photos with others who live far away.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can see what their old classmates are doing in different cities.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they feel closer to their friends even when they are apart.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that social media is good for keeping connections alive.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, social media has a negative effect on people's mental health.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because spending too much time online can make people feel bad about themselves.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, seeing perfect lives of others can make a person feel sad or inadequate.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people might spend hours scrolling and feel tired or stressed.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that it is a risk to our minds.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the view that staying connected on social media 24 hours a day has drawbacks.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because it helps people keep in touch with others and can negatively affect mental health.",
+            "level": "a2_b1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "platforms",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "connectivity",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "individuals",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "drawback",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "platforms",
+            "enGloss": "digital sites",
+            "viGloss": "nền tảng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "connectivity",
+            "enGloss": "links between people",
+            "viGloss": "sự kết nối",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "individuals",
+            "enGloss": "people",
+            "viGloss": "cá nhân",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "drawback",
+            "enGloss": "negative point",
+            "viGloss": "điểm bất lợi",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "anxiety",
+            "enGloss": "feeling of worry",
+            "viGloss": "sự lo lắng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "self-esteem",
+            "enGloss": "belief in oneself",
+            "viGloss": "lòng tự trọng",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "pros",
+          "label": "Version 1: PROS",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Media and communication far outweigh the drawbacks because ____.",
+          "point1": "The first body paragraph discusses the positive aspect of social media, focusing on its role in improving global connectivity and maintaining personal relationships.",
+          "point2": "The second body paragraph discusses the negative aspect of social media, focusing on the risk of mental health problems caused by constant comparison.",
+          "sampleVariantId": "pros",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "cons",
+          "label": "Version 2: CONS",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Media and communication are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive role of social media in maintaining connections and relationships.",
+          "point2": "The second body paragraph focuses on the negative effects, such as the risk to mental health and self-esteem, from excessive social media use.",
+          "sampleVariantId": "cons",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "pros": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Social media platforms have become a major part of modern life, changing how people communicate and share information.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that staying connected on social media 24 hours a day has benefits.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, social media is a powerful tool for connecting people globally.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these platforms allow individuals to keep in touch with friends and family regardless of distance.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, people can use it to stay updated with relatives living in different countries.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, it helps maintain strong personal relationships across long distances.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that social media greatly improves global connectivity.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are negative aspects, such as the risk of mental health problems.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant comparison with others can make people feel bad about themselves.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that users might compare their real lives to the perfect images posted online.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that this constant comparison can lead to feelings of anxiety and low self-esteem.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that this drawback requires careful management.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with the view that staying connected on social media 24 hours a day has benefits.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because it significantly improves global connectivity and provides a platform for maintaining personal relationships across distances.",
+            "level": "b2",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "cons": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Social media platforms have become a major part of modern life, changing how people communicate and share information.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the view that staying connected on social media 24 hours a day has drawbacks.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, social media can help people stay connected with friends and family across long distances.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these platforms allow people to maintain relationships even when they live far apart.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student can keep in touch with relatives who moved to another country using video calls.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel less isolated and can share important life moments instantly.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that social media is a useful tool for maintaining social ties.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are clear drawbacks to spending too much time on social media.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant use can negatively affect mental health and self-esteem.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that comparing one's life to others online often causes feelings of inadequacy.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that users might develop anxiety or feel pressure to appear perfect.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that excessive use poses a serious risk to well-being.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the view that staying connected on social media 24 hours a day has drawbacks.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because social media is a useful tool for maintaining social ties, yet excessive use poses a serious risk to well-being.",
+            "level": "b2",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "unparalleled",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "connectivity",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "induce",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "inadequacy",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "unparalleled",
+            "enGloss": "having no equal; unmatched",
+            "viGloss": "vô song",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "connectivity",
+            "enGloss": "the state of being connected",
+            "viGloss": "sự kết nối",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "induce",
+            "enGloss": "to bring about; provoke",
+            "viGloss": "gây ra",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "inadequacy",
+            "enGloss": "the state of being not good enough",
+            "viGloss": "sự không đủ năng lực",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "curated",
+            "enGloss": "carefully selected or organized",
+            "viGloss": "được chọn lọc",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "facilitate",
+            "enGloss": "to make easier or help progress",
+            "viGloss": "tạo điều kiện",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "facilitate development",
+            "enGloss": "To ease bottlenecks and make growth smoother, faster, and more accessible.",
+            "viGloss": "Cụm từ học thuật: tạo điều kiện thuận lợi cho sự phát triển"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "pros",
+          "label": "Version 1: PROS",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Media and communication far outweigh the drawbacks because ____.",
+          "point1": "The essay successfully addresses the prompt by presenting a balanced view of social media's pros and cons, maintaining a clear focus on the advantages in the first body paragraph and the disadvantages in the second.",
+          "point2": "The structure adheres strictly to the required format: Introduction (three sentences), Body 1 (five sentences, PEEL), Body 2 (five sentences, PEEL), and Conclusion (one sentence). The language used is precise and complex, suitable for a C1 learner, while avoiding C2 vocabulary and prohibited linking words.",
+          "sampleVariantId": "pros",
+          "sampleSourceStatus": "fallback_or_generated"
+        },
+        {
+          "variantId": "cons",
+          "label": "Version 2: CONS",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Media and communication are more concerning because ____.",
+          "point1": "The essay successfully structures the argument by dedicating the first body paragraph to a positive aspect (connectivity) and the second body paragraph to a negative aspect (psychological drawbacks). The use of specific linking phrases (In other words, For instance, As a result, Hence, etc.) maintains a formal, academic tone.",
+          "point2": "The vocabulary selection is precise and appropriate for a C1 level, avoiding overly complex C2 terms while maintaining academic rigor. The adherence to all structural constraints, including sentence counts and specific starting phrases, is perfect.",
+          "sampleVariantId": "cons",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "pros": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Social media platforms have fundamentally altered how individuals interact and access information in the modern era.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that staying connected on social media 24 hours a day has benefits.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these platforms offer unparalleled opportunities for global connectivity and knowledge sharing.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they allow people to maintain relationships and access diverse information streams effortlessly.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, professional groups on these sites facilitate collaboration among experts worldwide.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals can build valuable networks and acquire specialized knowledge.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that social media significantly enhances personal and professional development.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the overuse of social media presents significant drawbacks concerning mental well-being.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant comparison with curated online lives can induce feelings of inadequacy.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that excessive scrolling often correlates with increased anxiety levels among users.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people may neglect real-world interactions, leading to social isolation.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the negative impact on mental health is a serious concern.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with the view that staying connected on social media 24 hours a day has benefits.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because these platforms facilitate global connectivity and knowledge sharing, while also providing avenues for maintaining relationships and professional development.",
+            "level": "c1",
+            "sampleVariantId": "pros",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ],
+        "cons": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Social media platforms have fundamentally altered the way people communicate and interact in modern society.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the view that staying connected on social media 24 hours a day has drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these platforms offer unparalleled opportunities for global connectivity.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they allow individuals to maintain relationships across vast geographical distances.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student can connect with peers studying abroad, facilitating academic collaboration.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, knowledge sharing becomes more accessible, fostering a sense of global community.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that social media can significantly enhance personal and professional networks.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the constant use of social media presents significant psychological drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that users are constantly exposed to curated, idealized versions of other people's lives.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that individuals may compare their reality to these unattainable online standards.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that feelings of inadequacy and anxiety can proliferate among heavy users.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that excessive use poses a serious mental health risk.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the view that staying connected on social media 24 hours a day has drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because these platforms facilitate global connectivity and enhance professional networks, while simultaneously exposing users to idealized content that can trigger feelings of inadequacy.",
+            "level": "c1",
+            "sampleVariantId": "cons",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:02.962744+00:00"
+  }
+}

@@ -1,0 +1,832 @@
+  1. abstract concept                    | vi: khái niệm trừu tượng
+  2. academic achievement                | vi: thành tích học tập
+  3. academic career                     | vi: sự nghiệp học tập
+  4. academic circles                    | vi: giới học thuật
+  5. academic community                  | vi: cộng đồng học thuật
+  6. academic discipline                 | vi: kỷ luật học thuật
+  7. academic discourse                  | vi: diễn ngôn học thuật
+  8. academic institution                | vi: cơ quan học thuật
+  9. academic life                       | vi: đời sống học tập
+ 10. academic performance                | vi: kết quả học tập
+ 11. academic research                   | vi: nghiên cứu học thuật
+ 12. academic skills                     | vi: kỹ năng học tập
+ 13. academic study                      | vi: nghiên cứu học thuật
+ 14. academic success                    | vi: thành công trong học tập
+ 15. academic work                       | vi: công việc học tập
+ 16. academic world                      | vi: thế giới học thuật
+ 17. academic writing                    | vi: viết học thuật
+ 18. accept responsibility               | vi: chấp nhận trách nhiệm
+ 19. acceptable behaviour                | vi: hành vi chấp nhận được
+ 20. accurate assessment                 | vi: đánh giá chính xác
+ 21. accurate description                | vi: mô tả chính xác
+ 22. accurate information                | vi: thông tin chính xác
+ 23. accurate measurement                | vi: đo lường chính xác
+ 24. achieve goal                        | vi: đạt được mục tiêu
+ 25. achieve objective                   | vi: đạt được mục tiêu
+ 26. achieve outcome                     | vi: đạt được kết quả
+ 27. acquire knowledge                   | vi: tiếp thu kiến thức
+ 28. active involvement                  | vi: sự tham gia tích cực
+ 29. active participant                  | vi: người tham gia tích cực
+ 30. active participation                | vi: tham gia tích cực
+ 31. active role                         | vi: vai trò tích cực
+ 32. actively involved                   | vi: tích cực tham gia
+ 33. acutely aware                       | vi: nhận thức sâu sắc
+ 34. add information                     | vi: thêm thông tin
+ 35. additional cost                     | vi: chi phí bổ sung
+ 36. additional information              | vi: thông tin bổ sung
+ 37. additional problem                  | vi: vấn đề bổ sung
+ 38. additional resources                | vi: tài nguyên bổ sung
+ 39. additional support                  | vi: hỗ trợ bổ sung
+ 40. administrative practices            | vi: thực hành hành chính
+ 41. adopt procedure                     | vi: áp dụng thủ tục
+ 42. advanced economy                    | vi: nền kinh tế tiên tiến
+ 43. advanced technology                 | vi: công nghệ tiên tiến
+ 44. adverse reaction                    | vi: phản ứng bất lợi
+ 45. affect development                  | vi: ảnh hưởng đến sự phát triển
+ 46. affect outcome                      | vi: ảnh hưởng đến kết quả
+ 47. allocate resources                  | vi: phân bổ nguồn lực
+ 48. allow access                        | vi: cho phép truy cập
+ 49. alternative approach                | vi: cách tiếp cận thay thế
+ 50. alternative explanation             | vi: lời giải thích thay thế
+ 51. alternative form                    | vi: hình thức thay thế
+ 52. alternative interpretation          | vi: giải thích thay thế
+ 53. alternative method                  | vi: phương pháp thay thế
+ 54. alternative solution                | vi: giải pháp thay thế
+ 55. alternative source                  | vi: nguồn thay thế
+ 56. alternative view                    | vi: quan điểm thay thế
+ 57. ample evidence                      | vi: bằng chứng phong phú
+ 58. annual meeting                      | vi: cuộc họp thường niên
+ 59. annual report                       | vi: báo cáo thường niên
+ 60. annual review                       | vi: đánh giá hàng năm
+ 61. apply equally                       | vi: áp dụng như nhau
+ 62. apply method                        | vi: áp dụng phương pháp
+ 63. appropriate action                  | vi: hành động thích hợp
+ 64. appropriate behaviour               | vi: hành vi thích hợp
+ 65. appropriate data                    | vi: dữ liệu thích hợp
+ 66. appropriate language                | vi: ngôn ngữ thích hợp
+ 67. appropriate skills                  | vi: kỹ năng phù hợp
+ 68. appropriate treatment               | vi: điều trị thích hợp
+ 69. armed conflict                      | vi: xung đột vũ trang
+ 70. artificial intelligence             | vi: trí tuệ nhân tạo
+ 71. assess impact                       | vi: đánh giá tác động
+ 72. assessment process                  | vi: quá trình đánh giá
+ 73. associated factors                  | vi: yếu tố liên quan
+ 74. assume responsibility               | vi: chịu trách nhiệm
+ 75. assume role                         | vi: đảm nhận vai trò
+ 76. atomic energy                       | vi: năng lượng nguyên tử
+ 77. available data                      | vi: dữ liệu có sẵn
+ 78. available evidence                  | vi: bằng chứng sẵn có
+ 79. available information               | vi: thông tin có sẵn
+ 80. available resources                 | vi: nguồn lực sẵn có
+ 81. average score                       | vi: điểm trung bình
+ 82. background knowledge                | vi: kiến thức nền tảng
+ 83. basic assumption                    | vi: giả định cơ bản
+ 84. basic component                     | vi: thành phần cơ bản
+ 85. basic concept                       | vi: khái niệm cơ bản
+ 86. basic function                      | vi: chức năng cơ bản
+ 87. basic research                      | vi: nghiên cứu cơ bản
+ 88. basic structure                     | vi: cấu trúc cơ bản
+ 89. become apparent                     | vi: trở nên rõ ràng
+ 90. become evident                      | vi: trở nên rõ ràng
+ 91. become focus                        | vi: trở thành trọng tâm
+ 92. become independent                  | vi: trở nên độc lập
+ 93. become involved                     | vi: tham gia
+ 94. become widespread                   | vi: trở nên phổ biến
+ 95. begin process                       | vi: bắt đầu quá trình
+ 96. behave differently                  | vi: cư xử khác đi
+ 97. beneficial effect                   | vi: tác dụng có lợi
+ 98. binary system                       | vi: hệ nhị phân
+ 99. biological science                  | vi: khoa học sinh học
+100. brief account                       | vi: tài khoản ngắn gọn
+101. brief discussion                    | vi: thảo luận ngắn gọn
+102. brief history                       | vi: lịch sử tóm tắt
+103. brief overview                      | vi: tổng quan ngắn gọn
+104. brief period                        | vi: thời gian ngắn
+105. brief review                        | vi: đánh giá ngắn gọn
+106. brief time                          | vi: thời gian ngắn
+107. briefly discuss                     | vi: thảo luận ngắn gọn
+108. broad agreement                     | vi: thỏa thuận rộng rãi
+109. broad category                      | vi: danh mục rộng
+110. broad definition                    | vi: định nghĩa rộng
+111. broad range                         | vi: phạm vi rộng
+112. broader context                     | vi: bối cảnh rộng hơn
+113. business sector                     | vi: lĩnh vực kinh doanh
+114. business transaction                | vi: giao dịch kinh doanh
+115. capitalist economy                  | vi: kinh tế tư bản chủ nghĩa
+116. capitalist society                  | vi: xã hội tư bản
+117. capitalist system                   | vi: hệ thống tư bản chủ nghĩa
+118. capitalist world                    | vi: thế giới tư bản
+119. career development                  | vi: phát triển nghề nghiệp
+120. career opportunity                  | vi: cơ hội nghề nghiệp
+121. careful analysis                    | vi: phân tích cẩn thận
+122. careful attention                   | vi: chú ý cẩn thận
+123. careful consideration               | vi: cân nhắc cẩn thận
+124. carefully controlled                | vi: được kiểm soát cẩn thận
+125. carry out research                  | vi: thực hiện nghiên cứu
+126. carry out task                      | vi: thực hiện nhiệm vụ
+127. causal relationship                 | vi: mối quan hệ nhân quả
+128. cause consequences                  | vi: gây ra hậu quả
+129. cause stress                        | vi: gây căng thẳng
+130. central characteristics             | vi: đặc điểm trung tâm
+131. central control                     | vi: điều khiển trung tâm
+132. central focus                       | vi: trọng tâm trung tâm
+133. central government                  | vi: chính quyền trung ương
+134. central problem                     | vi: vấn đề trung tâm
+135. central role                        | vi: vai trò trung tâm
+136. change attitude                     | vi: thay đổi thái độ
+137. change constantly                   | vi: thay đổi liên tục
+138. change dramatically                 | vi: thay đổi đáng kể
+139. changing attitudes                  | vi: thay đổi thái độ
+140. changing nature                     | vi: thay đổi bản chất
+141. changing needs                      | vi: nhu cầu thay đổi
+142. changing world                      | vi: thế giới đang thay đổi
+143. characteristic feature              | vi: tính năng đặc trưng
+144. chemical reaction                   | vi: phản ứng hóa học
+145. civil society                       | vi: xã hội dân sự
+146. class consciousness                 | vi: ý thức giai cấp
+147. classic example                     | vi: ví dụ cổ điển
+148. classic study                       | vi: nghiên cứu cổ điển
+149. classic work                        | vi: tác phẩm kinh điển
+150. clear boundary                      | vi: ranh giới rõ ràng
+151. clear distinction                   | vi: sự phân biệt rõ ràng
+152. clear evidence                      | vi: bằng chứng rõ ràng
+153. clear focus                         | vi: tập trung rõ ràng
+154. clear relationship                  | vi: mối quan hệ rõ ràng
+155. clear structure                     | vi: cấu trúc rõ ràng
+156. clearly defined                     | vi: được xác định rõ ràng
+157. clearly demonstrated                | vi: chứng minh rõ ràng
+158. clearly evident                     | vi: rõ ràng
+159. clearly important                   | vi: rõ ràng là quan trọng
+160. clearly understand                  | vi: hiểu rõ ràng
+161. climate change                      | vi: biến đổi khí hậu
+162. close proximity                     | vi: sự gần gũi
+163. close relationship                  | vi: mối quan hệ thân thiết
+164. close scrutiny                      | vi: sự giám sát chặt chẽ
+165. closely connected                   | vi: kết nối chặt chẽ
+166. closer examination                  | vi: kiểm tra kỹ hơn
+167. cognitive ability                   | vi: khả năng nhận thức
+168. cognitive development               | vi: phát triển nhận thức
+169. cognitive skills                    | vi: kỹ năng nhận thức
+170. collaborative learning              | vi: học tập hợp tác
+171. collect data                        | vi: thu thập dữ liệu
+172. collective identity                 | vi: bản sắc tập thể
+173. collective memory                   | vi: ký ức tập thể
+174. combined effect                     | vi: hiệu ứng kết hợp
+175. come into conflict                  | vi: xảy ra xung đột
+176. commercial activity                 | vi: hoạt động thương mại
+177. commercial transaction              | vi: giao dịch thương mại
+178. commit crime                        | vi: phạm tội
+179. commit offence                      | vi: phạm tội
+180. common characteristic               | vi: đặc điểm chung
+181. common culture                      | vi: văn hóa chung
+182. common feature                      | vi: đặc điểm chung
+183. common goal                         | vi: mục tiêu chung
+184. commonly accepted                   | vi: thường được chấp nhận
+185. commonly called                     | vi: thường được gọi là
+186. communicate effectively             | vi: giao tiếp hiệu quả
+187. comparative research                | vi: nghiên cứu so sánh
+188. compelling argument                 | vi: lập luận thuyết phục
+189. compelling evidence                 | vi: bằng chứng thuyết phục
+190. compelling reason                   | vi: lý do thuyết phục
+191. competitive market                  | vi: thị trường cạnh tranh
+192. competitive pressure                | vi: áp lực cạnh tranh
+193. complex area                        | vi: khu phức hợp
+194. complex interaction                 | vi: tương tác phức tạp
+195. complex issue                       | vi: vấn đề phức tạp
+196. complex pattern                     | vi: mô hình phức tạp
+197. complex process                     | vi: quá trình phức tạp
+198. complex structure                   | vi: cấu trúc phức tạp
+199. complex system                      | vi: hệ thống phức tạp
+200. comprehensive account               | vi: tài khoản toàn diện
+201. comprehensive approach              | vi: cách tiếp cận toàn diện
+202. comprehensive overview              | vi: tổng quan toàn diện
+203. comprehensive review                | vi: đánh giá toàn diện
+204. comprehensive system                | vi: hệ thống toàn diện
+205. conceptual framework                | vi: khung khái niệm
+206. concerted effort                    | vi: nỗ lực phối hợp
+207. concluding probability              | vi: xác suất kết luận
+208. concluding remarks                  | vi: nhận xét kết luận
+209. conduct analysis                    | vi: tiến hành phân tích
+210. conduct interview                   | vi: tiến hành phỏng vấn
+211. conduct research                    | vi: tiến hành nghiên cứu
+212. conduct study                       | vi: tiến hành nghiên cứu
+213. conflict resolution                 | vi: giải quyết xung đột
+214. conflicting interests               | vi: xung đột lợi ích
+215. consider appropriate                | vi: xem xét thích hợp
+216. consider impact                     | vi: xem xét tác động
+217. consider role                       | vi: xem xét vai trò
+218. considerable attention              | vi: sự chú ý đáng kể
+219. considerable degree                 | vi: mức độ đáng kể
+220. considerable effort                 | vi: nỗ lực đáng kể
+221. considerable influence              | vi: ảnh hưởng đáng kể
+222. considerable interest               | vi: lãi suất đáng kể
+223. considerable support                | vi: hỗ trợ đáng kể
+224. consistent pattern                  | vi: mô hình nhất quán
+225. consistent results                  | vi: kết quả nhất quán
+226. constant rate                       | vi: tỷ lệ không đổi
+227. constituent parts                   | vi: bộ phận cấu thành
+228. contemporary debate                 | vi: cuộc tranh luận đương đại
+229. contemporary issue                  | vi: vấn đề đương đại
+230. contemporary life                   | vi: cuộc sống đương đại
+231. contemporary society                | vi: xã hội đương đại
+232. contextual factors                  | vi: yếu tố bối cảnh
+233. continued growth                    | vi: tiếp tục tăng trưởng
+234. continuous process                  | vi: quá trình liên tục
+235. contribute significantly            | vi: đóng góp đáng kể
+236. contribute to development           | vi: góp phần phát triển
+237. convey information                  | vi: truyền tải thông tin
+238. convey meaning                      | vi: truyền đạt ý nghĩa
+239. convey message                      | vi: truyền tải thông điệp
+240. coping strategy                     | vi: chiến lược đối phó
+241. core skills                         | vi: kỹ năng cốt lõi
+242. cover range                         | vi: phạm vi bao phủ
+243. cover topic                         | vi: chủ đề bìa
+244. create conditions                   | vi: tạo điều kiện
+245. create environment                  | vi: tạo môi trường
+246. create impression                   | vi: tạo ấn tượng
+247. create opportunities                | vi: tạo cơ hội
+248. create opportunity                  | vi: tạo cơ hội
+249. create problems                     | vi: tạo ra vấn đề
+250. creative process                    | vi: quá trình sáng tạo
+251. creative thinking                   | vi: tư duy sáng tạo
+252. creative work                       | vi: công việc sáng tạo
+253. critical analysis                   | vi: phân tích quan trọng
+254. critical approach                   | vi: cách tiếp cận quan trọng
+255. critical attention                  | vi: sự chú ý quan trọng
+256. critical essay                      | vi: tiểu luận phê phán
+257. critical factor                     | vi: yếu tố quan trọng
+258. critical inquiry                    | vi: cuộc điều tra quan trọng
+259. critical perspective                | vi: quan điểm phê phán
+260. critical reflection                 | vi: phản ánh quan trọng
+261. critical scrutiny                   | vi: sự xem xét kỹ lưỡng
+262. critical thinking                   | vi: tư duy phản biện
+263. critical writing                    | vi: viết phê bình
+264. crucial difference                  | vi: sự khác biệt quan trọng
+265. crucial factor                      | vi: yếu tố quyết định
+266. crucial importance                  | vi: tầm quan trọng cốt yếu
+267. crucial part                        | vi: phần quan trọng
+268. cultural activity                   | vi: hoạt động văn hóa
+269. cultural aspect                     | vi: khía cạnh văn hóa
+270. cultural attitudes                  | vi: thái độ văn hóa
+271. cultural background                 | vi: nền văn hóa
+272. cultural context                    | vi: bối cảnh văn hóa
+273. cultural diversity                  | vi: đa dạng văn hóa
+274. cultural heritage                   | vi: di sản văn hóa
+275. cultural history                    | vi: lịch sử văn hóa
+276. cultural identity                   | vi: bản sắc văn hóa
+277. cultural influence                  | vi: ảnh hưởng văn hóa
+278. cultural life                       | vi: đời sống văn hóa
+279. cultural perspective                | vi: quan điểm văn hóa
+280. cultural practice                   | vi: thực hành văn hóa
+281. cultural values                     | vi: giá trị văn hóa
+282. current climate                     | vi: khí hậu hiện tại
+283. current status                      | vi: tình trạng hiện tại
+284. current technology                  | vi: công nghệ hiện tại
+285. daily living                        | vi: cuộc sống hàng ngày
+286. data gathering                      | vi: thu thập dữ liệu
+287. deep understanding                  | vi: hiểu biết sâu sắc
+288. defining characteristic             | vi: đặc điểm xác định
+289. deliberate attempt                  | vi: nỗ lực có chủ ý
+290. democratic society                  | vi: xã hội dân chủ
+291. demographic change                  | vi: thay đổi nhân khẩu học
+292. demographic characteristics         | vi: đặc điểm nhân khẩu học
+293. demographic factor                  | vi: yếu tố nhân khẩu học
+294. demonstrate competence              | vi: thể hiện năng lực
+295. deny access                         | vi: từ chối quyền truy cập
+296. dependent variable                  | vi: biến phụ thuộc
+297. describe procedure                  | vi: mô tả thủ tục
+298. desired outcome                     | vi: kết quả mong muốn
+299. developmental process               | vi: quá trình phát triển
+300. diagnostic test                     | vi: xét nghiệm chẩn đoán
+301. differ significantly                | vi: khác biệt đáng kể
+302. digital information                 | vi: thông tin số
+303. digital media                       | vi: phương tiện truyền thông kỹ thuật số
+304. digital technology                  | vi: công nghệ số
+305. direct access                       | vi: truy cập trực tiếp
+306. direct communication                | vi: giao tiếp trực tiếp
+307. direct consequences                 | vi: hậu quả trực tiếp
+308. direct impact                       | vi: tác động trực tiếp
+309. directly connected                  | vi: kết nối trực tiếp
+310. directly responsible                | vi: chịu trách nhiệm trực tiếp
+311. discuss issue                       | vi: thảo luận vấn đề
+312. discuss topic                       | vi: thảo luận chủ đề
+313. disposable income                   | vi: thu nhập khả dụng
+314. distinct group                      | vi: nhóm riêng biệt
+315. diverse background                  | vi: nền đa dạng
+316. diverse group                       | vi: nhóm đa dạng
+317. diverse range                       | vi: phạm vi đa dạng
+318. documentary evidence                | vi: bằng chứng tài liệu
+319. domestic market                     | vi: thị trường nội địa
+320. domestic sphere                     | vi: lĩnh vực trong nước
+321. domestic violence                   | vi: bạo lực gia đình
+322. dominant culture                    | vi: văn hóa thống trị
+323. dominant discourse                  | vi: diễn ngôn chiếm ưu thế
+324. dominant group                      | vi: nhóm thống trị
+325. draw attention                      | vi: thu hút sự chú ý
+326. driving force                       | vi: động lực
+327. dynamic equilibrium                 | vi: trạng thái cân bằng động
+328. dynamic nature                      | vi: tính chất năng động
+329. earlier discussion                  | vi: cuộc thảo luận trước đó
+330. earlier times                       | vi: lần trước
+331. easily accessible                   | vi: dễ dàng truy cập
+332. easily identified                   | vi: dễ dàng xác định
+333. easy access                         | vi: truy cập dễ dàng
+334. economic activity                   | vi: hoạt động kinh tế
+335. economic affairs                    | vi: vấn đề kinh tế
+336. economic analysis                   | vi: phân tích kinh tế
+337. economic benefits                   | vi: lợi ích kinh tế
+338. economic consequences               | vi: hậu quả kinh tế
+339. economic context                    | vi: bối cảnh kinh tế
+340. economic forces                     | vi: lực lượng kinh tế
+341. economic goal                       | vi: mục tiêu kinh tế
+342. economic growth                     | vi: tăng trưởng kinh tế
+343. economic inequality                 | vi: bất bình đẳng kinh tế
+344. economic integration                | vi: hội nhập kinh tế
+345. economic interests                  | vi: lợi ích kinh tế
+346. economic power                      | vi: sức mạnh kinh tế
+347. economic prosperity                 | vi: thịnh vượng kinh tế
+348. economic relationships              | vi: quan hệ kinh tế
+349. economic resources                  | vi: nguồn lực kinh tế
+350. economic sector                     | vi: lĩnh vực kinh tế
+351. economic stability                  | vi: ổn định kinh tế
+352. economic status                     | vi: tình trạng kinh tế
+353. economic structure                  | vi: cơ cấu kinh tế
+354. economic success                    | vi: thành công kinh tế
+355. economic welfare                    | vi: phúc lợi kinh tế
+356. educational institution             | vi: cơ sở giáo dục
+357. educational opportunity             | vi: cơ hội giáo dục
+358. educational policy                  | vi: chính sách giáo dục
+359. educational programme               | vi: chương trình giáo dục
+360. educational qualification           | vi: trình độ học vấn
+361. effective communication             | vi: giao tiếp hiệu quả
+362. effective implementation            | vi: thực hiện hiệu quả
+363. effective intervention              | vi: can thiệp hiệu quả
+364. effective management                | vi: quản lý hiệu quả
+365. effective participation             | vi: tham gia hiệu quả
+366. electronic access                   | vi: truy cập điện tử
+367. electronic communication            | vi: truyền thông điện tử
+368. electronic media                    | vi: phương tiện truyền thông điện tử
+369. electronic resources                | vi: tài nguyên điện tử
+370. emotional impact                    | vi: tác động cảm xúc
+371. emotional intelligence              | vi: trí tuệ cảm xúc
+372. emotional reaction                  | vi: phản ứng cảm xúc
+373. emotional response                  | vi: phản ứng cảm xúc
+374. emotional support                   | vi: hỗ trợ tinh thần
+375. empirical investigation             | vi: điều tra thực nghiệm
+376. empirical support                   | vi: hỗ trợ thực nghiệm
+377. employment opportunities            | vi: cơ hội việc làm
+378. encounter difficulties              | vi: gặp khó khăn
+379. encounter problems                  | vi: gặp phải vấn đề
+380. encourage development               | vi: khuyến khích phát triển
+381. engage in activity                  | vi: tham gia vào hoạt động
+382. enhance learning                    | vi: tăng cường học tập
+383. enhance performance                 | vi: nâng cao hiệu suất
+384. entire range                        | vi: toàn bộ phạm vi
+385. entirely clear                      | vi: hoàn toàn rõ ràng
+386. entirely different                  | vi: hoàn toàn khác
+387. environmental changes               | vi: thay đổi môi trường
+388. environmental concern               | vi: mối quan tâm về môi trường
+389. environmental consequences          | vi: hậu quả môi trường
+390. environmental damage                | vi: thiệt hại môi trường
+391. environmental degradation           | vi: suy thoái môi trường
+392. environmental impact                | vi: tác động môi trường
+393. environmental pollution             | vi: ô nhiễm môi trường
+394. environmental protection            | vi: bảo vệ môi trường
+395. equal status                        | vi: tình trạng bình đẳng
+396. equally important                   | vi: quan trọng như nhau
+397. essential component                 | vi: thành phần thiết yếu
+398. essential element                   | vi: yếu tố thiết yếu
+399. essential feature                   | vi: tính năng thiết yếu
+400. essential function                  | vi: chức năng thiết yếu
+401. established practice                | vi: thực hành đã được thiết lập
+402. ethical consideration               | vi: xem xét đạo đức
+403. ethical dilemma                     | vi: vấn đề nan giải về đạo đức
+404. ethical issue                       | vi: vấn đề đạo đức
+405. ethical principle                   | vi: nguyên tắc đạo đức
+406. ethnic community                    | vi: cộng đồng dân tộc
+407. ethnic diversity                    | vi: đa dạng sắc tộc
+408. ethnic group                        | vi: nhóm dân tộc
+409. ethnic identity                     | vi: bản sắc dân tộc
+410. exercise authority                  | vi: quyền thực thi
+411. expand rapidly                      | vi: mở rộng nhanh chóng
+412. experience difficulties             | vi: trải qua khó khăn
+413. experience problems                 | vi: gặp vấn đề
+414. experiential learning               | vi: học tập trải nghiệm
+415. experimental design                 | vi: thiết kế thử nghiệm
+416. experimental results                | vi: kết quả thí nghiệm
+417. explanatory power                   | vi: sức mạnh giải thích
+418. explore further                     | vi: khám phá thêm
+419. explore issue                       | vi: tìm hiểu vấn đề
+420. external forces                     | vi: ngoại lực
+421. external threat                     | vi: mối đe dọa bên ngoài
+422. extract data                        | vi: trích xuất dữ liệu
+423. extract information                 | vi: trích xuất thông tin
+424. extremely powerful                  | vi: cực kỳ mạnh mẽ
+425. extremely useful                    | vi: cực kỳ hữu ích
+426. extremely valuable                  | vi: cực kỳ có giá trị
+427. face challenge                      | vi: đối mặt với thử thách
+428. face difficulties                   | vi: đối mặt với khó khăn
+429. face dilemma                        | vi: đối mặt với vấn đề nan giải
+430. face discrimination                 | vi: đối mặt với sự phân biệt đối xử
+431. facial expression                   | vi: nét mặt
+432. facilitate development              | vi: tạo điều kiện phát triển
+433. fair treatment                      | vi: đối xử công bằng
+434. fairly clear                        | vi: khá rõ ràng
+435. fairly common                       | vi: khá phổ biến
+436. federal government                  | vi: chính phủ liên bang
+437. final decision                      | vi: quyết định cuối cùng
+438. final outcome                       | vi: kết quả cuối cùng
+439. final product                       | vi: sản phẩm cuối cùng
+440. final result                        | vi: kết quả cuối cùng
+441. financial affairs                   | vi: vấn đề tài chính
+442. financial assistance                | vi: hỗ trợ tài chính
+443. financial institution               | vi: tổ chức tài chính
+444. financial management                | vi: quản lý tài chính
+445. financial market                    | vi: thị trường tài chính
+446. find evidence                       | vi: tìm bằng chứng
+447. find information                    | vi: tìm thông tin
+448. finite number                       | vi: số hữu hạn
+449. flexible approach                   | vi: cách tiếp cận linh hoạt
+450. focus attention                     | vi: tập trung chú ý
+451. follow instructions                 | vi: làm theo hướng dẫn
+452. follow procedure                    | vi: làm theo thủ tục
+453. foreign currency                    | vi: ngoại tệ
+454. foster self-efficacy                | vi: nuôi dưỡng năng lực bản thân
+455. free access                         | vi: truy cập miễn phí
+456. free movement                       | vi: phong trào tự do
+457. freely available                    | vi: có sẵn miễn phí
+458. fulfil obligation                   | vi: thực hiện nghĩa vụ
+459. full employment                     | vi: việc làm đầy đủ
+460. full participation                  | vi: tham gia đầy đủ
+461. full potential                      | vi: đầy đủ tiềm năng
+462. fully informed                      | vi: thông tin đầy đủ
+463. functional requirement              | vi: yêu cầu chức năng
+464. fundamental aspect                  | vi: khía cạnh cơ bản
+465. fundamental assumption              | vi: giả định cơ bản
+466. fundamental change                  | vi: thay đổi căn bản
+467. fundamentally different             | vi: về cơ bản là khác nhau
+468. further explanation                 | vi: giải thích thêm
+469. future prospects                    | vi: triển vọng tương lai
+470. gender equality                     | vi: bình đẳng giới
+471. geographic distribution             | vi: phân bố địa lý
+472. give access                         | vi: cấp quyền truy cập
+473. give consent                        | vi: đồng ý
+474. give consideration                  | vi: cân nhắc
+475. give emphasis                       | vi: nhấn mạnh
+476. give explanation                    | vi: đưa ra lời giải thích
+477. give feedback                       | vi: đưa ra phản hồi
+478. give guidance                       | vi: đưa ra hướng dẫn
+479. global capitalism                   | vi: chủ nghĩa tư bản toàn cầu
+480. global context                      | vi: bối cảnh toàn cầu
+481. global culture                      | vi: văn hóa toàn cầu
+482. global economy                      | vi: nền kinh tế toàn cầu
+483. global marketplace                  | vi: thị trường toàn cầu
+484. global media                        | vi: truyền thông toàn cầu
+485. global perspective                  | vi: quan điểm toàn cầu
+486. global trade                        | vi: thương mại toàn cầu
+487. global village                      | vi: làng toàn cầu
+488. government control                  | vi: kiểm soát của chính phủ
+489. government department               | vi: cơ quan chính phủ
+490. government expenditure              | vi: chi tiêu chính phủ
+491. graphical representation            | vi: biểu diễn đồ họa
+492. great diversity                     | vi: sự đa dạng lớn
+493. great majority                      | vi: đại đa số
+494. great potential                     | vi: tiềm năng lớn
+495. greater autonomy                    | vi: quyền tự chủ lớn hơn
+496. greater awareness                   | vi: nhận thức cao hơn
+497. greater equality                    | vi: bình đẳng hơn
+498. greater flexibility                 | vi: tính linh hoạt cao hơn
+499. greatly enhance                     | vi: tăng cường đáng kể
+500. greatly reduced                     | vi: giảm đi rất nhiều
+501. growing awareness                   | vi: nhận thức ngày càng tăng
+502. have limitations                    | vi: có những hạn chế
+503. have obligation                     | vi: có nghĩa vụ
+504. have potential                      | vi: có tiềm năng
+505. high concentration                  | vi: nồng độ cao
+506. high expectations                   | vi: kỳ vọng cao
+507. high incidence                      | vi: tỷ lệ mắc cao
+508. high probability                    | vi: xác suất cao
+509. high score                          | vi: điểm cao
+510. high status                         | vi: địa vị cao
+511. high unemployment                   | vi: tỷ lệ thất nghiệp cao
+512. highly dependent                    | vi: phụ thuộc nhiều
+513. highly efficient                    | vi: hiệu quả cao
+514. highly significant                  | vi: rất có ý nghĩa
+515. highly skilled                      | vi: tay nghề cao
+516. highly sophisticated                | vi: rất tinh vi
+517. highly successful                   | vi: rất thành công
+518. historical account                  | vi: tài khoản lịch sử
+519. historical context                  | vi: bối cảnh lịch sử
+520. historical knowledge                | vi: kiến thức lịch sử
+521. historical perspective              | vi: quan điểm lịch sử
+522. historical writing                  | vi: viết lịch sử
+523. holistic approach                   | vi: cách tiếp cận toàn diện
+524. human activity                      | vi: hoạt động của con người
+525. human behaviour                     | vi: hành vi của con người
+526. human interaction                   | vi: sự tương tác của con người
+527. human society                       | vi: xã hội loài người
+528. human species                       | vi: loài người
+529. ideally suited                      | vi: lý tưởng phù hợp
+530. immediate environment               | vi: môi trường ngay lập tức
+531. immediately apparent                | vi: rõ ràng ngay lập tức
+532. immediately following               | vi: ngay sau đây
+533. imported goods                      | vi: hàng nhập khẩu
+534. imported products                   | vi: sản phẩm nhập khẩu
+535. impose constraints                  | vi: áp đặt những hạn chế
+536. impose limitations                  | vi: áp đặt những hạn chế
+537. improved performance                | vi: hiệu suất được cải thiện
+538. increase awareness                  | vi: nâng cao nhận thức
+539. increased awareness                 | vi: nâng cao nhận thức
+540. increased competition               | vi: tăng cường cạnh tranh
+541. increased demand                    | vi: nhu cầu tăng lên
+542. increased pressure                  | vi: tăng áp lực
+543. increased productivity              | vi: tăng năng suất
+544. increased risk                      | vi: tăng nguy cơ
+545. increasing demand                   | vi: nhu cầu ngày càng tăng
+546. increasing pressure                 | vi: tăng áp lực
+547. increasingly popular                | vi: ngày càng phổ biến
+548. increasingly sophisticated          | vi: ngày càng tinh vi
+549. independent state                   | vi: nhà nước độc lập
+550. indigenous people                   | vi: người bản địa
+551. indigenous population               | vi: dân số bản địa
+552. individual behaviour                | vi: hành vi cá nhân
+553. individual case                     | vi: trường hợp cá nhân
+554. individual characteristics          | vi: đặc điểm cá nhân
+555. individual choice                   | vi: sự lựa chọn cá nhân
+556. individual experience               | vi: kinh nghiệm cá nhân
+557. individual interests                | vi: sở thích cá nhân
+558. individual needs                    | vi: nhu cầu cá nhân
+559. individual responsibility           | vi: trách nhiệm cá nhân
+560. industrial capitalism               | vi: chủ nghĩa tư bản công nghiệp
+561. infinite number                     | vi: số vô hạn
+562. information sharing                 | vi: chia sẻ thông tin
+563. informed consent                    | vi: sự đồng ý có hiểu biết
+564. institutional arrangement           | vi: sắp xếp thể chế
+565. institutional context               | vi: bối cảnh thể chế
+566. institutional framework             | vi: khung thể chế
+567. institutional structure             | vi: cơ cấu thể chế
+568. integral part                       | vi: phần không thể thiếu
+569. intellectual curiosity              | vi: trí tò mò trí tuệ
+570. intellectual property               | vi: sở hữu trí tuệ
+571. intellectual work                   | vi: công việc trí tuệ
+572. interested party                    | vi: bên quan tâm
+573. internal control                    | vi: kiểm soát nội bộ
+574. internal organ                      | vi: cơ quan nội tạng
+575. international body                  | vi: cơ quan quốc tế
+576. international community             | vi: cộng đồng quốc tế
+577. interpersonal relationships         | vi: mối quan hệ giữa các cá nhân
+578. interpersonal skills                | vi: kỹ năng giao tiếp
+579. intimately connected                | vi: kết nối mật thiết
+580. intrinsic value                     | vi: giá trị nội tại
+581. irreversible physical trauma        | vi: chấn thương thể chất không thể phục hồi
+582. key area                            | vi: khu vực trọng điểm
+583. key aspect                          | vi: khía cạnh quan trọng
+584. key characteristic                  | vi: đặc điểm chính
+585. key findings                        | vi: những phát hiện quan trọng
+586. large majority                      | vi: đa số lớn
+587. largely confined                    | vi: phần lớn bị giới hạn
+588. largely responsible                 | vi: chịu trách nhiệm phần lớn
+589. learning activity                   | vi: hoạt động học tập
+590. learning process                    | vi: quá trình học tập
+591. legal action                        | vi: hành động pháp lý
+592. legal basis                         | vi: cơ sở pháp lý
+593. legal obligation                    | vi: nghĩa vụ pháp lý
+594. legal requirement                   | vi: yêu cầu pháp lý
+595. liberal democracy                   | vi: dân chủ tự do
+596. lifelong learning                   | vi: học tập suốt đời
+597. limited access                      | vi: quyền truy cập hạn chế
+598. limited capacity                    | vi: năng lực hạn chế
+599. literal sense                       | vi: nghĩa đen
+600. little impact                       | vi: ít tác động
+601. local area                          | vi: khu vực địa phương
+602. local authority                     | vi: chính quyền địa phương
+603. local circumstances                 | vi: hoàn cảnh địa phương
+604. local community                     | vi: cộng đồng địa phương
+605. local culture                       | vi: văn hóa địa phương
+606. local economy                       | vi: kinh tế địa phương
+607. low income                          | vi: thu nhập thấp
+608. low unemployment                    | vi: tỷ lệ thất nghiệp thấp
+609. maintain contact                    | vi: duy trì liên lạc
+610. major advantage                     | vi: lợi thế lớn
+611. major area                          | vi: khu vực chính
+612. major cause                         | vi: nguyên nhân chính
+613. major challenge                     | vi: thách thức lớn
+614. major reason                        | vi: lý do chính
+615. make adjustments                    | vi: thực hiện điều chỉnh
+616. make arrangements                   | vi: sắp xếp
+617. make assessment                     | vi: đánh giá
+618. make prediction                     | vi: đưa ra dự đoán
+619. make transition                     | vi: thực hiện chuyển đổi
+620. male dominance                      | vi: sự thống trị của nam giới
+621. manual worker                       | vi: công nhân chân tay
+622. manufacturing sector                | vi: lĩnh vực sản xuất
+623. markedly different                  | vi: khác biệt rõ rệt
+624. mean score                          | vi: điểm trung bình
+625. media coverage                      | vi: truyền thông đưa tin
+626. meet expectations                   | vi: đáp ứng mong đợi
+627. mental health                       | vi: sức khỏe tâm thần
+628. mental state                        | vi: trạng thái tinh thần
+629. metropolitan area                   | vi: khu vực đô thị
+630. middle management                   | vi: quản lý cấp trung
+631. military force                      | vi: lực lượng quân sự
+632. military service                    | vi: nghĩa vụ quân sự
+633. modern culture                      | vi: văn hóa hiện đại
+634. modern method                       | vi: phương pháp hiện đại
+635. modern society                      | vi: xã hội hiện đại
+636. modern technology                   | vi: công nghệ hiện đại
+637. moral dilemma                       | vi: tình trạng khó xử về mặt đạo đức
+638. municipal government                | vi: chính quyền thành phố
+639. mutual recognition                  | vi: công nhận lẫn nhau
+640. mutual support                      | vi: hỗ trợ lẫn nhau
+641. mutual trust                        | vi: sự tin tưởng lẫn nhau
+642. mutual understanding                | vi: hiểu biết lẫn nhau
+643. national identity                   | vi: bản sắc dân tộc
+644. national language                   | vi: quốc ngữ
+645. national security                   | vi: an ninh quốc gia
+646. natural conditions                  | vi: điều kiện tự nhiên
+647. natural disaster                    | vi: thiên tai
+648. natural environment                 | vi: môi trường tự nhiên
+649. natural history                     | vi: lịch sử tự nhiên
+650. natural resources                   | vi: tài nguyên thiên nhiên
+651. natural science                     | vi: khoa học tự nhiên
+652. negative aspect                     | vi: khía cạnh tiêu cực
+653. negative attitude                   | vi: thái độ tiêu cực
+654. negative effect                     | vi: tác động tiêu cực
+655. negative feedback                   | vi: phản hồi tiêu cực
+656. negative impact                     | vi: tác động tiêu cực
+657. negatively correlated               | vi: tương quan tiêu cực
+658. new initiative                      | vi: sáng kiến mới
+659. newly acquired                      | vi: mới có được
+660. normal distribution                 | vi: phân phối bình thường
+661. nuclear energy                      | vi: năng lượng hạt nhân
+662. nuclear family                      | vi: gia đình hạt nhân
+663. numerous studies                    | vi: nhiều nghiên cứu
+664. obtain result                       | vi: đạt được kết quả
+665. optimal solution                    | vi: giải pháp tối ưu
+666. paramount importance                | vi: tầm quan trọng hàng đầu
+667. particularly evident                | vi: đặc biệt rõ ràng
+668. particularly significant            | vi: đặc biệt quan trọng
+669. particularly valuable               | vi: đặc biệt có giá trị
+670. partly responsible                  | vi: chịu trách nhiệm một phần
+671. perceived need                      | vi: nhu cầu nhận thức
+672. perceived threat                    | vi: nhận thức được mối đe dọa
+673. personal choice                     | vi: sự lựa chọn cá nhân
+674. personal communication              | vi: giao tiếp cá nhân
+675. personal experience                 | vi: kinh nghiệm cá nhân
+676. personal interest                   | vi: sở thích cá nhân
+677. personal knowledge                  | vi: kiến thức cá nhân
+678. personal responsibility             | vi: trách nhiệm cá nhân
+679. personal safety                     | vi: an toàn cá nhân
+680. personal space                      | vi: không gian cá nhân
+681. physical activity                   | vi: hoạt động thể chất
+682. physical appearance                 | vi: ngoại hình
+683. physical characteristics            | vi: đặc điểm vật lý
+684. physical contact                    | vi: tiếp xúc cơ thể
+685. physical health                     | vi: sức khỏe thể chất
+686. physical proximity                  | vi: sự gần gũi về mặt vật lý
+687. physical space                      | vi: không gian vật lý
+688. pioneering work                     | vi: công việc tiên phong
+689. pivotal role                        | vi: vai trò then chốt
+690. political instability               | vi: bất ổn chính trị
+691. political participation             | vi: tham gia chính trị
+692. political representation            | vi: đại diện chính trị
+693. political stability                 | vi: ổn định chính trị
+694. poorly understood                   | vi: hiểu kém
+695. popular culture                     | vi: văn hóa đại chúng
+696. popular media                       | vi: phương tiện truyền thông đại chúng
+697. pose challenge                      | vi: đặt ra thử thách
+698. pose threat                         | vi: đặt ra mối đe dọa
+699. potential benefits                  | vi: lợi ích tiềm năng
+700. potential risk                      | vi: nguy cơ tiềm ẩn
+701. potentially dangerous               | vi: có khả năng nguy hiểm
+702. practical consideration             | vi: xem xét thực tế
+703. practical difficulties              | vi: khó khăn thực tế
+704. practical issue                     | vi: vấn đề thực tiễn
+705. practical significance              | vi: ý nghĩa thực tiễn
+706. predictive power                    | vi: sức mạnh dự đoán
+707. present challenge                   | vi: thử thách hiện tại
+708. presidential election               | vi: bầu cử tổng thống
+709. primary purpose                     | vi: mục đích chính
+710. prime time                          | vi: giờ vàng
+711. private individual                  | vi: cá nhân riêng tư
+712. private investment                  | vi: đầu tư tư nhân
+713. private sector                      | vi: khu vực tư nhân
+714. private sphere                      | vi: lĩnh vực riêng tư
+715. professional activity               | vi: hoạt động nghề nghiệp
+716. professional body                   | vi: cơ thể chuyên nghiệp
+717. professional colleague              | vi: đồng nghiệp chuyên nghiệp
+718. professional development            | vi: phát triển chuyên môn
+719. professional staff                  | vi: nhân viên chuyên nghiệp
+720. professional training               | vi: đào tạo chuyên nghiệp
+721. profound effect                     | vi: ảnh hưởng sâu sắc
+722. profound impact                     | vi: tác động sâu sắc
+723. provide benefit                     | vi: mang lại lợi ích
+724. provide foundation                  | vi: cung cấp nền tảng
+725. provide guidance                    | vi: cung cấp hướng dẫn
+726. provide material                    | vi: cung cấp vật liệu
+727. provide service                     | vi: cung cấp dịch vụ
+728. public access                       | vi: truy cập công cộng
+729. public administration               | vi: hành chính công
+730. public attitudes                    | vi: thái độ của công chúng
+731. public authority                    | vi: cơ quan công quyền
+732. public discourse                    | vi: diễn ngôn công khai
+733. public expenditure                  | vi: chi tiêu công
+734. public transport                    | vi: phương tiện giao thông công cộng
+735. public welfare                      | vi: phúc lợi công cộng
+736. published material                  | vi: tài liệu đã xuất bản
+737. push physiological boundaries       | vi: đẩy ranh giới sinh lý
+738. readily accessible                  | vi: dễ dàng truy cập
+739. reduce emissions                    | vi: giảm khí thải
+740. reduce likelihood                   | vi: giảm khả năng
+741. reduce stress                       | vi: giảm căng thẳng
+742. reflective practice                 | vi: thực hành phản ánh
+743. reflective question                 | vi: câu hỏi phản ánh
+744. regulatory framework                | vi: khung pháp lý
+745. relative autonomy                   | vi: quyền tự chủ tương đối
+746. relatively constant                 | vi: tương đối ổn định
+747. relatively simple                   | vi: tương đối đơn giản
+748. relatively stable                   | vi: tương đối ổn định
+749. religious freedom                   | vi: tự do tôn giáo
+750. remain constant                     | vi: không đổi
+751. remain stable                       | vi: vẫn ổn định
+752. renewable energy                    | vi: năng lượng tái tạo
+753. representative government           | vi: chính phủ đại diện
+754. research effort                     | vi: nỗ lực nghiên cứu
+755. risk assessment                     | vi: đánh giá rủi ro
+756. rote memorization                   | vi: học thuộc lòng
+757. rural area                          | vi: khu vực nông thôn
+758. rural community                     | vi: cộng đồng nông thôn
+759. rural economy                       | vi: kinh tế nông thôn
+760. rural population                    | vi: dân số nông thôn
+761. safe sex                            | vi: tình dục an toàn
+762. scholarly journal                   | vi: tạp chí học thuật
+763. scholarly literature                | vi: văn học học thuật
+764. scholarly research                  | vi: nghiên cứu học thuật
+765. scholarly work                      | vi: công việc học thuật
+766. scientific discourse                | vi: diễn ngôn khoa học
+767. seek help                           | vi: tìm kiếm sự giúp đỡ
+768. senior management                   | vi: quản lý cấp cao
+769. service sector                      | vi: lĩnh vực dịch vụ
+770. sexual orientation                  | vi: xu hướng tình dục
+771. share information                   | vi: chia sẻ thông tin
+772. short duration                      | vi: thời gian ngắn
+773. short period                        | vi: thời gian ngắn
+774. significant growth                  | vi: tăng trưởng đáng kể
+775. significant improvement             | vi: cải thiện đáng kể
+776. significant interaction             | vi: tương tác đáng kể
+777. simple majority                     | vi: đa số đơn giản
+778. skilled worker                      | vi: công nhân lành nghề
+779. social activity                     | vi: hoạt động xã hội
+780. social aspect                       | vi: khía cạnh xã hội
+781. social attitudes                    | vi: thái độ xã hội
+782. social background                   | vi: nền tảng xã hội
+783. social democracy                    | vi: dân chủ xã hội
+784. social expectations                 | vi: kỳ vọng xã hội
+785. social integration                  | vi: hội nhập xã hội
+786. social interaction                  | vi: tương tác xã hội
+787. social isolation                    | vi: cách ly xã hội
+788. social mobility                     | vi: di động xã hội
+789. social welfare                      | vi: phúc lợi xã hội
+790. socially acceptable                 | vi: được xã hội chấp nhận
+791. socioeconomic status                | vi: tình trạng kinh tế xã hội
+792. solar energy                        | vi: năng lượng mặt trời
+793. specific knowledge                  | vi: kiến thức cụ thể
+794. specific sense                      | vi: ý nghĩa cụ thể
+795. specifically designed               | vi: được thiết kế đặc biệt
+796. standardized testing                | vi: kiểm tra tiêu chuẩn hóa
+797. store data                          | vi: lưu trữ dữ liệu
+798. store information                   | vi: lưu trữ thông tin
+799. strain on public resources          | vi: căng thẳng về nguồn lực công
+800. stress level                        | vi: mức độ căng thẳng
+801. strongly agree                      | vi: rất đồng ý
+802. substantial amount                  | vi: số tiền đáng kể
+803. substantial difference              | vi: sự khác biệt đáng kể
+804. substantial evidence                | vi: bằng chứng đáng kể
+805. substantial number                  | vi: số lượng đáng kể
+806. successful implementation           | vi: thực hiện thành công
+807. superior performance                | vi: hiệu suất vượt trội
+808. take initiative                     | vi: chủ động
+809. take precedence                     | vi: được ưu tiên
+810. technological advances              | vi: tiến bộ công nghệ
+811. technological innovation            | vi: đổi mới công nghệ
+812. technological progress              | vi: tiến bộ công nghệ
+813. theoretical analysis                | vi: phân tích lý thuyết
+814. theoretical approach                | vi: cách tiếp cận lý thuyết
+815. theoretical basis                   | vi: cơ sở lý thuyết
+816. theoretical concept                 | vi: khái niệm lý thuyết
+817. theoretical understanding           | vi: hiểu biết lý thuyết
+818. traditional approach                | vi: cách tiếp cận truyền thống
+819. transferable skill                  | vi: kỹ năng chuyển nhượng
+820. transport system                    | vi: hệ thống giao thông
+821. universally accepted                | vi: được chấp nhận rộng rãi
+822. urban area                          | vi: khu vực thành thị
+823. urban design                        | vi: thiết kế đô thị
+824. urban development                   | vi: phát triển đô thị
+825. urban environment                   | vi: môi trường đô thị
+826. useful information                  | vi: thông tin hữu ích
+827. vast amount                         | vi: số lượng lớn
+828. virtual community                   | vi: cộng đồng ảo
+829. vital importance                    | vi: tầm quan trọng sống còn
+830. vital part                          | vi: phần quan trọng
+831. vulnerable group                    | vi: nhóm dễ bị tổn thương
+832. welfare reform                      | vi: cải cách phúc lợi

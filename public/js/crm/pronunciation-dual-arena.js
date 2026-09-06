@@ -567,18 +567,32 @@
 
     async handleAudioBlob(blob) {
       let finalBlob = blob;
+      let dspApplied = false;
+      let dspAudioBuffer = null;
 
       // Route through window.AudioDspPipeline if available
       if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
         try {
           this.showStatus('Enhancing audio with standard DSP pipeline (80Hz rumble filter, 16kHz resample, -3dBFS peak norm)...', 'info');
-          finalBlob = await window.AudioDspPipeline.enhance(blob);
+          const dspResult = await window.AudioDspPipeline.enhance(blob);
+          if (dspResult && dspResult.wavBlob) {
+            finalBlob = dspResult.wavBlob;
+            dspAudioBuffer = dspResult.audioBuffer || null;
+            dspApplied = true;
+          }
         } catch (dspErr) {
           console.warn('AudioDspPipeline enhancement failed, using original audio:', dspErr);
         }
       }
 
       this.state.audioBlob = finalBlob;
+      this.state.dspApplied = dspApplied;
+      this.decodedAudioBuffer = dspAudioBuffer;
+
+      if (this.elements.dspBadge) {
+        this.elements.dspBadge.style.display = dspApplied ? 'inline-flex' : 'none';
+      }
+
       if (this.state.audioUrl) {
         URL.revokeObjectURL(this.state.audioUrl);
       }
@@ -636,7 +650,12 @@
               }
             });
 
-            this.wavesurfer.on('play', () => this.setWaveformPlayState(true));
+            this.wavesurfer.on('play', () => {
+              if (this.elements.audioPlayer && !this.elements.audioPlayer.paused) {
+                this.elements.audioPlayer.pause();
+              }
+              this.setWaveformPlayState(true);
+            });
             this.wavesurfer.on('pause', () => this.setWaveformPlayState(false));
             this.wavesurfer.on('finish', () => this.setWaveformPlayState(false));
 
@@ -748,6 +767,9 @@
 
     toggleWaveformPlay() {
       if (this.wavesurfer) {
+        if (this.elements.audioPlayer && !this.elements.audioPlayer.paused) {
+          this.elements.audioPlayer.pause();
+        }
         this.wavesurfer.playPause();
       } else if (this.elements.audioPlayer) {
         if (this.elements.audioPlayer.paused) {
@@ -769,6 +791,69 @@
       }
       if (this.elements.playText) {
         this.elements.playText.textContent = isPlaying ? 'Pause' : 'Play';
+      }
+    }
+
+    async getAudioContext() {
+      if (!this.audioCtx || this.audioCtx.state === 'closed') {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.audioCtx = new AudioCtx();
+      }
+      if (this.audioCtx.state === 'suspended') {
+        await this.audioCtx.resume();
+      }
+      return this.audioCtx;
+    }
+
+    async getDecodedAudioBuffer() {
+      if (this.decodedAudioBuffer) return this.decodedAudioBuffer;
+      if (this.lastAudioBuffer) {
+        this.decodedAudioBuffer = this.lastAudioBuffer;
+        return this.decodedAudioBuffer;
+      }
+      if (!this.state.audioBlob) return null;
+      try {
+        const ctx = await this.getAudioContext();
+        const arrayBuffer = await this.state.audioBlob.arrayBuffer();
+        this.decodedAudioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+        return this.decodedAudioBuffer;
+      } catch (err) {
+        console.warn('Could not decode audio buffer for slice playback:', err);
+        return null;
+      }
+    }
+
+    async playSlice(startSec, durSec) {
+      try {
+        const buffer = await this.getDecodedAudioBuffer();
+        if (!buffer) return;
+        const ctx = await this.getAudioContext();
+
+        if (this.currentSliceSource) {
+          try {
+            this.currentSliceSource.stop();
+          } catch (_) {
+            // Ignore slice source stop errors
+          }
+          this.currentSliceSource = null;
+        }
+
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+
+        const start = Math.max(0, Number(startSec) || 0);
+        const dur = Math.max(0.01, Math.min(buffer.duration - start, Number(durSec) || 0.05));
+
+        source.start(0, start, dur);
+        this.currentSliceSource = source;
+        source.onended = () => {
+          if (this.currentSliceSource === source) {
+            this.currentSliceSource = null;
+          }
+        };
+      } catch (err) {
+        console.warn('Audio slice playback error:', err);
       }
     }
 
@@ -928,6 +1013,14 @@
         const intDb = s.peakIntensity ? `${s.peakIntensity} dB` : 'N/A';
         const promPct = Math.round((s.prominence || 0) * 100);
 
+        const sylStart = typeof s.sylStartTime === 'number' ? s.sylStartTime : s.startTime;
+        const sylEnd = typeof s.sylEndTime === 'number' ? s.sylEndTime : s.endTime;
+        const sylDur = Math.max(0.05, Math.round((sylEnd - sylStart) * 1000) / 1000);
+
+        const nucStart = typeof s.nucleusStartTime === 'number' ? s.nucleusStartTime : s.startTime;
+        const nucEnd = typeof s.nucleusEndTime === 'number' ? s.nucleusEndTime : s.endTime;
+        const nucDur = Math.max(0.04, Math.round((nucEnd - nucStart) * 1000) / 1000);
+
         let reductionTag = '';
         if (s.reduction) {
           const verdictText = s.reduction.verdict || (s.reduction.isReduced ? 'Weak reduction to [ə] detected' : `Full vowel [${s.reduction.phoneme}] maintained`);
@@ -948,6 +1041,14 @@
               <span class="metric-pill" title="Vowel Nucleus Duration"><span class="metric-label">DUR</span> ${durMs}ms</span>
               <span class="metric-pill" title="Pitch (F0)"><span class="metric-label">F0</span> ${pitchHz}</span>
               <span class="metric-pill" title="Intensity"><span class="metric-label">INT</span> ${intDb}</span>
+            </div>
+            <div class="syl-col-slice-actions">
+              <button type="button" class="dual-arena-slice-btn btn-slice-syl" data-action="play-slice" data-start="${sylStart}" data-dur="${sylDur}" title="Play full syllable (${sylStart}s - ${sylEnd}s)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Syllable
+              </button>
+              <button type="button" class="dual-arena-slice-btn btn-slice-nuc" data-action="play-slice" data-start="${nucStart}" data-dur="${nucDur}" title="Play vowel nucleus (${nucStart}s - ${nucEnd}s)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Nucleus
+              </button>
             </div>
             <div class="syl-col-prominence">
               <div class="prominence-bar-wrap" title="Lexical prominence: ${promPct}%">
@@ -1012,6 +1113,14 @@
         const intDb = s.intensity ? `${s.intensity} dB` : 'N/A';
         const promPct = Math.round((s.prominence || 0) * 100);
 
+        const sylStart = typeof s.startTime === 'number' ? s.startTime : 0;
+        const sylEnd = typeof s.endTime === 'number' ? s.endTime : sylStart + (s.duration || 0.1);
+        const sylDur = Math.max(0.05, Math.round((sylEnd - sylStart) * 1000) / 1000);
+
+        const nucStart = typeof s.vowelStartTime === 'number' ? s.vowelStartTime : sylStart;
+        const nucEnd = typeof s.vowelEndTime === 'number' ? s.vowelEndTime : (nucStart + (s.vowelDuration || sylDur * 0.5));
+        const nucDur = Math.max(0.04, Math.round((nucEnd - nucStart) * 1000) / 1000);
+
         return `
           <div class="dual-syl-row ${isStressed ? 'is-stressed' : ''}">
             <div class="syl-col-main">
@@ -1023,6 +1132,14 @@
               <span class="metric-pill" title="Measured Vowel Duration"><span class="metric-label">DUR</span> ${durMs}ms</span>
               <span class="metric-pill" title="Pitch (F0)"><span class="metric-label">F0</span> ${pitchHz}</span>
               <span class="metric-pill" title="Intensity"><span class="metric-label">INT</span> ${intDb}</span>
+            </div>
+            <div class="syl-col-slice-actions">
+              <button type="button" class="dual-arena-slice-btn btn-slice-syl" data-action="play-slice" data-start="${sylStart}" data-dur="${sylDur}" title="Play full syllable (${sylStart}s - ${sylEnd}s)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Syllable
+              </button>
+              <button type="button" class="dual-arena-slice-btn btn-slice-nuc" data-action="play-slice" data-start="${nucStart}" data-dur="${nucDur}" title="Play vowel nucleus (${nucStart}s - ${nucEnd}s)">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Nucleus
+              </button>
             </div>
             <div class="syl-col-prominence">
               <div class="prominence-bar-wrap" title="Lexical prominence: ${promPct}%">

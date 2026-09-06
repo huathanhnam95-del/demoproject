@@ -134,7 +134,7 @@
               <div class="dual-arena-control-group">
                 <span class="dual-arena-label">Backend Engine:</span>
                 <div class="dual-arena-toggle-pills" role="radiogroup" aria-label="Backend environment selector">
-                  <button type="button" class="dual-arena-pill ${this.state.backendType === 'local' ? 'is-active' : ''}" data-backend="local" title="Run on local Python server (http://localhost:8081)">
+                  <button type="button" class="dual-arena-pill ${this.state.backendType === 'local' ? 'is-active' : ''}" data-backend="local" title="Run on local Python server (${this.options.localBackendUrl})">
                     <span class="pill-badge">LOCAL</span> Local Server (8081)
                   </button>
                   <button type="button" class="dual-arena-pill ${this.state.backendType === 'cloud' ? 'is-active' : ''}" data-backend="cloud" title="Run on Cloud Run backend">
@@ -189,7 +189,7 @@
 
               <div id="dual-arena-audio-preview-wrap" class="dual-arena-audio-preview" style="display: none;">
                 <audio id="dual-arena-audio-player" controls preload="auto"></audio>
-                <span id="dual-arena-dsp-badge" class="dual-arena-badge-dsp" title="Enhanced via AudioDspPipeline (80Hz rumble removal, 16kHz resample, -3dBFS peak norm)">DSP ENHANCED</span>
+                <span id="dual-arena-dsp-badge" class="dual-arena-badge-dsp" style="display: none;" title="Enhanced via AudioDspPipeline (80Hz rumble removal, 16kHz resample, -3dBFS peak norm)">DSP ENHANCED</span>
               </div>
 
               <button type="button" id="dual-arena-btn-run" class="dual-arena-btn dual-arena-btn-run" disabled>

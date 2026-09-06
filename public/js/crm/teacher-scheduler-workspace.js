@@ -628,10 +628,19 @@ window.TeacherSchedulerWorkspace = (function () {
             const label = session.unitType === 'overflow'
                 ? `Overflow ${session.overflowSequence || ''}`.trim()
                 : `Unit ${session.contractUnitIndex || ''}`.trim();
+            const scrollX = typeof window !== 'undefined' ? (window.scrollX || window.pageXOffset || 0) : 0;
+            const scrollY = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
+            const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
+            const popoverWidth = elements.teacherSchedulerSessionBubble.offsetWidth || 380;
+            const desiredLeft = (bubble.anchorLeft || 0) + scrollX;
+            const maxLeft = scrollX + viewportWidth - popoverWidth - 16;
+            const clampedLeft = Math.max(scrollX + 16, Math.min(desiredLeft, maxLeft));
+            const clampedTop = Math.max(16, (bubble.anchorTop || 0) + scrollY);
+
             elements.teacherSchedulerSessionBubble.style.display = 'block';
             elements.teacherSchedulerSessionBubble.setAttribute('aria-hidden', 'false');
-            elements.teacherSchedulerSessionBubble.style.left = `${Math.max(16, bubble.anchorLeft)}px`;
-            elements.teacherSchedulerSessionBubble.style.top = `${Math.max(16, bubble.anchorTop + window.scrollY)}px`;
+            elements.teacherSchedulerSessionBubble.style.left = `${clampedLeft}px`;
+            elements.teacherSchedulerSessionBubble.style.top = `${clampedTop}px`;
             if (elements.teacherSchedulerSessionBubbleTitle) {
                 elements.teacherSchedulerSessionBubbleTitle.textContent = classroom?.name || session.classId || 'Class';
             }

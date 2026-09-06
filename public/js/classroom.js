@@ -535,7 +535,7 @@
         <div class="todo-card needs-revision" data-work-id="${escapeHtml(w.id)}">
           <div>
             <h3>${escapeHtml(w.title)}</h3>
-            <div class="todo-card-meta">Assigned â€¢ ${escapeHtml(w.type)}</div>
+            <div class="todo-card-meta">Assigned • ${escapeHtml(w.type)}</div>
             <div style="margin-top: 8px; font-weight: 600; color: #b91c1c;">Needs Revision</div>
             ${sub.feedback ? `
               <div style="margin-top: 8px; font-size: 0.9rem; color: var(--crm-text-muted);">

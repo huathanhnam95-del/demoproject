@@ -5762,9 +5762,14 @@
         }
 
         const topic = currentEntry?.verifiedPrimaryTopic || 'the essay prompt';
+        const rawVi = item.viGloss || item.vi || '';
+        const cleanVi = rawVi.replace(/^Cụm từ học thuật:\s*/i, '');
+        const meaningText = guidedLanguage === 'vi'
+            ? (cleanVi || `Cụm từ học thuật về "${item.term}"`)
+            : (item.enGloss || item.en || `Academic collocation for "${item.term}"`);
         return {
-            viCandidate: item.viGloss || item.vi || '',
-            meaning: guidedLanguage === 'vi' ? `Cụm từ học thuật về "${item.term}"` : `Academic collocation for "${item.term}"`,
+            viCandidate: cleanVi || item.viGloss || item.vi || '',
+            meaning: meaningText,
             example: `Employing "${item.term}" clarifies your academic reasoning regarding ${topic.toLowerCase()}.`,
             exampleVi: `Sử dụng "${item.term}" giúp làm sáng tỏ lập luận học thuật của bạn về ${topic.toLowerCase()}.`
         };

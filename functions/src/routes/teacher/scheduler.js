@@ -972,7 +972,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             const isAdmin = req.teacherAccess?.isAdmin === true;
             if (isAdmin && req.body?.teacherUid) {
                 const targetTeacherUid = cleanOptionalString(req.body.teacherUid);
-                if (targetTeacherUid) {
+                if (targetTeacherUid && targetTeacherUid !== 'all') {
                     teacherUid = targetTeacherUid;
                 }
             }

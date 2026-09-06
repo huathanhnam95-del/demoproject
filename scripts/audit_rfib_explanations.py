@@ -85,9 +85,9 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                 "num_ctx": num_ctx,
             },
         }
-        if "qwen" in model.lower():
+        if "qwen" in model.lower() or "gemma" in model.lower():
             payload["think"] = False
-        if json_mode:
+        if json_mode and "deepseek" in model.lower():
             payload["format"] = "json"
         try:
             resp = requests.post(OLLAMA_URL, json=payload, timeout=timeout)

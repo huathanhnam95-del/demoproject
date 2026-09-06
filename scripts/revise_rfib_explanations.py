@@ -49,7 +49,10 @@ def clean_model_response(raw: str) -> str:
     if not raw:
         return raw
     cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+    cleaned = re.sub(r"<thought>.*?</thought>", "", cleaned, flags=re.DOTALL).strip()
     cleaned = re.sub(r"</?(no_)?think>", "", cleaned).strip()
+    cleaned = re.sub(r"</?thought>", "", cleaned).strip()
+    cleaned = re.sub(r"<\|.*?\|>", "", cleaned).strip()
     if cleaned.startswith("```"):
         match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", cleaned, re.DOTALL)
         if match:
@@ -64,11 +67,14 @@ def clean_model_response(raw: str) -> str:
 def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                  max_retries: int = 5, timeout: int = 450) -> str | None:
     effective_prompt = prompt
-    if "qwen" in model.lower():
+    is_qwen = "qwen" in model.lower()
+    is_gemma = "gemma" in model.lower()
+
+    if is_qwen:
         effective_prompt = "/no_think\n\n" + prompt
 
     # Adjust context size per model architecture to prevent CUDA VRAM memory bounds
-    num_ctx = 8192 if "gemma" in model.lower() else 16384
+    num_ctx = 8192 if is_gemma else 16384
     num_predict = 4096
 
     for attempt in range(1, max_retries + 1):
@@ -76,7 +82,6 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
         payload = {
             "model": model,
             "prompt": effective_prompt,
-            "format": "json",
             "stream": False,
             "options": {
                 "temperature": temp,
@@ -84,6 +89,11 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
                 "num_ctx": num_ctx,
             },
         }
+        if is_qwen or is_gemma:
+            payload["think"] = False
+        # Enforce format: json for deepseek-r1 to prevent markdown wrapping
+        if "deepseek" in model.lower():
+            payload["format"] = "json"
         try:
             resp = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
             if resp.status_code == 200:
@@ -469,6 +479,16 @@ def _find_list_key(data: dict, preferred: str, fallbacks: list[str]) -> list | N
             sub_res = _find_list_key(val, preferred, fallbacks)
             if sub_res:
                 return sub_res
+    # Fallback: check if the dictionary keys themselves represent indexed blanks
+    indexed_items = []
+    for k, v in data.items():
+        if isinstance(v, dict):
+            num = re.sub(r"\D", "", str(k))
+            if num:
+                indexed_items.append((int(num), v))
+    if len(indexed_items) >= 2:
+        indexed_items.sort(key=lambda x: x[0])
+        return [item[1] for item in indexed_items]
     return None
 
 
@@ -733,10 +753,16 @@ def process_question(
 
     logging.info(f"  Phase 2 [QW] {MODELS['qw']} ...")
     p2_prompt = build_phase2_prompt(answer_text, full_text, blanks, p1_data)
-    t2 = time.time()
-    p2_raw = query_ollama(MODELS["qw"], p2_prompt, temperature=0.2, timeout=300, max_retries=4)
-    p2_data = parse_phase2_response(p2_raw, blanks) if p2_raw else None
-    t2_elapsed = time.time() - t2
+    t2_start = time.time()
+    p2_data = None
+    for p2_attempt in range(1, 4):
+        p2_raw = query_ollama(MODELS["qw"], p2_prompt, temperature=0.1 if p2_attempt == 1 else 0.0, timeout=300, max_retries=2)
+        p2_data = parse_phase2_response(p2_raw, blanks) if p2_raw else None
+        if p2_data is not None:
+            break
+        logging.warning(f"  Phase 2 parse retry {p2_attempt}/3 for Question {qid}...")
+        time.sleep(2)
+    t2_elapsed = time.time() - t2_start
 
     if p2_data is None:
         logging.error(f"  Phase 2 FAILED for Question {qid}: No valid response from {MODELS['qw']}")
@@ -745,10 +771,16 @@ def process_question(
 
     logging.info(f"  Phase 3 [GM] {MODELS['gm']} ...")
     p3_prompt = build_phase3_prompt(answer_text, full_text, blanks, p2_data, existing_explanation)
-    t3 = time.time()
-    p3_raw = query_ollama(MODELS["gm"], p3_prompt, temperature=0.1, timeout=300, max_retries=4)
-    p3_data = parse_phase3_response(p3_raw, blanks) if p3_raw else None
-    t3_elapsed = time.time() - t3
+    t3_start = time.time()
+    p3_data = None
+    for p3_attempt in range(1, 4):
+        p3_raw = query_ollama(MODELS["gm"], p3_prompt, temperature=0.1 if p3_attempt == 1 else 0.0, timeout=300, max_retries=2)
+        p3_data = parse_phase3_response(p3_raw, blanks) if p3_raw else None
+        if p3_data is not None:
+            break
+        logging.warning(f"  Phase 3 parse retry {p3_attempt}/3 for Question {qid}...")
+        time.sleep(2)
+    t3_elapsed = time.time() - t3_start
 
     if p3_data is None:
         logging.error(f"  Phase 3 FAILED for Question {qid}: No valid response from {MODELS['gm']}")

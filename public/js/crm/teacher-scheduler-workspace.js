@@ -353,6 +353,65 @@ window.TeacherSchedulerWorkspace = (function () {
                 html += `<div class="scheduler-calendar-head">${DAY_LABELS[day.getDay()]} ${pad(day.getDate())}</div>`;
             });
 
+            // Precompute layout columns for concurrent and overlapping sessions per day
+            const sessionLayoutMap = new Map();
+            days.forEach((day) => {
+                const dateStr = toLocalDateInput(day);
+                const daySessions = state.sessions
+                    .filter((s) => getSessionLocalDate(s) === dateStr)
+                    .map((s) => {
+                        const start = parseTimeToMinutes(getSessionLocalTime(s)) ?? 0;
+                        const duration = Number(s.durationMinutes || 0) || 60;
+                        const end = start + duration;
+                        return { session: s, start, end };
+                    })
+                    .sort((a, b) => a.start - b.start || (b.end - a.end));
+
+                const clusters = [];
+                let currentCluster = [];
+                let clusterEnd = -1;
+                for (const item of daySessions) {
+                    if (currentCluster.length === 0 || item.start < clusterEnd) {
+                        currentCluster.push(item);
+                        clusterEnd = Math.max(clusterEnd, item.end);
+                    } else {
+                        clusters.push(currentCluster);
+                        currentCluster = [item];
+                        clusterEnd = item.end;
+                    }
+                }
+                if (currentCluster.length > 0) {
+                    clusters.push(currentCluster);
+                }
+
+                for (const cluster of clusters) {
+                    if (cluster.length === 1) {
+                        sessionLayoutMap.set(String(cluster[0].session.sessionId || ''), { col: 0, totalCols: 1 });
+                        continue;
+                    }
+                    const columns = [];
+                    for (const item of cluster) {
+                        let placedCol = -1;
+                        for (let c = 0; c < columns.length; c++) {
+                            if (columns[c] <= item.start) {
+                                placedCol = c;
+                                columns[c] = item.end;
+                                break;
+                            }
+                        }
+                        if (placedCol === -1) {
+                            placedCol = columns.length;
+                            columns.push(item.end);
+                        }
+                        item.col = placedCol;
+                    }
+                    const totalCols = columns.length;
+                    for (const item of cluster) {
+                        sessionLayoutMap.set(String(item.session.sessionId || ''), { col: item.col, totalCols });
+                    }
+                }
+            });
+
             slots.forEach((slotTime) => {
                 html += `<div class="scheduler-calendar-time">${slotTime}</div>`;
                 days.forEach((day) => {
@@ -379,10 +438,14 @@ window.TeacherSchedulerWorkspace = (function () {
                         const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
                             ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
                             : '';
+                        const layout = sessionLayoutMap.get(sessionId) || (totalSessions > 1 ? { col: idx, totalCols: totalSessions } : { col: 0, totalCols: 1 });
+                        const col = layout.col;
+                        const totalCols = layout.totalCols;
+
                         let layoutStyle = `top:0;height:${heightPx}px;`;
-                        if (totalSessions > 1) {
-                            const colWidth = (100 / totalSessions).toFixed(2);
-                            const colLeft = (idx * (100 / totalSessions)).toFixed(2);
+                        if (totalCols > 1) {
+                            const colWidth = (100 / totalCols).toFixed(2);
+                            const colLeft = (col * (100 / totalCols)).toFixed(2);
                             layoutStyle += `left:calc(${colLeft}% + 1px);width:calc(${colWidth}% - 2px);right:auto;`;
                         } else {
                             layoutStyle += 'left:2px;right:2px;';
@@ -498,7 +561,8 @@ window.TeacherSchedulerWorkspace = (function () {
             const slots = hourSlots(7, 21);
             const days = getRenderDays();
             const classroom = getClassroomById(classId);
-            const effectiveTeacherUid = classroom?.primaryTeacherUid || (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : null);
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const effectiveTeacherUid = selectedTeacher || classroom?.primaryTeacherUid || null;
 
             for (const day of days) {
                 const date = toLocalDateInput(day);
@@ -719,6 +783,10 @@ window.TeacherSchedulerWorkspace = (function () {
                 showToast?.('Activate recurrences API unavailable.', 'error');
                 return;
             }
+            if (isAdminMode() && (!state.selectedTeacherUid || state.selectedTeacherUid === 'all')) {
+                showToast?.('Please select a specific teacher before activating recurrences.', 'info');
+                return;
+            }
             const expectedScheduleVersions = {};
             state.classrooms.forEach((classroom) => {
                 expectedScheduleVersions[String(classroom.classroomId || '')] = Number(classroom?.scheduleConfig?.scheduleVersion || 0) || 1;
@@ -746,7 +814,8 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             const classId = String(elements.inputTeacherSchedulerPatternClass?.value || state.patternClassId || '').trim();
             const classroom = getClassroomById(classId);
-            const teacherUid = classroom?.primaryTeacherUid || (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : undefined);
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const teacherUid = selectedTeacher || classroom?.primaryTeacherUid || undefined;
             const weekdays = Array.from(state.patternWeekdays);
             if (!classId || !weekdays.length) {
                 showToast?.('Choose a class and at least one weekday.', 'error');

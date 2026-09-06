@@ -98,6 +98,8 @@ async function runTests() {
     let workspaceCalls = [];
     let addCalls = [];
     let outcomeCalls = [];
+    let multiCalls = [];
+    let recurrenceCalls = [];
 
     const mockClassroomAPI = {
         fetchTeachers: async () => mockTeachers,
@@ -122,6 +124,14 @@ async function runTests() {
         teacherSetScheduledSessionOutcome: async (sessionId, data) => {
             outcomeCalls.push({ sessionId, data });
             return { success: true };
+        },
+        teacherAddClassroomSessionMulti: async (classId, data) => {
+            multiCalls.push({ classId, data });
+            return { success: true, createdCount: 2, skippedCount: 0 };
+        },
+        teacherActivateRecurrences: async (data) => {
+            recurrenceCalls.push(data);
+            return { success: true, successCount: 1, blockedCount: 0, errorCount: 0, details: [] };
         }
     };
 
@@ -567,6 +577,138 @@ async function runTests() {
         assert.strictEqual(outcomeCalls[0].data.note, 'Great progress on dictation exercise.');
 
         console.log('✓ Session outcome note persistence in client controller verified');
+    }
+
+    // TEST 9: Staggered multi-session interval overlap rendering
+    {
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p')
+        };
+
+        const origFetchWorkspace = mockClassroomAPI.fetchTeacherSchedulerWorkspace;
+        mockClassroomAPI.fetchTeacherSchedulerWorkspace = async () => ({
+            classrooms: [
+                { classroomId: 'c1', name: 'Class Alpha', primaryTeacherUid: 'teacher-1', primaryTeacherName: 'Teacher Alice' },
+                { classroomId: 'c2', name: 'Class Beta', primaryTeacherUid: 'teacher-2', primaryTeacherName: 'Teacher Bob' }
+            ],
+            sessions: [
+                // s1 starts at 08:00 and lasts 90 mins (08:00 - 09:30)
+                { sessionId: 's1', classId: 'c1', teacherUid: 'teacher-1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 90 },
+                // s2 starts at 08:30 and lasts 60 mins (08:30 - 09:30) — staggered overlap
+                { sessionId: 's2', classId: 'c2', teacherUid: 'teacher-2', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:30', durationMinutes: 60 }
+            ],
+            from: '2026-09-07',
+            to: '2026-09-13'
+        });
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        const calendarHtml = adminElements.teacherSchedulerCalendar.innerHTML;
+        // Verify staggered overlapping sessions receive side-by-side columns
+        assert(calendarHtml.includes('width:calc(50.00% - 2px);'), 'Staggered overlapping sessions must render with 50% width');
+        assert(calendarHtml.includes('left:calc(0.00% + 1px);'), 'First overlapping session must start at left 0%');
+        assert(calendarHtml.includes('left:calc(50.00% + 1px);'), 'Second overlapping session must start at left 50%');
+
+        mockClassroomAPI.fetchTeacherSchedulerWorkspace = origFetchWorkspace;
+        console.log('✓ Staggered multi-session interval overlap rendering verified');
+    }
+
+    // TEST 10: Teacher filter prioritization in placePatternWeek
+    {
+        multiCalls = [];
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p'),
+            inputTeacherSchedulerPatternClass: doc.createElement('select'),
+            btnTeacherSchedulerPlaceWeek: doc.createElement('button')
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        // Select teacher-2 in the dropdown
+        adminElements.teacherSchedulerTeacherSelect.value = 'teacher-2';
+        adminElements.teacherSchedulerTeacherSelect.dispatchEvent({ type: 'change' });
+        await new Promise(r => setTimeout(r, 20));
+
+        // Select class c1 (whose primaryTeacherUid is teacher-1)
+        adminElements.inputTeacherSchedulerPatternClass.value = 'c1';
+
+        // Trigger placePatternWeek
+        adminElements.btnTeacherSchedulerPlaceWeek.dispatchEvent({ type: 'click' });
+        await new Promise(r => setTimeout(r, 20));
+
+        assert.strictEqual(multiCalls.length, 1);
+        assert.strictEqual(multiCalls[0].classId, 'c1');
+        assert.strictEqual(multiCalls[0].data.teacherUid, 'teacher-2', 'Weekly pattern should prioritize selected teacher filter over classroom primary teacher');
+
+        console.log('✓ Teacher filter prioritization in placePatternWeek verified');
+    }
+
+    // TEST 11: Admin recurrence activation teacher filter validation
+    {
+        recurrenceCalls = [];
+        const toasts = [];
+        const adminElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('h3'),
+            teacherSchedulerRailDesc: doc.createElement('p'),
+            btnTeacherSchedulerActivateRecurrences: doc.createElement('button')
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: adminElements,
+            showToast: (msg, type) => toasts.push({ msg, type }),
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        // When "All Teachers" is selected (default), activating recurrences should prompt for teacher
+        adminElements.btnTeacherSchedulerActivateRecurrences.dispatchEvent({ type: 'click' });
+        await new Promise(r => setTimeout(r, 20));
+
+        assert.strictEqual(recurrenceCalls.length, 0, 'Should not call API when All Teachers is selected');
+        assert(toasts.some(t => t.msg.includes('Please select a specific teacher')), 'Should toast prompting to select teacher');
+
+        // Now select teacher-2
+        adminElements.teacherSchedulerTeacherSelect.value = 'teacher-2';
+        adminElements.teacherSchedulerTeacherSelect.dispatchEvent({ type: 'change' });
+        await new Promise(r => setTimeout(r, 20));
+
+        adminElements.btnTeacherSchedulerActivateRecurrences.dispatchEvent({ type: 'click' });
+        await new Promise(r => setTimeout(r, 20));
+
+        assert.strictEqual(recurrenceCalls.length, 1, 'Should call API when specific teacher is selected');
+        assert.strictEqual(recurrenceCalls[0].teacherUid, 'teacher-2', 'Should pass selected teacherUid to activate recurrences API');
+
+        console.log('✓ Admin recurrence activation teacher filter validation verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');

@@ -23,12 +23,12 @@ service cloud.firestore {
       // Create: Prevent users from setting themselves as admin or teacher roles
       allow create: if isOwner(userId) && 
                     (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == false) &&
-                    !request.resource.data.keys().hasAny(['role', 'crmRole', 'isTeacher']);
+                    !request.resource.data.keys().hasAny(['role', 'crmRole', 'isTeacher', 'admin']);
       
       // Update: CLIENT CAN ONLY UPDATE HARMLESS PROFILE FIELDS
       // Scoring and currency fields are SERVER-ONLY (Cloud Functions)
       allow update: if isOwner(userId) && 
-                    !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'role', 'crmRole', 'isTeacher']) &&
+                    !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'admin', 'role', 'crmRole', 'isTeacher']) &&
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                       // Allowed client-writable fields:
                       'lastLoginAt', 
@@ -172,10 +172,11 @@ service cloud.firestore {
     // CLASSROOM FEATURE
     // ============================================
     match /crmClassrooms/{classId} {
-      // Allow admins, students with custom claim, or enrolled classroom members
+      // Allow admins, students with custom claim, teachers with custom claim, or enrolled classroom members
       function canReadClassroom() {
         return isAdmin() || (request.auth != null && (
           request.auth.token.isStudent == true ||
+          request.auth.token.isTeacher == true ||
           exists(/databases/$(database)/documents/crmClassrooms/$(classId)/members/$(request.auth.uid))
         ));
       }

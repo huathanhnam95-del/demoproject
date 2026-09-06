@@ -669,12 +669,96 @@ async function testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking()
     }
 }
 
+async function testNonAdminCannotSpoofTeacherUidInRecurrenceActivation() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-teacher-own`]: {
+            name: 'Teacher Own Class',
+            primaryTeacherUid: 'teacher-normal',
+            courseId: 'course-own',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 120,
+                sessionMinutes: 60,
+                targetSessionCount: 1,
+                timezone: 'Asia/Bangkok',
+                seedWeekdays: ['tue'],
+                seedStartTime: '09:00',
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 1,
+                contractedAssignedCount: 0,
+                contractedCompletedCount: 0,
+                remainingToScheduleCount: 1,
+                overflowCount: 0
+            }
+        },
+        [`${CRM_CLASSROOMS}/class-target-other`]: {
+            name: 'Target Other Class',
+            primaryTeacherUid: 'teacher-other',
+            courseId: 'course-other',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 120,
+                sessionMinutes: 60,
+                targetSessionCount: 1,
+                timezone: 'Asia/Bangkok',
+                seedWeekdays: ['fri'],
+                seedStartTime: '15:00',
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 1,
+                contractedAssignedCount: 0,
+                contractedCompletedCount: 0,
+                remainingToScheduleCount: 1,
+                overflowCount: 0
+            }
+        }
+    });
+
+    const router = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-normal', email: 'teacher@example.com', isTeacher: true, isAdmin: false };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    const activateHandlers = getRouteHandlers(router, '/scheduler/activate-recurrences', 'post');
+    const res = buildRes();
+    // Non-admin attempts to pass teacherUid: 'teacher-other'
+    await invokeHandlers(activateHandlers, {
+        body: {
+            teacherUid: 'teacher-other',
+            from: '2026-04-06',
+            to: '2026-04-12'
+        }
+    }, res);
+
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.success, true);
+
+    const createdSessions = Array.from(db.docs.entries())
+        .filter(([key]) => key.startsWith(`${CRM_SCHEDULED_SESSIONS}/`))
+        .map(([, val]) => val);
+
+    // Created sessions must be for teacher-normal's own classroom, assigned to teacher-normal
+    assert.strictEqual(createdSessions.length, 1);
+    assert.strictEqual(createdSessions[0].teacherUid, 'teacher-normal', 'Non-admin caller cannot spoof teacherUid');
+    assert.strictEqual(createdSessions[0].classId, 'class-teacher-own', 'Must only process caller teacher classrooms');
+}
+
 (async () => {
     await testAddMultiPersistsPattern();
     await testTeacherOutcomeUpdatesContractCounting();
     await testTeacherApiErrorMessages();
     await testAdminCanManageAllTeacherSchedules();
     await testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking();
+    await testNonAdminCannotSpoofTeacherUidInRecurrenceActivation();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

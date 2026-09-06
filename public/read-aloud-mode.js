@@ -1134,8 +1134,13 @@ class ReadAloudMode {
     const promptStage = document.getElementById('ra-prompt-stage');
     if (!promptStage || this.resizeObserver || typeof ResizeObserver === 'undefined') return;
 
-    this.resizeObserver = new ResizeObserver(() => {
+    this.lastPromptStageWidth = Math.round(promptStage.getBoundingClientRect().width);
+    this.resizeObserver = new ResizeObserver((entries) => {
       if (!this.isActive || !(this.chunkingEnabled || this.hasActiveCoachGuides()) || !this.currentPromptPlainText) return;
+      const entry = entries && entries[0];
+      const newWidth = Math.round(entry?.contentRect ? entry.contentRect.width : promptStage.getBoundingClientRect().width);
+      if (Number.isFinite(this.lastPromptStageWidth) && Math.abs(newWidth - this.lastPromptStageWidth) < 2) return;
+      this.lastPromptStageWidth = newWidth;
       this.renderPromptForCurrentView();
       if (this.state === 'RESULTS') {
         this.renderRecognizedLinkingOverlay();
@@ -1149,6 +1154,7 @@ class ReadAloudMode {
     if (!this.resizeObserver) return;
     this.resizeObserver.disconnect();
     this.resizeObserver = null;
+    this.lastPromptStageWidth = null;
   }
 
   async loadDatabase() {
@@ -2443,7 +2449,18 @@ class ReadAloudMode {
     this.cancelPendingHydration();
     this.pendingLinkingFrame = requestAnimationFrame(() => {
       this.pendingLinkingFrame = null;
-      this.hideSoundChangeTooltip();
+      if (this.activeSoundChangeTooltipId) {
+        const promptStage = document.getElementById('ra-prompt-stage');
+        const activeTargets = this.getSoundChangeTooltipTargets(this.activeSoundChangeTooltipId, promptStage);
+        if (activeTargets.length) {
+          const tooltip = document.getElementById('ra-sound-change-tooltip');
+          if (tooltip && tooltip.getAttribute('aria-hidden') === 'false') {
+            this.positionSoundChangeTooltip(tooltip, promptStage, activeTargets);
+          }
+        } else {
+          this.hideSoundChangeTooltip();
+        }
+      }
       if (!this.shouldApplyPromptRender(targetPromptKey, targetToken) || !this.hasActiveCoachGuides()) {
         return;
       }

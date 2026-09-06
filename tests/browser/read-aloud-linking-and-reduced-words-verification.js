@@ -325,7 +325,10 @@ async function main() {
 
     const soundWord = page.locator('#sc-probe-word');
     await soundWord.hover();
-    await page.waitForTimeout(300); // wait longer than the 100ms grace period and the 180ms CSS animation
+    await page.waitForFunction(() => (
+      document.getElementById('ra-sound-change-tooltip')?.getAttribute('aria-hidden') === 'false'
+    ));
+    await page.waitForTimeout(250); // wait to verify tooltip persists without split-second disappearance
 
     const soundChangeHoverCheck = await page.evaluate(() => {
       const tooltip = document.getElementById('ra-sound-change-tooltip');

@@ -1994,3 +1994,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 999,2026-09-06,Backward scan and rescore entrance tests since August 2026 and deploy V1.8.132 to production,Done,2026-09-06
 1000,2026-09-06,Guided Write Essay: remove trap notes strip AI emojis and refine Vietnamese phrasing across UI and support pack,Done,2026-09-06
 1001,2026-09-06,Reconstruct Pronunciation Sample page into Option A and Option B Dual Comparison Arena for lexical stress,Done,2026-09-06
+1002,2026-09-06,Naturalize and filter unnatural Vietnamese phrasing and placeholders across all Write Essay support packs,In Progress,
+1003,2026-09-06,Mount pronunciation comparison routes on local HTTPS server and redesign Dual Arena UI with zero emojis and high contrast,Done,2026-09-06

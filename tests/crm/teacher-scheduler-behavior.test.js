@@ -752,6 +752,136 @@ async function testNonAdminCannotSpoofTeacherUidInRecurrenceActivation() {
     assert.strictEqual(createdSessions[0].classId, 'class-teacher-own', 'Must only process caller teacher classrooms');
 }
 
+async function testNonAdminCannotSpoofTeacherUidInSessionOrPattern() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-spoof-target`]: {
+            name: 'Spoof Target Class',
+            primaryTeacherUid: 'teacher-normal',
+            courseId: 'course-normal',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 300,
+                sessionMinutes: 60,
+                targetSessionCount: 5,
+                timezone: 'Asia/Bangkok',
+                seedWeekdays: ['mon'],
+                seedStartTime: '09:00',
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 5,
+                contractedAssignedCount: 0,
+                contractedCompletedCount: 0,
+                remainingToScheduleCount: 5,
+                overflowCount: 0
+            }
+        }
+    });
+
+    const teacherRouter = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-normal', email: 'teacher@example.com', isTeacher: true, isAdmin: false };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    // 1. Non-admin POST /classrooms/:classId/sessions/add attempting to spoof teacherUid: 'teacher-other'
+    const sessionHandlers = getRouteHandlers(teacherRouter, '/classrooms/:classId/sessions/add', 'post');
+    const res1 = buildRes();
+    await invokeHandlers(sessionHandlers, {
+        params: { classId: 'class-spoof-target' },
+        body: {
+            teacherUid: 'teacher-other',
+            targetLocalDate: '2026-04-06',
+            targetLocalTime: '09:00',
+            durationMinutes: 60
+        }
+    }, res1);
+
+    assert.strictEqual(res1._status, 200);
+    assert.strictEqual(res1._json.success, true);
+    const createdSessionId = res1._json.sessionId;
+    const sessionData = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${createdSessionId}`);
+    assert.strictEqual(sessionData.teacherUid, 'teacher-normal', 'Non-admin caller cannot spoof teacherUid in single session');
+
+    // 2. Non-admin POST /classrooms/:classId/sessions/add-multi attempting to spoof teacherUid: 'teacher-other'
+    const patternHandlers = getRouteHandlers(teacherRouter, '/classrooms/:classId/sessions/add-multi', 'post');
+    const res2 = buildRes();
+    await invokeHandlers(patternHandlers, {
+        params: { classId: 'class-spoof-target' },
+        body: {
+            teacherUid: 'teacher-other',
+            from: '2026-04-13',
+            to: '2026-04-19',
+            startTime: '09:00',
+            durationMinutes: 60,
+            weekdays: ['mon']
+        }
+    }, res2);
+
+    assert.strictEqual(res2._status, 200);
+    assert.strictEqual(res2._json.success, true);
+    const patternSessions = Array.from(db.docs.entries())
+        .filter(([k, v]) => k.startsWith(`${CRM_SCHEDULED_SESSIONS}/`) && v.scheduledLocalDate === '2026-04-13')
+        .map(([, v]) => v);
+    assert.strictEqual(patternSessions.length, 1);
+    assert.strictEqual(patternSessions[0].teacherUid, 'teacher-normal', 'Non-admin caller cannot spoof teacherUid in pattern');
+
+    // 3. Admin POST /classrooms/:classId/sessions/add passing teacherUid: 'all'
+    const adminRouter = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'admin-super', email: 'admin@example.com', isTeacher: false, isAdmin: true };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+    const adminSessionHandlers = getRouteHandlers(adminRouter, '/classrooms/:classId/sessions/add', 'post');
+    const res3 = buildRes();
+    await invokeHandlers(adminSessionHandlers, {
+        params: { classId: 'class-spoof-target' },
+        body: {
+            teacherUid: 'all',
+            targetLocalDate: '2026-04-20',
+            targetLocalTime: '09:00',
+            durationMinutes: 60
+        }
+    }, res3);
+
+    assert.strictEqual(res3._status, 200);
+    const adminSessionId = res3._json.sessionId;
+    const adminSessionData = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${adminSessionId}`);
+    assert.strictEqual(adminSessionData.teacherUid, 'teacher-normal', 'Admin passing "all" must fall back to classroom primary teacher');
+
+    // 4. Admin POST /classrooms/:classId/sessions/add-multi passing teacherUid: 'all'
+    const adminPatternHandlers = getRouteHandlers(adminRouter, '/classrooms/:classId/sessions/add-multi', 'post');
+    const res4 = buildRes();
+    await invokeHandlers(adminPatternHandlers, {
+        params: { classId: 'class-spoof-target' },
+        body: {
+            teacherUid: 'all',
+            from: '2026-04-27',
+            to: '2026-05-03',
+            startTime: '09:00',
+            durationMinutes: 60,
+            weekdays: ['mon']
+        }
+    }, res4);
+
+    assert.strictEqual(res4._status, 200);
+    const adminPatternSessions = Array.from(db.docs.entries())
+        .filter(([k, v]) => k.startsWith(`${CRM_SCHEDULED_SESSIONS}/`) && v.scheduledLocalDate === '2026-04-27')
+        .map(([, v]) => v);
+    assert.strictEqual(adminPatternSessions.length, 1);
+    assert.strictEqual(adminPatternSessions[0].teacherUid, 'teacher-normal', 'Admin passing "all" in pattern must fall back to classroom primary teacher');
+}
+
 (async () => {
     await testAddMultiPersistsPattern();
     await testTeacherOutcomeUpdatesContractCounting();
@@ -759,6 +889,7 @@ async function testNonAdminCannotSpoofTeacherUidInRecurrenceActivation() {
     await testAdminCanManageAllTeacherSchedules();
     await testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking();
     await testNonAdminCannotSpoofTeacherUidInRecurrenceActivation();
+    await testNonAdminCannotSpoofTeacherUidInSessionOrPattern();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

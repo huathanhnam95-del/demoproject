@@ -528,9 +528,9 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const classroom = access.classroom;
-            const effectiveTeacherUid = cleanOptionalString(req.body?.teacherUid)
-                || cleanOptionalString(classroom.primaryTeacherUid)
-                || callerUid;
+            const effectiveTeacherUid = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                ? cleanOptionalString(req.body.teacherUid)
+                : (cleanOptionalString(classroom.primaryTeacherUid) || callerUid);
             const scheduleConfig = classroom.scheduleConfig || {};
             const classSessions = await listClassSessions(db, classId);
             const intent = extractLocalIntent(req.body || {}, scheduleConfig.timezone || null, scheduleConfig.sessionMinutes || null);
@@ -614,9 +614,9 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const classroom = access.classroom;
-            const effectiveTeacherUid = cleanOptionalString(req.body?.teacherUid)
-                || cleanOptionalString(classroom.primaryTeacherUid)
-                || callerUid;
+            const effectiveTeacherUid = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                ? cleanOptionalString(req.body.teacherUid)
+                : (cleanOptionalString(classroom.primaryTeacherUid) || callerUid);
             const scheduleConfig = classroom.scheduleConfig || {};
             const weekdays = normalizeWeekdays(req.body?.weekdays);
             if (!weekdays.length) {
@@ -806,7 +806,10 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 updatedBy: callerUid
             };
 
-            const effectiveTeacherUid = cleanOptionalString(existing.teacherUid) || cleanOptionalString(access.classroom?.primaryTeacherUid) || callerUid;
+            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
+            const effectiveTeacherUid = (rawExistingTeacher && rawExistingTeacher !== 'all')
+                ? rawExistingTeacher
+                : (cleanOptionalString(access.classroom?.primaryTeacherUid) || callerUid);
             const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
             const teacherConflict = findTeacherConflict(teacherSessions, next, [sessionId]);
             if (teacherConflict) {

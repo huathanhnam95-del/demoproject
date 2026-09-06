@@ -2006,3 +2006,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1011,2026-09-06,Execute full remediation roadmap for Pronunciation Dual Arena: prominence sync audio slice playback 90ms duration guards and mobile layout,Done,2026-09-06
 1012,2026-09-06,Fleet-wide remediation of 832 collocations across all 3 levels with UI meaning wiring and SHA-256 integrity,Done,2026-09-06
 1013,2026-09-06,Audit practice modes fix ESLint no-empty bugs in dual arena verify full CRM and speaking test suites and deploy V1.8.134,Done,2026-09-06
+1014,2026-09-06,Audit and harden Teacher Scheduling teacherUid authorization spoofing defense and deploy V1.8.134,Done,2026-09-06

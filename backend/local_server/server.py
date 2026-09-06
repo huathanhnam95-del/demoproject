@@ -5360,6 +5360,15 @@ def analyze_option_b():
     reference_ipa = request.form.get('reference_ipa') or (request.json.get('reference_ipa') if request.json else '')
     expected_syllables = request.form.get('expected_syllables', type=int) if request.form else (request.json.get('expected_syllables') if request.json else None)
 
+    if not expected_syllables and reference_ipa:
+        try:
+            from backend.phoneme_service.v4_syllabification import syllabify_reference_ipa
+            v4_hint = syllabify_reference_ipa(reference_ipa)
+            if v4_hint and v4_hint.syllable_count > 0:
+                expected_syllables = v4_hint.syllable_count
+        except Exception as err:
+            logger.debug(f"Could not infer expected_syllables from reference_ipa: {err}")
+
     tmp_path = None
     try:
         if 'audio' in request.files:

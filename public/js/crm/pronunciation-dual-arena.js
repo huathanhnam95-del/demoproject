@@ -10,37 +10,37 @@
     {
       group: 'Noun/Verb Minimal Pairs (Stress Shift)',
       presets: [
-        { word: 'record', ipa: 'ˈrɛk.ɚd', expectedStress: 0, label: "'record (noun) [ˈrɛk.ɚd]" },
-        { word: 'record', ipa: 'rɪˈkɔːrd', expectedStress: 1, label: "re'cord (verb) [rɪˈkɔːrd]" },
-        { word: 'present', ipa: 'ˈprɛz.ənt', expectedStress: 0, label: "'present (noun) [ˈprɛz.ənt]" },
-        { word: 'present', ipa: 'prɪˈzɛnt', expectedStress: 1, label: "pre'sent (verb) [prɪˈzɛnt]" },
-        { word: 'object', ipa: 'ˈɑːb.dʒɛkt', expectedStress: 0, label: "'object (noun) [ˈɑːb.dʒɛkt]" },
-        { word: 'object', ipa: 'əbˈdʒɛkt', expectedStress: 1, label: "ob'ject (verb) [əbˈdʒɛkt]" },
-        { word: 'conduct', ipa: 'ˈkɑːn.dʌkt', expectedStress: 0, label: "'conduct (noun) [ˈkɑːn.dʌkt]" },
-        { word: 'conduct', ipa: 'kənˈdʌkt', expectedStress: 1, label: "con'duct (verb) [kənˈdʌkt]" },
-        { word: 'desert', ipa: 'ˈdɛz.ɚt', expectedStress: 0, label: "'desert (noun) [ˈdɛz.ɚt]" },
-        { word: 'desert', ipa: 'dɪˈzɜːrt', expectedStress: 1, label: "de'sert (verb) [dɪˈzɜːrt]" }
+        { word: 'record', ipa: 'ˈrɛk.ɚd', expectedStress: 0, syllables: 2, label: "'record (noun) [ˈrɛk.ɚd]" },
+        { word: 'record', ipa: 'rɪˈkɔːrd', expectedStress: 1, syllables: 2, label: "re'cord (verb) [rɪˈkɔːrd]" },
+        { word: 'present', ipa: 'ˈprɛz.ənt', expectedStress: 0, syllables: 2, label: "'present (noun) [ˈprɛz.ənt]" },
+        { word: 'present', ipa: 'prɪˈzɛnt', expectedStress: 1, syllables: 2, label: "pre'sent (verb) [prɪˈzɛnt]" },
+        { word: 'object', ipa: 'ˈɑːb.dʒɛkt', expectedStress: 0, syllables: 2, label: "'object (noun) [ˈɑːb.dʒɛkt]" },
+        { word: 'object', ipa: 'əbˈdʒɛkt', expectedStress: 1, syllables: 2, label: "ob'ject (verb) [əbˈdʒɛkt]" },
+        { word: 'conduct', ipa: 'ˈkɑːn.dʌkt', expectedStress: 0, syllables: 2, label: "'conduct (noun) [ˈkɑːn.dʌkt]" },
+        { word: 'conduct', ipa: 'kənˈdʌkt', expectedStress: 1, syllables: 2, label: "con'duct (verb) [kənˈdʌkt]" },
+        { word: 'desert', ipa: 'ˈdɛz.ɚt', expectedStress: 0, syllables: 2, label: "'desert (noun) [ˈdɛz.ɚt]" },
+        { word: 'desert', ipa: 'dɪˈzɜːrt', expectedStress: 1, syllables: 2, label: "de'sert (verb) [dɪˈzɜːrt]" }
       ]
     },
     {
       group: 'Multisyllabic Shift Words',
       presets: [
-        { word: 'photograph', ipa: 'ˈfoʊ.tə.ɡræf', expectedStress: 0, label: "'photograph (3 syl) [ˈfoʊ.tə.ɡræf]" },
-        { word: 'photography', ipa: 'fəˈtɑː.ɡrə.fi', expectedStress: 1, label: "pho'tography (4 syl) [fəˈtɑː.ɡrə.fi]" },
-        { word: 'photographic', ipa: 'ˌfoʊ.təˈɡræf.ɪk', expectedStress: 2, label: "photo'graphic (4 syl) [ˌfoʊ.təˈɡræf.ɪk]" },
-        { word: 'economy', ipa: 'ɪˈkɑː.nə.mi', expectedStress: 1, label: "e'conomy (4 syl) [ɪˈkɑː.nə.mi]" },
-        { word: 'economic', ipa: 'ˌiː.kəˈnɑː.mɪk', expectedStress: 2, label: "eco'nomic (4 syl) [ˌiː.kəˈnɑː.mɪk]" },
-        { word: 'university', ipa: 'ˌjuː.nɪˈvɜːr.sə.t̬i', expectedStress: 2, label: "uni'versity (5 syl) [ˌjuː.nɪˈvɜːr.sə.t̬i]" }
+        { word: 'photograph', ipa: 'ˈfoʊ.tə.ɡræf', expectedStress: 0, syllables: 3, label: "'photograph (3 syl) [ˈfoʊ.tə.ɡræf]" },
+        { word: 'photography', ipa: 'fəˈtɑː.ɡrə.fi', expectedStress: 1, syllables: 4, label: "pho'tography (4 syl) [fəˈtɑː.ɡrə.fi]" },
+        { word: 'photographic', ipa: 'ˌfoʊ.təˈɡræf.ɪk', expectedStress: 2, syllables: 4, label: "photo'graphic (4 syl) [ˌfoʊ.təˈɡræf.ɪk]" },
+        { word: 'economy', ipa: 'ɪˈkɑː.nə.mi', expectedStress: 1, syllables: 4, label: "e'conomy (4 syl) [ɪˈkɑː.nə.mi]" },
+        { word: 'economic', ipa: 'ˌiː.kəˈnɑː.mɪk', expectedStress: 2, syllables: 4, label: "eco'nomic (4 syl) [ˌiː.kəˈnɑː.mɪk]" },
+        { word: 'university', ipa: 'ˌjuː.nɪˈvɜːr.sə.t̬i', expectedStress: 2, syllables: 5, label: "uni'versity (5 syl) [ˌjuː.nɪˈvɜːr.sə.t̬i]" }
       ]
     },
     {
       group: 'Weak Reduction Words (/ə/ Schwa)',
       presets: [
-        { word: 'banana', ipa: 'bəˈnæn.ə', expectedStress: 1, label: "ba'nana [bəˈnæn.ə] (syl 1 & 3 /ə/)" },
-        { word: 'camera', ipa: 'ˈkæm.rə', expectedStress: 0, label: "'camera [ˈkæm.rə] (weak reduction)" },
-        { word: 'potato', ipa: 'pəˈteɪ.toʊ', expectedStress: 1, label: "po'tato [pəˈteɪ.toʊ] (syl 1 /ə/)" },
-        { word: 'chocolate', ipa: 'ˈtʃɑːk.lət', expectedStress: 0, label: "'chocolate [ˈtʃɑːk.lət] (syl 2 reduction)" },
-        { word: 'family', ipa: 'ˈfæm.ə.li', expectedStress: 0, label: "'family [ˈfæm.ə.li] (weak /ə/)" }
+        { word: 'banana', ipa: 'bəˈnæn.ə', expectedStress: 1, syllables: 3, label: "ba'nana [bəˈnæn.ə] (syl 1 & 3 /ə/)" },
+        { word: 'camera', ipa: 'ˈkæm.rə', expectedStress: 0, syllables: 2, label: "'camera [ˈkæm.rə] (weak reduction)" },
+        { word: 'potato', ipa: 'pəˈteɪ.toʊ', expectedStress: 1, syllables: 3, label: "po'tato [pəˈteɪ.toʊ] (syl 1 /ə/)" },
+        { word: 'chocolate', ipa: 'ˈtʃɑːk.lət', expectedStress: 0, syllables: 2, label: "'chocolate [ˈtʃɑːk.lət] (syl 2 reduction)" },
+        { word: 'family', ipa: 'ˈfæm.ə.li', expectedStress: 0, syllables: 3, label: "'family [ˈfæm.ə.li] (weak /ə/)" }
       ]
     }
   ];
@@ -53,8 +53,11 @@
       this.options = Object.assign({
         defaultBackend: 'local',
         localBackendUrl: 'http://localhost:8081',
-        cloudBackendUrl: 'https://phoneme-recognizer-v2-109268305001.us-central1.run.app'
+        cloudBackendUrl: 'https://praat-api-1071929245506.us-central1.run.app'
       }, options);
+
+      this.wavesurfer = null;
+      this.isPlayingWaveform = false;
 
       this.state = {
         backendType: this.options.defaultBackend,
@@ -62,6 +65,7 @@
         selectedWord: 'photograph',
         selectedIpa: 'ˈfoʊ.tə.ɡræf',
         expectedStress: 0,
+        expectedSyllables: 3,
         audioBlob: null,
         audioUrl: null,
         isRecording: false,

@@ -111,12 +111,22 @@ function buildSyntheticPhonemes(word) {
   }));
 }
 
+function extractSampleRate(buffer) {
+  if (Buffer.isBuffer(buffer) && buffer.length >= 28) {
+    if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE') {
+      const rate = buffer.readUInt32LE(24);
+      if (rate >= 8000 && rate <= 96000) return rate;
+    }
+  }
+  return 16000;
+}
+
 function resolvePythonBackendUrl(req) {
-  const queryOrHeader = req.query.backendUrl || req.headers['x-python-backend-url'] || req.body?.backendUrl;
+  const queryOrHeader = req.query?.backendUrl || req.headers?.['x-python-backend-url'] || req.body?.backendUrl;
   if (queryOrHeader && typeof queryOrHeader === 'string' && queryOrHeader.trim()) {
     return queryOrHeader.trim().replace(/\/+$/, '');
   }
-  return (process.env.PYTHON_BACKEND_URL || 'http://localhost:8081').replace(/\/+$/, '');
+  return (process.env.PYTHON_BACKEND_URL || process.env.PRAAT_BACKEND_URL || 'https://praat-api-1071929245506.us-central1.run.app').replace(/\/+$/, '');
 }
 
 /**
@@ -137,9 +147,10 @@ router.post('/option-a', upload.single('audio'), async (req, res) => {
     const referenceIpa = String(req.body.reference_ipa || '').trim();
     const backendUrl = resolvePythonBackendUrl(req);
     const audioBuffer = req.file.buffer;
+    const sampleRate = extractSampleRate(audioBuffer);
 
     // 1. Call Azure Pronunciation Assessment
-    const azurePayload = await callAzureAssessment(audioBuffer, word);
+    const azurePayload = await callAzureAssessment(audioBuffer, word, sampleRate);
     const bestHypo = azurePayload?.NBest?.[0];
     const bestWord = bestHypo?.Words?.[0] || {};
     const rawPhonemes = Array.isArray(bestWord.Phonemes) ? bestWord.Phonemes : [];
@@ -182,7 +193,8 @@ router.post('/option-a', upload.single('audio'), async (req, res) => {
 
     // 3. Check for /ə/ vowel reduction
     const reductionChecks = vowelIntervals.map((nucleus) => {
-      const isSchwa = nucleus.phoneme === 'ə' || nucleus.phoneme === 'ɚ';
+      const clean = String(nucleus.phoneme || '').trim().toLowerCase().replace(/[ˈˌ.·]/g, '');
+      const isSchwa = clean === 'ə' || clean === 'ɚ' || clean === 'ɨ' || clean === 'ax';
       return {
         id: nucleus.id,
         phoneme: nucleus.phoneme,

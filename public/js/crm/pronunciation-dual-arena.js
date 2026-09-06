@@ -328,6 +328,7 @@
         fileInput: q('#dual-arena-file-input'),
         audioPlayer: q('#dual-arena-audio-player'),
         previewWrap: q('#dual-arena-audio-preview-wrap'),
+        dspBadge: q('#dual-arena-dsp-badge'),
         btnRun: q('#dual-arena-btn-run'),
         statusBanner: q('#dual-arena-status-banner'),
         waveformWrap: q('#dual-arena-waveform-wrap'),
@@ -359,7 +360,7 @@
           const type = pill.dataset.backend;
           this.state.backendType = type;
           this.state.backendUrl = type === 'local' ? this.options.localBackendUrl : this.options.cloudBackendUrl;
-          this.showStatus(`Switched backend to ${type === 'local' ? 'Local Server (http://localhost:8081)' : 'Cloud Run (' + this.options.cloudBackendUrl + ')'}`, 'info');
+          this.showStatus(`Switched backend to ${type === 'local' ? 'Local Server (' + this.options.localBackendUrl + ')' : 'Cloud Run (' + this.options.cloudBackendUrl + ')'}`, 'info');
         });
       });
 
@@ -422,23 +423,36 @@
 
       // Audio player event listeners for synchronized play state & canvas waveform progress
       if (this.elements.audioPlayer) {
-        this.elements.audioPlayer.addEventListener('play', () => this.setWaveformPlayState(true));
-        this.elements.audioPlayer.addEventListener('pause', () => this.setWaveformPlayState(false));
+        this.elements.audioPlayer.addEventListener('play', () => {
+          if (this.wavesurfer && this.wavesurfer.isPlaying()) {
+            this.wavesurfer.pause();
+          }
+          this.setWaveformPlayState(true);
+        });
+        this.elements.audioPlayer.addEventListener('pause', () => {
+          if (!this.wavesurfer || !this.wavesurfer.isPlaying()) {
+            this.setWaveformPlayState(false);
+          }
+        });
         this.elements.audioPlayer.addEventListener('ended', () => {
           this.setWaveformPlayState(false);
           this.drawWaveformCanvas(0);
         });
         this.elements.audioPlayer.addEventListener('timeupdate', () => {
-          if (this.lastAudioBuffer && this.elements.audioPlayer.duration) {
+          if (!this.wavesurfer && this.lastAudioBuffer && this.elements.audioPlayer.duration) {
             const ratio = this.elements.audioPlayer.currentTime / this.elements.audioPlayer.duration;
             this.drawWaveformCanvas(ratio);
           }
         });
       }
 
-      // Waveform click to seek
+      // Waveform click to seek (delegates to WaveSurfer when mounted)
       if (this.elements.waveformView) {
         this.elements.waveformView.addEventListener('click', (e) => {
+          if (this.wavesurfer) {
+            // WaveSurfer handles seeking internally on its container
+            return;
+          }
           if (!this.elements.audioPlayer || !this.elements.audioPlayer.duration) return;
           const rect = this.elements.waveformView.getBoundingClientRect();
           const clickX = e.clientX - rect.left;
@@ -447,6 +461,18 @@
           this.drawWaveformCanvas(ratio);
         });
       }
+
+      // Interactive audio slice play buttons ([Play Syllable] & [Play Nucleus])
+      this.container.addEventListener('click', (e) => {
+        const sliceBtn = e.target.closest('[data-action="play-slice"]');
+        if (sliceBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const start = parseFloat(sliceBtn.dataset.start);
+          const dur = parseFloat(sliceBtn.dataset.dur);
+          this.playSlice(start, dur);
+        }
+      });
 
       // Run button
       if (this.elements.btnRun) {

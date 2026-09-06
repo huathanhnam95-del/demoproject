@@ -1,3 +1,23 @@
+## [V1.8.137] - 2026-09-07
+
+### Added & Enhanced
+- **Pronunciation Dual Arena: Option A vs. Option B Lexical Stress Evaluation (`public/crm-admin.html`, `public/pronunciation-visual-comparison.html`, `public/js/crm/pronunciation-dual-arena.js`, `public/crm-admin.css`)**:
+  - Reconstructed the Pronunciation Sample page into an interactive side-by-side Dual Comparison Arena evaluating lexical stress on isolated words.
+  - **Option A (Cloud-Acoustic Fusion)**: Azure Speech forced alignment (`functions/src/entrance-test/asr-service.js`, `functions/src/routes/pronunciation-comparison.js`) extracting constituent vowel nucleus intervals, schwa `/ə/` reduction diagnosis, and Parselmouth pitch ($F_0$) & RMS intensity prosody.
+  - **Option B (Repaired Self-Hosted V4)**: Wav2Vec2 CTC alignment + Oxford Maximal Onset Principle (MOP) phonology (`backend/phoneme_service/v4_syllabification.py`, `backend/local_server/server.py`) repaired to expose vowel nucleus boundaries, eliminate naive midpoint halving, and normalize stress by vowel duration.
+  - **Interactive Waveform & Audio Slicing**: Added WaveSurfer visualization with HTML5 Canvas fallback, plus per-syllable `[Play Syllable]` and `[Play Nucleus]` audio slice buttons with 5ms linear attack/decay gain envelopes and race-guarded audio context playback.
+  - **Delta Benchmark & Manual Evaluation**: Side-by-side acoustic comparison (DUR, F0, INT, Reduction) with manual verdict rating and JSON benchmark data export.
+  - **Zero AI Emojis & High-Contrast Visual Design**: Completely purged all decorative emojis, elevated dark-mode contrast to WCAG AAA standards (19:1), and eliminated multi-layered nested card boxes.
+
+### Fixed & Hardened
+- **Backend Prosody Sampling & Route Mounting (`src/server/app.js`, `backend/local_server/server.py`, `functions/src/routes/pronunciation-comparison.js`)**:
+  - Mounted `/api/pronunciation-assessment` on the local development HTTPS server (`https://localhost:8443`), resolving HTTP 404 route errors.
+  - Implemented `/analyze-nucleus-prosody` on Python Praat backend for targeted pitch and intensity sampling over vowel intervals.
+  - Fixed syllable duration normalization in `find_stressed_with_corrections` and `normalize_syllable_pattern` (`server.py`) to divide by `max_vowel_dur` instead of full syllable `max_dur`.
+  - Added 90ms audio duration pre-flight guards across Node and Python to prevent unhandled Parselmouth window length crashes.
+  - Synchronized Option B prominence percentages with heuristic phonetic penalties to eliminate UI badge contradictions.
+  - Resolved Python `sys.path` package resolution for `v4_syllabification`.
+
 ## [V1.8.136] - 2026-09-06
 
 ### Added & Enhanced

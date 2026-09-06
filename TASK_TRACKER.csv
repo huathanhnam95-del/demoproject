@@ -2014,3 +2014,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1019,2026-09-06,Fix student save failing silently when choosing source account in CRM,Done,2026-09-06
 1020,2026-09-06,Fix completed sessions query filter in teacher scheduler and compact header to expand calendar viewport,Done,2026-09-06
 1021,2026-09-06,Release V1.8.136: Deploy RFIB distractor contrast CRM scheduler and Write Essay naturalization,Done,2026-09-06
+1022,2026-09-07,Release V1.8.137: Deploy Pronunciation Dual Arena lexical stress assessment and audio remediation,Done,2026-09-07

@@ -12,6 +12,12 @@
     - WCAG AA accessibility compliance: `role="dialog"`, `aria-labelledby`, $\ge 40\text{px}$ touch targets, and focus restoration to the active hint button upon dismissal.
     - Mobile bottom sheet physics on viewports $\le 640\text{px}$ with pointer event drag-to-dismiss behavior.
   - Repaired and audited all 23 missing edge cases via the hardened 3-model pipeline (DeepSeek-R1 14B + Qwen3 14B + Gemma4 12B), resolving Ollama schema collapse and Gemma token prediction exhaustion.
+- **Write Essay Guided Support Fleet-Wide Naturalization & UI Collocation Wiring (`public/database/Write Essay/`, `public/write-essay-mode.js`)**:
+  - Naturalized all 832 distinct collocations (3,808 instances) across `a2_b1`, `b2`, and `c1` packs with authentic academic Vietnamese translations (`viGloss`) and context explanations (`enGloss`), eliminating literal machine translation errors (e.g. `professional body` -> *"tổ chức / hiệp hội chuyên môn"*, `governing body` -> *"cơ quan quản trị / điều hành"*).
+  - Replaced all 2,318 placeholder definitions in `hardVocabulary` with rich, context-aware pedagogical definitions.
+  - Eliminated boilerplate calques (*"Hỗ trợ quan điểm"*, *"Tránh câu chung học thuộc"*) and purple prose across all 453 packs.
+  - Repaired UI collocation fallback in `public/write-essay-mode.js` (`getCollocationInfo()`) so custom glosses are faithfully displayed instead of hardcoded boilerplate strings.
+  - Synchronized cryptographic SHA-256 trimmed hashes (`sha256(file.trim())`) across all 453 packs and `manifest.json` with strict Unix LF line endings.
 
 ### Fixed & Hardened
 - **CRM Teacher Scheduler & Student Source Hardening (`functions/src/routes/teacher/scheduler.js`, `public/crm-admin.html`, `public/crm-admin.css`, `public/js/crm/lead-workspace.js`)**:

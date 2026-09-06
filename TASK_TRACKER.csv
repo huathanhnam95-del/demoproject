@@ -2013,4 +2013,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1018,2026-09-06,Update CRM lead source dropdown option from Zalo + Personal to Zalo - Personal,Done,2026-09-06
 1019,2026-09-06,Fix student save failing silently when choosing source account in CRM,Done,2026-09-06
 1020,2026-09-06,Fix completed sessions query filter in teacher scheduler and compact header to expand calendar viewport,Done,2026-09-06
-1021,2026-09-06,Release V1.8.136: Deploy 1128 audited RFIB explanations with distractor contrast UI and CRM teacher scheduler fixes,Done,2026-09-06
+1021,2026-09-06,Release V1.8.136: Deploy RFIB distractor contrast CRM scheduler and Write Essay naturalization,Done,2026-09-06

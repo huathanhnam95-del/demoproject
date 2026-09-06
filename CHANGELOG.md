@@ -1,3 +1,16 @@
+## [V1.8.135] - 2026-09-06
+
+### Fixed & Hardened
+- **Admin & Teacher Scheduler Hardening (`functions/src/routes/admin/scheduling.js`, `functions/src/routes/teacher/scheduler.js`)**:
+  - Implemented `resolveAdminTargetTeacherUid` helper to sanitize `teacherUid` inputs across admin scheduling endpoints (`seed`, `add-preview`, `add-batch`, `add`, `replace`, `regenerate-preview`, `regenerate`), ensuring `'all'` is never persisted as a literal UID into Firestore session documents.
+  - Enhanced workspace filtering (`GET /scheduler/workspace?teacherUid=all`) to treat `'all'` as an unfiltered cross-teacher query.
+  - Reordered authorization and outcome checks in teacher scheduler routes (`reschedule`, `cancel`, `outcome`) to allow classroom primary teachers to manage sessions even if historic records were corrupted with `teacherUid: 'all'`.
+  - Added explicit `teacherUid: effectiveTeacherUid` assignment on rescheduling and outcomes to heal corrupted Firestore records automatically.
+- **Read Aloud Prompt Stage & Tooltip Stabilization (`public/read-aloud-mode.js`)**:
+  - Standardized `observePromptStage` width measurements to `Math.round(promptStage.getBoundingClientRect().width)` across both baseline initialization and `ResizeObserver` callbacks, eliminating width hysteresis re-render loops caused by box-sizing mismatches.
+  - Hardened `hydrateLinkingView` tooltip repositioning check to ensure active tooltip state is cleanly reset via `this.hideSoundChangeTooltip()` when the DOM tooltip element is hidden or detached.
+  - Updated browser verification probe cleanup in `tests/browser/read-aloud-linking-and-reduced-words-verification.js` to dismiss active tooltip controllers cleanly before capturing artifacts.
+
 ## [V1.8.134] - 2026-09-06
 
 ### Added & Enhanced

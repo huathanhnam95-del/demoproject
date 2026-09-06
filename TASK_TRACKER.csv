@@ -2009,3 +2009,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1014,2026-09-06,Audit and harden Teacher Scheduling teacherUid authorization spoofing defense and deploy V1.8.134,Done,2026-09-06
 1015,2026-09-06,Audit and harden Admin and Teacher scheduler teacherUid resolution workspace all-filter and reschedule healing,Done,2026-09-06
 1016,2026-09-06,Fix Read Aloud sound changes tooltip hover persistence and width-aware ResizeObserver,Done,2026-09-06
+1017,2026-09-06,Release V1.8.135: Deploy Admin and Teacher scheduler hardening and Read Aloud prompt stage stabilization,Done,2026-09-06

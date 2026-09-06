@@ -12,14 +12,14 @@ const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
 const leadWorkspace = read('public/js/crm/lead-workspace.js');
 const schedulerWorkspace = read('public/js/crm/scheduler-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260906-v1.8.135';
+const CRM_ADMIN_ASSET_VERSION = '20260906-v1.8.136';
 
 assert(!html.includes('id="lead-templates-automations"'), 'Removed Templates and Automations UI must not remain in the CRM shell.');
 assert(/<select id="lead-source"[^>]*\brequired\b/.test(html), 'Lead source must be required.');
 assert(html.includes('<option value="" disabled selected>Select a source...</option>'), 'Lead source must default to a blank prompt.');
-assert(html.includes('<option value="Zalo + Personal">Zalo + Personal</option>'), 'Lead source must include Zalo + Personal.');
+assert(html.includes('<option value="Zalo - Personal">Zalo - Personal</option>'), 'Lead source must include Zalo - Personal.');
 assert(!leadWorkspace.includes("elements.inputLeadSource.value = 'Facebook - Personal'"), 'The active lead controller must not restore the old Facebook default.');
-assert(leadWorkspace.includes("val === 'Zalo + Personal'"), 'The active lead controller must handle Zalo + Personal visibility.');
+assert(leadWorkspace.includes("val === 'Zalo - Personal'"), 'The active lead controller must handle Zalo - Personal visibility.');
 assert(leadWorkspace.includes("showToast('Source is required.', 'error')"), 'The active lead save path must reject a blank source.');
 
 const panelIds = new Set(Array.from(html.matchAll(/data-panel="([^"]+)"/g), (match) => match[1]));

@@ -64,7 +64,7 @@ window.CrmLeadWorkspace = (function () {
 
             const val = String(inputLeadSource?.value || '').trim();
             const isFacebook = val.startsWith('Facebook');
-            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo + Personal';
+            const isPersonalSocialMedia = val === 'Facebook - Personal' || val === 'Tiktok - Personal' || val === 'Tiktok-Personal' || val === 'Zalo - Personal' || val === 'Zalo + Personal';
             const isAgent = val === 'Agent';
 
             if (groupUrl) {

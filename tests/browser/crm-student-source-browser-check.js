@@ -59,7 +59,7 @@ async function runTest() {
 
     // Verify Acquisition Source choices
     const acquisitionOptions = await page.$$eval('#lead-source option', (els) => els.map((el) => el.value));
-    assert.deepStrictEqual(acquisitionOptions, ['', 'Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Zalo + Personal', 'Tiktok - Personal', 'Agent'], 'Student acquisition source options mismatch');
+    assert.deepStrictEqual(acquisitionOptions, ['', 'Facebook - Personal', 'Facebook - Page', 'Zalo - Page', 'Zalo - Personal', 'Tiktok - Personal', 'Agent'], 'Student acquisition source options mismatch');
 
     // Source is required and blank by default.
     assert.strictEqual(await page.$eval('#lead-source', (el) => el.value), '', 'Source should be blank by default');

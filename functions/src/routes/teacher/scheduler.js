@@ -171,7 +171,7 @@ function filterSessionsByRange(sessions, from, to) {
     const fromDate = cleanOptionalString(from);
     const toDate = cleanOptionalString(to);
     return (Array.isArray(sessions) ? sessions : [])
-        .filter((session) => String(session.status || 'scheduled') === 'scheduled')
+        .filter((session) => String(session.status || 'scheduled') !== 'cancelled')
         .filter((session) => !fromDate || String(session.scheduledLocalDate || '') >= fromDate)
         .filter((session) => !toDate || String(session.scheduledLocalDate || '') <= toDate)
         .sort((left, right) => String(left.scheduledStartAtUtc || '').localeCompare(String(right.scheduledStartAtUtc || '')));
@@ -193,23 +193,8 @@ async function listTeacherScheduledSessions(db, teacherUid, options = {}) {
     const from = cleanOptionalString(options.from);
     const to = cleanOptionalString(options.to);
 
-    if (from && to) {
-        try {
-            const boundedSnap = await db.collection(CRM_SCHEDULED_SESSIONS)
-                .where('teacherUid', '==', cleanedTeacherUid)
-                .where('status', '==', 'scheduled')
-                .where('scheduledLocalDate', '>=', from)
-                .where('scheduledLocalDate', '<=', to)
-                .get();
-            return boundedSnap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
-        } catch (error) {
-            void error;
-        }
-    }
-
     const snap = await db.collection(CRM_SCHEDULED_SESSIONS)
         .where('teacherUid', '==', cleanedTeacherUid)
-        .where('status', '==', 'scheduled')
         .get();
     const sessions = snap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
     return filterSessionsByRange(sessions, from, to);
@@ -219,22 +204,7 @@ async function listAllScheduledSessions(db, options = {}) {
     const from = cleanOptionalString(options.from);
     const to = cleanOptionalString(options.to);
 
-    if (from && to) {
-        try {
-            const boundedSnap = await db.collection(CRM_SCHEDULED_SESSIONS)
-                .where('status', '==', 'scheduled')
-                .where('scheduledLocalDate', '>=', from)
-                .where('scheduledLocalDate', '<=', to)
-                .get();
-            return boundedSnap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
-        } catch (error) {
-            void error;
-        }
-    }
-
-    const snap = await db.collection(CRM_SCHEDULED_SESSIONS)
-        .where('status', '==', 'scheduled')
-        .get();
+    const snap = await db.collection(CRM_SCHEDULED_SESSIONS).get();
     const sessions = snap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
     return filterSessionsByRange(sessions, from, to);
 }
@@ -489,6 +459,21 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const classIdSet = new Set(classrooms.map((entry) => entry.id));
+            const missingClassIds = sessions
+                .map((s) => String(s.classId || '').trim())
+                .filter((id) => id && !classIdSet.has(id));
+            if (missingClassIds.length > 0) {
+                const uniqueMissing = [...new Set(missingClassIds)];
+                const extraSnaps = await Promise.all(
+                    uniqueMissing.map((id) => db.collection(CRM_CLASSROOMS).doc(id).get())
+                );
+                extraSnaps.forEach((snap) => {
+                    if (snap.exists) {
+                        classrooms.push({ id: snap.id, data: snap.data() || {} });
+                        classIdSet.add(snap.id);
+                    }
+                });
+            }
             const filteredSessions = sessions
                 .filter((session) => classIdSet.has(String(session.classId || '').trim()))
                 .filter((session) => !from || String(session.scheduledLocalDate || '') >= from)

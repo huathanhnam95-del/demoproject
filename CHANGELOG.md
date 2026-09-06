@@ -1,3 +1,24 @@
+## [V1.8.136] - 2026-09-06
+
+### Added & Enhanced
+- **RFIB 1,128-Question Audited Catalog & Distractor Contrast UI (`public/database/RFIB/`, `public/rfib-mode.js`, `public/rfib-mode.css`)**:
+  - Promoted 100% of the 1,128 RFIB catalog into `public/database/RFIB/review-metadata.json` and `public/database/RFIB/RFIB_audited_full.jsonl` with canonical 4-digit key alignment (`0001`–`1331`), eliminating the legacy 81.1% lookup failure where IDs $< 1000$ returned `null`.
+  - Serialized rich distractor analysis (`distractor_analysis`), 3-model judicial consensus audit verdicts (`audit_verdict`, `audit_consensus_type`), and verified grammar tags across 5,157 total blanks.
+  - Implemented the **Distractor Contrast UI**:
+    - Dual comparison answer grid (`.rfib-popover-answer-grid`) displaying `[Your Answer]: [choice] ❌` alongside `[Correct Answer]: [target] ✓`.
+    - Dedicated distractor contrast section (`.rfib-popover-section-distractor`) detailing specifically *"Why '[userAnswer]' is incorrect"*.
+    - Expandable collapsible drawer (`<details class="rfib-popover-distractors-details">`) for other unchosen distractors.
+    - Post-submission select dropdown locking to eliminate zombie states, restored cleanly on Retry and question navigation.
+    - WCAG AA accessibility compliance: `role="dialog"`, `aria-labelledby`, $\ge 40\text{px}$ touch targets, and focus restoration to the active hint button upon dismissal.
+    - Mobile bottom sheet physics on viewports $\le 640\text{px}$ with pointer event drag-to-dismiss behavior.
+  - Repaired and audited all 23 missing edge cases via the hardened 3-model pipeline (DeepSeek-R1 14B + Qwen3 14B + Gemma4 12B), resolving Ollama schema collapse and Gemma token prediction exhaustion.
+
+### Fixed & Hardened
+- **CRM Teacher Scheduler & Student Source Hardening (`functions/src/routes/teacher/scheduler.js`, `public/crm-admin.html`, `public/crm-admin.css`, `public/js/crm/lead-workspace.js`)**:
+  - Fixed completed session range querying in teacher scheduler to filter by non-cancelled status rather than strictly `scheduled`, preventing historical completed sessions from disappearing.
+  - Compacted scheduler pattern card and toolbar header in `public/crm-admin.html` and `public/crm-admin.css` to maximize calendar viewport height.
+  - Standardized `Zalo - Personal` acquisition source across lead/student workspace controllers, preventing silent save dropouts when updating source accounts in CRM.
+
 ## [V1.8.135] - 2026-09-06
 
 ### Fixed & Hardened

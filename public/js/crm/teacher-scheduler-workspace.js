@@ -58,14 +58,22 @@ window.TeacherSchedulerWorkspace = (function () {
 
     function closestTarget(evt, selector) {
         const rawTarget = evt?.target || null;
-        const target = rawTarget instanceof Element ? rawTarget : rawTarget?.parentElement;
-        return target?.closest(selector) || null;
+        if (!rawTarget) return null;
+        if (typeof rawTarget.closest === 'function') {
+            return rawTarget.closest(selector);
+        }
+        const parent = rawTarget.parentElement;
+        if (parent && typeof parent.closest === 'function') {
+            return parent.closest(selector);
+        }
+        return null;
     }
 
     function isLockedSession(session) {
         const hardLocked = String(session?.lockState || 'unlocked') === 'hard_locked'
             || String(session?.attendanceState || 'none') === 'in_progress'
             || String(session?.attendanceState || 'none') === 'finalized'
+            || String(session?.status || 'scheduled') === 'completed'
             || String(session?.status || 'scheduled') === 'cancelled';
         if (hardLocked) return true;
         if (session?.scheduledStartAtUtc) {
@@ -77,6 +85,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
     function isOutcomeLocked(session) {
         return String(session?.status || 'scheduled') === 'cancelled'
+            || String(session?.status || 'scheduled') === 'completed'
             || String(session?.attendanceState || 'none') === 'in_progress'
             || String(session?.attendanceState || 'none') === 'finalized'
             || String(session?.lockState || 'unlocked') === 'hard_locked';
@@ -112,7 +121,8 @@ window.TeacherSchedulerWorkspace = (function () {
             slotErrors: new Map(),
             pointerDrag: null,
             suppressedSessionClickId: null,
-            resizeDrag: null
+            resizeDrag: null,
+            _hasScrolledToHour: false
         };
 
         function updateRailLabels() {
@@ -270,7 +280,7 @@ window.TeacherSchedulerWorkspace = (function () {
             elements.teacherSchedulerClassList.innerHTML = state.classrooms.map((classroom) => {
                 const classId = String(classroom.classroomId || '');
                 const summary = classroom.scheduleSummary || {};
-                const assigned = Number(summary.contractedAssignedCount || 0);
+                const assigned = Number(summary.contractedAssignedCount ?? summary.contractedScheduledCount ?? 0);
                 const target = Number(summary.contractedTargetCount || 0);
                 const activeClass = state.placementClassroomId === classId ? 'is-armed' : '';
                 const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || classroom.primaryTeacherUid || '';
@@ -430,6 +440,11 @@ window.TeacherSchedulerWorkspace = (function () {
                         const classroom = getClassroomById(session.classId);
                         const title = classroom?.name || session.classId || 'Class';
                         const pending = state.pendingSessionIds.has(sessionId) ? 'is-saving' : '';
+                        const isCompleted = session.status === 'completed'
+                            || session.sessionOutcome === 'completed'
+                            || String(session.attendanceState || 'none') === 'finalized';
+                        const completedClass = isCompleted ? 'is-completed' : '';
+                        const completedBadge = isCompleted ? '<span class="pill-badge-completed">✓ Completed</span>' : '';
                         const duration = Number(session.durationMinutes || 0) || 60;
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
                         const heightPx = Math.max((duration / 30) * SLOT_HEIGHT_PX - 2, 18);
@@ -450,8 +465,8 @@ window.TeacherSchedulerWorkspace = (function () {
                         } else {
                             layoutStyle += 'left:2px;right:2px;';
                         }
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
-                            + `<span class="pill-title">${escapeHtml(title)}</span>`
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
+                            + `<span class="pill-title">${escapeHtml(title)}${completedBadge}</span>`
                             + teacherPill
                             + `<span class="pill-time">${escapeHtml(timeRange)}</span>`
                             + (locked ? '' : '<div class="scheduler-session-resize-handle" data-resize="1"></div>')
@@ -466,6 +481,20 @@ window.TeacherSchedulerWorkspace = (function () {
             });
             html += '</div>';
             elements.teacherSchedulerCalendar.innerHTML = html;
+
+            if (!state._hasScrolledToHour && elements.teacherSchedulerCalendar) {
+                state._hasScrolledToHour = true;
+                let earliestMinutes = 24 * 60;
+                state.sessions.forEach((s) => {
+                    const mins = parseTimeToMinutes(getSessionLocalTime(s));
+                    if (Number.isFinite(mins) && mins < earliestMinutes) {
+                        earliestMinutes = mins;
+                    }
+                });
+                const targetMinutes = earliestMinutes < 24 * 60 ? Math.max(7 * 60, earliestMinutes - 30) : 8 * 60;
+                const targetPx = Math.max(0, Math.floor(((targetMinutes - 7 * 60) / 30) * SLOT_HEIGHT_PX));
+                elements.teacherSchedulerCalendar.scrollTop = targetPx;
+            }
         }
 
 
@@ -506,11 +535,15 @@ window.TeacherSchedulerWorkspace = (function () {
             const scrollX = typeof window !== 'undefined' ? (window.scrollX || window.pageXOffset || 0) : 0;
             const scrollY = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
             const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
+            const viewportHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement?.clientHeight || 768) : 768;
             const popoverWidth = elements.teacherSchedulerQuickAdd.offsetWidth || 340;
+            const popoverHeight = elements.teacherSchedulerQuickAdd.offsetHeight || 280;
             const desiredLeft = (draft.anchorLeft || 0) + scrollX;
             const maxLeft = scrollX + viewportWidth - popoverWidth - 16;
             const clampedLeft = Math.max(scrollX + 16, Math.min(desiredLeft, maxLeft));
-            const clampedTop = Math.max(16, (draft.anchorTop || 0) + scrollY);
+            const desiredTop = (draft.anchorTop || 0) + scrollY;
+            const maxTop = scrollY + viewportHeight - popoverHeight - 16;
+            const clampedTop = desiredTop > maxTop ? Math.max(scrollY + 16, maxTop) : Math.max(16, desiredTop);
 
             elements.teacherSchedulerQuickAdd.style.display = 'block';
             elements.teacherSchedulerQuickAdd.setAttribute('aria-hidden', 'false');
@@ -695,11 +728,15 @@ window.TeacherSchedulerWorkspace = (function () {
             const scrollX = typeof window !== 'undefined' ? (window.scrollX || window.pageXOffset || 0) : 0;
             const scrollY = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
             const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
+            const viewportHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement?.clientHeight || 768) : 768;
             const popoverWidth = elements.teacherSchedulerSessionBubble.offsetWidth || 380;
+            const popoverHeight = elements.teacherSchedulerSessionBubble.offsetHeight || 320;
             const desiredLeft = (bubble.anchorLeft || 0) + scrollX;
             const maxLeft = scrollX + viewportWidth - popoverWidth - 16;
             const clampedLeft = Math.max(scrollX + 16, Math.min(desiredLeft, maxLeft));
-            const clampedTop = Math.max(16, (bubble.anchorTop || 0) + scrollY);
+            const desiredTop = (bubble.anchorTop || 0) + scrollY;
+            const maxTop = scrollY + viewportHeight - popoverHeight - 16;
+            const clampedTop = desiredTop > maxTop ? Math.max(scrollY + 16, maxTop) : Math.max(16, desiredTop);
 
             elements.teacherSchedulerSessionBubble.style.display = 'block';
             elements.teacherSchedulerSessionBubble.setAttribute('aria-hidden', 'false');
@@ -850,8 +887,14 @@ window.TeacherSchedulerWorkspace = (function () {
             });
             state.classrooms = Array.isArray(payload?.classrooms) ? payload.classrooms : [];
             state.sessions = Array.isArray(payload?.sessions) ? payload.sessions : [];
-            state.fromDate = from || payload?.from || null;
-            state.toDate = to || payload?.to || null;
+            const nextFrom = from || payload?.from || null;
+            const nextTo = to || payload?.to || null;
+            if (state.fromDate !== nextFrom || state.toDate !== nextTo || state._lastScrolledTeacherUid !== state.selectedTeacherUid) {
+                state._hasScrolledToHour = false;
+                state._lastScrolledTeacherUid = state.selectedTeacherUid;
+            }
+            state.fromDate = nextFrom;
+            state.toDate = nextTo;
             if (!getClassroomById(state.placementClassroomId)) {
                 state.placementClassroomId = '';
             }

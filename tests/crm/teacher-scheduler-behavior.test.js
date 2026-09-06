@@ -1030,6 +1030,150 @@ async function testTeacherRescheduleCancelOutcomeWithAllHealingAndAuth() {
     assert.strictEqual(res4._status, 403, 'Non-owner teacher must be forbidden from editing sessions');
 }
 
+async function testWorkspaceIncludesCompletedSessionsAndExcludesCancelled() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-hanh`]: {
+            primaryTeacherUid: 'teacher-shawn',
+            name: 'Trần Văn Hạnh - PTE Academic 1-1 24h',
+            courseId: 'course-pte',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 1440,
+                sessionMinutes: 120,
+                targetSessionCount: 12,
+                timezone: 'Asia/Ho_Chi_Minh',
+                scheduleVersion: 1
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-completed-1`]: {
+            classId: 'class-hanh',
+            teacherUid: 'teacher-shawn',
+            status: 'completed',
+            sessionOutcome: 'completed',
+            scheduledLocalDate: '2026-08-31',
+            scheduledLocalTime: '19:00',
+            scheduledStartAtUtc: '2026-08-31T12:00:00.000Z',
+            scheduledEndAtUtc: '2026-08-31T14:00:00.000Z',
+            durationMinutes: 120
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-completed-2`]: {
+            classId: 'class-hanh',
+            teacherUid: 'teacher-shawn',
+            status: 'completed',
+            sessionOutcome: 'completed',
+            scheduledLocalDate: '2026-09-02',
+            scheduledLocalTime: '19:00',
+            scheduledStartAtUtc: '2026-09-02T12:00:00.000Z',
+            scheduledEndAtUtc: '2026-09-02T14:00:00.000Z',
+            durationMinutes: 120
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-cancelled-1`]: {
+            classId: 'class-hanh',
+            teacherUid: 'teacher-shawn',
+            status: 'cancelled',
+            scheduledLocalDate: '2026-09-04',
+            scheduledLocalTime: '19:00',
+            scheduledStartAtUtc: '2026-09-04T12:00:00.000Z',
+            scheduledEndAtUtc: '2026-09-04T14:00:00.000Z',
+            durationMinutes: 120
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-scheduled-1`]: {
+            classId: 'class-hanh',
+            teacherUid: 'teacher-shawn',
+            status: 'scheduled',
+            scheduledLocalDate: '2026-09-07',
+            scheduledLocalTime: '19:00',
+            scheduledStartAtUtc: '2026-09-07T12:00:00.000Z',
+            scheduledEndAtUtc: '2026-09-07T14:00:00.000Z',
+            durationMinutes: 120
+        }
+    });
+
+    const router = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-shawn', email: 'shawn@example.com', isTeacher: true, isAdmin: false };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    const workspaceHandlers = getRouteHandlers(router, '/scheduler/workspace', 'get');
+
+    // Query the week 2026-08-31 to 2026-09-06
+    let res = buildRes();
+    await invokeHandlers(workspaceHandlers, {
+        query: { from: '2026-08-31', to: '2026-09-06' }
+    }, res);
+
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.sessions.length, 2, 'Must include the 2 completed sessions in the week 08/31-09/06');
+    assert.strictEqual(res._json.sessions[0].sessionId, 'session-completed-1');
+    assert.strictEqual(res._json.sessions[1].sessionId, 'session-completed-2');
+    assert(res._json.sessions.every(s => s.status !== 'cancelled'), 'Must exclude cancelled sessions');
+
+    // Query broad range including next week
+    res = buildRes();
+    await invokeHandlers(workspaceHandlers, {
+        query: { from: '2026-08-31', to: '2026-09-14' }
+    }, res);
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.sessions.length, 3, 'Must include both completed and scheduled sessions');
+}
+
+async function testWorkspaceLoadsClassroomsForGuestTeacherSessions() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-other-teacher`]: {
+            primaryTeacherUid: 'teacher-alice',
+            name: 'Alice Co-Taught Class',
+            courseId: 'course-pte',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 600,
+                sessionMinutes: 60,
+                targetSessionCount: 10,
+                timezone: 'Asia/Ho_Chi_Minh',
+                scheduleVersion: 1
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-guest-1`]: {
+            classId: 'class-other-teacher',
+            teacherUid: 'teacher-shawn',
+            status: 'scheduled',
+            scheduledLocalDate: '2026-09-02',
+            scheduledLocalTime: '10:00',
+            scheduledStartAtUtc: '2026-09-02T03:00:00.000Z',
+            scheduledEndAtUtc: '2026-09-02T04:00:00.000Z',
+            durationMinutes: 60
+        }
+    });
+
+    const router = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-shawn', email: 'shawn@example.com', isTeacher: true, isAdmin: false };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    const workspaceHandlers = getRouteHandlers(router, '/scheduler/workspace', 'get');
+    const res = buildRes();
+    await invokeHandlers(workspaceHandlers, {
+        query: { from: '2026-09-01', to: '2026-09-07' }
+    }, res);
+
+    assert.strictEqual(res._status, 200);
+    assert.strictEqual(res._json.sessions.length, 1);
+    assert.strictEqual(res._json.sessions[0].sessionId, 'session-guest-1');
+    assert.strictEqual(res._json.classrooms.length, 1, 'Classroom must be loaded even if primaryTeacherUid != callerUid');
+    assert.strictEqual(res._json.classrooms[0].id || res._json.classrooms[0].classroomId, 'class-other-teacher');
+}
+
 (async () => {
     await testAddMultiPersistsPattern();
     await testTeacherOutcomeUpdatesContractCounting();
@@ -1039,6 +1183,8 @@ async function testTeacherRescheduleCancelOutcomeWithAllHealingAndAuth() {
     await testNonAdminCannotSpoofTeacherUidInRecurrenceActivation();
     await testNonAdminCannotSpoofTeacherUidInSessionOrPattern();
     await testTeacherRescheduleCancelOutcomeWithAllHealingAndAuth();
+    await testWorkspaceIncludesCompletedSessionsAndExcludesCancelled();
+    await testWorkspaceLoadsClassroomsForGuestTeacherSessions();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

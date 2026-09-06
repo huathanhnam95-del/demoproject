@@ -1987,7 +1987,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 992,2026-09-05,Teaching Session Viewer Round 4: Interactive mindmap and workflow integration,Done,2026-09-05
 993,2026-09-05,Comparative analysis of V4 vs Azure Speech for isolated word lexical stress coaching,Done,2026-09-05
 994,2026-09-05,Restore prompt clause analyzer for each part of prompt to fulfill hieu de bai objective,Done,2026-09-05
-995,2026-09-06,Promote 1105 audited RFIB explanations with distractor contrast UI and resolve 23 edge cases,In Progress,
+995,2026-09-06,Promote 1105 audited RFIB explanations with distractor contrast UI and resolve 23 edge cases,Done,2026-09-06
 996,2026-09-06,Audit debug and refactor Teaching Session Viewer Round 4 implementation,Done,2026-09-06
 997,2026-09-06,Release V1.8.131: Deploy Teaching Session Viewer Round 4 and audit hardening to production,Done,2026-09-06
 998,2026-09-06,Fix and enforce automatic removal of (D) session tag when new development resumes,Done,2026-09-06
@@ -2010,3 +2010,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1015,2026-09-06,Audit and harden Admin and Teacher scheduler teacherUid resolution workspace all-filter and reschedule healing,Done,2026-09-06
 1016,2026-09-06,Fix Read Aloud sound changes tooltip hover persistence and width-aware ResizeObserver,Done,2026-09-06
 1017,2026-09-06,Release V1.8.135: Deploy Admin and Teacher scheduler hardening and Read Aloud prompt stage stabilization,Done,2026-09-06
+1018,2026-09-06,Update CRM lead source dropdown option from Zalo + Personal to Zalo - Personal,Done,2026-09-06
+1019,2026-09-06,Fix student save failing silently when choosing source account in CRM,Done,2026-09-06
+1020,2026-09-06,Fix completed sessions query filter in teacher scheduler and compact header to expand calendar viewport,Done,2026-09-06
+1021,2026-09-06,Release V1.8.136: Deploy 1128 audited RFIB explanations with distractor contrast UI and CRM teacher scheduler fixes,Done,2026-09-06

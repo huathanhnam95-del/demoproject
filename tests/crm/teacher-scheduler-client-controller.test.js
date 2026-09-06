@@ -711,6 +711,114 @@ async function runTests() {
         console.log('✓ Admin recurrence activation teacher filter validation verified');
     }
 
+    // Test 12: Completed session rendering, lock state, and vertical popover clamping
+    {
+        const { doc: testDoc } = createMockDocument();
+        const testElements = {
+            teacherSchedulerWorkspace: testDoc.createElement('div'),
+            teacherSchedulerClassList: testDoc.createElement('div'),
+            teacherSchedulerCalendar: testDoc.createElement('div'),
+            teacherSchedulerTeacherSelect: testDoc.createElement('select'),
+            teacherSchedulerAdminFilterGroup: testDoc.createElement('div'),
+            teacherSchedulerRailTitle: testDoc.createElement('h3'),
+            teacherSchedulerRailDesc: testDoc.createElement('p'),
+            teacherSchedulerSessionBubble: testDoc.createElement('div'),
+            teacherSchedulerSessionBubbleTitle: testDoc.createElement('div'),
+            teacherSchedulerSessionBubbleMeta: testDoc.createElement('div'),
+            teacherSchedulerSessionBubbleLock: testDoc.createElement('div'),
+            inputTeacherSchedulerSessionOutcome: testDoc.createElement('select'),
+            inputTeacherSchedulerSessionNote: testDoc.createElement('textarea'),
+            btnTeacherSchedulerSaveOutcome: testDoc.createElement('button'),
+            btnTeacherSchedulerCancelSession: testDoc.createElement('button'),
+            inputTeacherSchedulerFromDate: testDoc.createElement('input'),
+            inputTeacherSchedulerToDate: testDoc.createElement('input')
+        };
+        const testClassroom = {
+            classroomId: 'class-hanh',
+            name: 'Trần Văn Hạnh - PTE Academic 1-1 24h',
+            primaryTeacherUid: 'teacher-shawn',
+            scheduleConfig: { sessionMinutes: 120 }
+        };
+        const completedSession = {
+            sessionId: 'sess-completed-1',
+            classId: 'class-hanh',
+            teacherUid: 'teacher-shawn',
+            status: 'completed',
+            attendanceState: 'finalized',
+            sessionOutcome: 'completed',
+            scheduledLocalDate: '2026-08-31',
+            scheduledLocalTime: '19:00',
+            durationMinutes: 120,
+            unitType: 'contracted',
+            contractUnitIndex: 1
+        };
+
+        const mockGlobal = {
+            window: {
+                innerWidth: 1440,
+                innerHeight: 768,
+                scrollX: 0,
+                scrollY: 0,
+                Element: MockElement,
+                ClassroomAPI: {
+                    fetchTeacherSchedulerWorkspace: async () => ({
+                        classrooms: [testClassroom],
+                        sessions: [completedSession],
+                        from: '2026-08-31',
+                        to: '2026-09-06'
+                    }),
+                    fetchTeachers: async () => [{ uid: 'teacher-shawn', displayName: 'Shawn' }]
+                }
+            },
+            Element: MockElement,
+            document: testDoc,
+            console
+        };
+        vm.createContext(mockGlobal);
+        vm.runInContext(workspaceJs, mockGlobal);
+
+        const ctrl = mockGlobal.window.TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await ctrl.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('is-completed'), 'Calendar HTML must render session pill with is-completed class');
+        assert(calHtml.includes('✓ Completed'), 'Calendar HTML must render ✓ Completed badge');
+        assert(calHtml.includes('Trần Văn Hạnh'), 'Calendar HTML must render student/classroom name');
+
+        // Test vertical popover clamping near bottom of viewport
+        testElements.teacherSchedulerSessionBubble.offsetHeight = 300;
+        testElements.teacherSchedulerSessionBubble.offsetWidth = 360;
+
+        // Open bubble at bottom of 768px viewport (e.g. anchorTop = 720)
+        // Bubble should clamp to <= 768 - 300 - 16 = 452px
+        testElements.teacherSchedulerCalendar.listeners['click'].forEach(fn => fn({
+            target: {
+                closest: (sel) => {
+                    if (sel.includes('.teacher-scheduler-session-pill')) {
+                        return {
+                            dataset: { sessionId: 'sess-completed-1' },
+                            closest: () => null,
+                            getBoundingClientRect: () => ({ left: 200, bottom: 720 })
+                        };
+                    }
+                    return null;
+                }
+            }
+        }));
+
+        const bubbleTop = parseInt(testElements.teacherSchedulerSessionBubble.style.top, 10);
+        assert(Number.isFinite(bubbleTop), 'Bubble top must be a finite number');
+        assert(bubbleTop <= 452, `Bubble top (${bubbleTop}px) must be clamped to viewport maxTop (<= 452px)`);
+        assert(bubbleTop >= 16, 'Bubble top must be at least 16px');
+
+        console.log('✓ Completed session pill rendering and vertical popover clamping verified');
+    }
+
     console.log('All teacher scheduler client controller tests passed successfully!');
 }
 

@@ -75,7 +75,7 @@ def query_ollama(model: str, prompt: str, temperature: float = 0.1,
 
     # Adjust context size per model architecture to prevent CUDA VRAM memory bounds
     num_ctx = 8192 if is_gemma else 16384
-    num_predict = 4096
+    num_predict = 8192 if (is_qwen or "deepseek" in model.lower() or len(effective_prompt) > 4000) else 4096
 
     for attempt in range(1, max_retries + 1):
         temp = temperature if attempt == 1 else 0.0
@@ -493,9 +493,17 @@ def _find_list_key(data: dict, preferred: str, fallbacks: list[str]) -> list | N
 
 
 def parse_phase1_response(raw: str, blanks: list[dict]) -> dict | None:
+    data = None
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
+        idx = raw.rfind("}")
+        if idx != -1:
+            try:
+                data = json.loads(raw[:idx+1])
+            except json.JSONDecodeError:
+                pass
+    if not data:
         return None
 
     if isinstance(data, list):
@@ -734,17 +742,19 @@ def process_question(
 
     logging.info("  Phase 1 [DR] deepseek-r1:14b ...")
     p1_prompt = build_phase1_prompt(answer_text, full_text, blanks, existing_explanation)
-    t1 = time.time()
-    p1_raw = query_ollama(MODELS["dr"], p1_prompt, temperature=0.1, timeout=300, max_retries=4)
-    p1_data = parse_phase1_response(p1_raw, blanks) if p1_raw else None
-
-    if p1_data is None and existing_explanation is not None:
-        logging.info("  Phase 1 retry without existing explanation context...")
-        p1_prompt = build_phase1_prompt(answer_text, full_text, blanks, None)
-        p1_raw = query_ollama(MODELS["dr"], p1_prompt, temperature=0.1, timeout=300, max_retries=4)
+    t1_start = time.time()
+    p1_data = None
+    for p1_attempt in range(1, 4):
+        p1_raw = query_ollama(MODELS["dr"], p1_prompt, temperature=0.1 if p1_attempt == 1 else 0.0, timeout=360, max_retries=2)
         p1_data = parse_phase1_response(p1_raw, blanks) if p1_raw else None
-
-    t1_elapsed = time.time() - t1
+        if p1_data is not None:
+            break
+        logging.warning(f"  Phase 1 attempt {p1_attempt}/3 failed parsing for Question {qid}, retrying...")
+        if p1_attempt == 2 and existing_explanation is not None:
+            logging.info("  Phase 1 retry without existing explanation context...")
+            p1_prompt = build_phase1_prompt(answer_text, full_text, blanks, None)
+        time.sleep(2)
+    t1_elapsed = time.time() - t1_start
 
     if p1_data is None:
         logging.error(f"  Phase 1 FAILED for Question {qid}: No valid response from deepseek-r1:14b")

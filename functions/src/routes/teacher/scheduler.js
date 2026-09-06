@@ -964,9 +964,17 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
     router.post('/scheduler/activate-recurrences', ...requireTeacherHandlers, async (req, res) => {
         try {
-            const teacherUid = cleanOptionalString(req.user?.uid);
+            let teacherUid = cleanOptionalString(req.user?.uid);
             if (!teacherUid) {
                 return sendError(res, 401, 'UNAUTHORIZED', 'Missing authenticated user.');
+            }
+
+            const isAdmin = req.teacherAccess?.isAdmin === true;
+            if (isAdmin && req.body?.teacherUid) {
+                const targetTeacherUid = cleanOptionalString(req.body.teacherUid);
+                if (targetTeacherUid) {
+                    teacherUid = targetTeacherUid;
+                }
             }
 
             const from = cleanOptionalString(req.body?.from, startOfCurrentWeek());
@@ -1113,22 +1121,26 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 }
 
                 const createdSessions = [];
+                const BATCH_LIMIT = 400;
                 if (typeof db.batch === 'function') {
-                    const batch = db.batch();
-                    preparedSessions.forEach((session) => {
-                        const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
-                        const payload = {
-                            ...session,
-                            teacherUid,
-                            createdAt: serverTimestamp(),
-                            createdBy: teacherUid,
-                            updatedAt: serverTimestamp(),
-                            updatedBy: teacherUid
-                        };
-                        createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
-                        batch.set(ref, payload);
-                    });
-                    await batch.commit();
+                    for (let i = 0; i < preparedSessions.length; i += BATCH_LIMIT) {
+                        const chunk = preparedSessions.slice(i, i + BATCH_LIMIT);
+                        const batch = db.batch();
+                        chunk.forEach((session) => {
+                            const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
+                            const payload = {
+                                ...session,
+                                teacherUid,
+                                createdAt: serverTimestamp(),
+                                createdBy: cleanOptionalString(req.user?.uid) || teacherUid,
+                                updatedAt: serverTimestamp(),
+                                updatedBy: cleanOptionalString(req.user?.uid) || teacherUid
+                            };
+                            createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
+                            batch.set(ref, payload);
+                        });
+                        await batch.commit();
+                    }
                 } else {
                     for (const session of preparedSessions) {
                         const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
@@ -1136,11 +1148,13 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                             ...session,
                             teacherUid,
                             createdAt: serverTimestamp(),
-                            createdBy: teacherUid,
+                            createdBy: cleanOptionalString(req.user?.uid) || teacherUid,
                             updatedAt: serverTimestamp(),
-                            updatedBy: teacherUid
+                            updatedBy: cleanOptionalString(req.user?.uid) || teacherUid
                         };
-                        await ref.set(payload);
+                        if (typeof ref.set === 'function') {
+                            await ref.set(payload);
+                        }
                         createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
                     }
                 }

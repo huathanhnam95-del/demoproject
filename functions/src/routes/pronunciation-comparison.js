@@ -196,7 +196,8 @@ function buildSyntheticOptionB(word, referenceIpa = '', expectedSyllables = null
     const maxPitch = isStressed ? 224.0 : 162.0;
     const avgPitch = isStressed ? 215.0 : 158.0;
     const intensity = isStressed ? 78.5 : 65.0;
-    const prominence = isStressed ? 0.94 : 0.44;
+    const vStart = Math.round((startTime + (sylDur - vowelDur) / 2) * 1000) / 1000;
+    const vEnd = Math.round((vStart + vowelDur) * 1000) / 1000;
 
     syllables.push({
       syllable: i + 1,
@@ -204,6 +205,8 @@ function buildSyntheticOptionB(word, referenceIpa = '', expectedSyllables = null
       endTime,
       duration: sylDur,
       vowelDuration: vowelDur,
+      vowelStartTime: vStart,
+      vowelEndTime: vEnd,
       maxPitch,
       avgPitch,
       intensity,
@@ -352,11 +355,12 @@ router.post('/option-a', upload.single('audio'), async (req, res) => {
       formData.append('audio', blob, 'sample.wav');
       formData.append('intervals', JSON.stringify(vowelIntervals));
 
-      const prosodyResponse = await fetch(`${backendUrl}/analyze-nucleus-prosody`, {
+      const targetUrl = `${backendUrl}/analyze-nucleus-prosody`;
+      const prosodyResponse = await fetch(targetUrl, getFetchOptions(targetUrl, {
         method: 'POST',
         body: formData,
         signal: AbortSignal.timeout(8000)
-      });
+      }));
 
       if (prosodyResponse.ok) {
         const prosodyData = await prosodyResponse.json();
@@ -413,11 +417,42 @@ router.post('/option-a', upload.single('audio'), async (req, res) => {
         detectedStressedIdx = idx;
       }
 
+      // Compute syllable audio boundaries including adjacent consonants
+      let sylStart = interval.startTime;
+      let sylEnd = interval.endTime;
+      if (allPhonemes.length > 0) {
+        if (idx === 0) {
+          sylStart = allPhonemes[0].startTime;
+        } else {
+          const prevVowel = vowelIntervals[idx - 1];
+          const prevVowelPhoneIdx = allPhonemes.findIndex(p => p.isVowel && p.startTime === prevVowel?.startTime);
+          const currVowelPhoneIdx = allPhonemes.findIndex(p => p.isVowel && p.startTime === interval.startTime);
+          sylStart = prevVowelPhoneIdx >= 0 && currVowelPhoneIdx > prevVowelPhoneIdx + 1
+            ? allPhonemes[prevVowelPhoneIdx + 1].startTime
+            : interval.startTime;
+        }
+
+        if (idx === vowelIntervals.length - 1) {
+          sylEnd = allPhonemes[allPhonemes.length - 1].endTime;
+        } else {
+          const nextVowel = vowelIntervals[idx + 1];
+          const currVowelPhoneIdx = allPhonemes.findIndex(p => p.isVowel && p.startTime === interval.startTime);
+          const nextVowelPhoneIdx = allPhonemes.findIndex(p => p.isVowel && p.startTime === nextVowel?.startTime);
+          sylEnd = nextVowelPhoneIdx > currVowelPhoneIdx + 1
+            ? allPhonemes[currVowelPhoneIdx + 1].endTime
+            : interval.endTime;
+        }
+      }
+
       return {
         syllableNumber: idx + 1,
         nucleusPhoneme: interval.phoneme,
         startTime: interval.startTime,
         endTime: interval.endTime,
+        sylStartTime: Math.round(sylStart * 1000) / 1000,
+        sylEndTime: Math.round(sylEnd * 1000) / 1000,
+        nucleusStartTime: interval.startTime,
+        nucleusEndTime: interval.endTime,
         vowelDuration: interval.vowelDuration,
         maxPitch: interval.maxPitch || 0,
         meanPitch: interval.meanPitch || 0,
@@ -500,11 +535,12 @@ router.post('/option-b', upload.single('audio'), async (req, res) => {
 
     let response;
     try {
-      response = await fetch(`${backendUrl}/analyze/option-b`, {
+      const targetUrl = `${backendUrl}/analyze/option-b`;
+      response = await fetch(targetUrl, getFetchOptions(targetUrl, {
         method: 'POST',
         body: formData,
         signal: AbortSignal.timeout(8000)
-      });
+      }));
       if (!response.ok && backendUrl !== cloudFallback) {
         throw new Error(`Primary backend returned HTTP ${response.status}`);
       }
@@ -512,11 +548,12 @@ router.post('/option-b', upload.single('audio'), async (req, res) => {
       if (backendUrl !== cloudFallback) {
         try {
           console.warn(`[Option B] Primary backend ${backendUrl} failed (${primaryErr.message}), trying fallback ${cloudFallback}`);
-          response = await fetch(`${cloudFallback}/analyze/option-b`, {
+          const targetFallback = `${cloudFallback}/analyze/option-b`;
+          response = await fetch(targetFallback, getFetchOptions(targetFallback, {
             method: 'POST',
             body: formData,
             signal: AbortSignal.timeout(8000)
-          });
+          }));
         } catch (_) {
           // Both network attempts failed
         }

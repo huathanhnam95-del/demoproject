@@ -365,7 +365,8 @@ window.TeacherSchedulerWorkspace = (function () {
                         getSessionLocalDate(session) === dateStr && getSessionLocalTime(session) === slotTime
                     );
 
-                    const pillsHtml = sessionsHere.map((session) => {
+                    const totalSessions = sessionsHere.length;
+                    const pillsHtml = sessionsHere.map((session, idx) => {
                         const sessionId = String(session.sessionId || '');
                         const classroom = getClassroomById(session.classId);
                         const title = classroom?.name || session.classId || 'Class';
@@ -378,7 +379,15 @@ window.TeacherSchedulerWorkspace = (function () {
                         const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
                             ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
                             : '';
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending}" data-session-id="${escapeHtml(sessionId)}" style="top:0;height:${heightPx}px;">`
+                        let layoutStyle = `top:0;height:${heightPx}px;`;
+                        if (totalSessions > 1) {
+                            const colWidth = (100 / totalSessions).toFixed(2);
+                            const colLeft = (idx * (100 / totalSessions)).toFixed(2);
+                            layoutStyle += `left:calc(${colLeft}% + 1px);width:calc(${colWidth}% - 2px);right:auto;`;
+                        } else {
+                            layoutStyle += 'left:2px;right:2px;';
+                        }
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
                             + `<span class="pill-title">${escapeHtml(title)}</span>`
                             + teacherPill
                             + `<span class="pill-time">${escapeHtml(timeRange)}</span>`

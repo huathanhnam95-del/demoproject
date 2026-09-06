@@ -188,7 +188,7 @@ async function listClassSessions(db, classId) {
 
 async function listTeacherScheduledSessions(db, teacherUid, options = {}) {
     const cleanedTeacherUid = cleanOptionalString(teacherUid);
-    if (!cleanedTeacherUid) return [];
+    if (!cleanedTeacherUid || cleanedTeacherUid === 'all') return [];
 
     const from = cleanOptionalString(options.from);
     const to = cleanOptionalString(options.to);
@@ -774,9 +774,6 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
             const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only edit your own sessions.');
-            }
             if (!cleanOptionalString(existing.classId)) {
                 return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
             }
@@ -784,6 +781,13 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
             if (access.status !== 'ok') {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
+            }
+
+            const sessionTeacher = cleanOptionalString(existing.teacherUid);
+            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
+            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+            if (!isAdmin && !isAuthorizedTeacher) {
+                return sendError(res, 403, 'FORBIDDEN', 'You can only edit your own sessions.');
             }
             if (isLockedSession(existing)) {
                 return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
@@ -796,9 +800,19 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 timezone: intent.timezone,
                 durationMinutes: intent.durationMinutes || existing.durationMinutes || null
             });
+
+            const requestedTeacher = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                ? cleanOptionalString(req.body.teacherUid)
+                : null;
+            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
+            const effectiveTeacherUid = requestedTeacher
+                || ((rawExistingTeacher && rawExistingTeacher !== 'all') ? rawExistingTeacher : null)
+                || (classroomPrimaryTeacher || callerUid);
+
             const next = {
                 ...existing,
                 ...nextWindow,
+                teacherUid: effectiveTeacherUid,
                 durationMinutes: intent.durationMinutes || existing.durationMinutes || null,
                 timezone: intent.timezone || existing.timezone || null,
                 version: Number(existing.version || 1) + 1,
@@ -806,10 +820,6 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 updatedBy: callerUid
             };
 
-            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
-            const effectiveTeacherUid = (rawExistingTeacher && rawExistingTeacher !== 'all')
-                ? rawExistingTeacher
-                : (cleanOptionalString(access.classroom?.primaryTeacherUid) || callerUid);
             const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
             const teacherConflict = findTeacherConflict(teacherSessions, next, [sessionId]);
             if (teacherConflict) {
@@ -852,16 +862,23 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
             const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only cancel your own sessions.');
-            }
-            if (isLockedSession(existing)) {
-                return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be cancelled.');
+            if (!cleanOptionalString(existing.classId)) {
+                return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
             }
 
             const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
             if (access.status !== 'ok') {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only cancel sessions for your own classrooms.');
+            }
+
+            const sessionTeacher = cleanOptionalString(existing.teacherUid);
+            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
+            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+            if (!isAdmin && !isAuthorizedTeacher) {
+                return sendError(res, 403, 'FORBIDDEN', 'You can only cancel your own sessions.');
+            }
+            if (isLockedSession(existing)) {
+                return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be cancelled.');
             }
 
             await sessionRef.set({
@@ -911,11 +928,8 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 ? cleanOptionalString(rawNote, '')
                 : cleanOptionalString(existing?.sessionNote, '');
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
-            }
-            if (String(existing.status || 'scheduled') === 'cancelled' || isLockedSession(existing)) {
-                return sendError(res, 409, 'SESSION_LOCKED', 'Locked or cancelled sessions cannot be updated.');
+            if (!cleanOptionalString(existing.classId)) {
+                return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
             }
 
             const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
@@ -923,7 +937,23 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only update sessions for your own classrooms.');
             }
 
+            const sessionTeacher = cleanOptionalString(existing.teacherUid);
+            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
+            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+            if (!isAdmin && !isAuthorizedTeacher) {
+                return sendError(res, 403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
+            }
+            if (String(existing.status || 'scheduled') === 'cancelled' || isLockedSession(existing)) {
+                return sendError(res, 409, 'SESSION_LOCKED', 'Locked or cancelled sessions cannot be updated.');
+            }
+
+            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
+            const effectiveTeacherUid = (rawExistingTeacher && rawExistingTeacher !== 'all')
+                ? rawExistingTeacher
+                : (classroomPrimaryTeacher || callerUid);
+
             const patch = {
+                teacherUid: effectiveTeacherUid,
                 sessionOutcome,
                 sessionNote: sessionNote || '',
                 contractCountState: deriveContractCountState({

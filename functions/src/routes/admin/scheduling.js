@@ -51,6 +51,16 @@ function readExpectedScheduleVersion(payload) {
     return Number.isInteger(numeric) && numeric > 0 ? numeric : null;
 }
 
+function resolveAdminTargetTeacherUid(requestedTeacherUid, classroomFallback, existingFallback = null) {
+    const requested = cleanOptionalString(requestedTeacherUid);
+    if (requested && requested !== 'all') return requested;
+    const existing = cleanOptionalString(existingFallback);
+    if (existing && existing !== 'all') return existing;
+    const classroom = cleanOptionalString(classroomFallback);
+    if (classroom && classroom !== 'all') return classroom;
+    return null;
+}
+
 function splitDateTime(value) {
     const [datePart, timePart = '00:00:00'] = String(value || '').split('T');
     return {
@@ -95,7 +105,7 @@ async function listClassSessions(db, classId) {
 
 async function listTeacherScheduledSessions(db, teacherUid) {
     const cleanedTeacherUid = cleanOptionalString(teacherUid);
-    if (!cleanedTeacherUid) return [];
+    if (!cleanedTeacherUid || cleanedTeacherUid === 'all') return [];
     return listCollectionSessions(db, (query) =>
         query.where('teacherUid', '==', cleanedTeacherUid).where('status', '==', 'scheduled')
     );
@@ -188,7 +198,7 @@ async function syncClassroomScheduleState(db, classId, options = {}) {
 async function ensureNoTeacherConflict(db, proposedSession, ignoredSessionIds = []) {
     const normalizedProposal = normalizeScheduledSession(proposedSession);
     const teacherUid = cleanOptionalString(normalizedProposal.teacherUid);
-    if (!teacherUid) return;
+    if (!teacherUid || teacherUid === 'all') return;
 
     const proposedStartMs = new Date(normalizedProposal.scheduledStartAtUtc).getTime();
     const proposedEndMs = new Date(normalizedProposal.scheduledEndAtUtc).getTime();
@@ -245,6 +255,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             const from = cleanOptionalString(req.query?.from);
             const to = cleanOptionalString(req.query?.to);
             const teacherUid = cleanOptionalString(req.query?.teacherUid);
+            const isAllTeachers = !teacherUid || teacherUid === 'all';
 
             const [classroomSnap, sessions] = await Promise.all([
                 db.collection(CRM_CLASSROOMS).orderBy('createdAt', 'desc').limit(200).get(),
@@ -252,7 +263,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             ]);
 
             const filteredSessions = sessions
-                .filter((session) => !teacherUid || cleanOptionalString(session.teacherUid) === teacherUid)
+                .filter((session) => isAllTeachers || cleanOptionalString(session.teacherUid) === teacherUid)
                 .filter((session) => !from || String(session.scheduledLocalDate || '') >= from)
                 .filter((session) => !to || String(session.scheduledLocalDate || '') <= to)
                 .sort((left, right) => String(left.scheduledStartAtUtc || '').localeCompare(String(right.scheduledStartAtUtc || '')));
@@ -329,7 +340,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             const sessions = buildSeedSessions({
                 classId,
                 courseId: classroom.courseId || null,
-                teacherUid: cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || null,
+                teacherUid: resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid),
                 sessionMinutes: scheduleConfig.sessionMinutes,
                 timezone: scheduleConfig.timezone,
                 startDate: cleanOptionalString(req.body?.startDate),
@@ -373,7 +384,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             const preview = buildAddSessionPreview({
                 classId,
                 courseId: classroom.courseId || null,
-                teacherUid: cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || null,
+                teacherUid: resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid),
                 totalInstructionMinutes: previewContext.totalInstructionMinutes,
                 targetSessionCount: previewContext.targetSessionCount,
                 sessionMinutes: previewContext.sessionMinutes,
@@ -404,7 +415,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             const preview = buildAddSessionPreview({
                 classId,
                 courseId: classroom.courseId || null,
-                teacherUid: cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || null,
+                teacherUid: resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid),
                 totalInstructionMinutes: previewContext.totalInstructionMinutes,
                 targetSessionCount: previewContext.targetSessionCount,
                 sessionMinutes: previewContext.sessionMinutes,
@@ -478,7 +489,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             const preview = buildAddSessionPreview({
                 classId,
                 courseId: classroom.courseId || null,
-                teacherUid: cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || null,
+                teacherUid: resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid),
                 totalInstructionMinutes: previewContext.totalInstructionMinutes,
                 targetSessionCount: previewContext.targetSessionCount,
                 sessionMinutes: previewContext.sessionMinutes,
@@ -600,7 +611,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
                 replacementSession: {
                     classId,
                     courseId: classroom.courseId || null,
-                    teacherUid: cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || replacedSession.teacherUid || null,
+                    teacherUid: resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid, replacedSession.teacherUid),
                     ...replacementWindow
                 },
                 replacedSession
@@ -662,6 +673,18 @@ module.exports = function registerSchedulingRoutes(router, deps) {
                 return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
             }
 
+            const requestedTeacherUid = cleanOptionalString(req.body?.teacherUid);
+            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
+            let effectiveTeacherUid = (requestedTeacherUid && requestedTeacherUid !== 'all')
+                ? requestedTeacherUid
+                : ((rawExistingTeacher && rawExistingTeacher !== 'all') ? rawExistingTeacher : null);
+            if (!effectiveTeacherUid && cleanOptionalString(existing.classId)) {
+                const classSnap = await db.collection(CRM_CLASSROOMS).doc(cleanOptionalString(existing.classId)).get();
+                if (classSnap.exists) {
+                    effectiveTeacherUid = cleanOptionalString(classSnap.data()?.primaryTeacherUid) || null;
+                }
+            }
+
             const intent = extractLocalIntent(req.body || {}, existing.timezone || null, existing.durationMinutes || null);
             const nextWindow = buildScheduledSessionWriteData({}, {
                 targetLocalDate: intent.targetLocalDate,
@@ -672,6 +695,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
             const next = {
                 ...existing,
                 ...nextWindow,
+                teacherUid: effectiveTeacherUid || null,
                 durationMinutes: intent.durationMinutes || existing.durationMinutes || null,
                 timezone: intent.timezone || existing.timezone || null,
                 version: Number(existing.version || 1) + 1,
@@ -757,7 +781,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
                 listRawClassSessions(db, classId),
                 listClassSessions(db, classId)
             ]);
-            const teacherUid = cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || null;
+            const teacherUid = resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid);
             const teacherConflictSessions = teacherUid
                 ? (await listCollectionSessions(db, (query) =>
                     query.where('teacherUid', '==', teacherUid).where('status', '==', 'scheduled')
@@ -816,7 +840,7 @@ module.exports = function registerSchedulingRoutes(router, deps) {
                 listRawClassSessions(db, classId),
                 listClassSessions(db, classId)
             ]);
-            const teacherUid = cleanOptionalString(req.body?.teacherUid) || classroom.primaryTeacherUid || null;
+            const teacherUid = resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid);
             const teacherConflictSessions = teacherUid
                 ? (await listCollectionSessions(db, (query) =>
                     query.where('teacherUid', '==', teacherUid).where('status', '==', 'scheduled')

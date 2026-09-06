@@ -193,9 +193,111 @@ async function testRegenerateAfterSeededSessionsUsesPreviewApplyPath() {
     assert.strictEqual(updatedClassroom.scheduleSummary.remainingToScheduleCount, 0);
 }
 
+async function testAdminWorkspaceAllTeachersFilterAndRescheduleHealing() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-admin-test`]: {
+            name: 'Class Admin Test',
+            courseId: 'course-admin-1',
+            primaryTeacherUid: 'teacher-primary',
+            scheduleConfig: {
+                totalInstructionMinutes: 180,
+                sessionMinutes: 60,
+                targetSessionCount: 3,
+                timezone: 'Asia/Bangkok',
+                seedWeekdays: [1],
+                seedStartTime: '09:00',
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 3,
+                contractedAssignedCount: 2,
+                remainingToScheduleCount: 1,
+                overflowCount: 0
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-t1`]: {
+            sessionId: 'session-t1',
+            classId: 'class-admin-test',
+            teacherUid: 'teacher-1',
+            status: 'scheduled',
+            unitType: 'contracted',
+            scheduledLocalDate: '2026-04-06',
+            scheduledLocalTime: '09:00',
+            durationMinutes: 60,
+            timezone: 'Asia/Bangkok',
+            scheduledStartAtUtc: '2026-04-06T02:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-06T03:00:00.000Z'
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-t2`]: {
+            sessionId: 'session-t2',
+            classId: 'class-admin-test',
+            teacherUid: 'teacher-2',
+            status: 'scheduled',
+            unitType: 'contracted',
+            scheduledLocalDate: '2026-04-07',
+            scheduledLocalTime: '09:00',
+            durationMinutes: 60,
+            timezone: 'Asia/Bangkok',
+            scheduledStartAtUtc: '2026-04-07T02:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-07T03:00:00.000Z'
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-legacy-all`]: {
+            sessionId: 'session-legacy-all',
+            classId: 'class-admin-test',
+            teacherUid: 'all',
+            status: 'scheduled',
+            unitType: 'contracted',
+            scheduledLocalDate: '2026-04-08',
+            scheduledLocalTime: '09:00',
+            durationMinutes: 60,
+            timezone: 'Asia/Bangkok',
+            scheduledStartAtUtc: '2026-04-08T02:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-08T03:00:00.000Z'
+        }
+    });
+
+    const router = createSchedulingRouter(db);
+
+    // 1. GET /scheduler/workspace with teacherUid: 'all' must return all sessions across teachers
+    const wsRes = await callRoute(router, '/scheduler/workspace', 'get', {
+        query: { teacherUid: 'all' }
+    });
+    assert.strictEqual(wsRes._status, 200);
+    assert.strictEqual(wsRes._json.sessions.length, 3, 'Workspace with teacherUid=all must return all sessions');
+
+    // 2. POST /classrooms/:classId/sessions/add with teacherUid: 'all' must fall back to primaryTeacherUid
+    const addRes = await callRoute(router, '/classrooms/:classId/sessions/add', 'post', {
+        params: { classId: 'class-admin-test' },
+        body: {
+            teacherUid: 'all',
+            targetLocalDate: '2026-04-13',
+            targetLocalTime: '09:00',
+            durationMinutes: 60
+        }
+    });
+    assert.strictEqual(addRes._status, 200);
+    const addedSessionId = addRes._json.sessionId;
+    const addedSession = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/${addedSessionId}`);
+    assert.strictEqual(addedSession.teacherUid, 'teacher-primary', 'Admin passing "all" in session add must fall back to primary teacher');
+
+    // 3. PATCH /sessions/:sessionId/reschedule on session-legacy-all must heal teacherUid from 'all' to primaryTeacherUid
+    const reschedRes = await callRoute(router, '/sessions/:sessionId/reschedule', 'patch', {
+        params: { sessionId: 'session-legacy-all' },
+        body: {
+            targetLocalDate: '2026-04-20',
+            targetLocalTime: '09:00',
+            durationMinutes: 60
+        }
+    });
+    assert.strictEqual(reschedRes._status, 200);
+    const healedSession = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/session-legacy-all`);
+    assert.strictEqual(healedSession.teacherUid, 'teacher-primary', 'Rescheduling session with "all" must heal to primary teacher');
+}
+
 (async () => {
     await testSeedRejectsAlreadySeededContractedClass();
     await testRegenerateAfterSeededSessionsUsesPreviewApplyPath();
+    await testAdminWorkspaceAllTeachersFilterAndRescheduleHealing();
     process.stdout.write('admin scheduling route behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

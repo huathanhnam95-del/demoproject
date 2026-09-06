@@ -882,6 +882,154 @@ async function testNonAdminCannotSpoofTeacherUidInSessionOrPattern() {
     assert.strictEqual(adminPatternSessions[0].teacherUid, 'teacher-normal', 'Admin passing "all" in pattern must fall back to classroom primary teacher');
 }
 
+async function testTeacherRescheduleCancelOutcomeWithAllHealingAndAuth() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-heal-target`]: {
+            name: 'Heal Target Class',
+            primaryTeacherUid: 'teacher-owner',
+            courseId: 'course-owner',
+            createdAt: '2026-04-01T00:00:00.000Z',
+            scheduleConfig: {
+                totalInstructionMinutes: 300,
+                sessionMinutes: 60,
+                targetSessionCount: 5,
+                timezone: 'Asia/Bangkok',
+                seedWeekdays: ['mon'],
+                seedStartTime: '09:00',
+                scheduleVersion: 1
+            },
+            scheduleSummary: {
+                contractedTargetCount: 5,
+                contractedAssignedCount: 3,
+                remainingToScheduleCount: 2,
+                overflowCount: 0
+            }
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-all-resched`]: {
+            sessionId: 'session-all-resched',
+            classId: 'class-heal-target',
+            teacherUid: 'all',
+            unitType: 'contracted',
+            status: 'scheduled',
+            attendanceState: 'none',
+            lockState: 'unlocked',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            scheduledStartAtUtc: '2026-04-06T02:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-06T03:00:00.000Z',
+            scheduledLocalDate: '2026-04-06',
+            scheduledLocalTime: '09:00'
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-all-cancel`]: {
+            sessionId: 'session-all-cancel',
+            classId: 'class-heal-target',
+            teacherUid: 'all',
+            unitType: 'contracted',
+            status: 'scheduled',
+            attendanceState: 'none',
+            lockState: 'unlocked',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            scheduledStartAtUtc: '2026-04-07T02:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-07T03:00:00.000Z',
+            scheduledLocalDate: '2026-04-07',
+            scheduledLocalTime: '09:00'
+        },
+        [`${CRM_SCHEDULED_SESSIONS}/session-all-outcome`]: {
+            sessionId: 'session-all-outcome',
+            classId: 'class-heal-target',
+            teacherUid: 'all',
+            unitType: 'contracted',
+            status: 'scheduled',
+            attendanceState: 'none',
+            lockState: 'unlocked',
+            timezone: 'Asia/Bangkok',
+            durationMinutes: 60,
+            scheduledStartAtUtc: '2026-04-08T02:00:00.000Z',
+            scheduledEndAtUtc: '2026-04-08T03:00:00.000Z',
+            scheduledLocalDate: '2026-04-08',
+            scheduledLocalTime: '09:00'
+        }
+    });
+
+    const teacherRouter = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-owner', email: 'owner@example.com', isTeacher: true, isAdmin: false };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+
+    // 1. Primary teacher can reschedule session that has teacherUid: 'all', and it heals to teacher-owner
+    const reschedHandlers = getRouteHandlers(teacherRouter, '/sessions/:sessionId/reschedule', 'patch');
+    const res1 = buildRes();
+    await invokeHandlers(reschedHandlers, {
+        params: { sessionId: 'session-all-resched' },
+        body: {
+            targetLocalDate: '2026-04-13',
+            targetLocalTime: '09:00',
+            durationMinutes: 60
+        }
+    }, res1);
+
+    assert.strictEqual(res1._status, 200);
+    const sessionAfterResched = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/session-all-resched`);
+    assert.strictEqual(sessionAfterResched.teacherUid, 'teacher-owner', 'Reschedule must heal "all" to primary teacher');
+
+    // 2. Primary teacher can cancel session that has teacherUid: 'all'
+    const cancelHandlers = getRouteHandlers(teacherRouter, '/sessions/:sessionId/cancel', 'post');
+    const res2 = buildRes();
+    await invokeHandlers(cancelHandlers, {
+        params: { sessionId: 'session-all-cancel' }
+    }, res2);
+
+    assert.strictEqual(res2._status, 200);
+    const sessionAfterCancel = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/session-all-cancel`);
+    assert.strictEqual(sessionAfterCancel.status, 'cancelled');
+
+    // 3. Primary teacher can set outcome on session that has teacherUid: 'all'
+    const outcomeHandlers = getRouteHandlers(teacherRouter, '/sessions/:sessionId/outcome', 'post');
+    const res3 = buildRes();
+    await invokeHandlers(outcomeHandlers, {
+        params: { sessionId: 'session-all-outcome' },
+        body: {
+            outcome: 'completed',
+            note: 'Well done'
+        }
+    }, res3);
+
+    assert.strictEqual(res3._status, 200);
+    const sessionAfterOutcome = db.docs.get(`${CRM_SCHEDULED_SESSIONS}/session-all-outcome`);
+    assert.strictEqual(sessionAfterOutcome.sessionOutcome, 'completed');
+    assert.strictEqual(sessionAfterOutcome.teacherUid, 'teacher-owner', 'Outcome must heal "all" to primary teacher');
+
+    // 4. Non-owner teacher cannot edit this session (403 FORBIDDEN)
+    const otherTeacherRouter = createTeacherSchedulerRouter({
+        db,
+        authMiddleware: (req, _res, next) => {
+            req.user = { uid: 'teacher-other', email: 'other@example.com', isTeacher: true, isAdmin: false };
+            next();
+        },
+        sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
+        sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
+        serverTimestamp: () => 'SERVER_TS'
+    });
+    const otherReschedHandlers = getRouteHandlers(otherTeacherRouter, '/sessions/:sessionId/reschedule', 'patch');
+    const res4 = buildRes();
+    await invokeHandlers(otherReschedHandlers, {
+        params: { sessionId: 'session-all-resched' },
+        body: {
+            targetLocalDate: '2026-04-20',
+            targetLocalTime: '09:00',
+            durationMinutes: 60
+        }
+    }, res4);
+    assert.strictEqual(res4._status, 403, 'Non-owner teacher must be forbidden from editing sessions');
+}
+
 (async () => {
     await testAddMultiPersistsPattern();
     await testTeacherOutcomeUpdatesContractCounting();
@@ -890,6 +1038,7 @@ async function testNonAdminCannotSpoofTeacherUidInSessionOrPattern() {
     await testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking();
     await testNonAdminCannotSpoofTeacherUidInRecurrenceActivation();
     await testNonAdminCannotSpoofTeacherUidInSessionOrPattern();
+    await testTeacherRescheduleCancelOutcomeWithAllHealingAndAuth();
     process.stdout.write('teacher scheduler behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

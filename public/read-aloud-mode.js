@@ -1135,10 +1135,9 @@ class ReadAloudMode {
     if (!promptStage || this.resizeObserver || typeof ResizeObserver === 'undefined') return;
 
     this.lastPromptStageWidth = Math.round(promptStage.getBoundingClientRect().width);
-    this.resizeObserver = new ResizeObserver((entries) => {
+    this.resizeObserver = new ResizeObserver(() => {
       if (!this.isActive || !(this.chunkingEnabled || this.hasActiveCoachGuides()) || !this.currentPromptPlainText) return;
-      const entry = entries && entries[0];
-      const newWidth = Math.round(entry?.contentRect ? entry.contentRect.width : promptStage.getBoundingClientRect().width);
+      const newWidth = Math.round(promptStage.getBoundingClientRect().width);
       if (Number.isFinite(this.lastPromptStageWidth) && Math.abs(newWidth - this.lastPromptStageWidth) < 2) return;
       this.lastPromptStageWidth = newWidth;
       this.renderPromptForCurrentView();
@@ -2452,11 +2451,9 @@ class ReadAloudMode {
       if (this.activeSoundChangeTooltipId) {
         const promptStage = document.getElementById('ra-prompt-stage');
         const activeTargets = this.getSoundChangeTooltipTargets(this.activeSoundChangeTooltipId, promptStage);
-        if (activeTargets.length) {
-          const tooltip = document.getElementById('ra-sound-change-tooltip');
-          if (tooltip && tooltip.getAttribute('aria-hidden') === 'false') {
-            this.positionSoundChangeTooltip(tooltip, promptStage, activeTargets);
-          }
+        const tooltip = document.getElementById('ra-sound-change-tooltip');
+        if (activeTargets.length && tooltip && tooltip.getAttribute('aria-hidden') === 'false') {
+          this.positionSoundChangeTooltip(tooltip, promptStage, activeTargets);
         } else {
           this.hideSoundChangeTooltip();
         }

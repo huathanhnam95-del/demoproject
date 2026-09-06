@@ -347,7 +347,10 @@ async function main() {
       soundChangeHoverCheck.arrowText.includes('→'));
 
     // Clean up probe
-    await page.evaluate(() => document.getElementById('sc-hover-probe-container')?.remove());
+    await page.evaluate(() => {
+      window.ReadAloudMode?.hideSoundChangeTooltip?.();
+      document.getElementById('sc-hover-probe-container')?.remove();
+    });
 
     // Take screenshot of results
     await page.screenshot({

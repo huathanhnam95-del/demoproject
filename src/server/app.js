@@ -141,7 +141,8 @@ function createApp(options = {}) {
     pronunciationTestRoutes: require('../routes/pronunciation-test'),
     pronunciationAiRoutes: require('../routes/pronunciation-ai'),
     readAloudRoutes: require('../routes/read-aloud'),
-    echoForgeRoutes: require('../routes/echo-forge').createEchoForgeRouter()
+    echoForgeRoutes: require('../routes/echo-forge').createEchoForgeRouter(),
+    pronunciationComparisonRoutes: require('../../functions/src/routes/pronunciation-comparison')
   };
   const routes = { ...defaultRoutes, ...(options.routes || {}) };
 
@@ -291,6 +292,9 @@ function createApp(options = {}) {
   if (routes.pronunciationAiRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationAiRoutes);
   if (routes.readAloudRoutes) app.use('/api', optionalAuthUserMiddleware, routes.readAloudRoutes);
   if (routes.echoForgeRoutes) app.use('/api', optionalAuthUserMiddleware, routes.echoForgeRoutes);
+  if (routes.pronunciationComparisonRoutes) {
+    app.use('/api/pronunciation-assessment', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.pronunciationComparisonRoutes);
+  }
 
   const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
   const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');

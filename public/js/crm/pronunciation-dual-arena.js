@@ -129,10 +129,10 @@
                 <span class="dual-arena-label">Backend Engine:</span>
                 <div class="dual-arena-toggle-pills" role="radiogroup" aria-label="Backend environment selector">
                   <button type="button" class="dual-arena-pill ${this.state.backendType === 'local' ? 'is-active' : ''}" data-backend="local" title="Run on local Python server (http://localhost:8081)">
-                    <span class="pill-icon">💻</span> Local Server (8081)
+                    <span class="pill-badge">LOCAL</span> Local Server (8081)
                   </button>
                   <button type="button" class="dual-arena-pill ${this.state.backendType === 'cloud' ? 'is-active' : ''}" data-backend="cloud" title="Run on Cloud Run backend">
-                    <span class="pill-icon">☁️</span> Cloud Run
+                    <span class="pill-badge">CLOUD</span> Cloud Run
                   </button>
                 </div>
               </div>
@@ -176,17 +176,18 @@
               </button>
 
               <label class="dual-arena-btn dual-arena-btn-file" title="Upload audio file (.wav, .mp3)">
-                <span class="file-icon">📁</span> Upload WAV/MP3
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                Upload Audio
                 <input type="file" id="dual-arena-file-input" accept="audio/wav, audio/mp3, audio/mpeg, audio/ogg, audio/webm" style="display: none;" />
               </label>
 
               <div id="dual-arena-audio-preview-wrap" class="dual-arena-audio-preview" style="display: none;">
                 <audio id="dual-arena-audio-player" controls preload="auto"></audio>
-                <span id="dual-arena-dsp-badge" class="dual-arena-badge-dsp" title="Enhanced via AudioDspPipeline (80Hz rumble removal, 16kHz resample, -3dBFS peak norm)">⚡ DSP Enhanced</span>
+                <span id="dual-arena-dsp-badge" class="dual-arena-badge-dsp" title="Enhanced via AudioDspPipeline (80Hz rumble removal, 16kHz resample, -3dBFS peak norm)">DSP ENHANCED</span>
               </div>
 
               <button type="button" id="dual-arena-btn-run" class="dual-arena-btn dual-arena-btn-run" disabled>
-                <span class="run-bolt">⚡</span> Run Dual Analysis
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Dual Analysis
               </button>
             </div>
 
@@ -194,13 +195,13 @@
             <div id="dual-arena-waveform-wrap" class="dual-arena-waveform-container" style="display: none;">
               <div class="waveform-header">
                 <div class="waveform-title-wrap">
-                  <span class="waveform-icon">🌊</span>
+                  <span class="waveform-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M2 10v4M6 6v12M10 3v18M14 8v8M18 5v14M22 10v4"/></svg></span>
                   <span class="waveform-title">Acoustic Audio Waveform</span>
                   <span id="dual-arena-audio-duration" class="waveform-duration-badge">0.00s</span>
                 </div>
                 <div class="waveform-controls">
                   <button type="button" id="dual-arena-waveform-play-btn" class="dual-arena-btn-mini" title="Play / Pause Audio">
-                    <span id="dual-arena-play-icon">▶</span> <span id="dual-arena-play-text">Play</span>
+                    <span id="dual-arena-play-icon" class="play-icon-svg"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span> <span id="dual-arena-play-text">Play</span>
                   </button>
                 </div>
               </div>
@@ -229,7 +230,9 @@
               </div>
               <div class="dual-arena-card-body" id="option-a-body">
                 <div class="dual-arena-placeholder">
-                  <div class="placeholder-icon">☁️</div>
+                  <div class="placeholder-icon" aria-hidden="true">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                  </div>
                   <p>Option A combines Azure Speech phoneme alignment with targeted Praat F0 pitch and intensity extraction over vowel intervals, checking unstressed /ə/ reductions.</p>
                   <p class="placeholder-hint">Record audio or select a preset and click "Run Dual Analysis" to inspect.</p>
                 </div>
@@ -250,7 +253,9 @@
               </div>
               <div class="dual-arena-card-body" id="option-b-body">
                 <div class="dual-arena-placeholder">
-                  <div class="placeholder-icon">💻</div>
+                  <div class="placeholder-icon" aria-hidden="true">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.8"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                  </div>
                   <p>Option B runs local/self-hosted Praat native syllable segmentation with repaired lexical stress normalization (using vowel duration instead of full syllable duration) and reference-guided V4 syllabification.</p>
                   <p class="placeholder-hint">Record audio or select a preset and click "Run Dual Analysis" to inspect.</p>
                 </div>
@@ -262,13 +267,13 @@
           <div class="dual-arena-benchmark-panel" id="dual-arena-benchmark-panel" style="display: none;">
             <div class="benchmark-header">
               <div class="benchmark-title-wrap">
-                <h3 class="benchmark-title">📊 Human Comparison Judgment</h3>
+                <h3 class="benchmark-title">Human Comparison Judgment</h3>
                 <p class="benchmark-subtitle">Rate which engine performed more accurately on this audio sample to contribute to the benchmark dataset.</p>
               </div>
               <div class="benchmark-count-wrap">
                 <span class="benchmark-counter" id="benchmark-counter">${this.state.benchmarks.length} Comparisons Saved</span>
                 <button type="button" id="dual-arena-btn-export" class="dual-arena-btn dual-arena-btn-export" ${this.state.benchmarks.length === 0 ? 'disabled' : ''}>
-                  ⬇️ Export Benchmark (JSON)
+                  Export Benchmark (JSON)
                 </button>
               </div>
             </div>
@@ -277,16 +282,16 @@
               <span class="rating-prompt">Select Verdict:</span>
               <div class="rating-buttons">
                 <button type="button" class="rating-btn" data-winner="option-a">
-                  <span class="rating-icon">🏆</span> Option A is Better
+                  <span class="rating-badge rating-badge-a">A</span> Option A is Better
                 </button>
                 <button type="button" class="rating-btn" data-winner="option-b">
-                  <span class="rating-icon">🏆</span> Option B is Better
+                  <span class="rating-badge rating-badge-b">B</span> Option B is Better
                 </button>
                 <button type="button" class="rating-btn" data-winner="tie">
-                  <span class="rating-icon">🤝</span> Tie / Both Accurate
+                  <span class="rating-badge rating-badge-tie">=</span> Tie / Both Accurate
                 </button>
                 <button type="button" class="rating-btn" data-winner="neither">
-                  <span class="rating-icon">❌</span> Neither / Both Inaccurate
+                  <span class="rating-badge rating-badge-neither">X</span> Neither / Both Inaccurate
                 </button>
               </div>
             </div>
@@ -409,11 +414,32 @@
         this.elements.waveformPlayBtn.addEventListener('click', () => this.toggleWaveformPlay());
       }
 
-      // Audio player event listeners for synchronized play state
+      // Audio player event listeners for synchronized play state & canvas waveform progress
       if (this.elements.audioPlayer) {
         this.elements.audioPlayer.addEventListener('play', () => this.setWaveformPlayState(true));
         this.elements.audioPlayer.addEventListener('pause', () => this.setWaveformPlayState(false));
-        this.elements.audioPlayer.addEventListener('ended', () => this.setWaveformPlayState(false));
+        this.elements.audioPlayer.addEventListener('ended', () => {
+          this.setWaveformPlayState(false);
+          this.drawWaveformCanvas(0);
+        });
+        this.elements.audioPlayer.addEventListener('timeupdate', () => {
+          if (this.lastAudioBuffer && this.elements.audioPlayer.duration) {
+            const ratio = this.elements.audioPlayer.currentTime / this.elements.audioPlayer.duration;
+            this.drawWaveformCanvas(ratio);
+          }
+        });
+      }
+
+      // Waveform click to seek
+      if (this.elements.waveformView) {
+        this.elements.waveformView.addEventListener('click', (e) => {
+          if (!this.elements.audioPlayer || !this.elements.audioPlayer.duration) return;
+          const rect = this.elements.waveformView.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+          this.elements.audioPlayer.currentTime = ratio * this.elements.audioPlayer.duration;
+          this.drawWaveformCanvas(ratio);
+        });
       }
 
       // Run button
@@ -558,9 +584,9 @@
             view.innerHTML = '<div id="dual-arena-wavesurfer-target" style="width: 100%;"></div>';
             this.wavesurfer = window.WaveSurfer.create({
               container: '#dual-arena-wavesurfer-target',
-              waveColor: '#4f46e5',
+              waveColor: '#64748b',
               progressColor: '#38bdf8',
-              cursorColor: '#f1f5f9',
+              cursorColor: '#ffffff',
               cursorWidth: 2,
               height: 72,
               normalize: true,
@@ -607,46 +633,82 @@
         const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
         ctx.close();
 
+        this.lastAudioBuffer = audioBuffer;
         const duration = audioBuffer.duration;
         if (this.elements.audioDuration) {
           this.elements.audioDuration.textContent = `${duration.toFixed(2)}s`;
         }
 
-        const dpr = window.devicePixelRatio || 1;
-        const width = canvas.parentElement.clientWidth || 800;
-        const height = 80;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-
-        const drawCtx = canvas.getContext('2d');
-        drawCtx.scale(dpr, dpr);
-
-        const channelData = audioBuffer.getChannelData(0);
-        const step = Math.ceil(channelData.length / width);
-        const amp = height / 2;
-
-        const grad = drawCtx.createLinearGradient(0, 0, 0, height);
-        grad.addColorStop(0, '#38bdf8');
-        grad.addColorStop(0.5, '#6366f1');
-        grad.addColorStop(1, '#a855f7');
-        drawCtx.fillStyle = grad;
-
-        for (let i = 0; i < width; i++) {
-          let min = 1.0;
-          let max = -1.0;
-          for (let j = 0; j < step; j++) {
-            const datum = channelData[(i * step) + j];
-            if (datum < min) min = datum;
-            if (datum > max) max = datum;
-          }
-          const barH = Math.max(2, (max - min) * amp * 0.95);
-          const barY = amp - barH / 2;
-          drawCtx.fillRect(i, barY, 1, barH);
-        }
+        this.drawWaveformCanvas(0);
       } catch (err) {
         console.warn('Canvas waveform render error:', err);
+      }
+    }
+
+    drawWaveformCanvas(progressRatio = 0) {
+      const canvas = this.elements.waveformView ? this.elements.waveformView.querySelector('#dual-arena-waveform-canvas') : null;
+      if (!canvas || !this.lastAudioBuffer) return;
+
+      const audioBuffer = this.lastAudioBuffer;
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.parentElement.clientWidth || 800;
+      const height = 80;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      const drawCtx = canvas.getContext('2d');
+      drawCtx.scale(dpr, dpr);
+
+      // Dark obsidian high-contrast background
+      drawCtx.fillStyle = '#090d16';
+      drawCtx.fillRect(0, 0, width, height);
+
+      const amp = height / 2;
+
+      // Subtle zero-crossing center line
+      drawCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      drawCtx.lineWidth = 1;
+      drawCtx.beginPath();
+      drawCtx.moveTo(0, amp);
+      drawCtx.lineTo(width, amp);
+      drawCtx.stroke();
+
+      const channelData = audioBuffer.getChannelData(0);
+      const step = Math.ceil(channelData.length / width);
+      const playedWidth = Math.min(width, Math.max(0, width * progressRatio));
+
+      // Played gradient (vibrant sky blue to emerald)
+      const gradPlayed = drawCtx.createLinearGradient(0, 0, 0, height);
+      gradPlayed.addColorStop(0, '#38bdf8');
+      gradPlayed.addColorStop(0.5, '#0284c7');
+      gradPlayed.addColorStop(1, '#0369a1');
+
+      // Unplayed gradient (crisp light slate)
+      const gradUnplayed = drawCtx.createLinearGradient(0, 0, 0, height);
+      gradUnplayed.addColorStop(0, '#94a3b8');
+      gradUnplayed.addColorStop(0.5, '#64748b');
+      gradUnplayed.addColorStop(1, '#475569');
+
+      for (let i = 0; i < width; i++) {
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < step; j++) {
+          const datum = channelData[(i * step) + j];
+          if (datum < min) min = datum;
+          if (datum > max) max = datum;
+        }
+        const barH = Math.max(2, (max - min) * amp * 0.95);
+        const barY = amp - barH / 2;
+        drawCtx.fillStyle = i <= playedWidth ? gradPlayed : gradUnplayed;
+        drawCtx.fillRect(i, barY, 1, barH);
+      }
+
+      // Playhead progress cursor
+      if (progressRatio > 0 && progressRatio < 1) {
+        drawCtx.fillStyle = '#ffffff';
+        drawCtx.fillRect(Math.floor(playedWidth), 0, 2, height);
       }
     }
 
@@ -667,7 +729,9 @@
     setWaveformPlayState(isPlaying) {
       this.isPlayingWaveform = isPlaying;
       if (this.elements.playIcon) {
-        this.elements.playIcon.textContent = isPlaying ? '⏸' : '▶';
+        this.elements.playIcon.innerHTML = isPlaying
+          ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+          : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
       }
       if (this.elements.playText) {
         this.elements.playText.textContent = isPlaying ? 'Pause' : 'Play';
@@ -717,7 +781,7 @@
         this.state.optionAError = err;
         this.state.optionAResult = null;
         this.setCardStatus('a', 'error', 'Failed');
-        this.elements.cardABody.innerHTML = `<div class="card-error"><span class="error-icon">⚠️</span><p>Option A Error: ${err}</p></div>`;
+        this.elements.cardABody.innerHTML = `<div class="card-error"><span class="error-badge">ERROR</span><p>Option A Error: ${err}</p></div>`;
       }
 
       // Render Option B
@@ -733,7 +797,7 @@
         this.state.optionBError = err;
         this.state.optionBResult = null;
         this.setCardStatus('b', 'error', 'Failed');
-        this.elements.cardBBody.innerHTML = `<div class="card-error"><span class="error-icon">⚠️</span><p>Option B Error: ${err}</p></div>`;
+        this.elements.cardBBody.innerHTML = `<div class="card-error"><span class="error-badge">ERROR</span><p>Option B Error: ${err}</p></div>`;
       }
 
       // Show Benchmark evaluation panel
@@ -834,7 +898,7 @@
         if (s.reduction) {
           const verdictText = s.reduction.verdict || (s.reduction.isReduced ? 'Weak reduction to [ə] detected' : `Full vowel [${s.reduction.phoneme}] maintained`);
           reductionTag = s.reduction.isReduced
-            ? `<span class="tag-reduced" title="${verdictText}">/ə/ Reduced ✓ <span class="reduction-verdict">(${verdictText})</span></span>`
+            ? `<span class="tag-reduced" title="${verdictText}">/ə/ Reduced <span class="reduction-verdict">(${verdictText})</span></span>`
             : `<span class="tag-full" title="${verdictText}">[${s.reduction.phoneme}] Full</span>`;
         }
 
@@ -847,9 +911,9 @@
               ${isStressed ? '<span class="tag-stress-badge">PRIMARY STRESS</span>' : ''}
             </div>
             <div class="syl-col-metrics">
-              <span class="metric-pill" title="Vowel Nucleus Duration">⏱️ ${durMs}ms</span>
-              <span class="metric-pill" title="Pitch (F0)">🎵 ${pitchHz}</span>
-              <span class="metric-pill" title="Intensity">🔊 ${intDb}</span>
+              <span class="metric-pill" title="Vowel Nucleus Duration"><span class="metric-label">DUR</span> ${durMs}ms</span>
+              <span class="metric-pill" title="Pitch (F0)"><span class="metric-label">F0</span> ${pitchHz}</span>
+              <span class="metric-pill" title="Intensity"><span class="metric-label">INT</span> ${intDb}</span>
             </div>
             <div class="syl-col-prominence">
               <div class="prominence-bar-wrap" title="Lexical prominence: ${promPct}%">
@@ -922,9 +986,9 @@
               ${isStressed ? '<span class="tag-stress-badge badge-b">PRIMARY STRESS</span>' : ''}
             </div>
             <div class="syl-col-metrics">
-              <span class="metric-pill" title="Measured Vowel Duration">⏱️ Vowel: ${durMs}ms</span>
-              <span class="metric-pill" title="Pitch (F0)">🎵 ${pitchHz}</span>
-              <span class="metric-pill" title="Intensity">🔊 ${intDb}</span>
+              <span class="metric-pill" title="Measured Vowel Duration"><span class="metric-label">DUR</span> ${durMs}ms</span>
+              <span class="metric-pill" title="Pitch (F0)"><span class="metric-label">F0</span> ${pitchHz}</span>
+              <span class="metric-pill" title="Intensity"><span class="metric-label">INT</span> ${intDb}</span>
             </div>
             <div class="syl-col-prominence">
               <div class="prominence-bar-wrap" title="Lexical prominence: ${promPct}%">

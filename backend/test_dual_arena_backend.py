@@ -116,6 +116,58 @@ class TestDualArenaEndpoints(unittest.TestCase):
         self.assertIn('syllables', data)
         self.assertIn('detectedStressedIndex', data)
 
+    def test_analyze_option_b_infers_syllables_from_reference_ipa(self):
+        wav_buf = _make_dummy_wav(duration_s=0.7, freq=220.0)
+        # Without explicit expected_syllables parameter
+        response = self.client.post(
+            '/analyze/option-b',
+            data={
+                'audio': (wav_buf, 'test.wav', 'audio/wav'),
+                'word': 'photograph',
+                'reference_ipa': 'ˈfoʊ.tə.ɡræf',
+            },
+            content_type='multipart/form-data'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data.get('success'))
+        self.assertEqual(data.get('targetWord'), 'photograph')
+        self.assertIn('syllables', data)
+        self.assertIn('v4Syllabification', data)
+
+    def test_analyze_nucleus_prosody_empty_intervals(self):
+        wav_buf = _make_dummy_wav(duration_s=0.4, freq=200.0)
+        response = self.client.post(
+            '/analyze-nucleus-prosody',
+            data={
+                'audio': (wav_buf, 'test.wav', 'audio/wav'),
+                'intervals': '[]',
+            },
+            content_type='multipart/form-data'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data.get('success'))
+        self.assertEqual(data.get('intervals'), [])
+
+    def test_analyze_nucleus_prosody_silence(self):
+        # Silent audio buffer
+        wav_buf = _make_dummy_wav(duration_s=0.4, freq=0.0)
+        intervals = [{'id': 0, 'phoneme': 'ə', 'startTime': 0.1, 'endTime': 0.3}]
+        response = self.client.post(
+            '/analyze-nucleus-prosody',
+            data={
+                'audio': (wav_buf, 'test.wav', 'audio/wav'),
+                'intervals': json.dumps(intervals),
+            },
+            content_type='multipart/form-data'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data.get('success'))
+        self.assertEqual(len(data['intervals']), 1)
+        self.assertEqual(data['intervals'][0]['maxPitch'], 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()

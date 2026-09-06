@@ -38,7 +38,7 @@
     settings: { label: 'Settings', subTabs: [] },
     chatbot: { label: 'Chatbot Management', subTabs: [] },
     devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true },
-    "pronunciation-samples": { label: '🎙️ Pronunciation Verification', subTabs: [] },
+    "pronunciation-samples": { label: '🎙️ Pronunciation Samples', subTabs: [] },
     "voice-cloning": { label: '🎙️ Voice Cloning Studio', subTabs: [] }
   };
 
@@ -7422,11 +7422,13 @@
   // Pronunciation Dual Comparison Arena (Option A vs. Option B)
   let dualArenaInstance = null;
   function initPronunciationDualArena() {
+    if (dualArenaInstance) return dualArenaInstance;
     const mount = document.getElementById('pronunciation-dual-arena-mount');
-    if (!mount) return;
+    if (!mount) return null;
     if (window.PronunciationDualArena) {
       dualArenaInstance = new window.PronunciationDualArena(mount);
     }
+    return dualArenaInstance;
   }
 
   // V3 Pronunciation Verification Contract Handler (Preserved for CRM Audio Verification)

@@ -119,6 +119,66 @@ async function runTests() {
       assert.strictEqual(typeof data.summary.stressConfidence, 'number');
       console.log('✓ Option A extracts vowel nuclei, checks /ə/ reduction, and computes prominence');
     }
+
+    // Test 4: POST /option-b with missing audio returns 400
+    {
+      const res = await fetch(`${baseUrl}/option-b`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word: 'record' })
+      });
+      assert.strictEqual(res.status, 400);
+      const data = await res.json();
+      assert.strictEqual(data.success, false);
+      assert.match(data.error, /audio/i);
+      console.log('✓ Option B validates missing audio');
+    }
+
+    // Test 5: POST /option-b proxy with mocked backend response
+    {
+      const mockBackendServer = http.createServer((req, res) => {
+        if (req.url === '/analyze/option-b' && req.method === 'POST') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            engine: 'option-b',
+            targetWord: 'record',
+            syllables: [
+              { syllable: 1, startTime: 0.1, endTime: 0.3, vowelDuration: 0.15, prominence: 0.9 },
+              { syllable: 2, startTime: 0.35, endTime: 0.55, vowelDuration: 0.10, prominence: 0.4 }
+            ]
+          }));
+        } else {
+          res.writeHead(404);
+          res.end();
+        }
+      });
+      await new Promise((resolve) => mockBackendServer.listen(0, resolve));
+      const mockPort = mockBackendServer.address().port;
+      const mockBackendUrl = `http://127.0.0.1:${mockPort}`;
+
+      try {
+        const formData = new FormData();
+        const wav = makeWavBuffer();
+        formData.append('audio', new Blob([wav], { type: 'audio/wav' }), 'test.wav');
+        formData.append('word', 'record');
+        formData.append('reference_ipa', 'ˈrɛk.ɚd');
+
+        const res = await fetch(`${baseUrl}/option-b`, {
+          method: 'POST',
+          body: formData,
+          headers: { 'x-python-backend-url': mockBackendUrl }
+        });
+        assert.strictEqual(res.status, 200);
+        const data = await res.json();
+        assert.strictEqual(data.success, true);
+        assert.strictEqual(data.engine, 'option-b');
+        assert.strictEqual(data.syllables.length, 2);
+        console.log('✓ Option B successfully proxies to Python backend');
+      } finally {
+        await new Promise((resolve) => mockBackendServer.close(resolve));
+      }
+    }
   } finally {
     delete process.env.PRONUNCIATION_TEST_AZURE_MOCK_RESPONSE;
     await new Promise((resolve) => server.close(resolve));

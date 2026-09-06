@@ -364,6 +364,15 @@ async function main() {
     await runBtn.waitFor({ state: 'visible' });
     assert.strictEqual(await runBtn.isDisabled(), false, 'Run Dual Analysis button should be enabled after audio is uploaded.');
 
+    // 7b. Verify Waveform Visualization Display is mounted and visible
+    const waveformWrap = page.locator('#dual-arena-waveform-wrap');
+    await waveformWrap.waitFor({ state: 'visible', timeout: 5000 });
+    assert.strictEqual(await waveformWrap.isVisible(), true, 'Waveform container should be visible after audio is loaded.');
+    const playWaveformBtn = page.locator('#dual-arena-waveform-play-btn');
+    assert.strictEqual(await playWaveformBtn.isVisible(), true, 'Waveform play button should be visible.');
+    const durationText = await page.textContent('#dual-arena-audio-duration');
+    assert.match(durationText, /\d+\.\d+s/, 'Duration badge should show audio length in seconds.');
+
     // 8. Click "Run Dual Analysis" and verify side-by-side card rendering
     await runBtn.click();
 

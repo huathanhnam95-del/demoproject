@@ -1,0 +1,1790 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "271",
+  "title": "#271 Automobiles",
+  "prompt": "Some people think that the automobile has improved modern life. Others think that the automobile has caused serious problems. What’s your opinion about it?",
+  "source": {
+    "promptSha256": "6dc02708477623542072fa35de621a7148cde19ad99f148823e09a2846693c45",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people think that the automobile has improved modern life.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Others think that the automobile has caused serious problems.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "What’s your opinion about it?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Traffic"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "automobile",
+        "enGloss": "Key concept related to automobile.",
+        "viGloss": "ô tô"
+      },
+      {
+        "term": "improved",
+        "enGloss": "Key concept related to improved.",
+        "viGloss": "được cải thiện"
+      },
+      {
+        "term": "serious",
+        "enGloss": "Key concept related to serious.",
+        "viGloss": "nghiêm trọng"
+      },
+      {
+        "term": "problems",
+        "enGloss": "Key concept related to problems.",
+        "viGloss": "vấn đề"
+      },
+      {
+        "term": "opinion",
+        "enGloss": "Key concept related to opinion.",
+        "viGloss": "ý kiến"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "view_a-point1",
+        "label": "Point 1",
+        "en": "The automobile makes travel easier by allowing people to reach distant places.",
+        "vi": "Góc nhìn: The automobile makes travel easier by allowing people to reach distant places.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_a-point2",
+        "label": "Point 2",
+        "en": "The automobile helps people get to work quickly, improving daily routines.",
+        "vi": "Góc nhìn: The automobile helps people get to work quickly, improving daily routines.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_b-point1",
+        "label": "Point 1",
+        "en": "Cars create bad traffic and pollution in cities, leading to health issues because they use gasoline.",
+        "vi": "Góc nhìn: Cars create bad traffic and pollution in cities, leading to health issues because they use gasoline.",
+        "sourceVariantId": "view_b"
+      },
+      {
+        "id": "view_b-point2",
+        "label": "Point 2",
+        "en": "Cars require large amounts of space for roads and parking lots, preventing the use of land for parks or homes.",
+        "vi": "Góc nhìn: Cars require large amounts of space for roads and parking lots, preventing the use of land for parks or homes.",
+        "sourceVariantId": "view_b"
+      },
+      {
+        "id": "view_a-point1",
+        "label": "Point 1",
+        "en": "The car has greatly improved how people can travel and go places.",
+        "vi": "Góc nhìn: The car has greatly improved how people can travel and go places.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_a-point2",
+        "label": "Point 2",
+        "en": "Another benefit of the automobile is that it helps businesses grow and connect communities.",
+        "vi": "Góc nhìn: Another benefit of the automobile is that it helps businesses grow and connect communities.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_b-point1",
+        "label": "Point 1",
+        "en": "The car has not truly improved modern life because its negative impacts, such as traffic congestion and environmental damage, are too great to ignore.",
+        "vi": "Góc nhìn: The car has not truly improved modern life because its negative impacts, such as traffic congestion and environmental damage, are too great to ignore.",
+        "sourceVariantId": "view_b"
+      },
+      {
+        "id": "view_b-point2",
+        "label": "Point 2",
+        "en": "The negative effects of the automobile, including traffic congestion and environmental damage, show that the problems caused by cars are too great to ignore.",
+        "vi": "Góc nhìn: The negative effects of the automobile, including traffic congestion and environmental damage, show that the problems caused by cars are too great to ignore.",
+        "sourceVariantId": "view_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Traffic.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Traffic."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "automobile",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "travel",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "small",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "city",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "automobile",
+            "enGloss": "a car",
+            "viGloss": "xe ô tô",
+            "source": "approved_sample"
+          },
+          {
+            "term": "travel",
+            "enGloss": "to go from one place to another",
+            "viGloss": "đi lại",
+            "source": "approved_sample"
+          },
+          {
+            "term": "small",
+            "enGloss": "not big",
+            "viGloss": "nhỏ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "city",
+            "enGloss": "a large town",
+            "viGloss": "thành phố",
+            "source": "approved_sample"
+          },
+          {
+            "term": "work",
+            "enGloss": "a job",
+            "viGloss": "công việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "daily",
+            "enGloss": "happening every day",
+            "viGloss": "hàng ngày",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic work",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: công việc học tập"
+          },
+          {
+            "term": "classic work",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tác phẩm kinh điển"
+          },
+          {
+            "term": "conceptual framework",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: khung khái niệm"
+          },
+          {
+            "term": "creative work",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: công việc sáng tạo"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "view_a",
+          "label": "Version 1: VIEW A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Traffic ____.",
+          "point1": "The automobile makes travel easier by allowing people to reach distant places.",
+          "point2": "The automobile helps people get to work quickly, improving daily routines.",
+          "sampleVariantId": "view_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "view_b",
+          "label": "Version 2: VIEW B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Traffic ____.",
+          "point1": "Cars create bad traffic and pollution in cities, leading to health issues because they use gasoline.",
+          "point2": "Cars require large amounts of space for roads and parking lots, preventing the use of land for parks or homes.",
+          "sampleVariantId": "view_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "view_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that cars have made modern life better, while others think they cause big problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The automobile has made travel much easier for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, cars allow us to move to places that were hard to reach before in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, people can drive to small towns far away from the city in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can live in the country and still go to work.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that cars help people live in different areas.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that cars help people get to work quickly.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because cars save a lot of time when people need to travel long distances in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person can drive to a job site in less time than taking a bus in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can start their work and finish it on time.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that cars help people manage their daily routines.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from automobile and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "view_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that the automobile has made modern life better.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The car has caused serious problems for people and the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, cars create bad traffic and pollution in cities in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, many cars use gasoline, which makes the air dirty in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people breathe bad air, and this causes health issues.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that cars make city life harder.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another problem is that cars take up too much space.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people need big roads and parking lots for many cars in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a small town needs much land just for car parking in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this land cannot be used for parks or homes in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that cars use up valuable space.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from caused and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "automobile",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "mobility",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "convenience",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "transportation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "automobile",
+            "enGloss": "a car",
+            "viGloss": "ô tô",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mobility",
+            "enGloss": "the ability to move",
+            "viGloss": "sự di chuyển",
+            "source": "approved_sample"
+          },
+          {
+            "term": "convenience",
+            "enGloss": "the state of being easy",
+            "viGloss": "sự tiện lợi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "transportation",
+            "enGloss": "the movement of people or goods",
+            "viGloss": "sự vận chuyển",
+            "source": "approved_sample"
+          },
+          {
+            "term": "infrastructure",
+            "enGloss": "basic physical structures",
+            "viGloss": "cơ sở hạ tầng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "economies",
+            "enGloss": "the system of making and using money",
+            "viGloss": "nền kinh tế",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "social mobility",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Traffic.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Traffic."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "view_a",
+          "label": "Version 1: VIEW A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Traffic ____.",
+          "point1": "The car has greatly improved how people can travel and go places.",
+          "point2": "Another benefit of the automobile is that it helps businesses grow and connect communities.",
+          "sampleVariantId": "view_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "view_b",
+          "label": "Version 2: VIEW B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Traffic ____.",
+          "point1": "The car has not truly improved modern life because its negative impacts, such as traffic congestion and environmental damage, are too great to ignore.",
+          "point2": "The negative effects of the automobile, including traffic congestion and environmental damage, show that the problems caused by cars are too great to ignore.",
+          "sampleVariantId": "view_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "view_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of the automobile in modern life is a topic that causes much discussion.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The car has greatly improved how people can travel and go places.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it gives people freedom and convenience in their daily lives in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a family can easily move to a new area without needing public transport.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can live further away from their jobs, which offers more space.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the car increases personal mobility for many people.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another benefit of the automobile is that it helps businesses grow and connect communities.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that goods and services can be moved quickly across large distances in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that delivery trucks can bring fresh food to remote stores.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that local economies benefit from this reliable and fast transportation.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the car supports economic development.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from greatly and another.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "view_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of the automobile in modern life is a subject of much debate, with some people seeing it as an improvement and others seeing it as a source of serious problems.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The car has not truly improved modern life.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, while it offers convenience, it also creates many issues for cities in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, many cities struggle with severe traffic congestion during peak hours.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people spend much time stuck in traffic, which lowers their quality of life.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the negative impacts outweigh the benefits of car use.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that cars cause environmental damage.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that burning fuel releases harmful emissions into the air in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that major cities often report poor air quality levels.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people suffer from breathing problems, making the air unhealthy for everyone.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that cars are harmful to the environment.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from truly and another.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "mobility",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "unprecedented",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "facilitating",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "commuting",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "mobility",
+            "enGloss": "the ability to move from place to place",
+            "viGloss": "khả năng di chuyển",
+            "source": "approved_sample"
+          },
+          {
+            "term": "unprecedented",
+            "enGloss": "never done or known before",
+            "viGloss": "chưa từng có",
+            "source": "approved_sample"
+          },
+          {
+            "term": "facilitating",
+            "enGloss": "making something easier",
+            "viGloss": "tạo điều kiện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "commuting",
+            "enGloss": "traveling regularly between home and work",
+            "viGloss": "đi lại hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "suburban",
+            "enGloss": "residential area outside a city",
+            "viGloss": "ngoại ô",
+            "source": "approved_sample"
+          },
+          {
+            "term": "connectivity",
+            "enGloss": "the state of being connected",
+            "viGloss": "sự kết nối",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "social mobility",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Traffic.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Traffic."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "view_a",
+          "label": "Version 1: VIEW A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Traffic ____.",
+          "point1": "The primary argument is that automobiles boost personal mobility and connectivity.",
+          "point2": "The secondary argument is that vehicles support a better lifestyle by enabling flexible routines.",
+          "sampleVariantId": "view_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "view_b",
+          "label": "Version 2: VIEW B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Traffic ____.",
+          "point1": "The primary argument against the automobile is that its convenience is outweighed by negative consequences like congestion and pollution.",
+          "point2": "The secondary argument is that the environmental costs, specifically the emissions from internal combustion engines, pose a significant threat to ecological balance.",
+          "sampleVariantId": "view_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "view_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of the automobile in modern society has sparked considerable debate regarding its overall impact.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The automobile has undeniably enhanced the quality of life for many individuals.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it has provided unprecedented levels of personal mobility in everyday life in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, people can now travel to remote areas quickly, facilitating economic growth.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, access to job markets and essential services has expanded significantly.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the car has greatly improved human connectivity.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the vehicle has revolutionized the way people conduct their daily routines.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that it allows for flexible scheduling and efficient commuting in everyday life in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that suburban living, once impractical, is now achievable.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that families can live further from their workplaces, enjoying more space.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the automobile supports a better lifestyle.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from automobile and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "view_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of the automobile in modern society has generated considerable debate regarding its overall impact.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The notion that cars have significantly improved modern life is questionable.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the convenience of personal transportation often masks serious drawbacks in everyday life in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the sheer volume of vehicles contributes to severe urban congestion.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, daily commutes become stressful and time-consuming for many residents.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the supposed benefits are outweighed by the negative consequences.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the environmental costs associated with widespread car use are substantial.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that internal combustion engines emit harmful pollutants into the atmosphere in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that major cities frequently experience poor air quality readings.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that public health suffers, leading to respiratory illnesses among the populace.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that automobiles pose a significant threat to ecological balance.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Traffic.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from notion and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:29.511702+00:00"
+  }
+}

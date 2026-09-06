@@ -1,0 +1,1809 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "113",
+  "title": "#113 Concentration",
+  "prompt": "Some people argue that young people should concentrate on study or work, but some people think it is better to put energy in activities designed to broaden their experience, such as international travel and volunteering. Discuss with examples or cases.",
+  "source": {
+    "promptSha256": "f1de22a4935a3f14a5e7b9184bc2012791220f0b889ab3135f578e1533adfed8",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people argue that young people should concentrate on study or work, but some people think it is better to put energy in activities designed to broaden their experience, such as international travel and volunteering.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Discuss with examples or cases.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Socio-cultural and global issues"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "concentrate",
+        "enGloss": "Key concept related to concentrate.",
+        "viGloss": "tập trung"
+      },
+      {
+        "term": "activities",
+        "enGloss": "actions or tasks performed",
+        "viGloss": "hoạt động"
+      },
+      {
+        "term": "designed",
+        "enGloss": "Key concept related to designed.",
+        "viGloss": "được thiết kế"
+      },
+      {
+        "term": "broaden",
+        "enGloss": "Key concept related to broaden.",
+        "viGloss": "mở rộng"
+      },
+      {
+        "term": "experience",
+        "enGloss": "Key concept related to experience.",
+        "viGloss": "kinh nghiệm"
+      },
+      {
+        "term": "international",
+        "enGloss": "Key concept related to international.",
+        "viGloss": "quốc tế"
+      },
+      {
+        "term": "volunteering",
+        "enGloss": "Key concept related to volunteering.",
+        "viGloss": "hoạt động tình nguyện"
+      },
+      {
+        "term": "Discuss",
+        "enGloss": "Key concept related to discuss.",
+        "viGloss": "thảo luận"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "study_work-point1",
+        "label": "Point 1",
+        "en": "Focusing on study or work is important for a strong base.",
+        "vi": "Góc nhìn: Focusing on study or work is important for a strong base.",
+        "sourceVariantId": "study_work"
+      },
+      {
+        "id": "study_work-point2",
+        "label": "Point 2",
+        "en": "New activities help personal growth.",
+        "vi": "Góc nhìn: New activities help personal growth.",
+        "sourceVariantId": "study_work"
+      },
+      {
+        "id": "broaden-point1",
+        "label": "Point 1",
+        "en": "Focusing on study or work is crucial because these areas equip people with necessary skills for their future careers and lives.",
+        "vi": "Góc nhìn: Focusing on study or work is crucial because these areas equip people with necessary skills for their future careers and lives.",
+        "sourceVariantId": "broaden"
+      },
+      {
+        "id": "broaden-point2",
+        "label": "Point 2",
+        "en": "Although broadening experience through travel and volunteering is valuable, the essay concludes by reaffirming the importance of focusing on study and work.",
+        "vi": "Góc nhìn: Although broadening experience through travel and volunteering is valuable, the essay concludes by reaffirming the importance of focusing on study and work.",
+        "sourceVariantId": "broaden"
+      },
+      {
+        "id": "study_work-point1",
+        "label": "Point 1",
+        "en": "The first point discusses the benefits of focusing on study or work, arguing that it provides necessary structure and skills for a stable future.",
+        "vi": "Góc nhìn: The first point discusses the benefits of focusing on study or work, arguing that it provides necessary structure and skills for a stable future.",
+        "sourceVariantId": "study_work"
+      },
+      {
+        "id": "study_work-point2",
+        "label": "Point 2",
+        "en": "The second point discusses the benefits of broadening experience through travel or volunteering, arguing that this leads to personal growth and a wider view of the world.",
+        "vi": "Góc nhìn: The second point discusses the benefits of broadening experience through travel or volunteering, arguing that this leads to personal growth and a wider view of the world.",
+        "sourceVariantId": "study_work"
+      },
+      {
+        "id": "broaden-point1",
+        "label": "Point 1",
+        "en": "Young people should prioritize education and work over broadening experiences.",
+        "vi": "Góc nhìn: Young people should prioritize education and work over broadening experiences.",
+        "sourceVariantId": "broaden"
+      },
+      {
+        "id": "broaden-point2",
+        "label": "Point 2",
+        "en": "The essay discusses the benefits of both focusing on study/work and gaining broad experiences, but ultimately sides with the former.",
+        "vi": "Góc nhìn: The essay discusses the benefits of both focusing on study/work and gaining broad experiences, but ultimately sides with the former.",
+        "sourceVariantId": "broaden"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Socio-cultural and global issues.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Socio-cultural and global issues."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "study",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "work",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "education",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "job",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "study",
+            "enGloss": "learn things at school",
+            "viGloss": "học tập",
+            "source": "approved_sample"
+          },
+          {
+            "term": "work",
+            "enGloss": "have a job",
+            "viGloss": "làm việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "education",
+            "enGloss": "learning at school",
+            "viGloss": "giáo dục",
+            "source": "approved_sample"
+          },
+          {
+            "term": "job",
+            "enGloss": "a paid position",
+            "viGloss": "công việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "open-minded",
+            "enGloss": "willing to consider new ideas",
+            "viGloss": "cởi mở",
+            "source": "approved_sample"
+          },
+          {
+            "term": "travel",
+            "enGloss": "go to another country",
+            "viGloss": "du lịch",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic study",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: nghiên cứu học thuật"
+          },
+          {
+            "term": "academic work",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: công việc học tập"
+          },
+          {
+            "term": "classic study",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: nghiên cứu cổ điển"
+          },
+          {
+            "term": "classic work",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tác phẩm kinh điển"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "study_work",
+          "label": "Version 1: STUDY & WORK",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "Focusing on study or work is important for a strong base.",
+          "point2": "New activities help personal growth.",
+          "sampleVariantId": "study_work",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "broaden",
+          "label": "Version 2: BROADEN EXPERIENCE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Socio-cultural and global issues ____.",
+          "point1": "Focusing on study or work is crucial because these areas equip people with necessary skills for their future careers and lives.",
+          "point2": "Although broadening experience through travel and volunteering is valuable, the essay concludes by reaffirming the importance of focusing on study and work.",
+          "sampleVariantId": "broaden",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "study_work": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think young people should focus on study or work, but others feel it is better to use energy on activities that give them new knowledge.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that studying or working gives young people a good start in life.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, education and a job give people skills for the future in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can learn many things at school, and a worker can learn skills at a job.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they can get good jobs later on.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that focusing on study or work builds a strong base for the future.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that using energy on new activities is also good.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because travel and helping others help people learn about the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person who travels to another country sees different ways of life.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they become more open-minded and understand other people.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that new activities help personal growth.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from hand and other.",
+            "level": "a2_b1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "broaden": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think young people should focus on study or work, while others believe it is better to use energy for activities that broaden their experience.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with the view that young people should put energy in activities to broaden their experience.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, focusing on study or work is very important for young people.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these areas give people skills for their future lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can learn many things at school.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they get a good job when they finish their studies.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that education and work are key for a good life.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, some people think that broadening experience is better for young people.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because travel and volunteering help people learn about the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person who travels to a new country sees different ways of life.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they become more open-minded and understand others.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that experience is very valuable.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that young people should put energy in activities to broaden their experience.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because focusing on study and work provides necessary skills, while travel and volunteering help people become more open-minded.",
+            "level": "a2_b1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "broaden",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "foundation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "career path",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "empathy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "broaden",
+            "enGloss": "to make wider or more extensive",
+            "viGloss": "mở rộng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "foundation",
+            "enGloss": "a base or starting point",
+            "viGloss": "nền tảng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "career path",
+            "enGloss": "a sequence of jobs or studies",
+            "viGloss": "con đường sự nghiệp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "empathy",
+            "enGloss": "the ability to understand and share the feelings of another",
+            "viGloss": "sự đồng cảm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "self-discovery",
+            "enGloss": "the process of learning about oneself",
+            "viGloss": "sự tự khám phá",
+            "source": "approved_sample"
+          },
+          {
+            "term": "structure",
+            "enGloss": "the arrangement of parts to form a whole",
+            "viGloss": "cấu trúc",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "basic structure",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cấu trúc cơ bản"
+          },
+          {
+            "term": "clear structure",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cấu trúc rõ ràng"
+          },
+          {
+            "term": "complex structure",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          },
+          {
+            "term": "economic structure",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "study_work",
+          "label": "Version 1: STUDY & WORK",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "The first point discusses the benefits of focusing on study or work, arguing that it provides necessary structure and skills for a stable future.",
+          "point2": "The second point discusses the benefits of broadening experience through travel or volunteering, arguing that this leads to personal growth and a wider view of the world.",
+          "sampleVariantId": "study_work",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "broaden",
+          "label": "Version 2: BROADEN EXPERIENCE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Socio-cultural and global issues ____.",
+          "point1": "Young people should prioritize education and work over broadening experiences.",
+          "point2": "The essay discusses the benefits of both focusing on study/work and gaining broad experiences, but ultimately sides with the former.",
+          "sampleVariantId": "broaden",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "study_work": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "There are two different views on how young people should spend their time: focusing on study or work, or putting energy into broadening their experiences.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, focusing on study or work is a sensible approach for young people.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this path helps individuals build a stable foundation for their future lives.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, completing a degree or getting a job teaches valuable skills needed in the professional world.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, graduates often find better job opportunities and a clearer career path.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that academic focus provides necessary structure for adult life.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, broadening experience through activities like travel or volunteering is also important.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that these activities teach people about different cultures and ways of life.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that volunteering in another country helps people develop empathy and independence.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that young people gain self-discovery and a broader view of the world.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that personal growth comes from real-world experiences.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from hand and other.",
+            "level": "b2",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "broaden": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "There are two different views regarding how young people should spend their time: focusing on education or work, or spending time on activities that broaden their experience.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with the view that young people should put energy in activities to broaden their experience.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, focusing on study or work is the best path for young people.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these areas provide clear, structured goals for a person's life.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student who commits to their studies can prepare for a specific job in the future.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they gain important knowledge and skills needed for a good career.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that focusing on education or work gives a person a strong foundation for life.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, putting energy into broadening experiences is also valuable.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that travel and volunteering teach people about life outside of school.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that working abroad helps people understand different cultures.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that individuals become more flexible and learn how to solve problems in new places.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that broadening experiences is important for personal growth.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that young people should put energy in activities to broaden their experience.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because focusing on education or work provides a strong foundation for life, while engaging in travel and volunteering helps individuals become more flexible and understand different cultures.",
+            "level": "b2",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "foundational",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "specialized",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "trajectories",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "adaptability",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "foundational",
+            "enGloss": "basic or fundamental",
+            "viGloss": "nền tảng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "specialized",
+            "enGloss": "specific to a particular area",
+            "viGloss": "chuyên biệt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "trajectories",
+            "enGloss": "path or course of development",
+            "viGloss": "quỹ đạo",
+            "source": "approved_sample"
+          },
+          {
+            "term": "adaptability",
+            "enGloss": "the ability to adjust to new conditions",
+            "viGloss": "khả năng thích ứng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "volunteering",
+            "enGloss": "offering time and services freely",
+            "viGloss": "tình nguyện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "exposure",
+            "enGloss": "the state of being subjected to something",
+            "viGloss": "sự tiếp xúc",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "study_work",
+          "label": "Version 1: STUDY & WORK",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "Focusing on academic study and professional work builds foundational knowledge and specialized skills, which are crucial for establishing a solid career foundation.",
+          "point2": "Prioritizing experiences like international travel and volunteering fosters personal development by building adaptability and global awareness.",
+          "sampleVariantId": "study_work",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "broaden",
+          "label": "Version 2: BROADEN EXPERIENCE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Socio-cultural and global issues ____.",
+          "point1": "While broadening experience is valuable, the foundational importance of academic study and professional work for stability and career building is more critical.",
+          "point2": "The essay acknowledges that international travel and volunteering are beneficial for personal growth and developing global awareness, but maintains that these should complement, not replace, structured education.",
+          "sampleVariantId": "broaden",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "study_work": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "There are differing perspectives regarding whether young people should prioritize academic study or professional work, or if they should focus on broadening their experiences through activities like travel and volunteering.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, focusing on academic study and professional work provides a structured pathway for young people.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these commitments build foundational knowledge and specialized skills necessary for employment.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, completing a degree in engineering equips individuals with technical expertise and theoretical understanding.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, graduates are highly sought after by employers, leading to stable career trajectories.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that dedicated focus on education and career development is crucial for establishing a solid foundation.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, prioritizing experiences such as international travel and volunteering offers unique forms of personal development.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that exposure to diverse cultures fosters adaptability and global awareness.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that volunteering in a foreign country requires problem-solving and cross-cultural communication.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that individuals gain self-reliance and a broader perspective on global issues.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that experiential learning is vital for comprehensive personal growth.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from hand and other.",
+            "level": "c1",
+            "sampleVariantId": "study_work",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "broaden": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "There are differing perspectives regarding whether young people should prioritize academic study or professional work, or if they should focus on broadening their life experiences.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with the view that young people should put energy in activities to broaden their experience.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, focusing on academic study and professional work provides a structured pathway for young people's development.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, dedicated time to education and career preparation builds a solid foundation for future stability.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, completing a specialized degree in engineering equips graduates with highly sought-after technical knowledge.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these qualifications significantly increase job prospects and earning potential upon graduation.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that committing to structured learning and work is crucial for establishing a secure life path.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, prioritizing activities like international travel and volunteering offers invaluable personal growth opportunities.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that exposure to diverse cultures fosters adaptability and global awareness.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that volunteering in a foreign country requires individuals to navigate unfamiliar social customs.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that participants develop problem-solving skills and a deeper understanding of global citizenship.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that broadening experience is paramount for self-actualization.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that young people should put energy in activities to broaden their experience.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because focusing on academic study and professional work establishes a secure life path, while prioritizing international travel and volunteering cultivates adaptability and global awareness.",
+            "level": "c1",
+            "sampleVariantId": "broaden",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:07.488837+00:00"
+  }
+}

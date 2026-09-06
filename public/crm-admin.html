@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260906-v1.8.132">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260906-v1.8.134">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -15,8 +15,8 @@
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 http://localhost:8081 http://127.0.0.1:8081 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260906-v1.8.132&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260906-v1.8.132&bgm=v2" />
+  <link rel="stylesheet" href="style.css?v=20260906-v1.8.134&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260906-v1.8.134&bgm=v2" />
 </head>
 
 <body>
@@ -66,13 +66,13 @@
             <li><button data-main="settings" data-coming-soon="true" disabled>Settings <span class="crm-coming-soon-badge">Soon</span></button></li>
             <li><button data-main="chatbot" data-coming-soon="true" disabled>Chatbots <span class="crm-coming-soon-badge">Soon</span></button></li>
             <li id="nav-devtools-container" style="display: none;">
-              <button class="crm-nav-item" data-main="devtools" data-label="Dev Tools">🔧 Dev Tools</button>
+              <button class="crm-nav-item" data-main="devtools" data-label="Dev Tools">Dev Tools</button>
             </li>
             <li id="nav-pronunciation-samples-container" style="display: none;">
-              <button class="crm-nav-item" data-main="pronunciation-samples" data-label="Pronunciation Samples">🎙️ Pronunciation Samples</button>
+              <button class="crm-nav-item" data-main="pronunciation-samples" data-label="Pronunciation Samples">Pronunciation Samples</button>
             </li>
             <li id="nav-voice-cloning-container">
-              <button class="crm-nav-item" data-main="voice-cloning" data-label="Voice Cloning">🎙️ Voice Cloning</button>
+              <button class="crm-nav-item" data-main="voice-cloning" data-label="Voice Cloning">Voice Cloning</button>
             </li>
           </ul>
         </div>
@@ -106,7 +106,7 @@
       <section class="crm-panel" data-panel="devtools" style="display: none;">
         <div class="crm-panel-header">
           <div>
-            <h2>🔧 Developer Tools</h2>
+            <h2>Developer Tools</h2>
             <p>Local emulator utilities. These tools are never visible in production.</p>
           </div>
         </div>
@@ -173,7 +173,7 @@
                   <a id="devtools-emulator-link" href="http://localhost:4000/firestore" target="_blank" rel="noopener noreferrer"
                     class="crm-btn crm-btn-secondary"
                     style="display: inline-block; text-decoration: none; text-align: center; width: 100%;">
-                    Open Firebase Emulator UI ↗
+                    Open Firebase Emulator UI
                   </a>
                 </div>
               </div>
@@ -218,7 +218,7 @@
       <section class="crm-panel" data-panel="voice-cloning" style="display: none;">
         <div class="crm-panel-header">
           <div>
-            <h2>🎙️ Voice Cloning Studio</h2>
+            <h2>Voice Cloning Studio</h2>
             <p class="crm-muted">Zero-shot neural voice cloning powered by local F5-TTS Mel-Flow Matching. Calibrate with 1 Read Aloud prompt, store profiles in the cloud, and synthesize custom text into downloadable MP3 audio.</p>
           </div>
         </div>
@@ -235,7 +235,7 @@
             <div class="crm-inline-fields" style="padding: 0 18px 18px; align-items: center; gap: 12px; flex-wrap: wrap;">
               <span id="vc-worker-status-badge" class="vc-worker-status-badge checking">Voice Worker: Checking…</span>
               <button id="btn-vc-worker-refresh" class="crm-icon-btn" type="button" title="Refresh Worker Status">&#x21bb;</button>
-              <button id="btn-vc-queue-trigger" class="crm-btn crm-btn-primary" type="button" disabled>⚡ Process Pending Voice Jobs</button>
+              <button id="btn-vc-queue-trigger" class="crm-btn crm-btn-primary" type="button" disabled>Process Pending Voice Jobs</button>
               <span id="vc-queue-count-badge" class="crm-muted" style="font-weight: 600; color: #334155;" role="status" aria-live="polite">0 queued</span>
               <span id="vc-worker-admin-status" class="crm-muted" style="margin-left: auto;"></span>
             </div>
@@ -262,10 +262,10 @@
                 </p>
                 <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                   <button id="btn-vc-record-toggle" class="crm-btn crm-btn-secondary" type="button">
-                    <span id="vc-record-icon">🔴</span> <span id="vc-record-label">Record Reference Voice</span>
+                    <span id="vc-record-icon" class="rec-dot"></span> <span id="vc-record-label">Record Reference Voice</span>
                   </button>
                   <label class="crm-btn crm-btn-secondary" style="cursor: pointer; margin: 0;">
-                    📁 Upload Audio
+                    Upload Audio
                     <input type="file" id="vc-audio-file-input" accept="audio/*" style="display: none;" />
                   </label>
                   <span id="vc-record-timer" class="crm-muted" style="font-family: monospace; font-weight: 700; color: #334155;">00:00</span>
@@ -277,7 +277,7 @@
               <div class="crm-voice-prompt-box step-b">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                   <strong class="crm-voice-step-title step-b">Step B: Cloned Output Verification (RA #18)</strong>
-                  <button id="btn-vc-generate-test" class="crm-btn crm-btn-primary" type="button" disabled>🧪 Generate Cloned Test Output</button>
+                  <button id="btn-vc-generate-test" class="crm-btn crm-btn-primary" type="button" disabled>Generate Cloned Test Output</button>
                 </div>
                 <p class="crm-voice-prompt-text">
                   "Certain types of methodology are more suitable for some research projects than others. For example, the use of questionnaires and surveys is more suitable for quantitative research."
@@ -293,7 +293,7 @@
               <!-- Step C: Name & Save to Cloud -->
               <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <input type="text" id="vc-profile-name-input" class="crm-input" style="flex: 1; min-width: 240px;" placeholder="Name this voice (e.g. Teacher Nam - Academic Cadence)" />
-                <button id="btn-vc-save-profile" class="crm-btn crm-btn-success" type="button" disabled>💾 Save Cloned Voice to Cloud</button>
+                <button id="btn-vc-save-profile" class="crm-btn crm-btn-success" type="button" disabled>Save Cloned Voice to Cloud</button>
                 <span id="vc-save-profile-status" class="crm-muted" role="status" aria-live="polite"></span>
               </div>
 
@@ -303,7 +303,7 @@
                   <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">
                     Saved Voice Profiles (<span id="vc-saved-count">0</span>)
                   </h4>
-                  <button id="btn-vc-refresh-profiles" class="crm-btn crm-btn-text" type="button" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 600;">🔄 Refresh</button>
+                  <button id="btn-vc-refresh-profiles" class="crm-btn crm-btn-text" type="button" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 600;">Refresh</button>
                 </div>
                 <div id="vc-saved-profiles-list" class="crm-voice-gallery">
                   <!-- Populated dynamically with profile cards -->
@@ -332,8 +332,8 @@
                 <div>
                   <label class="crm-label" style="display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #334155;">Cadence / Speech Style:</label>
                   <div class="crm-btn-group" style="display: inline-flex; border-radius: 6px; overflow: hidden;">
-                    <button type="button" class="crm-btn crm-btn-secondary is-active" id="btn-vc-style-formal" data-style="formal">🏛️ Formal Citation</button>
-                    <button type="button" class="crm-btn crm-btn-secondary" id="btn-vc-style-connected" data-style="connected">🌊 Connected Stream</button>
+                    <button type="button" class="crm-btn crm-btn-secondary is-active" id="btn-vc-style-formal" data-style="formal">Formal Citation</button>
+                    <button type="button" class="crm-btn crm-btn-secondary" id="btn-vc-style-connected" data-style="connected">Connected Stream</button>
                   </div>
                 </div>
               </div>
@@ -344,7 +344,7 @@
               </div>
 
               <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <button id="btn-vc-studio-synthesize" class="crm-btn crm-btn-primary" type="button">✨ Synthesize Audio</button>
+                <button id="btn-vc-studio-synthesize" class="crm-btn crm-btn-primary" type="button">Synthesize Audio</button>
                 <span id="vc-studio-status" class="crm-muted" role="status" aria-live="polite"></span>
               </div>
 
@@ -357,7 +357,8 @@
                 <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap;">
                   <audio id="vc-studio-output-audio" controls style="flex: 1; min-width: 280px; height: 38px;"></audio>
                   <a id="btn-vc-download-mp3" class="crm-btn crm-btn-success" href="#" download="cloned_voice.mp3" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                    ⬇ Download MP3
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download MP3
                   </a>
                 </div>
                 <div id="vc-studio-annotations-container" style="margin-top: 10px; display: none;"></div>
@@ -981,9 +982,9 @@
               <input type="text" class="crm-books-search" placeholder="Search books..." />
             </div>
             <div class="crm-books-source-actions">
-              <button class="crm-books-kg-open-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Knowledge Graph">🔗 Knowledge Graph</button>
-              <button class="crm-books-new-collection-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Create Collection">📁 New Collection</button>
-              <button class="crm-books-create-tag-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Create Tag">🏷️ Create Tag</button>
+              <button class="crm-books-kg-open-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Knowledge Graph">Knowledge Graph</button>
+              <button class="crm-books-new-collection-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Create Collection">New Collection</button>
+              <button class="crm-books-create-tag-btn crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Create Tag">Create Tag</button>
             </div>
             <div class="crm-books-sidebar-tag-filter-bar"></div>
             <div class="crm-books-collection-filter-area"></div>
@@ -1071,7 +1072,7 @@
             <div class="crm-form-group"
               style="margin-bottom: 24px; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fafafa;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <label style="margin-bottom: 0; display: flex; align-items: center; gap: 4px;"><span>✨</span> AI Profile
+                <label style="margin-bottom: 0; display: flex; align-items: center; gap: 4px;">AI Profile
                   Snapshot
                   <span id="ai-summary-date"
                     style="display:none;font-size:11px;color:#888;font-weight:400;margin-left:8px;"></span>
@@ -1582,7 +1583,7 @@
           <div id="student-teaching-sessions" class="crm-tab-content" style="display: none;">
             <div class="crm-section-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
               <div>
-                <h3>🎙️ Teaching Sessions & Pre-Class Briefings</h3>
+                <h3>Teaching Sessions & Pre-Class Briefings</h3>
                 <p class="text-muted">Audio recordings, pedagogical analysis cards, and visual mindmaps.</p>
               </div>
               <button id="btn-toggle-teaching-upload" class="crm-btn-primary" type="button" style="display: flex; align-items: center; gap: 6px;">
@@ -1663,7 +1664,13 @@
                 Loading teaching sessions...
               </div>
               <div id="teaching-sessions-empty" style="display: none; text-align: center; padding: 32px; background: #f8fafc; border-radius: 8px; color: #64748b; border: 1px dashed #cbd5e1;">
-                <div style="font-size: 28px; margin-bottom: 8px;">🎙️</div>
+                <div style="font-size: 28px; margin-bottom: 8px; color: #94a3b8;">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block;">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" x2="12" y1="19" y2="22"></line>
+                  </svg>
+                </div>
                 <div style="font-weight: 500; color: #334155;">No teaching sessions recorded yet.</div>
                 <div style="font-size: 13px; margin-top: 4px;">Click "Upload Audio & Analyze" to record or import your first 1-on-1 coaching session.</div>
               </div>
@@ -1879,7 +1886,9 @@
                   <div id="scheduling-suggestion-banner" class="crm-suggestion-banner"
                     style="display:none; margin-bottom:12px; padding:10px 14px; background:#fffbeb; border:1px solid #fbbf24; border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
                     <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:200px;">
-                      <span style="font-size:1.2em;">💡</span>
+                      <span class="tip-icon" style="display:inline-flex; align-items:center; color:#d97706;" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                      </span>
                       <div>
                         <strong style="font-size:0.85rem;">Suggested defaults available</strong><br>
                         <span class="crm-muted" style="font-size:0.8rem;">Timezone: Asia/Bangkok · Start: 18:00 ·
@@ -2511,7 +2520,12 @@
       <!-- Docked Audio Bar (Visible when recording exists) -->
       <div id="teaching-session-docked-audio" class="crm-session-docked-audio" style="display: none;">
         <div class="crm-docked-audio-info">
-          <span class="crm-docked-audio-icon">🎧</span>
+          <span class="crm-docked-audio-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+            </svg>
+          </span>
           <span id="teaching-session-audio-meta" class="crm-docked-audio-meta">Full recording playback</span>
         </div>
         <audio id="teaching-session-audio-player" controls preload="metadata"></audio>
@@ -2539,68 +2553,68 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260906-v1.8.132"></script>
-  <script src="js/classroom-api.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/lifecycle-stages.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/utils.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/state.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/dom.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/courses.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/schedule-availability.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/students.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/student-360.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/student-courses.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/classrooms.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/leads.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/activities.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/enrollments.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/attendance.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/finance-workflow.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/finance.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/communications.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/staff-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/student-finance.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/live-delivery.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/classroom-modal.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/student-modal.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/course-modal.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/lead-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/communications-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/books-workspace.js?v=20260906-v1.8.132&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/dashboard.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/governance.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/index.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/devtools-access.js?v=20260906-v1.8.132&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260906-v1.8.132"></script>
-  <script src="arpabet-ipa-map.js?v=20260906-v1.8.132"></script>
-  <script src="phonetics.js?v=20260906-v1.8.132"></script>
+  <script src="js/auth-session-guard.js?v=20260906-v1.8.134"></script>
+  <script src="js/classroom-api.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/utils.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/state.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/dom.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/courses.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/schedule-availability.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/students.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/student-360.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/student-courses.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/classrooms.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/leads.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/activities.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/enrollments.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/attendance.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/finance-workflow.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/finance.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/communications.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/staff-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/student-finance.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/live-delivery.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/classroom-modal.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/student-modal.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/course-modal.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/lead-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/communications-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/books-workspace.js?v=20260906-v1.8.134&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/dashboard.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/governance.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/index.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/devtools-access.js?v=20260906-v1.8.134&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/bel-assistant.js?v=20260906-v1.8.134"></script>
+  <script src="arpabet-ipa-map.js?v=20260906-v1.8.134"></script>
+  <script src="phonetics.js?v=20260906-v1.8.134"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-session-mindmap.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/teaching-session-pdf.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/voice-cloning-workspace.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/pronunciation-dual-arena.js?v=20260906-v1.8.132"></script>
-  <script src="crm-admin.js?v=20260906-v1.8.132"></script>
-  <script src="js/crm/segmentation-study.js?v=20260906-v1.8.132" defer></script>
+  <script src="js/crm/teaching-session-mindmap.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/teaching-session-pdf.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/teaching-sessions.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/voice-cloning-workspace.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/pronunciation-dual-arena.js?v=20260906-v1.8.134"></script>
+  <script src="crm-admin.js?v=20260906-v1.8.134"></script>
+  <script src="js/crm/segmentation-study.js?v=20260906-v1.8.134" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">
       <div class="crm-mindmap-header-left">
-        <h2 id="crm-mindmap-title" class="crm-mindmap-title">🧠 Mind Map</h2>
+        <h2 id="crm-mindmap-title" class="crm-mindmap-title">Mind Map</h2>
         <div id="crm-mindmap-map-selector" class="crm-mindmap-map-selector">
           <button id="crm-mindmap-map-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Switch or create mind map">
             <span id="crm-mindmap-map-name">Default Map</span>
@@ -2615,7 +2629,7 @@
       <div class="crm-mindmap-header-actions">
         <div id="crm-mindmap-member-selector" class="crm-mindmap-member-selector">
           <button id="crm-mindmap-member-btn" class="crm-btn crm-btn-secondary crm-btn-sm crm-mindmap-member-btn" title="Switch team member">
-            <span id="crm-mindmap-member-emoji">🔴</span>
+            <span id="crm-mindmap-member-emoji" class="rec-dot"></span>
             <span id="crm-mindmap-member-name">Member 1</span>
             <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
           </button>
@@ -2644,7 +2658,7 @@
           Physics
         </button>
         <button id="crm-mindmap-elaborate-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Elaborate Mode">
-          ✨ Elaborate
+          Elaborate
         </button>
         <button id="crm-mindmap-heatmap-btn" class="crm-btn crm-btn-secondary crm-btn-sm" title="Toggle Vote Heatmap">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="10" width="3" height="4" rx="0.5"/><rect x="6.5" y="6" width="3" height="8" rx="0.5"/><rect x="11" y="2" width="3" height="12" rx="0.5"/></svg>
@@ -2708,10 +2722,10 @@
       </div>
       <!-- Right-click Context Menu -->
       <div id="crm-mindmap-context-menu" class="crm-mindmap-context-menu">
-        <button class="crm-mindmap-context-item" data-action="edit-title">✏️ Edit Title</button>
-        <button class="crm-mindmap-context-item" data-action="add-child">➕ Add Child</button>
-        <button class="crm-mindmap-context-item" data-action="add-note">📝 Add Note</button>
-        <button class="crm-mindmap-context-item" data-action="expand-ai">🤖 Expand with AI</button>
+        <button class="crm-mindmap-context-item" data-action="edit-title">Edit Title</button>
+        <button class="crm-mindmap-context-item" data-action="add-child">Add Child</button>
+        <button class="crm-mindmap-context-item" data-action="add-note">Add Note</button>
+        <button class="crm-mindmap-context-item" data-action="expand-ai">Expand with AI</button>
         <div class="crm-mindmap-context-divider"></div>
         <div class="crm-mindmap-color-swatches" data-action="change-color">
           <div class="crm-mindmap-color-swatch" data-color="#3B82F6" style="background:#3B82F6" title="Blue"></div>
@@ -2732,14 +2746,14 @@
         </div>
         <div class="crm-mindmap-context-divider"></div>
         <div class="crm-mindmap-tag-options" data-action="toggle-tag">
-          <button class="crm-mindmap-tag-option" data-tag="objective">🎯 Objective</button>
-          <button class="crm-mindmap-tag-option" data-tag="outcome">📊 Outcome</button>
-          <button class="crm-mindmap-tag-option" data-tag="key-concept">💡 Key Concept</button>
-          <button class="crm-mindmap-tag-option" data-tag="action-item">✅ Action Item</button>
-          <button class="crm-mindmap-tag-option" data-tag="research">🔬 Research</button>
+          <button class="crm-mindmap-tag-option" data-tag="objective">Objective</button>
+          <button class="crm-mindmap-tag-option" data-tag="outcome">Outcome</button>
+          <button class="crm-mindmap-tag-option" data-tag="key-concept">Key Concept</button>
+          <button class="crm-mindmap-tag-option" data-tag="action-item">Action Item</button>
+          <button class="crm-mindmap-tag-option" data-tag="research">Research</button>
         </div>
         <div class="crm-mindmap-context-divider"></div>
-        <button class="crm-mindmap-context-item is-danger" data-action="delete-node">🗑 Delete</button>
+        <button class="crm-mindmap-context-item is-danger" data-action="delete-node">Delete</button>
       </div>
       <!-- Slide-over Inspector Drawer -->
       <aside id="crm-mindmap-inspector" class="crm-mindmap-inspector" style="display: none;">
@@ -2789,7 +2803,7 @@
       <!-- Version History Panel -->
       <aside id="crm-mindmap-versions" class="crm-mindmap-versions-panel" style="display:none;">
         <div class="crm-mindmap-versions-header">
-          <h3>📜 Version History</h3>
+          <h3>Version History</h3>
           <button class="crm-btn-close" id="crm-mindmap-versions-close">&times;</button>
         </div>
         <div id="crm-mindmap-versions-list" class="crm-mindmap-versions-list">
@@ -2799,7 +2813,7 @@
       <!-- Outline View Panel -->
       <aside id="crm-mindmap-outline" class="crm-mindmap-outline-panel" style="display:none;">
         <div class="crm-mindmap-outline-header">
-          <h3>📋 Outline View</h3>
+          <h3>Outline View</h3>
           <button class="crm-btn-close" id="crm-mindmap-outline-close">&times;</button>
         </div>
         <div id="crm-mindmap-outline-tree" class="crm-mindmap-outline-tree"></div>
@@ -2815,7 +2829,7 @@
   <div id="crm-books-elaborate-drawer" class="crm-books-elaborate-drawer" aria-hidden="true" style="display: none;">
     <div class="crm-books-elaborate-drawer-header">
       <div class="crm-books-elaborate-drawer-title-group">
-        <div class="crm-books-elaborate-drawer-badge">✨ Elaborate Deep Dive</div>
+        <div class="crm-books-elaborate-drawer-badge">Elaborate Deep Dive</div>
         <h3 id="crm-books-elaborate-drawer-book-title" class="crm-books-elaborate-drawer-title">Source Grounding</h3>
       </div>
       <button id="crm-books-elaborate-drawer-close" class="crm-btn-close" type="button" aria-label="Close elaboration drawer">&times;</button>
@@ -2824,23 +2838,23 @@
       <!-- Dynamically populated -->
     </div>
     <div class="crm-books-elaborate-drawer-footer">
-      <button id="crm-books-elaborate-save-notes-btn" class="crm-btn crm-btn-primary crm-btn-sm" type="button" title="Save this elaboration to Notes">📝 Save to Notes</button>
-      <button id="crm-books-elaborate-chat-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Discuss in Chat">💬 Discuss in Chat</button>
-      <button id="crm-books-elaborate-copy-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Copy markdown">📋 Copy</button>
+      <button id="crm-books-elaborate-save-notes-btn" class="crm-btn crm-btn-primary crm-btn-sm" type="button" title="Save this elaboration to Notes">Save to Notes</button>
+      <button id="crm-books-elaborate-chat-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Discuss in Chat">Discuss in Chat</button>
+      <button id="crm-books-elaborate-copy-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Copy markdown">Copy</button>
     </div>
   </div>
 
   <!-- Floating Elaborate Selection Tray -->
   <div id="crm-books-elaborate-tray" class="crm-books-elaborate-tray" style="display: none;" role="region" aria-label="Elaborate selection tray">
     <div class="crm-books-elaborate-tray-header">
-      <span class="crm-books-elaborate-tray-icon">✨</span>
+      <span class="crm-books-elaborate-tray-icon">AI</span>
       <span class="crm-books-elaborate-tray-label">Elaborate Mode</span>
       <span id="crm-books-elaborate-tray-count" class="crm-books-elaborate-tray-count">0 selected</span>
     </div>
     <div id="crm-books-elaborate-tray-chips" class="crm-books-elaborate-tray-chips"></div>
     <div class="crm-books-elaborate-tray-actions">
       <button id="crm-books-elaborate-tray-done-btn" class="crm-btn crm-btn-primary crm-btn-sm" type="button" disabled title="Generate elaboration">
-        ✓ Done
+        Done
       </button>
       <button id="crm-books-elaborate-tray-cancel-btn" class="crm-btn crm-btn-secondary crm-btn-sm" type="button" title="Exit Elaborate Mode">
         Cancel

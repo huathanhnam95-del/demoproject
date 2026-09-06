@@ -195,6 +195,7 @@
    * @param {number} [options.highpassFreq=80]
    * @param {number} [options.targetPeakDb=-3]
    * @param {boolean} [options.trim=true]
+   * @param {boolean} [options.createUrl=true]
    * @param {number} [options.paddingMs=150]
    * @param {number} [options.timeoutMs=3000]
    * @returns {Promise<{ wavBlob: Blob, audioUrl: string, audioBuffer: AudioBuffer, stats: Object }>}
@@ -208,6 +209,7 @@
     const highpassFreq = typeof options.highpassFreq === 'number' ? options.highpassFreq : 80;
     const targetPeakDb = typeof options.targetPeakDb === 'number' ? options.targetPeakDb : -3;
     const shouldTrim = options.trim !== false;
+    const shouldCreateUrl = options.createUrl !== false;
     const paddingMs = typeof options.paddingMs === 'number' ? options.paddingMs : 150;
     const timeoutMs = options.timeoutMs || 3000;
 
@@ -219,7 +221,7 @@
         : null;
 
       if (!AudioContextCtor) {
-        const fallbackUrl = typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(rawBlob) : null;
+        const fallbackUrl = shouldCreateUrl && typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(rawBlob) : null;
         return { wavBlob: rawBlob, audioUrl: fallbackUrl, audioBuffer: null, stats: null };
       }
 
@@ -300,7 +302,13 @@
       }
 
       const wavBlob = encodeAudioBufferToWav(finalBuffer);
-      const audioUrl = typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(wavBlob) : null;
+      const audioUrl = shouldCreateUrl && typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(wavBlob) : null;
+      const finalData = finalBuffer.getChannelData(0);
+      let peakAfter = 0;
+      for (let i = 0; i < finalData.length; i++) {
+        const absVal = Math.abs(finalData[i]);
+        if (absVal > peakAfter) peakAfter = absVal;
+      }
       const trimmedDurationMs = Math.round((finalBuffer.length / finalBuffer.sampleRate) * 1000);
 
       return {
@@ -311,13 +319,13 @@
           originalDurationMs,
           trimmedDurationMs,
           peakBefore,
-          peakAfter: Math.pow(10, targetPeakDb / 20),
+          peakAfter,
           sampleRate: targetSampleRate
         }
       };
     } catch (error) {
       console.warn('[AudioDspPipeline] Audio enhancement failed, falling back to raw blob:', error);
-      const fallbackUrl = typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(rawBlob) : null;
+      const fallbackUrl = shouldCreateUrl && typeof URL !== 'undefined' && URL.createObjectURL ? URL.createObjectURL(rawBlob) : null;
       return {
         wavBlob: rawBlob,
         audioUrl: fallbackUrl,
@@ -346,23 +354,45 @@
     let mediaRecorder = null;
     let recordedChunks = [];
     let state = 'inactive'; // 'inactive' | 'recording' | 'processing'
+    let isCancelled = false;
+    let isAcquiring = false;
 
     async function start() {
-      if (state !== 'inactive') {
+      if (isAcquiring || state !== 'inactive') {
         throw new Error('[AudioDspPipeline.createRecorder] Recorder is already active.');
       }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('[AudioDspPipeline.createRecorder] Microphone access is not supported.');
       }
 
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+      isAcquiring = true;
+      isCancelled = false;
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+      } catch (err) {
+        isAcquiring = false;
+        state = 'inactive';
+        throw err;
+      } finally {
+        isAcquiring = false;
+      }
 
+      if (isCancelled) {
+        if (stream && typeof stream.getTracks === 'function') {
+          stream.getTracks().forEach((t) => t.stop());
+        }
+        state = 'inactive';
+        return;
+      }
+
+      mediaStream = stream;
       recordedChunks = [];
       const mimeType = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported
         ? (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((mt) => MediaRecorder.isTypeSupported(mt)) || '')
@@ -411,6 +441,14 @@
           state = 'inactive';
           mediaRecorder = null;
 
+          if (isCancelled) {
+            if (enhanced && enhanced.audioUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+              URL.revokeObjectURL(enhanced.audioUrl);
+            }
+            resolve(null);
+            return;
+          }
+
           const result = {
             rawBlob,
             wavBlob: enhanced.wavBlob,
@@ -420,7 +458,7 @@
           };
 
           if (typeof options.onStop === 'function') {
-            try { options.onStop(result); } catch (_) {}
+            try { options.onStop(result); } catch (_) { /* ignore */ }
           }
           resolve(result);
         }, { once: true });
@@ -436,9 +474,11 @@
     }
 
     function cancel() {
+      isAcquiring = false;
+      isCancelled = true;
       cleanupStream();
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        try { mediaRecorder.stop(); } catch (_) {}
+        try { mediaRecorder.stop(); } catch (_) { /* ignore */ }
       }
       mediaRecorder = null;
       state = 'inactive';

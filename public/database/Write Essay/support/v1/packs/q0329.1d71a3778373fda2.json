@@ -1,0 +1,1758 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "329",
+  "title": "#329 Computer",
+  "prompt": "Some people say that computers have made life easier and more convenient. Other people say that computers have made life more complex and stressful. Do you agree with that?",
+  "source": {
+    "promptSha256": "81de3ff0e71fc059a3341442e9cd4a3da8e212d46d7bcb94c315902cd3d288dd",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people say that computers have made life easier and more convenient.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Other people say that computers have made life more complex and stressful.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Do you agree with that?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Science, technology, and innovation"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "computers",
+        "enGloss": "Key concept related to computers.",
+        "viGloss": "máy tính"
+      },
+      {
+        "term": "convenient",
+        "enGloss": "Key concept related to convenient.",
+        "viGloss": "thuận tiện"
+      },
+      {
+        "term": "complex",
+        "enGloss": "Key concept related to complex.",
+        "viGloss": "phức tạp"
+      },
+      {
+        "term": "stressful",
+        "enGloss": "Key concept related to stressful.",
+        "viGloss": "căng thẳng"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "Computers make daily tasks easier because they provide fast ways to find information and complete tasks.",
+        "vi": "Góc nhìn: Computers make daily tasks easier because they provide fast ways to find information and complete tasks.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Computers help people connect with others through digital communication, keeping relationships strong.",
+        "vi": "Góc nhìn: Computers help people connect with others through digital communication, keeping relationships strong.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Computers make daily life easier by providing fast ways to find information and complete tasks, eliminating the need to visit multiple physical locations.",
+        "vi": "Góc nhìn: Computers make daily life easier by providing fast ways to find information and complete tasks, eliminating the need to visit multiple physical locations.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Furthermore, computers allow people to maintain connections with friends and family far away, supporting better emotional bonds.",
+        "vi": "Góc nhìn: Furthermore, computers allow people to maintain connections with friends and family far away, supporting better emotional bonds.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "Computers make life easier by providing access to information and helping with daily tasks.",
+        "vi": "Góc nhìn: Computers make life easier by providing access to information and helping with daily tasks.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Computers make life better by allowing people to stay connected with others globally.",
+        "vi": "Góc nhìn: Computers make life better by allowing people to stay connected with others globally.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph argues that computers are beneficial for education and learning.",
+        "vi": "Góc nhìn: The first body paragraph argues that computers are beneficial for education and learning.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph argues that computers are essential for improving business efficiency and communication.",
+        "vi": "Góc nhìn: The second body paragraph argues that computers are essential for improving business efficiency and communication.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "find information",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "digital communication",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "daily lives",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "connect with",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "find information",
+            "enGloss": "to search for knowledge",
+            "viGloss": "tìm thông tin",
+            "source": "approved_sample"
+          },
+          {
+            "term": "digital communication",
+            "enGloss": "talking using technology",
+            "viGloss": "giao tiếp kỹ thuật số",
+            "source": "approved_sample"
+          },
+          {
+            "term": "daily lives",
+            "enGloss": "the routine of living",
+            "viGloss": "cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "connect with",
+            "enGloss": "to keep in touch with",
+            "viGloss": "kết nối với",
+            "source": "approved_sample"
+          },
+          {
+            "term": "tasks",
+            "enGloss": "jobs or things to do",
+            "viGloss": "nhiệm vụ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "easier",
+            "enGloss": "not difficult",
+            "viGloss": "dễ dàng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "find information",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tìm thông tin"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "Computers make daily tasks easier because they provide fast ways to find information and complete tasks.",
+          "point2": "Computers help people connect with others through digital communication, keeping relationships strong.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "Computers make daily life easier by providing fast ways to find information and complete tasks, eliminating the need to visit multiple physical locations.",
+          "point2": "Furthermore, computers allow people to maintain connections with friends and family far away, supporting better emotional bonds.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that computers make life better, while others think they make life harder.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers help people do many things in their daily lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they give us fast ways to do tasks in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we can find information about anything on the internet in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people do not need to visit many places to learn things in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that computers make life much easier for us.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers also help people talk to friends and family.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because they allow us to use digital communication easily in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we can send a message to a relative who lives far away in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can keep in touch with loved ones every day in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that computers help us connect with others.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that computers make life better.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "They make tasks easier, and they help us connect with others.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that computers make life better, while others think they make life harder.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers help people do many things in their daily lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they give us fast ways to do tasks in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we can find information about anything on the internet in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people do not need to visit many places to learn things in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that computers make life much easier for us.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers also help people keep in touch with others.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because they allow us to talk to friends far away in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we can use a phone to video call family members in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel close to their loved ones even when they are apart in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that computers help us connect better.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that computers make life complex.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Computers make life easier by giving us fast ways to do tasks, and they also help us connect better with people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "access knowledge",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "improve daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "digital communication",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "stay connected",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "access knowledge",
+            "enGloss": "to find information or learn things",
+            "viGloss": "tiếp cận kiến thức",
+            "source": "approved_sample"
+          },
+          {
+            "term": "improve daily life",
+            "enGloss": "to make routine living better",
+            "viGloss": "cải thiện cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "digital communication",
+            "enGloss": "talking to people using technology",
+            "viGloss": "giao tiếp kỹ thuật số",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stay connected",
+            "enGloss": "to keep in touch with people",
+            "viGloss": "giữ liên lạc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "routines",
+            "enGloss": "regular habits or ways of doing things",
+            "viGloss": "thói quen",
+            "source": "approved_sample"
+          },
+          {
+            "term": "convenient",
+            "enGloss": "easy to use or available",
+            "viGloss": "thuận tiện",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "Computers make life easier by providing access to information and helping with daily tasks.",
+          "point2": "Computers make life better by allowing people to stay connected with others globally.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "The first body paragraph argues that computers are beneficial for education and learning.",
+          "point2": "The second body paragraph argues that computers are essential for improving business efficiency and communication.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people believe that computers have made our lives easier and more convenient, while others feel that they have made life more complex and stressful.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage is that computers help us access knowledge and improve daily life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these tools allow people to find information quickly and manage tasks better.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student can use a computer to research a topic, which saves many hours of library time.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can learn new things and solve problems faster than before.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that computers provide many benefits for our daily routines.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that computers help us stay connected with people all over the world.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that digital communication allows us to talk to friends and family easily.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that video calls let us see relatives who live far away.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people feel closer to loved ones, even when they are separated by distance.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that computers strengthen our personal connections.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because computers facilitate access to knowledge and improve daily life, while also enabling people to maintain strong personal connections across geographical distances.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people believe that computers are bad for society and should be limited in our daily lives.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers actually help people learn new things and get knowledge.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they give us access to huge amounts of information from all over the world.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, students can use online platforms to study subjects like history or science at any time.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can learn at their own pace and improve their skills greatly.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that computers are valuable tools for education.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers also help businesses work better and make things more efficient.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that they allow us to manage tasks and communicate quickly across long distances.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that small shops can use online systems to sell goods to many customers.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that businesses save time and money, helping them grow bigger.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that computers are important for the economy.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that computers should be limited.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "They are very helpful for education, and they also make businesses much more efficient.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "pervasive",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "instantaneous",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "indispensable",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "revolutionized",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pervasive",
+            "enGloss": "spreading widely",
+            "viGloss": "lan tỏa, phổ biến",
+            "source": "approved_sample"
+          },
+          {
+            "term": "instantaneous",
+            "enGloss": "happening immediately",
+            "viGloss": "tức thì",
+            "source": "approved_sample"
+          },
+          {
+            "term": "indispensable",
+            "enGloss": "absolutely necessary",
+            "viGloss": "không thể thiếu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "revolutionized",
+            "enGloss": "changed drastically",
+            "viGloss": "cách mạng hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "digitized",
+            "enGloss": "converted to digital format",
+            "viGloss": "số hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "catalysts",
+            "enGloss": "agents that cause change",
+            "viGloss": "chất xúc tác",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "The first body paragraph focuses on how computers improve global communication and social connectivity.",
+          "point2": "The second body paragraph discusses the transformative impact of computers on education and knowledge accessibility.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "The first point argues that technological advancement streamlines daily life by providing easy access to services and information.",
+          "point2": "The second point argues that computers enhance professional capabilities and global connectivity, supporting the view that technology is beneficial.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The pervasive influence of computers has fundamentally altered nearly every aspect of modern human existence.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computers have significantly enhanced global communication by providing instantaneous connectivity.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they allow people across vast geographical distances to interact seamlessly and efficiently.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, video conferencing platforms enable families to connect with relatives living on different continents.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the maintenance of personal relationships becomes far simpler and more accessible than before.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that computers are indispensable tools for maintaining social bonds.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, computers have revolutionized the accessibility and scope of educational resources.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that vast amounts of knowledge are now digitized and available online.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that students can access university-level lectures from reputable institutions worldwide.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that geographical limitations no longer restrict a person's potential for advanced learning.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that computers are crucial catalysts for lifelong learning.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that computers are vital to modern life.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Their role in enhancing global communication and revolutionizing educational resources confirms their essential place in contemporary society.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The integration of computers into modern life has prompted a debate regarding whether these devices simplify existence or introduce unnecessary complications.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Technological advancement has undeniably streamlined many aspects of human existence.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, computers provide unprecedented access to information and services in everyday life in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, online banking allows individuals to manage finances from any location.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people save considerable time and effort previously spent on physical errands.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that technology significantly improves daily life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, computers enhance professional capabilities and connectivity in remarkable ways.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that digital communication facilitates global collaboration in everyday life in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that remote work platforms enable teams across continents to function seamlessly.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that businesses can operate more efficiently, expanding their reach globally.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that technology is a powerful tool for progress.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from technological and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:34.476941+00:00"
+  }
+}

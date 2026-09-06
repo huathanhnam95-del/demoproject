@@ -807,7 +807,7 @@
       dragPointerId = e.pointerId;
       try {
         header.setPointerCapture(e.pointerId);
-      } catch (_) {}
+      } catch (_) { /* ignore */ }
 
       dragStartX = e.clientX;
       dragStartY = e.clientY;
@@ -851,7 +851,7 @@
       if (dragPointerId !== null) {
         try {
           header.releasePointerCapture(dragPointerId);
-        } catch (_) {}
+        } catch (_) { /* ignore */ }
         dragPointerId = null;
       }
 
@@ -1124,7 +1124,7 @@
       setTimeout(() => {
         try {
           prevBtn.focus();
-        } catch (_) {}
+        } catch (_) { /* ignore */ }
       }, 30);
     }
   }

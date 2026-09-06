@@ -168,6 +168,60 @@ class TestDualArenaEndpoints(unittest.TestCase):
         self.assertEqual(len(data['intervals']), 1)
         self.assertEqual(data['intervals'][0]['maxPitch'], 0.0)
 
+    def test_audio_duration_guard_under_90ms_option_b(self):
+        # 50ms audio buffer should trigger 90ms duration guard with HTTP 400
+        short_wav = _make_dummy_wav(duration_s=0.05, freq=220.0)
+        response = self.client.post(
+            '/analyze/option-b',
+            data={
+                'audio': (short_wav, 'short.wav', 'audio/wav'),
+                'word': 'test',
+            },
+            content_type='multipart/form-data'
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data.get('success'))
+        self.assertIn('90ms', data.get('error', ''))
+
+    def test_audio_duration_guard_under_90ms_nucleus_prosody(self):
+        short_wav = _make_dummy_wav(duration_s=0.06, freq=220.0)
+        response = self.client.post(
+            '/analyze-nucleus-prosody',
+            data={
+                'audio': (short_wav, 'short.wav', 'audio/wav'),
+                'intervals': '[]',
+            },
+            content_type='multipart/form-data'
+        )
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data.get('success'))
+        self.assertIn('90ms', data.get('error', ''))
+
+    def test_option_b_prominence_syncs_with_detected_stress(self):
+        wav_buf = _make_dummy_wav(duration_s=0.6, freq=220.0)
+        response = self.client.post(
+            '/analyze/option-b',
+            data={
+                'audio': (wav_buf, 'test.wav', 'audio/wav'),
+                'word': 'photograph',
+                'reference_ipa': 'ˈfoʊ.tə.ɡræf',
+                'expected_syllables': '3',
+            },
+            content_type='multipart/form-data'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        syllables = data.get('syllables', [])
+        detected_idx = data.get('detectedStressedIndex', 0)
+        self.assertTrue(len(syllables) > 0)
+        # Verify detected_idx has highest prominence
+        stressed_prom = syllables[detected_idx].get('prominence', 0)
+        for i, s in enumerate(syllables):
+            self.assertLessEqual(s.get('prominence', 0), stressed_prom + 0.001)
+            self.assertEqual(s.get('isStressed'), i == detected_idx)
+
 
 if __name__ == '__main__':
     unittest.main()

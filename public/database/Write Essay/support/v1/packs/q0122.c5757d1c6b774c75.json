@@ -1,0 +1,1785 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "122",
+  "title": "#122 Environment Effect",
+  "prompt": "Some people say that people are defined by the place where they grew up, but some argue that the environment only has little effect. To what extent do you agree or disagree? Use a celebrity you know to support your opinion.",
+  "source": {
+    "promptSha256": "de596d4cd42aeee0820407e0a75a02ce16117c756037061d25a6eec6d8cdca3c",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people say that people are defined by the place where they grew up, but some argue that the environment only has little effect.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "To what extent do you agree or disagree?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Use a celebrity you know to support your opinion.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Socio-cultural and global issues"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "defined",
+        "enGloss": "Key concept related to defined.",
+        "viGloss": "được xác định"
+      },
+      {
+        "term": "environment",
+        "enGloss": "Key concept related to environment.",
+        "viGloss": "môi trường"
+      },
+      {
+        "term": "disagree",
+        "enGloss": "Key concept related to disagree.",
+        "viGloss": "không đồng ý"
+      },
+      {
+        "term": "celebrity",
+        "enGloss": "Key concept related to celebrity.",
+        "viGloss": "người nổi tiếng"
+      },
+      {
+        "term": "support",
+        "enGloss": "Key concept related to support.",
+        "viGloss": "hỗ trợ"
+      },
+      {
+        "term": "opinion",
+        "enGloss": "Key concept related to opinion.",
+        "viGloss": "ý kiến"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "The community and family a person lives with teach them many things in daily life, as demonstrated by famous actors who grew up in big cities and learned to talk to many different kinds of people.",
+        "vi": "Góc nhìn: The community and family a person lives with teach them many things in daily life, as demonstrated by famous actors who grew up in big cities and learned to talk to many different kinds of people.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "The surroundings influence a person's interests and habits; for instance, a child near the sea might develop a strong interest in water sports and outdoor activities.",
+        "vi": "Góc nhìn: The surroundings influence a person's interests and habits; for instance, a child near the sea might develop a strong interest in water sports and outdoor activities.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "The local setting significantly shapes a person's personality, as demonstrated by a child living near the sea who might develop an interest in ocean activities.",
+        "vi": "Góc nhìn: The local setting significantly shapes a person's personality, as demonstrated by a child living near the sea who might develop an interest in ocean activities.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "A place provides crucial life skills because different areas require different kinds of work, such as farming, which teaches manual skills and an understanding of nature.",
+        "vi": "Góc nhìn: A place provides crucial life skills because different areas require different kinds of work, such as farming, which teaches manual skills and an understanding of nature.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "Growing up in a specific place, such as a busy city, teaches people how to manage crowds and fast life, thereby showing that the environment plays a major role in shaping a person's character.",
+        "vi": "Góc nhìn: Growing up in a specific place, such as a busy city, teaches people how to manage crowds and fast life, thereby showing that the environment plays a major role in shaping a person's character.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "The local environment influences social habits because the available resources and activities guide how people interact, such as a coastal town encouraging outdoor sports.",
+        "vi": "Góc nhìn: The local environment influences social habits because the available resources and activities guide how people interact, such as a coastal town encouraging outdoor sports.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph focuses on how the physical setting (community/city) influences practical skills and adaptability.",
+        "vi": "Góc nhìn: The first body paragraph focuses on how the physical setting (community/city) influences practical skills and adaptability.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph focuses on how the social setting (family/friends/nature) influences moral values and beliefs.",
+        "vi": "Góc nhìn: The second body paragraph focuses on how the social setting (family/friends/nature) influences moral values and beliefs.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "place where",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "strongly agree",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "person's early",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "daily life",
+            "enGloss": "everyday existence",
+            "viGloss": "cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "place where",
+            "enGloss": "location of growth",
+            "viGloss": "nơi mà",
+            "source": "approved_sample"
+          },
+          {
+            "term": "strongly agree",
+            "enGloss": "fully concur",
+            "viGloss": "hoàn toàn đồng ý",
+            "source": "approved_sample"
+          },
+          {
+            "term": "person's early",
+            "enGloss": "initial stages of life",
+            "viGloss": "giai đoạn đầu của một người",
+            "source": "approved_sample"
+          },
+          {
+            "term": "early life",
+            "enGloss": "initial years of existence",
+            "viGloss": "cuộc sống ban đầu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "other words",
+            "enGloss": "in different terms",
+            "viGloss": "nói cách khác",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "strongly agree",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: rất đồng ý"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "The community and family a person lives with teach them many things in daily life, as demonstrated by famous actors who grew up in big cities and learned to talk to many different kinds of people.",
+          "point2": "The surroundings influence a person's interests and habits; for instance, a child near the sea might develop a strong interest in water sports and outdoor activities.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Socio-cultural and global issues ____.",
+          "point1": "The local setting significantly shapes a person's personality, as demonstrated by a child living near the sea who might develop an interest in ocean activities.",
+          "point2": "A place provides crucial life skills because different areas require different kinds of work, such as farming, which teaches manual skills and an understanding of nature.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that where a person grows up shapes who they become.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A person's early life place shapes their personality.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the community and family they live with teach them many things in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, many famous actors grew up in big cities in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they learn to talk to many different kinds of people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the place where a child grows up has a big effect.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The place where we grow up affects our interests and habits.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the things around us give us new ideas and skills in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child near the sea might like swimming very much in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they become good at water sports and outdoor activities.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that our surroundings shape our interests.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the place where a person grows up shapes their personality and interests.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The community and family they live with, and the things around them, both play a big role in who they become.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that where a person grows up defines who they are.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A person's early life place shapes their personality.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the community where a child lives gives them many ideas in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child who lives near the sea learns about fishing and boats in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this person might enjoy ocean activities and live by the water.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the local setting has a big impact on a person.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that a place gives us important life skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people in different areas do different kinds of work in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child in a farming area learns about planting and caring for crops in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they become good at working with their hands and understanding nature.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that the local setting teaches useful skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from person's and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "person's character",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "strongly agree",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "social habits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "discuss whether",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "person's character",
+            "enGloss": "a person's personality or moral qualities",
+            "viGloss": "tính cách của một người",
+            "source": "approved_sample"
+          },
+          {
+            "term": "strongly agree",
+            "enGloss": "to fully support an idea",
+            "viGloss": "hoàn toàn đồng ý",
+            "source": "approved_sample"
+          },
+          {
+            "term": "social habits",
+            "enGloss": "patterns of behavior in social settings",
+            "viGloss": "thói quen xã hội",
+            "source": "approved_sample"
+          },
+          {
+            "term": "discuss whether",
+            "enGloss": "to talk about the possibility of something",
+            "viGloss": "thảo luận liệu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "surroundings have",
+            "enGloss": "the effect that the environment has",
+            "viGloss": "có ảnh hưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "little impact",
+            "enGloss": "not much effect",
+            "viGloss": "ít ảnh hưởng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "little impact",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          },
+          {
+            "term": "strongly agree",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: rất đồng ý"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "Growing up in a specific place, such as a busy city, teaches people how to manage crowds and fast life, thereby showing that the environment plays a major role in shaping a person's character.",
+          "point2": "The local environment influences social habits because the available resources and activities guide how people interact, such as a coastal town encouraging outdoor sports.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Socio-cultural and global issues ____.",
+          "point1": "The first body paragraph focuses on how the physical setting (community/city) influences practical skills and adaptability.",
+          "point2": "The second body paragraph focuses on how the social setting (family/friends/nature) influences moral values and beliefs.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people discuss whether a person's character is shaped by where they live or if their surroundings have little impact.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The place where a person grows up greatly affects their personality.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the community and culture of a region teach people many things about life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, growing up in a busy city teaches people how to manage crowds and fast life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people become good at dealing with many different kinds of people.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the environment plays a major role in shaping a person's character.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that the local environment influences a person's social habits.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the resources and activities available in a place guide how people interact.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a coastal town encourages people to enjoy outdoor sports and the sea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that residents develop a strong love for nature and physical activity.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the environment shapes our social habits.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the environment significantly shapes a person's character by influencing their ability to interact with diverse people and by guiding their social habits through available local resources.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people believe that the place where a person grows up shapes who they become, while others think this environment has little impact.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A person's early life setting greatly affects their character development.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the community and surroundings provide the initial lessons for living.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, growing up in a busy city teaches people to be quick and adaptable.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals learn how to manage crowds and fast changes in life.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the physical setting shapes a person's initial skills and outlook.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that the social environment shapes a person's beliefs and values.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that family and friends teach us what is normal and important.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a person raised near nature develops a deep respect for the environment.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they feel a strong connection to the outdoors and care for wildlife.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the social setting guides a person's moral compass.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that environment has little impact.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The early life setting greatly affects their character development, and the social environment shapes a person's beliefs and values.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "formative",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "milieu",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "determinants",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "socioeconomic",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "formative",
+            "enGloss": "relating to the development of something",
+            "viGloss": "thuộc về giai đoạn hình thành",
+            "source": "approved_sample"
+          },
+          {
+            "term": "milieu",
+            "enGloss": "the immediate surroundings that influence a person's life",
+            "viGloss": "môi trường sống",
+            "source": "approved_sample"
+          },
+          {
+            "term": "determinants",
+            "enGloss": "factors that cause or decide something",
+            "viGloss": "yếu tố quyết định",
+            "source": "approved_sample"
+          },
+          {
+            "term": "socioeconomic",
+            "enGloss": "relating to the interaction of social and economic factors",
+            "viGloss": "thuộc về kinh tế xã hội",
+            "source": "approved_sample"
+          },
+          {
+            "term": "trajectory",
+            "enGloss": "the path or course of something",
+            "viGloss": "quỹ đạo",
+            "source": "approved_sample"
+          },
+          {
+            "term": "profoundly",
+            "enGloss": "in a way that is very deep or intense",
+            "viGloss": "một cách sâu sắc",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "socioeconomic status",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "The first body paragraph focuses on how the general cultural milieu and social interactions within a community shape a person's core personality traits and worldview.",
+          "point2": "The second body paragraph argues that the socioeconomic status of one's initial environment dictates access to resources and opportunities, thereby influencing life trajectories.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Socio-cultural and global issues ____.",
+          "point1": "The geographical location where one spends their formative years significantly shapes their inherent traits, cultivating adaptability and a broad understanding of human interaction.",
+          "point2": "The surrounding community dictates behavioral patterns and aspirations, as the available resources and opportunities mold ambition and professional trajectories.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The extent to which a person's upbringing and surroundings shape their character is a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The environment where an individual spends their formative years profoundly shapes their core personality traits.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the cultural milieu and social interactions encountered during childhood leave lasting imprints on a person's worldview.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, growing up in a highly collaborative community encourages cooperation and empathy among its residents.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals tend to develop strong interpersonal skills and a sense of collective responsibility.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that early surroundings are crucial determinants of character development.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the socioeconomic status of one's initial environment significantly dictates access to resources and opportunities.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that certain backgrounds provide superior educational and networking advantages to their inhabitants.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that many successful actors, such as Leonardo DiCaprio, benefited from stable, affluent family support.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that these individuals are better positioned to pursue demanding careers and build professional networks.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that initial circumstances greatly influence life trajectories.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the formative years profoundly shape personality traits through cultural milieu, and socioeconomic status dictates access to crucial resources and opportunities.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The extent to which a person's upbringing determines their character is a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The geographical location where an individual spends their formative years significantly shapes their inherent traits.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the cultural milieu and social norms encountered during childhood leave a lasting imprint on one's worldview.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, growing up in a bustling metropolis exposes children to diverse economic strata and rapid social change.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these experiences cultivate adaptability and a broad understanding of human interaction.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the environment plays a crucial role in shaping personality development.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the community surrounding a person dictates much of their behavioral patterns and aspirations.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the resources and opportunities available in a specific area mold ambition and educational attainment.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that celebrities who originate from affluent backgrounds often have access to superior educational institutions.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that their professional trajectories tend to be more stable and globally recognized.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the environment is a powerful determinant of an individual's life path.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from geographical and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:08.974338+00:00"
+  }
+}

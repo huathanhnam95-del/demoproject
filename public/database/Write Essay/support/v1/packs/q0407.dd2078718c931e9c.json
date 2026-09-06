@@ -1,0 +1,1753 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "407",
+  "title": "#407 Health Maintenance",
+  "prompt": "What is your opinion on the role of diet in maintaining good health?",
+  "source": {
+    "promptSha256": "e1c2dcc21da5b7a03735e5d6fcf661f7b4fd06f7f2be7fa6304b32546aeaa0dd",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "What is your opinion on the role of diet in maintaining good health?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Food and health"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "opinion",
+        "enGloss": "Key concept related to opinion.",
+        "viGloss": "ý kiến"
+      },
+      {
+        "term": "maintaining",
+        "enGloss": "Key concept related to maintaining.",
+        "viGloss": "duy trì"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "Diet is important because it provides energy and necessary nutrients.",
+        "vi": "Góc nhìn: Diet is important because it provides energy and necessary nutrients.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Diet is important because it helps the digestive system work well.",
+        "vi": "Góc nhìn: Diet is important because it helps the digestive system work well.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Diet is not the only factor for good health.",
+        "vi": "Góc nhìn: Diet is not the only factor for good health.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Rest and exercise are more important than diet.",
+        "vi": "Góc nhìn: Rest and exercise are more important than diet.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "A balanced diet provides the necessary nutrients for the body to function well.",
+        "vi": "Góc nhìn: A balanced diet provides the necessary nutrients for the body to function well.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Diet also helps to prevent many serious long-term health problems.",
+        "vi": "Góc nhìn: Diet also helps to prevent many serious long-term health problems.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Good health requires more than just diet; lifestyle choices, such as getting enough sleep, are equally crucial for the body to repair itself.",
+        "vi": "Góc nhìn: Good health requires more than just diet; lifestyle choices, such as getting enough sleep, are equally crucial for the body to repair itself.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Physical activity is vital for maintaining good health, as exercise strengthens the body, manages weight, and improves overall energy and heart health.",
+        "vi": "Góc nhìn: Physical activity is vital for maintaining good health, as exercise strengthens the body, manages weight, and improves overall energy and heart health.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "balanced diet",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "energy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "vitamins",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "digestive system",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "balanced diet",
+            "enGloss": "a diet with many different types of food",
+            "viGloss": "chế độ ăn uống cân bằng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "energy",
+            "enGloss": "the power to do things",
+            "viGloss": "năng lượng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "vitamins",
+            "enGloss": "small parts of food that keep us healthy",
+            "viGloss": "vitamin",
+            "source": "approved_sample"
+          },
+          {
+            "term": "digestive system",
+            "enGloss": "the parts of the body that help us digest food",
+            "viGloss": "hệ tiêu hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "fiber",
+            "enGloss": "a part of food that helps us pass waste",
+            "viGloss": "chất xơ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "fruits",
+            "enGloss": "sweet things that grow on trees or plants",
+            "viGloss": "trái cây",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "atomic energy",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: năng lượng nguyên tử"
+          },
+          {
+            "term": "nuclear energy",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: năng lượng hạt nhân"
+          },
+          {
+            "term": "renewable energy",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: năng lượng tái tạo"
+          },
+          {
+            "term": "solar energy",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: năng lượng mặt trời"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Food and health ____.",
+          "point1": "Diet is important because it provides energy and necessary nutrients.",
+          "point2": "Diet is important because it helps the digestive system work well.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Food and health ____.",
+          "point1": "Diet is not the only factor for good health.",
+          "point2": "Rest and exercise are more important than diet.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The food we eat plays a big role in keeping our body healthy.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A balanced diet gives our body the energy it needs to live well.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, good food gives us the right amounts of vitamins in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, eating many fruits and vegetables gives us needed vitamins in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, our body works better, and we feel strong.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that eating good food is very important for health.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Good food helps our body keep its digestive system working well.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because certain foods have fiber that helps us pass waste easily in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, eating whole grains and beans helps our digestive system in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, we do not feel sick, and we have good energy.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that diet helps the body work well.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that diet is key to good health.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We must eat a balanced diet and pay attention to food to keep our body strong.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People often think that what we eat is the most important thing for keeping our body healthy.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A person's health comes from many things, not just food.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, exercise and sleep are also very important for a good body in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, walking for thirty minutes every day helps the body feel strong in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel more energy and sleep better at night.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a balanced life needs more than just good food.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that other habits affect our health much more than food.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because things like stress and sleep are key parts of staying well in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, getting enough hours of sleep helps the body repair itself in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, a person can think clearly and feel less tired during the day.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that rest is more important than diet.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from person's and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "balanced diet",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "nutrients",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "digestive system",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "vitamins",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "balanced diet",
+            "enGloss": "a diet that includes many different kinds of food",
+            "viGloss": "chế độ ăn uống cân bằng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nutrients",
+            "enGloss": "substances in food that the body needs to live",
+            "viGloss": "dinh dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "digestive system",
+            "enGloss": "the organs that help the body break down food",
+            "viGloss": "hệ tiêu hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "vitamins",
+            "enGloss": "natural substances found in food that keep us healthy",
+            "viGloss": "vitamin",
+            "source": "approved_sample"
+          },
+          {
+            "term": "chronic diseases",
+            "enGloss": "long-term illnesses that are hard to cure",
+            "viGloss": "bệnh mãn tính",
+            "source": "approved_sample"
+          },
+          {
+            "term": "food choices",
+            "enGloss": "the selection of food items to eat",
+            "viGloss": "lựa chọn thực phẩm",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Food and health ____.",
+          "point1": "A balanced diet provides the necessary nutrients for the body to function well.",
+          "point2": "Diet also helps to prevent many serious long-term health problems.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Food and health ____.",
+          "point1": "Good health requires more than just diet; lifestyle choices, such as getting enough sleep, are equally crucial for the body to repair itself.",
+          "point2": "Physical activity is vital for maintaining good health, as exercise strengthens the body, manages weight, and improves overall energy and heart health.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of diet is very important for keeping the body healthy and strong.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A balanced diet provides the necessary nutrients for the body to function well.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, This means that eating the right kinds of food gives us the energy we need every day.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, A practical example is eating plenty of fruits and vegetables, which gives us vitamins and fiber.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This result supports the view that our digestive system works better, and we feel more active.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Good food choices are key to good health.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Diet also helps to prevent many serious long-term health problems.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that This is mainly because poor eating habits can lead to weight gain and other issues.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that For instance, eating too much sugar can raise blood sugar levels over time.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people might develop chronic diseases, such as heart problems.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that This clearly shows that diet plays a major role in preventing illness.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that diet is crucial for good health.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Maintaining a balanced diet provides necessary nutrients, and controlling food intake helps prevent serious long-term problems.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of food and eating habits in keeping a person healthy is a common topic of discussion.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "While a good diet is often talked about, it is not the only thing that keeps a person healthy.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, good health comes from many parts of life, not just what we eat.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, getting enough sleep is very important for the body to repair itself.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, a person who eats well but does not sleep enough might still feel tired.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that lifestyle choices are more important than just the food we consume.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that physical activity plays a big role in maintaining good health.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that exercise helps keep the body strong and keeps weight at a normal level.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that walking for thirty minutes every day improves heart health.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people who exercise regularly have better energy and feel better overall.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that exercise is key to overall well-being.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from while and another.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "dietary",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "nutrients",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "folate",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "digestive system",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "dietary",
+            "enGloss": "relating to diet",
+            "viGloss": "thuộc về chế độ ăn uống",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nutrients",
+            "enGloss": "substances needed for growth and function",
+            "viGloss": "chất dinh dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "folate",
+            "enGloss": "a type of vitamin",
+            "viGloss": "axit folic",
+            "source": "approved_sample"
+          },
+          {
+            "term": "digestive system",
+            "enGloss": "the system that breaks down food",
+            "viGloss": "hệ tiêu hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "vitality",
+            "enGloss": "the state of being strong and active",
+            "viGloss": "sức sống",
+            "source": "approved_sample"
+          },
+          {
+            "term": "metabolism",
+            "enGloss": "the chemical processes that occur in the body",
+            "viGloss": "quá trình trao đổi chất",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Food and health ____.",
+          "point1": "A well-structured diet provides essential nutrients from whole foods, such as leafy greens, which ensures smooth digestive function and proper nutrient absorption.",
+          "point2": "Poor dietary habits increase the risk of chronic diseases, particularly due to excessive sugar intake and poor metabolism, leading to conditions like type one diabetes.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Food and health ____.",
+          "point1": "The primary argument is that focusing exclusively on diet is insufficient for achieving good health.",
+          "point2": "The secondary argument is that inherent biological factors and stress management are equally vital components of overall wellness.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of dietary choices is fundamental to maintaining optimal physical and mental well-being.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A well-structured diet provides the necessary nutrients for the body to function efficiently.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, consuming a variety of whole foods ensures the intake of essential vitamins and minerals.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, incorporating leafy green vegetables into meals provides substantial amounts of fiber and folate.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the digestive system operates smoothly, aiding nutrient absorption throughout the gut.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that proper nutrition is crucial for sustaining overall vitality.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Dietary habits significantly influence the risk of developing chronic diseases.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that poor eating patterns often lead to excessive sugar intake and poor metabolism.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that regular consumption of processed snacks contributes to weight gain and cardiovascular strain.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that individuals face an elevated risk of developing conditions such as type one diabetes.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that dietary patterns are a major determinant of long-term health.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from well and dietary.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of dietary habits in maintaining overall physical wellness is a widely debated subject.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "While nutrition is important, focusing solely on diet overlooks other crucial lifestyle elements.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, physical activity and adequate rest contribute significantly to bodily function in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a sedentary individual who eats perfectly will still struggle with cardiovascular fitness.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the body's overall metabolic rate may decline despite optimal nutrient intake.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a holistic approach encompassing movement is necessary for true health.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, genetics and stress management play equally significant roles in determining health outcomes.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that inherent biological predispositions influence how the body processes nutrients in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that some individuals require specialized supplements regardless of their diet.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that managing chronic stress can mitigate the negative effects of poor dietary patterns.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that lifestyle choices extend far beyond mere food consumption.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Food and health.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from while and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:40.932284+00:00"
+  }
+}

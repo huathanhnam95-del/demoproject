@@ -1,0 +1,1794 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "285",
+  "title": "#285 Tree-planting Day",
+  "prompt": "Tree-planting Day is popular worldwide. What are the advantages and disadvantages of it? Give your own experience and examples.",
+  "source": {
+    "promptSha256": "59d0691da4e0fff2dd2167f0c7ab88c4b93d4687ba56722443267dff33826cfc",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Tree-planting Day is popular worldwide.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What are the advantages and disadvantages of it?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Give your own experience and examples.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "Environment"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Tree-planting",
+        "enGloss": "Key concept related to tree-planting.",
+        "viGloss": "trồng cây"
+      },
+      {
+        "term": "popular",
+        "enGloss": "Key concept related to popular.",
+        "viGloss": "phổ biến"
+      },
+      {
+        "term": "worldwide",
+        "enGloss": "Key concept related to worldwide.",
+        "viGloss": "trên toàn thế giới"
+      },
+      {
+        "term": "advantages",
+        "enGloss": "beneficial conditions or circumstances",
+        "viGloss": "những lợi thế"
+      },
+      {
+        "term": "disadvantages",
+        "enGloss": "Key concept related to disadvantages.",
+        "viGloss": "nhược điểm"
+      },
+      {
+        "term": "experience",
+        "enGloss": "Key concept related to experience.",
+        "viGloss": "kinh nghiệm"
+      },
+      {
+        "term": "examples",
+        "enGloss": "Key concept related to examples.",
+        "viGloss": "ví dụ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "comparison",
+        "required": true,
+        "en": "Discuss the important advantages and disadvantages.",
+        "vi": "Thảo luận những ưu điểm và nhược điểm quan trọng."
+      },
+      {
+        "id": "judgement",
+        "required": true,
+        "en": "Make the required overall judgement.",
+        "vi": "Đưa ra nhận định tổng thể theo yêu cầu."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Support the comparison with relevant examples.",
+        "vi": "Hỗ trợ phần so sánh bằng ví dụ phù hợp."
+      }
+    ],
+    "angles": [
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "Planting trees improves air quality and helps the environment.",
+        "vi": "Góc nhìn: Planting trees improves air quality and helps the environment.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "Trees provide homes for local animals and plants, supporting local life.",
+        "vi": "Góc nhìn: Trees provide homes for local animals and plants, supporting local life.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The effort of planting trees takes a long time to show good results.",
+        "vi": "Góc nhìn: The effort of planting trees takes a long time to show good results.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The plants might not survive if the local area is not suitable for them.",
+        "vi": "Góc nhìn: The plants might not survive if the local area is not suitable for them.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "Tree-planting Day helps improve the local environment by cleaning the air.",
+        "vi": "Góc nhìn: Tree-planting Day helps improve the local environment by cleaning the air.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "Tree-planting Day supports wildlife and biodiversity, which is important for nature's survival.",
+        "vi": "Góc nhìn: Tree-planting Day supports wildlife and biodiversity, which is important for nature's survival.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first disadvantage is the low long-term survival rate of planted saplings, which can be wasted effort if the trees die due to lack of water or proper care.",
+        "vi": "Góc nhìn: The first disadvantage is the low long-term survival rate of planted saplings, which can be wasted effort if the trees die due to lack of water or proper care.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "Another issue is that these events sometimes prioritize visible actions (like planting for publicity) over necessary deep planning, such as checking the soil type.",
+        "vi": "Góc nhìn: Another issue is that these events sometimes prioritize visible actions (like planting for publicity) over necessary deep planning, such as checking the soil type.",
+        "sourceVariantId": "disadvantages"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+        "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "environment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "clean air",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "local area",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "support",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "environment",
+            "enGloss": "the natural world",
+            "viGloss": "môi trường tự nhiên",
+            "source": "approved_sample"
+          },
+          {
+            "term": "clean air",
+            "enGloss": "fresh air",
+            "viGloss": "không khí sạch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "local area",
+            "enGloss": "the area near us",
+            "viGloss": "khu vực địa phương",
+            "source": "approved_sample"
+          },
+          {
+            "term": "support",
+            "enGloss": "to help or hold up",
+            "viGloss": "hỗ trợ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "local life",
+            "enGloss": "life in a specific place",
+            "viGloss": "cuộc sống địa phương",
+            "source": "approved_sample"
+          },
+          {
+            "term": "creatures",
+            "enGloss": "living things",
+            "viGloss": "sinh vật",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ bổ sung"
+          },
+          {
+            "term": "considerable support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ đáng kể"
+          },
+          {
+            "term": "emotional support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ tinh thần"
+          },
+          {
+            "term": "empirical support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ thực nghiệm"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Environment far outweigh the drawbacks because ____.",
+          "point1": "Planting trees improves air quality and helps the environment.",
+          "point2": "Trees provide homes for local animals and plants, supporting local life.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Environment are more concerning because ____.",
+          "point1": "The effort of planting trees takes a long time to show good results.",
+          "point2": "The plants might not survive if the local area is not suitable for them.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Tree-planting Day is a popular event around the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Planting trees is very good for the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, trees help to keep the air clean in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a small forest can take away much smoke from the air in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can breathe better in the local area in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that planting trees improves our air quality.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Planting trees helps local animals and plants.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because trees provide a home for many creatures in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, birds build nests in the branches of big trees in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the animals have a safe place to live in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that trees support local life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that Tree-planting Day is useful.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Planting trees improves air quality, and trees also support local life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Tree-planting Day is a popular event around the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One disadvantage is that planting trees takes a long time to grow.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the young plants need many years to become strong in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a small sapling needs many years to grow big in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people might think the effort is not useful right away.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the immediate results are not always clear.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another problem is that the plants might not survive in certain places.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because the local soil or climate might be too hard for the trees in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, if the area is very dry, the saplings will die quickly in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the money and time spent on planting are wasted.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that care is very important.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that Tree-planting Day is always good.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The long time to grow and the need for good care are two main issues to think about.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "environment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "biodiversity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "ecosystem",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "environment",
+            "enGloss": "surroundings",
+            "viGloss": "môi trường",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollution",
+            "enGloss": "dirt or smoke",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "biodiversity",
+            "enGloss": "variety of life",
+            "viGloss": "đa dạng sinh học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "ecosystem",
+            "enGloss": "natural system",
+            "viGloss": "hệ sinh thái",
+            "source": "approved_sample"
+          },
+          {
+            "term": "shelter",
+            "enGloss": "place to live",
+            "viGloss": "nơi trú ẩn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "habitat",
+            "enGloss": "natural home",
+            "viGloss": "môi trường sống",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "environmental pollution",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ô nhiễm môi trường"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Environment far outweigh the drawbacks because ____.",
+          "point1": "Tree-planting Day helps improve the local environment by cleaning the air.",
+          "point2": "Tree-planting Day supports wildlife and biodiversity, which is important for nature's survival.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Environment are more concerning because ____.",
+          "point1": "The first disadvantage is the low long-term survival rate of planted saplings, which can be wasted effort if the trees die due to lack of water or proper care.",
+          "point2": "Another issue is that these events sometimes prioritize visible actions (like planting for publicity) over necessary deep planning, such as checking the soil type.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Tree-planting Day is a popular event globally, focusing on the planting of new trees and plants.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage of Tree-planting Day is that it helps improve the local environment.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, planting trees helps to clean the air and make the area healthier.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, planting many trees in a city park can absorb harmful pollution.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air quality gets better for all people living nearby.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that this activity supports the overall health of the community.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another benefit of this day is that it supports wildlife and biodiversity.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that trees provide necessary shelter and food for many animals.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that local birds and small mammals use the new plants for nesting.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the local ecosystem becomes more balanced and stable.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that tree planting is vital for nature's survival.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that Tree-planting Day is beneficial.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "It helps improve the local environment by cleaning the air, and it also supports wildlife and biodiversity for nature's survival.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Tree-planting Day is a popular event held around the world to promote environmental care.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One major disadvantage of these events is the limited long-term success of the planted trees.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, many saplings do not survive after the initial planting effort.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the trees planted in a dry area might die due to lack of water or proper care.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the effort spent by people and money is wasted.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the survival rate is a major concern for these days.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another issue is that these days sometimes focus too much on visible actions rather than deep planning.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people might plant trees just for publicity or to meet a goal.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a community might plant many trees without checking the soil type first.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the trees may not grow well because the ground is unsuitable for them.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that proper planning is more important than just planting.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that Tree-planting Day is always beneficial.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The low survival rate of the trees and the need for proper planning are two key issues that must be considered.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "pollutants",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "ecological balance",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "biodiversity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "habitat",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pollutants",
+            "enGloss": "harmful substances",
+            "viGloss": "các chất ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "ecological balance",
+            "enGloss": "stability of nature",
+            "viGloss": "sự cân bằng sinh thái",
+            "source": "approved_sample"
+          },
+          {
+            "term": "biodiversity",
+            "enGloss": "variety of life",
+            "viGloss": "đa dạng sinh học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "habitat",
+            "enGloss": "natural home",
+            "viGloss": "môi trường sống",
+            "source": "approved_sample"
+          },
+          {
+            "term": "resilient",
+            "enGloss": "able to recover",
+            "viGloss": "có khả năng phục hồi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "afforestation",
+            "enGloss": "planting trees on cleared land",
+            "viGloss": "trồng rừng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Environment far outweigh the drawbacks because ____.",
+          "point1": "Tree-planting Day significantly improves local air quality by absorbing pollutants and releasing oxygen.",
+          "point2": "The event enhances biodiversity by providing essential habitats for various species of wildlife.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Environment are more concerning because ____.",
+          "point1": "The primary disadvantage is that the immediate actions taken on Tree-planting Day often lack the sustained commitment necessary for true ecological success.",
+          "point2": "A secondary disadvantage is that the organization of these large-scale events can divert valuable resources and attention away from more continuous, systemic environmental needs.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Tree-planting Day is a globally celebrated event focused on enhancing green spaces and ecological health.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage of Tree-planting Day is its significant contribution to improving local air quality.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, newly planted trees absorb pollutants and release vital oxygen into the atmosphere.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a large plantation can filter out particulate matter, which is harmful to human respiratory systems.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the surrounding community experiences cleaner air and a more pleasant environment.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these initiatives are crucial for maintaining ecological balance.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another benefit of these activities is the enhancement of biodiversity within urban settings.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that trees provide essential habitats for various species of wildlife.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that planting native species supports local insect populations, which in turn feed birds.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the overall ecosystem becomes more robust and resilient to environmental changes.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that such efforts are vital for sustaining natural life.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that Tree-planting Day is highly beneficial.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "These efforts not only improve local air quality but also significantly enhance biodiversity, making them essential for a sustainable future.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Tree-planting Day is a globally celebrated event intended to promote environmental awareness and reforestation efforts.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One significant drawback of these organized events is the potential for superficial engagement with environmental issues.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, participation might become merely a photo opportunity rather than a commitment to long-term ecological stewardship.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, many participants view planting as a single, isolated action, neglecting the subsequent care required for the saplings.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the survival rate of the newly planted trees often declines due to insufficient maintenance or proper species selection.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the immediate impact of the day is often overstated compared to sustained effort.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another concern relates to the logistical challenges and the potential for resource misallocation.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that organizing such large-scale events requires substantial financial and human capital.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the procurement of appropriate tools, transportation, and expert labor can strain local community budgets.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that funds might be diverted from more critical, continuous environmental projects, such as pollution monitoring or habitat restoration.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the focus should be on systemic change rather than singular, annual activities.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the notion that Tree-planting Day is a complete solution.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the intention to promote environmental awareness is commendable, the superficial engagement and the resource misallocation issues diminish its overall effectiveness.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:30.772732+00:00"
+  }
+}

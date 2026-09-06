@@ -1,3 +1,43 @@
+## [V1.8.134] - 2026-09-06
+
+### Added & Enhanced
+- **Universal Client-Side Audio DSP Enhancement Engine (`public/js/audio-dsp-pipeline.js`)**:
+  - Centralized real-time audio enhancement engine featuring an 80Hz Butterworth highpass filter for rumble removal, 16kHz sinc-resampling via `OfflineAudioContext`, -3dBFS peak normalization, and frame-based RMS silence trimming with 150ms dynamic padding.
+  - Exported standard 16-bit PCM linear RIFF WAV generation with iOS Safari 3-second timeout protection and graceful fallback.
+  - Retrofitted across all audio recording practice modes: Read Aloud (`public/read-aloud-mode.js`), Entrance Test (`public/entrance-test.js`), Describe Image (`public/describe-image-mode.js`), Repeat Sentence (`public/rts-mode.js`), Answer Short Question (`public/asq-mode.js`), Small Group Discussion (`public/sgd-mode.js`), Pronunciation Test (`public/pronunciation-test/test-mode.js`), Classroom student submissions (`public/js/classroom.js`), and Echo Forge audio capture adapter (`public/js/echo-forge/adapters/audio-capture-adapter.js`).
+  - Added developer guideline in `AGENTS.md` under "Developing New Practice Modes" mandating all future recording modes route through `window.AudioDspPipeline`.
+
+### Fixed & Hardened
+- **Audio DSP Pipeline Memory & Concurrency Hardening**:
+  - Supported `{ createUrl: false }` in `AudioDspPipeline.enhance()` to prevent unrevoked Object URL accumulation in memory during automated scoring and uploads.
+  - Added `isAcquiring` lock and cancellation guards in `createRecorder()` to eliminate race conditions if cancelled during `getUserMedia()` stream acquisition.
+  - Replaced hardcoded silence peak stats with empirical buffer peak measurements (reporting `0` on pure silence).
+  - Added `dspPromise` awaiting and session token verification in Small Group Discussion (`public/sgd-mode.js`), Describe Image (`public/describe-image-mode.js`), and Repeat Sentence (`public/rts-mode.js`) to eliminate audio overwrite and prevent saving raw unenhanced WebM audio.
+  - Fixed all ESLint empty catch blocks with descriptive comments across `public/rfib-mode.js`, `functions/src/entrance-test/asr-service.js`, and browser test suites.
+- **RFIB & Practice Modes UI Remediation**:
+  - Implemented 4-digit ID zero-padding, post-check select locking, mobile pull-down drawer physics, touch target sizes $\ge 40\text{px}$, and keyboard accessibility.
+
+## [V1.8.133] - 2026-09-06
+
+### Added & Enhanced
+- **Pronunciation & Syllable Coaching Rollout to Read Aloud and Repeat Sentence**:
+  - **Universal Pronunciation Assessment Pipeline (`functions/src/services/pronunciation-assessment-service.js`)**:
+    - Centralized acoustic forced alignment (`Dimension: 'Comprehensive'`, `Granularity: 'Phoneme'`, `NBestPhonemeCount: 5`) with Oxford American IPA standardization via `normalizeToOxfordAmericanIPA` (converting turned `ɹ -> r`, flap `ɾ -> t`, `/ɚ/ -> /ər/`, `/ɝ/ -> /ɜːr/`, `/ɛ/ -> /e/`, stripping diacritics and tie bars).
+    - Unified 38+ Vietnamese L1 and ESL articulatory coaching rules with natural, intuitive physical feedback (lip rounding, teeth placement, tongue curling, jaw drop).
+    - Extracted multi-syllabic breakdown with individual scores, timestamps, spoken candidate phoneme substitution diagnostics (`heardIpa`), and contextual coaching tips.
+  - **Repeat Sentence Mode Acoustic Assessment (`POST /api/repeat-sentence/assess`)**:
+    - Added dedicated WAV assessment backend route with file validation, rate limiting, and mock payload support.
+    - Upgraded `public/script.js` to capture student audio during speaking practice, enhance via `window.AudioDspPipeline.enhance(rawBlob)` (80Hz rumble removal, 16kHz sinc-resample, -3dBFS peak norm), and assess against reference sentences.
+    - Decoded audio buffer into WebAudio memory for instant, zero-delay segment playback upon word or syllable click with 5ms anti-bleed envelopes.
+    - Fallback protection to client-side string diffing if audio recording or API assessment is unavailable.
+  - **Read Aloud Mode Syllable Scoring & Tooltips (`public/read-aloud-mode.js`)**:
+    - Enriched recognized words with `dataset.accuracy`, `dataset.syllables`, and `dataset.word`.
+    - Integrated shared hover tooltips with syllable chips and single-click isolated audio snippet playback.
+  - **Shared UI Tooltip Module (`public/js/pronunciation-tooltip.js` & `public/style.css`)**:
+    - Reusable interactive floating tooltip for Read Aloud, Repeat Sentence, and Entrance Test.
+    - Dual-metric semantic separation: clearly flags when a word is intelligible (green $\ge 80$) while displaying acoustic variance in individual syllables.
+    - Color-coded syllable chips (Green $\ge 80$, Amber $60-79$, Red $< 60$) with play icons, candidate phoneme diagnoses, and articulatory coaching tips.
+
 ## [V1.8.132] - 2026-09-06
 
 ### Added & Enhanced

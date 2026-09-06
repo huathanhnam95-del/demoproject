@@ -1,0 +1,1795 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "427",
+  "title": "#427 International Travel",
+  "prompt": "Do you agree that international travel broadens one's perspective?",
+  "source": {
+    "promptSha256": "d87f6108095b716c119f40f89986931c61698995d1e5e62f73268807e8c6f9db",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Do you agree that international travel broadens one's perspective?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Travelling and tourism"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "international",
+        "enGloss": "Key concept related to international.",
+        "viGloss": "quốc tế"
+      },
+      {
+        "term": "broadens",
+        "enGloss": "Key concept related to broadens.",
+        "viGloss": "mở rộng"
+      },
+      {
+        "term": "perspective",
+        "enGloss": "Key concept related to perspective.",
+        "viGloss": "quan điểm"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "International travel exposes people to diverse cultures, showing that life varies across different locations.",
+        "vi": "Góc nhìn: International travel exposes people to diverse cultures, showing that life varies across different locations.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Interacting with people from various backgrounds helps individuals develop patience and kindness, thereby building understanding.",
+        "vi": "Góc nhìn: Interacting with people from various backgrounds helps individuals develop patience and kindness, thereby building understanding.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Travel does not always change a person's view of the world.",
+        "vi": "Góc nhìn: Travel does not always change a person's view of the world.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Travel does not teach us about ourselves.",
+        "vi": "Góc nhìn: Travel does not teach us about ourselves.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "International travel exposes people to diverse customs and traditions, leading to an acceptance of differences in daily life and expanding understanding of humanity.",
+        "vi": "Góc nhìn: International travel exposes people to diverse customs and traditions, leading to an acceptance of differences in daily life and expanding understanding of humanity.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Interacting with unfamiliar cultures, such as staying with local families, helps individuals become more open-minded and less judgmental of other groups.",
+        "vi": "Góc nhìn: Interacting with unfamiliar cultures, such as staying with local families, helps individuals become more open-minded and less judgmental of other groups.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "International travel does not always broaden a person's perspective because the experience is often limited to what is popular.",
+        "vi": "Góc nhìn: International travel does not always broaden a person's perspective because the experience is often limited to what is popular.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Travel can be very expensive and stressful, which limits the depth of the experience.",
+        "vi": "Góc nhìn: Travel can be very expensive and stressful, which limits the depth of the experience.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "culture",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "daily",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "example",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "result",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "culture",
+            "enGloss": "the customs and arts of a group of people",
+            "viGloss": "văn hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "daily",
+            "enGloss": "every day",
+            "viGloss": "hằng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "example",
+            "enGloss": "an instance of something",
+            "viGloss": "ví dụ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "result",
+            "enGloss": "the outcome of something",
+            "viGloss": "kết quả",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mind",
+            "enGloss": "the faculty of consciousness",
+            "viGloss": "tâm trí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "people",
+            "enGloss": "human beings",
+            "viGloss": "con người",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "classic example",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ví dụ cổ điển"
+          },
+          {
+            "term": "common culture",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: văn hóa chung"
+          },
+          {
+            "term": "consistent results",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kết quả nhất quán"
+          },
+          {
+            "term": "daily living",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cuộc sống hàng ngày"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Travelling and tourism ____.",
+          "point1": "International travel exposes people to diverse cultures, showing that life varies across different locations.",
+          "point2": "Interacting with people from various backgrounds helps individuals develop patience and kindness, thereby building understanding.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Travelling and tourism ____.",
+          "point1": "Travel does not always change a person's view of the world.",
+          "point2": "Travel does not teach us about ourselves.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Going to a different country can help people see the world in a new way.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "International travel helps people learn about different cultures.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people meet many new ways of life in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person can visit a country with different food and clothes in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they learn that life is not the same everywhere.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that travel opens up a person's mind.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Travel also helps people understand other kinds of people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people meet many different kinds of people from many places in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can talk with people who speak a foreign language in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they learn to be more patient and kind in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that travel builds understanding.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that international travel helps people learn about different cultures and understand other kinds of people.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that going to other countries makes people see the world in a broader way.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Travel does not always change a person's view of the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a person can still think the same way after visiting a new place in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a tourist might only visit big cities and stay in hotels in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they only see the famous parts of a country.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the experience is often limited by money and time.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that travel does not teach us about ourselves.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people often focus only on seeing new sights and places in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student might only take pictures of temples and mountains in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they miss chances to talk to local people or learn new skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that the focus stays on the outside world.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from travel and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "customs",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "traditions",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "habits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "travelers",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "customs",
+            "enGloss": "traditional ways of behaving",
+            "viGloss": "phong tục",
+            "source": "approved_sample"
+          },
+          {
+            "term": "traditions",
+            "enGloss": "long-established customs",
+            "viGloss": "truyền thống",
+            "source": "approved_sample"
+          },
+          {
+            "term": "habits",
+            "enGloss": "natural ways of behaving",
+            "viGloss": "thói quen",
+            "source": "approved_sample"
+          },
+          {
+            "term": "travelers",
+            "enGloss": "people who travel",
+            "viGloss": "những người du lịch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "understanding",
+            "enGloss": "the ability to comprehend",
+            "viGloss": "sự hiểu biết",
+            "source": "approved_sample"
+          },
+          {
+            "term": "open-minded",
+            "enGloss": "willing to consider new ideas",
+            "viGloss": "cởi mở",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "deep understanding",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hiểu biết sâu sắc"
+          },
+          {
+            "term": "mutual understanding",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hiểu biết lẫn nhau"
+          },
+          {
+            "term": "theoretical understanding",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hiểu biết lý thuyết"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Travelling and tourism ____.",
+          "point1": "International travel exposes people to diverse customs and traditions, leading to an acceptance of differences in daily life and expanding understanding of humanity.",
+          "point2": "Interacting with unfamiliar cultures, such as staying with local families, helps individuals become more open-minded and less judgmental of other groups.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Travelling and tourism ____.",
+          "point1": "International travel does not always broaden a person's perspective because the experience is often limited to what is popular.",
+          "point2": "Travel can be very expensive and stressful, which limits the depth of the experience.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "It is often argued that going to different countries can help people gain a broader view of life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "International travel helps people understand different ways of life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people meet different customs and traditions in everyday life in everyday life in everyday life in everyday life in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, visiting a market in Asia shows unique buying habits.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, travelers learn to accept differences in daily life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that travel expands one's understanding of humanity.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Travel also helps people become more open-minded.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people interact with unfamiliar cultures in everyday life in everyday life in everyday life in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that staying with a local family teaches new habits.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that individuals feel less judgment about other groups.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that travel promotes open-mindedness.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that international travel broadens one's perspective.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Experiencing different ways of life and meeting unfamiliar cultures are key ways this happens.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people believe that going to other countries helps people see the world in a broader way.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "International travel does not always broaden a person's perspective.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a person's view of the world is often shaped by their existing background in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a tourist might only visit famous city centers and stay in hotels.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they only see a small part of the local culture.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the experience is often limited to what is popular.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that travel can be very expensive and stressful.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people must spend much money on flights and accommodation in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a family trip might require saving money for many months.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the focus remains on the cost, not on deep learning.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that financial worries limit the depth of the experience.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from international and another.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "diverse",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "norms",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "resilience",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "adaptability",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "diverse",
+            "enGloss": "varying; many kinds of",
+            "viGloss": "đa dạng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "norms",
+            "enGloss": "standards of behavior",
+            "viGloss": "chuẩn mực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "resilience",
+            "enGloss": "ability to recover quickly",
+            "viGloss": "khả năng phục hồi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "adaptability",
+            "enGloss": "ability to adjust to new conditions",
+            "viGloss": "khả năng thích ứng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "competency",
+            "enGloss": "skill or ability",
+            "viGloss": "năng lực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "global perspective",
+            "enGloss": "view of the world",
+            "viGloss": "góc nhìn toàn cầu",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "diverse background",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Travelling and tourism.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Travelling and tourism."
+          },
+          {
+            "term": "diverse group",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: nhóm đa dạng"
+          },
+          {
+            "term": "diverse range",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Travelling and tourism.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Travelling and tourism."
+          },
+          {
+            "term": "global perspective",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Travelling and tourism.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Travelling and tourism."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Travelling and tourism ____.",
+          "point1": "Travel exposes individuals to varied social norms and traditions, thereby broadening their understanding of humanity.",
+          "point2": "International journeys necessitate adaptability and problem-solving skills, which cultivates a more robust and adaptable mindset.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Travelling and tourism ____.",
+          "point1": "International travel does not guarantee a significant broadening of one's perspective.",
+          "point2": "The primary source of perspective broadening is internal reflection, not external travel.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "International travel offers individuals the opportunity to encounter diverse cultures and lifestyles around the world.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage is that travel exposes individuals to varied social norms and traditions.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people encounter ways of life that differ significantly from their own daily routines in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, visiting a market in Southeast Asia allows one to observe unique bargaining practices and local customs.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the traveler gains a deeper appreciation for human adaptability and resilience.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that exposure to foreign cultures broadens one's understanding of humanity.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that international journeys necessitate adaptability and problem-solving skills.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that navigating unfamiliar environments requires constant resourcefulness and flexibility.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that arranging transport or communicating in a foreign language presents immediate challenges.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that individuals develop a greater sense of self-reliance and global competency.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that such experiences cultivate a more robust and adaptable mindset.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from clear and another.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The notion that international travel inherently broadens an individual's perspective is a widely held belief.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "International travel does not guarantee a significant broadening of one's perspective.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a person's existing knowledge base remains largely unaffected by mere physical movement in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a wealthy tourist visiting a foreign country often remains confined to luxury resorts and tourist traps.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, their understanding of local life is superficial, lacking genuine depth.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that superficial exposure does not equate to profound personal growth.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the primary source of perspective broadening is internal reflection, not external travel.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that self-improvement and intellectual engagement are more potent catalysts for change.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that dedicated reading or deep study of history can alter one's worldview.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that academic pursuits provide a structured framework for understanding complex global issues.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that intellectual development is the true source of expanded understanding.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Travelling and tourism.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from international and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:44.088964+00:00"
+  }
+}

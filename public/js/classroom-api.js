@@ -52,6 +52,26 @@ window.ClassroomAPI = (function () {
         return json.classrooms || [];
     }
 
+    // Student: Read classrooms student is enrolled in
+    async function fetchStudentClassrooms() {
+        const headers = await getHeaders();
+        const res = await fetch('/api/student/classrooms', {
+            method: 'GET',
+            headers
+        });
+        if (!res.ok) {
+            const fallbackRes = await fetch('/api/classrooms', {
+                method: 'GET',
+                headers
+            });
+            if (!fallbackRes.ok) throw new Error(`HTTP Error: ${fallbackRes.status}`);
+            const json = await fallbackRes.json();
+            return json.classrooms || [];
+        }
+        const json = await res.json();
+        return json.classrooms || [];
+    }
+
     // Admin: Read CRM course catalog (crmCourses via server API to avoid Firestore permission issues)
     async function fetchCourses() {
         const headers = await getHeaders();
@@ -633,6 +653,7 @@ window.ClassroomAPI = (function () {
     return {
         fetchCourses,
         fetchClassrooms,
+        fetchStudentClassrooms,
         createClassroom,
         updateClassroom,
         loadModules,

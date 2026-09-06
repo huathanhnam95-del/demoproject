@@ -1,0 +1,1799 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "126",
+  "title": "#126 Space Travel",
+  "prompt": "Space travel is fantastic these days, but there are many issues, such as environmental problems that we should be focusing on. What are your views on the allocation of public funding?",
+  "source": {
+    "promptSha256": "99ebd544e234c2978675285fec22e10c337f0ad4264ce5fc7fa1758efc2cd234",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Space travel is fantastic these days, but there are many issues, such as environmental problems that we should be focusing on.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What are your views on the allocation of public funding?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Environment"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "fantastic",
+        "enGloss": "Key concept related to fantastic.",
+        "viGloss": "tuyệt vời"
+      },
+      {
+        "term": "environmental",
+        "enGloss": "Key concept related to environmental.",
+        "viGloss": "môi trường"
+      },
+      {
+        "term": "problems",
+        "enGloss": "Key concept related to problems.",
+        "viGloss": "vấn đề"
+      },
+      {
+        "term": "focusing",
+        "enGloss": "Key concept related to focusing.",
+        "viGloss": "tập trung"
+      },
+      {
+        "term": "allocation",
+        "enGloss": "the act of distributing resources",
+        "viGloss": "sự phân bổ"
+      },
+      {
+        "term": "funding",
+        "enGloss": "Key concept related to funding.",
+        "viGloss": "tài trợ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "Public money is needed to help space travel be better for Earth.",
+        "vi": "Góc nhìn: Public money is needed to help space travel be better for Earth.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Public money is needed because space projects help us learn about other planets.",
+        "vi": "Góc nhìn: Public money is needed because space projects help us learn about other planets.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Public money should not be spent on space travel because the money is better used for local needs on Earth.",
+        "vi": "Góc nhìn: Public money should not be spent on space travel because the money is better used for local needs on Earth.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "Space travel is harmful to the environment and should be limited.",
+        "vi": "Góc nhìn: Space travel is harmful to the environment and should be limited.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "agree-point1",
+        "label": "Point 1",
+        "en": "Public funding is crucial because it drives technological advancements that benefit life on Earth, such as developing better air filters and helping manage pollution.",
+        "vi": "Góc nhìn: Public funding is crucial because it drives technological advancements that benefit life on Earth, such as developing better air filters and helping manage pollution.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "agree-point2",
+        "label": "Point 2",
+        "en": "Furthermore, public funding is necessary to ensure that space exploration's benefits are distributed globally, preventing private companies from focusing only on profitable areas.",
+        "vi": "Góc nhìn: Furthermore, public funding is necessary to ensure that space exploration's benefits are distributed globally, preventing private companies from focusing only on profitable areas.",
+        "sourceVariantId": "agree"
+      },
+      {
+        "id": "disagree-point1",
+        "label": "Point 1",
+        "en": "Space travel is beneficial and should continue, contradicting the idea of limiting it.",
+        "vi": "Góc nhìn: Space travel is beneficial and should continue, contradicting the idea of limiting it.",
+        "sourceVariantId": "disagree"
+      },
+      {
+        "id": "disagree-point2",
+        "label": "Point 2",
+        "en": "The essay provides two main arguments: scientific/technological benefits and economic growth.",
+        "vi": "Góc nhìn: The essay provides two main arguments: scientific/technological benefits and economic growth.",
+        "sourceVariantId": "disagree"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "astronauts",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "planets",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "rockets",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pollution",
+            "enGloss": "dirt or smoke in the air",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "astronauts",
+            "enGloss": "people who travel in space",
+            "viGloss": "phi hành gia",
+            "source": "approved_sample"
+          },
+          {
+            "term": "planets",
+            "enGloss": "large groups of rocks in space",
+            "viGloss": "các hành tinh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "rockets",
+            "enGloss": "machines that fly into space",
+            "viGloss": "tên lửa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "governments",
+            "enGloss": "the people who run a country",
+            "viGloss": "chính phủ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "public",
+            "enGloss": "belonging to all people",
+            "viGloss": "công cộng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "environmental pollution",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ô nhiễm môi trường"
+          },
+          {
+            "term": "public access",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: truy cập công cộng"
+          },
+          {
+            "term": "public administration",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hành chính công"
+          },
+          {
+            "term": "public attitudes",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thái độ của công chúng"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Environment ____.",
+          "point1": "Public money is needed to help space travel be better for Earth.",
+          "point2": "Public money is needed because space projects help us learn about other planets.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Environment ____.",
+          "point1": "Public money should not be spent on space travel because the money is better used for local needs on Earth.",
+          "point2": "Space travel is harmful to the environment and should be limited.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Space travel is exciting, but it causes problems for the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Governments should give money to space projects.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, we must help space travel to be better for Earth in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we can build rockets that use less fuel in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air pollution from these launches will go down.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that public money helps keep our planet clean.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "We must use public money for space projects.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because these projects help us learn about other planets in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we can send astronauts to study Mars in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, we learn how to live on other worlds.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that public money is needed for space projects.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that governments should give money to space projects.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We must use public money to help space travel be better for Earth and to learn about other planets.",
+            "level": "a2_b1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Space travel is exciting these days, but it causes problems for the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Space travel causes pollution that harms the Earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, vehicles put waste into the air and the ground in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, the smoke from a vehicle can spread over many areas in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this pollution makes the air dirty for people to breathe.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that we must think about the planet's health first.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "We should not spend public money on space missions.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because these big projects cost a lot of money from the public in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, building a new space station needs billions of dollars in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this money could buy schools or hospitals for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that we need to use our money for local needs.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with spending public money on space missions.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We must think about the planet's health first, and we need to use our money for local needs.",
+            "level": "a2_b1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "public funding",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "helps develop",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "new technologies",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "knowledge",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "public funding",
+            "enGloss": "funding provided by the government",
+            "viGloss": "nguồn tài trợ công cộng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "helps develop",
+            "enGloss": "assists in creating",
+            "viGloss": "giúp phát triển",
+            "source": "approved_sample"
+          },
+          {
+            "term": "new technologies",
+            "enGloss": "recently created methods or tools",
+            "viGloss": "các công nghệ mới",
+            "source": "approved_sample"
+          },
+          {
+            "term": "knowledge",
+            "enGloss": "information gained through experience or study",
+            "viGloss": "kiến thức",
+            "source": "approved_sample"
+          },
+          {
+            "term": "ensures",
+            "enGloss": "makes certain that something will happen",
+            "viGloss": "đảm bảo",
+            "source": "approved_sample"
+          },
+          {
+            "term": "benefits all",
+            "enGloss": "advantages for every person",
+            "viGloss": "mang lại lợi ích cho tất cả",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "acquire knowledge",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tiếp thu kiến thức"
+          },
+          {
+            "term": "background knowledge",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kiến thức nền tảng"
+          },
+          {
+            "term": "historical knowledge",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kiến thức lịch sử"
+          },
+          {
+            "term": "personal knowledge",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kiến thức cá nhân"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Environment ____.",
+          "point1": "Public funding is crucial because it drives technological advancements that benefit life on Earth, such as developing better air filters and helping manage pollution.",
+          "point2": "Furthermore, public funding is necessary to ensure that space exploration's benefits are distributed globally, preventing private companies from focusing only on profitable areas.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Environment ____.",
+          "point1": "Space travel is beneficial and should continue, contradicting the idea of limiting it.",
+          "point2": "The essay provides two main arguments: scientific/technological benefits and economic growth.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Space travel is becoming more common today, but it brings up many issues, especially concerning the environment.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Public funding should support space exploration because it helps develop new technologies for Earth.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these funds allow scientists to research ways to make life better on our planet.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, research into life support systems for rockets can lead to better air filters for cities.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the knowledge gained helps us manage pollution and build cleaner communities.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that public money is useful for making improvements on Earth.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Public funding is also important because it ensures that space exploration benefits all people, not just rich nations.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that private companies might only focus on profitable areas.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a government grant might fund research into studying rare planets.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that this knowledge can help us understand our own solar system and its resources.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that public money should guide space efforts for global good.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that public funding is necessary for space exploration.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Public money helps develop new technologies for Earth, and it also ensures that space exploration benefits all people.",
+            "level": "b2",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Space travel is a popular topic of discussion, suggesting it should be limited or stopped.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Space exploration offers many benefits for humanity's future.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it pushes scientific knowledge and technology forward in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the development of satellite technology has improved global communication and weather forecasting in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, countries can manage natural disasters and coordinate aid much better.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that continuing space missions are highly valuable for society.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, space travel helps create new jobs and boost economies.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that building space infrastructure requires many skilled workers in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that private companies now build rockets and space stations.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that many people gain stable, high-paying careers in related fields.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that space exploration is a major economic driver.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea of limiting space travel.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Space exploration provides great benefits for society, and it also acts as a major economic driver for nations.",
+            "level": "b2",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "space exploration",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "presents both",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "both remarkable",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "scientific opportunities",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "space exploration",
+            "enGloss": "the act of traveling into outer space",
+            "viGloss": "việc khám phá không gian",
+            "source": "approved_sample"
+          },
+          {
+            "term": "presents both",
+            "enGloss": "shows two things",
+            "viGloss": "trình bày cả hai",
+            "source": "approved_sample"
+          },
+          {
+            "term": "both remarkable",
+            "enGloss": "two amazing things",
+            "viGloss": "cả hai điều đáng chú ý",
+            "source": "approved_sample"
+          },
+          {
+            "term": "scientific opportunities",
+            "enGloss": "chances for science",
+            "viGloss": "cơ hội khoa học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "considerable environmental",
+            "enGloss": "large environmental",
+            "viGloss": "môi trường đáng kể",
+            "source": "approved_sample"
+          },
+          {
+            "term": "environmental challenges",
+            "enGloss": "problems with the environment",
+            "viGloss": "thách thức môi trường",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "agree",
+          "label": "Version 1: AGREE",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Environment ____.",
+          "point1": "Public funding for space travel is beneficial because it drives technological advancement and global scientific knowledge, providing expertise that can improve resource management on Earth.",
+          "point2": "Furthermore, allocating public funds to space travel is vital for fostering international cooperation and maintaining global stability through joint ventures among multiple nations.",
+          "sampleVariantId": "agree",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disagree",
+          "label": "Version 2: DISAGREE",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Environment ____.",
+          "point1": "The primary argument for space travel is that it drives technological innovation and provides scientific benefits that improve life on Earth.",
+          "point2": "A secondary argument is that space exploration necessitates international cooperation, thereby strengthening global diplomatic ties and promoting peace.",
+          "sampleVariantId": "disagree",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "agree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The increasing interest in space exploration presents both remarkable scientific opportunities and considerable environmental challenges.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Public funding should be allocated to space travel because it promotes technological advancement and global scientific knowledge.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, governmental investment drives innovation across multiple sectors.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the development of advanced rocket propulsion systems has yielded benefits for terrestrial industries, such as medical imaging.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the expertise gained in orbital mechanics can improve resource management on Earth.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that funding space exploration yields substantial returns for humanity.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, allocating public funds to space travel is crucial for establishing international cooperation and maintaining global stability.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that space projects necessitate collaboration among multiple nations.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that This can be exemplified by the International Space Station, which involves numerous countries sharing resources and expertise.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that such joint ventures foster diplomatic ties and reduce geopolitical tensions.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that space endeavors are powerful tools for promoting global harmony.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because space exploration stimulates technological progress and yields substantial terrestrial benefits, while simultaneously fostering international cooperation and promoting global stability.",
+            "level": "c1",
+            "sampleVariantId": "agree",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disagree": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The discussion surrounding space travel often generates considerable debate regarding its overall necessity and impact on humanity.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagreeing with the statement.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Exploring space travel offers profound scientific advancements that benefit life on Earth.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the pursuit of extraterrestrial knowledge drives innovation in numerous technological sectors.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, advancements in satellite communication, initially developed for space missions, now underpin global internet connectivity.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these technological breakthroughs improve daily life, enhancing fields ranging from medicine to meteorology.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the investment in space exploration yields substantial terrestrial benefits.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, space exploration provides crucial opportunities for global collaboration among nations.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that complex space projects require pooling diverse scientific expertise and financial resources.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that This can be exemplified by the International Space Station, which involves multiple countries working toward a shared scientific goal.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that such cooperative ventures foster diplomatic ties and promote peaceful international relations.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that space endeavors strengthen global unity.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the notion that space travel is detrimental; rather, it provides immense scientific advancements and fosters global collaboration, making it a worthwhile endeavor for humanity's future.",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "disagree",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:10.063621+00:00"
+  }
+}

@@ -997,7 +997,8 @@
           highpassFreq: 80,
           targetPeakDb: -3,
           trim: true,
-          paddingMs: 150
+          paddingMs: 150,
+          createUrl: false
         });
         return {
           wavBlob: result.wavBlob,

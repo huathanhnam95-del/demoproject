@@ -37,9 +37,9 @@
     books: { label: 'Books', subTabs: [] },
     settings: { label: 'Settings', subTabs: [] },
     chatbot: { label: 'Chatbot Management', subTabs: [] },
-    devtools: { label: '🔧 Dev Tools', subTabs: [], localOnly: true },
-    "pronunciation-samples": { label: '🎙️ Pronunciation Samples', subTabs: [] },
-    "voice-cloning": { label: '🎙️ Voice Cloning Studio', subTabs: [] }
+    devtools: { label: 'Dev Tools', subTabs: [], localOnly: true },
+    "pronunciation-samples": { label: 'Pronunciation Samples', subTabs: [] },
+    "voice-cloning": { label: 'Voice Cloning Studio', subTabs: [] }
   };
 
   const devToolsAccess = window.CrmDevToolsAccess || {

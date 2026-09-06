@@ -1,0 +1,1226 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "154",
+  "title": "#154 Average Temperature",
+  "prompt": "Scientists believe that the increasing average temperature is an issue. What caused global warming? Present solutions to reduce its effect.",
+  "source": {
+    "promptSha256": "ac161f66b456b056ea3b541c609cc5190c178368789e39a2ca98ae1fffe301b0",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Scientists believe that the increasing average temperature is an issue.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What caused global warming?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Present solutions to reduce its effect.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Climate",
+      "Environment"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Scientists",
+        "enGloss": "Key concept related to scientists.",
+        "viGloss": "các nhà khoa học"
+      },
+      {
+        "term": "believe",
+        "enGloss": "Key concept related to believe.",
+        "viGloss": "tin tưởng"
+      },
+      {
+        "term": "increasing",
+        "enGloss": "Key concept related to increasing.",
+        "viGloss": "ngày càng tăng"
+      },
+      {
+        "term": "average",
+        "enGloss": "Key concept related to average.",
+        "viGloss": "trung bình"
+      },
+      {
+        "term": "temperature",
+        "enGloss": "Key concept related to temperature.",
+        "viGloss": "nhiệt độ"
+      },
+      {
+        "term": "warming",
+        "enGloss": "Key concept related to warming.",
+        "viGloss": "sự nóng lên"
+      },
+      {
+        "term": "Present",
+        "enGloss": "Key concept related to present.",
+        "viGloss": "hiện tại"
+      },
+      {
+        "term": "solutions",
+        "enGloss": "Key concept related to solutions.",
+        "viGloss": "giải pháp"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The main cause of global warming is pollution from human activities, such as burning coal and oil.",
+        "vi": "Góc nhìn: The main cause of global warming is pollution from human activities, such as burning coal and oil.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A practical solution to reduce global warming is to use clean power sources like wind energy.",
+        "vi": "Góc nhìn: A practical solution to reduce global warming is to use clean power sources like wind energy.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The primary cause of global warming is the burning of fossil fuels, which releases greenhouse gases and increases the Earth's temperature.",
+        "vi": "Góc nhìn: The primary cause of global warming is the burning of fossil fuels, which releases greenhouse gases and increases the Earth's temperature.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A practical solution to reduce global warming is improving public transportation, which decreases car use and lowers pollution.",
+        "vi": "Góc nhìn: A practical solution to reduce global warming is improving public transportation, which decreases car use and lowers pollution.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The essay identifies the primary cause of global warming as the emission of greenhouse gases from fossil fuel combustion.",
+        "vi": "Góc nhìn: The essay identifies the primary cause of global warming as the emission of greenhouse gases from fossil fuel combustion.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "The essay proposes transitioning to renewable energy sources as a key solution for mitigating climate change.",
+        "vi": "Góc nhìn: The essay proposes transitioning to renewable energy sources as a key solution for mitigating climate change.",
+        "sourceVariantId": "problems_solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Climate.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Climate."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "gas",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "earth",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "smoke",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pollution",
+            "enGloss": "contamination of the environment",
+            "viGloss": "sự ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "gas",
+            "enGloss": "a substance that is in a gaseous state",
+            "viGloss": "khí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "earth",
+            "enGloss": "planet",
+            "viGloss": "trái đất",
+            "source": "approved_sample"
+          },
+          {
+            "term": "smoke",
+            "enGloss": "dark smoke",
+            "viGloss": "khói",
+            "source": "approved_sample"
+          },
+          {
+            "term": "power",
+            "enGloss": "strength or energy",
+            "viGloss": "năng lượng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "wind",
+            "enGloss": "moving air",
+            "viGloss": "gió",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "economic power",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: sức mạnh kinh tế"
+          },
+          {
+            "term": "environmental pollution",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ô nhiễm môi trường"
+          },
+          {
+            "term": "explanatory power",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: sức mạnh giải thích"
+          },
+          {
+            "term": "extremely powerful",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cực kỳ mạnh mẽ"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Climate ____.",
+          "point1": "The main cause of global warming is pollution from human activities, such as burning coal and oil.",
+          "point2": "A practical solution to reduce global warming is to use clean power sources like wind energy.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The average temperature of the earth is changing, and this is a big issue for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The main cause is the pollution from human activities.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, burning things like coal and oil puts bad gas into the air in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, cars that use petrol release smoke into the atmosphere in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this smoke traps heat and makes the earth warmer in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that human pollution is a major problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is to use clean power sources.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because clean power does not put bad gas into the air in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, wind turbines use wind to make electricity in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can use this power instead of dirty power in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that clean power helps the earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because human pollution is a major problem, and using clean power sources is an effective solution.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "fossil fuels",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "greenhouse gases",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "temperature rise",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "fossil fuels",
+            "enGloss": "fuels that come from ancient plants and animals",
+            "viGloss": "nhiên liệu hóa thạch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "greenhouse gases",
+            "enGloss": "gases that trap heat in the atmosphere",
+            "viGloss": "khí nhà kính",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollution",
+            "enGloss": "the presence of harmful substances in the environment",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "temperature rise",
+            "enGloss": "an increase in the average heat level",
+            "viGloss": "sự tăng nhiệt độ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "public transportation",
+            "enGloss": "systems for moving people, like buses and trains",
+            "viGloss": "phương tiện giao thông công cộng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "emissions",
+            "enGloss": "the release of gases or pollutants into the air",
+            "viGloss": "khí thải",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "environmental pollution",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ô nhiễm môi trường"
+          },
+          {
+            "term": "reduce emissions",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giảm khí thải"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Climate ____.",
+          "point1": "The primary cause of global warming is the burning of fossil fuels, which releases greenhouse gases and increases the Earth's temperature.",
+          "point2": "A practical solution to reduce global warming is improving public transportation, which decreases car use and lowers pollution.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Scientists are concerned about the rising average temperature and the resulting global warming.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The main cause is the burning of fossil fuels for energy production.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these fuels release large amounts of greenhouse gases into the atmosphere in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, cars and factories that use oil and coal increase pollution levels in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the atmosphere traps more heat, leading to a temperature rise in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that human activity is greatly contributing to global warming.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is improving public transportation systems.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that fewer people will need to use private cars in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that cities can build more train lines and bus routes in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that fewer emissions are released into the air every day in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that better public transport can reduce pollution.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because human activity, particularly the burning of fossil fuels, causes global warming, and improving public transportation systems offers a viable method to reduce pollution.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "escalating",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "emissions",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "fossil fuels",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "combustion",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "escalating",
+            "enGloss": "increasing gradually",
+            "viGloss": "gia tăng dần",
+            "source": "approved_sample"
+          },
+          {
+            "term": "emissions",
+            "enGloss": "release of gases",
+            "viGloss": "lượng khí thải",
+            "source": "approved_sample"
+          },
+          {
+            "term": "fossil fuels",
+            "enGloss": "combustible deposits of ancient organic matter",
+            "viGloss": "nhiên liệu hóa thạch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "combustion",
+            "enGloss": "the process of burning",
+            "viGloss": "quá trình đốt cháy",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mitigation",
+            "enGloss": "the action of reducing the severity of something",
+            "viGloss": "sự giảm nhẹ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "renewable",
+            "enGloss": "able to be replaced naturally",
+            "viGloss": "tái tạo",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "reduce emissions",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giảm khí thải"
+          },
+          {
+            "term": "renewable energy",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: năng lượng tái tạo"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Climate ____.",
+          "point1": "The essay identifies the primary cause of global warming as the emission of greenhouse gases from fossil fuel combustion.",
+          "point2": "The essay proposes transitioning to renewable energy sources as a key solution for mitigating climate change.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The escalating average temperature across the globe represents a significant environmental concern for humanity.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the excessive emission of greenhouse gases from human activities.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the burning of fossil fuels for energy production releases vast quantities of carbon dioxide into the atmosphere.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the combustion of coal in power plants significantly increases atmospheric carbon levels.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these gases trap heat, leading to a measurable rise in global temperatures.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that human industrial practices are fundamentally altering the planet's climate system.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is transitioning towards renewable energy sources globally.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that solar and wind power generate electricity without releasing harmful pollutants.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that countries investing in offshore wind farms reduce their reliance on oil and gas.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that air quality improves, and the pressure on finite fossil fuel reserves diminishes.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that sustainable energy adoption is crucial for mitigation.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Climate.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because human industrial practices are fundamentally altering the planet's climate system due to excessive greenhouse gas emissions, necessitating a transition towards sustainable energy sources like solar and wind power.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:14.452691+00:00"
+  }
+}

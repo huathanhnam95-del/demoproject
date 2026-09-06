@@ -1,0 +1,1804 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "396",
+  "title": "#396 Interpersonal Communication",
+  "prompt": "To what extent do you think technology has influenced the quality of interpersonal communication? Is it positive or negative?",
+  "source": {
+    "promptSha256": "da659d27653867b18acdd49cdf124c95b32120babb243365e1f0e1f5fb3e5d57",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "To what extent do you think technology has influenced the quality of interpersonal communication?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Is it positive or negative?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "Science, technology, and innovation"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "technology",
+        "enGloss": "Key concept related to technology.",
+        "viGloss": "công nghệ"
+      },
+      {
+        "term": "influenced",
+        "enGloss": "Key concept related to influenced.",
+        "viGloss": "bị ảnh hưởng"
+      },
+      {
+        "term": "quality",
+        "enGloss": "Key concept related to quality.",
+        "viGloss": "chất lượng"
+      },
+      {
+        "term": "interpersonal",
+        "enGloss": "Key concept related to interpersonal.",
+        "viGloss": "giữa các cá nhân"
+      },
+      {
+        "term": "communication",
+        "enGloss": "Key concept related to communication.",
+        "viGloss": "giao tiếp"
+      },
+      {
+        "term": "positive",
+        "enGloss": "Key concept related to positive.",
+        "viGloss": "tích cực"
+      },
+      {
+        "term": "negative",
+        "enGloss": "Key concept related to negative.",
+        "viGloss": "tiêu cực"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "comparison",
+        "required": true,
+        "en": "Discuss the important advantages and disadvantages.",
+        "vi": "Thảo luận những ưu điểm và nhược điểm quan trọng."
+      },
+      {
+        "id": "judgement",
+        "required": true,
+        "en": "Make the required overall judgement.",
+        "vi": "Đưa ra nhận định tổng thể theo yêu cầu."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Support the comparison with relevant examples.",
+        "vi": "Hỗ trợ phần so sánh bằng ví dụ phù hợp."
+      }
+    ],
+    "angles": [
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "Technology helps people keep in touch easily by allowing them to communicate over long distances.",
+        "vi": "Góc nhìn: Technology helps people keep in touch easily by allowing them to communicate over long distances.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "Technology can cause a problem with face-to-face talk because people spend too much time looking at screens.",
+        "vi": "Góc nhìn: Technology can cause a problem with face-to-face talk because people spend too much time looking at screens.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "Technology helps people keep in touch with friends.",
+        "vi": "Góc nhìn: Technology helps people keep in touch with friends.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "Technology has a negative effect on face-to-face talks.",
+        "vi": "Góc nhìn: Technology has a negative effect on face-to-face talks.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "Technology helps maintain connections over long distances by allowing people to talk to family and friends who live far away.",
+        "vi": "Góc nhìn: Technology helps maintain connections over long distances by allowing people to talk to family and friends who live far away.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "Relying too much on screens can reduce face-to-face interaction, which is a negative aspect of using technology for talking to others.",
+        "vi": "Góc nhìn: Relying too much on screens can reduce face-to-face interaction, which is a negative aspect of using technology for talking to others.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspects of face-to-face communication, focusing on its ability to build trust and connection through non-verbal cues.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspects of face-to-face communication, focusing on its ability to build trust and connection through non-verbal cues.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspects of digital communication, highlighting the risk of misunderstanding and emotional isolation.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspects of digital communication, highlighting the risk of misunderstanding and emotional isolation.",
+        "sourceVariantId": "disadvantages"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+        "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "phone",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "friends",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "call",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "connection",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "phone",
+            "enGloss": "a mobile telephone",
+            "viGloss": "điện thoại",
+            "source": "approved_sample"
+          },
+          {
+            "term": "friends",
+            "enGloss": "people you know well",
+            "viGloss": "bạn bè",
+            "source": "approved_sample"
+          },
+          {
+            "term": "call",
+            "enGloss": "to speak to someone by phone",
+            "viGloss": "gọi điện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "connection",
+            "enGloss": "a link between people",
+            "viGloss": "sự kết nối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "problem",
+            "enGloss": "a difficult situation",
+            "viGloss": "vấn đề",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawback",
+            "enGloss": "a negative point",
+            "viGloss": "điểm yếu",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional problem",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: vấn đề bổ sung"
+          },
+          {
+            "term": "central problem",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: vấn đề trung tâm"
+          },
+          {
+            "term": "change dramatically",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thay đổi đáng kể"
+          },
+          {
+            "term": "commonly called",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thường được gọi là"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Science, technology, and innovation far outweigh the drawbacks because ____.",
+          "point1": "Technology helps people keep in touch easily by allowing them to communicate over long distances.",
+          "point2": "Technology can cause a problem with face-to-face talk because people spend too much time looking at screens.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Science, technology, and innovation are more concerning because ____.",
+          "point1": "Technology helps people keep in touch with friends.",
+          "point2": "Technology has a negative effect on face-to-face talks.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Technology has changed how people talk to each other.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that technology helps people keep in touch easily.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, we can talk to friends far away using a phone in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can call a family member in another city.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel close even when they are apart.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that technology helps build strong connections.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that technology can cause a problem with face-to-face talk.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people look at screens more than they look at each other in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, friends sitting at a table might look at their phones instead of talking.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the quality of their talk goes down.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that this is a negative drawback.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that technology has a positive influence on communication.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While technology can cause a problem with face-to-face talk, its ability to help people keep in touch easily is much better.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Technology has changed how people talk to each other.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that technology helps people keep in touch with friends.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, we can talk to people far away easily in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person can call a family member in another country in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel close even when they are apart.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that technology helps keep connections.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that technology has a negative effect on face-to-face talks.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people spend too much time looking at phones in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, friends sitting together might look at their screens instead of talking in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they miss out on good talks and smiles.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that this is a big problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree that technology is good for talking.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While technology helps keep connections, the negative effect on face-to-face talks is much worse.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "maintain",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "connections",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "isolated",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "negative",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "maintain",
+            "enGloss": "keep going",
+            "viGloss": "duy trì",
+            "source": "approved_sample"
+          },
+          {
+            "term": "connections",
+            "enGloss": "links",
+            "viGloss": "sự kết nối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "isolated",
+            "enGloss": "alone",
+            "viGloss": "cô lập",
+            "source": "approved_sample"
+          },
+          {
+            "term": "negative",
+            "enGloss": "bad",
+            "viGloss": "tiêu cực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "relying",
+            "enGloss": "depending",
+            "viGloss": "phụ thuộc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "interaction",
+            "enGloss": "talking with",
+            "viGloss": "tương tác",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "complex interaction",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          },
+          {
+            "term": "human interaction",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          },
+          {
+            "term": "maintain contact",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          },
+          {
+            "term": "negative aspect",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Science, technology, and innovation far outweigh the drawbacks because ____.",
+          "point1": "Technology helps maintain connections over long distances by allowing people to talk to family and friends who live far away.",
+          "point2": "Relying too much on screens can reduce face-to-face interaction, which is a negative aspect of using technology for talking to others.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Science, technology, and innovation are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspects of face-to-face communication, focusing on its ability to build trust and connection through non-verbal cues.",
+          "point2": "The second body paragraph discusses the negative aspects of digital communication, highlighting the risk of misunderstanding and emotional isolation.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Technology has changed how people communicate with each other in modern life.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, technology makes it easier to maintain connections over long distances.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can talk to family and friends who live far away.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, video calls allow us to see our relatives even if we cannot visit them.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel less isolated and can share important moments instantly.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that technology helps keep relationships strong.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are negative aspects to how we use technology for talking to others.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that relying too much on screens can reduce face-to-face interaction.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that people might prefer texting to having a real conversation.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people might lose the skill of reading body language and tone.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that overuse of technology harms deep personal connection.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because technology facilitates maintaining long-distance relationships, while also presenting challenges regarding the reduction of face-to-face interaction.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Interpersonal communication involves how people talk and interact with each other in their daily lives.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, face-to-face talking helps people build strong relationships.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, talking in person allows people to read body language and facial expressions.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, when friends meet, they can see if the other person is happy or sad just by looking at them.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these non-verbal signs help people understand feelings better than just words alone.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that personal meetings are good for building trust and connection.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, relying too much on digital communication has some negative effects.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that written messages often lack tone and emotion.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a joke sent via text might be misunderstood as mean.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people might feel isolated or that their true feelings are not understood.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that digital methods can damage deep connections.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because face-to-face interaction facilitates deeper understanding through non-verbal cues, while excessive digital communication risks misinterpreting emotions and damaging genuine connections.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "unprecedented",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "facilitates",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "mediated",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "nuance",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "unprecedented",
+            "enGloss": "never having happened before",
+            "viGloss": "chưa từng có",
+            "source": "approved_sample"
+          },
+          {
+            "term": "facilitates",
+            "enGloss": "makes easier",
+            "viGloss": "tạo điều kiện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mediated",
+            "enGloss": "passed through an intermediary",
+            "viGloss": "qua trung gian",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nuance",
+            "enGloss": "subtle difference",
+            "viGloss": "sắc thái tinh tế",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mitigated",
+            "enGloss": "made less severe",
+            "viGloss": "giảm bớt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawback",
+            "enGloss": "disadvantage",
+            "viGloss": "điểm bất lợi",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Science, technology, and innovation far outweigh the drawbacks because ____.",
+          "point1": "Technology provides unprecedented avenues for maintaining social connections across vast distances, enabling people to stay in touch with friends and family regardless of geographical barriers.",
+          "point2": "The reliance on mediated communication presents a significant drawback to the quality of interaction, as digital exchanges often lack the nuance of in-person dialogue.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Science, technology, and innovation are more concerning because ____.",
+          "point1": "Technology provides unprecedented means to maintain connections across vast distances, such as through video conferencing.",
+          "point2": "Technology diminishes the depth of interpersonal interaction because mediated communication often lacks crucial nonverbal cues.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Technology has profoundly altered the landscape of interpersonal communication in modern society.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that technology offers unprecedented avenues for maintaining social connections across vast distances.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, Digital platforms, for instance, allow individuals to stay in touch with friends and family regardless of geographical barriers.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, A practical example is video calls, which enable people to share moments with relatives living continents away, simulating face-to-face interaction.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This result supports the view that the sense of isolation is significantly mitigated, fostering a greater feeling of belonging.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, it becomes evident that technology greatly facilitates the maintenance of strong relationships.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that the reliance on mediated communication presents a significant drawback to the quality of interaction.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that digital exchanges often lack the nuance of in-person dialogue.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that For instance, interpreting tone or subtle body language is difficult through text messages, making genuine connection challenging.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that misunderstandings can easily arise, diminishing the depth of conversation.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that technology can sometimes impair genuine interpersonal connection.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the overall influence of technology on interpersonal communication is positive.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the drawback of mediated communication exists, the ability of technology to facilitate the maintenance of strong relationships remains far more beneficial.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Technology has significantly altered the landscape of how people engage in interpersonal communication.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that technology offers unprecedented means to maintain connections across vast distances.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, Digital platforms, for example, allow individuals to stay in touch with friends and family regardless of geographical barriers.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, A practical example is video conferencing, which enables people to see the facial expressions of loved ones who live far away.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This result supports the view that the sense of community and support can be maintained with relative ease.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, it becomes evident that technology greatly facilitates the maintenance of existing relationships.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that technology presents a significant drawback regarding the depth of interpersonal interaction.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that Mediated communication, for instance, often lacks crucial nonverbal cues, such as body language and tone.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that A practical example is sending a text message, which cannot convey the subtle nuances of a face-to-face conversation.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people may misinterpret intentions, leading to misunderstandings and emotional distance.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that technology diminishes the quality of real-life communication.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree that the benefits outweigh the drawbacks, as the negative impact on the depth of interpersonal interaction is more pronounced than the ability to maintain connections across vast distances.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:39.481915+00:00"
+  }
+}

@@ -1,0 +1,1773 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "195",
+  "title": "#195 Marketing in Companies",
+  "prompt": "Should marketing in companies which produce consumer goods, like food and clothing, place emphasis on the reputation of the company or short-term strategies like the discounts and special offers? Why?",
+  "source": {
+    "promptSha256": "54458c762d4687d065c493b29898d573076dc5147c9fea5061154a9199dafa90",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Should marketing in companies which produce consumer goods, like food and clothing, place emphasis on the reputation of the company or short-term strategies like the discounts and special offers?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Why?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Economy, money, and trade"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "marketing",
+        "enGloss": "Key concept related to marketing.",
+        "viGloss": "tiếp thị"
+      },
+      {
+        "term": "companies",
+        "enGloss": "Key concept related to companies.",
+        "viGloss": "công ty"
+      },
+      {
+        "term": "produce",
+        "enGloss": "Key concept related to produce.",
+        "viGloss": "sản xuất"
+      },
+      {
+        "term": "consumer",
+        "enGloss": "Key concept related to consumer.",
+        "viGloss": "người tiêu dùng"
+      },
+      {
+        "term": "clothing",
+        "enGloss": "Key concept related to clothing.",
+        "viGloss": "quần áo"
+      },
+      {
+        "term": "emphasis",
+        "enGloss": "Key concept related to emphasis.",
+        "viGloss": "sự nhấn mạnh"
+      },
+      {
+        "term": "reputation",
+        "enGloss": "Key concept related to reputation.",
+        "viGloss": "danh tiếng"
+      },
+      {
+        "term": "company",
+        "enGloss": "Key concept related to company.",
+        "viGloss": "công ty"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "Focusing on a good company image helps a business a lot.",
+        "vi": "Góc nhìn: Focusing on a good company image helps a business a lot.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "Using special deals and sales helps a business a lot.",
+        "vi": "Góc nhìn: Using special deals and sales helps a business a lot.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Building a good company image, especially through community help, helps people like the company more over time, which is important for sales.",
+        "vi": "Góc nhìn: Building a good company image, especially through community help, helps people like the company more over time, which is important for sales.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Special offers and discounts can motivate people to buy things immediately, leading to quick sales for the store.",
+        "vi": "Góc nhìn: Special offers and discounts can motivate people to buy things immediately, leading to quick sales for the store.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "The first point discusses the importance of building a good company reputation for long-term success.",
+        "vi": "Góc nhìn: The first point discusses the importance of building a good company reputation for long-term success.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "The second point discusses how short-term strategies, such as discounts, can boost immediate sales and revenue.",
+        "vi": "Góc nhìn: The second point discusses how short-term strategies, such as discounts, can boost immediate sales and revenue.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "The first point discusses the importance of building a good company reputation for consumer goods companies.",
+        "vi": "Góc nhìn: The first point discusses the importance of building a good company reputation for consumer goods companies.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "The second point discusses how short-term sales deals can quickly boost immediate sales.",
+        "vi": "Góc nhìn: The second point discusses how short-term sales deals can quickly boost immediate sales.",
+        "sourceVariantId": "option_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Economy, money, and trade.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Economy, money, and trade."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "products",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "good company image",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "customers",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "special deals",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "products",
+            "enGloss": "things made for sale",
+            "viGloss": "sản phẩm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "good company image",
+            "enGloss": "a positive view of the company",
+            "viGloss": "hình ảnh công ty tốt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "customers",
+            "enGloss": "people who buy things",
+            "viGloss": "khách hàng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "special deals",
+            "enGloss": "sales or discounts",
+            "viGloss": "ưu đãi đặc biệt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "discounts",
+            "enGloss": "money taken off the price",
+            "viGloss": "giảm giá",
+            "source": "approved_sample"
+          },
+          {
+            "term": "sales",
+            "enGloss": "the act of selling things",
+            "viGloss": "doanh số bán hàng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "imported products",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: sản phẩm nhập khẩu"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "Focusing on a good company image helps a business a lot.",
+          "point2": "Using special deals and sales helps a business a lot.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "Building a good company image, especially through community help, helps people like the company more over time, which is important for sales.",
+          "point2": "Special offers and discounts can motivate people to buy things immediately, leading to quick sales for the store.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Companies that sell things, like food and clothes, must decide how to advertise their products.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on a good company image helps a business a lot.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people like companies that act well in daily life in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a food company that helps the environment will get good reviews in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel good about buying their food.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a good image helps with customers.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Using special deals and sales helps a business a lot.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because these offers make people want to buy things now in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a clothing store offering a big discount will see many shoppers in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the store sells many items in a short time.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that deals bring quick sales.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that companies should focus on both good company image and special deals.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "A good image helps with customers, and special deals help with quick sales.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Companies that sell things like food and clothes must decide how to advertise their goods.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on a good company image is one way to advertise.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, companies should build a good name for themselves in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a company that helps the community will be seen as good in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people will like the company more over time.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a good name is important for sales.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Using special offers is another way to advertise.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because deals can make people want to buy things right away in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a store offering a big discount on clothes will attract many buyers in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the store will sell a lot of items in a short time in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that deals help with quick sales.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from focusing and special.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "reputation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "customers",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "discounts",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "special offers",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "reputation",
+            "enGloss": "the good name or standing of a company",
+            "viGloss": "danh tiếng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "customers",
+            "enGloss": "people who buy goods",
+            "viGloss": "khách hàng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "discounts",
+            "enGloss": "a reduction in the price of goods",
+            "viGloss": "giảm giá",
+            "source": "approved_sample"
+          },
+          {
+            "term": "special offers",
+            "enGloss": "deals or promotions for a limited time",
+            "viGloss": "ưu đãi đặc biệt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "sales",
+            "enGloss": "the act of selling goods",
+            "viGloss": "doanh số",
+            "source": "approved_sample"
+          },
+          {
+            "term": "revenue",
+            "enGloss": "money earned from sales",
+            "viGloss": "doanh thu",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "The first point discusses the importance of building a good company reputation for long-term success.",
+          "point2": "The second point discusses how short-term strategies, such as discounts, can boost immediate sales and revenue.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "The first point discusses the importance of building a good company reputation for consumer goods companies.",
+          "point2": "The second point discusses how short-term sales deals can quickly boost immediate sales.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Companies that sell consumer goods, such as food and clothing, must decide whether to focus their marketing efforts on building a good company reputation or on using short-term sales tactics.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on a good company reputation is important for consumer goods companies.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, This builds trust among customers, which is key for long-term success.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a clothing brand that always uses ethical materials gains respect.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, customers feel good about buying things from them, even if the price is higher.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that reputation creates a strong base for sales.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Short-term strategies, like offering discounts and special offers, also have their place in marketing.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that these deals quickly attract people who want to save money.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a food store runs a 'buy one, get one' deal on bread.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the store sees a sudden increase in immediate sales.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that short-term deals boost quick revenue.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from focusing and short.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Companies that sell consumer goods, such as food and clothing, must decide whether to focus their marketing efforts on building a good company reputation or on short-term sales deals.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on a good company reputation is a strong approach for consumer goods companies.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, This is because a good reputation builds trust among customers over time in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a clothing brand known for ethical sourcing will gain trust.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, customers feel good about buying things from them.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that reputation is a key part of sales.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Short-term strategies, like offering discounts and special deals, are also important for sales.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that these offers quickly attract people to buy things in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a food store offers a big discount on bread.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that many people visit the store immediately to save money.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that short-term deals boost immediate sales.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from focusing and short.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "reputation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "consumer",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "discounts",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "brand equity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "reputation",
+            "enGloss": "the quality of being trusted and believed in",
+            "viGloss": "danh tiếng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "consumer",
+            "enGloss": "a person who purchases goods and services",
+            "viGloss": "người tiêu dùng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "discounts",
+            "enGloss": "a reduction in the usual price of something",
+            "viGloss": "giảm giá",
+            "source": "approved_sample"
+          },
+          {
+            "term": "brand equity",
+            "enGloss": "the commercial value derived from consumer perception of the brand",
+            "viGloss": "giá trị thương hiệu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "loyalty",
+            "enGloss": "a strong feeling of support or support for someone or something",
+            "viGloss": "lòng trung thành",
+            "source": "approved_sample"
+          },
+          {
+            "term": "revenue",
+            "enGloss": "income generated from sales",
+            "viGloss": "doanh thu",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "Building a strong company reputation is vital for long-term success because it establishes trust, allowing consumers to pay more for perceived high quality and ethical products.",
+          "point2": "Short-term strategies, such as discounts, can generate immediate revenue by creating a sense of urgency among potential buyers, which is necessary for operational survival.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "Building a company's reputation, such as through ethical sourcing, establishes long-term brand equity and trust, making consumers more loyal even when cheaper alternatives exist.",
+          "point2": "Short-term strategies like discounts aim for immediate revenue by stimulating quick consumer spending, which can be seen in seasonal sales at electronics retailers.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question of whether companies producing consumer goods should prioritize their corporate reputation or focus on short-term sales strategies is a significant debate.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Emphasizing a company's reputation is a crucial element of sustainable market positioning.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a strong reputation builds trust among the consumer base.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a food company known for ethical sourcing maintains customer loyalty even when competitors offer deep discounts.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, consumers are willing to pay a premium for products they perceive as high quality and morally sound.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that brand equity is more valuable than temporary sales boosts.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Conversely, focusing on short-term strategies like discounts can generate immediate revenue streams.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that promotions create a sense of urgency among potential buyers.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that clothing retailers frequently use 'buy one, get one' deals to clear seasonal inventory.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that sales figures appear robust in the immediate quarter.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that immediate financial gains are necessary for operational survival.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from emphasizing and conversely.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question of whether companies producing consumer goods should prioritize their corporate reputation or focus on short-term sales tactics is a complex one.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Emphasizing a company's reputation suggests a focus on building long-term brand equity.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this approach prioritizes trust and perceived value over immediate financial gains.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a clothing brand that consistently uses ethical sourcing practices builds a positive public image.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, consumers are more inclined to support the brand even when competitors offer lower prices.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that reputation forms a solid foundation for sustained market positioning.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on short-term strategies, such as discounts and special offers, aims for immediate revenue streams.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that such deals stimulate quick consumer spending and boost immediate sales figures.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that electronics retailers frequently advertise deep discounts during seasonal sales.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that consumers are drawn to the perceived savings, leading to a temporary spike in transactions.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that immediate sales boosts are the primary goal of marketing.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from emphasizing and focusing.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:22.403897+00:00"
+  }
+}

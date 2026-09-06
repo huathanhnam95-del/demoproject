@@ -1,0 +1,1822 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "25",
+  "title": "#25 Competitive Environment",
+  "prompt": "Is a competitive environment in school or university good or bad? Discuss and give your own experiences as examples.",
+  "source": {
+    "promptSha256": "f30dc6dd1f5bcf8c5c67849eed6c4cf530efdb346d95d9d4e84d8b8180fa42a8",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Is a competitive environment in school or university good or bad?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Discuss and give your own experiences as examples.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Education",
+      "Leisure, sports, and hobbies"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "competitive",
+        "enGloss": "Key concept related to competitive.",
+        "viGloss": "cạnh tranh"
+      },
+      {
+        "term": "environment",
+        "enGloss": "Key concept related to environment.",
+        "viGloss": "môi trường"
+      },
+      {
+        "term": "university",
+        "enGloss": "Key concept related to university.",
+        "viGloss": "trường đại học"
+      },
+      {
+        "term": "Discuss",
+        "enGloss": "Key concept related to discuss.",
+        "viGloss": "thảo luận"
+      },
+      {
+        "term": "experiences",
+        "enGloss": "Key concept related to experiences.",
+        "viGloss": "kinh nghiệm"
+      },
+      {
+        "term": "examples",
+        "enGloss": "Key concept related to examples.",
+        "viGloss": "ví dụ"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "The main point of Body 1 is that competition helps students improve their skills.",
+        "vi": "Góc nhìn: The main point of Body 1 is that competition helps students improve their skills.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "The main point of Body 2 is that competition can cause a negative problem for students.",
+        "vi": "Góc nhìn: The main point of Body 2 is that competition can cause a negative problem for students.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "Competition can help students learn better.",
+        "vi": "Góc nhìn: Competition can help students learn better.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "Competition has a negative effect on students.",
+        "vi": "Góc nhìn: Competition has a negative effect on students.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "Competition motivates students to study harder and improve the overall academic standard of the class.",
+        "vi": "Góc nhìn: Competition motivates students to study harder and improve the overall academic standard of the class.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "However, a major disadvantage is that competition can cause high levels of stress due to comparison with others.",
+        "vi": "Góc nhìn: However, a major disadvantage is that competition can cause high levels of stress due to comparison with others.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "The first point suggests that competition can motivate students to work harder and improve their knowledge base, leading to better academic skills.",
+        "vi": "Góc nhìn: The first point suggests that competition can motivate students to work harder and improve their knowledge base, leading to better academic skills.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "However, the essay argues that the negative impact of competition on students' mental health, caused by constant comparison and stress, is a greater concern.",
+        "vi": "Góc nhìn: However, the essay argues that the negative impact of competition on students' mental health, caused by constant comparison and stress, is a greater concern.",
+        "sourceVariantId": "negative"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Education.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Education."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "improve",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "skills",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "test",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "score",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "improve",
+            "enGloss": "to make better",
+            "viGloss": "cải thiện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "skills",
+            "enGloss": "abilities",
+            "viGloss": "kỹ năng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "test",
+            "enGloss": "exam",
+            "viGloss": "bài kiểm tra",
+            "source": "approved_sample"
+          },
+          {
+            "term": "score",
+            "enGloss": "mark",
+            "viGloss": "điểm số",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pressure",
+            "enGloss": "stress",
+            "viGloss": "áp lực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "problem",
+            "enGloss": "difficulty",
+            "viGloss": "vấn đề",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng học tập"
+          },
+          {
+            "term": "additional problem",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: vấn đề bổ sung"
+          },
+          {
+            "term": "appropriate skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng phù hợp"
+          },
+          {
+            "term": "average score",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: điểm trung bình"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: GOOD",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "The main point of Body 1 is that competition helps students improve their skills.",
+          "point2": "The main point of Body 2 is that competition can cause a negative problem for students.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: BAD",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Competition can help students learn better.",
+          "point2": "Competition has a negative effect on students.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Competition is a part of life in school and at university.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that a competitive environment in school or university is good for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a competitive environment helps students improve their skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, students try hard to do their best work in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, students study for a big test and want a high score in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they learn to work harder and focus more in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that competition makes students better learners.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a competitive environment can cause a negative problem for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because students might feel too much pressure to succeed in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, one student might worry about failing a class test in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this worry can make them feel sad and tired.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that this pressure is a problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that a competitive environment is good for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While competition helps students improve their skills, it is important to manage the negative problem it can cause.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Competition can happen in school or university life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that a competitive environment in school or university is bad for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, competition can help students learn better.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, students try hard to do well in their studies in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, students study extra hours for a big test in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they know more things and learn better in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that competition can make students learn more.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, competition has a negative effect on students.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because students feel too much pressure to get good scores in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, students worry about failing a class test in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they feel sad and sometimes they do not want to go to school in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that competition is a problem for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that a competitive environment is bad for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While competition can help students learn more, the negative effect on students is a bigger problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "competition",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "can motivate",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "achieve better",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "better results",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "competition",
+            "enGloss": "the activity of trying to gain or win something by defeating or establishing superiority over others",
+            "viGloss": "sự cạnh tranh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "can motivate",
+            "enGloss": "to give someone a reason or enthusiasm to do something",
+            "viGloss": "có thể thúc đẩy",
+            "source": "approved_sample"
+          },
+          {
+            "term": "achieve better",
+            "enGloss": "to successfully reach a higher level",
+            "viGloss": "đạt được tốt hơn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "better results",
+            "enGloss": "more favorable outcomes",
+            "viGloss": "kết quả tốt hơn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "other words",
+            "enGloss": "in different terms",
+            "viGloss": "nói cách khác",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stress",
+            "enGloss": "mental or emotional tension",
+            "viGloss": "sự căng thẳng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "cause stress",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: gây căng thẳng"
+          },
+          {
+            "term": "increased competition",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tăng cường cạnh tranh"
+          },
+          {
+            "term": "reduce stress",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giảm căng thẳng"
+          },
+          {
+            "term": "stress level",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: GOOD",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Competition motivates students to study harder and improve the overall academic standard of the class.",
+          "point2": "However, a major disadvantage is that competition can cause high levels of stress due to comparison with others.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: BAD",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "The first point suggests that competition can motivate students to work harder and improve their knowledge base, leading to better academic skills.",
+          "point2": "However, the essay argues that the negative impact of competition on students' mental health, caused by constant comparison and stress, is a greater concern.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The discussion about whether a competitive environment in school or university is beneficial or harmful is a common topic.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that a competitive environment in school or university is good for students.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, competition can motivate students to achieve better results.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, students feel a need to perform well when they see others doing the same.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, students might study harder for a test when they know their friends are also preparing.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the overall academic standard of the class tends to improve.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that competition helps students reach their full potential.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a major disadvantage is that competition can cause high levels of stress.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that students worry too much about comparing themselves to others.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that some students might feel anxious if they do not get the highest score.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that this stress can sometimes affect a student's ability to learn effectively.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that this drawback can be negative for mental health.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that a competitive environment in school or university is good for students.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because it motivates students to achieve better results and, while causing stress, it also helps students reach their full potential.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The topic of whether a competitive environment in school or university is beneficial or harmful is a common discussion.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that a competitive environment in school or university is bad for students.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a competitive environment can help students improve their academic skills.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, students are pushed to work harder to achieve better results.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, students might study extra hours to get a higher score on a difficult test.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, their knowledge base grows, and they learn how to manage time well.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that competition can motivate students to perform better.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a competitive environment has a negative impact on students' mental health.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that students feel too much stress from constant comparison with others.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that some students start worrying about failing, even if they study hard.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they might lose interest in learning, and their focus becomes poor.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the negative effects outweigh any benefits.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that a competitive environment is bad for students.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While competition can motivate students to perform better, the negative impact on mental health is a greater concern.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "academic",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "fosters",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "catalyst",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "drawback",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "academic",
+            "enGloss": "related to school or education",
+            "viGloss": "thuộc về học thuật",
+            "source": "approved_sample"
+          },
+          {
+            "term": "fosters",
+            "enGloss": "encourages or promotes the development of",
+            "viGloss": "nuôi dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "catalyst",
+            "enGloss": "a person or thing that precipitates an event",
+            "viGloss": "chất xúc tác",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawback",
+            "enGloss": "a disadvantage or negative aspect",
+            "viGloss": "nhược điểm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "anxiety",
+            "enGloss": "a feeling of worry, nervousness, or unease",
+            "viGloss": "sự lo lắng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "detrimental",
+            "enGloss": "harmful or damaging",
+            "viGloss": "có hại",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic achievement",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thành tích học tập"
+          },
+          {
+            "term": "academic career",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: sự nghiệp học tập"
+          },
+          {
+            "term": "academic circles",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giới học thuật"
+          },
+          {
+            "term": "academic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng học thuật"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: GOOD",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "While competition boosts academic performance, it also carries risks like stress.",
+          "point2": "The essay maintains a balanced view but ultimately concludes that the benefits of competition outweigh the drawbacks.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: BAD",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Competition can motivate students to study more and improve the overall academic standard of the group.",
+          "point2": "However, excessive rivalry causes significant psychological stress, leading students to neglect their health and relationships.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The discussion surrounding the impact of a competitive environment within educational institutions is a widely debated topic.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that a competitive environment in school or university is good for students.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a competitive environment fosters academic excellence and drives students to achieve their maximum potential.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the presence of rivals motivates individuals to perform better than they might otherwise.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, students aiming for high scores in university entrance examinations often study diligently, pushing their academic boundaries.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the collective effort elevates the overall standard of learning within the institution.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that competition is a powerful catalyst for personal growth.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a significant drawback of intense competition is the potential for increased stress and anxiety among students.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the focus shifts from genuine learning to merely achieving superior results.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that some students begin to prioritize grades over their actual enjoyment of the subject matter.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that this intense pressure can negatively affect mental well-being and discourage genuine curiosity.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the negative aspects of rivalry can be detrimental.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that a competitive environment in school or university is good for students.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because it fosters academic excellence and drives students to achieve their maximum potential, while also providing a framework for personal growth.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The presence of a competitive environment within educational institutions is a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that a competitive environment in school or university is bad for students.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a competitive environment can motivate students to achieve academic excellence.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the desire to outperform peers encourages individuals to dedicate more time to their studies.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, students might study extra hours to secure a higher score on a major examination.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the overall academic standard of the cohort tends to improve significantly.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that competition can foster a culture of high achievement.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a competitive environment presents a significant drawback for student well-being.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that excessive rivalry generates considerable psychological stress.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that students may experience anxiety when facing constant academic pressure.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that students might neglect their physical health or social relationships.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the negative impacts outweigh any potential benefits.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that a competitive environment in school or university is bad for students.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because while competition can foster a culture of high achievement, it simultaneously generates considerable psychological stress that negatively impacts student well-being.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode",
+    "naturalizerPass": true
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:53.109807+00:00"
+  }
+}

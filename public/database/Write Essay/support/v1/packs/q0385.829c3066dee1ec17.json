@@ -1,0 +1,1825 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "385",
+  "title": "#385 Better Future",
+  "prompt": "Among computer, aerospace, and manufacturing industries, which one has a more promising future? Please provide your reasons.",
+  "source": {
+    "promptSha256": "2dbbafeb02002dce8a38be9ea03b3414438828cbd5430dd4c8ea36852a55788b",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Among computer, aerospace, and manufacturing industries, which one has a more promising future?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Please provide your reasons.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Science, technology, and innovation"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "computer",
+        "enGloss": "Key concept related to computer.",
+        "viGloss": "máy tính"
+      },
+      {
+        "term": "aerospace",
+        "enGloss": "relating to air and space",
+        "viGloss": "không gian hàng không"
+      },
+      {
+        "term": "manufacturing",
+        "enGloss": "Key concept related to manufacturing.",
+        "viGloss": "sản xuất"
+      },
+      {
+        "term": "industries",
+        "enGloss": "Key concept related to industries.",
+        "viGloss": "các ngành công nghiệp"
+      },
+      {
+        "term": "promising",
+        "enGloss": "Key concept related to promising.",
+        "viGloss": "đầy hứa hẹn"
+      },
+      {
+        "term": "provide",
+        "enGloss": "Key concept related to provide.",
+        "viGloss": "cung cấp"
+      },
+      {
+        "term": "reasons",
+        "enGloss": "Key concept related to reasons.",
+        "viGloss": "lý do"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "The computer industry is promising because technology is used in many daily aspects of life, leading to a continuous need for computer knowledge and growth.",
+        "vi": "Góc nhìn: The computer industry is promising because technology is used in many daily aspects of life, leading to a continuous need for computer knowledge and growth.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "Aerospace is also strong because the development of bigger and faster planes creates many new job opportunities for engineers.",
+        "vi": "Góc nhìn: Aerospace is also strong because the development of bigger and faster planes creates many new job opportunities for engineers.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Computer technology has a very promising future.",
+        "vi": "Góc nhìn: Computer technology has a very promising future.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Aerospace technology also has a good future.",
+        "vi": "Góc nhìn: Aerospace technology also has a good future.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "The computer industry is promising because of its rapid development in digital technology.",
+        "vi": "Góc nhìn: The computer industry is promising because of its rapid development in digital technology.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "The manufacturing sector is promising because it provides essential physical goods and can use automation.",
+        "vi": "Góc nhìn: The manufacturing sector is promising because it provides essential physical goods and can use automation.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "The computer industry is the most promising because it is essential for modern operations.",
+        "vi": "Góc nhìn: The computer industry is the most promising because it is essential for modern operations.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Aerospace remains a key area of development due to constant global travel and defense needs.",
+        "vi": "Góc nhìn: Aerospace remains a key area of development due to constant global travel and defense needs.",
+        "sourceVariantId": "option_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Science, technology, and innovation.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Science, technology, and innovation."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "industry",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "technology",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "daily",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "work",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "industry",
+            "enGloss": "a particular area of activity or commerce",
+            "viGloss": "ngành công nghiệp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "technology",
+            "enGloss": "the application of scientific knowledge for practical purposes",
+            "viGloss": "công nghệ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "daily",
+            "enGloss": "happening or done every day",
+            "viGloss": "hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "work",
+            "enGloss": "activity involving mental or physical effort",
+            "viGloss": "công việc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "planes",
+            "enGloss": "aircraft used for air travel",
+            "viGloss": "máy bay",
+            "source": "approved_sample"
+          },
+          {
+            "term": "skills",
+            "enGloss": "the ability to do something",
+            "viGloss": "kỹ năng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng học tập"
+          },
+          {
+            "term": "academic work",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: công việc học tập"
+          },
+          {
+            "term": "advanced technology",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: công nghệ tiên tiến"
+          },
+          {
+            "term": "appropriate skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng phù hợp"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "The computer industry is promising because technology is used in many daily aspects of life, leading to a continuous need for computer knowledge and growth.",
+          "point2": "Aerospace is also strong because the development of bigger and faster planes creates many new job opportunities for engineers.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "Computer technology has a very promising future.",
+          "point2": "Aerospace technology also has a good future.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People talk about which industry will have the best future: computer, plane, or making things.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The computer industry has a very promising future.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this field helps people use technology in many ways in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, people use computers for school and for work in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, more people need to learn about computers every day.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the computer field will grow a lot.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Aerospace is another industry with a good future.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because planes and space travel need many new skills in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, companies build bigger and faster planes now in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many new jobs are created for engineers.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that aerospace will be a strong industry.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the computer industry and aerospace are the best choices.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The computer field will grow a lot, and aerospace will be a strong industry.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question asks which industry—computer, aerospace, or making things—will have the best future.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Computer technology has a very promising future.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, computers help people do many kinds of work in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, people use computers for school and for business in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, more people need to learn about computers.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the computer industry will grow a lot.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Aerospace technology also has a good future.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because planes and space travel need many improvements in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, companies build bigger and faster planes every year in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many new jobs are created for engineers in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that aerospace is a strong field.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that one industry is best.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Both computer technology and aerospace technology offer good chances for job growth and development.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "digital technology",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "sector",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "automation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "growth",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "digital technology",
+            "enGloss": "digital technology",
+            "viGloss": "công nghệ số",
+            "source": "approved_sample"
+          },
+          {
+            "term": "sector",
+            "enGloss": "sector",
+            "viGloss": "ngành",
+            "source": "approved_sample"
+          },
+          {
+            "term": "automation",
+            "enGloss": "automation",
+            "viGloss": "tự động hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "growth",
+            "enGloss": "growth",
+            "viGloss": "sự tăng trưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "potential",
+            "enGloss": "potential",
+            "viGloss": "tiềm năng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "infrastructure",
+            "enGloss": "infrastructure",
+            "viGloss": "cơ sở hạ tầng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "business sector",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: lĩnh vực kinh doanh"
+          },
+          {
+            "term": "continued growth",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tiếp tục tăng trưởng"
+          },
+          {
+            "term": "digital technology",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: công nghệ số"
+          },
+          {
+            "term": "economic growth",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tăng trưởng kinh tế"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "The computer industry is promising because of its rapid development in digital technology.",
+          "point2": "The manufacturing sector is promising because it provides essential physical goods and can use automation.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "The computer industry is the most promising because it is essential for modern operations.",
+          "point2": "Aerospace remains a key area of development due to constant global travel and defense needs.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question of which industry—computer, aerospace, or manufacturing—will have the most promising future is a complex one.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The computer industry shows great potential for future growth.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, One clear advantage is its rapid development in digital technology.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, This means that this sector changes very quickly, creating new tools for people to use.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, A practical example is the rise of mobile phones, which shows how fast this technology moves.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that This result supports the view that many people can access information and services from anywhere.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The manufacturing sector also holds a strong position for a good future.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that This is mainly because it provides physical goods that people need every day.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that A practical example is the making of cars and household items, which must be produced.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that this industry can use automation to make things faster and cheaper.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that This clearly supports the view that manufacturing is a key part of the economy.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that both the computer industry and the manufacturing sector will have a promising future.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The rapid development of digital technology and the need for physical goods from manufacturing both support this view.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question of which industry—computer, aerospace, or manufacturing—will have the most promising future is a complex one.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The computer industry shows a very promising future because it drives much of the modern world's technology.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, nearly every other sector now needs computer systems to operate efficiently.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, hospitals use computer networks to manage patient records and appointments.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the need for skilled workers in this field will continue to grow greatly.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the computer industry is a strong leader for the future.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Aerospace is another sector with a strong chance for growth.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that global travel and defense needs always require advanced aircraft.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that countries are always building bigger and more efficient planes.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that companies must invest heavily in research and development to keep up.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that aerospace will remain a key area of development.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that manufacturing is the best choice.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The computer industry's strong growth and the continued development of aerospace both point to a very promising future.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "infrastructure",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "proliferation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "computational",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "aerodynamics",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "infrastructure",
+            "enGloss": "basic physical and organizational structures needed for the operation of a society",
+            "viGloss": "cơ sở hạ tầng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "proliferation",
+            "enGloss": "rapid increase in numbers or amount",
+            "viGloss": "sự bùng phát",
+            "source": "approved_sample"
+          },
+          {
+            "term": "computational",
+            "enGloss": "relating to the use of computers or calculation",
+            "viGloss": "thuộc về tính toán",
+            "source": "approved_sample"
+          },
+          {
+            "term": "aerodynamics",
+            "enGloss": "the study of the forces acting on objects moving through the air",
+            "viGloss": "khí động lực học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "viability",
+            "enGloss": "the ability to work or continue; feasibility",
+            "viGloss": "khả năng tồn tại",
+            "source": "approved_sample"
+          },
+          {
+            "term": "sector",
+            "enGloss": "a part of a larger whole",
+            "viGloss": "ngành lĩnh vực",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "business sector",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: lĩnh vực kinh doanh"
+          },
+          {
+            "term": "economic sector",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          },
+          {
+            "term": "manufacturing sector",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          },
+          {
+            "term": "private sector",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "The computer industry's foundational role in modern global infrastructure makes it a highly promising sector.",
+          "point2": "Aerospace technology remains a critical and advancing industry due to its reliance on advanced engineering and global travel.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "The computer industry's digital advancements and the ongoing growth of aerospace technology both guarantee a highly promising future.",
+          "point2": "The computer industry presents a remarkably promising trajectory for future development.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Determining which sector—computer, aerospace, or manufacturing—holds the most promising future requires careful consideration of current technological trends.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The computer industry possesses a remarkably promising future due to its foundational role in modern global infrastructure.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, nearly every aspect of contemporary life, from finance to healthcare, is digitally mediated.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the proliferation of artificial intelligence systems requires immense computational power and advanced processing capabilities.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, demand for specialized hardware and software development continues to escalate globally.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the computer sector is poised for sustained and substantial growth.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Aerospace technology represents another highly viable sector, primarily due to the fact that global travel and defense systems rely heavily on advanced engineering.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that advancements in aerodynamics and propulsion are constantly pushing the boundaries of what is possible.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the development of hypersonic aircraft requires breakthroughs in material science and structural integrity.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that nations and corporations invest heavily in research to maintain a competitive edge in this field.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that aerospace will remain a critical and advancing industry.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the computer industry and aerospace technology offer the most promising futures.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The foundational role of the computer sector, alongside the critical advancements in aerospace, ensures continued global development and economic viability.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Determining which sector—computer, aerospace, or manufacturing—possesses the most promising future is a complex issue.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The computer industry presents a remarkably promising trajectory for future development.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the continuous advancement of digital technology drives unprecedented global connectivity.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the proliferation of artificial intelligence systems is transforming nearly every professional field.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the demand for specialized digital skills and computational power continues to escalate rapidly.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the computer sector is poised for substantial and sustained growth.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Aerospace technology represents another highly viable sector for future economic expansion.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that global efforts are increasingly focusing on sustainable and efficient air travel.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the development of electric and hydrogen-powered aircraft is gaining significant traction.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that nations are investing heavily in advanced aerodynamics and infrastructure upgrades.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that aerospace will remain a critical and expanding industry.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the notion that manufacturing or aerospace is superior; the computer industry's digital advancements and the ongoing growth of aerospace technology both guarantee a highly promising future.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:38.321216+00:00"
+  }
+}

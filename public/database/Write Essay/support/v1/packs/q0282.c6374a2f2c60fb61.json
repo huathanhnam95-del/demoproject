@@ -1,0 +1,1214 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "282",
+  "title": "#282 Agriculture",
+  "prompt": "Despite the great progress in agriculture humans have achieved, there are still people who starve to death. Is there anything we can do to address the problem? Please give some possible solutions.",
+  "source": {
+    "promptSha256": "9fa34bada6c236ed5aff8a74fc0902cc7598cd33b588edca3991b27e54a7f684",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Despite the great progress in agriculture humans have achieved, there are still people who starve to death.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Is there anything we can do to address the problem?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Please give some possible solutions.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Socio-cultural and global issues"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Despite",
+        "enGloss": "Key concept related to despite.",
+        "viGloss": "mặc dù"
+      },
+      {
+        "term": "progress",
+        "enGloss": "Key concept related to progress.",
+        "viGloss": "tiến bộ"
+      },
+      {
+        "term": "agriculture",
+        "enGloss": "the practice of farming",
+        "viGloss": "nông nghiệp"
+      },
+      {
+        "term": "achieved",
+        "enGloss": "has accomplished a goal",
+        "viGloss": "đã đạt được"
+      },
+      {
+        "term": "anything",
+        "enGloss": "Key concept related to anything.",
+        "viGloss": "bất cứ điều gì"
+      },
+      {
+        "term": "address",
+        "enGloss": "to deal with or mention something",
+        "viGloss": "đề cập đến"
+      },
+      {
+        "term": "problem",
+        "enGloss": "Key concept related to problem.",
+        "viGloss": "vấn đề"
+      },
+      {
+        "term": "possible",
+        "enGloss": "Key concept related to possible.",
+        "viGloss": "có thể"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The major problem is that food cannot reach the poor people because of bad movement.",
+        "vi": "Góc nhìn: The major problem is that food cannot reach the poor people because of bad movement.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A good solution is to build better roads and keeping places to help move food.",
+        "vi": "Góc nhìn: A good solution is to build better roads and keeping places to help move food.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The major reason is the poor distribution of food resources.",
+        "vi": "Góc nhìn: The major reason is the poor distribution of food resources.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "One effective solution is improving global infrastructure and logistics.",
+        "vi": "Góc nhìn: One effective solution is improving global infrastructure and logistics.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The first major issue is the significant disparity in food distribution and access, where logistical failures and conflict zones prevent sufficient food from reaching those who need it most.",
+        "vi": "Góc nhìn: The first major issue is the significant disparity in food distribution and access, where logistical failures and conflict zones prevent sufficient food from reaching those who need it most.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A key solution is implementing robust, sustainable farming practices in developing regions, which enhances local resilience and promotes self-sufficient food supplies.",
+        "vi": "Góc nhìn: A key solution is implementing robust, sustainable farming practices in developing regions, which enhances local resilience and promotes self-sufficient food supplies.",
+        "sourceVariantId": "problems_solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Socio-cultural and global issues.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Socio-cultural and global issues."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "farming",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "food",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "poor",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "road",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "farming",
+            "enGloss": "growing crops",
+            "viGloss": "trồng trọt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "food",
+            "enGloss": "things we eat",
+            "viGloss": "thức ăn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "poor",
+            "enGloss": "having little money",
+            "viGloss": "nghèo",
+            "source": "approved_sample"
+          },
+          {
+            "term": "road",
+            "enGloss": "a way to travel",
+            "viGloss": "con đường",
+            "source": "approved_sample"
+          },
+          {
+            "term": "farm",
+            "enGloss": "a place where crops are grown",
+            "viGloss": "trang trại",
+            "source": "approved_sample"
+          },
+          {
+            "term": "move",
+            "enGloss": "to change place",
+            "viGloss": "di chuyển",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "broad agreement",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thỏa thuận rộng rãi"
+          },
+          {
+            "term": "broad category",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: danh mục rộng"
+          },
+          {
+            "term": "broad definition",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: định nghĩa rộng"
+          },
+          {
+            "term": "broad range",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phạm vi rộng"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "The major problem is that food cannot reach the poor people because of bad movement.",
+          "point2": "A good solution is to build better roads and keeping places to help move food.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Even with good farming methods, some people still do not have enough food to eat.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that food does not reach poor areas well.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, food grown in good places does not reach people who need it in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, bad roads make it hard to move rice from the farm to the city.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many families cannot buy enough food for their meals.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that we must fix the way food moves to people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is to build better roads and keeping places.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because better transport helps bring food from farms to markets easily in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, building a new bridge allows trucks to carry grain to local villages.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, food becomes available for more people, and they can eat better.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that better transport helps people eat well.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that we can help people who do not have enough food.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We must fix the poor food movement and build better roads and keeping places.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "distribution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "harvest",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "infrastructure",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "logistics",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "distribution",
+            "enGloss": "the way things are spread out",
+            "viGloss": "sự phân phối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "harvest",
+            "enGloss": "the crops gathered after growing",
+            "viGloss": "mùa thu hoạch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "infrastructure",
+            "enGloss": "the basic physical structures needed for a society",
+            "viGloss": "cơ sở hạ tầng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "logistics",
+            "enGloss": "the detailed organization and implementation of complex operations",
+            "viGloss": "hậu cần",
+            "source": "approved_sample"
+          },
+          {
+            "term": "perishable",
+            "enGloss": "something that spoils quickly",
+            "viGloss": "dễ hư hỏng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "hunger",
+            "enGloss": "the need for food",
+            "viGloss": "cơn đói cồn cào",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "geographic distribution",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          },
+          {
+            "term": "normal distribution",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "The major reason is the poor distribution of food resources.",
+          "point2": "One effective solution is improving global infrastructure and logistics.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Despite the great progress in agriculture, many people worldwide still suffer from hunger and starvation.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the poor distribution of food resources.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, even when food is available, it does not reach all people who need it.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, conflict zones often prevent farmers from bringing their harvest to the markets.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many families cannot buy enough food to eat every day.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that poor distribution is a major cause of global hunger.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is improving global infrastructure and logistics.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that poor roads and weak storage systems make food transport difficult.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that developing countries lack reliable cold storage facilities for perishable goods.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that food spoils before it can reach the people who are most hungry.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that better infrastructure can solve food shortages.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that addressing global hunger requires action.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We must improve the distribution of food resources and also work on better infrastructure and logistics to help people.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "global hunger",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "food distribution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "disparity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "sustainable farming",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "global hunger",
+            "enGloss": "global hunger",
+            "viGloss": "nạn đói toàn cầu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "food distribution",
+            "enGloss": "food distribution",
+            "viGloss": "phân phối lương thực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "disparity",
+            "enGloss": "disparity",
+            "viGloss": "sự chênh lệch",
+            "source": "approved_sample"
+          },
+          {
+            "term": "sustainable farming",
+            "enGloss": "sustainable farming",
+            "viGloss": "nông nghiệp bền vững",
+            "source": "approved_sample"
+          },
+          {
+            "term": "farming practices",
+            "enGloss": "farming practices",
+            "viGloss": "thực hành nông nghiệp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "food security",
+            "enGloss": "food security",
+            "viGloss": "an ninh lương thực",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "The first major issue is the significant disparity in food distribution and access, where logistical failures and conflict zones prevent sufficient food from reaching those who need it most.",
+          "point2": "A key solution is implementing robust, sustainable farming practices in developing regions, which enhances local resilience and promotes self-sufficient food supplies.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Despite significant advancements in agricultural technology, global hunger remains a persistent and critical humanitarian challenge.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the profound disparity in food distribution and access among different populations.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, even when sufficient food is harvested, logistical failures prevent it from reaching those who need it most.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, conflict zones often disrupt supply chains, making food aid distribution nearly impossible.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, many communities suffer from severe malnutrition, despite the existence of surplus food elsewhere.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that addressing the distribution infrastructure is paramount to solving global hunger.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is implementing robust, sustainable farming practices across developing regions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that these methods enhance local resilience and reduce reliance on external aid.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that promoting drought-resistant crops allows farmers to maintain yields even during periods of water scarcity.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that local economies become more self-sufficient, thereby stabilizing food supplies at the community level.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that empowering local agricultural systems is a key step toward food security.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that addressing global hunger requires intervention.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "We must tackle the disparity in food distribution and simultaneously promote sustainable farming practices to ensure global food security.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:30.528123+00:00"
+  }
+}

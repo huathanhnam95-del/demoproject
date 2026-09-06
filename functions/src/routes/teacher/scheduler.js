@@ -903,6 +903,10 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+            const rawNote = req.body?.note !== undefined ? req.body.note : req.body?.sessionNote;
+            const sessionNote = rawNote !== undefined
+                ? cleanOptionalString(rawNote, '')
+                : cleanOptionalString(existing?.sessionNote, '');
             const isAdmin = req.teacherAccess?.isAdmin === true;
             if (!isAdmin && cleanOptionalString(existing.teacherUid) !== callerUid) {
                 return sendError(res, 403, 'FORBIDDEN', 'You can only update outcomes for your own sessions.');
@@ -918,6 +922,7 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
             const patch = {
                 sessionOutcome,
+                sessionNote: sessionNote || '',
                 contractCountState: deriveContractCountState({
                     ...existing,
                     sessionOutcome
@@ -934,11 +939,17 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 action: 'teacher.session.outcome',
                 entityType: 'scheduled_session',
                 entityId: sessionId,
-                metadata: { classId: existing.classId || null, sessionOutcome }
+                metadata: {
+                    classId: existing.classId || null,
+                    sessionOutcome,
+                    hasSessionNote: !!sessionNote
+                }
             }, { user: req.user });
 
             return sendSuccess(res, {
                 sessionId,
+                sessionOutcome,
+                sessionNote: sessionNote || '',
                 scheduleSummary: scheduleState?.scheduleSummary || null,
                 scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
             }, 'Session outcome updated.');

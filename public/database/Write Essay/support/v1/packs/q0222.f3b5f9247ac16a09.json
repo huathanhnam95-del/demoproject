@@ -1,0 +1,1220 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "222",
+  "title": "#222 Cooperation and Competition",
+  "prompt": "Some people believe that cooperation is more important than competition. Discuss whether you think cooperation outweighs competition.",
+  "source": {
+    "promptSha256": "7be7a142dd2339e2843fff46e53a3bae53d36110bb66c8487c244054a635841b",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people believe that cooperation is more important than competition.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Discuss whether you think cooperation outweighs competition.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "Socio-cultural and global issues"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "believe",
+        "enGloss": "Key concept related to believe.",
+        "viGloss": "tin tưởng"
+      },
+      {
+        "term": "cooperation",
+        "enGloss": "Key concept related to cooperation.",
+        "viGloss": "hợp tác"
+      },
+      {
+        "term": "important",
+        "enGloss": "Key concept related to important.",
+        "viGloss": "quan trọng"
+      },
+      {
+        "term": "competition",
+        "enGloss": "Key concept related to competition.",
+        "viGloss": "sự cạnh tranh"
+      },
+      {
+        "term": "Discuss",
+        "enGloss": "Key concept related to discuss.",
+        "viGloss": "thảo luận"
+      },
+      {
+        "term": "whether",
+        "enGloss": "Key concept related to whether.",
+        "viGloss": "liệu"
+      },
+      {
+        "term": "outweighs",
+        "enGloss": "Key concept related to outweighs.",
+        "viGloss": "nặng hơn"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "comparison",
+        "required": true,
+        "en": "Discuss the important advantages and disadvantages.",
+        "vi": "Thảo luận những ưu điểm và nhược điểm quan trọng."
+      },
+      {
+        "id": "judgement",
+        "required": true,
+        "en": "Make the required overall judgement.",
+        "vi": "Đưa ra nhận định tổng thể theo yêu cầu."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Support the comparison with relevant examples.",
+        "vi": "Hỗ trợ phần so sánh bằng ví dụ phù hợp."
+      }
+    ],
+    "angles": [
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Cooperation helps people work together to reach shared goals.",
+        "vi": "Góc nhìn: Cooperation helps people work together to reach shared goals.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Another reason is that cooperation builds strong relationships between people.",
+        "vi": "Góc nhìn: Another reason is that cooperation builds strong relationships between people.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Cooperation is essential for building strong communities and achieving shared goals, as demonstrated by group efforts like building a school.",
+        "vi": "Góc nhìn: Cooperation is essential for building strong communities and achieving shared goals, as demonstrated by group efforts like building a school.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Cooperation provides emotional security and support in daily life, exemplified by neighbors helping each other during a natural disaster.",
+        "vi": "Góc nhìn: Cooperation provides emotional security and support in daily life, exemplified by neighbors helping each other during a natural disaster.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Cooperation is fundamentally crucial for human progress and societal stability.",
+        "vi": "Góc nhìn: Cooperation is fundamentally crucial for human progress and societal stability.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Furthermore, cooperation fosters stronger interpersonal relationships and emotional well-being.",
+        "vi": "Góc nhìn: Furthermore, cooperation fosters stronger interpersonal relationships and emotional well-being.",
+        "sourceVariantId": "perspective_a"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+        "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "cooperation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "shared goals",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "help each other",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "friends",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "cooperation",
+            "enGloss": "working together",
+            "viGloss": "sự hợp tác",
+            "source": "approved_sample"
+          },
+          {
+            "term": "shared goals",
+            "enGloss": "common aims",
+            "viGloss": "mục tiêu chung",
+            "source": "approved_sample"
+          },
+          {
+            "term": "help each other",
+            "enGloss": "assist one another",
+            "viGloss": "giúp đỡ nhau",
+            "source": "approved_sample"
+          },
+          {
+            "term": "friends",
+            "enGloss": "companions",
+            "viGloss": "bạn bè",
+            "source": "approved_sample"
+          },
+          {
+            "term": "builds",
+            "enGloss": "creates",
+            "viGloss": "xây dựng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "relationships",
+            "enGloss": "connections",
+            "viGloss": "mối quan hệ",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "economic relationships",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: quan hệ kinh tế"
+          },
+          {
+            "term": "interpersonal relationships",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: mối quan hệ giữa các cá nhân"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "Cooperation helps people work together to reach shared goals.",
+          "point2": "Another reason is that cooperation builds strong relationships between people.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that working together is more important than trying to beat others.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Cooperation helps people work together to reach shared goals.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, when people help each other, they can do much better things in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a group of friends can clean a park together in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the park looks much nicer for everyone to use.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that working together makes things better for the whole group.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that cooperation builds strong relationships between people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because when we help friends, we feel good about ourselves and others feel the same in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a family helps a sick member at home in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the family feels strong and supported by each other in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that helping others makes people feel connected.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from cooperation and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "cooperate",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "vital",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "achieving",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "community",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "cooperate",
+            "enGloss": "work together",
+            "viGloss": "hợp tác",
+            "source": "approved_sample"
+          },
+          {
+            "term": "vital",
+            "enGloss": "essential",
+            "viGloss": "thiết yếu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "achieving",
+            "enGloss": "reaching",
+            "viGloss": "đạt được",
+            "source": "approved_sample"
+          },
+          {
+            "term": "community",
+            "enGloss": "group of people",
+            "viGloss": "cộng đồng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "teamwork efforts",
+            "enGloss": "group work",
+            "viGloss": "nỗ lực làm việc nhóm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "supported",
+            "enGloss": "helped",
+            "viGloss": "được hỗ trợ",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng học thuật"
+          },
+          {
+            "term": "ethnic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng dân tộc"
+          },
+          {
+            "term": "international community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng quốc tế"
+          },
+          {
+            "term": "local community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng địa phương"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "Cooperation is essential for building strong communities and achieving shared goals, as demonstrated by group efforts like building a school.",
+          "point2": "Cooperation provides emotional security and support in daily life, exemplified by neighbors helping each other during a natural disaster.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people debate whether working together or competing against others is more important for success.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Cooperation is vital for building strong communities and achieving shared goals.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people often need to work together to solve big problems in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a community must cooperate to build a new school or park.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the group can achieve things that one person could not do alone.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that teamwork efforts are very important for society.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Cooperation also helps people feel safe and supported in their daily lives.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that having friends and family helps people through hard times in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that neighbors help each other during a natural disaster.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people feel a strong sense of belonging and mutual support.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that mutual support is key to a happy life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that cooperation outweighs competition.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Working together is key to achieving shared goals, and mutual support is vital for a happy life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "mutual support",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "collective effort",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "infrastructure",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "camaraderie",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "mutual support",
+            "enGloss": "reciprocal help",
+            "viGloss": "sự hỗ trợ lẫn nhau",
+            "source": "approved_sample"
+          },
+          {
+            "term": "collective effort",
+            "enGloss": "joint work",
+            "viGloss": "nỗ lực tập thể",
+            "source": "approved_sample"
+          },
+          {
+            "term": "infrastructure",
+            "enGloss": "basic physical structures",
+            "viGloss": "cơ sở hạ tầng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "camaraderie",
+            "enGloss": "friendly, warm association",
+            "viGloss": "tình đồng chí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "synergy",
+            "enGloss": "combined effect greater than sum of parts",
+            "viGloss": "sự cộng hưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "interpersonal",
+            "enGloss": "relating to people",
+            "viGloss": "giữa các cá nhân",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "interpersonal relationships",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: mối quan hệ giữa các cá nhân"
+          },
+          {
+            "term": "interpersonal skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng giao tiếp"
+          },
+          {
+            "term": "mutual support",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Socio-cultural and global issues.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Socio-cultural and global issues."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Socio-cultural and global issues ____.",
+          "point1": "Cooperation is fundamentally crucial for human progress and societal stability.",
+          "point2": "Furthermore, cooperation fosters stronger interpersonal relationships and emotional well-being.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relative importance of cooperation versus competition is a subject of ongoing debate.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Cooperation is fundamentally crucial for human progress and societal stability.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, working together allows individuals to achieve outcomes that would be impossible in isolation in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, large-scale infrastructure projects, such as building bridges, require the coordinated effort of many specialized workers.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the division of labor ensures that complex tasks are completed efficiently and reliably.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that mutual support forms the bedrock of advanced civilization.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, cooperation fosters stronger interpersonal relationships and emotional well-being.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that sharing goals and assisting each other builds trust and camaraderie in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that community volunteer groups organize successful local clean-up drives.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that participants feel a profound sense of belonging and shared purpose within their neighborhood.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that collective effort enhances personal fulfillment.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Socio-cultural and global issues.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from cooperation and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:25.040235+00:00"
+  }
+}

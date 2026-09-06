@@ -19,6 +19,10 @@ const {
   uploadConnectedSpeechAudio,
   persistConnectedSpeechAttempt
 } = require('../read-aloud/connected-speech-storage');
+const {
+  extractWordsAndSyllablesFromAzure,
+  buildPronunciationAssessmentHeader
+} = require('../services/pronunciation-assessment-service');
 
 const router = express.Router();
 const CONNECTED_SPEECH_INDEX_PATH = fs.existsSync(path.join(__dirname, '..', 'data', 'read-aloud-connected-speech-index.json'))
@@ -371,18 +375,6 @@ function validateWavUpload(buffer) {
   }
 }
 
-function buildPronunciationAssessmentHeader(referenceText) {
-  const config = {
-    ReferenceText: referenceText,
-    GradingSystem: 'HundredMark',
-    Granularity: 'Phoneme',
-    PhonemeAlphabet: 'IPA',
-    EnableMiscue: true,
-    NBestPhonemeCount: 5
-  };
-  return Buffer.from(JSON.stringify(config)).toString('base64');
-}
-
 function normalizeConnectedSpeechStatus(result) {
   if (!result || typeof result !== 'object') {
     return {
@@ -732,13 +724,18 @@ router.post('/read-aloud/assess', parseReadAloudUpload, async (req, res) => {
     const words = (nbest.Words || []).map(word => {
       const startMs = getAzureWordTimingMs(word, 'Offset');
       const durationMs = getAzureWordTimingMs(word, 'Duration');
-      return {
+      const wordObj = {
         word: word.Word,
         accuracyScore: normalizeRoundedAzureScore(word, 'AccuracyScore') || 0,
         errorType: getAzureWordErrorType(word),
         startMs,
         endMs: startMs != null && durationMs != null ? startMs + durationMs : null
       };
+      const enriched = extractWordsAndSyllablesFromAzure([word]);
+      if (enriched[0]?.syllables) {
+        wordObj.syllables = enriched[0].syllables;
+      }
+      return wordObj;
     });
 
     const connectedSpeechPromise = questionId

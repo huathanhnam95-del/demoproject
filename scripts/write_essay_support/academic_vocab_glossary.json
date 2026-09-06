@@ -1,0 +1,3414 @@
+{
+  "abandon": {
+    "enGloss": "to leave something behind permanently",
+    "viGloss": "từ bỏ hoàn toàn"
+  },
+  "abilities": {
+    "enGloss": "the capacity to do something",
+    "viGloss": "khả năng thực hiện một việc gì đó"
+  },
+  "ability": {
+    "enGloss": "the capacity to do something",
+    "viGloss": "khả năng thực hiện một việc gì đó"
+  },
+  "abundant": {
+    "enGloss": "available in large quantities",
+    "viGloss": "dồi dào"
+  },
+  "academic": {
+    "enGloss": "related to education or scholarly activities",
+    "viGloss": "liên quan đến học thuật"
+  },
+  "accelerated": {
+    "enGloss": "speeded up or made faster",
+    "viGloss": "tăng tốc"
+  },
+  "accessed": {
+    "enGloss": "to gain entry to or use something",
+    "viGloss": "truy cập"
+  },
+  "accessible": {
+    "enGloss": "easy to reach or use",
+    "viGloss": "có thể tiếp cận được"
+  },
+  "accomplishment": {
+    "enGloss": "a notable achievement",
+    "viGloss": "thành tựu"
+  },
+  "accomplishments": {
+    "enGloss": "notable achievements",
+    "viGloss": "những thành tựu"
+  },
+  "according": {
+    "enGloss": "in accordance with",
+    "viGloss": "theo"
+  },
+  "achieve": {
+    "enGloss": "to accomplish a goal",
+    "viGloss": "đạt được"
+  },
+  "achieved": {
+    "enGloss": "has accomplished a goal",
+    "viGloss": "đã đạt được"
+  },
+  "achievements": {
+    "enGloss": "notable accomplishments",
+    "viGloss": "những thành tựu"
+  },
+  "achieving": {
+    "enGloss": "the process of accomplishing",
+    "viGloss": "việc đạt được"
+  },
+  "actions": {
+    "enGloss": "things done or performed",
+    "viGloss": "hành động"
+  },
+  "activities": {
+    "enGloss": "actions or tasks performed",
+    "viGloss": "hoạt động"
+  },
+  "activity": {
+    "enGloss": "a particular action or task",
+    "viGloss": "hoạt động"
+  },
+  "actually": {
+    "enGloss": "in reality",
+    "viGloss": "thực tế"
+  },
+  "additional": {
+    "enGloss": "extra or supplementary",
+    "viGloss": "thêm"
+  },
+  "address": {
+    "enGloss": "to deal with or mention something",
+    "viGloss": "đề cập đến"
+  },
+  "addressed": {
+    "enGloss": "has dealt with or mentioned",
+    "viGloss": "đã đề cập đến"
+  },
+  "adequately": {
+    "enGloss": "sufficiently or to an adequate degree",
+    "viGloss": "đủ"
+  },
+  "adult's": {
+    "enGloss": "belonging to an adult",
+    "viGloss": "của người lớn"
+  },
+  "advance": {
+    "enGloss": "to move forward or progress",
+    "viGloss": "tiến bộ"
+  },
+  "advanced": {
+    "enGloss": "highly developed or sophisticated",
+    "viGloss": "phát triển"
+  },
+  "advancement": {
+    "enGloss": "progress or development",
+    "viGloss": "tiến bộ"
+  },
+  "advancements": {
+    "enGloss": "progresses or developments",
+    "viGloss": "những tiến bộ"
+  },
+  "advantage": {
+    "enGloss": "a beneficial condition or circumstance",
+    "viGloss": "lợi thế"
+  },
+  "advantageous": {
+    "enGloss": "providing an advantage",
+    "viGloss": "có lợi"
+  },
+  "advantages": {
+    "enGloss": "beneficial conditions or circumstances",
+    "viGloss": "những lợi thế"
+  },
+  "adventure": {
+    "enGloss": "an unusual or exciting experience",
+    "viGloss": "phiêu lưu"
+  },
+  "adverse": {
+    "enGloss": "unfavorable or harmful",
+    "viGloss": "tiêu cực"
+  },
+  "advertisements": {
+    "enGloss": "public announcements promoting products or services",
+    "viGloss": "quảng cáo"
+  },
+  "aeroplanes": {
+    "enGloss": "aircraft used for transportation",
+    "viGloss": "máy bay"
+  },
+  "aerospace": {
+    "enGloss": "relating to air and space",
+    "viGloss": "không gian hàng không"
+  },
+  "affected": {
+    "enGloss": "influenced or changed",
+    "viGloss": "bị ảnh hưởng"
+  },
+  "affects": {
+    "enGloss": "influences or changes",
+    "viGloss": "ảnh hưởng đến"
+  },
+  "after-class": {
+    "enGloss": "occurring after class time",
+    "viGloss": "sau giờ học"
+  },
+  "agriculture": {
+    "enGloss": "the practice of farming",
+    "viGloss": "nông nghiệp"
+  },
+  "airplanes": {
+    "enGloss": "aircraft used for transportation",
+    "viGloss": "máy bay"
+  },
+  "alarming": {
+    "enGloss": "causing alarm or concern",
+    "viGloss": "lo ngại"
+  },
+  "allocate": {
+    "enGloss": "to distribute or assign resources",
+    "viGloss": "phân bổ"
+  },
+  "allocation": {
+    "enGloss": "the act of distributing resources",
+    "viGloss": "sự phân bổ"
+  },
+  "already": {
+    "enGloss": "before now or at an earlier time",
+    "viGloss": "đã"
+  },
+  "alternative": {
+    "enGloss": "a substitute or different option",
+    "viGloss": "thay thế"
+  },
+  "alternatives": {
+    "enGloss": "substitute options",
+    "viGloss": "những lựa chọn thay thế"
+  },
+  "amounts": {
+    "enGloss": "quantities or sums",
+    "viGloss": "số lượng"
+  },
+  "analysis": {
+    "enGloss": "the process of examining something in detail",
+    "viGloss": "phân tích"
+  },
+  "animals": {
+    "enGloss": "living creatures with certain characteristics",
+    "viGloss": "động vật"
+  },
+  "antibiotics": {
+    "enGloss": "Key concept related to antibiotics.",
+    "viGloss": "kháng sinh"
+  },
+  "anything": {
+    "enGloss": "Key concept related to anything.",
+    "viGloss": "bất cứ điều gì"
+  },
+  "appearances": {
+    "enGloss": "Key concept related to appearances.",
+    "viGloss": "xuất hiện"
+  },
+  "appropriate": {
+    "enGloss": "Key concept related to appropriate.",
+    "viGloss": "thích hợp"
+  },
+  "argument": {
+    "enGloss": "Key concept related to argument.",
+    "viGloss": "lý lẽ"
+  },
+  "articles": {
+    "enGloss": "Key concept related to articles.",
+    "viGloss": "bài viết"
+  },
+  "artificial": {
+    "enGloss": "Key concept related to artificial.",
+    "viGloss": "nhân tạo"
+  },
+  "artists": {
+    "enGloss": "Key concept related to artists.",
+    "viGloss": "nghệ sĩ"
+  },
+  "aspects": {
+    "enGloss": "Key concept related to aspects.",
+    "viGloss": "các khía cạnh"
+  },
+  "assessment": {
+    "enGloss": "Key concept related to assessment.",
+    "viGloss": "đánh giá"
+  },
+  "assigned": {
+    "enGloss": "Key concept related to assigned.",
+    "viGloss": "được giao"
+  },
+  "assignments": {
+    "enGloss": "Key concept related to assignments.",
+    "viGloss": "bài tập"
+  },
+  "athletes": {
+    "enGloss": "Key concept related to athletes.",
+    "viGloss": "vận động viên"
+  },
+  "attending": {
+    "enGloss": "Key concept related to attending.",
+    "viGloss": "tham dự"
+  },
+  "attention": {
+    "enGloss": "Key concept related to attention.",
+    "viGloss": "chú ý"
+  },
+  "attracted": {
+    "enGloss": "Key concept related to attracted.",
+    "viGloss": "thu hút"
+  },
+  "audience's": {
+    "enGloss": "Key concept related to audience's.",
+    "viGloss": "của khán giả"
+  },
+  "automobile": {
+    "enGloss": "Key concept related to automobile.",
+    "viGloss": "ô tô"
+  },
+  "available": {
+    "enGloss": "Key concept related to available.",
+    "viGloss": "có sẵn"
+  },
+  "average": {
+    "enGloss": "Key concept related to average.",
+    "viGloss": "trung bình"
+  },
+  "awareness": {
+    "enGloss": "Key concept related to awareness.",
+    "viGloss": "nhận thức"
+  },
+  "balance": {
+    "enGloss": "Key concept related to balance.",
+    "viGloss": "cân đối"
+  },
+  "beautiful": {
+    "enGloss": "Key concept related to beautiful.",
+    "viGloss": "đẹp"
+  },
+  "because": {
+    "enGloss": "Key concept related to because.",
+    "viGloss": "bởi vì"
+  },
+  "becomes": {
+    "enGloss": "Key concept related to becomes.",
+    "viGloss": "trở thành"
+  },
+  "becoming": {
+    "enGloss": "Key concept related to becoming.",
+    "viGloss": "trở thành"
+  },
+  "behavior": {
+    "enGloss": "Key concept related to behavior.",
+    "viGloss": "hành vi"
+  },
+  "behaviors": {
+    "enGloss": "Key concept related to behaviors.",
+    "viGloss": "hành vi"
+  },
+  "believe": {
+    "enGloss": "Key concept related to believe.",
+    "viGloss": "tin tưởng"
+  },
+  "believed": {
+    "enGloss": "Key concept related to believed.",
+    "viGloss": "tin tưởng"
+  },
+  "beneficial": {
+    "enGloss": "Key concept related to beneficial.",
+    "viGloss": "có lợi"
+  },
+  "benefits": {
+    "enGloss": "Key concept related to benefits.",
+    "viGloss": "lợi ích"
+  },
+  "between": {
+    "enGloss": "Key concept related to between.",
+    "viGloss": "giữa"
+  },
+  "bilingual": {
+    "enGloss": "Key concept related to bilingual.",
+    "viGloss": "song ngữ"
+  },
+  "bioplastics": {
+    "enGloss": "Key concept related to bioplastics.",
+    "viGloss": "nhựa sinh học"
+  },
+  "blessing": {
+    "enGloss": "Key concept related to blessing.",
+    "viGloss": "phước lành"
+  },
+  "bottled": {
+    "enGloss": "Key concept related to bottled.",
+    "viGloss": "đóng chai"
+  },
+  "bottles": {
+    "enGloss": "Key concept related to bottles.",
+    "viGloss": "chai"
+  },
+  "brilliant": {
+    "enGloss": "Key concept related to brilliant.",
+    "viGloss": "rực rỡ"
+  },
+  "broaden": {
+    "enGloss": "Key concept related to broaden.",
+    "viGloss": "mở rộng"
+  },
+  "broadens": {
+    "enGloss": "Key concept related to broadens.",
+    "viGloss": "mở rộng"
+  },
+  "brought": {
+    "enGloss": "Key concept related to brought.",
+    "viGloss": "mang đến"
+  },
+  "buildings": {
+    "enGloss": "Key concept related to buildings.",
+    "viGloss": "các tòa nhà"
+  },
+  "business": {
+    "enGloss": "Key concept related to business.",
+    "viGloss": "kinh doanh"
+  },
+  "businesses": {
+    "enGloss": "Key concept related to businesses.",
+    "viGloss": "doanh nghiệp"
+  },
+  "careers": {
+    "enGloss": "Key concept related to careers.",
+    "viGloss": "sự nghiệp"
+  },
+  "careful": {
+    "enGloss": "Key concept related to careful.",
+    "viGloss": "cẩn thận"
+  },
+  "cashless": {
+    "enGloss": "Key concept related to cashless.",
+    "viGloss": "không dùng tiền mặt"
+  },
+  "celebrities": {
+    "enGloss": "Key concept related to celebrities.",
+    "viGloss": "người nổi tiếng"
+  },
+  "celebrity": {
+    "enGloss": "Key concept related to celebrity.",
+    "viGloss": "người nổi tiếng"
+  },
+  "centuries": {
+    "enGloss": "Key concept related to centuries.",
+    "viGloss": "thế kỷ"
+  },
+  "century": {
+    "enGloss": "Key concept related to century.",
+    "viGloss": "thế kỷ"
+  },
+  "certain": {
+    "enGloss": "Key concept related to certain.",
+    "viGloss": "nhất định"
+  },
+  "challenge": {
+    "enGloss": "Key concept related to challenge.",
+    "viGloss": "thử thách"
+  },
+  "challenges": {
+    "enGloss": "Key concept related to challenges.",
+    "viGloss": "thử thách"
+  },
+  "chances": {
+    "enGloss": "Key concept related to chances.",
+    "viGloss": "cơ hội"
+  },
+  "changed": {
+    "enGloss": "Key concept related to changed.",
+    "viGloss": "đã thay đổi"
+  },
+  "changes": {
+    "enGloss": "Key concept related to changes.",
+    "viGloss": "thay đổi"
+  },
+  "cheaper": {
+    "enGloss": "Key concept related to cheaper.",
+    "viGloss": "rẻ hơn"
+  },
+  "child's": {
+    "enGloss": "Key concept related to child's.",
+    "viGloss": "của đứa trẻ"
+  },
+  "children": {
+    "enGloss": "Key concept related to children.",
+    "viGloss": "bọn trẻ"
+  },
+  "classes": {
+    "enGloss": "Key concept related to classes.",
+    "viGloss": "lớp học"
+  },
+  "classmates": {
+    "enGloss": "Key concept related to classmates.",
+    "viGloss": "bạn cùng lớp"
+  },
+  "classroom": {
+    "enGloss": "Key concept related to classroom.",
+    "viGloss": "lớp học"
+  },
+  "climate": {
+    "enGloss": "Key concept related to climate.",
+    "viGloss": "khí hậu"
+  },
+  "cloning": {
+    "enGloss": "Key concept related to cloning.",
+    "viGloss": "nhân bản"
+  },
+  "clothing": {
+    "enGloss": "Key concept related to clothing.",
+    "viGloss": "quần áo"
+  },
+  "cognitive": {
+    "enGloss": "Key concept related to cognitive.",
+    "viGloss": "nhận thức"
+  },
+  "college": {
+    "enGloss": "Key concept related to college.",
+    "viGloss": "đại học"
+  },
+  "colleges": {
+    "enGloss": "Key concept related to colleges.",
+    "viGloss": "cao đẳng"
+  },
+  "combine": {
+    "enGloss": "Key concept related to combine.",
+    "viGloss": "kết hợp"
+  },
+  "comfort": {
+    "enGloss": "Key concept related to comfort.",
+    "viGloss": "sự thoải mái"
+  },
+  "commercial": {
+    "enGloss": "Key concept related to commercial.",
+    "viGloss": "thương mại"
+  },
+  "commonly": {
+    "enGloss": "Key concept related to commonly.",
+    "viGloss": "thông thường"
+  },
+  "commonplace": {
+    "enGloss": "Key concept related to commonplace.",
+    "viGloss": "chuyện tầm thường"
+  },
+  "communicating": {
+    "enGloss": "Key concept related to communicating.",
+    "viGloss": "giao tiếp"
+  },
+  "communication": {
+    "enGloss": "Key concept related to communication.",
+    "viGloss": "giao tiếp"
+  },
+  "communications": {
+    "enGloss": "Key concept related to communications.",
+    "viGloss": "thông tin liên lạc"
+  },
+  "communities": {
+    "enGloss": "Key concept related to communities.",
+    "viGloss": "cộng đồng"
+  },
+  "community": {
+    "enGloss": "Key concept related to community.",
+    "viGloss": "cộng đồng"
+  },
+  "companies": {
+    "enGloss": "Key concept related to companies.",
+    "viGloss": "công ty"
+  },
+  "companion": {
+    "enGloss": "Key concept related to companion.",
+    "viGloss": "bạn đồng hành"
+  },
+  "company": {
+    "enGloss": "Key concept related to company.",
+    "viGloss": "công ty"
+  },
+  "competition": {
+    "enGloss": "Key concept related to competition.",
+    "viGloss": "sự cạnh tranh"
+  },
+  "competitive": {
+    "enGloss": "Key concept related to competitive.",
+    "viGloss": "cạnh tranh"
+  },
+  "complete": {
+    "enGloss": "Key concept related to complete.",
+    "viGloss": "hoàn thành"
+  },
+  "completely": {
+    "enGloss": "Key concept related to completely.",
+    "viGloss": "hoàn toàn"
+  },
+  "complex": {
+    "enGloss": "Key concept related to complex.",
+    "viGloss": "phức tạp"
+  },
+  "component": {
+    "enGloss": "Key concept related to component.",
+    "viGloss": "thành phần"
+  },
+  "compressed": {
+    "enGloss": "Key concept related to compressed.",
+    "viGloss": "nén"
+  },
+  "compulsory": {
+    "enGloss": "Key concept related to compulsory.",
+    "viGloss": "bắt buộc"
+  },
+  "computer": {
+    "enGloss": "Key concept related to computer.",
+    "viGloss": "máy tính"
+  },
+  "computers": {
+    "enGloss": "Key concept related to computers.",
+    "viGloss": "máy tính"
+  },
+  "concentrate": {
+    "enGloss": "Key concept related to concentrate.",
+    "viGloss": "tập trung"
+  },
+  "concern": {
+    "enGloss": "Key concept related to concern.",
+    "viGloss": "mối quan tâm"
+  },
+  "concerning": {
+    "enGloss": "Key concept related to concerning.",
+    "viGloss": "liên quan đến"
+  },
+  "concerns": {
+    "enGloss": "Key concept related to concerns.",
+    "viGloss": "mối quan tâm"
+  },
+  "conclusions": {
+    "enGloss": "Key concept related to conclusions.",
+    "viGloss": "kết luận"
+  },
+  "condition": {
+    "enGloss": "Key concept related to condition.",
+    "viGloss": "tình trạng"
+  },
+  "confront": {
+    "enGloss": "Key concept related to confront.",
+    "viGloss": "đối đầu"
+  },
+  "connected": {
+    "enGloss": "Key concept related to connected.",
+    "viGloss": "đã kết nối"
+  },
+  "connection": {
+    "enGloss": "Key concept related to connection.",
+    "viGloss": "kết nối"
+  },
+  "consequences": {
+    "enGloss": "Key concept related to consequences.",
+    "viGloss": "hậu quả"
+  },
+  "conservation": {
+    "enGloss": "Key concept related to conservation.",
+    "viGloss": "bảo tồn"
+  },
+  "considerations": {
+    "enGloss": "Key concept related to considerations.",
+    "viGloss": "cân nhắc"
+  },
+  "constantly": {
+    "enGloss": "Key concept related to constantly.",
+    "viGloss": "liên tục"
+  },
+  "consumer": {
+    "enGloss": "Key concept related to consumer.",
+    "viGloss": "người tiêu dùng"
+  },
+  "consumers": {
+    "enGloss": "Key concept related to consumers.",
+    "viGloss": "người tiêu dùng"
+  },
+  "consumption": {
+    "enGloss": "Key concept related to consumption.",
+    "viGloss": "tiêu thụ"
+  },
+  "contact": {
+    "enGloss": "Key concept related to contact.",
+    "viGloss": "liên hệ"
+  },
+  "contains": {
+    "enGloss": "Key concept related to contains.",
+    "viGloss": "chứa"
+  },
+  "content": {
+    "enGloss": "Key concept related to content.",
+    "viGloss": "nội dung"
+  },
+  "continue": {
+    "enGloss": "Key concept related to continue.",
+    "viGloss": "tiếp tục"
+  },
+  "continuing": {
+    "enGloss": "Key concept related to continuing.",
+    "viGloss": "tiếp tục"
+  },
+  "continuous": {
+    "enGloss": "Key concept related to continuous.",
+    "viGloss": "liên tục"
+  },
+  "contribute": {
+    "enGloss": "Key concept related to contribute.",
+    "viGloss": "đóng góp"
+  },
+  "contributes": {
+    "enGloss": "Key concept related to contributes.",
+    "viGloss": "đóng góp"
+  },
+  "controlled": {
+    "enGloss": "Key concept related to controlled.",
+    "viGloss": "được kiểm soát"
+  },
+  "convenience": {
+    "enGloss": "Key concept related to convenience.",
+    "viGloss": "tiện lợi"
+  },
+  "convenient": {
+    "enGloss": "Key concept related to convenient.",
+    "viGloss": "thuận tiện"
+  },
+  "cooperation": {
+    "enGloss": "Key concept related to cooperation.",
+    "viGloss": "hợp tác"
+  },
+  "copyright": {
+    "enGloss": "Key concept related to copyright.",
+    "viGloss": "bản quyền"
+  },
+  "correct": {
+    "enGloss": "Key concept related to correct.",
+    "viGloss": "đúng"
+  },
+  "countries": {
+    "enGloss": "Key concept related to countries.",
+    "viGloss": "các nước"
+  },
+  "country": {
+    "enGloss": "Key concept related to country.",
+    "viGloss": "đất nước"
+  },
+  "countryside": {
+    "enGloss": "Key concept related to countryside.",
+    "viGloss": "nông thôn"
+  },
+  "couples": {
+    "enGloss": "Key concept related to couples.",
+    "viGloss": "cặp đôi"
+  },
+  "courses": {
+    "enGloss": "Key concept related to courses.",
+    "viGloss": "các khóa học"
+  },
+  "creativity": {
+    "enGloss": "Key concept related to creativity.",
+    "viGloss": "sự sáng tạo"
+  },
+  "criminals": {
+    "enGloss": "Key concept related to criminals.",
+    "viGloss": "tội phạm"
+  },
+  "crucial": {
+    "enGloss": "Key concept related to crucial.",
+    "viGloss": "quan trọng"
+  },
+  "cultural": {
+    "enGloss": "Key concept related to cultural.",
+    "viGloss": "văn hóa"
+  },
+  "culture": {
+    "enGloss": "Key concept related to culture.",
+    "viGloss": "văn hóa"
+  },
+  "cultures": {
+    "enGloss": "Key concept related to cultures.",
+    "viGloss": "nền văn hóa"
+  },
+  "current": {
+    "enGloss": "Key concept related to current.",
+    "viGloss": "hiện tại"
+  },
+  "curriculum": {
+    "enGloss": "Key concept related to curriculum.",
+    "viGloss": "chương trình giảng dạy"
+  },
+  "damaged": {
+    "enGloss": "Key concept related to damaged.",
+    "viGloss": "hư hỏng"
+  },
+  "dangerous": {
+    "enGloss": "Key concept related to dangerous.",
+    "viGloss": "nguy hiểm"
+  },
+  "dealing": {
+    "enGloss": "Key concept related to dealing.",
+    "viGloss": "giao dịch"
+  },
+  "debating": {
+    "enGloss": "Key concept related to debating.",
+    "viGloss": "tranh luận"
+  },
+  "decision": {
+    "enGloss": "Key concept related to decision.",
+    "viGloss": "quyết định"
+  },
+  "decision-making": {
+    "enGloss": "Key concept related to decision-making.",
+    "viGloss": "ra quyết định"
+  },
+  "decisions": {
+    "enGloss": "Key concept related to decisions.",
+    "viGloss": "quyết định"
+  },
+  "declare": {
+    "enGloss": "Key concept related to declare.",
+    "viGloss": "tuyên bố"
+  },
+  "declining": {
+    "enGloss": "Key concept related to declining.",
+    "viGloss": "suy giảm"
+  },
+  "defined": {
+    "enGloss": "Key concept related to defined.",
+    "viGloss": "được xác định"
+  },
+  "degradation": {
+    "enGloss": "Key concept related to degradation.",
+    "viGloss": "suy thoái"
+  },
+  "degrees": {
+    "enGloss": "Key concept related to degrees.",
+    "viGloss": "độ"
+  },
+  "democracy": {
+    "enGloss": "Key concept related to democracy.",
+    "viGloss": "dân chủ"
+  },
+  "democratic": {
+    "enGloss": "Key concept related to democratic.",
+    "viGloss": "dân chủ"
+  },
+  "dependent": {
+    "enGloss": "Key concept related to dependent.",
+    "viGloss": "phụ thuộc"
+  },
+  "describe": {
+    "enGloss": "Key concept related to describe.",
+    "viGloss": "mô tả"
+  },
+  "deserve": {
+    "enGloss": "Key concept related to deserve.",
+    "viGloss": "xứng đáng"
+  },
+  "deserves": {
+    "enGloss": "Key concept related to deserves.",
+    "viGloss": "xứng đáng"
+  },
+  "designed": {
+    "enGloss": "Key concept related to designed.",
+    "viGloss": "được thiết kế"
+  },
+  "despite": {
+    "enGloss": "Key concept related to despite.",
+    "viGloss": "mặc dù"
+  },
+  "destroy": {
+    "enGloss": "Key concept related to destroy.",
+    "viGloss": "phá hủy"
+  },
+  "destroyed": {
+    "enGloss": "Key concept related to destroyed.",
+    "viGloss": "bị phá hủy"
+  },
+  "details": {
+    "enGloss": "Key concept related to details.",
+    "viGloss": "chi tiết"
+  },
+  "determine": {
+    "enGloss": "Key concept related to determine.",
+    "viGloss": "xác định"
+  },
+  "determining": {
+    "enGloss": "Key concept related to determining.",
+    "viGloss": "xác định"
+  },
+  "detrimental": {
+    "enGloss": "Key concept related to detrimental.",
+    "viGloss": "có hại"
+  },
+  "develop": {
+    "enGloss": "Key concept related to develop.",
+    "viGloss": "phát triển"
+  },
+  "developed": {
+    "enGloss": "Key concept related to developed.",
+    "viGloss": "phát triển"
+  },
+  "developing": {
+    "enGloss": "Key concept related to developing.",
+    "viGloss": "đang phát triển"
+  },
+  "development": {
+    "enGloss": "Key concept related to development.",
+    "viGloss": "phát triển"
+  },
+  "devices": {
+    "enGloss": "Key concept related to devices.",
+    "viGloss": "thiết bị"
+  },
+  "different": {
+    "enGloss": "Key concept related to different.",
+    "viGloss": "khác nhau"
+  },
+  "differential": {
+    "enGloss": "Key concept related to differential.",
+    "viGloss": "sự khác biệt"
+  },
+  "difficult": {
+    "enGloss": "Key concept related to difficult.",
+    "viGloss": "khó khăn"
+  },
+  "difficulties": {
+    "enGloss": "Key concept related to difficulties.",
+    "viGloss": "khó khăn"
+  },
+  "digital": {
+    "enGloss": "Key concept related to digital.",
+    "viGloss": "kỹ thuật số"
+  },
+  "digitalized": {
+    "enGloss": "Key concept related to digitalized.",
+    "viGloss": "số hóa"
+  },
+  "disadvantage": {
+    "enGloss": "Key concept related to disadvantage.",
+    "viGloss": "bất lợi"
+  },
+  "disadvantageous": {
+    "enGloss": "Key concept related to disadvantageous.",
+    "viGloss": "bất lợi"
+  },
+  "disadvantages": {
+    "enGloss": "Key concept related to disadvantages.",
+    "viGloss": "nhược điểm"
+  },
+  "disagree": {
+    "enGloss": "Key concept related to disagree.",
+    "viGloss": "không đồng ý"
+  },
+  "discuss": {
+    "enGloss": "Key concept related to discuss.",
+    "viGloss": "thảo luận"
+  },
+  "discussing": {
+    "enGloss": "Key concept related to discussing.",
+    "viGloss": "thảo luận"
+  },
+  "discussion": {
+    "enGloss": "Key concept related to discussion.",
+    "viGloss": "thảo luận"
+  },
+  "diseases": {
+    "enGloss": "Key concept related to diseases.",
+    "viGloss": "bệnh tật"
+  },
+  "dislike": {
+    "enGloss": "Key concept related to dislike.",
+    "viGloss": "không thích"
+  },
+  "disseminating": {
+    "enGloss": "Key concept related to disseminating.",
+    "viGloss": "phổ biến"
+  },
+  "distance": {
+    "enGloss": "Key concept related to distance.",
+    "viGloss": "khoảng cách"
+  },
+  "disturbance": {
+    "enGloss": "Key concept related to disturbance.",
+    "viGloss": "sự xáo trộn"
+  },
+  "diversity": {
+    "enGloss": "Key concept related to diversity.",
+    "viGloss": "sự đa dạng"
+  },
+  "doctors": {
+    "enGloss": "Key concept related to doctors.",
+    "viGloss": "bác sĩ"
+  },
+  "dollars": {
+    "enGloss": "Key concept related to dollars.",
+    "viGloss": "đô la"
+  },
+  "driving": {
+    "enGloss": "Key concept related to driving.",
+    "viGloss": "lái xe"
+  },
+  "e-books": {
+    "enGloss": "Key concept related to e-books.",
+    "viGloss": "sách điện tử"
+  },
+  "e-readers": {
+    "enGloss": "Key concept related to e-readers.",
+    "viGloss": "máy đọc sách điện tử"
+  },
+  "earth's": {
+    "enGloss": "Key concept related to earth's.",
+    "viGloss": "trái đất"
+  },
+  "eclipsed": {
+    "enGloss": "Key concept related to eclipsed.",
+    "viGloss": "bị lu mờ"
+  },
+  "economic": {
+    "enGloss": "Key concept related to economic.",
+    "viGloss": "kinh tế"
+  },
+  "educate": {
+    "enGloss": "Key concept related to educate.",
+    "viGloss": "giáo dục"
+  },
+  "educating": {
+    "enGloss": "Key concept related to educating.",
+    "viGloss": "giáo dục"
+  },
+  "education": {
+    "enGloss": "Key concept related to education.",
+    "viGloss": "giáo dục"
+  },
+  "educational": {
+    "enGloss": "Key concept related to educational.",
+    "viGloss": "giáo dục"
+  },
+  "effective": {
+    "enGloss": "Key concept related to effective.",
+    "viGloss": "hiệu quả"
+  },
+  "effectively": {
+    "enGloss": "Key concept related to effectively.",
+    "viGloss": "một cách hiệu quả"
+  },
+  "effects": {
+    "enGloss": "Key concept related to effects.",
+    "viGloss": "hiệu ứng"
+  },
+  "efficient": {
+    "enGloss": "Key concept related to efficient.",
+    "viGloss": "hiệu quả"
+  },
+  "eighteen": {
+    "enGloss": "Key concept related to eighteen.",
+    "viGloss": "mười tám"
+  },
+  "einstein": {
+    "enGloss": "Key concept related to einstein.",
+    "viGloss": "Einstein"
+  },
+  "elderly": {
+    "enGloss": "Key concept related to elderly.",
+    "viGloss": "người già"
+  },
+  "electric": {
+    "enGloss": "Key concept related to electric.",
+    "viGloss": "điện"
+  },
+  "electrical": {
+    "enGloss": "Key concept related to electrical.",
+    "viGloss": "điện"
+  },
+  "electronic": {
+    "enGloss": "Key concept related to electronic.",
+    "viGloss": "điện tử"
+  },
+  "emigrate": {
+    "enGloss": "Key concept related to emigrate.",
+    "viGloss": "di cư"
+  },
+  "empathy": {
+    "enGloss": "Key concept related to empathy.",
+    "viGloss": "sự đồng cảm"
+  },
+  "emphasis": {
+    "enGloss": "Key concept related to emphasis.",
+    "viGloss": "sự nhấn mạnh"
+  },
+  "employees": {
+    "enGloss": "Key concept related to employees.",
+    "viGloss": "nhân viên"
+  },
+  "employer": {
+    "enGloss": "Key concept related to employer.",
+    "viGloss": "chủ lao động"
+  },
+  "employers": {
+    "enGloss": "Key concept related to employers.",
+    "viGloss": "người sử dụng lao động"
+  },
+  "employment": {
+    "enGloss": "Key concept related to employment.",
+    "viGloss": "việc làm"
+  },
+  "encourage": {
+    "enGloss": "Key concept related to encourage.",
+    "viGloss": "khuyến khích"
+  },
+  "endangered": {
+    "enGloss": "Key concept related to endangered.",
+    "viGloss": "nguy cơ tuyệt chủng"
+  },
+  "english": {
+    "enGloss": "Key concept related to english.",
+    "viGloss": "tiếng anh"
+  },
+  "enjoyable": {
+    "enGloss": "Key concept related to enjoyable.",
+    "viGloss": "thú vị"
+  },
+  "enrolled": {
+    "enGloss": "Key concept related to enrolled.",
+    "viGloss": "đã ghi danh"
+  },
+  "entered": {
+    "enGloss": "Key concept related to entered.",
+    "viGloss": "đã nhập"
+  },
+  "entertain": {
+    "enGloss": "Key concept related to entertain.",
+    "viGloss": "giải trí"
+  },
+  "entertainers": {
+    "enGloss": "Key concept related to entertainers.",
+    "viGloss": "nghệ sĩ giải trí"
+  },
+  "entertainment": {
+    "enGloss": "Key concept related to entertainment.",
+    "viGloss": "sự giải trí"
+  },
+  "environment": {
+    "enGloss": "Key concept related to environment.",
+    "viGloss": "môi trường"
+  },
+  "environmental": {
+    "enGloss": "Key concept related to environmental.",
+    "viGloss": "môi trường"
+  },
+  "environmentalists": {
+    "enGloss": "Key concept related to environmentalists.",
+    "viGloss": "các nhà bảo vệ môi trường"
+  },
+  "environments": {
+    "enGloss": "Key concept related to environments.",
+    "viGloss": "môi trường"
+  },
+  "equality": {
+    "enGloss": "Key concept related to equality.",
+    "viGloss": "bình đẳng"
+  },
+  "eradicate": {
+    "enGloss": "Key concept related to eradicate.",
+    "viGloss": "diệt trừ"
+  },
+  "escaping": {
+    "enGloss": "Key concept related to escaping.",
+    "viGloss": "trốn thoát"
+  },
+  "especially": {
+    "enGloss": "Key concept related to especially.",
+    "viGloss": "đặc biệt"
+  },
+  "essential": {
+    "enGloss": "Key concept related to essential.",
+    "viGloss": "thiết yếu"
+  },
+  "established": {
+    "enGloss": "Key concept related to established.",
+    "viGloss": "thành lập"
+  },
+  "ethical": {
+    "enGloss": "Key concept related to ethical.",
+    "viGloss": "đạo đức"
+  },
+  "eventually": {
+    "enGloss": "Key concept related to eventually.",
+    "viGloss": "cuối cùng"
+  },
+  "everyone": {
+    "enGloss": "Key concept related to everyone.",
+    "viGloss": "mọi người"
+  },
+  "evolving": {
+    "enGloss": "Key concept related to evolving.",
+    "viGloss": "đang phát triển"
+  },
+  "examinations": {
+    "enGloss": "Key concept related to examinations.",
+    "viGloss": "kỳ thi"
+  },
+  "example": {
+    "enGloss": "Key concept related to example.",
+    "viGloss": "ví dụ"
+  },
+  "examples": {
+    "enGloss": "Key concept related to examples.",
+    "viGloss": "ví dụ"
+  },
+  "exchange": {
+    "enGloss": "Key concept related to exchange.",
+    "viGloss": "trao đổi"
+  },
+  "exercise": {
+    "enGloss": "Key concept related to exercise.",
+    "viGloss": "tập thể dục"
+  },
+  "exercises": {
+    "enGloss": "Key concept related to exercises.",
+    "viGloss": "bài tập"
+  },
+  "expectancy": {
+    "enGloss": "Key concept related to expectancy.",
+    "viGloss": "kỳ vọng"
+  },
+  "expensive": {
+    "enGloss": "Key concept related to expensive.",
+    "viGloss": "đắt tiền"
+  },
+  "experience": {
+    "enGloss": "Key concept related to experience.",
+    "viGloss": "kinh nghiệm"
+  },
+  "experiences": {
+    "enGloss": "Key concept related to experiences.",
+    "viGloss": "kinh nghiệm"
+  },
+  "experiential": {
+    "enGloss": "Key concept related to experiential.",
+    "viGloss": "kinh nghiệm"
+  },
+  "experiments": {
+    "enGloss": "Key concept related to experiments.",
+    "viGloss": "thí nghiệm"
+  },
+  "experts": {
+    "enGloss": "Key concept related to experts.",
+    "viGloss": "chuyên gia"
+  },
+  "explain": {
+    "enGloss": "Key concept related to explain.",
+    "viGloss": "giải thích"
+  },
+  "explanation": {
+    "enGloss": "Key concept related to explanation.",
+    "viGloss": "lời giải thích"
+  },
+  "exploits": {
+    "enGloss": "Key concept related to exploits.",
+    "viGloss": "khai thác"
+  },
+  "exploration": {
+    "enGloss": "Key concept related to exploration.",
+    "viGloss": "thăm dò"
+  },
+  "exponent": {
+    "enGloss": "Key concept related to exponent.",
+    "viGloss": "số mũ"
+  },
+  "express": {
+    "enGloss": "Key concept related to express.",
+    "viGloss": "thể hiện"
+  },
+  "external": {
+    "enGloss": "Key concept related to external.",
+    "viGloss": "bên ngoài"
+  },
+  "extreme": {
+    "enGloss": "Key concept related to extreme.",
+    "viGloss": "cực đoan"
+  },
+  "face-to-face": {
+    "enGloss": "Key concept related to face-to-face.",
+    "viGloss": "mặt đối mặt"
+  },
+  "facilities": {
+    "enGloss": "Key concept related to facilities.",
+    "viGloss": "cơ sở vật chất"
+  },
+  "factories": {
+    "enGloss": "Key concept related to factories.",
+    "viGloss": "nhà máy"
+  },
+  "factory": {
+    "enGloss": "Key concept related to factory.",
+    "viGloss": "nhà máy"
+  },
+  "failure": {
+    "enGloss": "Key concept related to failure.",
+    "viGloss": "thất bại"
+  },
+  "families": {
+    "enGloss": "Key concept related to families.",
+    "viGloss": "gia đình"
+  },
+  "fantastic": {
+    "enGloss": "Key concept related to fantastic.",
+    "viGloss": "tuyệt vời"
+  },
+  "farming": {
+    "enGloss": "Key concept related to farming.",
+    "viGloss": "nông nghiệp"
+  },
+  "farmland": {
+    "enGloss": "Key concept related to farmland.",
+    "viGloss": "đất nông nghiệp"
+  },
+  "fast-paced": {
+    "enGloss": "Key concept related to fast-paced.",
+    "viGloss": "nhịp độ nhanh"
+  },
+  "fathers": {
+    "enGloss": "Key concept related to fathers.",
+    "viGloss": "những người cha"
+  },
+  "figures": {
+    "enGloss": "Key concept related to figures.",
+    "viGloss": "số liệu"
+  },
+  "finance": {
+    "enGloss": "Key concept related to finance.",
+    "viGloss": "tài chính"
+  },
+  "financial": {
+    "enGloss": "Key concept related to financial.",
+    "viGloss": "tài chính"
+  },
+  "finding": {
+    "enGloss": "Key concept related to finding.",
+    "viGloss": "tìm thấy"
+  },
+  "finishing": {
+    "enGloss": "Key concept related to finishing.",
+    "viGloss": "hoàn thiện"
+  },
+  "five-day": {
+    "enGloss": "Key concept related to five-day.",
+    "viGloss": "năm ngày"
+  },
+  "flights": {
+    "enGloss": "Key concept related to flights.",
+    "viGloss": "chuyến bay"
+  },
+  "focusing": {
+    "enGloss": "Key concept related to focusing.",
+    "viGloss": "tập trung"
+  },
+  "followed": {
+    "enGloss": "Key concept related to followed.",
+    "viGloss": "đã theo dõi"
+  },
+  "following": {
+    "enGloss": "Key concept related to following.",
+    "viGloss": "theo dõi"
+  },
+  "foolish": {
+    "enGloss": "Key concept related to foolish.",
+    "viGloss": "ngu ngốc"
+  },
+  "foreign": {
+    "enGloss": "Key concept related to foreign.",
+    "viGloss": "nước ngoài"
+  },
+  "forming": {
+    "enGloss": "Key concept related to forming.",
+    "viGloss": "hình thành"
+  },
+  "four-day": {
+    "enGloss": "Key concept related to four-day.",
+    "viGloss": "bốn ngày"
+  },
+  "frequent": {
+    "enGloss": "Key concept related to frequent.",
+    "viGloss": "thường xuyên"
+  },
+  "friends": {
+    "enGloss": "Key concept related to friends.",
+    "viGloss": "bạn bè"
+  },
+  "friendships": {
+    "enGloss": "Key concept related to friendships.",
+    "viGloss": "tình bạn"
+  },
+  "fuel-powered": {
+    "enGloss": "Key concept related to fuel-powered.",
+    "viGloss": "chạy bằng nhiên liệu"
+  },
+  "fulfill": {
+    "enGloss": "Key concept related to fulfill.",
+    "viGloss": "thực hiện"
+  },
+  "function": {
+    "enGloss": "Key concept related to function.",
+    "viGloss": "chức năng"
+  },
+  "functions": {
+    "enGloss": "Key concept related to functions.",
+    "viGloss": "chức năng"
+  },
+  "funding": {
+    "enGloss": "Key concept related to funding.",
+    "viGloss": "tài trợ"
+  },
+  "gardens": {
+    "enGloss": "Key concept related to gardens.",
+    "viGloss": "khu vườn"
+  },
+  "general": {
+    "enGloss": "Key concept related to general.",
+    "viGloss": "chung"
+  },
+  "generated": {
+    "enGloss": "Key concept related to generated.",
+    "viGloss": "tạo ra"
+  },
+  "generation": {
+    "enGloss": "Key concept related to generation.",
+    "viGloss": "thế hệ"
+  },
+  "generations": {
+    "enGloss": "Key concept related to generations.",
+    "viGloss": "thế hệ"
+  },
+  "genetically": {
+    "enGloss": "Key concept related to genetically.",
+    "viGloss": "về mặt di truyền"
+  },
+  "getting": {
+    "enGloss": "Key concept related to getting.",
+    "viGloss": "nhận được"
+  },
+  "glamorous": {
+    "enGloss": "Key concept related to glamorous.",
+    "viGloss": "quyến rũ"
+  },
+  "globalization": {
+    "enGloss": "Key concept related to globalization.",
+    "viGloss": "toàn cầu hóa"
+  },
+  "globalized": {
+    "enGloss": "Key concept related to globalized.",
+    "viGloss": "toàn cầu hóa"
+  },
+  "goodbye": {
+    "enGloss": "Key concept related to goodbye.",
+    "viGloss": "tạm biệt"
+  },
+  "governance": {
+    "enGloss": "Key concept related to governance.",
+    "viGloss": "quản trị"
+  },
+  "government": {
+    "enGloss": "Key concept related to government.",
+    "viGloss": "chính phủ"
+  },
+  "governments": {
+    "enGloss": "Key concept related to governments.",
+    "viGloss": "chính phủ"
+  },
+  "graduates": {
+    "enGloss": "Key concept related to graduates.",
+    "viGloss": "sinh viên tốt nghiệp"
+  },
+  "graduation": {
+    "enGloss": "Key concept related to graduation.",
+    "viGloss": "tốt nghiệp"
+  },
+  "greater": {
+    "enGloss": "Key concept related to greater.",
+    "viGloss": "lớn hơn"
+  },
+  "greatly": {
+    "enGloss": "Key concept related to greatly.",
+    "viGloss": "rất nhiều"
+  },
+  "growing": {
+    "enGloss": "Key concept related to growing.",
+    "viGloss": "đang phát triển"
+  },
+  "guidelines": {
+    "enGloss": "Key concept related to guidelines.",
+    "viGloss": "hướng dẫn"
+  },
+  "habitats": {
+    "enGloss": "Key concept related to habitats.",
+    "viGloss": "môi trường sống"
+  },
+  "handwriting": {
+    "enGloss": "Key concept related to handwriting.",
+    "viGloss": "chữ viết tay"
+  },
+  "happens": {
+    "enGloss": "Key concept related to happens.",
+    "viGloss": "xảy ra"
+  },
+  "happiness": {
+    "enGloss": "Key concept related to happiness.",
+    "viGloss": "hạnh phúc"
+  },
+  "harmful": {
+    "enGloss": "Key concept related to harmful.",
+    "viGloss": "có hại"
+  },
+  "healthy": {
+    "enGloss": "Key concept related to healthy.",
+    "viGloss": "khỏe mạnh"
+  },
+  "helpful": {
+    "enGloss": "Key concept related to helpful.",
+    "viGloss": "hữu ích"
+  },
+  "helping": {
+    "enGloss": "Key concept related to helping.",
+    "viGloss": "giúp đỡ"
+  },
+  "heritage": {
+    "enGloss": "Key concept related to heritage.",
+    "viGloss": "di sản"
+  },
+  "high-level": {
+    "enGloss": "Key concept related to high-level.",
+    "viGloss": "cấp cao"
+  },
+  "high-paying": {
+    "enGloss": "Key concept related to high-paying.",
+    "viGloss": "trả lương cao"
+  },
+  "high-speed": {
+    "enGloss": "Key concept related to high-speed.",
+    "viGloss": "tốc độ cao"
+  },
+  "historic": {
+    "enGloss": "Key concept related to historic.",
+    "viGloss": "mang tính lịch sử"
+  },
+  "historical": {
+    "enGloss": "Key concept related to historical.",
+    "viGloss": "lịch sử"
+  },
+  "hobbies": {
+    "enGloss": "Key concept related to hobbies.",
+    "viGloss": "sở thích"
+  },
+  "hometown": {
+    "enGloss": "Key concept related to hometown.",
+    "viGloss": "quê hương"
+  },
+  "hosting": {
+    "enGloss": "Key concept related to hosting.",
+    "viGloss": "lưu trữ"
+  },
+  "household": {
+    "enGloss": "Key concept related to household.",
+    "viGloss": "hộ gia đình"
+  },
+  "housing": {
+    "enGloss": "Key concept related to housing.",
+    "viGloss": "nhà ở"
+  },
+  "however": {
+    "enGloss": "Key concept related to however.",
+    "viGloss": "tuy nhiên"
+  },
+  "humanities": {
+    "enGloss": "Key concept related to humanities.",
+    "viGloss": "nhân văn"
+  },
+  "humanity": {
+    "enGloss": "Key concept related to humanity.",
+    "viGloss": "nhân loại"
+  },
+  "humanity's": {
+    "enGloss": "Key concept related to humanity's.",
+    "viGloss": "nhân loại"
+  },
+  "hurting": {
+    "enGloss": "Key concept related to hurting.",
+    "viGloss": "làm tổn thương"
+  },
+  "hyper-competitive": {
+    "enGloss": "Key concept related to hyper-competitive.",
+    "viGloss": "siêu cạnh tranh"
+  },
+  "ideology": {
+    "enGloss": "Key concept related to ideology.",
+    "viGloss": "hệ tư tưởng"
+  },
+  "illiterates": {
+    "enGloss": "Key concept related to illiterates.",
+    "viGloss": "mù chữ"
+  },
+  "illusion": {
+    "enGloss": "Key concept related to illusion.",
+    "viGloss": "ảo tưởng"
+  },
+  "imagine": {
+    "enGloss": "Key concept related to imagine.",
+    "viGloss": "tưởng tượng"
+  },
+  "imitating": {
+    "enGloss": "Key concept related to imitating.",
+    "viGloss": "bắt chước"
+  },
+  "immigration": {
+    "enGloss": "Key concept related to immigration.",
+    "viGloss": "nhập cư"
+  },
+  "impacts": {
+    "enGloss": "Key concept related to impacts.",
+    "viGloss": "tác động"
+  },
+  "importance": {
+    "enGloss": "Key concept related to importance.",
+    "viGloss": "tầm quan trọng"
+  },
+  "important": {
+    "enGloss": "Key concept related to important.",
+    "viGloss": "quan trọng"
+  },
+  "impossible": {
+    "enGloss": "Key concept related to impossible.",
+    "viGloss": "không thể"
+  },
+  "improve": {
+    "enGloss": "Key concept related to improve.",
+    "viGloss": "cải thiện"
+  },
+  "improved": {
+    "enGloss": "Key concept related to improved.",
+    "viGloss": "được cải thiện"
+  },
+  "improves": {
+    "enGloss": "Key concept related to improves.",
+    "viGloss": "cải thiện"
+  },
+  "improving": {
+    "enGloss": "Key concept related to improving.",
+    "viGloss": "cải thiện"
+  },
+  "incentive": {
+    "enGloss": "Key concept related to incentive.",
+    "viGloss": "khuyến khích"
+  },
+  "including": {
+    "enGloss": "Key concept related to including.",
+    "viGloss": "bao gồm cả"
+  },
+  "incorporating": {
+    "enGloss": "Key concept related to incorporating.",
+    "viGloss": "kết hợp"
+  },
+  "increase": {
+    "enGloss": "Key concept related to increase.",
+    "viGloss": "tăng lên"
+  },
+  "increased": {
+    "enGloss": "Key concept related to increased.",
+    "viGloss": "tăng lên"
+  },
+  "increasing": {
+    "enGloss": "Key concept related to increasing.",
+    "viGloss": "ngày càng tăng"
+  },
+  "increasingly": {
+    "enGloss": "Key concept related to increasingly.",
+    "viGloss": "ngày càng"
+  },
+  "independently": {
+    "enGloss": "Key concept related to independently.",
+    "viGloss": "độc lập"
+  },
+  "individual": {
+    "enGloss": "Key concept related to individual.",
+    "viGloss": "cá nhân"
+  },
+  "individuals": {
+    "enGloss": "Key concept related to individuals.",
+    "viGloss": "cá nhân"
+  },
+  "industrial": {
+    "enGloss": "Key concept related to industrial.",
+    "viGloss": "công nghiệp"
+  },
+  "industrialization": {
+    "enGloss": "Key concept related to industrialization.",
+    "viGloss": "công nghiệp hóa"
+  },
+  "industries": {
+    "enGloss": "Key concept related to industries.",
+    "viGloss": "các ngành công nghiệp"
+  },
+  "industry": {
+    "enGloss": "Key concept related to industry.",
+    "viGloss": "ngành công nghiệp"
+  },
+  "inevitable": {
+    "enGloss": "Key concept related to inevitable.",
+    "viGloss": "không thể tránh khỏi"
+  },
+  "influence": {
+    "enGloss": "Key concept related to influence.",
+    "viGloss": "ảnh hưởng"
+  },
+  "influenced": {
+    "enGloss": "Key concept related to influenced.",
+    "viGloss": "bị ảnh hưởng"
+  },
+  "influences": {
+    "enGloss": "Key concept related to influences.",
+    "viGloss": "ảnh hưởng"
+  },
+  "information": {
+    "enGloss": "Key concept related to information.",
+    "viGloss": "thông tin"
+  },
+  "innovations": {
+    "enGloss": "Key concept related to innovations.",
+    "viGloss": "đổi mới"
+  },
+  "instead": {
+    "enGloss": "Key concept related to instead.",
+    "viGloss": "thay vào đó"
+  },
+  "institution": {
+    "enGloss": "Key concept related to institution.",
+    "viGloss": "cơ quan"
+  },
+  "integrated": {
+    "enGloss": "Key concept related to integrated.",
+    "viGloss": "tích hợp"
+  },
+  "intelligence": {
+    "enGloss": "Key concept related to intelligence.",
+    "viGloss": "trí thông minh"
+  },
+  "interested": {
+    "enGloss": "Key concept related to interested.",
+    "viGloss": "quan tâm"
+  },
+  "interesting": {
+    "enGloss": "Key concept related to interesting.",
+    "viGloss": "thú vị"
+  },
+  "interferes": {
+    "enGloss": "Key concept related to interferes.",
+    "viGloss": "can thiệp"
+  },
+  "international": {
+    "enGloss": "Key concept related to international.",
+    "viGloss": "quốc tế"
+  },
+  "internet": {
+    "enGloss": "Key concept related to internet.",
+    "viGloss": "mạng"
+  },
+  "internet-based": {
+    "enGloss": "Key concept related to internet-based.",
+    "viGloss": "dựa trên internet"
+  },
+  "interpersonal": {
+    "enGloss": "Key concept related to interpersonal.",
+    "viGloss": "giữa các cá nhân"
+  },
+  "introduce": {
+    "enGloss": "Key concept related to introduce.",
+    "viGloss": "giới thiệu"
+  },
+  "invented": {
+    "enGloss": "Key concept related to invented.",
+    "viGloss": "phát minh ra"
+  },
+  "invention": {
+    "enGloss": "Key concept related to invention.",
+    "viGloss": "phát minh"
+  },
+  "inventions": {
+    "enGloss": "Key concept related to inventions.",
+    "viGloss": "phát minh"
+  },
+  "investing": {
+    "enGloss": "Key concept related to investing.",
+    "viGloss": "đầu tư"
+  },
+  "investment": {
+    "enGloss": "Key concept related to investment.",
+    "viGloss": "đầu tư"
+  },
+  "involve": {
+    "enGloss": "Key concept related to involve.",
+    "viGloss": "liên quan đến"
+  },
+  "involvement": {
+    "enGloss": "Key concept related to involvement.",
+    "viGloss": "sự tham gia"
+  },
+  "isolated": {
+    "enGloss": "Key concept related to isolated.",
+    "viGloss": "bị cô lập"
+  },
+  "journalism": {
+    "enGloss": "Key concept related to journalism.",
+    "viGloss": "báo chí"
+  },
+  "journalism'": {
+    "enGloss": "Key concept related to journalism'.",
+    "viGloss": "báo chí'"
+  },
+  "journalist": {
+    "enGloss": "Key concept related to journalist.",
+    "viGloss": "nhà báo"
+  },
+  "keeping": {
+    "enGloss": "Key concept related to keeping.",
+    "viGloss": "giữ"
+  },
+  "killed'": {
+    "enGloss": "Key concept related to killed'.",
+    "viGloss": "bị giết'"
+  },
+  "knowing": {
+    "enGloss": "Key concept related to knowing.",
+    "viGloss": "biết"
+  },
+  "knowledge": {
+    "enGloss": "Key concept related to knowledge.",
+    "viGloss": "kiến thức"
+  },
+  "knowledgeable": {
+    "enGloss": "Key concept related to knowledgeable.",
+    "viGloss": "hiểu biết"
+  },
+  "language": {
+    "enGloss": "Key concept related to language.",
+    "viGloss": "ngôn ngữ"
+  },
+  "languages": {
+    "enGloss": "Key concept related to languages.",
+    "viGloss": "ngôn ngữ"
+  },
+  "leaders": {
+    "enGloss": "Key concept related to leaders.",
+    "viGloss": "lãnh đạo"
+  },
+  "leading": {
+    "enGloss": "Key concept related to leading.",
+    "viGloss": "dẫn đầu"
+  },
+  "learned": {
+    "enGloss": "Key concept related to learned.",
+    "viGloss": "đã học"
+  },
+  "learning": {
+    "enGloss": "Key concept related to learning.",
+    "viGloss": "học tập"
+  },
+  "leaving": {
+    "enGloss": "Key concept related to leaving.",
+    "viGloss": "rời đi"
+  },
+  "legally": {
+    "enGloss": "Key concept related to legally.",
+    "viGloss": "hợp pháp"
+  },
+  "leisure": {
+    "enGloss": "Key concept related to leisure.",
+    "viGloss": "giải trí"
+  },
+  "lessons": {
+    "enGloss": "Key concept related to lessons.",
+    "viGloss": "bài học"
+  },
+  "letters": {
+    "enGloss": "Key concept related to letters.",
+    "viGloss": "chữ cái"
+  },
+  "libraries": {
+    "enGloss": "Key concept related to libraries.",
+    "viGloss": "thư viện"
+  },
+  "library": {
+    "enGloss": "Key concept related to library.",
+    "viGloss": "thư viện"
+  },
+  "lifestyle": {
+    "enGloss": "Key concept related to lifestyle.",
+    "viGloss": "lối sống"
+  },
+  "lifestyles": {
+    "enGloss": "Key concept related to lifestyles.",
+    "viGloss": "lối sống"
+  },
+  "lifetime": {
+    "enGloss": "Key concept related to lifetime.",
+    "viGloss": "trọn đời"
+  },
+  "lighting": {
+    "enGloss": "Key concept related to lighting.",
+    "viGloss": "thắp sáng"
+  },
+  "listener": {
+    "enGloss": "Key concept related to listener.",
+    "viGloss": "người nghe"
+  },
+  "literature": {
+    "enGloss": "Key concept related to literature.",
+    "viGloss": "văn học"
+  },
+  "locally": {
+    "enGloss": "Key concept related to locally.",
+    "viGloss": "tại địa phương"
+  },
+  "long-term": {
+    "enGloss": "Key concept related to long-term.",
+    "viGloss": "lâu dài"
+  },
+  "lowering": {
+    "enGloss": "Key concept related to lowering.",
+    "viGloss": "hạ thấp"
+  },
+  "magazines": {
+    "enGloss": "Key concept related to magazines.",
+    "viGloss": "tạp chí"
+  },
+  "maintain": {
+    "enGloss": "Key concept related to maintain.",
+    "viGloss": "duy trì"
+  },
+  "maintaining": {
+    "enGloss": "Key concept related to maintaining.",
+    "viGloss": "duy trì"
+  },
+  "management": {
+    "enGloss": "Key concept related to management.",
+    "viGloss": "quản lý"
+  },
+  "managing": {
+    "enGloss": "Key concept related to managing.",
+    "viGloss": "quản lý"
+  },
+  "mankind": {
+    "enGloss": "Key concept related to mankind.",
+    "viGloss": "nhân loại"
+  },
+  "manufacturers": {
+    "enGloss": "Key concept related to manufacturers.",
+    "viGloss": "nhà sản xuất"
+  },
+  "manufacturing": {
+    "enGloss": "Key concept related to manufacturing.",
+    "viGloss": "sản xuất"
+  },
+  "marketing": {
+    "enGloss": "Key concept related to marketing.",
+    "viGloss": "tiếp thị"
+  },
+  "married": {
+    "enGloss": "Key concept related to married.",
+    "viGloss": "kết hôn"
+  },
+  "materials": {
+    "enGloss": "Key concept related to materials.",
+    "viGloss": "vật liệu"
+  },
+  "matters": {
+    "enGloss": "Key concept related to matters.",
+    "viGloss": "vấn đề"
+  },
+  "maximize": {
+    "enGloss": "Key concept related to maximize.",
+    "viGloss": "tối đa hóa"
+  },
+  "maximum": {
+    "enGloss": "Key concept related to maximum.",
+    "viGloss": "tối đa"
+  },
+  "measure": {
+    "enGloss": "Key concept related to measure.",
+    "viGloss": "đo lường"
+  },
+  "measures": {
+    "enGloss": "Key concept related to measures.",
+    "viGloss": "biện pháp"
+  },
+  "medical": {
+    "enGloss": "Key concept related to medical.",
+    "viGloss": "y tế"
+  },
+  "medicine": {
+    "enGloss": "Key concept related to medicine.",
+    "viGloss": "y học"
+  },
+  "medicines": {
+    "enGloss": "Key concept related to medicines.",
+    "viGloss": "thuốc"
+  },
+  "meditation": {
+    "enGloss": "Key concept related to meditation.",
+    "viGloss": "thiền định"
+  },
+  "meetings": {
+    "enGloss": "Key concept related to meetings.",
+    "viGloss": "các cuộc họp"
+  },
+  "members": {
+    "enGloss": "Key concept related to members.",
+    "viGloss": "thành viên"
+  },
+  "migrated": {
+    "enGloss": "Key concept related to migrated.",
+    "viGloss": "di cư"
+  },
+  "migrating": {
+    "enGloss": "Key concept related to migrating.",
+    "viGloss": "di cư"
+  },
+  "millions": {
+    "enGloss": "Key concept related to millions.",
+    "viGloss": "hàng triệu"
+  },
+  "mindfulness": {
+    "enGloss": "Key concept related to mindfulness.",
+    "viGloss": "chánh niệm"
+  },
+  "mitigate": {
+    "enGloss": "Key concept related to mitigate.",
+    "viGloss": "giảm nhẹ"
+  },
+  "mobiles": {
+    "enGloss": "Key concept related to mobiles.",
+    "viGloss": "điện thoại di động"
+  },
+  "modified": {
+    "enGloss": "Key concept related to modified.",
+    "viGloss": "đã sửa đổi"
+  },
+  "morning": {
+    "enGloss": "Key concept related to morning.",
+    "viGloss": "buổi sáng"
+  },
+  "mothers": {
+    "enGloss": "Key concept related to mothers.",
+    "viGloss": "các bà mẹ"
+  },
+  "motivation": {
+    "enGloss": "Key concept related to motivation.",
+    "viGloss": "động lực"
+  },
+  "motorcycling": {
+    "enGloss": "Key concept related to motorcycling.",
+    "viGloss": "lái xe mô tô"
+  },
+  "multitasking": {
+    "enGloss": "Key concept related to multitasking.",
+    "viGloss": "đa nhiệm"
+  },
+  "multitude": {
+    "enGloss": "Key concept related to multitude.",
+    "viGloss": "vô số"
+  },
+  "museums": {
+    "enGloss": "Key concept related to museums.",
+    "viGloss": "viện bảo tàng"
+  },
+  "musicians": {
+    "enGloss": "Key concept related to musicians.",
+    "viGloss": "nhạc sĩ"
+  },
+  "national": {
+    "enGloss": "Key concept related to national.",
+    "viGloss": "quốc gia"
+  },
+  "nations": {
+    "enGloss": "Key concept related to nations.",
+    "viGloss": "quốc gia"
+  },
+  "natural": {
+    "enGloss": "Key concept related to natural.",
+    "viGloss": "tự nhiên"
+  },
+  "necessary": {
+    "enGloss": "Key concept related to necessary.",
+    "viGloss": "cần thiết"
+  },
+  "necessity": {
+    "enGloss": "Key concept related to necessity.",
+    "viGloss": "sự cần thiết"
+  },
+  "negative": {
+    "enGloss": "Key concept related to negative.",
+    "viGloss": "tiêu cực"
+  },
+  "negatively": {
+    "enGloss": "Key concept related to negatively.",
+    "viGloss": "tiêu cực"
+  },
+  "neighbor": {
+    "enGloss": "Key concept related to neighbor.",
+    "viGloss": "hàng xóm"
+  },
+  "neighborhood": {
+    "enGloss": "Key concept related to neighborhood.",
+    "viGloss": "khu phố"
+  },
+  "neighbors": {
+    "enGloss": "Key concept related to neighbors.",
+    "viGloss": "hàng xóm"
+  },
+  "networking": {
+    "enGloss": "Key concept related to networking.",
+    "viGloss": "mạng"
+  },
+  "networks": {
+    "enGloss": "Key concept related to networks.",
+    "viGloss": "mạng lưới"
+  },
+  "newspapers": {
+    "enGloss": "Key concept related to newspapers.",
+    "viGloss": "báo chí"
+  },
+  "nothing": {
+    "enGloss": "Key concept related to nothing.",
+    "viGloss": "không có gì"
+  },
+  "nowadays": {
+    "enGloss": "Key concept related to nowadays.",
+    "viGloss": "ngày nay"
+  },
+  "numbers": {
+    "enGloss": "Key concept related to numbers.",
+    "viGloss": "con số"
+  },
+  "numerous": {
+    "enGloss": "Key concept related to numerous.",
+    "viGloss": "nhiều"
+  },
+  "nursing": {
+    "enGloss": "Key concept related to nursing.",
+    "viGloss": "điều dưỡng"
+  },
+  "nurture": {
+    "enGloss": "Key concept related to nurture.",
+    "viGloss": "nuôi dưỡng"
+  },
+  "obligation": {
+    "enGloss": "Key concept related to obligation.",
+    "viGloss": "nghĩa vụ"
+  },
+  "observations": {
+    "enGloss": "Key concept related to observations.",
+    "viGloss": "quan sát"
+  },
+  "obsolete": {
+    "enGloss": "Key concept related to obsolete.",
+    "viGloss": "lỗi thời"
+  },
+  "offering": {
+    "enGloss": "Key concept related to offering.",
+    "viGloss": "cúng dường"
+  },
+  "olympics": {
+    "enGloss": "Key concept related to olympics.",
+    "viGloss": "Thế vận hội"
+  },
+  "opinion": {
+    "enGloss": "Key concept related to opinion.",
+    "viGloss": "ý kiến"
+  },
+  "opinions": {
+    "enGloss": "Key concept related to opinions.",
+    "viGloss": "ý kiến"
+  },
+  "opponent": {
+    "enGloss": "Key concept related to opponent.",
+    "viGloss": "đối thủ"
+  },
+  "opportunity": {
+    "enGloss": "Key concept related to opportunity.",
+    "viGloss": "cơ hội"
+  },
+  "optional": {
+    "enGloss": "Key concept related to optional.",
+    "viGloss": "tùy chọn"
+  },
+  "options": {
+    "enGloss": "Key concept related to options.",
+    "viGloss": "tùy chọn"
+  },
+  "organic": {
+    "enGloss": "Key concept related to organic.",
+    "viGloss": "hữu cơ"
+  },
+  "organizations": {
+    "enGloss": "Key concept related to organizations.",
+    "viGloss": "tổ chức"
+  },
+  "outdated": {
+    "enGloss": "Key concept related to outdated.",
+    "viGloss": "lỗi thời"
+  },
+  "outside": {
+    "enGloss": "Key concept related to outside.",
+    "viGloss": "bên ngoài"
+  },
+  "outweigh": {
+    "enGloss": "Key concept related to outweigh.",
+    "viGloss": "nặng hơn"
+  },
+  "outweighs": {
+    "enGloss": "Key concept related to outweighs.",
+    "viGloss": "nặng hơn"
+  },
+  "over-competitive": {
+    "enGloss": "Key concept related to over-competitive.",
+    "viGloss": "cạnh tranh quá mức"
+  },
+  "over-packaged": {
+    "enGloss": "Key concept related to over-packaged.",
+    "viGloss": "đóng gói quá mức"
+  },
+  "overburden": {
+    "enGloss": "Key concept related to overburden.",
+    "viGloss": "quá tải"
+  },
+  "overcrowding": {
+    "enGloss": "Key concept related to overcrowding.",
+    "viGloss": "quá đông đúc"
+  },
+  "overrated": {
+    "enGloss": "Key concept related to overrated.",
+    "viGloss": "đánh giá quá cao"
+  },
+  "overseas": {
+    "enGloss": "Key concept related to overseas.",
+    "viGloss": "ở nước ngoài"
+  },
+  "packaging": {
+    "enGloss": "Key concept related to packaging.",
+    "viGloss": "bao bì"
+  },
+  "painters": {
+    "enGloss": "Key concept related to painters.",
+    "viGloss": "họa sĩ"
+  },
+  "parents": {
+    "enGloss": "Key concept related to parents.",
+    "viGloss": "cha mẹ"
+  },
+  "parking": {
+    "enGloss": "Key concept related to parking.",
+    "viGloss": "bãi đậu xe"
+  },
+  "part-time": {
+    "enGloss": "Key concept related to part-time.",
+    "viGloss": "bán thời gian"
+  },
+  "particularly": {
+    "enGloss": "Key concept related to particularly.",
+    "viGloss": "đặc biệt"
+  },
+  "patients": {
+    "enGloss": "Key concept related to patients.",
+    "viGloss": "bệnh nhân"
+  },
+  "pay-for-performance": {
+    "enGloss": "Key concept related to pay-for-performance.",
+    "viGloss": "trả tiền theo hiệu suất"
+  },
+  "people's": {
+    "enGloss": "Key concept related to people's.",
+    "viGloss": "của mọi người"
+  },
+  "percentage": {
+    "enGloss": "Key concept related to percentage.",
+    "viGloss": "phần trăm"
+  },
+  "performance": {
+    "enGloss": "Key concept related to performance.",
+    "viGloss": "hiệu suất"
+  },
+  "performance-enhancing": {
+    "enGloss": "Key concept related to performance-enhancing.",
+    "viGloss": "nâng cao hiệu suất"
+  },
+  "performs": {
+    "enGloss": "Key concept related to performs.",
+    "viGloss": "biểu diễn"
+  },
+  "person's": {
+    "enGloss": "Key concept related to person's.",
+    "viGloss": "của người"
+  },
+  "personal": {
+    "enGloss": "Key concept related to personal.",
+    "viGloss": "cá nhân"
+  },
+  "personality": {
+    "enGloss": "Key concept related to personality.",
+    "viGloss": "cá tính"
+  },
+  "perspective": {
+    "enGloss": "Key concept related to perspective.",
+    "viGloss": "quan điểm"
+  },
+  "phenomenon": {
+    "enGloss": "Key concept related to phenomenon.",
+    "viGloss": "hiện tượng"
+  },
+  "physical": {
+    "enGloss": "Key concept related to physical.",
+    "viGloss": "thể chất"
+  },
+  "pivotal": {
+    "enGloss": "Key concept related to pivotal.",
+    "viGloss": "mấu chốt"
+  },
+  "placing": {
+    "enGloss": "Key concept related to placing.",
+    "viGloss": "đặt"
+  },
+  "planners": {
+    "enGloss": "Key concept related to planners.",
+    "viGloss": "người lập kế hoạch"
+  },
+  "planning": {
+    "enGloss": "Key concept related to planning.",
+    "viGloss": "lập kế hoạch"
+  },
+  "plastic": {
+    "enGloss": "Key concept related to plastic.",
+    "viGloss": "nhựa"
+  },
+  "platforms": {
+    "enGloss": "Key concept related to platforms.",
+    "viGloss": "nền tảng"
+  },
+  "policies": {
+    "enGloss": "Key concept related to policies.",
+    "viGloss": "chính sách"
+  },
+  "policy-making": {
+    "enGloss": "Key concept related to policy-making.",
+    "viGloss": "hoạch định chính sách"
+  },
+  "pollution": {
+    "enGloss": "Key concept related to pollution.",
+    "viGloss": "sự ô nhiễm"
+  },
+  "popular": {
+    "enGloss": "Key concept related to popular.",
+    "viGloss": "phổ biến"
+  },
+  "population": {
+    "enGloss": "Key concept related to population.",
+    "viGloss": "dân số"
+  },
+  "positive": {
+    "enGloss": "Key concept related to positive.",
+    "viGloss": "tích cực"
+  },
+  "positively": {
+    "enGloss": "Key concept related to positively.",
+    "viGloss": "tích cực"
+  },
+  "possibilities": {
+    "enGloss": "Key concept related to possibilities.",
+    "viGloss": "khả năng"
+  },
+  "possible": {
+    "enGloss": "Key concept related to possible.",
+    "viGloss": "có thể"
+  },
+  "potential": {
+    "enGloss": "Key concept related to potential.",
+    "viGloss": "tiềm năng"
+  },
+  "practical": {
+    "enGloss": "Key concept related to practical.",
+    "viGloss": "thiết thực"
+  },
+  "practice": {
+    "enGloss": "Key concept related to practice.",
+    "viGloss": "luyện tập"
+  },
+  "practices": {
+    "enGloss": "Key concept related to practices.",
+    "viGloss": "thực hành"
+  },
+  "practicing": {
+    "enGloss": "Key concept related to practicing.",
+    "viGloss": "luyện tập"
+  },
+  "predominant": {
+    "enGloss": "Key concept related to predominant.",
+    "viGloss": "chiếm ưu thế"
+  },
+  "predominantly": {
+    "enGloss": "Key concept related to predominantly.",
+    "viGloss": "chủ yếu"
+  },
+  "preparation": {
+    "enGloss": "Key concept related to preparation.",
+    "viGloss": "sự chuẩn bị"
+  },
+  "prepare": {
+    "enGloss": "Key concept related to prepare.",
+    "viGloss": "chuẩn bị"
+  },
+  "prepares": {
+    "enGloss": "Key concept related to prepares.",
+    "viGloss": "chuẩn bị"
+  },
+  "preparing": {
+    "enGloss": "Key concept related to preparing.",
+    "viGloss": "chuẩn bị"
+  },
+  "present": {
+    "enGloss": "Key concept related to present.",
+    "viGloss": "hiện tại"
+  },
+  "preserve": {
+    "enGloss": "Key concept related to preserve.",
+    "viGloss": "bảo quản"
+  },
+  "preserving": {
+    "enGloss": "Key concept related to preserving.",
+    "viGloss": "bảo quản"
+  },
+  "pressing": {
+    "enGloss": "Key concept related to pressing.",
+    "viGloss": "ép"
+  },
+  "prevails": {
+    "enGloss": "Key concept related to prevails.",
+    "viGloss": "chiếm ưu thế"
+  },
+  "prevent": {
+    "enGloss": "Key concept related to prevent.",
+    "viGloss": "ngăn chặn"
+  },
+  "primarily": {
+    "enGloss": "Key concept related to primarily.",
+    "viGloss": "chủ yếu"
+  },
+  "primary": {
+    "enGloss": "Key concept related to primary.",
+    "viGloss": "chính"
+  },
+  "principles": {
+    "enGloss": "Key concept related to principles.",
+    "viGloss": "nguyên tắc"
+  },
+  "printed": {
+    "enGloss": "Key concept related to printed.",
+    "viGloss": "in"
+  },
+  "prioritized": {
+    "enGloss": "Key concept related to prioritized.",
+    "viGloss": "được ưu tiên"
+  },
+  "prisoners": {
+    "enGloss": "Key concept related to prisoners.",
+    "viGloss": "tù nhân"
+  },
+  "prisons": {
+    "enGloss": "Key concept related to prisons.",
+    "viGloss": "nhà tù"
+  },
+  "privacy": {
+    "enGloss": "Key concept related to privacy.",
+    "viGloss": "sự riêng tư"
+  },
+  "private": {
+    "enGloss": "Key concept related to private.",
+    "viGloss": "riêng tư"
+  },
+  "privatization": {
+    "enGloss": "Key concept related to privatization.",
+    "viGloss": "tư nhân hóa"
+  },
+  "problem": {
+    "enGloss": "Key concept related to problem.",
+    "viGloss": "vấn đề"
+  },
+  "problems": {
+    "enGloss": "Key concept related to problems.",
+    "viGloss": "vấn đề"
+  },
+  "process": {
+    "enGloss": "Key concept related to process.",
+    "viGloss": "quá trình"
+  },
+  "procure": {
+    "enGloss": "Key concept related to procure.",
+    "viGloss": "mua sắm"
+  },
+  "produce": {
+    "enGloss": "Key concept related to produce.",
+    "viGloss": "sản xuất"
+  },
+  "productivity": {
+    "enGloss": "Key concept related to productivity.",
+    "viGloss": "năng suất"
+  },
+  "products": {
+    "enGloss": "Key concept related to products.",
+    "viGloss": "sản phẩm"
+  },
+  "professional": {
+    "enGloss": "Key concept related to professional.",
+    "viGloss": "chuyên nghiệp"
+  },
+  "professions": {
+    "enGloss": "Key concept related to professions.",
+    "viGloss": "nghề nghiệp"
+  },
+  "programs": {
+    "enGloss": "Key concept related to programs.",
+    "viGloss": "chương trình"
+  },
+  "progress": {
+    "enGloss": "Key concept related to progress.",
+    "viGloss": "tiến bộ"
+  },
+  "prohibit": {
+    "enGloss": "Key concept related to prohibit.",
+    "viGloss": "cấm"
+  },
+  "promise": {
+    "enGloss": "Key concept related to promise.",
+    "viGloss": "lời hứa"
+  },
+  "promising": {
+    "enGloss": "Key concept related to promising.",
+    "viGloss": "đầy hứa hẹn"
+  },
+  "promote": {
+    "enGloss": "Key concept related to promote.",
+    "viGloss": "thúc đẩy"
+  },
+  "promoted": {
+    "enGloss": "Key concept related to promoted.",
+    "viGloss": "thăng chức"
+  },
+  "promotes": {
+    "enGloss": "Key concept related to promotes.",
+    "viGloss": "thúc đẩy"
+  },
+  "proposed": {
+    "enGloss": "Key concept related to proposed.",
+    "viGloss": "đề xuất"
+  },
+  "prospects": {
+    "enGloss": "Key concept related to prospects.",
+    "viGloss": "triển vọng"
+  },
+  "protect": {
+    "enGloss": "Key concept related to protect.",
+    "viGloss": "bảo vệ"
+  },
+  "provide": {
+    "enGloss": "Key concept related to provide.",
+    "viGloss": "cung cấp"
+  },
+  "punished": {
+    "enGloss": "Key concept related to punished.",
+    "viGloss": "trừng phạt"
+  },
+  "punishment": {
+    "enGloss": "Key concept related to punishment.",
+    "viGloss": "hình phạt"
+  },
+  "purchase": {
+    "enGloss": "Key concept related to purchase.",
+    "viGloss": "mua hàng"
+  },
+  "purpose": {
+    "enGloss": "Key concept related to purpose.",
+    "viGloss": "mục đích"
+  },
+  "pursuing": {
+    "enGloss": "Key concept related to pursuing.",
+    "viGloss": "theo đuổi"
+  },
+  "pursuit": {
+    "enGloss": "Key concept related to pursuit.",
+    "viGloss": "theo đuổi"
+  },
+  "putting": {
+    "enGloss": "Key concept related to putting.",
+    "viGloss": "đặt"
+  },
+  "qualifications": {
+    "enGloss": "Key concept related to qualifications.",
+    "viGloss": "bằng cấp"
+  },
+  "qualities": {
+    "enGloss": "Key concept related to qualities.",
+    "viGloss": "phẩm chất"
+  },
+  "quality": {
+    "enGloss": "Key concept related to quality.",
+    "viGloss": "chất lượng"
+  },
+  "quickly": {
+    "enGloss": "Key concept related to quickly.",
+    "viGloss": "nhanh chóng"
+  },
+  "raising": {
+    "enGloss": "Key concept related to raising.",
+    "viGloss": "nâng cao"
+  },
+  "rapidly": {
+    "enGloss": "Key concept related to rapidly.",
+    "viGloss": "nhanh chóng"
+  },
+  "reading": {
+    "enGloss": "Key concept related to reading.",
+    "viGloss": "đọc sách"
+  },
+  "real-world": {
+    "enGloss": "Key concept related to real-world.",
+    "viGloss": "thế giới thực"
+  },
+  "realistic": {
+    "enGloss": "Key concept related to realistic.",
+    "viGloss": "thực tế"
+  },
+  "reality": {
+    "enGloss": "Key concept related to reality.",
+    "viGloss": "thực tế"
+  },
+  "reasons": {
+    "enGloss": "Key concept related to reasons.",
+    "viGloss": "lý do"
+  },
+  "receive": {
+    "enGloss": "Key concept related to receive.",
+    "viGloss": "nhận được"
+  },
+  "recommend": {
+    "enGloss": "Key concept related to recommend.",
+    "viGloss": "đề nghị"
+  },
+  "reducing": {
+    "enGloss": "Key concept related to reducing.",
+    "viGloss": "giảm bớt"
+  },
+  "regulate": {
+    "enGloss": "Key concept related to regulate.",
+    "viGloss": "điều chỉnh"
+  },
+  "rehabilitate": {
+    "enGloss": "Key concept related to rehabilitate.",
+    "viGloss": "phục hồi"
+  },
+  "rehabilitation": {
+    "enGloss": "Key concept related to rehabilitation.",
+    "viGloss": "phục hồi chức năng"
+  },
+  "related": {
+    "enGloss": "Key concept related to related.",
+    "viGloss": "liên quan"
+  },
+  "relationship": {
+    "enGloss": "Key concept related to relationship.",
+    "viGloss": "mối quan hệ"
+  },
+  "relationships": {
+    "enGloss": "Key concept related to relationships.",
+    "viGloss": "mối quan hệ"
+  },
+  "relatives": {
+    "enGloss": "Key concept related to relatives.",
+    "viGloss": "họ hàng"
+  },
+  "relearn": {
+    "enGloss": "Key concept related to relearn.",
+    "viGloss": "học lại"
+  },
+  "release": {
+    "enGloss": "Key concept related to release.",
+    "viGloss": "phát hành"
+  },
+  "relevant": {
+    "enGloss": "Key concept related to relevant.",
+    "viGloss": "có liên quan"
+  },
+  "renewable": {
+    "enGloss": "Key concept related to renewable.",
+    "viGloss": "tái tạo"
+  },
+  "repetitive": {
+    "enGloss": "Key concept related to repetitive.",
+    "viGloss": "lặp đi lặp lại"
+  },
+  "replace": {
+    "enGloss": "Key concept related to replace.",
+    "viGloss": "thay thế"
+  },
+  "replaced": {
+    "enGloss": "Key concept related to replaced.",
+    "viGloss": "thay thế"
+  },
+  "replacing": {
+    "enGloss": "Key concept related to replacing.",
+    "viGloss": "thay thế"
+  },
+  "reputation": {
+    "enGloss": "Key concept related to reputation.",
+    "viGloss": "danh tiếng"
+  },
+  "required": {
+    "enGloss": "Key concept related to required.",
+    "viGloss": "bắt buộc"
+  },
+  "requires": {
+    "enGloss": "Key concept related to requires.",
+    "viGloss": "yêu cầu"
+  },
+  "research": {
+    "enGloss": "Key concept related to research.",
+    "viGloss": "nghiên cứu"
+  },
+  "researched": {
+    "enGloss": "Key concept related to researched.",
+    "viGloss": "đã nghiên cứu"
+  },
+  "researchers": {
+    "enGloss": "Key concept related to researchers.",
+    "viGloss": "nhà nghiên cứu"
+  },
+  "researches": {
+    "enGloss": "Key concept related to researches.",
+    "viGloss": "nghiên cứu"
+  },
+  "reserve": {
+    "enGloss": "Key concept related to reserve.",
+    "viGloss": "dự trữ"
+  },
+  "reserving": {
+    "enGloss": "Key concept related to reserving.",
+    "viGloss": "đặt trước"
+  },
+  "resource": {
+    "enGloss": "Key concept related to resource.",
+    "viGloss": "tài nguyên"
+  },
+  "resources": {
+    "enGloss": "Key concept related to resources.",
+    "viGloss": "tài nguyên"
+  },
+  "respond": {
+    "enGloss": "Key concept related to respond.",
+    "viGloss": "đáp lại"
+  },
+  "responsibility": {
+    "enGloss": "Key concept related to responsibility.",
+    "viGloss": "trách nhiệm"
+  },
+  "responsible": {
+    "enGloss": "Key concept related to responsible.",
+    "viGloss": "chịu trách nhiệm"
+  },
+  "restaurants": {
+    "enGloss": "Key concept related to restaurants.",
+    "viGloss": "nhà hàng"
+  },
+  "restoration": {
+    "enGloss": "Key concept related to restoration.",
+    "viGloss": "phục hồi"
+  },
+  "restrictions": {
+    "enGloss": "Key concept related to restrictions.",
+    "viGloss": "hạn chế"
+  },
+  "results": {
+    "enGloss": "Key concept related to results.",
+    "viGloss": "kết quả"
+  },
+  "retirement": {
+    "enGloss": "Key concept related to retirement.",
+    "viGloss": "nghỉ hưu"
+  },
+  "revolution": {
+    "enGloss": "Key concept related to revolution.",
+    "viGloss": "cuộc cách mạng"
+  },
+  "robotics": {
+    "enGloss": "Key concept related to robotics.",
+    "viGloss": "người máy"
+  },
+  "routine": {
+    "enGloss": "Key concept related to routine.",
+    "viGloss": "thói quen"
+  },
+  "rubbish": {
+    "enGloss": "Key concept related to rubbish.",
+    "viGloss": "rác rưởi"
+  },
+  "salaries": {
+    "enGloss": "Key concept related to salaries.",
+    "viGloss": "tiền lương"
+  },
+  "schedule": {
+    "enGloss": "Key concept related to schedule.",
+    "viGloss": "lịch trình"
+  },
+  "scholar": {
+    "enGloss": "Key concept related to scholar.",
+    "viGloss": "học giả"
+  },
+  "scholars": {
+    "enGloss": "Key concept related to scholars.",
+    "viGloss": "học giả"
+  },
+  "schools": {
+    "enGloss": "Key concept related to schools.",
+    "viGloss": "trường học"
+  },
+  "science": {
+    "enGloss": "Key concept related to science.",
+    "viGloss": "khoa học"
+  },
+  "scientific": {
+    "enGloss": "Key concept related to scientific.",
+    "viGloss": "khoa học"
+  },
+  "scientist": {
+    "enGloss": "Key concept related to scientist.",
+    "viGloss": "nhà khoa học"
+  },
+  "scientists": {
+    "enGloss": "Key concept related to scientists.",
+    "viGloss": "các nhà khoa học"
+  },
+  "security": {
+    "enGloss": "Key concept related to security.",
+    "viGloss": "an ninh"
+  },
+  "self-fulfillment": {
+    "enGloss": "Key concept related to self-fulfillment.",
+    "viGloss": "tự thực hiện"
+  },
+  "self-improvement": {
+    "enGloss": "Key concept related to self-improvement.",
+    "viGloss": "tự cải thiện"
+  },
+  "semester": {
+    "enGloss": "Key concept related to semester.",
+    "viGloss": "học kỳ"
+  },
+  "sending": {
+    "enGloss": "Key concept related to sending.",
+    "viGloss": "gửi"
+  },
+  "seniors": {
+    "enGloss": "Key concept related to seniors.",
+    "viGloss": "người cao tuổi"
+  },
+  "separate": {
+    "enGloss": "Key concept related to separate.",
+    "viGloss": "riêng biệt"
+  },
+  "serious": {
+    "enGloss": "Key concept related to serious.",
+    "viGloss": "nghiêm trọng"
+  },
+  "service": {
+    "enGloss": "Key concept related to service.",
+    "viGloss": "dịch vụ"
+  },
+  "services": {
+    "enGloss": "Key concept related to services.",
+    "viGloss": "dịch vụ"
+  },
+  "several": {
+    "enGloss": "Key concept related to several.",
+    "viGloss": "một số"
+  },
+  "shaping": {
+    "enGloss": "Key concept related to shaping.",
+    "viGloss": "tạo hình"
+  },
+  "shopping": {
+    "enGloss": "Key concept related to shopping.",
+    "viGloss": "mua sắm"
+  },
+  "short-term": {
+    "enGloss": "Key concept related to short-term.",
+    "viGloss": "ngắn hạn"
+  },
+  "shortage": {
+    "enGloss": "Key concept related to shortage.",
+    "viGloss": "sự thiếu hụt"
+  },
+  "shorten": {
+    "enGloss": "Key concept related to shorten.",
+    "viGloss": "rút ngắn"
+  },
+  "significantly": {
+    "enGloss": "Key concept related to significantly.",
+    "viGloss": "đáng kể"
+  },
+  "similar": {
+    "enGloss": "Key concept related to similar.",
+    "viGloss": "tương tự"
+  },
+  "simultaneously": {
+    "enGloss": "Key concept related to simultaneously.",
+    "viGloss": "đồng thời"
+  },
+  "situation": {
+    "enGloss": "Key concept related to situation.",
+    "viGloss": "tình huống"
+  },
+  "situations": {
+    "enGloss": "Key concept related to situations.",
+    "viGloss": "tình huống"
+  },
+  "sky-diving": {
+    "enGloss": "Key concept related to sky-diving.",
+    "viGloss": "nhảy dù"
+  },
+  "slow-paced": {
+    "enGloss": "Key concept related to slow-paced.",
+    "viGloss": "nhịp độ chậm"
+  },
+  "society": {
+    "enGloss": "Key concept related to society.",
+    "viGloss": "xã hội"
+  },
+  "solution": {
+    "enGloss": "Key concept related to solution.",
+    "viGloss": "giải pháp"
+  },
+  "solutions": {
+    "enGloss": "Key concept related to solutions.",
+    "viGloss": "giải pháp"
+  },
+  "solving": {
+    "enGloss": "Key concept related to solving.",
+    "viGloss": "giải quyết"
+  },
+  "someone": {
+    "enGloss": "Key concept related to someone.",
+    "viGloss": "ai đó"
+  },
+  "something": {
+    "enGloss": "Key concept related to something.",
+    "viGloss": "cái gì đó"
+  },
+  "sometimes": {
+    "enGloss": "Key concept related to sometimes.",
+    "viGloss": "đôi khi"
+  },
+  "somewhere": {
+    "enGloss": "Key concept related to somewhere.",
+    "viGloss": "ở đâu đó"
+  },
+  "specific": {
+    "enGloss": "Key concept related to specific.",
+    "viGloss": "cụ thể"
+  },
+  "spending": {
+    "enGloss": "Key concept related to spending.",
+    "viGloss": "chi tiêu"
+  },
+  "splitting": {
+    "enGloss": "Key concept related to splitting.",
+    "viGloss": "chia tách"
+  },
+  "sporting": {
+    "enGloss": "Key concept related to sporting.",
+    "viGloss": "thể thao"
+  },
+  "sportspeople": {
+    "enGloss": "Key concept related to sportspeople.",
+    "viGloss": "vận động viên thể thao"
+  },
+  "standards": {
+    "enGloss": "Key concept related to standards.",
+    "viGloss": "tiêu chuẩn"
+  },
+  "starting": {
+    "enGloss": "Key concept related to starting.",
+    "viGloss": "bắt đầu"
+  },
+  "statement": {
+    "enGloss": "Key concept related to statement.",
+    "viGloss": "tuyên bố"
+  },
+  "staying": {
+    "enGloss": "Key concept related to staying.",
+    "viGloss": "ở lại"
+  },
+  "strategies": {
+    "enGloss": "Key concept related to strategies.",
+    "viGloss": "chiến lược"
+  },
+  "strengthens": {
+    "enGloss": "Key concept related to strengthens.",
+    "viGloss": "tăng cường"
+  },
+  "strengths": {
+    "enGloss": "Key concept related to strengths.",
+    "viGloss": "điểm mạnh"
+  },
+  "stressed": {
+    "enGloss": "Key concept related to stressed.",
+    "viGloss": "nhấn mạnh"
+  },
+  "stressful": {
+    "enGloss": "Key concept related to stressful.",
+    "viGloss": "căng thẳng"
+  },
+  "strictly": {
+    "enGloss": "Key concept related to strictly.",
+    "viGloss": "nghiêm ngặt"
+  },
+  "struggle": {
+    "enGloss": "Key concept related to struggle.",
+    "viGloss": "đấu tranh"
+  },
+  "student's": {
+    "enGloss": "Key concept related to student's.",
+    "viGloss": "của sinh viên"
+  },
+  "students": {
+    "enGloss": "Key concept related to students.",
+    "viGloss": "sinh viên"
+  },
+  "students'": {
+    "enGloss": "Key concept related to students'.",
+    "viGloss": "sinh viên'"
+  },
+  "studies": {
+    "enGloss": "Key concept related to studies.",
+    "viGloss": "nghiên cứu"
+  },
+  "studying": {
+    "enGloss": "Key concept related to studying.",
+    "viGloss": "học tập"
+  },
+  "subject": {
+    "enGloss": "Key concept related to subject.",
+    "viGloss": "chủ đề"
+  },
+  "subjects": {
+    "enGloss": "Key concept related to subjects.",
+    "viGloss": "môn học"
+  },
+  "succeed": {
+    "enGloss": "Key concept related to succeed.",
+    "viGloss": "thành công"
+  },
+  "success": {
+    "enGloss": "Key concept related to success.",
+    "viGloss": "sự thành công"
+  },
+  "successful": {
+    "enGloss": "Key concept related to successful.",
+    "viGloss": "thành công"
+  },
+  "suggest": {
+    "enGloss": "Key concept related to suggest.",
+    "viGloss": "đề nghị"
+  },
+  "suggested": {
+    "enGloss": "Key concept related to suggested.",
+    "viGloss": "đề nghị"
+  },
+  "suggestion": {
+    "enGloss": "Key concept related to suggestion.",
+    "viGloss": "gợi ý"
+  },
+  "suggestions": {
+    "enGloss": "Key concept related to suggestions.",
+    "viGloss": "gợi ý"
+  },
+  "suitable": {
+    "enGloss": "Key concept related to suitable.",
+    "viGloss": "phù hợp"
+  },
+  "support": {
+    "enGloss": "Key concept related to support.",
+    "viGloss": "hỗ trợ"
+  },
+  "sustainable": {
+    "enGloss": "Key concept related to sustainable.",
+    "viGloss": "bền vững"
+  },
+  "systems": {
+    "enGloss": "Key concept related to systems.",
+    "viGloss": "hệ thống"
+  },
+  "targets": {
+    "enGloss": "Key concept related to targets.",
+    "viGloss": "mục tiêu"
+  },
+  "teacher": {
+    "enGloss": "Key concept related to teacher.",
+    "viGloss": "giáo viên"
+  },
+  "teachers": {
+    "enGloss": "Key concept related to teachers.",
+    "viGloss": "giáo viên"
+  },
+  "teachers'": {
+    "enGloss": "Key concept related to teachers'.",
+    "viGloss": "giáo viên'"
+  },
+  "teaching": {
+    "enGloss": "Key concept related to teaching.",
+    "viGloss": "giảng dạy"
+  },
+  "technological": {
+    "enGloss": "Key concept related to technological.",
+    "viGloss": "công nghệ"
+  },
+  "technology": {
+    "enGloss": "Key concept related to technology.",
+    "viGloss": "công nghệ"
+  },
+  "teenage": {
+    "enGloss": "Key concept related to teenage.",
+    "viGloss": "thiếu niên"
+  },
+  "teenagers": {
+    "enGloss": "Key concept related to teenagers.",
+    "viGloss": "thanh thiếu niên"
+  },
+  "telephone": {
+    "enGloss": "Key concept related to telephone.",
+    "viGloss": "điện thoại"
+  },
+  "television": {
+    "enGloss": "Key concept related to television.",
+    "viGloss": "truyền hình"
+  },
+  "temperature": {
+    "enGloss": "Key concept related to temperature.",
+    "viGloss": "nhiệt độ"
+  },
+  "temporary": {
+    "enGloss": "Key concept related to temporary.",
+    "viGloss": "tạm thời"
+  },
+  "testing": {
+    "enGloss": "Key concept related to testing.",
+    "viGloss": "thử nghiệm"
+  },
+  "textbooks": {
+    "enGloss": "Key concept related to textbooks.",
+    "viGloss": "sách giáo khoa"
+  },
+  "theater": {
+    "enGloss": "Key concept related to theater.",
+    "viGloss": "rạp hát"
+  },
+  "theaters": {
+    "enGloss": "Key concept related to theaters.",
+    "viGloss": "rạp hát"
+  },
+  "theatre": {
+    "enGloss": "Key concept related to theatre.",
+    "viGloss": "rạp hát"
+  },
+  "themselves": {
+    "enGloss": "Key concept related to themselves.",
+    "viGloss": "chính họ"
+  },
+  "theoretical": {
+    "enGloss": "Key concept related to theoretical.",
+    "viGloss": "lý thuyết"
+  },
+  "thinking": {
+    "enGloss": "Key concept related to thinking.",
+    "viGloss": "suy nghĩ"
+  },
+  "thought": {
+    "enGloss": "Key concept related to thought.",
+    "viGloss": "suy nghĩ"
+  },
+  "through": {
+    "enGloss": "Key concept related to through.",
+    "viGloss": "thông qua"
+  },
+  "throughout": {
+    "enGloss": "Key concept related to throughout.",
+    "viGloss": "xuyên suốt"
+  },
+  "throw-away": {
+    "enGloss": "Key concept related to throw-away.",
+    "viGloss": "vứt đi"
+  },
+  "today's": {
+    "enGloss": "Key concept related to today's.",
+    "viGloss": "hôm nay"
+  },
+  "tourism": {
+    "enGloss": "Key concept related to tourism.",
+    "viGloss": "du lịch"
+  },
+  "tourist": {
+    "enGloss": "Key concept related to tourist.",
+    "viGloss": "khách du lịch"
+  },
+  "towards": {
+    "enGloss": "Key concept related to towards.",
+    "viGloss": "hướng tới"
+  },
+  "traditional": {
+    "enGloss": "Key concept related to traditional.",
+    "viGloss": "truyền thống"
+  },
+  "traffic": {
+    "enGloss": "Key concept related to traffic.",
+    "viGloss": "giao thông"
+  },
+  "training": {
+    "enGloss": "Key concept related to training.",
+    "viGloss": "đào tạo"
+  },
+  "transactions": {
+    "enGloss": "Key concept related to transactions.",
+    "viGloss": "giao dịch"
+  },
+  "translate": {
+    "enGloss": "Key concept related to translate.",
+    "viGloss": "dịch"
+  },
+  "transportation": {
+    "enGloss": "Key concept related to transportation.",
+    "viGloss": "vận chuyển"
+  },
+  "treatments": {
+    "enGloss": "Key concept related to treatments.",
+    "viGloss": "phương pháp điều trị"
+  },
+  "tree-planting": {
+    "enGloss": "Key concept related to tree-planting.",
+    "viGloss": "trồng cây"
+  },
+  "tuition": {
+    "enGloss": "Key concept related to tuition.",
+    "viGloss": "học phí"
+  },
+  "tuition-free": {
+    "enGloss": "Key concept related to tuition-free.",
+    "viGloss": "miễn học phí"
+  },
+  "understanding": {
+    "enGloss": "Key concept related to understanding.",
+    "viGloss": "sự hiểu biết"
+  },
+  "undertakings": {
+    "enGloss": "Key concept related to undertakings.",
+    "viGloss": "cam kết"
+  },
+  "unemployment": {
+    "enGloss": "Key concept related to unemployment.",
+    "viGloss": "thất nghiệp"
+  },
+  "unhealthy": {
+    "enGloss": "Key concept related to unhealthy.",
+    "viGloss": "không khỏe mạnh"
+  },
+  "uniforms": {
+    "enGloss": "Key concept related to uniforms.",
+    "viGloss": "đồng phục"
+  },
+  "unimportant": {
+    "enGloss": "Key concept related to unimportant.",
+    "viGloss": "không quan trọng"
+  },
+  "universities": {
+    "enGloss": "Key concept related to universities.",
+    "viGloss": "trường đại học"
+  },
+  "university": {
+    "enGloss": "Key concept related to university.",
+    "viGloss": "trường đại học"
+  },
+  "unlearn": {
+    "enGloss": "Key concept related to unlearn.",
+    "viGloss": "quên đi"
+  },
+  "unsuitable": {
+    "enGloss": "Key concept related to unsuitable.",
+    "viGloss": "không phù hợp"
+  },
+  "urbanization": {
+    "enGloss": "Key concept related to urbanization.",
+    "viGloss": "đô thị hóa"
+  },
+  "validity": {
+    "enGloss": "Key concept related to validity.",
+    "viGloss": "hiệu lực"
+  },
+  "valuable": {
+    "enGloss": "Key concept related to valuable.",
+    "viGloss": "có giá trị"
+  },
+  "various": {
+    "enGloss": "Key concept related to various.",
+    "viGloss": "khác nhau"
+  },
+  "vegetarian": {
+    "enGloss": "Key concept related to vegetarian.",
+    "viGloss": "ăn chay"
+  },
+  "vehicle": {
+    "enGloss": "Key concept related to vehicle.",
+    "viGloss": "xe cộ"
+  },
+  "vehicles": {
+    "enGloss": "Key concept related to vehicles.",
+    "viGloss": "xe cộ"
+  },
+  "viewpoint": {
+    "enGloss": "Key concept related to viewpoint.",
+    "viGloss": "quan điểm"
+  },
+  "violence": {
+    "enGloss": "Key concept related to violence.",
+    "viGloss": "bạo lực"
+  },
+  "virtual": {
+    "enGloss": "Key concept related to virtual.",
+    "viGloss": "ảo"
+  },
+  "volunteering": {
+    "enGloss": "Key concept related to volunteering.",
+    "viGloss": "hoạt động tình nguyện"
+  },
+  "warming": {
+    "enGloss": "Key concept related to warming.",
+    "viGloss": "sự nóng lên"
+  },
+  "watching": {
+    "enGloss": "Key concept related to watching.",
+    "viGloss": "đang xem"
+  },
+  "weaknesses": {
+    "enGloss": "Key concept related to weaknesses.",
+    "viGloss": "điểm yếu"
+  },
+  "wealth-producing": {
+    "enGloss": "Key concept related to wealth-producing.",
+    "viGloss": "tạo ra sự giàu có"
+  },
+  "wealthy": {
+    "enGloss": "Key concept related to wealthy.",
+    "viGloss": "giàu có"
+  },
+  "wearing": {
+    "enGloss": "Key concept related to wearing.",
+    "viGloss": "mặc"
+  },
+  "weather": {
+    "enGloss": "Key concept related to weather.",
+    "viGloss": "thời tiết"
+  },
+  "western": {
+    "enGloss": "Key concept related to western.",
+    "viGloss": "phương Tây"
+  },
+  "whatever": {
+    "enGloss": "Key concept related to whatever.",
+    "viGloss": "sao cũng được"
+  },
+  "whether": {
+    "enGloss": "Key concept related to whether.",
+    "viGloss": "liệu"
+  },
+  "widespread": {
+    "enGloss": "Key concept related to widespread.",
+    "viGloss": "rộng rãi"
+  },
+  "wildlife": {
+    "enGloss": "Key concept related to wildlife.",
+    "viGloss": "động vật hoang dã"
+  },
+  "willing": {
+    "enGloss": "Key concept related to willing.",
+    "viGloss": "sẵn sàng"
+  },
+  "work-life": {
+    "enGloss": "Key concept related to work-life.",
+    "viGloss": "cuộc sống công việc"
+  },
+  "workers": {
+    "enGloss": "Key concept related to workers.",
+    "viGloss": "công nhân"
+  },
+  "workforce": {
+    "enGloss": "Key concept related to workforce.",
+    "viGloss": "lực lượng lao động"
+  },
+  "working": {
+    "enGloss": "Key concept related to working.",
+    "viGloss": "đang làm việc"
+  },
+  "workplace": {
+    "enGloss": "Key concept related to workplace.",
+    "viGloss": "nơi làm việc"
+  },
+  "workweek": {
+    "enGloss": "Key concept related to workweek.",
+    "viGloss": "tuần làm việc"
+  },
+  "world's": {
+    "enGloss": "Key concept related to world's.",
+    "viGloss": "thế giới"
+  },
+  "worldwide": {
+    "enGloss": "Key concept related to worldwide.",
+    "viGloss": "trên toàn thế giới"
+  },
+  "writing": {
+    "enGloss": "Key concept related to writing.",
+    "viGloss": "viết"
+  },
+  "writings": {
+    "enGloss": "Key concept related to writings.",
+    "viGloss": "bài viết"
+  },
+  "written": {
+    "enGloss": "Key concept related to written.",
+    "viGloss": "bằng văn bản"
+  },
+  "xenophobia": {
+    "enGloss": "Key concept related to xenophobia.",
+    "viGloss": "bài ngoại"
+  },
+  "year-old": {
+    "enGloss": "Key concept related to year-old.",
+    "viGloss": "một tuổi"
+  },
+  "younger": {
+    "enGloss": "Key concept related to younger.",
+    "viGloss": "trẻ hơn"
+  },
+  "youngsters": {
+    "enGloss": "Key concept related to youngsters.",
+    "viGloss": "thanh niên"
+  }
+}

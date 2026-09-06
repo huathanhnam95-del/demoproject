@@ -1,0 +1,1795 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "357",
+  "title": "#357 Human and Earth",
+  "prompt": "Some people believe that the Earth is being harmed by human activity. Others feel that human activity makes the Earth a better place to live. What is your opinion?",
+  "source": {
+    "promptSha256": "f22bbecee2ce8a4a801913930d1f73f39cc785a617935c312289f115b8092c6a",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people believe that the Earth is being harmed by human activity.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Others feel that human activity makes the Earth a better place to live.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "What is your opinion?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Environment"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "believe",
+        "enGloss": "Key concept related to believe.",
+        "viGloss": "tin tưởng"
+      },
+      {
+        "term": "activity",
+        "enGloss": "a particular action or task",
+        "viGloss": "hoạt động"
+      },
+      {
+        "term": "opinion",
+        "enGloss": "Key concept related to opinion.",
+        "viGloss": "ý kiến"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "view_a-point1",
+        "label": "Point 1",
+        "en": "Human actions can make the Earth worse for living.",
+        "vi": "Góc nhìn: Human actions can make the Earth worse for living.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_a-point2",
+        "label": "Point 2",
+        "en": "Human actions can make the Earth a better place to live.",
+        "vi": "Góc nhìn: Human actions can make the Earth a better place to live.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_b-point1",
+        "label": "Point 1",
+        "en": "Human actions can help the environment by planting trees and cleaning the air.",
+        "vi": "Góc nhìn: Human actions can help the environment by planting trees and cleaning the air.",
+        "sourceVariantId": "view_b"
+      },
+      {
+        "id": "view_b-point2",
+        "label": "Point 2",
+        "en": "Human actions can improve human life by building useful things and growing more food.",
+        "vi": "Góc nhìn: Human actions can improve human life by building useful things and growing more food.",
+        "sourceVariantId": "view_b"
+      },
+      {
+        "id": "view_a-point1",
+        "label": "Point 1",
+        "en": "Human activities improve the environment by developing efficient ways to use natural resources, such as creating solar power plants, which improves air quality.",
+        "vi": "Góc nhìn: Human activities improve the environment by developing efficient ways to use natural resources, such as creating solar power plants, which improves air quality.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_a-point2",
+        "label": "Point 2",
+        "en": "Human innovation helps manage waste and improve living conditions, exemplified by advanced recycling facilities that reduce landfill waste.",
+        "vi": "Góc nhìn: Human innovation helps manage waste and improve living conditions, exemplified by advanced recycling facilities that reduce landfill waste.",
+        "sourceVariantId": "view_a"
+      },
+      {
+        "id": "view_b-point1",
+        "label": "Point 1",
+        "en": "Human activities provide many benefits to the environment, such as improving water systems.",
+        "vi": "Góc nhìn: Human activities provide many benefits to the environment, such as improving water systems.",
+        "sourceVariantId": "view_b"
+      },
+      {
+        "id": "view_b-point2",
+        "label": "Point 2",
+        "en": "Human actions help in developing new resources, like clean energy from solar power.",
+        "vi": "Góc nhìn: Human actions help in developing new resources, like clean energy from solar power.",
+        "sourceVariantId": "view_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "environment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "air",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "trees",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pollution",
+            "enGloss": "dirt or bad stuff in the air or water",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "environment",
+            "enGloss": "the natural world around us",
+            "viGloss": "môi trường",
+            "source": "approved_sample"
+          },
+          {
+            "term": "air",
+            "enGloss": "the gas we breathe",
+            "viGloss": "không khí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "trees",
+            "enGloss": "plants with a thick trunk",
+            "viGloss": "cây cối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "animals",
+            "enGloss": "creatures that move",
+            "viGloss": "động vật",
+            "source": "approved_sample"
+          },
+          {
+            "term": "help",
+            "enGloss": "to make something better",
+            "viGloss": "giúp đỡ",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "economic affairs",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: vấn đề kinh tế"
+          },
+          {
+            "term": "environmental pollution",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ô nhiễm môi trường"
+          },
+          {
+            "term": "fair treatment",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đối xử công bằng"
+          },
+          {
+            "term": "fairly clear",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: khá rõ ràng"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "view_a",
+          "label": "Version 1: VIEW A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Environment ____.",
+          "point1": "Human actions can make the Earth worse for living.",
+          "point2": "Human actions can make the Earth a better place to live.",
+          "sampleVariantId": "view_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "view_b",
+          "label": "Version 2: VIEW B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Environment ____.",
+          "point1": "Human actions can help the environment by planting trees and cleaning the air.",
+          "point2": "Human actions can improve human life by building useful things and growing more food.",
+          "sampleVariantId": "view_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "view_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that human actions are hurting the Earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human actions can make the Earth worse for living.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people make pollution and damage the environment in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, cars put smoke into the air in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air becomes dirty, and people get sick.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that human actions can make the Earth worse.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human actions can make the Earth a better place to live.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people invent new things that help the environment in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, people plant more trees in cities in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air becomes cleaner, and animals have more homes.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that human actions can help the Earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that human actions can make the Earth a better place to live.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "People can make the Earth worse through pollution, but they can also help the Earth by planting trees and making new things.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "view_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people talk about how human actions hurt the Earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human actions do not always hurt the Earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people also help the environment in daily life in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, people plant new trees in bad areas in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the air becomes cleaner for all animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that human actions can make the Earth better.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human actions can also make life better for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because humans build useful things for daily life in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, we make better tools for farming in daily life in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can grow more food and live well.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that human actions help us.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that human actions hurt the Earth.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Human actions can help the environment, and they can also make life better for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "resources",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "polluting",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "evident",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "innovation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "resources",
+            "enGloss": "natural assets",
+            "viGloss": "tài nguyên",
+            "source": "approved_sample"
+          },
+          {
+            "term": "polluting",
+            "enGloss": "releasing harmful substances",
+            "viGloss": "gây ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "evident",
+            "enGloss": "clear to be seen",
+            "viGloss": "rõ ràng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "innovation",
+            "enGloss": "new methods or ideas",
+            "viGloss": "sự đổi mới",
+            "source": "approved_sample"
+          },
+          {
+            "term": "exemplified",
+            "enGloss": "shown by an example",
+            "viGloss": "được minh họa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "facilities",
+            "enGloss": "buildings for specific purposes",
+            "viGloss": "cơ sở vật chất",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tài nguyên bổ sung"
+          },
+          {
+            "term": "allocate resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phân bổ nguồn lực"
+          },
+          {
+            "term": "available resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: nguồn lực sẵn có"
+          },
+          {
+            "term": "become evident",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Environment.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Environment."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "view_a",
+          "label": "Version 1: VIEW A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Environment ____.",
+          "point1": "Human activities improve the environment by developing efficient ways to use natural resources, such as creating solar power plants, which improves air quality.",
+          "point2": "Human innovation helps manage waste and improve living conditions, exemplified by advanced recycling facilities that reduce landfill waste.",
+          "sampleVariantId": "view_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "view_b",
+          "label": "Version 2: VIEW B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Environment ____.",
+          "point1": "Human activities provide many benefits to the environment, such as improving water systems.",
+          "point2": "Human actions help in developing new resources, like clean energy from solar power.",
+          "sampleVariantId": "view_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "view_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "There is a debate about whether human actions are harming the Earth or if they are actually improving the planet for people to live on.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human activities can improve the environment by providing necessary resources for modern life.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people have developed ways to use natural resources more efficiently.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the creation of solar power plants shows a move away from polluting fuels.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, air quality in many cities starts to get better.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that human efforts can greatly help the Earth.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that human innovation helps us manage waste and improve living conditions.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that technology allows us to clean up pollution and manage waste better.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that advanced recycling facilities process plastic waste into new items.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that less trash ends up in landfills, which is good for the land.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that human activity makes the Earth a better place to live.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from human and another.",
+            "level": "b2",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "view_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people argue that human actions are harming the Earth, while others believe that human life improves the planet.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human activities can provide many benefits to the environment.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people use their skills to create better living conditions in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, building clean water systems helps communities access safe drinking water.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, fewer people get sick from bad water sources.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that human effort can improve the Earth's health.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human actions also help in developing new resources for the planet.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people invent ways to use natural materials more wisely.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that solar power technology provides clean energy without burning fuel.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that countries become less dependent on dirty fuels.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that human activity makes the Earth a better place to live.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that human actions harm the Earth.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Human effort can improve the Earth's health, and developing new resources for the planet shows this positive impact.",
+            "level": "b2",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "degradation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "pollutants",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "biodiversity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "ingenuity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "degradation",
+            "enGloss": "the process of deteriorating in quality",
+            "viGloss": "sự suy thoái",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollutants",
+            "enGloss": "substances that make air, water, or land dirty",
+            "viGloss": "chất gây ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "biodiversity",
+            "enGloss": "the variety of life in the world or in a particular habitat",
+            "viGloss": "đa dạng sinh học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "ingenuity",
+            "enGloss": "the quality of being clever, original, and inventive",
+            "viGloss": "sự khéo léo",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mitigate",
+            "enGloss": "to make something less severe, serious, or painful",
+            "viGloss": "giảm nhẹ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "habitability",
+            "enGloss": "the ability to be lived in",
+            "viGloss": "khả năng sinh sống",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "environmental degradation",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Environment.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Environment."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "view_a",
+          "label": "Version 1: VIEW A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Environment ____.",
+          "point1": "Human activities contribute to environmental degradation, causing considerable harm to the Earth.",
+          "point2": "Human ingenuity has developed innovative methods that improve the planet's habitability.",
+          "sampleVariantId": "view_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "view_b",
+          "label": "Version 2: VIEW B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Environment ____.",
+          "point1": "Human activity provides necessary advancements that improve global living standards and support sustainability.",
+          "point2": "Human technological advancements are essential for solving environmental problems and improving the planet's habitability.",
+          "sampleVariantId": "view_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "view_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relationship between human civilization and the planet's health is a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human activities have significantly contributed to environmental degradation, causing considerable harm to the Earth.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, industrial processes and unsustainable consumption patterns release pollutants into the atmosphere and oceans.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the burning of fossil fuels releases greenhouse gases, which trap heat and raise global temperatures.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, coastal regions face increased flooding, threatening human settlements and biodiversity.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that human actions necessitate careful management to preserve ecological balance.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Conversely, human ingenuity has developed innovative methods that improve the planet's habitability.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that technological advancements allow for cleaner energy sources and waste management systems.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the widespread adoption of solar and wind power reduces reliance on polluting fuels.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that air quality improves in major urban centers, leading to better public health outcomes for residents.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that human efforts can mitigate environmental damage.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from human and conversely.",
+            "level": "c1",
+            "sampleVariantId": "view_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "view_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relationship between human actions and the planet's health is a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Human activity has not necessarily caused widespread environmental degradation.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, human ingenuity has provided the means to improve living conditions globally in everyday life in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the development of advanced agricultural techniques has increased food security for millions.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, populations can now thrive in areas previously considered marginal.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that human efforts contribute positively to the planet's sustainability.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, human actions are crucial for maintaining a habitable world.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that our technological advancements offer solutions to ecological challenges in everyday life in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that solar power generation is mitigating reliance on fossil fuels.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that air quality improves, and carbon emissions decrease significantly.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that human activity makes the Earth a better place to live.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from human and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "view_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:36.966275+00:00"
+  }
+}

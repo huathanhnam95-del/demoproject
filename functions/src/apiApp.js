@@ -11,12 +11,14 @@ const { buildLeadStageSyncPatch } = require('./crm/lead-service');
 const { buildEntranceTestAdminList } = require('./crm/entrance-test-link-recovery');
 const createCrmRouter = require('./routes/admin/create-crm-router');
 const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
+const createStudentClassroomsRouter = require('./routes/student/classrooms');
 const entranceTestRoutes = require('./routes/entrance-tests');
 const createPracticeAttemptsRouter = require('./routes/practice-attempts');
 const createSharedPracticeAttemptsRouter = require('./routes/shared-practice-attempts');
 const createEssayAiAdminRouter = require('./essay-ai/admin-routes');
 const { createVoiceCloningAdminRouter } = require('./voice-cloning/admin-routes');
 const readAloudRoutes = require('./routes/read-aloud');
+const repeatSentenceRoutes = require('./routes/repeat-sentence');
 const { createEchoForgeRouter } = require('./routes/echo-forge');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const pronunciationComparisonRoutes = require('./routes/pronunciation-comparison');
@@ -376,21 +378,32 @@ const pronunciationReferenceAudioRouter = createPronunciationReferenceAudioRoute
     getStorageBucket
 });
 
+const studentClassroomsRouter = createStudentClassroomsRouter({
+    db,
+    authMiddleware,
+    sendSuccess,
+    sendError
+});
+
 app.use('/api/admin/essay-ai', essayAiAdminRouter);
 app.use('/api/admin/voice-cloning', voiceCloningAdminRouter);
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
+app.use('/api/student', studentClassroomsRouter);
+app.use('/api', studentClassroomsRouter);
 app.use('/api/entrance-tests', entranceTestRoutes);
 app.use('/api/practice-attempts', authMiddleware, practiceAttemptsLimiterByUid, practiceAttemptsRouter);
 app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, sharedPracticeAttemptsRouter);
 app.use('/api/read-aloud/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
+app.use('/api/repeat-sentence/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/echo-forge/assess', createEchoForgeOriginGuard({ environment: process.env }));
 app.use('/api/echo-forge/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/assess', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-test/vowel-hint', optionalAuthMiddleware, azureAssessmentRateLimiter);
 app.use('/api/pronunciation-assessment', optionalAuthMiddleware, azureAssessmentRateLimiter, pronunciationComparisonRoutes);
 app.use('/api', optionalAuthMiddleware, readAloudRoutes);
+app.use('/api', optionalAuthMiddleware, repeatSentenceRoutes);
 app.use('/api', optionalAuthMiddleware, createEchoForgeRouter());
 app.use('/api', optionalAuthMiddleware, pronunciationTestRoutes);
 app.use('/api', pronunciationReferenceAudioRouter);

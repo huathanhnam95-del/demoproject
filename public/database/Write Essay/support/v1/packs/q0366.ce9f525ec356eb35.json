@@ -1,0 +1,1764 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "366",
+  "title": "#366 Financial Learning",
+  "prompt": "As dealing with money is such an important skill, all children should be taught financial management at school. Do you agree with it or not?",
+  "source": {
+    "promptSha256": "7acaa6caacd67bb5adadf4e72b016fa3a9064b900a6b6926713628e5abcb7644",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "As dealing with money is such an important skill, all children should be taught financial management at school.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Do you agree with it or not?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Economy, money, and trade"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "dealing",
+        "enGloss": "Key concept related to dealing.",
+        "viGloss": "giao dịch"
+      },
+      {
+        "term": "important",
+        "enGloss": "Key concept related to important.",
+        "viGloss": "quan trọng"
+      },
+      {
+        "term": "children",
+        "enGloss": "Key concept related to children.",
+        "viGloss": "bọn trẻ"
+      },
+      {
+        "term": "financial",
+        "enGloss": "Key concept related to financial.",
+        "viGloss": "tài chính"
+      },
+      {
+        "term": "management",
+        "enGloss": "Key concept related to management.",
+        "viGloss": "quản lý"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "Learning about money helps children manage their funds better.",
+        "vi": "Góc nhìn: Learning about money helps children manage their funds better.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "Learning about money helps children build good saving habits for the future.",
+        "vi": "Góc nhìn: Learning about money helps children build good saving habits for the future.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "The best place to learn money skills is at home, not in school.",
+        "vi": "Góc nhìn: The best place to learn money skills is at home, not in school.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Schools already teach many subjects and should not add money lessons.",
+        "vi": "Góc nhìn: Schools already teach many subjects and should not add money lessons.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "Financial education helps children understand how to manage funds and develop good saving habits.",
+        "vi": "Góc nhìn: Financial education helps children understand how to manage funds and develop good saving habits.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "Learning about budgeting and making smart choices when spending cash helps students prepare for adult life.",
+        "vi": "Góc nhìn: Learning about budgeting and making smart choices when spending cash helps students prepare for adult life.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Learning to handle money helps children make good choices by understanding the value of saving and planning for purchases.",
+        "vi": "Góc nhìn: Learning to handle money helps children make good choices by understanding the value of saving and planning for purchases.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Adding a new subject like finance would overextend the school day, as students already have many core subjects to study.",
+        "vi": "Góc nhìn: Adding a new subject like finance would overextend the school day, as students already have many core subjects to study.",
+        "sourceVariantId": "option_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "pocket money",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "spend cash",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "saving habits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "expenses",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "pocket money",
+            "enGloss": "small amount of money given to a child",
+            "viGloss": "tiền tiêu vặt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "spend cash",
+            "enGloss": "to use physical money",
+            "viGloss": "tiêu tiền mặt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "saving habits",
+            "enGloss": "regular actions of saving money",
+            "viGloss": "thói quen tiết kiệm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "expenses",
+            "enGloss": "money spent on things",
+            "viGloss": "chi phí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "manage funds",
+            "enGloss": "to control and use money",
+            "viGloss": "quản lý tiền bạc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "school",
+            "enGloss": "place of learning",
+            "viGloss": "trường học",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "Learning about money helps children manage their funds better.",
+          "point2": "Learning about money helps children build good saving habits for the future.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "The best place to learn money skills is at home, not in school.",
+          "point2": "Schools already teach many subjects and should not add money lessons.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Learning about money is a very important skill for people to have.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Teaching children about money in school is very helpful.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they learn how to manage their funds better in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they can learn to plan for pocket money in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they will know how to spend cash wisely in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that school helps children manage their money well.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Teaching children about money in school is also good for their future.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because they learn about saving habits early in life in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they can practice putting some money into a savings pot in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they will feel ready for their own expenses in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that school gives children good life skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from teaching and teaching.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Learning how to manage money is a very important skill for everyone.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Teaching children about money in school is not the best idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these skills are learned best at home in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, parents can teach children how to count small coins when they buy things in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, children learn good habits from their family life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that family teaching is better than school teaching.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that schools teach many subjects already.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because adding money lessons takes up too much time in the classroom in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child might have too much homework in math and science in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the school day becomes too full for all the subjects.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that schools should keep their focus on main subjects.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from teaching and another.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "financial management",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "manage funds",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "saving habits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "budgeting",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "financial management",
+            "enGloss": "dealing with money",
+            "viGloss": "quản lý tài chính",
+            "source": "approved_sample"
+          },
+          {
+            "term": "manage funds",
+            "enGloss": "control money",
+            "viGloss": "quản lý tiền",
+            "source": "approved_sample"
+          },
+          {
+            "term": "saving habits",
+            "enGloss": "regular saving",
+            "viGloss": "thói quen tiết kiệm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "budgeting",
+            "enGloss": "planning spending",
+            "viGloss": "lập ngân sách",
+            "source": "approved_sample"
+          },
+          {
+            "term": "spend cash",
+            "enGloss": "use physical money",
+            "viGloss": "tiêu tiền mặt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "expenses",
+            "enGloss": "money spent",
+            "viGloss": "chi tiêu",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "financial management",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: quản lý tài chính"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "Financial education helps children understand how to manage funds and develop good saving habits.",
+          "point2": "Learning about budgeting and making smart choices when spending cash helps students prepare for adult life.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "Learning to handle money helps children make good choices by understanding the value of saving and planning for purchases.",
+          "point2": "Adding a new subject like finance would overextend the school day, as students already have many core subjects to study.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Financial management is a very important skill for people to live well in modern life.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Teaching children about money helps them understand how to manage funds.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they learn the difference between needs and wants in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student might learn to save pocket money for a book they really want.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they develop good saving habits and plan their purchases.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that early education builds financial responsibility.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Financial education helps students make smart choices when they spend cash.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that they learn about budgeting and planning in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a child might create a simple monthly budget for allowance.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they understand how to balance their income against their expenses.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that school should teach practical financial skills.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that teaching financial management is vital.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Learning to manage funds and making smart choices when spending cash are key skills that children need to develop early in school life.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Teaching children about managing money is a very important skill for their future lives.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Financial management is a crucial life skill that should be taught to children.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, This is because learning how to handle money helps them make good choices later on in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a child might learn to save pocket money for a desired toy.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they understand the value of saving and planning for purchases.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that early education in this area is very helpful.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Curriculum time is already very full with many subjects that need attention.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that schools have many important areas to cover in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that students already have to study many core subjects like science and history.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that adding a whole new subject like finance might make the school day too long.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that other subjects need more time and focus.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from financial and curriculum.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "financial literacy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "budgeting",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "resilience",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "economic landscape",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "financial literacy",
+            "enGloss": "knowledge of managing money",
+            "viGloss": "kiến thức tài chính",
+            "source": "approved_sample"
+          },
+          {
+            "term": "budgeting",
+            "enGloss": "planning how to spend money",
+            "viGloss": "lập ngân sách",
+            "source": "approved_sample"
+          },
+          {
+            "term": "resilience",
+            "enGloss": "ability to recover quickly",
+            "viGloss": "khả năng phục hồi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "economic landscape",
+            "enGloss": "overall state of the economy",
+            "viGloss": "bối cảnh kinh tế",
+            "source": "approved_sample"
+          },
+          {
+            "term": "compound interest",
+            "enGloss": "interest calculated on the initial principal and also on the accumulated interest",
+            "viGloss": "lãi kép",
+            "source": "approved_sample"
+          },
+          {
+            "term": "economic stability",
+            "enGloss": "a state of steady and secure economy",
+            "viGloss": "sự ổn định kinh tế",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "economic stability",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Economy, money, and trade.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Economy, money, and trade."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Economy, money, and trade ____.",
+          "point1": "Financial education is crucial for developing essential life skills like budgeting and saving money.",
+          "point2": "Formal schooling helps students understand the broader economic landscape and financial concepts.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Economy, money, and trade ____.",
+          "point1": "The primary argument against mandatory school-based financial education is the lack of real-world context in the academic setting.",
+          "point2": "The alternative source of financial learning is the family unit, which provides continuous, personalized guidance and practical experience.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Financial management constitutes a crucial life skill; consequently, educational institutions should incorporate its teaching into the curriculum.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Teaching financial literacy in schools equips students with essential life skills.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, Understanding concepts like budgeting and saving money is vital for future independence.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, A practical example is a student learning to differentiate between needs and wants when allocating their pocket money.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This result supports the view that they develop sound spending habits and learn to prioritize their expenditures.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, early education in this area fosters greater financial resilience.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Formal education helps students understand the broader economic landscape.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that financial concepts relate to real-world income and expenses.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that A practical example is learning about compound interest, which helps students grasp the power of long-term saving.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they become more informed consumers, capable of assessing financial risks.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that academic learning should prepare students for economic stability.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from teaching and formal.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Teaching financial management skills to children should be a core component of the educational curriculum.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "While financial literacy is undeniably valuable, formal schooling may not be the optimal environment for teaching these practical skills.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the classroom setting often lacks the real-world context necessary for mastering money management.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, learning to budget with pocket money from a local shop provides far greater insight than theoretical lessons.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, students fail to grasp the immediate consequences of spending decisions in a simulated environment.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that practical, experiential learning methods are superior for developing sound financial habits.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, financial education should be acquired through family interaction and mentorship, not solely through academic institutions.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that family units provide continuous, personalized guidance regarding household finances.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that observing parents manage a monthly budget teaches invaluable prioritization skills.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that children develop a natural understanding of income and expenses within a supportive domestic setting.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that familial instruction is the most effective source of financial wisdom.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Economy, money, and trade.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from while and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:37.790665+00:00"
+  }
+}

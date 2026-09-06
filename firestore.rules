@@ -20,14 +20,15 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId);
       
-      // Create: Prevent users from setting themselves as admin
+      // Create: Prevent users from setting themselves as admin or teacher roles
       allow create: if isOwner(userId) && 
-                    (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == false);
+                    (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == false) &&
+                    !request.resource.data.keys().hasAny(['role', 'crmRole', 'isTeacher']);
       
       // Update: CLIENT CAN ONLY UPDATE HARMLESS PROFILE FIELDS
       // Scoring and currency fields are SERVER-ONLY (Cloud Functions)
       allow update: if isOwner(userId) && 
-                    !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']) &&
+                    !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'role', 'crmRole', 'isTeacher']) &&
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                       // Allowed client-writable fields:
                       'lastLoginAt', 
@@ -171,22 +172,34 @@ service cloud.firestore {
     // CLASSROOM FEATURE
     // ============================================
     match /crmClassrooms/{classId} {
-      // Only students or admins can read classrooms
-      allow read: if isAdmin() || (request.auth != null && request.auth.token.isStudent == true);
+      // Allow admins, students with custom claim, or enrolled classroom members
+      function canReadClassroom() {
+        return isAdmin() || (request.auth != null && (
+          request.auth.token.isStudent == true ||
+          exists(/databases/$(database)/documents/crmClassrooms/$(classId)/members/$(request.auth.uid))
+        ));
+      }
+
+      allow read: if canReadClassroom();
       allow write: if isAdmin();
 
       match /modules/{moduleId} {
-        allow read: if isAdmin() || (request.auth != null && request.auth.token.isStudent == true);
+        allow read: if canReadClassroom();
         allow write: if isAdmin();
       }
 
       match /classwork/{workId} {
-        allow read: if isAdmin() || (request.auth != null && request.auth.token.isStudent == true);
+        allow read: if canReadClassroom();
         allow write: if isAdmin();
       }
 
       match /posts/{postId} {
-        allow read: if isAdmin() || (request.auth != null && request.auth.token.isStudent == true);
+        allow read: if canReadClassroom();
+        allow write: if isAdmin();
+      }
+
+      match /members/{memberId} {
+        allow read: if canReadClassroom();
         allow write: if isAdmin();
       }
     }

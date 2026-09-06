@@ -1,0 +1,1240 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "203",
+  "title": "#203 Distance Learning",
+  "prompt": "Universities are now offering qualifications through distance learning rather than in the classroom. What are the benefits of it?",
+  "source": {
+    "promptSha256": "bedd5b427140a7bd80007565c724c2f77a62cba2dbc8fe2c519f1602c57193b0",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Universities are now offering qualifications through distance learning rather than in the classroom.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What are the benefits of it?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Education"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Universities",
+        "enGloss": "Key concept related to universities.",
+        "viGloss": "trường đại học"
+      },
+      {
+        "term": "offering",
+        "enGloss": "Key concept related to offering.",
+        "viGloss": "cúng dường"
+      },
+      {
+        "term": "qualifications",
+        "enGloss": "Key concept related to qualifications.",
+        "viGloss": "bằng cấp"
+      },
+      {
+        "term": "through",
+        "enGloss": "Key concept related to through.",
+        "viGloss": "thông qua"
+      },
+      {
+        "term": "distance",
+        "enGloss": "Key concept related to distance.",
+        "viGloss": "khoảng cách"
+      },
+      {
+        "term": "learning",
+        "enGloss": "Key concept related to learning.",
+        "viGloss": "học tập"
+      },
+      {
+        "term": "classroom",
+        "enGloss": "Key concept related to classroom.",
+        "viGloss": "lớp học"
+      },
+      {
+        "term": "benefits",
+        "enGloss": "Key concept related to benefits.",
+        "viGloss": "lợi ích"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Distance learning provides flexibility and convenience for students.",
+        "vi": "Góc nhìn: Distance learning provides flexibility and convenience for students.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Online education helps people learn new skills and improve their career chances.",
+        "vi": "Góc nhìn: Online education helps people learn new skills and improve their career chances.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph focuses on the flexibility and convenience that distance learning offers to students' personal lives and work schedules.",
+        "vi": "Góc nhìn: The first body paragraph focuses on the flexibility and convenience that distance learning offers to students' personal lives and work schedules.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph focuses on how distance learning removes geographical barriers, giving students access to a wider range of educational institutions and subjects.",
+        "vi": "Góc nhìn: The second body paragraph focuses on how distance learning removes geographical barriers, giving students access to a wider range of educational institutions and subjects.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Distance learning enhances accessibility by removing geographical and time-based barriers to education.",
+        "vi": "Góc nhìn: Distance learning enhances accessibility by removing geographical and time-based barriers to education.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Distance learning fosters crucial life skills, particularly self-discipline and time management, which are valuable for career development.",
+        "vi": "Góc nhìn: Distance learning fosters crucial life skills, particularly self-discipline and time management, which are valuable for career development.",
+        "sourceVariantId": "perspective_a"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Education.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Education."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "flexibility",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "access",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "result",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "education",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "flexibility",
+            "enGloss": "the ability to change or move easily",
+            "viGloss": "sự linh hoạt",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "access",
+            "enGloss": "the ability to approach or use something",
+            "viGloss": "tiếp cận",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "result",
+            "enGloss": "the outcome or consequence",
+            "viGloss": "kết quả",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "education",
+            "enGloss": "the process of receiving or giving systematic instruction",
+            "viGloss": "giáo dục",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "skills",
+            "enGloss": "the ability to do something",
+            "viGloss": "kỹ năng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "useful",
+            "enGloss": "able to be used for a practical purpose",
+            "viGloss": "hữu ích",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng học tập"
+          },
+          {
+            "term": "allow access",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cho phép truy cập"
+          },
+          {
+            "term": "appropriate skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng phù hợp"
+          },
+          {
+            "term": "cognitive skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng nhận thức"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Distance learning provides flexibility and convenience for students.",
+          "point2": "Online education helps people learn new skills and improve their career chances.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Learning from home using the internet is becoming very common today.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with presenting a positive perspective on the topic.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Distance learning offers great flexibility for students.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can study from any place with internet access in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can take classes while staying at home in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they do not need to travel to a school building in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that learning can happen anywhere.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Online education helps people learn new skills easily.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because students can access many different courses online in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, someone can learn coding or a new language on a computer in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, their job chances become much better in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that online learning is very useful.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that distance learning is good.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "It gives students flexibility, and it also helps people learn new skills easily.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "flexibility",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "commitments",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "geographical",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "opportunities",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "flexibility",
+            "enGloss": "the quality of being able to change or adapt",
+            "viGloss": "sự linh hoạt",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "commitments",
+            "enGloss": "things that one must do or take care of",
+            "viGloss": "trách nhiệm",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "geographical",
+            "enGloss": "relating to the physical features of the Earth",
+            "viGloss": "thuộc về địa lý",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "opportunities",
+            "enGloss": "a set of chances or possibilities",
+            "viGloss": "cơ hội",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "outcome",
+            "enGloss": "the final result or consequence",
+            "viGloss": "kết quả",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "expand",
+            "enGloss": "to make larger or more extensive",
+            "viGloss": "mở rộng",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "achieve outcome",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đạt được kết quả"
+          },
+          {
+            "term": "affect outcome",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "create opportunities",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "desired outcome",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "The first body paragraph focuses on the flexibility and convenience that distance learning offers to students' personal lives and work schedules.",
+          "point2": "The second body paragraph focuses on how distance learning removes geographical barriers, giving students access to a wider range of educational institutions and subjects.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Distance learning, or remote education, has become a popular method for students to gain knowledge without needing to attend a physical classroom.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with presenting a positive perspective on the topic.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One main benefit of distance learning is that it offers great flexibility to students' schedules.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, learners can study at times that fit around their existing work or family commitments.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a working parent can take online courses in the evening after their job is finished.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can continue their education without having to stop their careers.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that distance learning helps people balance their life and studies.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another positive aspect of this method is that it gives students access to wider educational opportunities.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that they are not limited by their geographical location.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a student in a small town can take classes from a top university far away.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they can study subjects that might not be available in their local area.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that distance learning expands educational reach.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that distance learning is a valuable method.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "It provides great flexibility for students and also gives them access to wider educational opportunities.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "flexibility",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "constraints",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "autonomy",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "cultivate",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "flexibility",
+            "enGloss": "the quality of being able to change or adapt",
+            "viGloss": "sự linh hoạt",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "constraints",
+            "enGloss": "limitations or restrictions",
+            "viGloss": "sự hạn chế",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "autonomy",
+            "enGloss": "self-governance or independence",
+            "viGloss": "tự chủ",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "cultivate",
+            "enGloss": "to develop or promote the growth of",
+            "viGloss": "trau dồi",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "accountability",
+            "enGloss": "responsibility for actions",
+            "viGloss": "trách nhiệm",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "diverse",
+            "enGloss": "showing a great deal of variety",
+            "viGloss": "đa dạng",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "diverse background",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "diverse group",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: nhóm đa dạng"
+          },
+          {
+            "term": "diverse range",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          },
+          {
+            "term": "greater autonomy",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Education.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Education."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Distance learning enhances accessibility by removing geographical and time-based barriers to education.",
+          "point2": "Distance learning fosters crucial life skills, particularly self-discipline and time management, which are valuable for career development.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The increasing availability of distance learning methods has fundamentally altered the educational landscape.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with presenting a positive perspective on the topic.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Distance learning offers considerable flexibility, allowing students to pursue education regardless of geographical constraints.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, learners are not confined to a physical campus or rigid daily schedules.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a working professional can complete modules in the evening after fulfilling their professional duties.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals can balance their career commitments with their academic pursuits effectively.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that distance learning promotes greater accessibility for diverse student populations.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, these remote educational models cultivate essential self-discipline and autonomy among participants.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that students must manage their own time and motivate themselves without constant supervision.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that online courses require independent scheduling and consistent self-assessment.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that students develop robust time management skills and a greater sense of personal accountability.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that distance learning fosters crucial life skills for the modern workforce.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that distance learning is highly beneficial because it enhances accessibility and cultivates vital self-discipline, making it a valuable educational tool.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:23.269857+00:00"
+  }
+}

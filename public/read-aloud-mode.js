@@ -2216,6 +2216,7 @@ class ReadAloudMode {
       });
     });
 
+    /* eslint-disable-next-line no-console */
     console.log('[RA] Settings sheet initialized with', {
       filters: !!practiceTargetDrawer,
       audio: !!audioPlayer,
@@ -2250,6 +2251,7 @@ class ReadAloudMode {
 
   /** Close the Settings sheet */
   closeSettingsSheet() {
+    /* eslint-disable-next-line no-console */
     console.log('[RA] closeSettingsSheet execution fired!');
     if (this.settingsSheet && typeof this.settingsSheet.close === 'function') {
       this.settingsSheet.close();
@@ -2257,6 +2259,7 @@ class ReadAloudMode {
     const sheetEl = document.getElementById('ra-settings-sheet');
     if (sheetEl) {
       sheetEl.classList.remove('is-active');
+      /* eslint-disable-next-line no-console */
       console.log('[RA] sheetEl is-active removed:', !sheetEl.classList.contains('is-active'));
     }
     const backdrop = document.querySelector('.spc-sheet-backdrop[data-spc-sheet-id="ra-settings-sheet"]');
@@ -3212,6 +3215,9 @@ class ReadAloudMode {
     this.stopSpeechCoachYoursAudio({ pause: true, resetTime: true });
     this.stopSpeechCoachModelAudio();
     this.stopReferenceAudioPlayback();
+    if (window.PronunciationTooltip && typeof window.PronunciationTooltip.stopSegmentPlayback === 'function') {
+      window.PronunciationTooltip.stopSegmentPlayback();
+    }
     this.switchCustomAudioSource('yours');
     const audioEl = document.getElementById('ra-user-recording-audio');
     if (audioEl) {
@@ -3955,7 +3961,8 @@ class ReadAloudMode {
         highpassFreq: 80,
         targetPeakDb: -3,
         trim: true,
-        paddingMs: 150
+        paddingMs: 150,
+        createUrl: false
       });
 
       if (!result.audioBuffer) {
@@ -4855,6 +4862,13 @@ class ReadAloudMode {
         token.dataset.wordIndex = String(wordIndex);
         token.dataset.errorType = errorType;
         token.dataset.playable = playable ? 'true' : 'false';
+        token.dataset.word = String(word?.word || '').trim();
+        if (Number.isFinite(Number(word?.accuracyScore))) {
+          token.dataset.accuracy = String(Math.round(Number(word.accuracyScore)));
+        }
+        if (Array.isArray(word?.syllables) && word.syllables.length > 0) {
+          token.dataset.syllables = JSON.stringify(word.syllables);
+        }
         if (Number.isFinite(startMs)) token.dataset.startMs = String(startMs);
         if (Number.isFinite(endMs)) token.dataset.endMs = String(endMs);
         const eventIndexes = Array.from(eventIndexesByWord[wordIndex] || []);
@@ -4972,6 +4986,24 @@ class ReadAloudMode {
         this.playRecordedWordSegment(Number(token.dataset.startMs), Number(token.dataset.endMs), token);
       }
     });
+
+    if (window.PronunciationTooltip && typeof window.PronunciationTooltip.bindHoverTooltip === 'function') {
+      window.PronunciationTooltip.bindHoverTooltip(transcript, {
+        selector: '.ra-word-token',
+        playSyllable: (sStart, sEnd, chip) => {
+          this.stopRecordedWordPlayback?.();
+          const buffer = this.assessmentAudioBuffer || this.speechCoachRecordingBuffer;
+          const audioEl = document.getElementById('ra-user-recording-audio');
+          if (buffer) {
+            window.PronunciationTooltip.playAudioSegment(buffer, sStart, sEnd, chip);
+          } else if (audioEl) {
+            window.PronunciationTooltip.playAudioSegment(audioEl, sStart, sEnd, chip);
+          } else {
+            this.playRecordedWordSegment(sStart, sEnd, null);
+          }
+        }
+      });
+    }
   }
 
   navigateToSpeechCoachFeedback(token) {

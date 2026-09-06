@@ -3,6 +3,10 @@ from flask_cors import CORS
 import json
 from pathlib import Path
 import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 try:
     import parselmouth  # type: ignore
 except ImportError:
@@ -5254,12 +5258,13 @@ def analyze_nucleus_prosody():
     Measure Praat pitch (F0) and intensity over specific vowel nucleus intervals.
     Used by Option A (Azure Speech + Praat Prosody Fusion).
     """
-    if 'audio' not in request.files and not request.json:
+    req_json = request.get_json(silent=True) or {}
+    if 'audio' not in request.files and not req_json:
         return jsonify({'error': 'No audio provided'}), 400
 
     intervals_raw = request.form.get('intervals')
-    if not intervals_raw and request.json:
-        intervals_raw = request.json.get('intervals')
+    if not intervals_raw and req_json:
+        intervals_raw = req_json.get('intervals')
     
     intervals = []
     if isinstance(intervals_raw, str):
@@ -5277,9 +5282,9 @@ def analyze_nucleus_prosody():
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 audio_file.save(tmp.name)
                 tmp_path = tmp.name
-        elif request.json and request.json.get('audioBase64'):
+        elif req_json and req_json.get('audioBase64'):
             import base64
-            audio_data = base64.b64decode(request.json['audioBase64'])
+            audio_data = base64.b64decode(req_json['audioBase64'])
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 tmp.write(audio_data)
                 tmp_path = tmp.name
@@ -5288,6 +5293,8 @@ def analyze_nucleus_prosody():
 
         sound = parselmouth.Sound(tmp_path)
         duration = float(sound.duration)
+        if duration < 0.09:
+            return jsonify({'error': 'Audio duration is too short (<90ms) for acoustic analysis', 'success': False}), 400
         pitch = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
         intensity = sound.to_intensity(minimum_pitch=75, time_step=0.01)
 
@@ -5353,12 +5360,13 @@ def analyze_option_b():
     Combines Praat multi-cue boundary detection, vowel duration measurement,
     and repaired lexical stress determination (normalized by max_vowel_dur).
     """
-    if 'audio' not in request.files and not request.json:
+    req_json = request.get_json(silent=True) or {}
+    if 'audio' not in request.files and not req_json:
         return jsonify({'error': 'No audio file provided'}), 400
 
-    target_word = request.form.get('target_word') or request.form.get('word') or (request.json.get('word') if request.json else '')
-    reference_ipa = request.form.get('reference_ipa') or (request.json.get('reference_ipa') if request.json else '')
-    expected_syllables = request.form.get('expected_syllables', type=int) if request.form else (request.json.get('expected_syllables') if request.json else None)
+    target_word = request.form.get('target_word') or request.form.get('word') or req_json.get('word') or ''
+    reference_ipa = request.form.get('reference_ipa') or req_json.get('reference_ipa') or ''
+    expected_syllables = request.form.get('expected_syllables', type=int) if request.form else req_json.get('expected_syllables')
 
     if not expected_syllables and reference_ipa:
         try:
@@ -5376,45 +5384,43 @@ def analyze_option_b():
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 audio_file.save(tmp.name)
                 tmp_path = tmp.name
-        elif request.json and request.json.get('audioBase64'):
+        elif req_json and req_json.get('audioBase64'):
             import base64
-            audio_data = base64.b64decode(request.json['audioBase64'])
+            audio_data = base64.b64decode(req_json['audioBase64'])
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 tmp.write(audio_data)
                 tmp_path = tmp.name
         else:
             return jsonify({'error': 'Missing audio file or audioBase64'}), 400
 
+        sound = parselmouth.Sound(tmp_path)
+        duration = float(sound.duration)
+        if duration < 0.09:
+            return jsonify({'error': 'Audio duration is too short (<90ms) for acoustic analysis', 'success': False}), 400
+
         # 1. Run native Praat analysis
         praat_res = analyze_audio(tmp_path, expected_syllables=expected_syllables)
         syllables = praat_res.get('syllables') or []
 
-        # 2. Ensure each syllable has vowelDuration measured
-        sound = parselmouth.Sound(tmp_path)
+        # 2. Ensure each syllable has vowelDuration and interval measured
         pitch_obj = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
         for s in syllables:
-            if 'vowelDuration' not in s or s.get('vowelDuration', 0) <= 0:
-                s_start = float(s.get('startTime', 0))
-                s_end = float(s.get('endTime', s_start))
-                v_dur = measure_vowel_duration(sound, s_start, s_end, pitch_obj)
-                s['vowelDuration'] = round(v_dur, 3)
-                s['vowel_duration'] = s['vowelDuration']
+            s_start = float(s.get('startTime', 0))
+            s_end = float(s.get('endTime', s_start))
+            v_dur, v_start, v_end = measure_vowel_interval(sound, s_start, s_end, pitch_obj)
+            s['vowelDuration'] = round(v_dur, 3)
+            s['vowel_duration'] = s['vowelDuration']
+            s['vowelStartTime'] = round(v_start, 3)
+            s['vowelEndTime'] = round(v_end, 3)
 
         # 3. Detect stressed syllable with repaired phonetic corrections & vowel normalization
-        detected_idx = find_stressed_with_corrections(syllables) if syllables else 0
+        prom_scores, detected_idx = compute_syllable_prominence_scores(syllables)
         normalized_pattern = normalize_syllable_pattern(syllables)
 
-        # 4. Compute prominence per syllable
-        max_vowel_dur = max((s.get('vowelDuration', 0) for s in syllables), default=1.0) or 1.0
-        max_pitch = max((s.get('maxPitch', 0) or s.get('avgPitch', 0) for s in syllables), default=1.0) or 1.0
-        max_int = max((s.get('intensity', 0) for s in syllables), default=1.0) or 1.0
-
+        # 4. Compute prominence per syllable using the synchronized penalized scores
         for i, s in enumerate(syllables):
             s['isStressed'] = (i == detected_idx)
-            p_score = (s.get('maxPitch', 0) or s.get('avgPitch', 0)) / max_pitch
-            d_score = s.get('vowelDuration', 0) / max_vowel_dur
-            i_score = s.get('intensity', 0) / max_int
-            s['prominence'] = round(0.50 * p_score + 0.30 * d_score + 0.20 * i_score, 3)
+            s['prominence'] = prom_scores[i] if i < len(prom_scores) else 0.0
 
         # 5. Add V4 syllabification if reference IPA is available
         v4_data = None
@@ -5445,7 +5451,8 @@ def analyze_option_b():
         })
     except Exception as e:
         logger.exception(f"analyze_option_b error: {e}")
-        return jsonify({'error': str(e), 'success': False}), 500
+        status = 400 if "too short" in str(e).lower() else 500
+        return jsonify({'error': str(e), 'success': False}), status
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
@@ -5456,6 +5463,8 @@ def analyze_audio(audio_path, expected_syllables=None, allow_expected_adjustment
     # Load sound
     sound = parselmouth.Sound(audio_path)
     duration = float(sound.duration)
+    if duration < 0.09:
+        raise ValueError("Audio duration is too short (<90ms) for acoustic analysis")
     
     # Define common time grid (10ms steps)
     time_step = 0.01
@@ -6207,21 +6216,36 @@ def create_syllable_segment(start_time, end_time, pitch, intensity):
         'intensity': round(float(mid_intensity), 2) if not np.isnan(mid_intensity) else 0
     }
 
-def measure_vowel_duration(sound, start_time, end_time, pitch_obj):
+def measure_vowel_interval(sound, start_time, end_time, pitch_obj):
     """
-    Measure duration of voiced (vowel) portion within a syllable.
+    Measure duration and time boundaries of voiced (vowel) portion within a syllable.
+    Returns (voiced_duration, vowel_start, vowel_end).
     """
     voiced_duration: float = 0.0
     time_step = 0.002  # 2ms resolution
+    first_voiced = None
+    last_voiced = None
     
     t = start_time
     while t < end_time:
         pitch_val = pitch_obj.get_value_at_time(t)
         if not np.isnan(pitch_val) and pitch_val > 0:
             voiced_duration += time_step
+            if first_voiced is None:
+                first_voiced = t
+            last_voiced = t
         t += time_step
-        
-    return voiced_duration
+
+    v_start = round(first_voiced, 3) if first_voiced is not None else round(start_time, 3)
+    v_end = round(last_voiced + time_step, 3) if last_voiced is not None else round(end_time, 3)
+    return round(voiced_duration, 3), v_start, v_end
+
+def measure_vowel_duration(sound, start_time, end_time, pitch_obj):
+    """
+    Measure duration of voiced (vowel) portion within a syllable.
+    """
+    dur, _, _ = measure_vowel_interval(sound, start_time, end_time, pitch_obj)
+    return dur
 
 def peaks_to_syllables(peaks, pitch, int_times, int_values, speech_start, speech_end, sound):
     """
@@ -6510,13 +6534,13 @@ def generate_pattern_feedback(user_norm, native_norm, stressed_idx, p_corr, d_co
     return "Good pattern match!"
 
 
-def find_stressed_with_corrections(syllables):
+def compute_syllable_prominence_scores(syllables):
     """
-    Find stressed syllable with phonetic corrections.
-    Used for edge cases and backwards compatibility.
+    Compute prominence scores per syllable using phonetic corrections (final lengthening penalty,
+    initial burst penalty, short duration penalty). Returns (prominence_scores_list, best_idx).
     """
     if not syllables:
-        return 0
+        return [], 0
     
     n = len(syllables)
     max_pitch = max(s.get('maxPitch', 0) or s.get('avgPitch', 1) for s in syllables) or 1
@@ -6527,6 +6551,7 @@ def find_stressed_with_corrections(syllables):
         max_dur = max(s.get('duration', 0) for s in syllables) or 1
     max_int = max(s.get('intensity', 0) for s in syllables) or 1
     
+    scores = []
     best_idx = 0
     best_score = -1
     
@@ -6537,7 +6562,6 @@ def find_stressed_with_corrections(syllables):
         i_score = s.get('intensity', 0) / max_int
         
         # === PHONETIC CORRECTIONS ===
-        
         # 1. Final syllable penalty (30% - more aggressive for final lengthening)
         if i == n - 1 and n > 1:
             d_score *= 0.70
@@ -6551,12 +6575,24 @@ def find_stressed_with_corrections(syllables):
             p_score *= 0.8
         
         # Weighted: Pitch (0.50) > Duration (0.30) > Intensity (0.20)
-        total = (p_score * 0.50) + (d_score * 0.30) + (i_score * 0.20)
+        total = round((p_score * 0.50) + (d_score * 0.30) + (i_score * 0.20), 3)
+        scores.append(total)
         
         if total > best_score:
             best_score = total
             best_idx = i
-    
+            
+    return scores, best_idx
+
+
+def find_stressed_with_corrections(syllables):
+    """
+    Find stressed syllable with phonetic corrections.
+    Used for edge cases and backwards compatibility.
+    """
+    if not syllables:
+        return 0
+    _, best_idx = compute_syllable_prominence_scores(syllables)
     return best_idx
 
 if __name__ == '__main__':

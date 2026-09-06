@@ -1,0 +1,1195 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "298",
+  "title": "#298 Popular Movies",
+  "prompt": "Movies are popular all over the world. What is the cause of it？",
+  "source": {
+    "promptSha256": "8e464e120f2f034a9d8d21ed60e04f251c87f62b202892252e821164e7c0f7df",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Movies are popular all over the world.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What is the cause of it？",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Media and communication"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "popular",
+        "enGloss": "Key concept related to popular.",
+        "viGloss": "phổ biến"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "Movies are popular because they provide great entertainment for people.",
+        "vi": "Góc nhìn: Movies are popular because they provide great entertainment for people.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "Making movies easy for everyone to see helps keep the popularity of films.",
+        "vi": "Góc nhìn: Making movies easy for everyone to see helps keep the popularity of films.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The main cause of movie popularity is the universal appeal of storytelling, and the solution is for cinemas to improve the viewing experience.",
+        "vi": "Góc nhìn: The main cause of movie popularity is the universal appeal of storytelling, and the solution is for cinemas to improve the viewing experience.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "The PEEL structure in both body paragraphs, ensuring each body paragraph has exactly five sentences and follows the required academic starters.",
+        "vi": "Góc nhìn: The PEEL structure in both body paragraphs, ensuring each body paragraph has exactly five sentences and follows the required academic starters.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The primary cause of movie popularity is the universal appeal of compelling storytelling, which allows films to connect with diverse audiences regardless of location.",
+        "vi": "Góc nhìn: The primary cause of movie popularity is the universal appeal of compelling storytelling, which allows films to connect with diverse audiences regardless of location.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A key solution to maintaining this popularity is the continuous innovation in cinematic technology, which enhances the viewing experience and keeps the industry fresh.",
+        "vi": "Góc nhìn: A key solution to maintaining this popularity is the continuous innovation in cinematic technology, which enhances the viewing experience and keeps the industry fresh.",
+        "sourceVariantId": "problems_solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Media and communication.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Media and communication."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "entertainment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "cinema",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "stories",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "family",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "entertainment",
+            "enGloss": "fun activity",
+            "viGloss": "sự giải trí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "cinema",
+            "enGloss": "place to watch films",
+            "viGloss": "rạp chiếu phim",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stories",
+            "enGloss": "tales",
+            "viGloss": "những câu chuyện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "family",
+            "enGloss": "group of relatives",
+            "viGloss": "gia đình",
+            "source": "approved_sample"
+          },
+          {
+            "term": "outings",
+            "enGloss": "trips out",
+            "viGloss": "chuyến đi chơi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "people",
+            "enGloss": "human beings",
+            "viGloss": "mọi người",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "indigenous people",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: người bản địa"
+          },
+          {
+            "term": "nuclear family",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: gia đình hạt nhân"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Media and communication ____.",
+          "point1": "Movies are popular because they provide great entertainment for people.",
+          "point2": "Making movies easy for everyone to see helps keep the popularity of films.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Movies are very popular all over the world today.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that movies provide great entertainment for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people like to watch films because they offer fun stories in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a family can go to the cinema to watch a comedy film show in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they spend time together and enjoy a nice outing in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that movies are a good way for people to have fun.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is that cinemas can make movies easy for everyone to see.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because making films easy to see helps more people enjoy them in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, showing films in small towns, not just big cities, helps many people in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, more people can watch films and feel included.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that better reach keeps movies popular.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from major and effective.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "entertainment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "storytelling",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "universal",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "appeal",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "entertainment",
+            "enGloss": "fun activity",
+            "viGloss": "hoạt động giải trí",
+            "source": "approved_sample"
+          },
+          {
+            "term": "storytelling",
+            "enGloss": "telling stories",
+            "viGloss": "kể chuyện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "universal",
+            "enGloss": "for everyone",
+            "viGloss": "phổ quát",
+            "source": "approved_sample"
+          },
+          {
+            "term": "appeal",
+            "enGloss": "attraction",
+            "viGloss": "sự hấp dẫn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "experience",
+            "enGloss": "time spent doing something",
+            "viGloss": "trải nghiệm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "audience",
+            "enGloss": "people watching",
+            "viGloss": "khán giả",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "experience difficulties",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: trải qua khó khăn"
+          },
+          {
+            "term": "experience problems",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: gặp vấn đề"
+          },
+          {
+            "term": "individual experience",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kinh nghiệm cá nhân"
+          },
+          {
+            "term": "personal experience",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kinh nghiệm cá nhân"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Media and communication ____.",
+          "point1": "The main cause of movie popularity is the universal appeal of storytelling, and the solution is for cinemas to improve the viewing experience.",
+          "point2": "The PEEL structure in both body paragraphs, ensuring each body paragraph has exactly five sentences and follows the required academic starters.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Movies are a popular form of entertainment enjoyed by people all over the world.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the universal appeal of storytelling.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people enjoy stories that reflect their own lives and emotions in everyday life in many cases.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a family movie about growing up can connect with many viewers in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel understood and entertained by the film in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that good stories have mass appeal.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is that cinemas can improve the viewing experience.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that better seating and sound systems make watching more comfortable in everyday life in many cases.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that modern theaters offer reclining seats and advanced sound in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the audience feels more engaged and willing to spend money in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that better facilities boost popularity.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because storytelling possesses universal appeal, and improving cinema facilities can significantly boost popularity.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "universal",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "compelling",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "transcends",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "narrative",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "universal",
+            "enGloss": "relating to all people or things",
+            "viGloss": "phổ quát",
+            "source": "approved_sample"
+          },
+          {
+            "term": "compelling",
+            "enGloss": "forcing attention or interest",
+            "viGloss": "hấp dẫn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "transcends",
+            "enGloss": "is greater than or beyond",
+            "viGloss": "vượt qua",
+            "source": "approved_sample"
+          },
+          {
+            "term": "narrative",
+            "enGloss": "a story or account of events",
+            "viGloss": "cốt truyện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "cinematic",
+            "enGloss": "relating to the art of making movies",
+            "viGloss": "điện ảnh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "immersive",
+            "enGloss": "creating the feeling of being completely involved",
+            "viGloss": "sống động",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "compelling argument",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Media and communication.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Media and communication."
+          },
+          {
+            "term": "compelling evidence",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Media and communication.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Media and communication."
+          },
+          {
+            "term": "compelling reason",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Media and communication.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Media and communication."
+          },
+          {
+            "term": "universally accepted",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Media and communication.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Media and communication."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Media and communication ____.",
+          "point1": "The primary cause of movie popularity is the universal appeal of compelling storytelling, which allows films to connect with diverse audiences regardless of location.",
+          "point2": "A key solution to maintaining this popularity is the continuous innovation in cinematic technology, which enhances the viewing experience and keeps the industry fresh.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Movies have become a widespread form of global entertainment, captivating audiences across diverse cultures.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is the universal appeal of compelling storytelling.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, films possess the unique ability to transport viewers to different worlds and times.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, historical epics allow people to witness past civilizations, while science fiction explores future possibilities.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the emotional resonance of a well-crafted narrative transcends geographical boundaries.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the inherent power of a good plot is the primary driver of movie popularity.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is the continuous innovation in cinematic technology.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that advancements in visual effects and sound design enhance the viewing experience.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that virtual reality integration is making movie viewing more immersive than ever before.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that cinema halls can offer unparalleled spectacle, attracting even the most skeptical viewers.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that technological progress sustains the industry's global appeal.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the inherent power of compelling storytelling drives movie popularity, while continuous innovation in cinematic technology sustains the industry's global appeal.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:31.800037+00:00"
+  }
+}

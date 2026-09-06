@@ -308,6 +308,7 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
       Buffer.from(pronunciationAssessmentHeader, 'base64').toString('utf8')
     );
     assert.strictEqual(pronunciationAssessmentConfig.Granularity, 'Phoneme');
+    assert.strictEqual(pronunciationAssessmentConfig.Dimension, 'Comprehensive');
     assert.strictEqual(pronunciationAssessmentConfig.PhonemeAlphabet, 'IPA');
     assert.strictEqual(pronunciationAssessmentConfig.NBestPhonemeCount, 5);
 
@@ -348,12 +349,112 @@ async function postAssessment(baseUrl, { audioBuffer, referenceText, questionId,
       { word: 'up', accuracyScore: 88, errorType: 'None', startMs: null, endMs: null },
       { word: 'now', accuracyScore: 96, errorType: 'None', startMs: null, endMs: null }
     ]);
+
+    // Test rich multi-syllabic breakdown, Oxford IPA, and articulatory coaching
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+        Display: 'after',
+        PronunciationAssessment: {
+          AccuracyScore: 75,
+          FluencyScore: 80,
+          CompletenessScore: 100,
+          PronScore: 78
+        },
+        Words: [
+          {
+            Word: 'after',
+            Offset: 1000000,
+            Duration: 4000000,
+            PronunciationAssessment: { AccuracyScore: 72, ErrorType: 'None' },
+            Syllables: [
+              {
+                Syllable: 'æf',
+                Grapheme: 'af',
+                Offset: 1000000,
+                Duration: 2000000,
+                PronunciationAssessment: { AccuracyScore: 55 }
+              },
+              {
+                Syllable: 'tər',
+                Grapheme: 'ter',
+                Offset: 3000000,
+                Duration: 2000000,
+                PronunciationAssessment: { AccuracyScore: 85 }
+              }
+            ],
+            Phonemes: [
+              {
+                Phoneme: 'æ',
+                Offset: 1000000,
+                Duration: 1000000,
+                PronunciationAssessment: { AccuracyScore: 88 }
+              },
+              {
+                Phoneme: 'f',
+                Offset: 2000000,
+                Duration: 1000000,
+                PronunciationAssessment: { AccuracyScore: 45 },
+                NBestPhonemes: [{ Phoneme: 't' }]
+              },
+              {
+                Phoneme: 't',
+                Offset: 3000000,
+                Duration: 800000,
+                PronunciationAssessment: { AccuracyScore: 90 }
+              },
+              {
+                Phoneme: 'ər',
+                Offset: 3800000,
+                Duration: 1200000,
+                PronunciationAssessment: { AccuracyScore: 80 }
+              }
+            ]
+          }
+        ]
+      }]
+    });
+
+    result = await postAssessment(baseUrl, {
+      audioBuffer: createMonoPcmWavBuffer({ durationMs: 400 }),
+      referenceText: 'after'
+    });
+    assert.strictEqual(result.response.status, 200, 'rich syllable breakdown assessment should return 200');
+    assert.strictEqual(result.payload.words[0].word, 'after');
+    assert.strictEqual(result.payload.words[0].startMs, 100);
+    assert.strictEqual(result.payload.words[0].endMs, 500);
+    assert.ok(Array.isArray(result.payload.words[0].syllables), 'words should contain syllables array');
+    assert.strictEqual(result.payload.words[0].syllables.length, 2);
+    assert.strictEqual(result.payload.words[0].syllables[0].text, 'af');
+    assert.strictEqual(result.payload.words[0].syllables[0].heardIpa, 'æt');
+    assert.ok(result.payload.words[0].syllables[0].diagnosis, 'should produce diagnosis for /f/ -> /t/ substitution');
+    assert.ok(result.payload.words[0].syllables[0].tip, 'should produce articulatory coaching tip');
+
     assert.strictEqual(azureFetchCalls, 0, 'mocked Azure success should not hit the network');
     assert.strictEqual(result.payload.connectedSpeech.status, 'not_applicable', 'connected speech should be skipped without questionId');
     assert.ok(persistedAttempts.length >= 1, 'attempt persistence should run without questionId');
     assert.strictEqual(persistedAttempts[0].audioStatus, 'complete', 'persistence should store audio status');
     assert.strictEqual(persistedAttempts[0].workerStatus, 'not_applicable', 'persistence should store worker status');
     assert.deepStrictEqual(persistedAttempts[0].eventFamilyCounts, {}, 'persistence should store empty family counts when no connected speech is applicable');
+
+    process.env.READ_ALOUD_AZURE_MOCK_RESPONSE = JSON.stringify({
+      RecognitionStatus: 'Success',
+      NBest: [{
+        Display: 'Pick it up now',
+        PronunciationAssessment: {
+          AccuracyScore: 92.2,
+          FluencyScore: 87.6,
+          CompletenessScore: 100,
+          PronScore: 91.1
+        },
+        Words: [
+          { Word: 'Pick', PronunciationAssessment: { AccuracyScore: 95, ErrorType: 'None' } },
+          { Word: 'it', PronunciationAssessment: { AccuracyScore: 90, ErrorType: 'None' } },
+          { Word: 'up', PronunciationAssessment: { AccuracyScore: 88, ErrorType: 'None' } },
+          { Word: 'now', PronunciationAssessment: { AccuracyScore: 96, ErrorType: 'None' } }
+        ]
+      }]
+    });
 
     result = await postAssessment(rawBodyBaseUrl, {
       audioBuffer: createMonoPcmWavBuffer({ durationMs: 300 }),

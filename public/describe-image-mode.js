@@ -30,6 +30,7 @@
     let recordedChunks = [];
     let recordingBlobUrl = null;
     let recordingBlob = null;
+    let dspPromise = null;
     let recordingSessionToken = 0;
 
     // Speech recognition
@@ -99,6 +100,7 @@
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordedChunks = [];
         recordingBlob = null;
+        dspPromise = null;
         if (el.diRecordingPlayback) {
             try {
                 el.diRecordingPlayback.pause();
@@ -391,6 +393,7 @@
         try {
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
             recordingBlob = null;
+            dspPromise = null;
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const sessionToken = ++recordingSessionToken;
@@ -412,19 +415,24 @@
                     recordingBlobUrl = URL.createObjectURL(blob);
                     if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
 
-                    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-                        window.AudioDspPipeline.enhance(blob).then((result) => {
-                            if (sessionToken !== recordingSessionToken) return;
-                            if (result && result.wavBlob && result.audioUrl) {
+                    dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
+                        ? window.AudioDspPipeline.enhance(blob).then((result) => {
+                            if (sessionToken !== recordingSessionToken) return blob;
+                            if (result && result.wavBlob) {
                                 if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
                                 recordingBlob = result.wavBlob;
-                                recordingBlobUrl = result.audioUrl;
+                                recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
                                 if (el.diRecordingPlayback) el.diRecordingPlayback.src = recordingBlobUrl;
+                                return result.wavBlob;
                             }
+                            return blob;
                         }).catch((err) => {
                             console.warn('[DescribeImage] AudioDspPipeline enhancement failed, keeping raw audio:', err);
-                        });
-                    }
+                            return blob;
+                        })
+                        : Promise.resolve(blob);
+                } else {
+                    dspPromise = Promise.resolve(null);
                 }
 
                 // Transition to review only if we were still in the recording step.
@@ -546,6 +554,7 @@
     function retryRecording() {
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        dspPromise = null;
         transcriptText = '';
         goToStep('preparing');
     }
@@ -554,7 +563,7 @@
         goToStep('results');
     }
 
-    function displayResults() {
+    async function displayResults() {
         if (!currentEntry) return;
 
         // Sample answer
@@ -589,6 +598,10 @@
             }
         }
 
+        const sessionToken = recordingSessionToken;
+        const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+        if (sessionToken !== recordingSessionToken) return;
+
         window.PTEAttemptArchive?.saveAttempt?.({
             practiceMode: 'describe-image',
             promptSnapshot: {
@@ -609,11 +622,11 @@
                 submitted: true
             },
             scoringSource: 'client',
-            media: recordingBlob ? [{
+            media: finalBlob ? [{
                 slot: 'student',
                 label: 'Student description',
-                blob: recordingBlob,
-                contentType: recordingBlob.type || 'audio/webm'
+                blob: finalBlob,
+                contentType: finalBlob.type || 'audio/webm'
             }] : []
         }).catch((error) => console.warn('[PTE Archive] Describe Image save failed:', error));
     }

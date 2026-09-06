@@ -1,0 +1,1188 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "98",
+  "title": "#98 International Organizations",
+  "prompt": "Global problems are related to governments and international organizations. What are the problems and what is your solution?",
+  "source": {
+    "promptSha256": "90fe7ec119f6ebf6031088fd223cb480aac2642b9cae73ac80ba6e1231ab0666",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Global problems are related to governments and international organizations.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What are the problems and what is your solution?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Government, politics, and diplomacy"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "problems",
+        "enGloss": "Key concept related to problems.",
+        "viGloss": "vấn đề"
+      },
+      {
+        "term": "related",
+        "enGloss": "Key concept related to related.",
+        "viGloss": "liên quan"
+      },
+      {
+        "term": "governments",
+        "enGloss": "Key concept related to governments.",
+        "viGloss": "chính phủ"
+      },
+      {
+        "term": "international",
+        "enGloss": "Key concept related to international.",
+        "viGloss": "quốc tế"
+      },
+      {
+        "term": "organizations",
+        "enGloss": "Key concept related to organizations.",
+        "viGloss": "tổ chức"
+      },
+      {
+        "term": "solution",
+        "enGloss": "Key concept related to solution.",
+        "viGloss": "giải pháp"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The main problem is that countries often act alone, which makes global issues worse.",
+        "vi": "Góc nhìn: The main problem is that countries often act alone, which makes global issues worse.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "The solution is that international groups must create better rules and encourage cooperation among all nations.",
+        "vi": "Góc nhìn: The solution is that international groups must create better rules and encourage cooperation among all nations.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The main problem is that national governments often act in their own interests, which makes solving global issues difficult.",
+        "vi": "Góc nhìn: The main problem is that national governments often act in their own interests, which makes solving global issues difficult.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A practical solution is for international organizations to create stronger rules for all member countries.",
+        "vi": "Góc nhìn: A practical solution is for international organizations to create stronger rules for all member countries.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The first major problem is that national governments tend to prioritize their own domestic interests over the overall global well-being, which hinders necessary global cooperation.",
+        "vi": "Góc nhìn: The first major problem is that national governments tend to prioritize their own domestic interests over the overall global well-being, which hinders necessary global cooperation.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A solution involves establishing stronger international governance mechanisms to ensure collective action and mutual aid among countries.",
+        "vi": "Góc nhìn: A solution involves establishing stronger international governance mechanisms to ensure collective action and mutual aid among countries.",
+        "sourceVariantId": "problems_solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Government, politics, and diplomacy.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Government, politics, and diplomacy."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "governments",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "international",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "problems",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "cooperation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "governments",
+            "enGloss": "national governments",
+            "viGloss": "các chính phủ quốc gia",
+            "source": "approved_sample"
+          },
+          {
+            "term": "international",
+            "enGloss": "between countries",
+            "viGloss": "quốc tế",
+            "source": "approved_sample"
+          },
+          {
+            "term": "problems",
+            "enGloss": "difficult issues",
+            "viGloss": "các vấn đề",
+            "source": "approved_sample"
+          },
+          {
+            "term": "cooperation",
+            "enGloss": "working together",
+            "viGloss": "sự hợp tác",
+            "source": "approved_sample"
+          },
+          {
+            "term": "resources",
+            "enGloss": "things we need",
+            "viGloss": "nguồn tài nguyên",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollution",
+            "enGloss": "dirty air or water",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tài nguyên bổ sung"
+          },
+          {
+            "term": "allocate resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phân bổ nguồn lực"
+          },
+          {
+            "term": "available resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: nguồn lực sẵn có"
+          },
+          {
+            "term": "create problems",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tạo ra vấn đề"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "The main problem is that countries often act alone, which makes global issues worse.",
+          "point2": "The solution is that international groups must create better rules and encourage cooperation among all nations.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Global problems need the help of governments and international groups.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that governments and international organizations must act to solve global problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The main cause is that countries often act alone when facing big world problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, national interests sometimes come before the good of all people in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, some countries do not share clean energy plans with their neighbors.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, pollution gets worse, and the air becomes dirty.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that working together is very important for a clean world.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is that international groups must make better rules for all countries.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because a shared set of rules helps everyone follow a common plan.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, the world can set rules for how much waste a country can make.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, all countries must try to reduce their trash and save resources.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that cooperation is key to solving global issues.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that governments and international organizations must act to solve global problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because countries must work together to prevent pollution, and international groups must create better rules for all nations.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "cooperation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "governments",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "global issues",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "self-interest",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "cooperation",
+            "enGloss": "working together",
+            "viGloss": "sự hợp tác",
+            "source": "approved_sample"
+          },
+          {
+            "term": "governments",
+            "enGloss": "national governments",
+            "viGloss": "các chính phủ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "global issues",
+            "enGloss": "world problems",
+            "viGloss": "các vấn đề toàn cầu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "self-interest",
+            "enGloss": "own needs",
+            "viGloss": "lợi ích cá nhân",
+            "source": "approved_sample"
+          },
+          {
+            "term": "international organizations",
+            "enGloss": "groups of countries",
+            "viGloss": "các tổ chức quốc tế",
+            "source": "approved_sample"
+          },
+          {
+            "term": "rules",
+            "enGloss": "agreed-upon guidelines",
+            "viGloss": "các quy tắc",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "The main problem is that national governments often act in their own interests, which makes solving global issues difficult.",
+          "point2": "A practical solution is for international organizations to create stronger rules for all member countries.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Global problems require cooperation between national governments and international organizations to find effective solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that governments and international organizations must act to solve global problems.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The main cause is that national governments often act in their own interests, which makes solving global issues difficult.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, countries sometimes put their own needs before the world's common good.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, some nations might refuse to share clean energy data with other countries.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the effort to control climate change slows down, and pollution continues to rise.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that self-interest can block necessary global action.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is for international organizations to create stronger rules for all member countries.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that having clear, agreed-upon rules gives everyone a common goal.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the World Health Organization sets guidelines for disease control.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that countries know exactly what steps they must take to protect their people.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that global cooperation is needed for safety.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that governments and international organizations must act to solve global problems.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because national self-interest often hinders global cooperation, while international organizations can establish necessary rules and guidelines for collective action.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "global challenges",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "national governments",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "often prioritize",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "global well-being",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "global challenges",
+            "enGloss": "worldwide difficulties",
+            "viGloss": "các thách thức toàn cầu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "national governments",
+            "enGloss": "governments of individual countries",
+            "viGloss": "các chính phủ quốc gia",
+            "source": "approved_sample"
+          },
+          {
+            "term": "often prioritize",
+            "enGloss": "tend to give importance to",
+            "viGloss": "thường ưu tiên",
+            "source": "approved_sample"
+          },
+          {
+            "term": "global well-being",
+            "enGloss": "the health and welfare of the world",
+            "viGloss": "sự thịnh vượng toàn cầu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "insufficient cooperation",
+            "enGloss": "lack of enough teamwork",
+            "viGloss": "sự hợp tác không đủ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "effective solution",
+            "enGloss": "a successful way to fix something",
+            "viGloss": "giải pháp hiệu quả",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "The first major problem is that national governments tend to prioritize their own domestic interests over the overall global well-being, which hinders necessary global cooperation.",
+          "point2": "A solution involves establishing stronger international governance mechanisms to ensure collective action and mutual aid among countries.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Global challenges require coordinated efforts from both national governments and international organizations.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that governments and international organizations must act to solve global problems.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that national governments often prioritize domestic interests over collective global well-being.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, countries frequently hesitate to implement stringent regulations if those rules impact their immediate economic growth.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, nations might resist adopting strict carbon emission standards, preferring to maintain current industrial practices.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, critical global issues, such as climate change, accumulate without sufficient mitigation efforts.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that insufficient cooperation undermines global sustainability goals.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is establishing stronger international governance mechanisms and enforcing collective action.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that a unified global mandate provides the necessary legal framework for cooperation.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the World Health Organization coordinates responses to pandemics, ensuring shared resources.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that countries commit to mutual aid, thereby improving global safety and development.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that international organizations must play a leading role in addressing global problems.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that governments and international organizations must act to solve global problems.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because national governments often prioritize domestic interests, and establishing stronger international governance mechanisms provides the necessary legal framework for cooperation.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:04.983501+00:00"
+  }
+}

@@ -1,0 +1,1779 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "240",
+  "title": "#240 Movie Theater",
+  "prompt": "A new movie theater is said to be built in your neighborhood. What are the advantages or disadvantages of this plan?",
+  "source": {
+    "promptSha256": "27c1d0122cc1c2a554cc0e3cc93ed899a7c3bf99be77a90a35457e0b28fa704d",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "A new movie theater is said to be built in your neighborhood.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What are the advantages or disadvantages of this plan?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "City development"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "theater",
+        "enGloss": "Key concept related to theater.",
+        "viGloss": "rạp hát"
+      },
+      {
+        "term": "neighborhood",
+        "enGloss": "Key concept related to neighborhood.",
+        "viGloss": "khu phố"
+      },
+      {
+        "term": "advantages",
+        "enGloss": "beneficial conditions or circumstances",
+        "viGloss": "những lợi thế"
+      },
+      {
+        "term": "disadvantages",
+        "enGloss": "Key concept related to disadvantages.",
+        "viGloss": "nhược điểm"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "comparison",
+        "required": true,
+        "en": "Discuss the important advantages and disadvantages.",
+        "vi": "Thảo luận những ưu điểm và nhược điểm quan trọng."
+      },
+      {
+        "id": "judgement",
+        "required": true,
+        "en": "Make the required overall judgement.",
+        "vi": "Đưa ra nhận định tổng thể theo yêu cầu."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Support the comparison with relevant examples.",
+        "vi": "Hỗ trợ phần so sánh bằng ví dụ phù hợp."
+      }
+    ],
+    "angles": [
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "The theater will improve local life by providing a fun place for families to spend time, making the neighborhood more attractive.",
+        "vi": "Góc nhìn: The theater will improve local life by providing a fun place for families to spend time, making the neighborhood more attractive.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "However, a disadvantage is the potential increase in traffic, which will make the local roads very busy and difficult to use.",
+        "vi": "Góc nhìn: However, a disadvantage is the potential increase in traffic, which will make the local roads very busy and difficult to use.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspect of the movie theater, focusing on community fun and local life improvement.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspect of the movie theater, focusing on community fun and local life improvement.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspect, focusing on increased traffic and making the area less walkable.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspect, focusing on increased traffic and making the area less walkable.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "The primary advantage of building a movie theater is the positive effect on the local economy through job creation and increased business activity.",
+        "vi": "Góc nhìn: The primary advantage of building a movie theater is the positive effect on the local economy through job creation and increased business activity.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "The main disadvantage is the potential for increased traffic congestion and parking difficulties, which negatively affects the neighborhood's daily life.",
+        "vi": "Góc nhìn: The main disadvantage is the potential for increased traffic congestion and parking difficulties, which negatively affects the neighborhood's daily life.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive social aspect of going to the cinema, using the structure: Point, Explain, Example, Effect, Link.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive social aspect of going to the cinema, using the structure: Point, Explain, Example, Effect, Link.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph focuses on the negative financial aspect (disadvantage) of movie theaters, following the structure: Point, Explain, Example, Effect, Link.",
+        "vi": "Góc nhìn: The second body paragraph focuses on the negative financial aspect (disadvantage) of movie theaters, following the structure: Point, Explain, Example, Effect, Link.",
+        "sourceVariantId": "disadvantages"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write a biography of the quoted figure; focus strictly on analyzing and evaluating the core claim.",
+        "vi": "Không viết về tiểu sử của nhân vật được trích dẫn; hãy tập trung phân tích và đánh giá đúng nhận định trong đề."
+      },
+      {
+        "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+        "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "movie theater",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "strongly positive",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "advantages outweigh",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "movie theater",
+            "enGloss": "a place to watch movies",
+            "viGloss": "rạp chiếu phim",
+            "source": "approved_sample"
+          },
+          {
+            "term": "strongly positive",
+            "enGloss": "very sure of",
+            "viGloss": "rất chắc chắn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "advantages outweigh",
+            "enGloss": "the good points are greater than the bad points",
+            "viGloss": "ưu điểm lớn hơn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "daily life",
+            "enGloss": "everyday existence",
+            "viGloss": "cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "neighborhood more",
+            "enGloss": "the area becomes more",
+            "viGloss": "khu phố hơn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "more attractive",
+            "enGloss": "more appealing",
+            "viGloss": "hấp dẫn hơn",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of City development far outweigh the drawbacks because ____.",
+          "point1": "The theater will improve local life by providing a fun place for families to spend time, making the neighborhood more attractive.",
+          "point2": "However, a disadvantage is the potential increase in traffic, which will make the local roads very busy and difficult to use.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of City development are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspect of the movie theater, focusing on community fun and local life improvement.",
+          "point2": "The second body paragraph discusses the negative aspect, focusing on increased traffic and making the area less walkable.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Building a new movie theater in our neighborhood is a big topic for discussion.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a new movie theater brings many benefits to the community.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people will have a fun place to spend their time in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, families can go together to watch a movie on a weekend in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this makes the neighborhood more attractive for people to live in.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the theater will improve local life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a new movie theater has some disadvantages for the area.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because it might increase the amount of traffic in the streets in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, many cars will come to the area when the theater is open in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the roads will get very busy and difficult to use.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that traffic is a problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the benefits of the theater are important.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The new movie theater will improve local life, but people must plan for increased traffic.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many people talk about building a new movie theater in our neighborhood.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a new movie theater can be a good addition to the area.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it gives people a fun place to spend time in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, families can go together to watch a film on a weekend.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the local community will have more places for fun activities.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the theater will improve local life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, a new movie theater presents a negative drawback for the area.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because it will bring more cars and increase traffic problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, the main road might get very busy when the theater opens.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, walking to the area will become difficult for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that traffic will be a big problem.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because a theater can improve local life by giving people a fun place to spend time, but it will also cause traffic problems and make walking difficult.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "economic growth",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "local people",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "community",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "disadvantage",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "economic growth",
+            "enGloss": "the process of increasing wealth and income",
+            "viGloss": "sự tăng trưởng kinh tế",
+            "source": "approved_sample"
+          },
+          {
+            "term": "local people",
+            "enGloss": "people who live in the immediate area",
+            "viGloss": "người dân địa phương",
+            "source": "approved_sample"
+          },
+          {
+            "term": "community",
+            "enGloss": "a group of people living in the same place",
+            "viGloss": "cộng đồng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "disadvantage",
+            "enGloss": "an unfavorable aspect or drawback",
+            "viGloss": "bất lợi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "traffic",
+            "enGloss": "the movement of vehicles on roads",
+            "viGloss": "giao thông",
+            "source": "approved_sample"
+          },
+          {
+            "term": "congestion",
+            "enGloss": "a state of being overcrowded or blocked",
+            "viGloss": "tắc nghẽn",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng học thuật"
+          },
+          {
+            "term": "economic growth",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tăng trưởng kinh tế"
+          },
+          {
+            "term": "ethnic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng dân tộc"
+          },
+          {
+            "term": "international community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng quốc tế"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of City development far outweigh the drawbacks because ____.",
+          "point1": "The primary advantage of building a movie theater is the positive effect on the local economy through job creation and increased business activity.",
+          "point2": "The main disadvantage is the potential for increased traffic congestion and parking difficulties, which negatively affects the neighborhood's daily life.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of City development are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive social aspect of going to the cinema, using the structure: Point, Explain, Example, Effect, Link.",
+          "point2": "The second body paragraph focuses on the negative financial aspect (disadvantage) of movie theaters, following the structure: Point, Explain, Example, Effect, Link.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The plan to build a new movie theater in our neighborhood has brought up many discussions.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, a new movie theater can bring great economic growth to the area.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it will create many new jobs for local people.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the theater will need staff for tickets, cleaning, and food service.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, local businesses near the theater will also see more customers.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the community will benefit from increased employment.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are some disadvantages, such as increased traffic and parking problems.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that many people will drive to the theater.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that the local roads might not handle the extra number of cars.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that rush hour traffic will become much worse for all residents.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that traffic congestion is a major drawback.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the establishment of a movie theater stimulates local employment and commerce, while the drawbacks are limited to increased traffic and parking difficulties.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Movie theaters are a popular form of entertainment that many people enjoy.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, movie theaters offer a unique and enjoyable social experience.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, going to the cinema allows people to share a fun time with friends or family.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, seeing a big movie on a large screen is much more exciting than watching it at home.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the atmosphere of the theater adds to the enjoyment of the film.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the communal setting enhances the viewing pleasure.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the high cost of going to the cinema is a significant disadvantage.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that tickets, snacks, and parking can add up quickly.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a single outing might cost more than a week's worth of groceries.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that this expense can make movie-going a luxury for many people.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the financial burden is a major drawback.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the communal setting enhances the viewing pleasure, while the financial burden makes movie-going a luxury for many people.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "cinema facility",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "local economy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "job creation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "will stimulate",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "cinema facility",
+            "enGloss": "a place to watch movies",
+            "viGloss": "cơ sở điện ảnh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "local economy",
+            "enGloss": "the economy of a specific area",
+            "viGloss": "nền kinh tế địa phương",
+            "source": "approved_sample"
+          },
+          {
+            "term": "job creation",
+            "enGloss": "the process of creating jobs",
+            "viGloss": "việc tạo việc làm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "will stimulate",
+            "enGloss": "will encourage or promote",
+            "viGloss": "sẽ kích thích",
+            "source": "approved_sample"
+          },
+          {
+            "term": "substantial economic",
+            "enGloss": "large and important economic",
+            "viGloss": "kinh tế đáng kể",
+            "source": "approved_sample"
+          },
+          {
+            "term": "economic growth",
+            "enGloss": "the increase in the value of goods and services",
+            "viGloss": "tăng trưởng kinh tế",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "economic growth",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tăng trưởng kinh tế"
+          },
+          {
+            "term": "local economy",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kinh tế địa phương"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of City development far outweigh the drawbacks because ____.",
+          "point1": "The establishment of a cinema facility can significantly boost the local economy by attracting visitors, which necessitates more services and leads to job creation.",
+          "point2": "However, the construction poses a significant drawback regarding local traffic congestion, which will overwhelm existing road infrastructure and cause noise pollution.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of City development are more concerning because ____.",
+          "point1": "The first body paragraph discusses the superior viewing experience provided by movie theaters, focusing on technical aspects like large screens and sound systems.",
+          "point2": "The second body paragraph addresses the financial drawback of movie theaters, emphasizing high operational costs and resulting ticket price barriers.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The proposed construction of a new movie theater in our residential area raises questions regarding its overall impact on the neighborhood.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, the establishment of a cinema facility can significantly boost the local economy.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, such a major entertainment venue attracts a steady stream of visitors and patrons.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the increased footfall will necessitate more services, such as local cafes and restaurants, to cater to the crowd.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these businesses will experience greater revenue, leading to job creation within the community.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the cinema will stimulate substantial economic growth for the area.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the construction poses a significant drawback regarding local traffic congestion.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that a large gathering place will inevitably draw many vehicles to the immediate vicinity.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that peak viewing times will overwhelm existing road infrastructure, making daily commutes difficult.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that residents will face increased noise pollution and difficulty accessing their homes.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the project might negatively affect the quality of life for nearby inhabitants.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the advantages outweigh the disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the cinema will certainly stimulate economic growth, the negative impact on local traffic congestion must be carefully managed.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Movie theaters offer a unique form of entertainment, providing a communal experience for viewing films.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, movie theaters provide a superior viewing experience compared to watching films at home.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, the specialized equipment and darkened environment enhance the cinematic immersion for the audience.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the large screen and professional sound system deliver visual and auditory quality that is difficult to replicate in a domestic setting.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, patrons can fully concentrate on the narrative without the distractions of household life.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that the dedicated infrastructure significantly elevates the enjoyment of film viewing.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the high operational costs associated with movie theaters present a significant financial disadvantage.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that maintaining large complexes, paying staff, and acquiring new films require substantial capital investment.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that ticket prices often reflect these overhead expenses, making outings expensive for many families.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that regular attendance becomes a luxury for lower-income groups, limiting accessibility.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that financial barriers restrict the enjoyment of cinema for certain demographics.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the specialized infrastructure of theaters enhances the viewing experience, while the high operational costs restrict accessibility for various demographics.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:26.788314+00:00"
+  }
+}

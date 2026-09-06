@@ -1,0 +1,1820 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "368",
+  "title": "#368 Nature or Nurture",
+  "prompt": "Scientists have been debating the impact of nature and nurture on people’s personality and behavior. Nature brings you inborn skills and nurture helps you obtain skills by practices. Which one do you think has a greater influence?",
+  "source": {
+    "promptSha256": "c195a96e563d6a5df367573333163eb4f8b9147d65305d84cd168fb092ba2139",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Scientists have been debating the impact of nature and nurture on people’s personality and behavior.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Nature brings you inborn skills and nurture helps you obtain skills by practices.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Which one do you think has a greater influence?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Science, technology, and innovation"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Scientists",
+        "enGloss": "Key concept related to scientists.",
+        "viGloss": "các nhà khoa học"
+      },
+      {
+        "term": "debating",
+        "enGloss": "Key concept related to debating.",
+        "viGloss": "tranh luận"
+      },
+      {
+        "term": "nurture",
+        "enGloss": "Key concept related to nurture.",
+        "viGloss": "nuôi dưỡng"
+      },
+      {
+        "term": "personality",
+        "enGloss": "Key concept related to personality.",
+        "viGloss": "cá tính"
+      },
+      {
+        "term": "behavior",
+        "enGloss": "Key concept related to behavior.",
+        "viGloss": "hành vi"
+      },
+      {
+        "term": "practices",
+        "enGloss": "Key concept related to practices.",
+        "viGloss": "thực hành"
+      },
+      {
+        "term": "greater",
+        "enGloss": "Key concept related to greater.",
+        "viGloss": "lớn hơn"
+      },
+      {
+        "term": "influence",
+        "enGloss": "Key concept related to influence.",
+        "viGloss": "ảnh hưởng"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "The first point argues that nature (things we are born with) has a strong influence on our behavior.",
+        "vi": "Góc nhìn: The first point argues that nature (things we are born with) has a strong influence on our behavior.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "The second point argues that nurture (things we learn from our environment) also has a strong influence on our behavior.",
+        "vi": "Góc nhìn: The second point argues that nurture (things we learn from our environment) also has a strong influence on our behavior.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Nature provides individuals with inherent traits, such as a natural talent for music, which establishes a starting point for their abilities.",
+        "vi": "Góc nhìn: Nature provides individuals with inherent traits, such as a natural talent for music, which establishes a starting point for their abilities.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Nurture, through environmental experiences and practice, allows individuals to develop crucial skills and good social habits.",
+        "vi": "Góc nhìn: Nurture, through environmental experiences and practice, allows individuals to develop crucial skills and good social habits.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "Nature provides the initial foundation for personality and abilities.",
+        "vi": "Góc nhìn: Nature provides the initial foundation for personality and abilities.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "The environment and upbringing play a very important role in shaping who we become.",
+        "vi": "Góc nhìn: The environment and upbringing play a very important role in shaping who we become.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Both nature and nurture are equally important in shaping human personality and behavior, disagreeing with the idea that one factor is superior.",
+        "vi": "Góc nhìn: Both nature and nurture are equally important in shaping human personality and behavior, disagreeing with the idea that one factor is superior.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "The first body paragraph focuses on the foundational importance of innate traits (nature), while the second body paragraph emphasizes the crucial role of learning and environment (nurture).",
+        "vi": "Góc nhìn: The first body paragraph focuses on the foundational importance of innate traits (nature), while the second body paragraph emphasizes the crucial role of learning and environment (nurture).",
+        "sourceVariantId": "option_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Science, technology, and innovation.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Science, technology, and innovation."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "personality",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "behavior",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "influence",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "babies",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "personality",
+            "enGloss": "the way a person acts",
+            "viGloss": "tính cách",
+            "source": "approved_sample"
+          },
+          {
+            "term": "behavior",
+            "enGloss": "how a person acts",
+            "viGloss": "hành vi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "influence",
+            "enGloss": "power to affect",
+            "viGloss": "ảnh hưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "babies",
+            "enGloss": "newborn children",
+            "viGloss": "em bé",
+            "source": "approved_sample"
+          },
+          {
+            "term": "surroundings",
+            "enGloss": "the area around us",
+            "viGloss": "môi trường xung quanh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "develop",
+            "enGloss": "to grow or improve",
+            "viGloss": "phát triển",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "affect development",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ảnh hưởng đến sự phát triển"
+          },
+          {
+            "term": "career development",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phát triển nghề nghiệp"
+          },
+          {
+            "term": "cognitive development",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phát triển nhận thức"
+          },
+          {
+            "term": "considerable influence",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ảnh hưởng đáng kể"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "The first point argues that nature (things we are born with) has a strong influence on our behavior.",
+          "point2": "The second point argues that nurture (things we learn from our environment) also has a strong influence on our behavior.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "Nature provides individuals with inherent traits, such as a natural talent for music, which establishes a starting point for their abilities.",
+          "point2": "Nurture, through environmental experiences and practice, allows individuals to develop crucial skills and good social habits.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People talk about what makes a person's personality and actions.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with supporting the first option.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Nature has a big influence on a person's behavior.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, some things are given to us when we are born in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, some babies are naturally good at singing in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they might enjoy music and singing from a young age in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that our birth traits play a big part in who we become.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Nurture also has a big influence on a person's behavior.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because our surroundings teach us many things in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, if a child lives near a park, they will learn to play outside in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they will become active and enjoy outdoor time in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that our life experiences shape our habits.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that nature and nurture both matter.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Our birth traits give us a start, and our life experiences help us develop our personality.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People talk about what makes a person's personality and actions.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Nature gives us some skills when we are born.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, some traits come from our family in daily life in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a baby might have a natural talent for music in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this person might enjoy singing or playing an instrument in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that our birth traits give us a starting point.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Nurture helps us get skills through practice.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because our surroundings teach us many things in daily life in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child who plays in a garden learns to share toys in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this child develops good social habits in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that our experiences shape who we become.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from nature and nurture.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "personality",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "behavior",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "natural",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "tendencies",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "personality",
+            "enGloss": "the combination of characteristics that make a person who they are",
+            "viGloss": "tính cách",
+            "source": "approved_sample"
+          },
+          {
+            "term": "behavior",
+            "enGloss": "the way in which one acts",
+            "viGloss": "hành vi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "natural",
+            "enGloss": "existing in nature; not made by humans",
+            "viGloss": "tự nhiên",
+            "source": "approved_sample"
+          },
+          {
+            "term": "tendencies",
+            "enGloss": "a likelihood or inclination to behave in a particular way",
+            "viGloss": "khuynh hướng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "environment",
+            "enGloss": "the surroundings or conditions in which a person lives",
+            "viGloss": "môi trường",
+            "source": "approved_sample"
+          },
+          {
+            "term": "upbringing",
+            "enGloss": "the way in which a person is raised",
+            "viGloss": "sự nuôi dưỡng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "create environment",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tạo môi trường"
+          },
+          {
+            "term": "environmental changes",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thay đổi môi trường"
+          },
+          {
+            "term": "environmental concern",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: mối quan tâm về môi trường"
+          },
+          {
+            "term": "environmental consequences",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hậu quả môi trường"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "Nature provides the initial foundation for personality and abilities.",
+          "point2": "The environment and upbringing play a very important role in shaping who we become.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "Both nature and nurture are equally important in shaping human personality and behavior, disagreeing with the idea that one factor is superior.",
+          "point2": "The first body paragraph focuses on the foundational importance of innate traits (nature), while the second body paragraph emphasizes the crucial role of learning and environment (nurture).",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate about whether a person's personality and behavior are shaped more by genetics or by their life experiences is a long discussion.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with supporting the first option.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Nature provides a basic base for human traits and abilities.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a person is born with certain natural tendencies and skills.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, that some babies show a natural talent for music or drawing.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This result shows that these natural gifts give them an early advantage in certain areas.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that This clearly shows that nature sets the initial path for development.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The environment and upbringing also play a very important role in shaping who we become.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that This is mainly because our surroundings teach us how to act and feel.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that that children raised in good families tend to be more confident.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that positive interactions help build strong emotional skills.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that This clearly shows that the environment guides our growth.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that nature has the greater influence on personality and behavior.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The initial traits provided by nature set the stage, and the environment helps develop these skills.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate about whether human personality and behavior are shaped more by genetics or by life experiences is very old.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with supporting the second option.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Nature provides a strong foundation for our character.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, some traits are built into us from birth.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a baby might show a natural talent for music or a certain temperament.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these innate abilities give us a starting point for development.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that our natural makeup plays a major role in who we become.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The environment also plays a very important role in shaping us.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people learn through interaction with others.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a child who grows up in a supportive family learns good habits.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that these early experiences help shape our skills and personality.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that our surroundings are key to development.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that one factor is more important.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Both innate traits and life experiences are needed to develop a person, as shown by the role of natural makeup and the influence of surroundings.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "predisposition",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "temperaments",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "aptitudes",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "predominant",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "predisposition",
+            "enGloss": "a tendency to develop a particular condition or quality",
+            "viGloss": "khuynh hướng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "temperaments",
+            "enGloss": "a person's characteristic emotional state",
+            "viGloss": "tâm trạng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "aptitudes",
+            "enGloss": "natural abilities or talents",
+            "viGloss": "năng khiếu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "predominant",
+            "enGloss": "main or most important",
+            "viGloss": "chủ yếu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "socialization",
+            "enGloss": "the process of learning to behave in a particular society",
+            "viGloss": "quá trình xã hội hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "paramount",
+            "enGloss": "more important than anything else",
+            "viGloss": "tối quan trọng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "paramount importance",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Science, technology, and innovation.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Science, technology, and innovation."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Science, technology, and innovation ____.",
+          "point1": "The first point discusses the influence of nature, arguing that genetic predisposition establishes a foundational framework for personality development.",
+          "point2": "The second point discusses the influence of nurture, arguing that environmental factors are paramount because they allow for the acquisition of new skills and positive socialization.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because Science, technology, and innovation ____.",
+          "point1": "Both nature and nurture are highly influential, refuting the idea that one dominates the other. It emphasizes that innate traits provide a necessary starting point, while environmental factors are vital for developing complex behaviors.",
+          "point2": "The argument highlights that genetic predispositions set initial parameters, and that social interactions are responsible for modeling complex behavioral patterns, demonstrating the necessity of both biological and experiential inputs.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relationship between innate characteristics and environmental influences on human personality remains a subject of considerable academic debate.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The argument for nature suggests that many aspects of human behavior are determined by genetic predisposition.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, certain temperaments and aptitudes are inherited from parents.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a child might display a natural inclination toward musical rhythm, regardless of formal training.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these inherent traits can significantly shape early developmental paths.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that genetic factors provide a foundational framework for personality development.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Conversely, the influence of nurture highlights the crucial role of experience and learning in shaping character.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that human beings are highly adaptable and capable of acquiring new skills.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that someone raised in a supportive community can develop strong social skills.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that consistent practice and positive socialization can modify innate tendencies.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that environmental factors are paramount in determining adult behavior.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from argument and conversely.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relationship between innate characteristics and environmental influences on human behavior has long been a subject of academic debate.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with supporting the second option.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The evidence suggests that innate traits provide a foundational framework for human development.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, genetic predispositions establish initial parameters for temperament and potential.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a child may exhibit a natural inclination toward musical rhythm, regardless of formal training.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, early exposure to certain stimuli can amplify these inherent aptitudes.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that nature provides a crucial starting point for all subsequent learning.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, the environment plays a role in shaping personality far beyond mere practice.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that social interactions model complex behavioral patterns.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that growing up in a collaborative community fosters teamwork skills.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that individuals develop sophisticated coping mechanisms through lived experience.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that environmental factors are highly influential in shaping character.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with supporting the second option.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Science, technology, and innovation.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Both innate traits providing a foundational framework and environmental factors shaping personality are crucial components of human development.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:37.956241+00:00"
+  }
+}

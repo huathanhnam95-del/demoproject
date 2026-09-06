@@ -1,0 +1,1810 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "310",
+  "title": "#310 Historical Preservation",
+  "prompt": "Should a city try to preserve its old, historic buildings or destroy them and replace them with modern buildings?",
+  "source": {
+    "promptSha256": "28720ac80df90745c817c02354c8377b2206cf3dbe813af08da21b127f95f8cf",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Should a city try to preserve its old, historic buildings or destroy them and replace them with modern buildings?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "City development"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "preserve",
+        "enGloss": "Key concept related to preserve.",
+        "viGloss": "bảo quản"
+      },
+      {
+        "term": "historic",
+        "enGloss": "Key concept related to historic.",
+        "viGloss": "mang tính lịch sử"
+      },
+      {
+        "term": "buildings",
+        "enGloss": "Key concept related to buildings.",
+        "viGloss": "các tòa nhà"
+      },
+      {
+        "term": "destroy",
+        "enGloss": "Key concept related to destroy.",
+        "viGloss": "phá hủy"
+      },
+      {
+        "term": "replace",
+        "enGloss": "Key concept related to replace.",
+        "viGloss": "thay thế"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "Old buildings help people remember the past and keep the community feel alive.",
+        "vi": "Góc nhìn: Old buildings help people remember the past and keep the community feel alive.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "New buildings can improve city life and help the city grow.",
+        "vi": "Góc nhìn: New buildings can improve city life and help the city grow.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Old buildings help people remember the past and give a community a strong sense of place.",
+        "vi": "Góc nhìn: Old buildings help people remember the past and give a community a strong sense of place.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "New structures can improve a city's look and function, helping it to grow.",
+        "vi": "Góc nhìn: New structures can improve a city's look and function, helping it to grow.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_a-point1",
+        "label": "Point 1",
+        "en": "Preserving old buildings helps maintain a city's unique character and sense of history.",
+        "vi": "Góc nhìn: Preserving old buildings helps maintain a city's unique character and sense of history.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_a-point2",
+        "label": "Point 2",
+        "en": "Destroying old buildings and replacing them with modern ones can improve city efficiency and appearance.",
+        "vi": "Góc nhìn: Destroying old buildings and replacing them with modern ones can improve city efficiency and appearance.",
+        "sourceVariantId": "option_a"
+      },
+      {
+        "id": "option_b-point1",
+        "label": "Point 1",
+        "en": "Preserving old buildings helps maintain a city's unique character and sense of place, allowing people to feel a stronger connection to their roots and local identity.",
+        "vi": "Góc nhìn: Preserving old buildings helps maintain a city's unique character and sense of place, allowing people to feel a stronger connection to their roots and local identity.",
+        "sourceVariantId": "option_b"
+      },
+      {
+        "id": "option_b-point2",
+        "label": "Point 2",
+        "en": "Historic buildings also provide economic benefits because they can be adapted for new uses, which creates jobs and attracts visitors.",
+        "vi": "Góc nhìn: Historic buildings also provide economic benefits because they can be adapted for new uses, which creates jobs and attracts visitors.",
+        "sourceVariantId": "option_b"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of City development.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của City development."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "community feel",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "history",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "old buildings",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "new buildings",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "community feel",
+            "enGloss": "the feeling of belonging to a group",
+            "viGloss": "cảm giác cộng đồng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "history",
+            "enGloss": "the study of past events",
+            "viGloss": "lịch sử",
+            "source": "approved_sample"
+          },
+          {
+            "term": "old buildings",
+            "enGloss": "structures from the past",
+            "viGloss": "những tòa nhà cũ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "new buildings",
+            "enGloss": "modern structures",
+            "viGloss": "những tòa nhà mới",
+            "source": "approved_sample"
+          },
+          {
+            "term": "city",
+            "enGloss": "a large town",
+            "viGloss": "thành phố",
+            "source": "approved_sample"
+          },
+          {
+            "term": "shop",
+            "enGloss": "a place to buy things",
+            "viGloss": "cửa hàng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "brief history",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: lịch sử tóm tắt"
+          },
+          {
+            "term": "cultural history",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: lịch sử văn hóa"
+          },
+          {
+            "term": "limited capacity",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: năng lực hạn chế"
+          },
+          {
+            "term": "natural history",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: lịch sử tự nhiên"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because City development ____.",
+          "point1": "Old buildings help people remember the past and keep the community feel alive.",
+          "point2": "New buildings can improve city life and help the city grow.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because City development ____.",
+          "point1": "Old buildings help people remember the past and give a community a strong sense of place.",
+          "point2": "New structures can improve a city's look and function, helping it to grow.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Cities often face a choice about old buildings: should they keep them or tear them down for new ones?",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Keeping old buildings helps people remember the past.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these structures tell a story about the city's history in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a shop from a hundred years ago shows how people lived back then in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel a strong connection to their home area in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that old buildings keep the community feel alive.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Tearing down old buildings for new ones can improve city life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because modern buildings offer better space and new services in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a new office block can hold many people and new shops in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the city can grow and people can work better.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that new buildings help the city grow.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from keeping and tearing.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Cities often face a choice about their old buildings: should they keep them or tear them down for new ones?",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Keeping old buildings helps people remember the past.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these structures hold the memories of past people in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, an old market building shows how people used to shop in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the city keeps a strong sense of its history.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that old buildings give a community a strong sense of place.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Building new structures can improve a city's look and function.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because modern buildings offer better space for people to live and work in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a new shopping center can give many shops more room in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people have better places to buy things and meet friends.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that new buildings help a city grow.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from keeping and building.",
+            "level": "a2_b1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "historic",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "character",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "modernization",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "community",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "historic",
+            "enGloss": "relating to history",
+            "viGloss": "thuộc về lịch sử",
+            "source": "approved_sample"
+          },
+          {
+            "term": "character",
+            "enGloss": "the distinctive nature of a person or place",
+            "viGloss": "tính cách, đặc điểm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "modernization",
+            "enGloss": "the process of making something modern",
+            "viGloss": "hiện đại hóa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "community",
+            "enGloss": "a group of people living in the same place",
+            "viGloss": "cộng đồng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "efficiency",
+            "enGloss": "the ability to work well and quickly",
+            "viGloss": "hiệu quả",
+            "source": "approved_sample"
+          },
+          {
+            "term": "structures",
+            "enGloss": "buildings or frameworks",
+            "viGloss": "cấu trúc",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng học thuật"
+          },
+          {
+            "term": "central characteristics",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đặc điểm trung tâm"
+          },
+          {
+            "term": "characteristic feature",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tính năng đặc trưng"
+          },
+          {
+            "term": "common characteristic",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đặc điểm chung"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because City development ____.",
+          "point1": "Preserving old buildings helps maintain a city's unique character and sense of history.",
+          "point2": "Destroying old buildings and replacing them with modern ones can improve city efficiency and appearance.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because City development ____.",
+          "point1": "Preserving old buildings helps maintain a city's unique character and sense of place, allowing people to feel a stronger connection to their roots and local identity.",
+          "point2": "Historic buildings also provide economic benefits because they can be adapted for new uses, which creates jobs and attracts visitors.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate about whether a city should keep its old, historic buildings or tear them down for modern structures is a common one.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Preserving old buildings helps maintain a city's unique character and sense of history.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these structures tell the story of the community that built them.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the old market area in Boston shows the city's growth over many years.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel a strong connection to their roots when they walk through these historic streets.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that keeping old buildings supports the community's identity.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Destroying old buildings and replacing them with modern ones can improve city efficiency and appearance.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that new designs often meet current needs for space and technology.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that This can be exemplified by the construction of new high-rise office blocks in Dubai.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the city can accommodate more people and businesses in a compact area.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that modernization is necessary for growth.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from preserving and destroying.",
+            "level": "b2",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate over whether a city should keep its old, historic buildings or tear them down for modern structures is a common one.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with supporting the second option.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Preserving old buildings helps maintain a city's unique character and sense of place.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these structures tell the story of the community that built them over many years.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a historic market square shows the original way people traded goods in the past.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel a stronger connection to their roots and local identity.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that keeping these buildings supports the community's cultural value.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Historic buildings also provide economic benefits that new developments often miss.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that old buildings can be adapted for new uses, like shops or offices.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that This can be exemplified by the reuse of a former factory into trendy art studios and cafes.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that local businesses can open up in these areas, creating jobs and attracting visitors.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that preserving old buildings helps the local economy.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with supporting the second option.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because preserving old buildings maintains a community's unique cultural identity and also provides significant economic advantages through adaptive reuse.",
+            "level": "b2",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "structures",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "preserve",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "embody",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "architecture",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "structures",
+            "enGloss": "buildings",
+            "viGloss": "các tòa nhà",
+            "source": "approved_sample"
+          },
+          {
+            "term": "preserve",
+            "enGloss": "keep safe",
+            "viGloss": "bảo tồn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "embody",
+            "enGloss": "represent",
+            "viGloss": "thể hiện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "architecture",
+            "enGloss": "style of buildings",
+            "viGloss": "kiến trúc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "identity",
+            "enGloss": "who someone is",
+            "viGloss": "bản sắc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "demolishing",
+            "enGloss": "tearing down",
+            "viGloss": "phá hủy",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "collective identity",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: bản sắc tập thể"
+          },
+          {
+            "term": "cultural identity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing City development.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về City development."
+          },
+          {
+            "term": "ethnic identity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing City development.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về City development."
+          },
+          {
+            "term": "national identity",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing City development.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về City development."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "option_a",
+          "label": "Version 1: OPTION A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because City development ____.",
+          "point1": "Preserving old buildings maintains a deep connection to a community's past, embodying collective memory and unique character, which is vital for the city's identity and soul.",
+          "point2": "Demolishing old buildings allows for modernization and growth, enabling the creation of efficient commercial spaces that stimulate economic activity and boost the overall economy.",
+          "sampleVariantId": "option_a",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "option_b",
+          "label": "Version 2: OPTION B",
+          "stance": "disagree",
+          "thesisFrame": "In my view, I disagree with this assertion because City development ____.",
+          "point1": "The argument for modernization suggests that replacing old buildings with new ones is necessary for economic viability and functional efficiency.",
+          "point2": "The argument for preservation emphasizes that historical buildings are vital for maintaining a community's unique character and cultural significance.",
+          "sampleVariantId": "option_b",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "option_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate surrounding urban development often centers on whether a city should prioritize the preservation of its historical structures or demolish them for contemporary construction.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Preserving old buildings maintains a deep connection to a community's past.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, these structures embody the collective memory and unique character of a locale.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, the preserved architecture of a market square tells a story about generations of commerce and social interaction.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the neighborhood retains its distinct identity, which is crucial for local morale.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that maintaining the existing architectural heritage is vital for the city's soul.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Conversely, demolishing old buildings allows for significant modernization and growth.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that contemporary needs often require larger, more efficient commercial spaces.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that replacing outdated industrial zones with high-tech office parks stimulates economic activity.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the city can attract new industries and improve infrastructure, thereby boosting its overall economy.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that progress necessitates radical structural change.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from preserving and conversely.",
+            "level": "c1",
+            "sampleVariantId": "option_a",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "option_b": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate concerning whether a city should maintain its historical structures or demolish them for contemporary construction is highly contentious.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Some proponents argue that demolishing old buildings and replacing them with modern structures facilitates necessary urban development.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, contemporary designs offer superior functionality and efficiency for modern commerce.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, an outdated factory building might be replaced by a sleek office complex, maximizing usable space.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the city's infrastructure can adapt to the demands of a growing population.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that modernization is crucial for economic viability.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Conversely, others maintain that preserving historical buildings is essential for maintaining a community's unique character.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that these structures embody the city's deep cultural significance and collective memory.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a preserved market square retains the original architectural heritage and local feel.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that residents feel a stronger connection to their roots, fostering a sense of belonging.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that cultural preservation is paramount.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with disagree.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from proponents and conversely.",
+            "level": "c1",
+            "sampleVariantId": "option_b",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:32.755722+00:00"
+  }
+}

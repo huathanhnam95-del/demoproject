@@ -1,0 +1,1818 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "6",
+  "title": "#6 National Services",
+  "prompt": "As national services, which one deserves to receive more financial support, education or health?",
+  "source": {
+    "promptSha256": "20fbea6fbb172d47ea45b9e50d8b914dc28c79dce0a1ab156a5eaecdaa19ccd9",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "As national services, which one deserves to receive more financial support, education or health?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Government, politics, and diplomacy",
+      "Food and health",
+      "Economy, money, and trade"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "national",
+        "enGloss": "Key concept related to national.",
+        "viGloss": "quốc gia"
+      },
+      {
+        "term": "services",
+        "enGloss": "Key concept related to services.",
+        "viGloss": "dịch vụ"
+      },
+      {
+        "term": "deserves",
+        "enGloss": "Key concept related to deserves.",
+        "viGloss": "xứng đáng"
+      },
+      {
+        "term": "receive",
+        "enGloss": "Key concept related to receive.",
+        "viGloss": "nhận được"
+      },
+      {
+        "term": "financial",
+        "enGloss": "Key concept related to financial.",
+        "viGloss": "tài chính"
+      },
+      {
+        "term": "support",
+        "enGloss": "Key concept related to support.",
+        "viGloss": "hỗ trợ"
+      },
+      {
+        "term": "education",
+        "enGloss": "Key concept related to education.",
+        "viGloss": "giáo dục"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "education-point1",
+        "label": "Point 1",
+        "en": "Education is crucial for a country's future because good schooling provides people with better job opportunities, ultimately strengthening the entire community.",
+        "vi": "Góc nhìn: Education is crucial for a country's future because good schooling provides people with better job opportunities, ultimately strengthening the entire community.",
+        "sourceVariantId": "education"
+      },
+      {
+        "id": "education-point2",
+        "label": "Point 2",
+        "en": "While good health is necessary for a good life, allowing people to stay active and live longer, education's ability to give people good chances makes it more vital.",
+        "vi": "Góc nhìn: While good health is necessary for a good life, allowing people to stay active and live longer, education's ability to give people good chances makes it more vital.",
+        "sourceVariantId": "education"
+      },
+      {
+        "id": "health-point1",
+        "label": "Point 1",
+        "en": "Education is important for a good life.",
+        "vi": "Góc nhìn: Education is important for a good life.",
+        "sourceVariantId": "health"
+      },
+      {
+        "id": "health-point2",
+        "label": "Point 2",
+        "en": "Health care is also very important for people.",
+        "vi": "Góc nhìn: Health care is also very important for people.",
+        "sourceVariantId": "health"
+      },
+      {
+        "id": "education-point1",
+        "label": "Point 1",
+        "en": "Education provides essential skills and knowledge, which are necessary for individuals to improve their lives and contribute to the economy.",
+        "vi": "Góc nhìn: Education provides essential skills and knowledge, which are necessary for individuals to improve their lives and contribute to the economy.",
+        "sourceVariantId": "education"
+      },
+      {
+        "id": "education-point2",
+        "label": "Point 2",
+        "en": "Education empowers people to make informed decisions regarding their personal health, leading to better long-term wellness and preventative care.",
+        "vi": "Góc nhìn: Education empowers people to make informed decisions regarding their personal health, leading to better long-term wellness and preventative care.",
+        "sourceVariantId": "education"
+      },
+      {
+        "id": "health-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the importance of funding for education, arguing that it helps people get better jobs and makes the workforce more skilled.",
+        "vi": "Góc nhìn: The first body paragraph discusses the importance of funding for education, arguing that it helps people get better jobs and makes the workforce more skilled.",
+        "sourceVariantId": "health"
+      },
+      {
+        "id": "health-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph argues that health care needs more financial support because poor health stops people from working or learning, which is a more immediate concern.",
+        "vi": "Góc nhìn: The second body paragraph argues that health care needs more financial support because poor health stops people from working or learning, which is a more immediate concern.",
+        "sourceVariantId": "health"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Government, politics, and diplomacy.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Government, politics, and diplomacy."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "education",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "financial",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "support",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "schooling",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "education",
+            "enGloss": "the process of receiving or giving systematic instruction",
+            "viGloss": "giáo dục",
+            "source": "approved_sample"
+          },
+          {
+            "term": "financial",
+            "enGloss": "relating to money or valuables",
+            "viGloss": "tài chính",
+            "source": "approved_sample"
+          },
+          {
+            "term": "support",
+            "enGloss": "assistance or encouragement",
+            "viGloss": "hỗ trợ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "schooling",
+            "enGloss": "the process of receiving education",
+            "viGloss": "việc học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "community",
+            "enGloss": "a group of people living in the same place",
+            "viGloss": "cộng đồng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "health",
+            "enGloss": "the state of being free from illness or injury",
+            "viGloss": "sức khỏe",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng học thuật"
+          },
+          {
+            "term": "additional support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ bổ sung"
+          },
+          {
+            "term": "considerable support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ đáng kể"
+          },
+          {
+            "term": "educational institution",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cơ sở giáo dục"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "education",
+          "label": "Version 1: EDUCATION",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "Education is crucial for a country's future because good schooling provides people with better job opportunities, ultimately strengthening the entire community.",
+          "point2": "While good health is necessary for a good life, allowing people to stay active and live longer, education's ability to give people good chances makes it more vital.",
+          "sampleVariantId": "education",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "health",
+          "label": "Version 2: HEALTH",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "Education is important for a good life.",
+          "point2": "Health care is also very important for people.",
+          "sampleVariantId": "health",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "education": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People must decide which national service needs more money: education or health.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that education should receive more financial support than health.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Education is very important for a country's future.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, good schooling helps people get better jobs in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child who learns to read can get a better job later.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the whole community becomes stronger and more successful.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that education gives people good chances in life.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Health care is also a very important service.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because good health helps people work every day in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person who gets good treatment can stay active and help their family.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can live longer and feel better.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that health is necessary for a good life.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that education should receive more financial support than health.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While health is important for a good life, education gives people good chances in life and helps the community become stronger.",
+            "level": "a2_b1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "health": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People must decide where to spend money: on health services or on education.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that health should receive more financial support than education.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Education is important for a good life.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, schools help people learn skills for work in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a child goes to school and learns to read and write.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they can get a better job when they are adults.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that education gives people good chances in life.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Health care is also very important for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because good health lets people work and live well in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person needs medicine when they are sick.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they feel strong again and can continue their daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that health needs strong support to keep people well.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that health should receive more financial support than education.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While education gives people good chances in life, good health is more basic because it keeps people strong enough to learn and work.",
+            "level": "a2_b1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "allocate",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "fundamental",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "citizen",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "skills",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "allocate",
+            "enGloss": "to distribute money or resources",
+            "viGloss": "phân bổ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "fundamental",
+            "enGloss": "basic or essential",
+            "viGloss": "cơ bản",
+            "source": "approved_sample"
+          },
+          {
+            "term": "citizen",
+            "enGloss": "a person who belongs to a country",
+            "viGloss": "công dân",
+            "source": "approved_sample"
+          },
+          {
+            "term": "skills",
+            "enGloss": "abilities or knowledge",
+            "viGloss": "kỹ năng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nutrition",
+            "enGloss": "the process of getting food for health",
+            "viGloss": "dinh dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "illnesses",
+            "enGloss": "sicknesses or diseases",
+            "viGloss": "bệnh tật",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng học tập"
+          },
+          {
+            "term": "allocate resources",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phân bổ nguồn lực"
+          },
+          {
+            "term": "appropriate skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng phù hợp"
+          },
+          {
+            "term": "cognitive skills",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kỹ năng nhận thức"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "education",
+          "label": "Version 1: EDUCATION",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "Education provides essential skills and knowledge, which are necessary for individuals to improve their lives and contribute to the economy.",
+          "point2": "Education empowers people to make informed decisions regarding their personal health, leading to better long-term wellness and preventative care.",
+          "sampleVariantId": "education",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "health",
+          "label": "Version 2: HEALTH",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "The first body paragraph discusses the importance of funding for education, arguing that it helps people get better jobs and makes the workforce more skilled.",
+          "point2": "The second body paragraph argues that health care needs more financial support because poor health stops people from working or learning, which is a more immediate concern.",
+          "sampleVariantId": "health",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "education": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question of where to allocate limited national funds, between education and health, is a major topic of discussion.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that education should receive more financial support than health.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Education is a fundamental right for every citizen, and it provides the tools for personal growth.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a good education helps people gain skills for better jobs.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a child who attends a quality school learns how to read and write well.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they can find employment that pays a stable income.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that strong education builds a better society.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that education helps people make better life choices in the long run.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that knowledge allows people to understand health risks.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that people who learn about nutrition eat healthier food.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they are less likely to get serious illnesses later in life.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that education is a key factor in maintaining good health.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that education should receive more financial support than health.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because education provides essential skills for career advancement and empowers individuals to make informed decisions regarding their long-term well-being.",
+            "level": "b2",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "health": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The question of where to allocate limited national funds, between health services and education, is a major debate.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that health should receive more financial support than education.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Funding for education is important for a stable society.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, good schooling helps people get better jobs later in life.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a child who attends a good school learns many skills for their future career.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the workforce becomes more skilled and productive for the country.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that education is a key area needing financial support.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Health care deserves more financial support than education.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that poor health can stop people from working or learning properly.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a serious illness keeps a person away from school for many months.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people lose valuable time and may never return to their previous level of life.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that health should receive more financial support.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while education is important for skills, I strongly agree that health should receive more financial support.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Prioritizing health care funding helps people stay well, and this is more vital than focusing only on education funding for a stable society.",
+            "level": "b2",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "populace",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "curricula",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "socioeconomic",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "prerequisite",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "populace",
+            "enGloss": "the people of a place",
+            "viGloss": "dân chúng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "curricula",
+            "enGloss": "the subjects taught in a school",
+            "viGloss": "chương trình giảng dạy",
+            "source": "approved_sample"
+          },
+          {
+            "term": "socioeconomic",
+            "enGloss": "relating to social and economic factors",
+            "viGloss": "kinh tế xã hội",
+            "source": "approved_sample"
+          },
+          {
+            "term": "prerequisite",
+            "enGloss": "something required beforehand",
+            "viGloss": "điều kiện tiên quyết",
+            "source": "approved_sample"
+          },
+          {
+            "term": "preventative",
+            "enGloss": "aimed at preventing disease",
+            "viGloss": "phòng ngừa",
+            "source": "approved_sample"
+          },
+          {
+            "term": "expenditure",
+            "enGloss": "the action or process of spending money",
+            "viGloss": "chi tiêu",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "government expenditure",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Government, politics, and diplomacy.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Government, politics, and diplomacy."
+          },
+          {
+            "term": "public expenditure",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Government, politics, and diplomacy.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Government, politics, and diplomacy."
+          },
+          {
+            "term": "socioeconomic status",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Government, politics, and diplomacy.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Government, politics, and diplomacy."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "education",
+          "label": "Version 1: EDUCATION",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "The primary argument for prioritizing education funding is that it builds a knowledgeable populace, providing skills for professional life and yielding long-term societal returns.",
+          "point2": "The counterargument acknowledges that healthcare is vital for human capital, as good health is a prerequisite for productive participation in society.",
+          "sampleVariantId": "education",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "health",
+          "label": "Version 2: HEALTH",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Government, politics, and diplomacy ____.",
+          "point1": "Education is crucial for individual growth and economic participation, helping to reduce poverty and improve socioeconomic mobility.",
+          "point2": "Good health is a prerequisite for productive activity, and robust public health minimizes lost working days and enhances community resilience.",
+          "sampleVariantId": "health",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "education": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The allocation of financial resources among national services, specifically education and health, presents a complex societal debate.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that education should receive more financial support than health.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Prioritizing education funding is crucial for building a knowledgeable populace.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, a robust education system equips individuals with the necessary skills for professional life.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, adequate funding allows schools to update curricula and provide modern learning resources.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, students gain better opportunities to secure stable employment and improve their socioeconomic status.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that educational investment yields long-term societal returns.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Conversely, allocating substantial funds to healthcare is also vitally important for public well-being.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that good health is a prerequisite for productive participation in society.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that preventative care initiatives, such as vaccination programs, significantly reduce community illness.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that a healthier workforce contributes more effectively to the national economy and reduces overall public expenditure.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that health services are fundamental to human capital.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with the view that education should receive more financial support than health.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from prioritizing and conversely.",
+            "level": "c1",
+            "sampleVariantId": "education",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "health": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The allocation of financial resources among national services, such as education and health, presents a complex societal debate.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with the view that health should receive more financial support than education.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Education is undeniably a crucial component of a functioning society.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it provides the foundational knowledge necessary for individual growth and economic participation.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, adequate schooling ensures that citizens acquire the skills needed to enter the workforce successfully.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, a well-funded education system can reduce poverty rates and improve overall socioeconomic mobility.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that educational funding is vital for human capital development.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Health care services are equally important for maintaining a stable populace.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that good health is a prerequisite for engaging in any form of productive activity.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that preventative care, such as vaccinations, significantly reduces the spread of communicable diseases.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that a robust public health infrastructure minimizes lost working days and enhances community resilience.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that health should receive more financial support than education.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while educational funding is vital for human capital development, I strongly agree that health should receive more financial support than education.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Government, politics, and diplomacy.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Prioritizing health care services, which are essential for community resilience, is paramount to ensuring the overall well-being of the population.",
+            "level": "c1",
+            "sampleVariantId": "health",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode",
+    "naturalizerPass": true
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:55:49.999337+00:00"
+  }
+}

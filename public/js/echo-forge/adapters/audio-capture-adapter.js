@@ -38,7 +38,7 @@ export async function prepareWavBlob(blob, {
   if (!(blob instanceof Blob)) throw new TypeError('audio blob is required');
   if (globalThis.AudioDspPipeline && typeof globalThis.AudioDspPipeline.enhance === 'function') {
     try {
-      const result = await globalThis.AudioDspPipeline.enhance(blob, { targetSampleRate: sampleRate });
+      const result = await globalThis.AudioDspPipeline.enhance(blob, { targetSampleRate: sampleRate, createUrl: false });
       if (result && result.wavBlob) return result.wavBlob;
     } catch (e) {
       console.warn('[EchoForge] AudioDspPipeline enhancement failed, falling back:', e);

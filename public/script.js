@@ -1124,7 +1124,9 @@
     function revertState() {
       try {
         window.history.replaceState(_lastActiveState, '', _lastActivePath);
-      } catch (_) {}
+      } catch (_) {
+        // Ignore replaceState errors in sandboxed or file: environments
+      }
     }
 
     /**
@@ -4483,6 +4485,97 @@
   let currentWordIndex = -1; // Track which word is being practiced
   let sameVocabRecognitions = {}; // Store recognition instances for same vocab items (Speak mode)
   let sameVocabTranscriptions = {}; // Store transcriptions for each same vocab item (Speak mode)
+
+  const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  let repeatSentenceMediaRecorder = null;
+  let repeatSentenceAudioChunks = [];
+  let repeatSentenceMediaStream = null;
+  let repeatSentenceStopPromise = null;
+  window.repeatSentenceWavBlob = null;
+  window.repeatSentenceAudioBuffer = null;
+  window.lastRepeatSentenceAssessment = null;
+
+  async function stopRepeatSentenceAudioCapture() {
+    if (repeatSentenceMediaRecorder && repeatSentenceMediaRecorder.state !== 'inactive') {
+      const stopPromise = new Promise((resolve) => {
+        const recorder = repeatSentenceMediaRecorder;
+        recorder.onstop = async () => {
+          if (repeatSentenceMediaStream) {
+            try {
+              repeatSentenceMediaStream.getTracks().forEach(t => t.stop());
+            } catch (_) {
+              // Ignore track stop errors during cleanup
+            }
+            repeatSentenceMediaStream = null;
+          }
+          if (repeatSentenceAudioChunks.length > 0) {
+            const rawBlob = new Blob(repeatSentenceAudioChunks, { type: recorder.mimeType || 'audio/webm' });
+            let finalWavBlob = rawBlob;
+            if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
+              try {
+                const enhanced = await window.AudioDspPipeline.enhance(rawBlob);
+                if (enhanced && enhanced.wavBlob) {
+                  finalWavBlob = enhanced.wavBlob;
+                }
+              } catch (dspErr) {
+                console.warn('[RepeatSentence] Audio enhancement failed:', dspErr);
+              }
+            }
+            window.repeatSentenceWavBlob = finalWavBlob;
+            try {
+              const arrayBuf = await finalWavBlob.arrayBuffer();
+              const ctx = (window.PronunciationTooltip && typeof window.PronunciationTooltip.getAudioContext === 'function')
+                ? window.PronunciationTooltip.getAudioContext()
+                : (window._repeatSentenceAudioCtx || (window._repeatSentenceAudioCtx = new (window.AudioContext || window.webkitAudioContext)()));
+              if (ctx) {
+                if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+                  await ctx.resume();
+                }
+                window.repeatSentenceAudioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+              }
+            } catch (decErr) {
+              console.warn('[RepeatSentence] Audio decode failed:', decErr);
+            }
+          }
+          resolve();
+        };
+        try {
+          recorder.stop();
+        } catch (_) {
+          resolve();
+        }
+      });
+      repeatSentenceStopPromise = stopPromise;
+      return stopPromise;
+    }
+    return Promise.resolve();
+  }
+
+  async function startRepeatSentenceAudioCapture() {
+    repeatSentenceAudioChunks = [];
+    repeatSentenceStopPromise = null;
+    window.repeatSentenceWavBlob = null;
+    window.repeatSentenceAudioBuffer = null;
+    window.lastRepeatSentenceAssessment = null;
+
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        repeatSentenceMediaStream = stream;
+        const recorder = new MediaRecorder(stream);
+        repeatSentenceMediaRecorder = recorder;
+        recorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            repeatSentenceAudioChunks.push(event.data);
+          }
+        };
+        recorder.start(100);
+      } catch (err) {
+        console.warn('[RepeatSentence] Audio recording setup error:', err);
+      }
+    }
+  }
 
   if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -8365,12 +8458,39 @@
   };
 
   // Speak mode check function
-  const performCheckSpeak = (userAnswer, scoreElement) => {
+  const performCheckSpeak = async (userAnswer, scoreElement) => {
     const totalWords = getCorrectWordCount("speak");
     if (!userAnswer.trim()) {
       result.innerHTML = `<span class="errors">Please provide your answer before checking.</span>`;
       scoreElement.textContent = `Points: 0 / ${totalWords}`;
       return;
+    }
+
+    if (repeatSentenceStopPromise) {
+      await repeatSentenceStopPromise;
+      repeatSentenceStopPromise = null;
+    }
+
+    // Call Azure Pronunciation Assessment if student audio was recorded
+    if (window.repeatSentenceWavBlob && correctSentenceSpeak) {
+      try {
+        const formData = new FormData();
+        formData.append('audio', window.repeatSentenceWavBlob, 'recording.wav');
+        formData.append('referenceText', correctSentenceSpeak);
+        if (typeof currentSpeakQuestionId !== 'undefined' && currentSpeakQuestionId) {
+          formData.append('questionId', String(currentSpeakQuestionId));
+        }
+        const assessRes = await fetch('/api/repeat-sentence/assess', {
+          method: 'POST',
+          body: formData
+        });
+        const assessData = await assessRes.json().catch(() => null);
+        if (assessRes.ok && assessData && assessData.success && Array.isArray(assessData.words) && assessData.words.length > 0) {
+          window.lastRepeatSentenceAssessment = assessData;
+        }
+      } catch (assessErr) {
+        console.warn('[RepeatSentence] Pronunciation assessment request failed:', assessErr);
+      }
     }
 
     const diff = diffWords(userAnswer, correctSentenceSpeak);
@@ -8426,11 +8546,97 @@
 
     lastAnimationMode = true; // Speak mode
     playAnimation(lastSteps, () => {
+      let acousticTokensHtml = '';
+      if (window.lastRepeatSentenceAssessment && Array.isArray(window.lastRepeatSentenceAssessment.words) && window.lastRepeatSentenceAssessment.words.length > 0) {
+        const tokenSpans = window.lastRepeatSentenceAssessment.words.map((w) => {
+          const acc = Math.round(Number(w.accuracyScore ?? 0));
+          let statusClass = 'speak-word-token--good';
+          if (w.errorType === 'Omission') {
+            statusClass = 'speak-word-token--omission';
+          } else if (w.errorType === 'Insertion') {
+            statusClass = 'speak-word-token--insertion';
+          } else if (acc < 60) {
+            statusClass = 'speak-word-token--error';
+          } else if (acc < 80) {
+            statusClass = 'speak-word-token--uncertain';
+          }
+
+          const rawWord = String(w.word || '').trim();
+          const displayWord = w.errorType === 'Insertion' ? `[${rawWord}]` : rawWord;
+          const escapedWord = escapeHtml(displayWord);
+          const sylJson = escapeHtml(JSON.stringify(w.syllables || []));
+          const timeAttr = (w.startMs != null && w.endMs != null)
+            ? ` data-start-ms="${w.startMs}" data-end-ms="${w.endMs}" data-playable="true"`
+            : '';
+
+          return `<span class="speak-word-token ${statusClass}" role="button" tabindex="0" data-word="${escapedWord}" data-accuracy="${acc}" data-syllables="${sylJson}"${timeAttr}>${escapedWord}</span>`;
+        });
+
+        acousticTokensHtml = `
+          <div class="result-text speak-acoustic-tokens" style="margin-top: 8px;">${tokenSpans.join(' ')}</div>
+          <div class="crm-transcript-hint" style="margin-top: 6px; font-size: 12px; color: #64748b;">
+            💡 Hover or tap words for syllable scores & articulatory coaching. Click to listen.
+          </div>
+        `;
+      }
+
       const feedback = hasErrors
-        ? `<div class="errors">Keep practicing! Differences highlighted below:</div><div class="result-text">${renderDiff(diff)}</div>`
-        : `<div class="ok">Great job! Perfect match.</div>`;
+        ? `<div class="errors">Keep practicing! Differences highlighted below:</div>${acousticTokensHtml || `<div class="result-text">${renderDiff(diff)}</div>`}`
+        : `<div class="ok">Great job! Perfect match.</div>${acousticTokensHtml}`;
 
       result.innerHTML = `${feedback}<div class="correct-sentence">Correct sentence: ${correctSentenceSpeak}</div>`;
+
+      // Bind shared pronunciation tooltip to Speak mode tokens
+      if (window.PronunciationTooltip && typeof window.PronunciationTooltip.bindHoverTooltip === 'function') {
+        window.PronunciationTooltip.bindHoverTooltip(result, {
+          selector: '.speak-word-token',
+          playSyllable: async (sStart, sEnd, chip, token) => {
+            if (window.repeatSentenceAudioBuffer) {
+              window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, sStart, sEnd, chip);
+            } else if (window.repeatSentenceWavBlob) {
+              try {
+                const audioCtx = (window.PronunciationTooltip && typeof window.PronunciationTooltip.getAudioContext === 'function')
+                  ? window.PronunciationTooltip.getAudioContext()
+                  : null;
+                if (audioCtx) {
+                  const arrBuf = await window.repeatSentenceWavBlob.arrayBuffer();
+                  window.repeatSentenceAudioBuffer = await audioCtx.decodeAudioData(arrBuf.slice(0));
+                  window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, sStart, sEnd, chip);
+                }
+              } catch (e) {
+                console.warn('[RepeatSentence] Lazy syllable playback failed:', e);
+              }
+            }
+          }
+        });
+      }
+
+      // Word token direct click for segment playback
+      result.querySelectorAll('.speak-word-token[data-playable="true"]').forEach((tokenEl) => {
+        tokenEl.addEventListener('click', async (e) => {
+          if (e.target.closest('.crm-syl-chip')) return;
+          const sStart = tokenEl.dataset.startMs;
+          const sEnd = tokenEl.dataset.endMs;
+          if (sStart != null && sEnd != null) {
+            if (window.repeatSentenceAudioBuffer) {
+              window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, Number(sStart), Number(sEnd), tokenEl);
+            } else if (window.repeatSentenceWavBlob) {
+              try {
+                const audioCtx = (window.PronunciationTooltip && typeof window.PronunciationTooltip.getAudioContext === 'function')
+                  ? window.PronunciationTooltip.getAudioContext()
+                  : null;
+                if (audioCtx) {
+                  const arrBuf = await window.repeatSentenceWavBlob.arrayBuffer();
+                  window.repeatSentenceAudioBuffer = await audioCtx.decodeAudioData(arrBuf.slice(0));
+                  window.PronunciationTooltip.playAudioSegment(window.repeatSentenceAudioBuffer, Number(sStart), Number(sEnd), tokenEl);
+                }
+              } catch (err) {
+                console.warn('[RepeatSentence] Lazy word playback failed:', err);
+              }
+            }
+          }
+        });
+      });
 
       // Replay original audio if there are errors (points not max)
       if (hasErrors && scoreValue < totalWords) {
@@ -9952,6 +10158,7 @@
       } catch (e) {
         // Ignore errors when stopping
       }
+      await stopRepeatSentenceAudioCapture();
       isRecording = false;
       recordBtn.textContent = "Start Recording";
       recordBtn.classList.remove("recording");
@@ -9985,6 +10192,7 @@
       recordBtn.textContent = "Stop Recording";
       recordBtn.classList.add("recording");
       isRecording = true;
+      await startRepeatSentenceAudioCapture();
 
       // New flow: Hide check button while recording
       if (checkBtnSpeak) checkBtnSpeak.style.display = "none";
@@ -10018,6 +10226,7 @@
   checkBtnSpeak.addEventListener("click", () => {
     if (isRecording && recognition) {
       recognition.stop();
+      stopRepeatSentenceAudioCapture();
       isRecording = false;
       recordBtn.textContent = "Start Recording";
       recordBtn.classList.remove("recording");
@@ -10037,6 +10246,9 @@
 
   if (retryBtnSpeak) {
     retryBtnSpeak.addEventListener("click", () => {
+      window.repeatSentenceWavBlob = null;
+      window.repeatSentenceAudioBuffer = null;
+      window.lastRepeatSentenceAssessment = null;
       // New flow: Show record button, hide retry button, and reset scaffolding
       // Show Play button again (was hidden after Check to prevent point farming)
       if (recordBtn) recordBtn.style.display = "inline-block";

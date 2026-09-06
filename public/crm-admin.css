@@ -14127,58 +14127,66 @@ mark.crm-highlight:hover {
 
 /* ==========================================================================
    Pronunciation Dual Comparison Arena (Option A vs. Option B)
+   High Visibility, High Contrast, Anti-Nested ("No Boxes-in-Boxes") Styling
    ========================================================================== */
 
 .dual-arena-root {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   width: 100%;
-  color: #f1f5f9;
+  background: #080d1a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  color: #f8fafc;
   box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-/* Header */
+/* --------------------------------------------------------------------------
+   Arena Header & Command Bar (Flows naturally on parent background)
+   -------------------------------------------------------------------------- */
 .dual-arena-header {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1e293b;
 }
 
 .dual-arena-title-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .dual-arena-badge {
   align-self: flex-start;
-  padding: 3px 10px;
-  border-radius: 9999px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
-  color: #ffffff;
+  letter-spacing: 0.08em;
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(2, 132, 199, 0.4);
 }
 
 .dual-arena-title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: #ffffff;
+  letter-spacing: -0.01em;
 }
 
 .dual-arena-subtitle {
   margin: 0;
-  font-size: 0.88rem;
-  color: #94a3b8;
-  line-height: 1.45;
+  font-size: 0.92rem;
+  color: #cbd5e1;
+  line-height: 1.55;
 }
 
 /* Controls Bar */
@@ -14186,15 +14194,15 @@ mark.crm-highlight:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  padding-top: 14px;
-  border-top: 1px solid #1e293b;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dual-arena-control-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .dual-arena-flex-grow {
@@ -14202,8 +14210,8 @@ mark.crm-highlight:hover {
 }
 
 .dual-arena-label {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 700;
   color: #cbd5e1;
   white-space: nowrap;
 }
@@ -14211,7 +14219,7 @@ mark.crm-highlight:hover {
 /* Toggle Pills */
 .dual-arena-toggle-pills {
   display: inline-flex;
-  background: #1e293b;
+  background: #020617;
   border: 1px solid #334155;
   border-radius: 8px;
   padding: 3px;
@@ -14222,47 +14230,55 @@ mark.crm-highlight:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: #cbd5e1;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .dual-arena-pill:hover {
-  color: #f8fafc;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dual-arena-pill.is-active {
   background: #0284c7;
   color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 6px rgba(2, 132, 199, 0.45);
 }
 
-.pill-icon {
-  font-size: 0.95rem;
+.pill-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 /* Select & Inputs */
 .dual-arena-select,
 .dual-arena-input {
-  padding: 7px 12px;
-  background: #1e293b;
+  padding: 8px 12px;
+  background: #020617;
   border: 1px solid #334155;
   border-radius: 6px;
-  color: #f8fafc;
-  font-size: 0.85rem;
+  color: #ffffff;
+  font-size: 0.86rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .dual-arena-select:focus,
 .dual-arena-input:focus {
   border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
 }
 
 .dual-arena-select {
@@ -14270,23 +14286,23 @@ mark.crm-highlight:hover {
 }
 
 .dual-arena-word-input {
-  width: 130px;
+  width: 140px;
 }
 
 .dual-arena-ipa-input {
-  width: 150px;
-  font-family: monospace;
+  width: 160px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Audio Console */
+/* --------------------------------------------------------------------------
+   Audio Console & Waveform Viewport (Unboxed layout flow)
+   -------------------------------------------------------------------------- */
 .dual-arena-audio-console {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1e293b;
 }
 
 .dual-arena-audio-actions {
@@ -14300,38 +14316,39 @@ mark.crm-highlight:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 16px;
-  border-radius: 7px;
+  padding: 9px 18px;
+  border-radius: 8px;
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .dual-arena-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .dual-arena-btn-record {
   background: #dc2626;
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
 }
 
 .dual-arena-btn-record:hover:not(:disabled) {
-  background: #b91c1c;
+  background: #ef4444;
 }
 
 .dual-arena-btn-stop {
-  background: #f43f5e;
+  background: #e11d48;
   color: #ffffff;
   animation: arenaRecordPulse 1.5s infinite;
 }
 
 @keyframes arenaRecordPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5); }
-  50% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); }
 }
 
 .record-dot {
@@ -14349,59 +14366,62 @@ mark.crm-highlight:hover {
 
 .dual-arena-btn-file {
   background: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
+  color: #f8fafc;
+  border: 1px solid #475569;
   cursor: pointer;
 }
 
 .dual-arena-btn-file:hover {
   background: #334155;
-  color: #f8fafc;
+  border-color: #64748b;
+  color: #ffffff;
 }
 
 .dual-arena-btn-run {
-  background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #059669 100%);
   color: #ffffff;
   margin-left: auto;
-  padding: 9px 20px;
+  padding: 10px 22px;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
 }
 
 .dual-arena-btn-run:hover:not(:disabled) {
-  filter: brightness(1.1);
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+  filter: brightness(1.12);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
 }
 
 .dual-arena-audio-preview {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .dual-arena-audio-preview audio {
-  height: 36px;
+  height: 38px;
   border-radius: 6px;
   outline: none;
 }
 
 .dual-arena-badge-dsp {
-  font-size: 0.73rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
   padding: 4px 8px;
   border-radius: 5px;
   background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.4);
   color: #34d399;
+  letter-spacing: 0.04em;
 }
 
-/* Acoustic Waveform Container & Controls */
+/* Acoustic Waveform Container (Direct, unboxed) */
 .dual-arena-waveform-container {
-  background: #0b0f19;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 4px;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .waveform-header {
@@ -14418,25 +14438,27 @@ mark.crm-highlight:hover {
 }
 
 .waveform-icon {
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .waveform-title {
   font-size: 0.82rem;
-  font-weight: 700;
-  color: #cbd5e1;
+  font-weight: 800;
+  color: #f8fafc;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .waveform-duration-badge {
-  font-size: 0.75rem;
-  font-family: monospace;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
   color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  padding: 2px 6px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
   border-radius: 4px;
 }
 
@@ -14449,32 +14471,36 @@ mark.crm-highlight:hover {
 .dual-arena-btn-mini {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   background: #1e293b;
   color: #f8fafc;
-  border: 1px solid #334155;
+  border: 1px solid #475569;
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .dual-arena-btn-mini:hover {
   background: #334155;
-  border-color: #475569;
+  border-color: #64748b;
+  color: #ffffff;
 }
 
 .dual-arena-waveform-view {
   width: 100%;
-  min-height: 72px;
-  background: #020617;
-  border-radius: 6px;
+  min-height: 80px;
+  background: #030712;
+  border: 1px solid #334155;
+  border-radius: 8px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  position: relative;
 }
 
 .dual-arena-waveform-canvas {
@@ -14485,31 +14511,34 @@ mark.crm-highlight:hover {
 
 /* Status Banner */
 .dual-arena-status-banner {
-  padding: 9px 14px;
-  border-radius: 6px;
-  font-size: 0.84rem;
-  line-height: 1.4;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 .banner-info {
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(14, 165, 233, 0.25);
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.35);
   color: #7dd3fc;
 }
 
 .banner-success {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
   color: #6ee7b7;
 }
 
 .banner-error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
   color: #fca5a5;
 }
 
-/* Comparison Grid */
+/* --------------------------------------------------------------------------
+   Comparison Grid (Option A vs. Option B Columns)
+   -------------------------------------------------------------------------- */
 .dual-arena-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
@@ -14519,11 +14548,10 @@ mark.crm-highlight:hover {
 .dual-arena-card {
   display: flex;
   flex-direction: column;
-  background: #0f172a;
-  border-radius: 12px;
+  background: #0c1322;
+  border-radius: 10px;
   border: 1px solid #1e293b;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .dual-arena-card-a {
@@ -14539,8 +14567,8 @@ mark.crm-highlight:hover {
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: rgba(30, 41, 59, 0.5);
-  border-bottom: 1px solid #1e293b;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .card-title-wrap {
@@ -14550,30 +14578,31 @@ mark.crm-highlight:hover {
 }
 
 .card-badge {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .badge-option-a {
   background: rgba(2, 132, 199, 0.2);
   color: #38bdf8;
-  border: 1px solid rgba(2, 132, 199, 0.4);
+  border: 1px solid #0284c7;
 }
 
 .badge-option-b {
   background: rgba(16, 185, 129, 0.2);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  border: 1px solid #10b981;
 }
 
 .card-title {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
 .card-status-wrap {
@@ -14583,22 +14612,23 @@ mark.crm-highlight:hover {
 }
 
 .latency-tag {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-family: monospace;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
 }
 
 .status-indicator {
   font-size: 0.74rem;
-  font-weight: 600;
-  padding: 2px 7px;
+  font-weight: 700;
+  padding: 3px 8px;
   border-radius: 4px;
 }
 
-.status-idle { background: #334155; color: #94a3b8; }
-.status-running { background: #854d0e; color: #fef08a; }
-.status-success { background: #065f46; color: #a7f3d0; }
-.status-error { background: #991b1b; color: #fecaca; }
+.status-idle { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; }
+.status-running { background: #854d0e; color: #fef08a; border: 1px solid #ca8a04; }
+.status-success { background: #065f46; color: #a7f3d0; border: 1px solid #059669; }
+.status-error { background: #991b1b; color: #fecaca; border: 1px solid #dc2626; }
 
 .dual-arena-card-body {
   padding: 18px;
@@ -14610,22 +14640,22 @@ mark.crm-highlight:hover {
 
 .dual-arena-placeholder {
   text-align: center;
-  padding: 40px 20px;
-  color: #64748b;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  padding: 44px 20px;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
 .placeholder-icon {
-  font-size: 2.2rem;
-  margin-bottom: 10px;
-  opacity: 0.7;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
 }
 
 .placeholder-hint {
-  font-size: 0.8rem;
-  color: #475569;
-  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-top: 10px;
 }
 
 .card-spinner {
@@ -14633,15 +14663,16 @@ mark.crm-highlight:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   padding: 50px 20px;
-  color: #94a3b8;
-  font-size: 0.88rem;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .card-spinner .spinner {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: 3px solid #334155;
   border-top-color: #38bdf8;
   border-radius: 50%;
@@ -14653,15 +14684,24 @@ mark.crm-highlight:hover {
 }
 
 .card-error {
-  padding: 20px;
+  padding: 16px 18px;
   border-radius: 8px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
   color: #fca5a5;
   font-size: 0.88rem;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.error-badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 /* Card Results Display */
@@ -14674,11 +14714,12 @@ mark.crm-highlight:hover {
 .card-metric-banner {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
-  padding: 12px;
-  border: 1px solid #1e293b;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   text-align: center;
+  gap: 8px;
 }
 
 .metric-stat {
@@ -14688,16 +14729,19 @@ mark.crm-highlight:hover {
 }
 
 .stat-value {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
 }
 
 .stat-label {
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #cbd5e1;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
 }
 
 .metric-stat.highlight .stat-value {
@@ -14717,10 +14761,10 @@ mark.crm-highlight:hover {
 .card-section-title {
   margin: 0;
   font-size: 0.85rem;
-  font-weight: 700;
-  color: #cbd5e1;
+  font-weight: 800;
+  color: #ffffff;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 /* Syllable Rows */
@@ -14734,23 +14778,24 @@ mark.crm-highlight:hover {
   display: grid;
   grid-template-columns: 1fr 1.4fr 120px;
   align-items: center;
-  padding: 10px 12px;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 7px;
-  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  gap: 12px;
+  transition: border-color 0.15s, background-color 0.15s;
 }
 
 .dual-syl-row.is-stressed {
   border-color: #0284c7;
-  background: rgba(2, 132, 199, 0.1);
-  box-shadow: 0 0 8px rgba(2, 132, 199, 0.15);
+  background: rgba(2, 132, 199, 0.12);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.2);
 }
 
 .dual-arena-card-b .dual-syl-row.is-stressed {
   border-color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 .syl-col-main {
@@ -14761,54 +14806,57 @@ mark.crm-highlight:hover {
 }
 
 .syl-num {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #cbd5e1;
 }
 
 .syl-vowel {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #f8fafc;
-  font-family: monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .syl-ipa {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  font-family: monospace;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .tag-reduced {
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(16, 185, 129, 0.15);
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(16, 185, 129, 0.2);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid #10b981;
 }
 
 .tag-full {
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(245, 158, 11, 0.15);
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid #f59e0b;
 }
 
 .tag-stress-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 5px;
   background: #0284c7;
   color: #ffffff;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .tag-stress-badge.badge-b {
   background: #10b981;
+  color: #ffffff;
 }
 
 .syl-col-metrics {
@@ -14818,12 +14866,31 @@ mark.crm-highlight:hover {
 }
 
 .metric-pill {
-  font-size: 0.72rem;
-  padding: 3px 6px;
-  border-radius: 4px;
-  background: #0f172a;
-  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: #020617;
+  color: #f8fafc;
   border: 1px solid #334155;
+}
+
+.metric-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+
+.dual-arena-card-b .metric-label {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.18);
 }
 
 .syl-col-prominence {
@@ -14834,8 +14901,9 @@ mark.crm-highlight:hover {
 
 .prominence-bar-wrap {
   flex: 1;
-  height: 7px;
-  background: #0f172a;
+  height: 8px;
+  background: #020617;
+  border: 1px solid #334155;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -14852,31 +14920,32 @@ mark.crm-highlight:hover {
 }
 
 .prominence-num {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #cbd5e1;
-  width: 32px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  width: 38px;
   text-align: right;
 }
 
 /* Disclosures */
 .card-details-disclosure {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 7px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
 }
 
 .card-details-disclosure summary {
   cursor: pointer;
-  color: #94a3b8;
-  font-weight: 600;
+  color: #cbd5e1;
+  font-weight: 700;
   outline: none;
 }
 
 .card-details-disclosure summary:hover {
-  color: #f8fafc;
+  color: #ffffff;
 }
 
 .phoneme-pills-wrap {
@@ -14887,40 +14956,44 @@ mark.crm-highlight:hover {
 }
 
 .phone-pill {
-  padding: 3px 7px;
-  border-radius: 4px;
-  background: #0f172a;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: #020617;
   border: 1px solid #334155;
-  color: #cbd5e1;
-  font-family: monospace;
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
 }
 
 .phone-pill small {
-  color: #64748b;
-  margin-left: 2px;
+  color: #cbd5e1;
+  margin-left: 4px;
 }
 
 .phone-pill.phone-vowel {
   border-color: #0284c7;
   color: #38bdf8;
+  background: rgba(2, 132, 199, 0.15);
 }
 
 .v4-structure-content {
   margin-top: 8px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #cbd5e1;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-/* Benchmark Evaluation Panel */
+/* --------------------------------------------------------------------------
+   Benchmark Evaluation Panel & Verdict Badges
+   -------------------------------------------------------------------------- */
 .dual-arena-benchmark-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
-  background: #0f172a;
+  gap: 18px;
+  padding: 20px 22px;
+  background: #0c1322;
   border: 1px solid #1e293b;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .benchmark-header {
@@ -14933,15 +15006,15 @@ mark.crm-highlight:hover {
 
 .benchmark-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
 .benchmark-subtitle {
-  margin: 2px 0 0 0;
-  font-size: 0.82rem;
-  color: #94a3b8;
+  margin: 4px 0 0 0;
+  font-size: 0.86rem;
+  color: #cbd5e1;
 }
 
 .benchmark-count-wrap {
@@ -14951,22 +15024,25 @@ mark.crm-highlight:hover {
 }
 
 .benchmark-counter {
-  font-size: 0.8rem;
-  color: #cbd5e1;
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: #1e293b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #020617;
+  border: 1px solid #334155;
 }
 
 .dual-arena-btn-export {
   background: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
+  color: #f8fafc;
+  border: 1px solid #475569;
 }
 
 .dual-arena-btn-export:hover:not(:disabled) {
   background: #334155;
-  color: #f8fafc;
+  color: #ffffff;
+  border-color: #64748b;
 }
 
 .benchmark-rating-actions {
@@ -14977,9 +15053,9 @@ mark.crm-highlight:hover {
 }
 
 .rating-prompt {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #cbd5e1;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .rating-buttons {
@@ -14991,45 +15067,92 @@ mark.crm-highlight:hover {
 .rating-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 7px;
-  background: #1e293b;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: #020617;
   border: 1px solid #334155;
-  color: #cbd5e1;
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .rating-btn:hover {
-  background: #334155;
-  color: #f8fafc;
+  background: #1e293b;
+  border-color: #64748b;
+  color: #ffffff;
 }
 
 .rating-btn.is-selected {
   background: #0284c7;
   color: #ffffff;
   border-color: #38bdf8;
-  box-shadow: 0 0 10px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
+}
+
+.rating-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.rating-badge-a {
+  background: rgba(2, 132, 199, 0.25);
+  color: #38bdf8;
+  border: 1px solid #0284c7;
+}
+
+.rating-badge-b {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid #10b981;
+}
+
+.rating-badge-tie {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+  border: 1px solid #64748b;
+}
+
+.rating-badge-neither {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid #ef4444;
 }
 
 .benchmark-notes-row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .dual-arena-notes-input {
   flex: 1;
+  background: #020617;
+  border: 1px solid #334155;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
 }
 
 .dual-arena-btn-save-rating {
   background: #10b981;
   color: #ffffff;
+  font-weight: 700;
   white-space: nowrap;
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .dual-arena-btn-save-rating:hover:not(:disabled) {
   background: #059669;
 }
+

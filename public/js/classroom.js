@@ -384,17 +384,25 @@
         if (!window.ClassroomAPI) return;
         try {
             let classrooms = [];
-            try {
-                classrooms = await window.ClassroomAPI.fetchClassrooms();
-            } catch (e) {
-                // If not admin, fetch classrooms assigned to the teacher via scheduler workspace
+
+            // 1. For students, resolve enrolled classrooms via dedicated endpoint
+            if (typeof window.ClassroomAPI.fetchStudentClassrooms === 'function') {
                 try {
-                    const workspace = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace();
-                    if (Array.isArray(workspace?.classrooms) && workspace.classrooms.length) {
-                        classrooms = workspace.classrooms;
+                    const studentClasses = await window.ClassroomAPI.fetchStudentClassrooms();
+                    if (Array.isArray(studentClasses) && studentClasses.length) {
+                        classrooms = studentClasses;
                     }
                 } catch (_) {}
             }
+
+            // 2. If not student or no student classrooms, try admin classrooms
+            if (!classrooms.length) {
+                try {
+                    classrooms = await window.ClassroomAPI.fetchClassrooms();
+                } catch (_) {}
+            }
+
+            // 3. If still empty, fetch classrooms assigned to the teacher via scheduler workspace
             if (!classrooms.length) {
                 try {
                     const workspace = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace();
@@ -403,6 +411,30 @@
                     }
                 } catch (_) {}
             }
+
+            // 4. Direct Firestore fallback if user is authenticated
+            if (!classrooms.length && typeof firebase !== 'undefined' && firebase.firestore && currentUser) {
+                try {
+                    const db = firebase.firestore();
+                    const enrollSnap = await db.collection('crmEnrollments')
+                        .where('studentUid', '==', currentUser.uid)
+                        .get();
+                    const classIds = [];
+                    enrollSnap.forEach((doc) => {
+                        const d = doc.data() || {};
+                        if (d.classId && !classIds.includes(d.classId)) classIds.push(d.classId);
+                    });
+                    if (classIds.length > 0) {
+                        const classDocs = await Promise.all(
+                            classIds.map((id) => db.collection('crmClassrooms').doc(id).get().catch(() => null))
+                        );
+                        classrooms = classDocs
+                            .filter((s) => s && s.exists)
+                            .map((s) => ({ id: s.id, classroomId: s.id, ...s.data() }));
+                    }
+                } catch (_) {}
+            }
+
             if (elements.classSwitcher && classrooms.length > 0) {
                 elements.classSwitcher.innerHTML = classrooms.map((c) => {
                     const classId = c.id || c.classroomId;
@@ -410,9 +442,11 @@
                 }).join('');
                 activeClassId = classrooms[0].id || classrooms[0].classroomId;
                 loadClassData();
+            } else if (elements.classSwitcher) {
+                elements.classSwitcher.innerHTML = '<option value="">No classrooms found</option>';
             }
         } catch (e) {
-            console.error(e);
+            console.error('[Classroom] Failed to load classrooms:', e);
         }
     }
 

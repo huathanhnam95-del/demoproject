@@ -1,0 +1,1185 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "259",
+  "title": "#259 Hurry or Slow-paced",
+  "prompt": "Some people are always in a hurry to get somewhere and get things done. Others prefer to take their time and live a slow-paced life. Will you prefer the slow-paced life and why？",
+  "source": {
+    "promptSha256": "897d29f99df106c45804bbc87a19c18125b5ab9bb2373e933736eb177fe52f4f",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people are always in a hurry to get somewhere and get things done.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Others prefer to take their time and live a slow-paced life.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Will you prefer the slow-paced life and why？",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Lifestyle"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "somewhere",
+        "enGloss": "Key concept related to somewhere.",
+        "viGloss": "ở đâu đó"
+      },
+      {
+        "term": "slow-paced",
+        "enGloss": "Key concept related to slow-paced.",
+        "viGloss": "nhịp độ chậm"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "A slow-paced life allows people more time for enjoyable daily activities, leading to reduced stress and increased happiness.",
+        "vi": "Góc nhìn: A slow-paced life allows people more time for enjoyable daily activities, leading to reduced stress and increased happiness.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Slow living facilitates stronger connections with family and friends because people are not constantly rushing.",
+        "vi": "Góc nhìn: Slow living facilitates stronger connections with family and friends because people are not constantly rushing.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "The first main point is that a slow-paced lifestyle helps people improve their mental health by allowing them to enjoy their daily activities.",
+        "vi": "Góc nhìn: The first main point is that a slow-paced lifestyle helps people improve their mental health by allowing them to enjoy their daily activities.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "The second main point is that a slow pace helps people build stronger relationships by giving them time for deep connection with others.",
+        "vi": "Góc nhìn: The second main point is that a slow pace helps people build stronger relationships by giving them time for deep connection with others.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "The primary advantage of a slow-paced life is its positive impact on mental and physical health, promoting a sense of well-being.",
+        "vi": "Góc nhìn: The primary advantage of a slow-paced life is its positive impact on mental and physical health, promoting a sense of well-being.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Another benefit of adopting a slower pace is the opportunity for deep personal reflection, which aids in self-discovery and goal setting.",
+        "vi": "Góc nhìn: Another benefit of adopting a slower pace is the opportunity for deep personal reflection, which aids in self-discovery and goal setting.",
+        "sourceVariantId": "perspective_a"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Lifestyle.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Lifestyle."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "slow-paced",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "calm",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "stress",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "enjoy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "slow-paced",
+            "enGloss": "moving slowly; unhurried",
+            "viGloss": "nhịp sống chậm rãi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "calm",
+            "enGloss": "peaceful; tranquil",
+            "viGloss": "bình tĩnh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stress",
+            "enGloss": "mental or emotional tension",
+            "viGloss": "căng thẳng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "enjoy",
+            "enGloss": "take pleasure in",
+            "viGloss": "tận hưởng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "rushing",
+            "enGloss": "moving or doing things too quickly",
+            "viGloss": "vội vã",
+            "source": "approved_sample"
+          },
+          {
+            "term": "relationships",
+            "enGloss": "connections between people",
+            "viGloss": "mối quan hệ",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "cause stress",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: gây căng thẳng"
+          },
+          {
+            "term": "economic relationships",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: quan hệ kinh tế"
+          },
+          {
+            "term": "interpersonal relationships",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: mối quan hệ giữa các cá nhân"
+          },
+          {
+            "term": "reduce stress",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giảm căng thẳng"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "A slow-paced life allows people more time for enjoyable daily activities, leading to reduced stress and increased happiness.",
+          "point2": "Slow living facilitates stronger connections with family and friends because people are not constantly rushing.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people like to move fast and finish things quickly, while others prefer a slower way of life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A slow-paced life helps people feel calm and rested.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people have more time to do things they enjoy in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person can take a long walk in a park in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they feel less stress and more happy.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that a slow life helps people feel good.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Slow living also helps people connect with their family and friends.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people are not always rushing from one place to another in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a family can sit down for a long meal together in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they talk more and share good memories.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that slow life builds strong relationships.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that a slow-paced life is better.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Taking time to enjoy activities and building strong relationships are two main benefits of a slow life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "slow-paced",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "routine",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "mental health",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "unhurried",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "slow-paced",
+            "enGloss": "moving slowly; relaxed",
+            "viGloss": "chậm rãi; thư thái",
+            "source": "approved_sample"
+          },
+          {
+            "term": "routine",
+            "enGloss": "a regular sequence of actions",
+            "viGloss": "thói quen; lịch trình",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mental health",
+            "enGloss": "the emotional and psychological well-being",
+            "viGloss": "sức khỏe tinh thần",
+            "source": "approved_sample"
+          },
+          {
+            "term": "unhurried",
+            "enGloss": "not rushed; calm",
+            "viGloss": "thong thả; bình tĩnh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "personal bonds",
+            "enGloss": "connections between people",
+            "viGloss": "mối liên kết cá nhân",
+            "source": "approved_sample"
+          },
+          {
+            "term": "activities",
+            "enGloss": "things that keep one busy",
+            "viGloss": "hoạt động",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "mental health",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: sức khỏe tâm thần"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The first main point is that a slow-paced lifestyle helps people improve their mental health by allowing them to enjoy their daily activities.",
+          "point2": "The second main point is that a slow pace helps people build stronger relationships by giving them time for deep connection with others.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people feel comfortable moving quickly through their day, while others prefer a more relaxed and slow pace of life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A slow-paced lifestyle allows people to truly enjoy their daily activities.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this slower routine gives individuals time to focus on what they are doing in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, taking a long walk in a park allows a person to notice small details of nature.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel less stressed and more connected to their surroundings.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a slower pace helps improve mental health.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that a slow pace helps people build stronger relationships.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that rushing often means missing important moments with family and friends in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that spending an unhurried evening meal allows for deeper conversation.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people feel more valued and understood by those close to them.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a slower life improves personal bonds.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from slow and another.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "well-being",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "leisurely",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "contentment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "introspection",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "well-being",
+            "enGloss": "the state of being comfortable, healthy, or happy",
+            "viGloss": "sức khỏe và hạnh phúc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "leisurely",
+            "enGloss": "adjective: relaxed and unhurried",
+            "viGloss": "thư thái",
+            "source": "approved_sample"
+          },
+          {
+            "term": "contentment",
+            "enGloss": "the state of being satisfied and peaceful",
+            "viGloss": "sự mãn nguyện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "introspection",
+            "enGloss": "the examination of one's own thoughts and feelings",
+            "viGloss": "sự tự vấn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "deliberate",
+            "enGloss": "done consciously and intentionally",
+            "viGloss": "có chủ ý",
+            "source": "approved_sample"
+          },
+          {
+            "term": "self-actualization",
+            "enGloss": "the realization or fulfillment of one's potential",
+            "viGloss": "sự tự hoàn thiện",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "deliberate attempt",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Lifestyle.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Lifestyle."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "The primary advantage of a slow-paced life is its positive impact on mental and physical health, promoting a sense of well-being.",
+          "point2": "Another benefit of adopting a slower pace is the opportunity for deep personal reflection, which aids in self-discovery and goal setting.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The debate regarding whether one should live a fast-paced or a slow-paced life is a common discussion.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "A slow-paced lifestyle promotes a greater sense of well-being and mental clarity.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, individuals have ample opportunity to engage in mindful activities that reduce stress in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, spending time gardening or taking leisurely walks allows for deep connection with nature.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people develop a stronger sense of contentment and emotional stability.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a slower routine contributes significantly to overall physical and mental health.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, adopting a slower pace enables deeper personal reflection and self-discovery.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that rushing through life prevents adequate time for introspection.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that people who slow down often dedicate time to journaling or reading complex literature.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they gain a more comprehensive understanding of their personal values and goals.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a deliberate pace is crucial for self-actualization.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from slow and furthermore.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:28.489617+00:00"
+  }
+}

@@ -1,0 +1,1224 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "370",
+  "title": "#370 Positive Aspects and Perspective",
+  "prompt": "It is important to look at the positive aspects when discussing various subjects. Do you agree or disagree? Give reasons and examples to support your view.",
+  "source": {
+    "promptSha256": "fb375896936f0c01bbf07d34ce6c4623900aa05b7233e042c6927039198c95e6",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "It is important to look at the positive aspects when discussing various subjects.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Do you agree or disagree?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Give reasons and examples to support your view.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "agree_disagree",
+    "topics": [
+      "Education"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "important",
+        "enGloss": "Key concept related to important.",
+        "viGloss": "quan trọng"
+      },
+      {
+        "term": "positive",
+        "enGloss": "Key concept related to positive.",
+        "viGloss": "tích cực"
+      },
+      {
+        "term": "aspects",
+        "enGloss": "Key concept related to aspects.",
+        "viGloss": "các khía cạnh"
+      },
+      {
+        "term": "discussing",
+        "enGloss": "Key concept related to discussing.",
+        "viGloss": "thảo luận"
+      },
+      {
+        "term": "various",
+        "enGloss": "Key concept related to various.",
+        "viGloss": "khác nhau"
+      },
+      {
+        "term": "subjects",
+        "enGloss": "Key concept related to subjects.",
+        "viGloss": "môn học"
+      },
+      {
+        "term": "disagree",
+        "enGloss": "Key concept related to disagree.",
+        "viGloss": "không đồng ý"
+      },
+      {
+        "term": "reasons",
+        "enGloss": "Key concept related to reasons.",
+        "viGloss": "lý do"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "answer",
+        "required": true,
+        "en": "State how far you agree or disagree.",
+        "vi": "Nêu rõ mức độ đồng ý hoặc không đồng ý."
+      },
+      {
+        "id": "reasons",
+        "required": true,
+        "en": "Support your position with two clear reasons.",
+        "vi": "Bảo vệ quan điểm bằng 2 lý do rõ ràng."
+      },
+      {
+        "id": "examples",
+        "required": true,
+        "en": "Use relevant examples when they strengthen an idea.",
+        "vi": "Sử dụng các dẫn chứng thực tế thuyết phục để củng cố luận điểm."
+      }
+    ],
+    "angles": [
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Positive views help build trust.",
+        "vi": "Góc nhìn: Positive views help build trust.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Positive views help people learn better.",
+        "vi": "Góc nhìn: Positive views help people learn better.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Adopting a positive perspective is beneficial for personal growth and social connections.",
+        "vi": "Góc nhìn: Adopting a positive perspective is beneficial for personal growth and social connections.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "The benefits discussed include improved self-confidence and stronger relationships.",
+        "vi": "Góc nhìn: The benefits discussed include improved self-confidence and stronger relationships.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses how focusing on positive aspects helps individuals maintain a proactive mindset and drives positive change.",
+        "vi": "Góc nhìn: The first body paragraph discusses how focusing on positive aspects helps individuals maintain a proactive mindset and drives positive change.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph explains that presenting a positive perspective improves interpersonal relationships and group cohesion.",
+        "vi": "Góc nhìn: The second body paragraph explains that presenting a positive perspective improves interpersonal relationships and group cohesion.",
+        "sourceVariantId": "perspective_a"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not merely rephrase the topic without stating a definitive personal position in both intro and conclusion.",
+        "vi": "Không chỉ diễn đạt lại đề bài mà quên khẳng định rõ lập trường cá nhân ở cả mở bài và kết bài."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "topic",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "positive",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "trust",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "subject",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "topic",
+            "enGloss": "subject matter",
+            "viGloss": "chủ đề",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "positive",
+            "enGloss": "good or hopeful",
+            "viGloss": "tích cực",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "trust",
+            "enGloss": "belief in someone",
+            "viGloss": "sự tin tưởng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "subject",
+            "enGloss": "area of study",
+            "viGloss": "môn học",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "choices",
+            "enGloss": "things to pick",
+            "viGloss": "sự lựa chọn",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "learn",
+            "enGloss": "get knowledge",
+            "viGloss": "học hỏi",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "collaborative learning",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: học tập hợp tác"
+          },
+          {
+            "term": "cover topic",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: chủ đề bìa"
+          },
+          {
+            "term": "discuss topic",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thảo luận chủ đề"
+          },
+          {
+            "term": "enhance learning",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tăng cường học tập"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Positive views help build trust.",
+          "point2": "Positive views help people learn better.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "It is important to look at the good sides of any topic.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with presenting a positive perspective on the topic.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Looking at positive sides helps people feel better about things.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it gives people a good view of a subject in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a company can show its good work to customers in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, customers trust the company more in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that positive views help build trust.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on positive sides helps people make better choices.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people like to think things are good in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can see the good parts of a hard subject in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the student will try harder to learn it in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that positive views help people learn.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that looking at positive sides is helpful.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Positive views help build trust, and they also help people learn better.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "perspective",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "benefits",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "optimistic",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "achieve",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "perspective",
+            "enGloss": "a way of thinking",
+            "viGloss": "quan điểm",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "benefits",
+            "enGloss": "good things or advantages",
+            "viGloss": "lợi ích",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "optimistic",
+            "enGloss": "hopeful and positive",
+            "viGloss": "lạc quan",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "achieve",
+            "enGloss": "to successfully reach a goal",
+            "viGloss": "đạt được",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "social bonds",
+            "enGloss": "connections between people",
+            "viGloss": "mối liên kết xã hội",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "improve",
+            "enGloss": "to make better",
+            "viGloss": "cải thiện",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic achievement",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: thành tích học tập"
+          },
+          {
+            "term": "achieve goal",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đạt được mục tiêu"
+          },
+          {
+            "term": "achieve objective",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đạt được mục tiêu"
+          },
+          {
+            "term": "achieve outcome",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đạt được kết quả"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "Adopting a positive perspective is beneficial for personal growth and social connections.",
+          "point2": "The benefits discussed include improved self-confidence and stronger relationships.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "It is important to look at the positive aspects when discussing various subjects.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with presenting a positive perspective on the topic.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Considering the benefits of a positive view helps people feel better about their lives.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, focusing on good things can change how we think about problems.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student who sees challenges as learning chances will study harder.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they will achieve better grades and feel more confident.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a positive perspective helps people improve their skills.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, maintaining a positive outlook can improve our relationships with others.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people are drawn to those who are happy and optimistic.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a cheerful friend makes others feel good too.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people are more willing to help and spend time with positive people.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that a positive perspective strengthens social bonds.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that looking at the positive aspects is beneficial.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "A positive view helps people improve their skills, and it also strengthens social bonds with others.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "proactive",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "resilience",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "cohesion",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "optimistic",
+          "source": "legacy_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X, I believe Y because Z."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "proactive",
+            "enGloss": "acting in anticipation of future events",
+            "viGloss": "chủ động",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "resilience",
+            "enGloss": "the capacity to recover quickly from difficulties",
+            "viGloss": "khả năng phục hồi",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "cohesion",
+            "enGloss": "the action or fact of forming a united whole",
+            "viGloss": "sự gắn kết",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "optimistic",
+            "enGloss": "hopeful and confident about the future",
+            "viGloss": "lạc quan",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "constructive",
+            "enGloss": "intended to be helpful or improving",
+            "viGloss": "mang tính xây dựng",
+            "source": "legacy_sample"
+          },
+          {
+            "term": "enhances",
+            "enGloss": "improve or intensify",
+            "viGloss": "nâng cao",
+            "source": "legacy_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "contrast and thesis",
+            "en": "Although X, I believe Y because Z.",
+            "vi": "Mặc dù X, tôi cho rằng Y vì Z."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Education ____.",
+          "point1": "The first body paragraph discusses how focusing on positive aspects helps individuals maintain a proactive mindset and drives positive change.",
+          "point2": "The second body paragraph explains that presenting a positive perspective improves interpersonal relationships and group cohesion.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "fallback_or_generated"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Adopting a positive viewpoint on any subject can significantly enhance understanding and promote constructive dialogue.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with presenting a positive perspective on the topic.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Focusing on the optimistic aspects of a topic helps individuals maintain a proactive mindset.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, this approach encourages people to seek solutions rather than dwelling on inherent difficulties.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, when facing a complex global issue, emphasizing potential technological advancements provides actionable hope.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, communities are motivated to collaborate and implement innovative strategies.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that a positive perspective fosters resilience and drives positive change.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Furthermore, presenting a positive perspective can improve interpersonal relationships and group cohesion.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that optimism is contagious, uplifting the spirits of those around us.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that teams that maintain a positive outlook are more likely to achieve collective goals.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that mutual support increases, leading to a more harmonious working environment.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that positive framing strengthens social bonds and improves overall well-being.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that adopting a positive viewpoint is beneficial because it fosters resilience and drives positive change, and it also improves interpersonal relationships and group cohesion.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Education.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "fallback_or_generated"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:38.123720+00:00"
+  }
+}

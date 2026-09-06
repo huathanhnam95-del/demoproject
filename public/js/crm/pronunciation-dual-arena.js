@@ -576,7 +576,9 @@
       if (window.WaveSurfer && typeof window.WaveSurfer.create === 'function') {
         try {
           if (this.wavesurfer) {
-            try { this.wavesurfer.destroy(); } catch (_) {}
+            try { this.wavesurfer.destroy(); } catch (_) {
+              // Ignore wavesurfer destruction errors
+            }
             this.wavesurfer = null;
           }
           const view = this.elements.waveformView;

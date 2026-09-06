@@ -516,7 +516,8 @@ class SegmentalScreeningApp {
           highpassFreq: 80,
           targetPeakDb: -3,
           trim: true,
-          paddingMs: 150
+          paddingMs: 150,
+          createUrl: false
         });
         if (result && result.wavBlob) {
           return result.wavBlob;

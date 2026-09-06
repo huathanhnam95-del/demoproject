@@ -48,7 +48,7 @@ async function dismissBlockingOverlays(page) {
   if (await dismissButton.count()) {
     try {
       await dismissButton.click({ timeout: 3000 });
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
 
   await page.waitForFunction(() => {
@@ -406,11 +406,11 @@ async function runRemediationVerification() {
   } finally {
     try {
       await browser.close();
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
     try {
       server.destroyAll?.();
       server.close();
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
 }
 

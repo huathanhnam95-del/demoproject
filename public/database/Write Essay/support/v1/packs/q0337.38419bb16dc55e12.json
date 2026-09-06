@@ -1,0 +1,1800 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "337",
+  "title": "#337 Sport Practice",
+  "prompt": "Some young children spend a great amount of their time practicing sports. Discuss the advantages and disadvantages of this.",
+  "source": {
+    "promptSha256": "62db4d25c4e82804a18b02caff1175df943fed0f6afbb509aa6522f82207f3b4",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some young children spend a great amount of their time practicing sports.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Discuss the advantages and disadvantages of this.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "advantages_disadvantages",
+    "topics": [
+      "Leisure, sports, and hobbies"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "children",
+        "enGloss": "Key concept related to children.",
+        "viGloss": "bọn trẻ"
+      },
+      {
+        "term": "practicing",
+        "enGloss": "Key concept related to practicing.",
+        "viGloss": "luyện tập"
+      },
+      {
+        "term": "Discuss",
+        "enGloss": "Key concept related to discuss.",
+        "viGloss": "thảo luận"
+      },
+      {
+        "term": "advantages",
+        "enGloss": "beneficial conditions or circumstances",
+        "viGloss": "những lợi thế"
+      },
+      {
+        "term": "disadvantages",
+        "enGloss": "Key concept related to disadvantages.",
+        "viGloss": "nhược điểm"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "comparison",
+        "required": true,
+        "en": "Discuss the important advantages and disadvantages.",
+        "vi": "Thảo luận những ưu điểm và nhược điểm quan trọng."
+      },
+      {
+        "id": "judgement",
+        "required": true,
+        "en": "Make the required overall judgement.",
+        "vi": "Đưa ra nhận định tổng thể theo yêu cầu."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Support the comparison with relevant examples.",
+        "vi": "Hỗ trợ phần so sánh bằng ví dụ phù hợp."
+      }
+    ],
+    "angles": [
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "Sports practice is beneficial for physical health because regular exercise keeps the body healthy and provides more energy for other activities.",
+        "vi": "Góc nhìn: Sports practice is beneficial for physical health because regular exercise keeps the body healthy and provides more energy for other activities.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "However, spending excessive time on sports can be detrimental, causing children to neglect family time and academic responsibilities.",
+        "vi": "Góc nhìn: However, spending excessive time on sports can be detrimental, causing children to neglect family time and academic responsibilities.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspect of sport practice, focusing on physical health and fitness.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspect of sport practice, focusing on physical health and fitness.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspect of sport practice, focusing on the risk of injuries and physical problems.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspect of sport practice, focusing on the risk of injuries and physical problems.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "Regular sport practice offers significant physical advantages, helping children build strong bodies, improve stamina, and maintain better overall fitness for daily life.",
+        "vi": "Góc nhìn: Regular sport practice offers significant physical advantages, helping children build strong bodies, improve stamina, and maintain better overall fitness for daily life.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "However, spending too much time on sports can be detrimental, potentially causing stress and affecting a child's studies and social life.",
+        "vi": "Góc nhìn: However, spending too much time on sports can be detrimental, potentially causing stress and affecting a child's studies and social life.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspect of sport practice, focusing on maintaining a healthy body weight.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspect of sport practice, focusing on maintaining a healthy body weight.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspect of sport practice, focusing on the risk of injury from excessive training.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspect of sport practice, focusing on the risk of injury from excessive training.",
+        "sourceVariantId": "disadvantages"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not simply enumerate pros and cons without providing the required evaluation of which side outweighs.",
+        "vi": "Không chỉ liệt kê ưu nhược điểm mà quên so sánh và đánh giá mặt nào chiếm ưu thế hơn."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "sports practice",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "advantages outweigh",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "physical health",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "daily life",
+            "enGloss": "everyday existence",
+            "viGloss": "cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "sports practice",
+            "enGloss": "engaging in sports activities",
+            "viGloss": "tập thể thao",
+            "source": "approved_sample"
+          },
+          {
+            "term": "advantages outweigh",
+            "enGloss": "the benefits are greater than",
+            "viGloss": "lợi ích lớn hơn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "physical health",
+            "enGloss": "the condition of the body",
+            "viGloss": "sức khỏe thể chất",
+            "source": "approved_sample"
+          },
+          {
+            "term": "too much",
+            "enGloss": "an excessive amount",
+            "viGloss": "quá nhiều",
+            "source": "approved_sample"
+          },
+          {
+            "term": "family time",
+            "enGloss": "time spent with family",
+            "viGloss": "thời gian gia đình",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "physical health",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: sức khỏe thể chất"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Leisure, sports, and hobbies far outweigh the drawbacks because ____.",
+          "point1": "Sports practice is beneficial for physical health because regular exercise keeps the body healthy and provides more energy for other activities.",
+          "point2": "However, spending excessive time on sports can be detrimental, causing children to neglect family time and academic responsibilities.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Leisure, sports, and hobbies are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspect of sport practice, focusing on physical health and fitness.",
+          "point2": "The second body paragraph discusses the negative aspect of sport practice, focusing on the risk of injuries and physical problems.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many young children spend a lot of time practicing sports.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, sports practice helps children stay fit and strong.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, regular exercise keeps their bodies healthy in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, playing football every day makes their legs strong in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they have more energy for other activities in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that sports practice is good for physical health.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, spending too much time on sports can be a disadvantage.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because children might forget to do other things in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, they may spend less time with their family or doing homework in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, their school work or family time suffers in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that too much practice has a negative effect.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the advantages outweigh the disadvantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Sports practice is good for physical health, but children must also balance this time with family time.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Sport practice is a common activity for many people today.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, sport practice keeps people fit and healthy.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, regular exercise helps the body work well in daily life for many people in many places.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, running every day makes the heart strong in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel better and have more energy in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that physical activity is good for our bodies.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, sport practice can cause physical problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people might push themselves too hard in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, playing sports without rest can hurt muscles in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, some people get injuries that take time to heal in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that there are risks with sport.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because physical activity keeps people fit and healthy, but it can also cause physical problems and injuries.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "physical benefits",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "regular sport",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "practice gives",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "bodies",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "physical benefits",
+            "enGloss": "physical benefits",
+            "viGloss": "lợi ích thể chất",
+            "source": "approved_sample"
+          },
+          {
+            "term": "regular sport",
+            "enGloss": "regular sport",
+            "viGloss": "thể thao thường xuyên",
+            "source": "approved_sample"
+          },
+          {
+            "term": "practice gives",
+            "enGloss": "practice gives",
+            "viGloss": "việc tập luyện mang lại",
+            "source": "approved_sample"
+          },
+          {
+            "term": "bodies",
+            "enGloss": "bodies",
+            "viGloss": "cơ thể",
+            "source": "approved_sample"
+          },
+          {
+            "term": "child",
+            "enGloss": "child",
+            "viGloss": "đứa trẻ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "life",
+            "enGloss": "life",
+            "viGloss": "cuộc sống",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "academic life",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đời sống học tập"
+          },
+          {
+            "term": "contemporary life",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cuộc sống đương đại"
+          },
+          {
+            "term": "cultural life",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đời sống văn hóa"
+          },
+          {
+            "term": "lifelong learning",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Leisure, sports, and hobbies.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Leisure, sports, and hobbies."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Leisure, sports, and hobbies far outweigh the drawbacks because ____.",
+          "point1": "Regular sport practice offers significant physical advantages, helping children build strong bodies, improve stamina, and maintain better overall fitness for daily life.",
+          "point2": "However, spending too much time on sports can be detrimental, potentially causing stress and affecting a child's studies and social life.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Leisure, sports, and hobbies are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspect of sport practice, focusing on maintaining a healthy body weight.",
+          "point2": "The second body paragraph discusses the negative aspect of sport practice, focusing on the risk of injury from excessive training.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Many young children spend a lot of their time practicing various sports.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, regular sport practice gives children many physical benefits.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, consistent physical activity helps build strong bodies and good habits.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a child who practices running every day will improve their stamina and muscle strength.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, they will have better overall fitness and energy levels for daily life.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that sport practice is good for physical health.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, spending too much time on sport can cause some problems.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that young bodies need time for rest and other activities.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a child might skip school time to attend extra training sessions.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they may feel tired and stressed, which affects their studies and social life.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that excessive practice can be a drawback.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that while sport practice offers great physical benefits, parents must also manage the time to prevent drawbacks like stress.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Sport practice is a popular activity that many people engage in for physical health and mental well-being.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, regular sport practice helps people maintain a healthy body weight.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, physical activity burns extra calories and keeps the body strong.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, running or swimming regularly helps people stay fit and active.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people are less likely to develop serious health problems later in life.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that exercise is good for our physical health.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, excessive sport practice can cause serious physical problems.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that bodies need time to rest and recover from intense effort.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that athletes who train too hard often suffer from injuries.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that they might need long periods away from sport to heal properly.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that overtraining poses a major risk.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because regular sport practice promotes physical fitness, while excessive training poses significant risks of injury and overexertion.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "rigorous",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "substantial",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "coordination",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "stamina",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "Although X offers A, its main limitation is B."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "rigorous",
+            "enGloss": "extremely thorough or demanding",
+            "viGloss": "khắc nghiệt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "substantial",
+            "enGloss": "large in size, amount, or degree",
+            "viGloss": "đáng kể",
+            "source": "approved_sample"
+          },
+          {
+            "term": "coordination",
+            "enGloss": "the ability to use different parts of the body together",
+            "viGloss": "sự phối hợp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "stamina",
+            "enGloss": "the ability to sustain prolonged physical or mental effort",
+            "viGloss": "sức bền",
+            "source": "approved_sample"
+          },
+          {
+            "term": "overexertion",
+            "enGloss": "exerting too much effort",
+            "viGloss": "quá gắng sức",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawbacks",
+            "enGloss": "disadvantages; drawbacks",
+            "viGloss": "nhược điểm",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "substantial amount",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Leisure, sports, and hobbies.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Leisure, sports, and hobbies."
+          },
+          {
+            "term": "substantial difference",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Leisure, sports, and hobbies.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Leisure, sports, and hobbies."
+          },
+          {
+            "term": "substantial evidence",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Leisure, sports, and hobbies.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Leisure, sports, and hobbies."
+          },
+          {
+            "term": "substantial number",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Leisure, sports, and hobbies.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Leisure, sports, and hobbies."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "comparison",
+            "en": "Although X offers A, its main limitation is B.",
+            "vi": "Mặc dù X có A, hạn chế chính là B."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Leisure, sports, and hobbies far outweigh the drawbacks because ____.",
+          "point1": "The first body paragraph focuses on the positive aspects of sports practice, detailing physical and mental benefits.",
+          "point2": "The second body paragraph discusses the negative aspects, emphasizing the risks associated with overtraining and neglecting rest.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Leisure, sports, and hobbies are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspects of sports practice, focusing on physical conditioning and fitness.",
+          "point2": "The second body paragraph discusses the negative aspects, focusing on the risk of overcommitment and neglecting other developmental areas.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The dedication of young children to rigorous sports practice is a widely discussed topic.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, consistent sports practice offers substantial physical and mental advantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, regular physical activity helps children develop superior coordination and stamina.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, participating in team sports requires continuous running and complex movements.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, children build strong muscle groups and improve their overall physical conditioning.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that structured practice significantly enhances a child's physical health.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, excessive practice presents several potential drawbacks for developing youngsters.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that intense training schedules can lead to overexertion and fatigue.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that young athletes might neglect essential rest periods for proper recovery.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that chronic fatigue can negatively impact their academic performance and general well-being.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that excessive commitment poses a considerable risk.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the advantages of sports practice outweigh the disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While excessive commitment poses a considerable risk, the substantial physical and mental advantages gained from consistent sports practice are invaluable for development.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The dedication of young children to rigorous sports practice is a widely discussed topic.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, Structured sports practice offers significant physical conditioning benefits.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, consistent training helps children develop robust physical capabilities.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, participating in team sports, which requires continuous running and coordination drills.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, children build stronger muscles and improve their overall fitness levels.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, these activities promote a healthy lifestyle.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Excessive practice presents a notable disadvantage to a child's overall development.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that intense scheduling can severely limit time for other crucial activities.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that that academic studies or family interactions might be neglected.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the child risks experiencing burnout and mental exhaustion.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that overcommitment can be detrimental.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that while structured sports practice offers clear physical conditioning benefits, the potential disadvantage of overcommitment is more concerning.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Leisure, sports, and hobbies.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Parents must balance the pursuit of athletic skill with the need for holistic development.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:35.243983+00:00"
+  }
+}

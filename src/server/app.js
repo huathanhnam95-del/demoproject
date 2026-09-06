@@ -141,6 +141,7 @@ function createApp(options = {}) {
     pronunciationTestRoutes: require('../routes/pronunciation-test'),
     pronunciationAiRoutes: require('../routes/pronunciation-ai'),
     readAloudRoutes: require('../routes/read-aloud'),
+    repeatSentenceRoutes: require('../routes/repeat-sentence'),
     echoForgeRoutes: require('../routes/echo-forge').createEchoForgeRouter(),
     pronunciationComparisonRoutes: require('../../functions/src/routes/pronunciation-comparison')
   };
@@ -285,12 +286,14 @@ function createApp(options = {}) {
   };
 
   app.use('/api/read-aloud/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
+  app.use('/api/repeat-sentence/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   app.use('/api/echo-forge/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   app.use('/api/pronunciation-test/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   app.use('/api/pronunciation-test/vowel-hint', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   if (routes.pronunciationTestRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationTestRoutes);
   if (routes.pronunciationAiRoutes) app.use('/api', optionalAuthUserMiddleware, routes.pronunciationAiRoutes);
   if (routes.readAloudRoutes) app.use('/api', optionalAuthUserMiddleware, routes.readAloudRoutes);
+  if (routes.repeatSentenceRoutes) app.use('/api', optionalAuthUserMiddleware, routes.repeatSentenceRoutes);
   if (routes.echoForgeRoutes) app.use('/api', optionalAuthUserMiddleware, routes.echoForgeRoutes);
   if (routes.pronunciationComparisonRoutes) {
     app.use('/api/pronunciation-assessment', optionalAuthUserMiddleware, azureAssessmentRateLimiter, routes.pronunciationComparisonRoutes);

@@ -1,0 +1,1204 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "359",
+  "title": "#359 Lifetime Employment",
+  "prompt": "Businesses should hire employees for their entire life. What is the disadvantage? What is your solution?",
+  "source": {
+    "promptSha256": "071494cd1395b13ed9549370b5dc64227e64e46ebc5deb5795c4f17709a71fd3",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Businesses should hire employees for their entire life.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What is the disadvantage?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "What is your solution?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Work"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Businesses",
+        "enGloss": "Key concept related to businesses.",
+        "viGloss": "doanh nghiệp"
+      },
+      {
+        "term": "employees",
+        "enGloss": "Key concept related to employees.",
+        "viGloss": "nhân viên"
+      },
+      {
+        "term": "disadvantage",
+        "enGloss": "Key concept related to disadvantage.",
+        "viGloss": "bất lợi"
+      },
+      {
+        "term": "solution",
+        "enGloss": "Key concept related to solution.",
+        "viGloss": "giải pháp"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The main problem with keeping workers for their whole lives is that they might stop learning new skills, making them less useful to the company.",
+        "vi": "Góc nhìn: The main problem with keeping workers for their whole lives is that they might stop learning new skills, making them less useful to the company.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A good solution is for companies to offer training programs, which helps workers learn new skills and keeps them useful.",
+        "vi": "Góc nhìn: A good solution is for companies to offer training programs, which helps workers learn new skills and keeps them useful.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The main problem with lifetime employment is that it can limit an employee's growth and make them less valuable to the company.",
+        "vi": "Góc nhìn: The main problem with lifetime employment is that it can limit an employee's growth and make them less valuable to the company.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A good solution is to create flexible career paths that allow workers to change roles within the company.",
+        "vi": "Góc nhìn: A good solution is to create flexible career paths that allow workers to change roles within the company.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point1",
+        "label": "Point 1",
+        "en": "The primary disadvantage of lifetime employment is that it can impede professional growth and adaptability, leading to stagnation within the workforce.",
+        "vi": "Góc nhìn: The primary disadvantage of lifetime employment is that it can impede professional growth and adaptability, leading to stagnation within the workforce.",
+        "sourceVariantId": "problems_solutions"
+      },
+      {
+        "id": "problems_solutions-point2",
+        "label": "Point 2",
+        "en": "A practical solution to mitigate this issue is the implementation of continuous professional development programs, which keep employees skilled and engaged.",
+        "vi": "Góc nhìn: A practical solution to mitigate this issue is the implementation of continuous professional development programs, which keep employees skilled and engaged.",
+        "sourceVariantId": "problems_solutions"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Work.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Work."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "businesses",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "long-term",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "skilled",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "training",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "businesses",
+            "enGloss": "companies",
+            "viGloss": "các công ty",
+            "source": "approved_sample"
+          },
+          {
+            "term": "long-term",
+            "enGloss": "for a long time",
+            "viGloss": "lâu dài",
+            "source": "approved_sample"
+          },
+          {
+            "term": "skilled",
+            "enGloss": "having good abilities",
+            "viGloss": "có kỹ năng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "training",
+            "enGloss": "learning new things",
+            "viGloss": "việc đào tạo",
+            "source": "approved_sample"
+          },
+          {
+            "term": "programs",
+            "enGloss": "plans or courses",
+            "viGloss": "các chương trình",
+            "source": "approved_sample"
+          },
+          {
+            "term": "support",
+            "enGloss": "help",
+            "viGloss": "hỗ trợ",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "additional support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ bổ sung"
+          },
+          {
+            "term": "considerable support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ đáng kể"
+          },
+          {
+            "term": "emotional support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ tinh thần"
+          },
+          {
+            "term": "empirical support",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: hỗ trợ thực nghiệm"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Work ____.",
+          "point1": "The main problem with keeping workers for their whole lives is that they might stop learning new skills, making them less useful to the company.",
+          "point2": "A good solution is for companies to offer training programs, which helps workers learn new skills and keeps them useful.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Some people think that businesses should keep workers for their whole lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that long-term employment can make workers less skilled.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, workers might stop learning new things after many years in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a person who works in the same job for thirty years might not learn about new computer programs today.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the company cannot use the worker's skills for modern tasks.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that keeping people in one job for a long time is not good for the company.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is that companies should offer training programs.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because training helps workers learn new skills for their jobs in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a company can pay for a worker to take a course on digital marketing in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the worker can use modern skills and help the company grow.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that giving workers training is a good idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because long-term jobs can make workers less skilled, and companies should offer training programs to help workers learn new skills.",
+            "level": "a2_b1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "employment",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "limit",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "resist",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "development",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "employment",
+            "enGloss": "the state of having paid work",
+            "viGloss": "việc làm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "limit",
+            "enGloss": "to restrict or reduce the scope of",
+            "viGloss": "giới hạn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "resist",
+            "enGloss": "to refuse to accept or comply with",
+            "viGloss": "chống cự",
+            "source": "approved_sample"
+          },
+          {
+            "term": "development",
+            "enGloss": "the process of growing or changing",
+            "viGloss": "sự phát triển",
+            "source": "approved_sample"
+          },
+          {
+            "term": "flexible",
+            "enGloss": "able to change easily or easily adjusted",
+            "viGloss": "linh hoạt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "satisfaction",
+            "enGloss": "the feeling of contentment",
+            "viGloss": "sự hài lòng",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "affect development",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: ảnh hưởng đến sự phát triển"
+          },
+          {
+            "term": "career development",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phát triển nghề nghiệp"
+          },
+          {
+            "term": "cognitive development",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: phát triển nhận thức"
+          },
+          {
+            "term": "contribute to development",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Work.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Work."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Work ____.",
+          "point1": "The main problem with lifetime employment is that it can limit an employee's growth and make them less valuable to the company.",
+          "point2": "A good solution is to create flexible career paths that allow workers to change roles within the company.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The idea of businesses keeping employees working for their entire lives raises many questions about modern employment practices.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that long-term employment can limit an employee's growth and make them less valuable to the company.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, workers might become comfortable in their current roles and stop learning new skills.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, an employee who has done the same job for many years might resist learning new software programs.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the company loses the chance to use the employee's best abilities in new ways.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that this lack of development hurts both the worker and the company.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is to create flexible career paths that allow workers to change roles within the company.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people need variety and new challenges to stay motivated.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a marketing worker could spend time helping the IT department.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the worker gains a wider set of skills and feels more engaged in their job.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that giving people choices improves job satisfaction.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because limited career growth can hinder an employee's development, while establishing flexible career paths enhances job satisfaction and skill acquisition.",
+            "level": "b2",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "stifle",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "complacent",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "adaptability",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "efficiency",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "stifle",
+            "enGloss": "to prevent or restrain",
+            "viGloss": "kìm hãm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "complacent",
+            "enGloss": "smug or unconcerned",
+            "viGloss": "tự mãn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "adaptability",
+            "enGloss": "the ability to adjust to new conditions",
+            "viGloss": "khả năng thích ứng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "efficiency",
+            "enGloss": "the state of being effective and productive",
+            "viGloss": "hiệu suất",
+            "source": "approved_sample"
+          },
+          {
+            "term": "robust",
+            "enGloss": "strong and healthy",
+            "viGloss": "vững chắc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "tenure",
+            "enGloss": "the holding of an office or job",
+            "viGloss": "thời hạn công tác",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "problems_solutions",
+          "label": "Version 1: PROBLEMS & SOLUTIONS",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Work ____.",
+          "point1": "The primary disadvantage of lifetime employment is that it can impede professional growth and adaptability, leading to stagnation within the workforce.",
+          "point2": "A practical solution to mitigate this issue is the implementation of continuous professional development programs, which keep employees skilled and engaged.",
+          "sampleVariantId": "problems_solutions",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "problems_solutions": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The concept of lifetime employment suggests that businesses should maintain workers in their roles throughout their entire working lives.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "The major reason is that maintaining workers for their entire working lives can stifle professional growth and adaptability.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, employees may become complacent with their current skill sets, resisting necessary changes in the industry.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a worker who has remained in the same department for decades might struggle to adopt new digital technologies.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the company's overall efficiency decreases, making it difficult to compete in a rapidly evolving market.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that mandatory long-term employment hinders both individual and corporate progress.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One effective solution is implementing robust, continuous professional development programs.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that such initiatives equip employees with modern skills, making them valuable assets regardless of their tenure.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a company offering advanced coding workshops keeps its workforce relevant and highly motivated.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the employee feels valued and sees a clear path for career advancement within the organization.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that proactive training is essential for sustainable workforce stability.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with identifying problems and proposing solutions.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Work.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because mandatory long-term employment hinders professional adaptability, while implementing continuous professional development programs ensures a relevant and motivated workforce.",
+            "level": "c1",
+            "sampleVariantId": "problems_solutions",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:37.155653+00:00"
+  }
+}

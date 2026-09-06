@@ -1,0 +1,1805 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "178",
+  "title": "#178 Outside World",
+  "prompt": "What are the positive and negative aspects of the connection to outside world including mobile phone, email and social networking?",
+  "source": {
+    "promptSha256": "619022275e3677106a971af4816df16836fff1184c72cc85b6fbe0ab62226430",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "What are the positive and negative aspects of the connection to outside world including mobile phone, email and social networking?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Media and communication"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "positive",
+        "enGloss": "Key concept related to positive.",
+        "viGloss": "tích cực"
+      },
+      {
+        "term": "negative",
+        "enGloss": "Key concept related to negative.",
+        "viGloss": "tiêu cực"
+      },
+      {
+        "term": "aspects",
+        "enGloss": "Key concept related to aspects.",
+        "viGloss": "các khía cạnh"
+      },
+      {
+        "term": "connection",
+        "enGloss": "Key concept related to connection.",
+        "viGloss": "kết nối"
+      },
+      {
+        "term": "outside",
+        "enGloss": "Key concept related to outside.",
+        "viGloss": "bên ngoài"
+      },
+      {
+        "term": "including",
+        "enGloss": "Key concept related to including.",
+        "viGloss": "bao gồm cả"
+      },
+      {
+        "term": "networking",
+        "enGloss": "Key concept related to networking.",
+        "viGloss": "mạng"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "The main advantage is that mobile phones and social media make communication very easy, allowing people to stay connected with friends and family across long distances.",
+        "vi": "Góc nhìn: The main advantage is that mobile phones and social media make communication very easy, allowing people to stay connected with friends and family across long distances.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "The main disadvantage is that spending too much time on these devices can negatively affect real-life interactions and friendships.",
+        "vi": "Góc nhìn: The main disadvantage is that spending too much time on these devices can negatively affect real-life interactions and friendships.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses a positive aspect of the outside world: meeting new people and building social ties. It uses the structure: Point (On the one hand...), Explain (In other words...), Example (For example...), Effect (As a result...), Link (This shows that...).",
+        "vi": "Góc nhìn: The first body paragraph discusses a positive aspect of the outside world: meeting new people and building social ties. It uses the structure: Point (On the one hand...), Explain (In other words...), Example (For example...), Effect (As a result...), Link (This shows that...).",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses a negative aspect (disadvantage) of the outside world: feeling unsafe or scared. It uses the structure: Point (On the other hand...), Explain (This is because...), Example (For example...), Effect (As a result...), Link (This supports the view that...).",
+        "vi": "Góc nhìn: The second body paragraph discusses a negative aspect (disadvantage) of the outside world: feeling unsafe or scared. It uses the structure: Point (On the other hand...), Explain (This is because...), Example (For example...), Effect (As a result...), Link (This supports the view that...).",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "advantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph focuses on the positive aspect of improved global communication and connectivity.",
+        "vi": "Góc nhìn: The first body paragraph focuses on the positive aspect of improved global communication and connectivity.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "advantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph focuses on the negative aspect, specifically the risk of social isolation caused by over-reliance on technology.",
+        "vi": "Góc nhìn: The second body paragraph focuses on the negative aspect, specifically the risk of social isolation caused by over-reliance on technology.",
+        "sourceVariantId": "advantages"
+      },
+      {
+        "id": "disadvantages-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive aspects of interacting with the outside world, focusing on learning and personal growth.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive aspects of interacting with the outside world, focusing on learning and personal growth.",
+        "sourceVariantId": "disadvantages"
+      },
+      {
+        "id": "disadvantages-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative aspects (disadvantages) of constant interaction with the outside world, focusing on stress and mental health.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative aspects (disadvantages) of constant interaction with the outside world, focusing on stress and mental health.",
+        "sourceVariantId": "disadvantages"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Media and communication.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Media and communication."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "communication",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "easy",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "message",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "negative",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "communication",
+            "enGloss": "the action of talking to others",
+            "viGloss": "sự giao tiếp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "easy",
+            "enGloss": "simple or not difficult",
+            "viGloss": "dễ dàng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "message",
+            "enGloss": "a written note or text",
+            "viGloss": "tin nhắn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "negative",
+            "enGloss": "bad or harmful",
+            "viGloss": "tiêu cực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "aspects",
+            "enGloss": "parts or features of something",
+            "viGloss": "khía cạnh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "friends",
+            "enGloss": "people you like to spend time with",
+            "viGloss": "bạn bè",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "convey message",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: truyền tải thông điệp"
+          },
+          {
+            "term": "direct communication",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giao tiếp trực tiếp"
+          },
+          {
+            "term": "easy access",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: truy cập dễ dàng"
+          },
+          {
+            "term": "effective communication",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giao tiếp hiệu quả"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Media and communication far outweigh the drawbacks because ____.",
+          "point1": "The main advantage is that mobile phones and social media make communication very easy, allowing people to stay connected with friends and family across long distances.",
+          "point2": "The main disadvantage is that spending too much time on these devices can negatively affect real-life interactions and friendships.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Media and communication are more concerning because ____.",
+          "point1": "The first body paragraph discusses a positive aspect of the outside world: meeting new people and building social ties. It uses the structure: Point (On the one hand...), Explain (In other words...), Example (For example...), Effect (As a result...), Link (This shows that...).",
+          "point2": "The second body paragraph discusses a negative aspect (disadvantage) of the outside world: feeling unsafe or scared. It uses the structure: Point (On the other hand...), Explain (This is because...), Example (For example...), Effect (As a result...), Link (This supports the view that...).",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Mobile phones, email, and social media change how people talk to each other.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these tools make communication very easy.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can talk to friends far away quickly in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a student can send a message to a family member in another country in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel close to their loved ones even when they are apart in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that these tools help people keep in touch easily.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are negative aspects to using these tools.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people spend too much time looking at screens in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, spending hours on social media can make people forget to talk face to face in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, real-life friendships might get weaker in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that this use has a negative effect.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the advantages outweigh the disadvantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "These tools make communication very easy, but people must also be careful about the negative aspects of using them.",
+            "level": "a2_b1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The outside world means life outside of our homes and schools.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, the outside world helps people meet new people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can meet friends and learn new things outside in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, going to a park allows you to talk to neighbors in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people feel more connected to their community in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that the outside world helps build social ties.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the outside world has some negative points.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because people can feel lost or scared when they are alone in daily life for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, walking in a big city at night can be scary in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people might feel unsafe or worried in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that the outside world can be a risk.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because the outside world helps build social ties, but it can also make people feel unsafe or worried.",
+            "level": "a2_b1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "connectivity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "communication",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "instantly",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "relationships",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "connectivity",
+            "enGloss": "the state of being connected",
+            "viGloss": "sự kết nối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "communication",
+            "enGloss": "the act of sharing information",
+            "viGloss": "sự giao tiếp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "instantly",
+            "enGloss": "at once; immediately",
+            "viGloss": "ngay lập tức",
+            "source": "approved_sample"
+          },
+          {
+            "term": "relationships",
+            "enGloss": "the way people are connected",
+            "viGloss": "mối quan hệ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "isolation",
+            "enGloss": "the state of being alone",
+            "viGloss": "sự cô lập",
+            "source": "approved_sample"
+          },
+          {
+            "term": "dependency",
+            "enGloss": "relying on something",
+            "viGloss": "sự phụ thuộc",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "direct communication",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giao tiếp trực tiếp"
+          },
+          {
+            "term": "economic relationships",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: quan hệ kinh tế"
+          },
+          {
+            "term": "effective communication",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: giao tiếp hiệu quả"
+          },
+          {
+            "term": "electronic communication",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: truyền thông điện tử"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Media and communication far outweigh the drawbacks because ____.",
+          "point1": "The first body paragraph focuses on the positive aspect of improved global communication and connectivity.",
+          "point2": "The second body paragraph focuses on the negative aspect, specifically the risk of social isolation caused by over-reliance on technology.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Media and communication are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspects of interacting with the outside world, focusing on learning and personal growth.",
+          "point2": "The second body paragraph discusses the negative aspects (disadvantages) of constant interaction with the outside world, focusing on stress and mental health.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Modern technology, such as mobile phones, email, and social networking, has greatly changed how people connect with the outside world.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these tools greatly improve global communication and connectivity.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can talk to friends and family across long distances very easily.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student can send pictures to a relative living in another country instantly.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, maintaining strong personal relationships becomes much simpler for everyone.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these technologies help people stay connected globally.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are negative aspects, such as the risk of social isolation.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that people might spend too much time online and neglect real life.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that someone prefers chatting online rather than meeting a friend face to face.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that physical social skills might get weaker over time.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that this dependency on screens can cause problems.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the benefits of global communication outweigh the risks of social isolation.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While these tools help people stay connected globally, we must also be careful about the dependency on screens.",
+            "level": "b2",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relationship between people and the outside world is a topic that many people discuss.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, interacting with the outside world can help people learn many new things.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people get exposure to different cultures and ideas.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, traveling to a new country allows people to meet people from many backgrounds.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people gain a broader understanding of global issues.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that outside contact is good for personal growth.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, spending too much time in the outside world can cause some problems.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant interaction can lead to stress and exhaustion.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that city life often involves long commutes and high noise levels.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people might feel overwhelmed and struggle to relax.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that constant outside contact is difficult for mental health.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because outside contact promotes personal growth through exposure to diverse cultures, yet excessive interaction can also cause significant stress and exhaustion.",
+            "level": "b2",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "connectivity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "geographical",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "unprecedented",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "drawbacks",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "connectivity",
+            "enGloss": "the state of being connected",
+            "viGloss": "sự kết nối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "geographical",
+            "enGloss": "relating to the Earth's surface",
+            "viGloss": "thuộc về địa lý",
+            "source": "approved_sample"
+          },
+          {
+            "term": "unprecedented",
+            "enGloss": "never done or known before",
+            "viGloss": "chưa từng có",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawbacks",
+            "enGloss": "disadvantages or negative aspects",
+            "viGloss": "nhược điểm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "inadequacy",
+            "enGloss": "the state of not being good enough",
+            "viGloss": "sự không đủ năng lực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "isolation",
+            "enGloss": "the state of being alone",
+            "viGloss": "sự cô lập",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "social isolation",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Media and communication.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Media and communication."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "advantages",
+          "label": "Version 1: ADVANTAGES",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Media and communication far outweigh the drawbacks because ____.",
+          "point1": "The primary advantage discussed is the enhancement of global communication and connectivity, allowing people to maintain relationships and share information across vast distances.",
+          "point2": "The main disadvantage discussed is the negative impact on mental well-being, stemming from constant connectivity and social comparison.",
+          "sampleVariantId": "advantages",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "disadvantages",
+          "label": "Version 2: DISADVANTAGES",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Media and communication are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive aspects of interacting with the outside world, focusing on personal development and cultural exposure.",
+          "point2": "The second body paragraph addresses the negative aspects, specifically the psychological risks and pressures resulting from excessive global engagement.",
+          "sampleVariantId": "disadvantages",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "advantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Modern technologies, such as mobile phones, email, and social networking platforms, have fundamentally altered how people interact globally.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the advantages outweigh the disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, these digital tools have significantly enhanced global communication and connectivity.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, people can maintain relationships and share information across vast geographical distances instantly.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a student can collaborate on a project with a classmate located on a different continent using video calls.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the barriers of distance are effectively removed, allowing for continuous academic and personal exchange.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that these technologies foster unprecedented levels of global connection.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the reliance on these platforms presents several significant drawbacks, particularly concerning mental well-being.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant connectivity can lead to feelings of inadequacy and social comparison.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that individuals may spend excessive time viewing curated, idealized versions of others' lives online.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that users might experience increased anxiety or feelings of social isolation despite being constantly connected.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that excessive use poses a genuine risk to psychological health.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the advantages of these technologies outweigh the disadvantages.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the enhanced global communication and connectivity are undeniable benefits, the potential drawbacks regarding mental well-being must be managed responsibly.",
+            "level": "c1",
+            "sampleVariantId": "advantages",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "disadvantages": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The relationship between individuals and the outside world presents a complex debate regarding its overall benefits and drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, interaction with the outside world facilitates significant personal development.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, exposure to diverse cultures and ideas broadens one's perspective considerably.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, traveling to foreign countries allows people to experience different social norms and ways of life.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, individuals develop greater adaptability and a more global mindset.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that external engagement is crucial for intellectual growth.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, excessive engagement with the outside world presents notable psychological drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that constant exposure to global pressures can induce anxiety.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that social media platforms often promote unrealistic standards of living.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people may develop feelings of inadequacy and isolation.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that constant external demands can be detrimental to mental well-being.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly negative with the disadvantages outweigh the advantages.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Media and communication.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is because external engagement is crucial for intellectual growth, yet constant external demands can be detrimental to mental well-being.",
+            "level": "c1",
+            "sampleVariantId": "disadvantages",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:19.843661+00:00"
+  }
+}

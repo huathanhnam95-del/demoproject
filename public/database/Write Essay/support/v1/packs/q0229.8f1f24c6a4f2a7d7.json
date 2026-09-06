@@ -1,0 +1,1183 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "229",
+  "title": "#229 Technological Development",
+  "prompt": "Nowadays, with the rapid development of technology, it is easy for people to prepare food. Has it improved the people’s quality of life? Discuss it with your own experience.",
+  "source": {
+    "promptSha256": "823c5e3a2381a052890ef18450fc6970f3e28d5af883658201b2dcba9d2b84a7",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Nowadays, with the rapid development of technology, it is easy for people to prepare food.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Has it improved the people’s quality of life?",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-3",
+        "text": "Discuss it with your own experience.",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Lifestyle",
+      "Science, technology, and innovation"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "Nowadays",
+        "enGloss": "Key concept related to nowadays.",
+        "viGloss": "ngày nay"
+      },
+      {
+        "term": "development",
+        "enGloss": "Key concept related to development.",
+        "viGloss": "phát triển"
+      },
+      {
+        "term": "technology",
+        "enGloss": "Key concept related to technology.",
+        "viGloss": "công nghệ"
+      },
+      {
+        "term": "prepare",
+        "enGloss": "Key concept related to prepare.",
+        "viGloss": "chuẩn bị"
+      },
+      {
+        "term": "improved",
+        "enGloss": "Key concept related to improved.",
+        "viGloss": "được cải thiện"
+      },
+      {
+        "term": "quality",
+        "enGloss": "Key concept related to quality.",
+        "viGloss": "chất lượng"
+      },
+      {
+        "term": "Discuss",
+        "enGloss": "Key concept related to discuss.",
+        "viGloss": "thảo luận"
+      },
+      {
+        "term": "experience",
+        "enGloss": "Key concept related to experience.",
+        "viGloss": "kinh nghiệm"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Technology makes cooking simple and saves time.",
+        "vi": "Góc nhìn: Technology makes cooking simple and saves time.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Technology improves food storage and shopping.",
+        "vi": "Góc nhìn: Technology improves food storage and shopping.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Technology saves time and effort in the kitchen.",
+        "vi": "Góc nhìn: Technology saves time and effort in the kitchen.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Technology helps people maintain a healthier diet.",
+        "vi": "Góc nhìn: Technology helps people maintain a healthier diet.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point1",
+        "label": "Point 1",
+        "en": "Technological development enhances the quality of life by increasing efficiency in domestic life.",
+        "vi": "Góc nhìn: Technological development enhances the quality of life by increasing efficiency in domestic life.",
+        "sourceVariantId": "perspective_a"
+      },
+      {
+        "id": "perspective_a-point2",
+        "label": "Point 2",
+        "en": "Technology supports better health outcomes through improvement in nutritional planning and storage.",
+        "vi": "Góc nhìn: Technology supports better health outcomes through improvement in nutritional planning and storage.",
+        "sourceVariantId": "perspective_a"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Lifestyle.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Lifestyle."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "cook",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "machine",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "cooker",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "kitchen",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "cook",
+            "enGloss": "to prepare food",
+            "viGloss": "nấu ăn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "machine",
+            "enGloss": "a device that does work",
+            "viGloss": "máy móc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "cooker",
+            "enGloss": "an appliance for cooking",
+            "viGloss": "nồi nấu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "kitchen",
+            "enGloss": "room for cooking",
+            "viGloss": "nhà bếp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "refrigerator",
+            "enGloss": "a machine for keeping cold",
+            "viGloss": "tủ lạnh",
+            "source": "approved_sample"
+          },
+          {
+            "term": "food keeping",
+            "enGloss": "the act of keeping food safe",
+            "viGloss": "bảo quản thực phẩm",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Technology makes cooking simple and saves time.",
+          "point2": "Technology improves food storage and shopping.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Today, it is easy for people to prepare food because of new technology.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Technology helps people cook food much easier.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, many new machines do much of the work for us in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a modern cooker can bake bread without much help in daily life in daily life in daily life today today.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people save a lot of time in the kitchen.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that cooking is much simpler now.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Technology also helps people buy and keep food better.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because we have better ways to shop and keep items fresh in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, refrigerators keep food safe for many weeks in daily life in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, families do not waste food and can buy more items.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that food keeping is much better now.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that technology has improved people's lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The simpler cooking and the better food keeping both show this improvement.",
+            "level": "a2_b1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "appliances",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "nutritious",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "convenient",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "storage",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "appliances",
+            "enGloss": "machines used in a house",
+            "viGloss": "thiết bị gia dụng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nutritious",
+            "enGloss": "having good nutrients",
+            "viGloss": "giàu dinh dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "convenient",
+            "enGloss": "easy to use or access",
+            "viGloss": "tiện lợi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "storage",
+            "enGloss": "keeping things safe",
+            "viGloss": "sự lưu trữ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "routine",
+            "enGloss": "a regular way of doing things",
+            "viGloss": "thói quen",
+            "source": "approved_sample"
+          },
+          {
+            "term": "prepare",
+            "enGloss": "to get ready",
+            "viGloss": "chuẩn bị",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Technology saves time and effort in the kitchen.",
+          "point2": "Technology helps people maintain a healthier diet.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The rapid growth of technology has made it simpler for people to prepare meals at home.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage is that technology saves people a lot of time in the kitchen.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, modern appliances help people cook food much faster than before in everyday life in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, electric cookers can prepare a full meal in half the time of old methods.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people have more time for other activities, like spending time with family.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that technology improves our daily routine and quality of life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is that technology helps people eat healthier meals.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that modern appliances allow for better food storage and meal planning in everyday life.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that vacuum sealers keep groceries fresh for longer periods.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that families can always access nutritious ingredients, even when they are busy.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that technology supports a better, healthier lifestyle.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from clear and another.",
+            "level": "b2",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "appliances",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "nutritious",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "domestic life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "efficiency",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "appliances",
+            "enGloss": "machines used for domestic tasks",
+            "viGloss": "thiết bị gia dụng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nutritious",
+            "enGloss": "providing essential nutrients",
+            "viGloss": "giàu dinh dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "domestic life",
+            "enGloss": "daily life within the home",
+            "viGloss": "cuộc sống gia đình",
+            "source": "approved_sample"
+          },
+          {
+            "term": "efficiency",
+            "enGloss": "measured ability to achieve desired results",
+            "viGloss": "hiệu quả",
+            "source": "approved_sample"
+          },
+          {
+            "term": "nutritional planning",
+            "enGloss": "systematic arrangement of food intake",
+            "viGloss": "lập kế hoạch dinh dưỡng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "expiration dates",
+            "enGloss": "the date when a product is no longer safe to consume",
+            "viGloss": "ngày hết hạn",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "perspective_a",
+          "label": "Version 1: PERSPECTIVE A",
+          "stance": "agree",
+          "thesisFrame": "In my view, I strongly agree with this perspective because Lifestyle ____.",
+          "point1": "Technological development enhances the quality of life by increasing efficiency in domestic life.",
+          "point2": "Technology supports better health outcomes through improvement in nutritional planning and storage.",
+          "sampleVariantId": "perspective_a",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "perspective_a": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The rapid advancement of technology has significantly simplified the process of preparing meals for people today.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "One clear advantage is the increased efficiency in domestic life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, modern appliances allow individuals to complete complex cooking tasks with minimal effort in everyday life in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, automated food cookers can prepare nutritious meals while the user attends to other responsibilities.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people gain substantial amounts of time previously spent on manual food preparation.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that technological aids significantly enhance the quality of life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "Another reason is the improvement in nutritional planning and storage.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that technology provides extensive knowledge about dietary requirements and food preservation in everyday life.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that smart refrigerators track expiration dates and suggest recipes based on available ingredients.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that households can minimize food waste and ensure a more balanced diet.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that technological development supports better health outcomes.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree with agree.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Lifestyle.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "This is clear from clear and another.",
+            "level": "c1",
+            "sampleVariantId": "perspective_a",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:25.743388+00:00"
+  }
+}

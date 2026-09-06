@@ -1,0 +1,1786 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "96",
+  "title": "#96 Air Travel",
+  "prompt": "Some people think air travel has more negative impacts than positive impacts on modern life. What do you think?",
+  "source": {
+    "promptSha256": "afb54ec056c1bdb0d1c018fc54dcec97803fba569720ebd16008dcec1bde9f1a",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Some people think air travel has more negative impacts than positive impacts on modern life.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "What do you think?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Environment",
+      "Lifestyle",
+      "Science, technology, and innovation"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "negative",
+        "enGloss": "Key concept related to negative.",
+        "viGloss": "tiêu cực"
+      },
+      {
+        "term": "impacts",
+        "enGloss": "Key concept related to impacts.",
+        "viGloss": "tác động"
+      },
+      {
+        "term": "positive",
+        "enGloss": "Key concept related to positive.",
+        "viGloss": "tích cực"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "Air travel facilitates rapid movement over long distances, allowing people to visit other countries and spend more time with loved ones, thereby connecting people globally.",
+        "vi": "Góc nhìn: Air travel facilitates rapid movement over long distances, allowing people to visit other countries and spend more time with loved ones, thereby connecting people globally.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "Conversely, air travel negatively affects the environment because planes burn fuel and release smoke, causing pollution that harms the atmosphere and makes the air dirty.",
+        "vi": "Góc nhìn: Conversely, air travel negatively affects the environment because planes burn fuel and release smoke, causing pollution that harms the atmosphere and makes the air dirty.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "Air travel facilitates the quick movement of goods and people over long distances, benefiting trade and family visits.",
+        "vi": "Góc nhìn: Air travel facilitates the quick movement of goods and people over long distances, benefiting trade and family visits.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "However, air travel negatively impacts the environment by burning fuel and releasing smoke, causing pollution.",
+        "vi": "Góc nhìn: However, air travel negatively impacts the environment by burning fuel and releasing smoke, causing pollution.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "The positive impacts of air travel, such as global connection and economic growth, outweigh its negative environmental impacts.",
+        "vi": "Góc nhìn: The positive impacts of air travel, such as global connection and economic growth, outweigh its negative environmental impacts.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "The essay acknowledges the negative aspect of air travel, specifically pollution and carbon emissions, but concludes that the benefits are more significant.",
+        "vi": "Góc nhìn: The essay acknowledges the negative aspect of air travel, specifically pollution and carbon emissions, but concludes that the benefits are more significant.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses the positive economic impact of air travel, focusing on global connectivity and trade.",
+        "vi": "Góc nhìn: The first body paragraph discusses the positive economic impact of air travel, focusing on global connectivity and trade.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph discusses the negative environmental impact of air travel, focusing on pollution and carbon emissions.",
+        "vi": "Góc nhìn: The second body paragraph discusses the negative environmental impact of air travel, focusing on pollution and carbon emissions.",
+        "sourceVariantId": "negative"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Environment.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Environment."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "impact",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "connects",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "atmosphere",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "impact",
+            "enGloss": "effect or influence",
+            "viGloss": "tác động",
+            "source": "approved_sample"
+          },
+          {
+            "term": "connects",
+            "enGloss": "brings together or links",
+            "viGloss": "kết nối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollution",
+            "enGloss": "contamination of air, water, or land",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "atmosphere",
+            "enGloss": "the layer of gases surrounding the earth",
+            "viGloss": "bầu khí quyển",
+            "source": "approved_sample"
+          },
+          {
+            "term": "fuel",
+            "enGloss": "substance burned to produce power",
+            "viGloss": "nhiên liệu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "distances",
+            "enGloss": "the space between two points",
+            "viGloss": "khoảng cách",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "assess impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đánh giá tác động"
+          },
+          {
+            "term": "consider impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: xem xét tác động"
+          },
+          {
+            "term": "direct impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tác động trực tiếp"
+          },
+          {
+            "term": "emotional impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tác động cảm xúc"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Environment far outweigh the drawbacks because ____.",
+          "point1": "Air travel facilitates rapid movement over long distances, allowing people to visit other countries and spend more time with loved ones, thereby connecting people globally.",
+          "point2": "Conversely, air travel negatively affects the environment because planes burn fuel and release smoke, causing pollution that harms the atmosphere and makes the air dirty.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Environment are more concerning because ____.",
+          "point1": "Air travel facilitates the quick movement of goods and people over long distances, benefiting trade and family visits.",
+          "point2": "However, air travel negatively impacts the environment by burning fuel and releasing smoke, causing pollution.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Air travel has many effects on our modern lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, air travel helps people move across long distances quickly.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it makes it easy for people to visit other countries in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a family can fly from one continent to another in just a few hours in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can spend more time with their loved ones.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that air travel connects people around the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, air travel has a negative impact on the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because planes burn fuel and release smoke into the air in daily life in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, flying a plane creates pollution that harms the atmosphere.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this pollution makes the air dirty for many people.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that air travel is bad for the planet.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with positive.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While air travel has a negative impact on the environment, its ability to connect people across long distances is much more important.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Air travel has many effects on our modern lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, air travel helps people move goods and people quickly.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it makes long distances easy to cross in daily life in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, planes can take people from one country to another in a few hours.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, businesses can trade items and people can visit family far away.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that air travel is very useful for connecting people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, air travel has a negative impact on the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because planes burn fuel and release smoke into the air in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, many planes fly every day, making the air dirty.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, this pollution makes the planet less healthy for all living things.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that air travel is bad for the world.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while air travel helps people move goods and people quickly, the negative impact on the environment is much worse.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "I strongly disagree that air travel is good, because the pollution is a bigger problem than the usefulness of moving people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "global",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "impact",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "pollution",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "emissions",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "global",
+            "enGloss": "worldwide",
+            "viGloss": "toàn cầu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "impact",
+            "enGloss": "effect",
+            "viGloss": "tác động",
+            "source": "approved_sample"
+          },
+          {
+            "term": "pollution",
+            "enGloss": "dirt in the air",
+            "viGloss": "ô nhiễm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "emissions",
+            "enGloss": "gases released",
+            "viGloss": "khí thải",
+            "source": "approved_sample"
+          },
+          {
+            "term": "vital",
+            "enGloss": "very important",
+            "viGloss": "thiết yếu",
+            "source": "approved_sample"
+          },
+          {
+            "term": "connect",
+            "enGloss": "join together",
+            "viGloss": "kết nối",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "assess impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: đánh giá tác động"
+          },
+          {
+            "term": "closely connected",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: kết nối chặt chẽ"
+          },
+          {
+            "term": "consider impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: xem xét tác động"
+          },
+          {
+            "term": "direct impact",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: tác động trực tiếp"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Environment far outweigh the drawbacks because ____.",
+          "point1": "The positive impacts of air travel, such as global connection and economic growth, outweigh its negative environmental impacts.",
+          "point2": "The essay acknowledges the negative aspect of air travel, specifically pollution and carbon emissions, but concludes that the benefits are more significant.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Environment are more concerning because ____.",
+          "point1": "The first body paragraph discusses the positive economic impact of air travel, focusing on global connectivity and trade.",
+          "point2": "The second body paragraph discusses the negative environmental impact of air travel, focusing on pollution and carbon emissions.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Air travel is a major part of modern life, and people often discuss its positive and negative effects.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that air travel has more positive impacts on modern life.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, air travel greatly helps people connect with others across long distances.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it makes global movement much faster and easier for many people.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a person can travel from one continent to another in just a few hours.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, businesses can operate globally, and families can visit relatives quickly.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that air travel is vital for global connection and economic growth.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, air travel has some negative impacts, such as pollution and carbon emissions.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that planes burn fuel, which releases harmful gases into the air.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that large numbers of planes contribute to air pollution in major cities.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the environment faces extra stress, and air quality can drop.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that air travel presents environmental problems.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly positive with the view that air travel has more positive impacts on modern life.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While air travel does present environmental problems, its role in global connection and economic growth remains extremely important.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Air travel has many effects on modern life, and some people argue that these effects are more negative than positive.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, air travel offers great benefits for connecting people across long distances.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it allows people to move quickly between different countries.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, business people can travel from one continent to another in a single day.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, global trade can grow faster, and companies can reach more customers.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that air travel helps boost the global economy.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, air travel has significant negative impacts on the environment.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that planes release large amounts of smoke and pollution into the air.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that every flight adds to the planet's carbon emissions.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that air quality gets worse, and this contributes to climate change.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that air travel is harmful to the planet.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while air travel helps boost the global economy, the negative impacts on the environment are much worse.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "I strongly disagree with the idea that air travel is good, because the pollution problem is too serious to ignore.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "connectivity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "facilitates",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "unparalleled",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "drawbacks",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "connectivity",
+            "enGloss": "the state of being connected",
+            "viGloss": "sự kết nối",
+            "source": "approved_sample"
+          },
+          {
+            "term": "facilitates",
+            "enGloss": "makes easier",
+            "viGloss": "tạo điều kiện",
+            "source": "approved_sample"
+          },
+          {
+            "term": "unparalleled",
+            "enGloss": "having no equal",
+            "viGloss": "vô song",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawbacks",
+            "enGloss": "disadvantages",
+            "viGloss": "nhược điểm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "combustion",
+            "enGloss": "the process of burning",
+            "viGloss": "sự đốt cháy",
+            "source": "approved_sample"
+          },
+          {
+            "term": "ecological footprint",
+            "enGloss": "the impact of human activity on the environment",
+            "viGloss": "dấu chân sinh thái",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Environment far outweigh the drawbacks because ____.",
+          "point1": "The primary advantage of air travel is its ability to facilitate unparalleled global connectivity, which is crucial for maintaining a highly interconnected world economy.",
+          "point2": "The main drawback of air travel is the considerable environmental impact, stemming from the release of substantial greenhouse gases into the atmosphere.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Environment are more concerning because ____.",
+          "point1": "Air travel is a major driver of global economic development and connectivity.",
+          "point2": "The environmental impact of air travel, specifically carbon emissions, poses a serious threat to sustainability.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "Air travel is a significant component of modern global connectivity, influencing various aspects of daily life.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that air travel has more positive impacts on modern life.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, air travel facilitates unparalleled global connectivity, which is a major positive impact.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, it allows people and goods to traverse vast distances quickly, connecting distant economies.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, international business meetings can be held across continents within a single week.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, global trade flourishes, stimulating economic growth and cultural exchange.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that air travel is crucial for maintaining a highly interconnected world economy.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, air travel presents considerable environmental drawbacks, which is a significant negative impact.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the combustion of jet fuel releases substantial greenhouse gases into the atmosphere.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that a single flight contributes measurable carbon emissions, worsening air quality.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the industry faces increasing scrutiny regarding its ecological footprint and sustainability.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that air travel poses serious environmental challenges.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that air travel has more positive impacts on modern life.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the environmental drawbacks are undeniable, the unparalleled global connectivity and economic stimulation provided by air travel remain fundamentally vital.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The influence of air travel on modern life is a subject of considerable debate, concerning whether its positive benefits outweigh its negative consequences.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that air travel facilitates global commerce and connectivity.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, This means it allows businesses and people to interact across vast geographical distances with unprecedented speed.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, A practical example is international trade, which relies heavily on cargo planes transporting goods rapidly between continents.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This swift movement of commodities stimulates economic growth, supporting diverse industries.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, it becomes evident that air travel is a crucial catalyst for global economic development.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that air travel presents significant environmental drawbacks.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that the combustion of jet fuel releases substantial carbon emissions into the atmosphere.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that A practical example is how major airports contribute significantly to local air pollution and greenhouse gas levels.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the cumulative ecological footprint of the aviation industry poses a serious threat to planetary sustainability.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the negative impacts are substantial and require urgent mitigation.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree that air travel's benefits outweigh its costs.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Environment.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While air travel facilitates global commerce and connectivity, the environmental drawbacks, particularly concerning carbon emissions, are more concerning.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:04.650551+00:00"
+  }
+}

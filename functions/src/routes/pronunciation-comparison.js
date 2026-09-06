@@ -1,5 +1,31 @@
 const express = require('express');
 const multer = require('multer');
+const https = require('https');
+
+let devHttpsDispatcher = null;
+let devHttpsAgent = null;
+
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    const { Agent } = require('undici');
+    devHttpsDispatcher = new Agent({ connect: { rejectUnauthorized: false } });
+  } catch (_) {}
+  try {
+    devHttpsAgent = new https.Agent({ rejectUnauthorized: false });
+  } catch (_) {}
+}
+
+function getFetchOptions(url, baseOptions = {}) {
+  const isDev = process.env.NODE_ENV !== 'production';
+  const isLocalHttps = typeof url === 'string' && (url.startsWith('https://localhost') || url.startsWith('https://127.0.0.1'));
+  if (isDev && isLocalHttps) {
+    const extra = {};
+    if (devHttpsDispatcher) extra.dispatcher = devHttpsDispatcher;
+    if (devHttpsAgent) extra.agent = devHttpsAgent;
+    return { ...baseOptions, ...extra };
+  }
+  return baseOptions;
+}
 
 const router = express.Router();
 const upload = multer({

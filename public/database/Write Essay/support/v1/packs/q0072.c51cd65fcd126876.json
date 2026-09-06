@@ -1,0 +1,1748 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "72",
+  "title": "#72 Building Effects",
+  "prompt": "Do you think the design of buildings affects, positively or negatively, where people live and work?",
+  "source": {
+    "promptSha256": "8b85a256ba9269be10965c698fbfe022bbb30726f99c0cf547bb56f06e25bfe2",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Do you think the design of buildings affects, positively or negatively, where people live and work?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "City development"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "buildings",
+        "enGloss": "Key concept related to buildings.",
+        "viGloss": "các tòa nhà"
+      },
+      {
+        "term": "affects",
+        "enGloss": "influences or changes",
+        "viGloss": "ảnh hưởng đến"
+      },
+      {
+        "term": "positively",
+        "enGloss": "Key concept related to positively.",
+        "viGloss": "tích cực"
+      },
+      {
+        "term": "negatively",
+        "enGloss": "Key concept related to negatively.",
+        "viGloss": "tiêu cực"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "Good building design improves living areas by creating safe and happy homes, which helps build a strong community.",
+        "vi": "Góc nhìn: Good building design improves living areas by creating safe and happy homes, which helps build a strong community.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "Conversely, poor building design can cause negative problems, such as making areas difficult to navigate and harming the environment.",
+        "vi": "Góc nhìn: Conversely, poor building design can cause negative problems, such as making areas difficult to navigate and harming the environment.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "Building design can make living areas very convenient.",
+        "vi": "Góc nhìn: Building design can make living areas very convenient.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "Building design can create problems for the community.",
+        "vi": "Góc nhìn: Building design can create problems for the community.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "positive-point1",
+        "label": "Point 1",
+        "en": "Good building design improves the quality of life by making daily routines easier, such as having small shops and offices close to homes, which supports a strong local community.",
+        "vi": "Góc nhìn: Good building design improves the quality of life by making daily routines easier, such as having small shops and offices close to homes, which supports a strong local community.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "positive-point2",
+        "label": "Point 2",
+        "en": "Conversely, poor building design can cause problems because badly planned structures often lack necessary services, forcing workers to spend time and money on commuting.",
+        "vi": "Góc nhìn: Conversely, poor building design can cause problems because badly planned structures often lack necessary services, forcing workers to spend time and money on commuting.",
+        "sourceVariantId": "positive"
+      },
+      {
+        "id": "negative-point1",
+        "label": "Point 1",
+        "en": "The first body paragraph discusses how good design can create convenient places for people to live, focusing on the benefit of local services.",
+        "vi": "Góc nhìn: The first body paragraph discusses how good design can create convenient places for people to live, focusing on the benefit of local services.",
+        "sourceVariantId": "negative"
+      },
+      {
+        "id": "negative-point2",
+        "label": "Point 2",
+        "en": "The second body paragraph argues that poor design is a disadvantage because it separates residential areas from job centers, forcing people to travel long distances.",
+        "vi": "Góc nhìn: The second body paragraph argues that poor design is a disadvantage because it separates residential areas from job centers, forcing people to travel long distances.",
+        "sourceVariantId": "negative"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not answer only the first question while neglecting the second requirement; address both dimensions equally.",
+        "vi": "Không chỉ trả lời câu hỏi đầu tiên mà bỏ quên yêu cầu thứ hai; cần giải quyết cả hai khía cạnh công bằng."
+      },
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of City development.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của City development."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "good layouts",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "strong community",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "negative problem",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "way buildings",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "good layouts",
+            "enGloss": "good arrangements",
+            "viGloss": "bố cục tốt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "strong community",
+            "enGloss": "close-knit group",
+            "viGloss": "cộng đồng gắn bó",
+            "source": "approved_sample"
+          },
+          {
+            "term": "negative problem",
+            "enGloss": "unfavorable issue",
+            "viGloss": "vấn đề tiêu cực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "way buildings",
+            "enGloss": "manner of structures",
+            "viGloss": "cách các tòa nhà",
+            "source": "approved_sample"
+          },
+          {
+            "term": "can change",
+            "enGloss": "have the power to alter",
+            "viGloss": "có thể thay đổi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "affects where",
+            "enGloss": "influences location",
+            "viGloss": "ảnh hưởng đến nơi",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of City development far outweigh the drawbacks because ____.",
+          "point1": "Good building design improves living areas by creating safe and happy homes, which helps build a strong community.",
+          "point2": "Conversely, poor building design can cause negative problems, such as making areas difficult to navigate and harming the environment.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of City development are more concerning because ____.",
+          "point1": "Building design can make living areas very convenient.",
+          "point2": "Building design can create problems for the community.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The way buildings are designed can change where people choose to live and where they go to work.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that the design of buildings affects where people live and work positively.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, Good building design makes living areas very nice.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, good layouts help people feel safe and happy in their homes.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a house with a local park is good for families.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people enjoy spending time outside and feeling connected to their neighbors.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that good design helps build a strong community.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Bad building design can create a negative problem for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because poor structures often make it hard to move around the area.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, an office area without bus stops is difficult to reach.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people must use cars for everything, which is not good for the environment.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that bad design causes problems for daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that building design affects people's lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Good layouts help build a strong community, and bad structures can create a negative problem for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The design of buildings can change how people live and where they work.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, building design can make living areas very convenient.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, good layouts help people move around their homes easily in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a house with a big kitchen and a dining room is very useful in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people spend more time together in a nice space.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that good design helps family life.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, building design can create problems for the community.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because poor structures might keep people away from local shops in daily life in daily life in daily life today.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, an office area far from homes makes daily life difficult.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people must use cars for everything, which is bad.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that poor design causes problems.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while good layouts help family life, the negative effects of poor structures, such as making daily life difficult, are stronger.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "I strongly disagree that building design is always good for people.",
+            "level": "a2_b1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "good design",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "local community",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "design supports",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "poor design",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "good design",
+            "enGloss": "good",
+            "viGloss": "tốt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "local community",
+            "enGloss": "local",
+            "viGloss": "địa phương",
+            "source": "approved_sample"
+          },
+          {
+            "term": "design supports",
+            "enGloss": "supports",
+            "viGloss": "hỗ trợ",
+            "source": "approved_sample"
+          },
+          {
+            "term": "poor design",
+            "enGloss": "poor",
+            "viGloss": "kém",
+            "source": "approved_sample"
+          },
+          {
+            "term": "design creates",
+            "enGloss": "creates",
+            "viGloss": "tạo ra",
+            "source": "approved_sample"
+          },
+          {
+            "term": "major disadvantage",
+            "enGloss": "major",
+            "viGloss": "lớn",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "local community",
+            "enGloss": "Natural academic collocation enhancing coherence.",
+            "viGloss": "Cụm từ học thuật: cộng đồng địa phương"
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of City development far outweigh the drawbacks because ____.",
+          "point1": "Good building design improves the quality of life by making daily routines easier, such as having small shops and offices close to homes, which supports a strong local community.",
+          "point2": "Conversely, poor building design can cause problems because badly planned structures often lack necessary services, forcing workers to spend time and money on commuting.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of City development are more concerning because ____.",
+          "point1": "The first body paragraph discusses how good design can create convenient places for people to live, focusing on the benefit of local services.",
+          "point2": "The second body paragraph argues that poor design is a disadvantage because it separates residential areas from job centers, forcing people to travel long distances.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The way buildings are designed can greatly influence where people choose to live and where they go to work.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that the design of buildings affects where people live and work positively.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, good building design can greatly improve the quality of life in a community.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, thoughtful planning makes daily routines much easier for residents.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a neighborhood with small shops and offices close to homes is very convenient.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people do not need to travel long distances every day.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that good design supports a strong local community.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, poor building design can create significant problems for people living in an area.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that badly planned structures often lack necessary services.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that some large office blocks are far from public transport links.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that workers must spend much time and money on commuting.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that poor design creates a major disadvantage.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the design of buildings affects where people live and work positively.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Good design supports a strong local community, and while poor design creates a major disadvantage, the positive effects are more important.",
+            "level": "b2",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The way buildings are designed can greatly influence where people choose to live and where they go to work.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with the view that the design of buildings affects where people live and work negatively.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, good building design can create convenient places for people to live.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, well-planned structures can put shops and services close to homes.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a neighborhood with local shops on the ground floor makes daily life easier.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people do not need to travel far for basic needs, which saves time.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that good design supports a strong community feeling.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, poor building design presents a significant disadvantage to people's daily lives.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that bad layouts often separate places where people live from places where they work.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that residential areas are far from job centers.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people must use cars for long journeys, which is bad for the environment.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that poor design creates problems for people.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the view that the design of buildings affects where people live and work negatively.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While good design supports a strong community feeling, poor design creates problems for people, making the negative impact clear.",
+            "level": "b2",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "livability",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "architectural",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "mixed-use",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "self-sufficient",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "livability",
+            "enGloss": "the quality of life in a place",
+            "viGloss": "khả năng sống; mức độ tiện nghi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "architectural",
+            "enGloss": "relating to the design and construction of buildings",
+            "viGloss": "thuộc về kiến trúc",
+            "source": "approved_sample"
+          },
+          {
+            "term": "mixed-use",
+            "enGloss": "combining residential and commercial functions",
+            "viGloss": "đa chức năng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "self-sufficient",
+            "enGloss": "able to provide for its own needs",
+            "viGloss": "tự cung tự cấp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "drawback",
+            "enGloss": "a disadvantage or negative aspect",
+            "viGloss": "điểm yếu; nhược điểm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "car-dependent",
+            "enGloss": "requiring reliance on personal vehicles",
+            "viGloss": "phụ thuộc vào ô tô",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "positive",
+          "label": "Version 1: POSITIVE",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of City development far outweigh the drawbacks because ____.",
+          "point1": "The first body paragraph argues that good design enhances livability and community by promoting mixed-use zoning and reducing commute times.",
+          "point2": "The second body paragraph argues that poor design creates drawbacks by promoting car-dependent environments and negatively impacting community cohesion.",
+          "sampleVariantId": "positive",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "negative",
+          "label": "Version 2: NEGATIVE",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of City development are more concerning because ____.",
+          "point1": "The first body paragraph argues that good architectural design can enhance the functionality and quality of life in residential areas.",
+          "point2": "The second body paragraph argues that poorly designed buildings create significant drawbacks, such as increased car dependency and pollution, negatively affecting local communities.",
+          "sampleVariantId": "negative",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "positive": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The architectural design of buildings significantly influences the quality of life and the functionality of communities where people reside and pursue their careers.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that the design of buildings affects where people live and work positively.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, thoughtful architectural design significantly enhances the overall livability of residential areas.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, well-planned structures promote a sense of community and improve daily routines.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, neighborhoods featuring mixed-use zoning, such as ground-floor shops beneath apartments, are highly desirable.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, residents have immediate access to essential services, reducing the need for long commutes.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that good design fosters self-sufficient and vibrant local areas.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, poor architectural design can present a significant drawback to the functionality of urban centers.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that poorly conceived layouts often create car-dependent environments.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that sprawling office parks, separated from residential zones, require extensive vehicular travel.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people spend excessive time commuting, which negatively impacts their overall well-being.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that poor design can hinder the development of walkable and cohesive communities.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that the design of buildings affects where people live and work positively.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Thoughtful architectural design enhances livability by fostering self-sufficient local areas, while avoiding poor design drawbacks helps maintain walkable and cohesive communities.",
+            "level": "c1",
+            "sampleVariantId": "positive",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "negative": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The architectural design of buildings significantly influences the way people choose to live and where they choose to work.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, architectural design can enhance the functionality of residential areas.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, thoughtful planning can create highly convenient living spaces.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, incorporating green spaces and pedestrian walkways makes the neighborhood more appealing.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, residents enjoy a higher quality of life and a stronger sense of community.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that good design supports a desirable lifestyle.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, the design of buildings presents significant drawbacks to local communities.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that poorly planned structures often prioritize profit over human comfort.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that massive, isolated office complexes discourage local interaction.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that people become car-dependent, leading to increased traffic congestion and pollution.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that poor design negatively impacts the surrounding area.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, while good design can support a desirable lifestyle, the negative drawbacks, such as increased traffic congestion and pollution, are more pronounced.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to City development.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "I strongly disagree that the design of buildings affects positively, because the negative impact on the surrounding area outweighs the benefits of good design.",
+            "level": "c1",
+            "sampleVariantId": "negative",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:01.000514+00:00"
+  }
+}

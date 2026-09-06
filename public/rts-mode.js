@@ -35,6 +35,7 @@
     let recordedChunks = [];
     let recordingBlobUrl = null;
     let recordingBlob = null;
+    let dspPromise = null;
     let recordingSessionToken = 0;
     let archiveAttemptId = null;
     let archiveSavePromise = null;
@@ -149,6 +150,7 @@
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        dspPromise = null;
         archiveAttemptId = null;
         archiveSavePromise = null;
         recordedChunks = [];
@@ -518,6 +520,7 @@
         transcriptText = '';
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        dspPromise = null;
 
         // Request mic
         let stream;
@@ -599,30 +602,35 @@
 
     function onRecordingComplete() {
         if (recordedChunks.length === 0) {
+            dspPromise = Promise.resolve(null);
             showResults(null);
             return;
         }
         const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'audio/webm' });
         recordingBlob = blob;
         recordingBlobUrl = URL.createObjectURL(blob);
-        showResults(recordingBlobUrl);
 
-        if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-            const currentToken = recordingSessionToken;
-            window.AudioDspPipeline.enhance(blob).then((result) => {
-                if (currentToken !== recordingSessionToken) return;
-                if (result && result.wavBlob && result.audioUrl) {
+        const currentToken = recordingSessionToken;
+        dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
+            ? window.AudioDspPipeline.enhance(blob).then((result) => {
+                if (currentToken !== recordingSessionToken) return blob;
+                if (result && result.wavBlob) {
                     if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
                     recordingBlob = result.wavBlob;
-                    recordingBlobUrl = result.audioUrl;
+                    recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
                     if (el.rtsRecordingPlayback) {
                         el.rtsRecordingPlayback.src = recordingBlobUrl;
                     }
+                    return result.wavBlob;
                 }
+                return blob;
             }).catch((err) => {
                 console.warn('[RTS] AudioDspPipeline enhancement failed, keeping raw audio:', err);
-            });
-        }
+                return blob;
+            })
+            : Promise.resolve(blob);
+
+        showResults(recordingBlobUrl);
     }
 
     /* ──────────────────────────── SPEECH RECOGNITION ──────────────────────────── */
@@ -695,33 +703,38 @@
 
         archiveAttemptId = null;
         archiveSavePromise = null;
-        rememberArchiveSave(window.PTEAttemptArchive?.saveAttempt?.({
-            practiceMode: 'rts',
-            promptSnapshot: {
-                promptId: currentEntry?.id || null,
-                title: currentEntry?.title || '',
-                text: currentEntry?.answer || currentEntry?.prompt || '',
-                sourceAssetPaths: [currentEntry?.audioPath || currentEntry?.audio || currentEntry?.mediaPath].filter(Boolean),
-                data: currentEntry || null
-            },
-            responseSnapshot: {
-                transcript: getTranscriptForScoring() || transcriptText || ''
-            },
-            answerSnapshot: {
-                sampleResponse: currentEntry?.sampleResponse || currentEntry?.sampleResponses || null
-            },
-            resultSnapshot: {
-                submitted: true,
-                hasAudio: !!recordingBlob
-            },
-            scoringSource: 'client',
-            media: recordingBlob ? [{
-                slot: 'student',
-                label: 'Student response',
-                blob: recordingBlob,
-                contentType: recordingBlob.type || 'audio/webm'
-            }] : []
-        }));
+        const currentToken = recordingSessionToken;
+        rememberArchiveSave((async () => {
+            const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+            if (currentToken !== recordingSessionToken) return null;
+            return window.PTEAttemptArchive?.saveAttempt?.({
+                practiceMode: 'rts',
+                promptSnapshot: {
+                    promptId: currentEntry?.id || null,
+                    title: currentEntry?.title || '',
+                    text: currentEntry?.answer || currentEntry?.prompt || '',
+                    sourceAssetPaths: [currentEntry?.audioPath || currentEntry?.audio || currentEntry?.mediaPath].filter(Boolean),
+                    data: currentEntry || null
+                },
+                responseSnapshot: {
+                    transcript: getTranscriptForScoring() || transcriptText || ''
+                },
+                answerSnapshot: {
+                    sampleResponse: currentEntry?.sampleResponse || currentEntry?.sampleResponses || null
+                },
+                resultSnapshot: {
+                    submitted: true,
+                    hasAudio: !!finalBlob
+                },
+                scoringSource: 'client',
+                media: finalBlob ? [{
+                    slot: 'student',
+                    label: 'Student response',
+                    blob: finalBlob,
+                    contentType: finalBlob.type || 'audio/webm'
+                }] : []
+            });
+        })());
     }
 
     /* ──────────────────────────── AI SCORING ──────────────────────────── */

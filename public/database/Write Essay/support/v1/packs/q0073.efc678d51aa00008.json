@@ -1,0 +1,1769 @@
+{
+  "schemaVersion": "EssaySupportPackV1",
+  "questionId": "73",
+  "title": "#73 Zoo and Animal",
+  "prompt": "Animal rights have been a subject of debate since the 1970s. Are zoos helping or hurting animals?",
+  "source": {
+    "promptSha256": "07753bdddbf56626824b5e6c67157ed48a4202eaae6aa518bc2b7c1a260425b2",
+    "sourceIssues": []
+  },
+  "common": {
+    "promptSegments": [
+      {
+        "id": "segment-1",
+        "text": "Animal rights have been a subject of debate since the 1970s.",
+        "role": "prompt_clause"
+      },
+      {
+        "id": "segment-2",
+        "text": "Are zoos helping or hurting animals?",
+        "role": "prompt_clause"
+      }
+    ],
+    "promptType": "other",
+    "topics": [
+      "Animals",
+      "Ethics"
+    ],
+    "hardVocabulary": [
+      {
+        "term": "subject",
+        "enGloss": "Key concept related to subject.",
+        "viGloss": "chủ đề"
+      },
+      {
+        "term": "helping",
+        "enGloss": "Key concept related to helping.",
+        "viGloss": "giúp đỡ"
+      },
+      {
+        "term": "hurting",
+        "enGloss": "Key concept related to hurting.",
+        "viGloss": "làm tổn thương"
+      },
+      {
+        "term": "animals",
+        "enGloss": "living creatures with certain characteristics",
+        "viGloss": "động vật"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "task",
+        "required": true,
+        "en": "Answer every direct question in the prompt.",
+        "vi": "Trả lời mọi câu hỏi trực tiếp trong đề."
+      },
+      {
+        "id": "position",
+        "required": true,
+        "en": "State a clear and consistent position when an opinion is requested.",
+        "vi": "Nêu quan điểm rõ ràng và nhất quán khi đề yêu cầu ý kiến."
+      },
+      {
+        "id": "support",
+        "required": true,
+        "en": "Develop each main idea with explanation and an example.",
+        "vi": "Phát triển mỗi ý chính bằng giải thích và ví dụ."
+      }
+    ],
+    "angles": [
+      {
+        "id": "helping-point1",
+        "label": "Point 1",
+        "en": "Zoos are beneficial because they keep animals safe from danger and provide necessary medical care and food that they would not receive in the wild.",
+        "vi": "Góc nhìn: Zoos are beneficial because they keep animals safe from danger and provide necessary medical care and food that they would not receive in the wild.",
+        "sourceVariantId": "helping"
+      },
+      {
+        "id": "helping-point2",
+        "label": "Point 2",
+        "en": "However, keeping animals in small cages can be detrimental, as it restricts their natural movement and may cause stress or unhappiness.",
+        "vi": "Góc nhìn: However, keeping animals in small cages can be detrimental, as it restricts their natural movement and may cause stress or unhappiness.",
+        "sourceVariantId": "helping"
+      },
+      {
+        "id": "hurting-point1",
+        "label": "Point 1",
+        "en": "Zoos can be useful for education and helping rare animals survive.",
+        "vi": "Góc nhìn: Zoos can be useful for education and helping rare animals survive.",
+        "sourceVariantId": "hurting"
+      },
+      {
+        "id": "hurting-point2",
+        "label": "Point 2",
+        "en": "Zoos have a negative effect on animal life because small cages are not like their natural home.",
+        "vi": "Góc nhìn: Zoos have a negative effect on animal life because small cages are not like their natural home.",
+        "sourceVariantId": "hurting"
+      },
+      {
+        "id": "helping-point1",
+        "label": "Point 1",
+        "en": "Zoos are important for conservation efforts and saving species from extinction.",
+        "vi": "Góc nhìn: Zoos are important for conservation efforts and saving species from extinction.",
+        "sourceVariantId": "helping"
+      },
+      {
+        "id": "helping-point2",
+        "label": "Point 2",
+        "en": "Captivity can cause unhappiness and limit natural movement for wild animals.",
+        "vi": "Góc nhìn: Captivity can cause unhappiness and limit natural movement for wild animals.",
+        "sourceVariantId": "helping"
+      },
+      {
+        "id": "hurting-point1",
+        "label": "Point 1",
+        "en": "Zoos can contribute to conservation by providing a safe space for endangered species, such as rhinos, allowing them to be bred for eventual release into natural habitats.",
+        "vi": "Góc nhìn: Zoos can contribute to conservation by providing a safe space for endangered species, such as rhinos, allowing them to be bred for eventual release into natural habitats.",
+        "sourceVariantId": "hurting"
+      },
+      {
+        "id": "hurting-point2",
+        "label": "Point 2",
+        "en": "However, keeping animals in captivity severely limits their natural behavior, causing physical and mental health issues, as seen with lions unable to roam or hunt freely.",
+        "vi": "Góc nhìn: However, keeping animals in captivity severely limits their natural behavior, causing physical and mental health issues, as seen with lions unable to roam or hunt freely.",
+        "sourceVariantId": "hurting"
+      }
+    ],
+    "promptTraps": [
+      {
+        "en": "Do not write off-topic generalizations; ground every point in the specific context of Animals.",
+        "vi": "Không viết chung chung ngoài đề; hãy gắn chặt từng luận điểm vào bối cảnh cụ thể của Animals."
+      },
+      {
+        "en": "Avoid memorized generic templates; ensure every body paragraph contains concrete reasoning and evidence.",
+        "vi": "Tránh các câu rập khuôn học thuộc lòng; hãy đảm bảo mỗi thân bài đều có lập luận và dẫn chứng cụ thể."
+      }
+    ],
+    "faq": [
+      {
+        "questionEn": "What is this question asking?",
+        "questionVi": "Đề này đang hỏi điều gì?",
+        "answerEn": "Break the prompt into its direct requirements before choosing ideas.",
+        "answerVi": "Hãy tách đề thành các yêu cầu trực tiếp trước khi chọn ý."
+      },
+      {
+        "questionEn": "How many main ideas should I use?",
+        "questionVi": "Tôi nên dùng bao nhiêu ý chính?",
+        "answerEn": "Use two developed points with explanation and relevant examples.",
+        "answerVi": "Dùng hai luận điểm được phát triển bằng giải thích và ví dụ phù hợp."
+      },
+      {
+        "questionEn": "Can I use a personal example?",
+        "questionVi": "Tôi có thể dùng ví dụ cá nhân không?",
+        "answerEn": "Yes, if it directly supports the point and remains relevant to the prompt.",
+        "answerVi": "Có, nếu ví dụ trực tiếp hỗ trợ luận điểm và vẫn liên quan đến đề."
+      },
+      {
+        "questionEn": "What should I avoid?",
+        "questionVi": "Tôi nên tránh điều gì?",
+        "answerEn": "Avoid memorised general sentences and any idea that does not answer the task.",
+        "answerVi": "Tránh dùng các câu văn mẫu học thuộc lòng chung chung và các ý lạc đề."
+      }
+    ],
+    "tutorHandoff": {
+      "contextEn": "I am working on Write Essay question {questionId}. Please help me review the prompt requirements, my selected direction, and my language targets.",
+      "contextVi": "Tôi đang làm câu Write Essay {questionId}. Hãy giúp tôi kiểm tra yêu cầu đề, hướng triển khai và các mục tiêu ngôn ngữ đã chọn.",
+      "includedContext": [
+        "questionId",
+        "prompt",
+        "promptType",
+        "selectedVariantId",
+        "selectedTargetIds"
+      ],
+      "excludes": [
+        "rawAuditArtifacts",
+        "modelVotes",
+        "revealedSentenceText"
+      ]
+    }
+  },
+  "levels": {
+    "a2_b1": {
+      "cefrEvidence": "a2_b1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "a2_b1-vocab-1",
+          "type": "vocabulary",
+          "term": "daily life",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-2",
+          "type": "vocabulary",
+          "term": "zoos help",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-3",
+          "type": "vocabulary",
+          "term": "provide important",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-vocab-4",
+          "type": "vocabulary",
+          "term": "important care",
+          "source": "approved_sample"
+        },
+        {
+          "id": "a2_b1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "daily life",
+            "enGloss": "everyday existence",
+            "viGloss": "cuộc sống hàng ngày",
+            "source": "approved_sample"
+          },
+          {
+            "term": "zoos help",
+            "enGloss": "zoos assist",
+            "viGloss": "các sở thú giúp",
+            "source": "approved_sample"
+          },
+          {
+            "term": "provide important",
+            "enGloss": "supply crucial",
+            "viGloss": "cung cấp quan trọng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "important care",
+            "enGloss": "crucial attention",
+            "viGloss": "sự chăm sóc quan trọng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "negative drawback",
+            "enGloss": "adverse limitation",
+            "viGloss": "hạn chế tiêu cực",
+            "source": "approved_sample"
+          },
+          {
+            "term": "captivity can",
+            "enGloss": "being held can",
+            "viGloss": "việc nuôi nhốt có thể",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "helping",
+          "label": "Version 1: HELPING",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Animals far outweigh the drawbacks because ____.",
+          "point1": "Zoos are beneficial because they keep animals safe from danger and provide necessary medical care and food that they would not receive in the wild.",
+          "point2": "However, keeping animals in small cages can be detrimental, as it restricts their natural movement and may cause stress or unhappiness.",
+          "sampleVariantId": "helping",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "hurting",
+          "label": "Version 2: HURTING",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Animals are more concerning because ____.",
+          "point1": "Zoos can be useful for education and helping rare animals survive.",
+          "point2": "Zoos have a negative effect on animal life because small cages are not like their natural home.",
+          "sampleVariantId": "hurting",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "helping": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People often talk about whether zoos are good or bad for animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that zoos are helping animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, Zoos help animals by keeping them safe from danger.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, zoos give animals a place to live and receive good care in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a zoo can give sick animals special food and medical help in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, animals can get treatment they would not get in the wild in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that zoos provide important care for many animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Zoos have a negative drawback for animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because keeping animals in a small cage is not like their real home in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a tiger in a small area cannot run or play enough in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the animal might become unhappy or stressed.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that captivity can be bad for animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that zoos are helping animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "Zoos provide important care, and while captivity can be a negative drawback, the benefits are still important.",
+            "level": "a2_b1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "hurting": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "People often talk about whether zoos are good or bad for animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, Zoos can help animals survive in the wild.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they give animals a safe place to live and care for them in daily life.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, zoos keep animals that are rare in the wild.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, people can learn about these animals and help them to live better lives.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This shows that zoos are useful for learning and helping animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Zoos have a negative effect on animal life.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is because keeping animals in small cages is not like their natural home.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For example, a tiger in a small cage cannot run far enough to play.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, the animal might become weak and unhappy in its small space.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This supports the view that keeping animals in captivity is bad for them.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that zoos are good.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While zoos are useful for learning and helping animals, the negative effect of keeping animals in small cages is much worse for the animals.",
+            "level": "a2_b1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "b2": {
+      "cefrEvidence": "b2 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "b2-vocab-1",
+          "type": "vocabulary",
+          "term": "conservation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-2",
+          "type": "vocabulary",
+          "term": "endangered",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-3",
+          "type": "vocabulary",
+          "term": "captivity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-vocab-4",
+          "type": "vocabulary",
+          "term": "welfare",
+          "source": "approved_sample"
+        },
+        {
+          "id": "b2-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "conservation",
+            "enGloss": "the protection of animals and plants",
+            "viGloss": "sự bảo tồn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "endangered",
+            "enGloss": "at risk of dying out",
+            "viGloss": "có nguy cơ tuyệt chủng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "captivity",
+            "enGloss": "being held in a zoo or enclosure",
+            "viGloss": "sự nuôi nhốt",
+            "source": "approved_sample"
+          },
+          {
+            "term": "welfare",
+            "enGloss": "the health and happiness of animals",
+            "viGloss": "sức khỏe và phúc lợi",
+            "source": "approved_sample"
+          },
+          {
+            "term": "enclosures",
+            "enGloss": "small areas where animals are kept",
+            "viGloss": "chuồng trại",
+            "source": "approved_sample"
+          },
+          {
+            "term": "species",
+            "enGloss": "a group of living things",
+            "viGloss": "loài",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [
+          {
+            "term": "economic welfare",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Animals.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Animals."
+          },
+          {
+            "term": "human species",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Animals.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Animals."
+          },
+          {
+            "term": "public welfare",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Animals.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Animals."
+          },
+          {
+            "term": "social welfare",
+            "enGloss": "Natural academic collocation that enhances cohesion when discussing Animals.",
+            "viGloss": "Cụm kết hợp từ tự nhiên giúp tăng tính học thuật và mạch lạc khi viết về Animals."
+          }
+        ],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "helping",
+          "label": "Version 1: HELPING",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Animals far outweigh the drawbacks because ____.",
+          "point1": "Zoos are important for conservation efforts and saving species from extinction.",
+          "point2": "Captivity can cause unhappiness and limit natural movement for wild animals.",
+          "sampleVariantId": "helping",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "hurting",
+          "label": "Version 2: HURTING",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Animals are more concerning because ____.",
+          "point1": "Zoos can contribute to conservation by providing a safe space for endangered species, such as rhinos, allowing them to be bred for eventual release into natural habitats.",
+          "point2": "However, keeping animals in captivity severely limits their natural behavior, causing physical and mental health issues, as seen with lions unable to roam or hunt freely.",
+          "sampleVariantId": "hurting",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "helping": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of zoos in modern society has been a subject of much discussion since the 1970s.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with the view that zoos are helping animals.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, Zoos play a vital role in conservation efforts for endangered animals.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, This means they provide a safe place for species that are struggling in the wild.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, that many zoos run breeding programs to keep animals alive.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This allows scientists to study these animals, helping them survive in their natural habitat.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that This clearly shows that zoos are important for saving species from extinction.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Concerns exist about the negative impact of captivity on animal welfare.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that This is mainly because keeping wild animals in small enclosures limits their natural movement.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that that some animals show signs of boredom or stress in cages.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that their natural behaviors, like hunting or migrating, cannot be fully expressed.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that zoos can cause unhappiness for the animals.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that zoos are important for saving species.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the negative impact of captivity is a real concern, the benefits of supporting conservation efforts and saving species through zoos are more important.",
+            "level": "b2",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "hurting": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The discussion about keeping animals in zoos has been going on for many years.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, zoos are often seen as places that help with conservation efforts.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they provide a safe space for certain species that might face dangers in the wild.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, a zoo might keep a small group of rhinos to protect them from poaching.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these animals can be bred and then sent to natural habitats.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that zoos can play a helpful role in saving animals.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are clear disadvantages to keeping animals in captivity.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that zoo life limits the animals' natural behavior.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that lions in cages cannot roam large areas or hunt freely.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that their physical and mental health can suffer over time.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that zoos cause problems for the animals.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree with the idea that zoos help animals.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While zoos may help with conservation, the negative impact of captivity on the animals' natural behavior is much stronger.",
+            "level": "b2",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    },
+    "c1": {
+      "cefrEvidence": "c1 uses controlled sentence frames, 6 core vocabulary items, and prompt-specific academic structures.",
+      "coreTargets": [
+        {
+          "id": "c1-vocab-1",
+          "type": "vocabulary",
+          "term": "conservation",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-2",
+          "type": "vocabulary",
+          "term": "endangered",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-3",
+          "type": "vocabulary",
+          "term": "captivity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-vocab-4",
+          "type": "vocabulary",
+          "term": "biodiversity",
+          "source": "approved_sample"
+        },
+        {
+          "id": "c1-grammar-1",
+          "type": "grammar",
+          "term": "This is important because X leads to Y."
+        }
+      ],
+      "languageKit": {
+        "vocabulary": [
+          {
+            "term": "conservation",
+            "enGloss": "the protection of wildlife and natural resources",
+            "viGloss": "sự bảo tồn",
+            "source": "approved_sample"
+          },
+          {
+            "term": "endangered",
+            "enGloss": "at risk of extinction",
+            "viGloss": "có nguy cơ tuyệt chủng",
+            "source": "approved_sample"
+          },
+          {
+            "term": "captivity",
+            "enGloss": "being held in confinement",
+            "viGloss": "sự giam cầm",
+            "source": "approved_sample"
+          },
+          {
+            "term": "biodiversity",
+            "enGloss": "the variety of life in the world or in a particular habitat",
+            "viGloss": "đa dạng sinh học",
+            "source": "approved_sample"
+          },
+          {
+            "term": "enclosures",
+            "enGloss": "limited areas designed to contain animals",
+            "viGloss": "chuồng giam",
+            "source": "approved_sample"
+          },
+          {
+            "term": "habitat",
+            "enGloss": "the natural home or environment of an animal",
+            "viGloss": "môi trường sống",
+            "source": "approved_sample"
+          }
+        ],
+        "collocations": [],
+        "grammar": [
+          {
+            "id": "sentence-pattern-1",
+            "purpose": "cause and effect",
+            "en": "This is important because X leads to Y.",
+            "vi": "Điều này quan trọng vì X dẫn đến Y."
+          }
+        ],
+        "cohesion": [
+          {
+            "id": "cause-result",
+            "term": "as a result",
+            "en": "Use this to show a result.",
+            "vi": "Dùng để nêu kết quả."
+          },
+          {
+            "id": "contrast",
+            "term": "however",
+            "en": "Use a semicolon before and a comma after however when it joins clauses.",
+            "vi": "Dùng dấu chấm phẩy trước và dấu phẩy sau however khi nối mệnh đề."
+          }
+        ]
+      },
+      "plans": [
+        {
+          "variantId": "helping",
+          "label": "Version 1: HELPING",
+          "stance": "positive",
+          "thesisFrame": "In my view, the benefits of Animals far outweigh the drawbacks because ____.",
+          "point1": "Zoos are vital for conservation and education, helping to preserve endangered species.",
+          "point2": "The primary drawback of zoos is that confinement restricts natural behaviors and causes psychological distress.",
+          "sampleVariantId": "helping",
+          "sampleSourceStatus": "approved"
+        },
+        {
+          "variantId": "hurting",
+          "label": "Version 2: HURTING",
+          "stance": "negative",
+          "thesisFrame": "In my view, the negative consequences of Animals are more concerning because ____.",
+          "point1": "Zoos are often argued to be beneficial for conservation, providing breeding programs for endangered animals.",
+          "point2": "The primary disadvantage of zoos is that confining wild animals restricts their natural behaviors and causes psychological distress.",
+          "sampleVariantId": "hurting",
+          "sampleSourceStatus": "approved"
+        }
+      ],
+      "scaffolds": {
+        "helping": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of zoos in modern society, particularly concerning animal welfare, has been a subject of considerable debate.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly positive with positive.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, zoos play a crucial role in conservation efforts for endangered animals.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, they provide vital breeding programs and educational opportunities for the public.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, many institutions participate in global breeding initiatives, safeguarding vulnerable species from extinction.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, these controlled environments allow scientists to monitor health and genetics, ensuring the survival of rare animals.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that zoos contribute significantly to the preservation of biodiversity.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, there are concerns regarding the negative impact of captivity on animal welfare.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that confining wild creatures to small enclosures restricts their natural behaviors.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that animals may exhibit abnormal stress responses, such as pacing, when deprived of sufficient space.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the artificial habitat fails to simulate the complexity of a natural environment, leading to psychological issues.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that the confinement itself poses a significant drawback to the animals' well-being.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly agree that zoos are beneficial for animals.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "While the drawback of confinement is a valid concern, the conservation efforts and educational value provided by zoos, such as breeding programs, are far more important for global biodiversity.",
+            "level": "c1",
+            "sampleVariantId": "helping",
+            "sampleSourceStatus": "approved"
+          }
+        ],
+        "hurting": [
+          {
+            "sentenceId": "p1s1",
+            "paragraph": "introduction",
+            "index": 1,
+            "purpose": "paraphrase the prompt",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "The issue of ____ has sparked considerable debate in contemporary society.",
+            "modelSentence": "The role of zoos in modern society, particularly concerning animal welfare, has generated considerable public debate.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s2",
+            "paragraph": "introduction",
+            "index": 2,
+            "purpose": "state your position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In my view, I ____ because ____.",
+            "modelSentence": "In my opinion, I strongly negative with negative.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p1s3",
+            "paragraph": "introduction",
+            "index": 3,
+            "purpose": "preview the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "This essay will examine ____ as well as ____.",
+            "modelSentence": "This essay will provide two reasons supporting my idea.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s1",
+            "paragraph": "body1",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the one hand, One clear advantage is that zoos contribute significantly to conservation efforts.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s2",
+            "paragraph": "body1",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "In other words, These institutions provide necessary platforms for the breeding and safeguarding of endangered animal populations.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s3",
+            "paragraph": "body1",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "For instance, A practical example is that many accredited zoos participate in captive breeding programs, helping to maintain genetic diversity.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s4",
+            "paragraph": "body1",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "As a result, This result supports the view that these facilities can contribute to the eventual reintroduction of animals into their natural habitats.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p2s5",
+            "paragraph": "body1",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "Hence, it becomes evident that Consequently, it becomes evident that zoos play a vital role in global conservation initiatives.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s1",
+            "paragraph": "body2",
+            "index": 1,
+            "purpose": "introduce the main point",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "First and foremost, a major consideration is that ____.",
+            "modelSentence": "On the other hand, Another reason is that the captivity of wild animals presents a significant drawback to their natural welfare.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s2",
+            "paragraph": "body2",
+            "index": 2,
+            "purpose": "explain why it matters",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Specifically, this occurs because ____.",
+            "modelSentence": "This is primarily due to the fact that confining complex creatures to limited enclosures restricts their natural behaviors.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s3",
+            "paragraph": "body2",
+            "index": 3,
+            "purpose": "give a relevant example",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "For instance, real-world experience demonstrates that ____.",
+            "modelSentence": "This can be exemplified by the fact that A practical example is that animals often exhibit abnormal stress responses, such as pacing, when confined to small cages.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s4",
+            "paragraph": "body2",
+            "index": 4,
+            "purpose": "show the effect",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Consequently, this leads to ____.",
+            "modelSentence": "The outcome is that the animals may suffer from poor physical health and a diminished quality of life.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p3s5",
+            "paragraph": "body2",
+            "index": 5,
+            "purpose": "link back to the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Therefore, this evidence confirms that ____.",
+            "modelSentence": "This clearly aligns with the view that zoos often compromise the animal's inherent freedom.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s1",
+            "paragraph": "conclusion",
+            "index": 1,
+            "purpose": "restate the position",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "In conclusion, while some argue otherwise, I reaffirm that ____.",
+            "modelSentence": "In conclusion, I strongly disagree that zoos are beneficial; the negative impact of captivity on animal welfare outweighs the benefits of conservation efforts.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          },
+          {
+            "sentenceId": "p4s2",
+            "paragraph": "conclusion",
+            "index": 2,
+            "purpose": "synthesise the main points",
+            "ideaCue": "Connect this sentence to Animals.",
+            "frame": "Looking forward, addressing both ____ and ____ will be vital.",
+            "modelSentence": "The restriction of natural behaviors and the issue of animal welfare are more concerning than the role in conservation initiatives.",
+            "level": "c1",
+            "sampleVariantId": "hurting",
+            "sampleSourceStatus": "approved"
+          }
+        ]
+      },
+      "recycling": {
+        "maxPreviousTargets": 2,
+        "instructionEn": "Reuse up to two relevant targets from the previous Guided question.",
+        "instructionVi": "Áp dụng linh hoạt tối đa 2 mục tiêu phù hợp từ bài tập trước."
+      }
+    }
+  },
+  "audit": {
+    "status": "PASSED_UNCONTESTED",
+    "components": {
+      "promptBreakdown": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "angles": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "languageKit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "plans": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "scaffolds": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "faq": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      },
+      "eltAudit": {
+        "status": "PASSED_UNCONTESTED",
+        "votes": {
+          "dr": "PASS",
+          "qw": "PASS",
+          "gm": "PASS"
+        },
+        "passCount": 3,
+        "initialDetails": {},
+        "rawArtifacts": {},
+        "debateHistory": []
+      }
+    },
+    "auditMethod": "template_only_test_mode"
+  },
+  "provenance": {
+    "modelStages": {},
+    "sourceIssues": [],
+    "generatedAt": "2026-09-02T23:56:01.110614+00:00"
+  }
+}

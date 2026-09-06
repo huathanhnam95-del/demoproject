@@ -54,6 +54,15 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 - **Audio DSP Enhancement Pipeline**: For any practice mode that records student audio (speaking, repetition, voice submissions), ALWAYS route recorded audio through `window.AudioDspPipeline.enhance(blob)` (or instantiate `window.AudioDspPipeline.createRecorder()`). This applies standard 80Hz rumble removal, 16kHz sinc-resampling, -3dBFS peak normalization, and silence trimming so that audio playback is crystal-clear and scoring accuracy is maximized across all devices.
 - **E2E Testing**: Add automated E2E browser tests in `tests/browser/` that verify the full user flow, ensuring `sessionStorage` mock is applied to bypass the onboarding welcome modal when necessary.
 
+## Pronunciation and Text Comparison Convention (MANDATORY)
+
+- For any feature or practice mode that requires pronunciation and text comparison (such as Entrance Test, Read Aloud, Repeat Sentence, or any new speaking mode where students speak against reference text):
+  - **Acoustic Forced Alignment**: Always use forced-alignment pronunciation assessment (Azure Speech `Dimension: 'Comprehensive'`, `Granularity: 'Phoneme'`, aligned against `expectedText`).
+  - **Dual-Metric Semantic Separation**: Decouple whole-word communicative intelligibility (`accuracyScore: 0-100`) from narrow-band acoustic syllable precision (`syllables: [...]`).
+  - **Syllable-Level Breakdown & Coaching**: Render interactive tokens with color-coded states (Green $\ge 80$, Amber $60-79$, Red $< 60$), floating tooltips displaying syllable chips with millisecond boundaries for isolated audio playback, spoken candidate phoneme diagnoses (`heardIpa`), and natural articulatory physical coaching tips.
+  - **Oxford American IPA**: Strictly standardize all phonetics via `Phonetics.normalizeIPA()` (converting turned `ɹ -> r`, `/ɚ/ -> /ər/`, `/ɝ/ -> /ɜːr/`, `/ɛ/ -> /e/`, stripping tie bars and diacritics).
+  - **Future Feature Mandate**: Always use this convention or explicitly ask the user for permission before using any alternative approach for pronunciation and text comparison.
+
 ## Deployment Rule
 
 - **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.

@@ -40,6 +40,8 @@
     let recordingSeconds = 0;
     let recordingBlobUrl = null;
     let recordingBlob = null;
+    let dspPromise = null;
+    let recordingSessionToken = 0;
 
     // Recommendation engine state
     let sgdRecommendationEngine = null;
@@ -198,6 +200,8 @@
             recordingBlobUrl = null;
         }
         recordingBlob = null;
+        dspPromise = null;
+        recordingSessionToken++;
         if (el.recordingPlayback) {
             el.recordingPlayback.removeAttribute('src');
             el.recordingPlayback.load();
@@ -1072,6 +1076,8 @@
         hide(el.submitBtn);
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        dspPromise = null;
+        recordingSessionToken++;
 
         // Remove recording-active indicator
         const timerEl = el.recordTimer;
@@ -1096,6 +1102,8 @@
             // Bug fix: clean up previous recording blob if re-recording
             if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
             recordingBlob = null;
+            dspPromise = null;
+            const currentToken = ++recordingSessionToken;
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordedChunks = [];
@@ -1115,18 +1123,24 @@
                     show(el.playbackArea);
                     showInline(el.submitBtn);
 
-                    if (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function') {
-                        window.AudioDspPipeline.enhance(blob).then((result) => {
-                            if (result && result.wavBlob && result.audioUrl) {
+                    dspPromise = (window.AudioDspPipeline && typeof window.AudioDspPipeline.enhance === 'function')
+                        ? window.AudioDspPipeline.enhance(blob).then((result) => {
+                            if (currentToken !== recordingSessionToken) return blob;
+                            if (result && result.wavBlob) {
                                 if (recordingBlobUrl) URL.revokeObjectURL(recordingBlobUrl);
                                 recordingBlob = result.wavBlob;
-                                recordingBlobUrl = result.audioUrl;
+                                recordingBlobUrl = result.audioUrl || URL.createObjectURL(result.wavBlob);
                                 if (el.recordingPlayback) el.recordingPlayback.src = recordingBlobUrl;
+                                return result.wavBlob;
                             }
+                            return blob;
                         }).catch((err) => {
                             console.warn('[SGD] AudioDspPipeline enhancement failed, keeping raw audio:', err);
-                        });
-                    }
+                            return blob;
+                        })
+                        : Promise.resolve(blob);
+                } else {
+                    dspPromise = Promise.resolve(null);
                 }
                 // Bug fix: show record button only here (not in stopRecording)
                 showInline(el.recordBtn);
@@ -1193,7 +1207,7 @@
         const userNotes = collectSpeakerNotes();
         const hasAnyNotes = Object.values(userNotes).some(v => v.length > 0);
 
-        const doSubmit = () => {
+        const doSubmit = async () => {
             hide(el.stepRecord);
             hide(el.stepListen);
             goToStep('results');
@@ -1215,6 +1229,11 @@
             }
 
             saveProgress(userNotes, result);
+
+            const currentToken = recordingSessionToken;
+            const finalBlob = dspPromise ? await dspPromise.catch(() => recordingBlob) : recordingBlob;
+            if (currentToken !== recordingSessionToken) return;
+
             window.PTEAttemptArchive?.saveAttempt?.({
                 practiceMode: 'sgd',
                 promptSnapshot: {
@@ -1234,11 +1253,11 @@
                 },
                 resultSnapshot: result,
                 scoringSource: 'client',
-                media: recordingBlob ? [{
+                media: finalBlob ? [{
                     slot: 'student',
                     label: 'Student summary',
-                    blob: recordingBlob,
-                    contentType: recordingBlob.type || 'audio/webm'
+                    blob: finalBlob,
+                    contentType: finalBlob.type || 'audio/webm'
                 }] : []
             }).catch((error) => console.warn('[PTE Archive] SGD save failed:', error));
 
@@ -1567,6 +1586,8 @@
         sgdAttemptStartTime = null;
         if (recordingBlobUrl) { URL.revokeObjectURL(recordingBlobUrl); recordingBlobUrl = null; }
         recordingBlob = null;
+        dspPromise = null;
+        recordingSessionToken++;
         startPractice();
     }
 

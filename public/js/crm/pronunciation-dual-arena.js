@@ -144,7 +144,7 @@
                   ${PRESET_GROUPS.map(g => `
                     <optgroup label="${g.group}">
                       ${g.presets.map(p => `
-                        <option value="${p.word}" data-ipa="${p.ipa}" data-stress="${p.expectedStress}" ${p.word === this.state.selectedWord && p.ipa === this.state.selectedIpa ? 'selected' : ''}>
+                        <option value="${p.word}" data-ipa="${p.ipa}" data-stress="${p.expectedStress}" data-syllables="${p.syllables || ''}" ${p.word === this.state.selectedWord && p.ipa === this.state.selectedIpa ? 'selected' : ''}>
                           ${p.label}
                         </option>
                       `).join('')}
@@ -188,6 +188,25 @@
               <button type="button" id="dual-arena-btn-run" class="dual-arena-btn dual-arena-btn-run" disabled>
                 <span class="run-bolt">⚡</span> Run Dual Analysis
               </button>
+            </div>
+
+            <!-- Acoustic Waveform Visualization Display -->
+            <div id="dual-arena-waveform-wrap" class="dual-arena-waveform-container" style="display: none;">
+              <div class="waveform-header">
+                <div class="waveform-title-wrap">
+                  <span class="waveform-icon">🌊</span>
+                  <span class="waveform-title">Acoustic Audio Waveform</span>
+                  <span id="dual-arena-audio-duration" class="waveform-duration-badge">0.00s</span>
+                </div>
+                <div class="waveform-controls">
+                  <button type="button" id="dual-arena-waveform-play-btn" class="dual-arena-btn-mini" title="Play / Pause Audio">
+                    <span id="dual-arena-play-icon">▶</span> <span id="dual-arena-play-text">Play</span>
+                  </button>
+                </div>
+              </div>
+              <div id="dual-arena-waveform-view" class="dual-arena-waveform-view">
+                <canvas id="dual-arena-waveform-canvas" class="dual-arena-waveform-canvas" height="80"></canvas>
+              </div>
             </div>
 
             <!-- Status banner -->
@@ -300,6 +319,12 @@
         previewWrap: q('#dual-arena-audio-preview-wrap'),
         btnRun: q('#dual-arena-btn-run'),
         statusBanner: q('#dual-arena-status-banner'),
+        waveformWrap: q('#dual-arena-waveform-wrap'),
+        waveformView: q('#dual-arena-waveform-view'),
+        waveformPlayBtn: q('#dual-arena-waveform-play-btn'),
+        playIcon: q('#dual-arena-play-icon'),
+        playText: q('#dual-arena-play-text'),
+        audioDuration: q('#dual-arena-audio-duration'),
         cardABody: q('#option-a-body'),
         cardBBody: q('#option-b-body'),
         cardAStatus: q('#option-a-status'),
@@ -323,7 +348,7 @@
           const type = pill.dataset.backend;
           this.state.backendType = type;
           this.state.backendUrl = type === 'local' ? this.options.localBackendUrl : this.options.cloudBackendUrl;
-          this.showStatus(`Switched backend to ${type === 'local' ? 'Local Server (http://localhost:8081)' : 'Cloud Run'}`, 'info');
+          this.showStatus(`Switched backend to ${type === 'local' ? 'Local Server (http://localhost:8081)' : 'Cloud Run (' + this.options.cloudBackendUrl + ')'}`, 'info');
         });
       });
 
@@ -335,9 +360,11 @@
           const word = opt.value;
           const ipa = opt.dataset.ipa || '';
           const stress = parseInt(opt.dataset.stress || '0', 10);
+          const syllables = parseInt(opt.dataset.syllables || '0', 10);
           this.state.selectedWord = word;
           this.state.selectedIpa = ipa;
           this.state.expectedStress = stress;
+          this.state.expectedSyllables = syllables || (ipa.includes('.') ? ipa.split('.').length : null);
           this.elements.wordInput.value = word;
           this.elements.ipaInput.value = ipa;
         });
@@ -351,7 +378,11 @@
       }
       if (this.elements.ipaInput) {
         this.elements.ipaInput.addEventListener('input', (e) => {
-          this.state.selectedIpa = e.target.value.trim();
+          const ipa = e.target.value.trim();
+          this.state.selectedIpa = ipa;
+          if (ipa.includes('.')) {
+            this.state.expectedSyllables = ipa.split('.').length;
+          }
         });
       }
 
@@ -371,6 +402,18 @@
             this.handleAudioBlob(file);
           }
         });
+      }
+
+      // Waveform Play / Pause Button
+      if (this.elements.waveformPlayBtn) {
+        this.elements.waveformPlayBtn.addEventListener('click', () => this.toggleWaveformPlay());
+      }
+
+      // Audio player event listeners for synchronized play state
+      if (this.elements.audioPlayer) {
+        this.elements.audioPlayer.addEventListener('play', () => this.setWaveformPlayState(true));
+        this.elements.audioPlayer.addEventListener('pause', () => this.setWaveformPlayState(false));
+        this.elements.audioPlayer.addEventListener('ended', () => this.setWaveformPlayState(false));
       }
 
       // Run button
@@ -493,7 +536,142 @@
         this.elements.btnRun.disabled = false;
       }
 
+      await this.renderWaveform(finalBlob);
+
       this.showStatus('Audio ready. Click "Run Dual Analysis" to test Option A and Option B concurrently.', 'success');
+    }
+
+    async renderWaveform(blob) {
+      if (this.elements.waveformWrap) {
+        this.elements.waveformWrap.style.display = 'block';
+      }
+
+      // 1. Try window.WaveSurfer if loaded
+      if (window.WaveSurfer && typeof window.WaveSurfer.create === 'function') {
+        try {
+          if (this.wavesurfer) {
+            try { this.wavesurfer.destroy(); } catch (_) {}
+            this.wavesurfer = null;
+          }
+          const view = this.elements.waveformView;
+          if (view) {
+            view.innerHTML = '<div id="dual-arena-wavesurfer-target" style="width: 100%;"></div>';
+            this.wavesurfer = window.WaveSurfer.create({
+              container: '#dual-arena-wavesurfer-target',
+              waveColor: '#4f46e5',
+              progressColor: '#38bdf8',
+              cursorColor: '#f1f5f9',
+              cursorWidth: 2,
+              height: 72,
+              normalize: true,
+              barWidth: 2,
+              barGap: 1,
+              barRadius: 2
+            });
+
+            this.wavesurfer.on('ready', () => {
+              const dur = this.wavesurfer.getDuration();
+              if (this.elements.audioDuration) {
+                this.elements.audioDuration.textContent = `${dur.toFixed(2)}s`;
+              }
+            });
+
+            this.wavesurfer.on('play', () => this.setWaveformPlayState(true));
+            this.wavesurfer.on('pause', () => this.setWaveformPlayState(false));
+            this.wavesurfer.on('finish', () => this.setWaveformPlayState(false));
+
+            this.wavesurfer.load(this.state.audioUrl);
+            return;
+          }
+        } catch (wsErr) {
+          console.warn('WaveSurfer initialization failed, falling back to Canvas:', wsErr);
+        }
+      }
+
+      // 2. Fallback Canvas Waveform using Web Audio API
+      await this.renderCanvasWaveform(blob);
+    }
+
+    async renderCanvasWaveform(blob) {
+      const view = this.elements.waveformView;
+      if (!view) return;
+      view.innerHTML = '<canvas id="dual-arena-waveform-canvas" class="dual-arena-waveform-canvas" height="80"></canvas>';
+      const canvas = view.querySelector('#dual-arena-waveform-canvas');
+      if (!canvas) return;
+
+      try {
+        const arrayBuffer = await blob.arrayBuffer();
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+        ctx.close();
+
+        const duration = audioBuffer.duration;
+        if (this.elements.audioDuration) {
+          this.elements.audioDuration.textContent = `${duration.toFixed(2)}s`;
+        }
+
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.parentElement.clientWidth || 800;
+        const height = 80;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+
+        const drawCtx = canvas.getContext('2d');
+        drawCtx.scale(dpr, dpr);
+
+        const channelData = audioBuffer.getChannelData(0);
+        const step = Math.ceil(channelData.length / width);
+        const amp = height / 2;
+
+        const grad = drawCtx.createLinearGradient(0, 0, 0, height);
+        grad.addColorStop(0, '#38bdf8');
+        grad.addColorStop(0.5, '#6366f1');
+        grad.addColorStop(1, '#a855f7');
+        drawCtx.fillStyle = grad;
+
+        for (let i = 0; i < width; i++) {
+          let min = 1.0;
+          let max = -1.0;
+          for (let j = 0; j < step; j++) {
+            const datum = channelData[(i * step) + j];
+            if (datum < min) min = datum;
+            if (datum > max) max = datum;
+          }
+          const barH = Math.max(2, (max - min) * amp * 0.95);
+          const barY = amp - barH / 2;
+          drawCtx.fillRect(i, barY, 1, barH);
+        }
+      } catch (err) {
+        console.warn('Canvas waveform render error:', err);
+      }
+    }
+
+    toggleWaveformPlay() {
+      if (this.wavesurfer) {
+        this.wavesurfer.playPause();
+      } else if (this.elements.audioPlayer) {
+        if (this.elements.audioPlayer.paused) {
+          this.elements.audioPlayer.play();
+          this.setWaveformPlayState(true);
+        } else {
+          this.elements.audioPlayer.pause();
+          this.setWaveformPlayState(false);
+        }
+      }
+    }
+
+    setWaveformPlayState(isPlaying) {
+      this.isPlayingWaveform = isPlaying;
+      if (this.elements.playIcon) {
+        this.elements.playIcon.textContent = isPlaying ? '⏸' : '▶';
+      }
+      if (this.elements.playText) {
+        this.elements.playText.textContent = isPlaying ? 'Pause' : 'Play';
+      }
     }
 
     showStatus(message, type = 'info') {
@@ -600,6 +778,11 @@
       formData.append('audio', this.state.audioBlob, 'audio.wav');
       formData.append('word', word);
       formData.append('reference_ipa', ipa);
+      if (this.state.expectedSyllables) {
+        formData.append('expected_syllables', String(this.state.expectedSyllables));
+      } else if (ipa && ipa.includes('.')) {
+        formData.append('expected_syllables', String(ipa.split('.').length));
+      }
 
       let res;
       // Try local direct first if local selected, fallback to Cloud Functions proxy

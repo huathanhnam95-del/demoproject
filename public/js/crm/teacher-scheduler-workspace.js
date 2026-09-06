@@ -440,10 +440,19 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
+            const scrollX = typeof window !== 'undefined' ? (window.scrollX || window.pageXOffset || 0) : 0;
+            const scrollY = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
+            const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
+            const popoverWidth = elements.teacherSchedulerQuickAdd.offsetWidth || 340;
+            const desiredLeft = (draft.anchorLeft || 0) + scrollX;
+            const maxLeft = scrollX + viewportWidth - popoverWidth - 16;
+            const clampedLeft = Math.max(scrollX + 16, Math.min(desiredLeft, maxLeft));
+            const clampedTop = Math.max(16, (draft.anchorTop || 0) + scrollY);
+
             elements.teacherSchedulerQuickAdd.style.display = 'block';
             elements.teacherSchedulerQuickAdd.setAttribute('aria-hidden', 'false');
-            elements.teacherSchedulerQuickAdd.style.left = `${Math.max(16, draft.anchorLeft)}px`;
-            elements.teacherSchedulerQuickAdd.style.top = `${Math.max(16, draft.anchorTop + window.scrollY)}px`;
+            elements.teacherSchedulerQuickAdd.style.left = `${clampedLeft}px`;
+            elements.teacherSchedulerQuickAdd.style.top = `${clampedTop}px`;
             if (elements.inputTeacherSchedulerQuickClass) {
                 elements.inputTeacherSchedulerQuickClass.innerHTML = state.classrooms.map((classroom) => {
                     const classId = String(classroom.classroomId || '');
@@ -536,7 +545,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 throw new Error('Teacher scheduler API unavailable.');
             }
             const durationMinutes = Number(classroom.scheduleConfig?.sessionMinutes || 0) || 120;
-            const teacherUid = classroom.primaryTeacherUid || (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : undefined);
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const teacherUid = selectedTeacher || classroom.primaryTeacherUid || undefined;
             const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, null, classId, teacherUid);
             if (conflict) {
                 const conflictClass = getClassroomById(conflict.classId);

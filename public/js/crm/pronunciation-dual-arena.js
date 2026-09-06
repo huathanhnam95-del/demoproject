@@ -50,14 +50,20 @@
   class PronunciationDualArena {
     constructor(container, options = {}) {
       this.container = typeof container === 'string' ? document.querySelector(container) : container;
+      const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+      const defaultLocalUrl = isHttps ? 'https://localhost:8081' : 'http://localhost:8081';
+
       this.options = Object.assign({
         defaultBackend: 'local',
-        localBackendUrl: 'http://localhost:8081',
+        localBackendUrl: defaultLocalUrl,
         cloudBackendUrl: 'https://praat-api-1071929245506.us-central1.run.app'
       }, options);
 
       this.wavesurfer = null;
       this.isPlayingWaveform = false;
+      this.audioCtx = null;
+      this.decodedAudioBuffer = null;
+      this.currentSliceSource = null;
 
       this.state = {
         backendType: this.options.defaultBackend,

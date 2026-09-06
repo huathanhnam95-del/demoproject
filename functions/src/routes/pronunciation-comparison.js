@@ -21,7 +21,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 function getFetchOptions(url, baseOptions = {}) {
   const isDev = process.env.NODE_ENV !== 'production';
-  const isLocalHttps = typeof url === 'string' && (url.startsWith('https://localhost') || url.startsWith('https://127.0.0.1'));
+  const isLocalHttps = typeof url === 'string' && (
+    url.startsWith('https://localhost') ||
+    url.startsWith('https://127.0.0.1') ||
+    url.startsWith('https://0.0.0.0') ||
+    url.startsWith('https://[::1]')
+  );
   if (isDev && isLocalHttps) {
     const extra = {};
     if (devHttpsDispatcher) extra.dispatcher = devHttpsDispatcher;
@@ -165,19 +170,24 @@ function buildSyntheticPhonemes(word) {
   }));
 }
 
-function extractAudioDuration(buffer, sampleRate = 16000) {
+function getPreciseAudioDuration(buffer, sampleRate = 16000) {
   if (Buffer.isBuffer(buffer) && buffer.length >= 44) {
     if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE') {
       const byteRate = buffer.readUInt32LE(28);
       if (byteRate > 0) {
-        return Math.max(0.2, Math.round(((buffer.length - 44) / byteRate) * 100) / 100);
+        return Math.max(0, (buffer.length - 44) / byteRate);
       }
     }
   }
   if (Buffer.isBuffer(buffer) && buffer.length > 0) {
-    return Math.max(0.2, Math.round((buffer.length / (sampleRate * 2)) * 100) / 100);
+    return Math.max(0, buffer.length / (sampleRate * 2));
   }
-  return 1.0;
+  return 0;
+}
+
+function extractAudioDuration(buffer, sampleRate = 16000) {
+  const dur = getPreciseAudioDuration(buffer, sampleRate);
+  return dur > 0 ? Math.round(dur * 1000) / 1000 : 1.0;
 }
 
 function buildSyntheticOptionB(word, referenceIpa = '', expectedSyllables = null, duration = 1.0) {
@@ -189,7 +199,8 @@ function buildSyntheticOptionB(word, referenceIpa = '', expectedSyllables = null
     syllableCount = Math.max(1, Math.round((word || 'sample').length / 3));
   }
 
-  const sylDur = Math.round((duration / syllableCount) * 1000) / 1000;
+  const safeDur = Math.max(0.1, Number(duration) || 1.0);
+  const sylDur = Math.round((safeDur / syllableCount) * 1000) / 1000;
   const syllables = [];
 
   for (let i = 0; i < syllableCount; i++) {
@@ -202,16 +213,20 @@ function buildSyntheticOptionB(word, referenceIpa = '', expectedSyllables = null
     const intensity = isStressed ? 78.5 : 65.0;
     const vStart = Math.round((startTime + (sylDur - vowelDur) / 2) * 1000) / 1000;
     const vEnd = Math.round((vStart + vowelDur) * 1000) / 1000;
-    const prominence = syllableCount === 1 ? 100 : (isStressed ? 60 : Math.round(40 / Math.max(1, syllableCount - 1)));
+    const prominence = syllableCount === 1 ? 1.0 : (isStressed ? 0.60 : Math.round((0.40 / Math.max(1, syllableCount - 1)) * 100) / 100);
 
     syllables.push({
       syllable: i + 1,
       startTime,
       endTime,
+      sylStartTime: startTime,
+      sylEndTime: endTime,
       duration: sylDur,
       vowelDuration: vowelDur,
       vowelStartTime: vStart,
       vowelEndTime: vEnd,
+      nucleusStartTime: vStart,
+      nucleusEndTime: vEnd,
       maxPitch,
       avgPitch,
       intensity,
@@ -281,6 +296,13 @@ router.post('/option-a', upload.single('audio'), async (req, res) => {
     const backendUrl = resolvePythonBackendUrl(req);
     const audioBuffer = req.file.buffer;
     const sampleRate = extractSampleRate(audioBuffer);
+    const audioDur = getPreciseAudioDuration(audioBuffer, sampleRate);
+    if (audioDur > 0 && audioDur < 0.09) {
+      return res.status(400).json({
+        error: 'Audio duration is too short (<90ms) for acoustic analysis',
+        success: false
+      });
+    }
 
     // 1. Call Azure Pronunciation Assessment
     const azurePayload = await callAzureAssessment(audioBuffer, word, sampleRate);
@@ -517,6 +539,15 @@ router.post('/option-b', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'No audio file provided', success: false });
     }
 
+    const sampleRate = extractSampleRate(req.file.buffer);
+    const audioDur = getPreciseAudioDuration(req.file.buffer, sampleRate);
+    if (audioDur > 0 && audioDur < 0.09) {
+      return res.status(400).json({
+        error: 'Audio duration is too short (<90ms) for acoustic analysis',
+        success: false
+      });
+    }
+
     const backendUrl = resolvePythonBackendUrl(req);
     const cloudFallback = (process.env.PYTHON_BACKEND_URL || process.env.PRAAT_BACKEND_URL || 'https://praat-api-1071929245506.us-central1.run.app').replace(/\/+$/, '');
     const formData = new FormData();
@@ -547,6 +578,10 @@ router.post('/option-b', upload.single('audio'), async (req, res) => {
         signal: AbortSignal.timeout(8000)
       }));
       if (!response.ok && backendUrl !== cloudFallback) {
+        if (response.status === 400) {
+          const errData = await response.json().catch(() => ({}));
+          return res.status(400).json(errData.error ? errData : { error: 'Bad request', success: false });
+        }
         throw new Error(`Primary backend returned HTTP ${response.status}`);
       }
     } catch (primaryErr) {

@@ -14848,6 +14848,20 @@ mark.crm-highlight:hover {
   color: #34d399;
 }
 
+.dual-arena-slice-btn.is-playing {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+.dual-arena-slice-btn.btn-slice-nuc.is-playing {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: #34d399;
+  color: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
+}
+
 .syl-col-main {
   display: flex;
   align-items: center;
@@ -15223,6 +15237,10 @@ mark.crm-highlight:hover {
   .dual-arena-controls-bar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .benchmark-notes-row {
+    flex-direction: column;
   }
 }
 

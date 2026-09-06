@@ -3,8 +3,10 @@ const express = require('express');
 const http = require('http');
 const pronunciationComparisonRouter = require('../../functions/src/routes/pronunciation-comparison');
 
-function makeWavBuffer() {
-  const dataSize = 32000;
+function makeWavBuffer(durationMs = 1000) {
+  const sampleRate = 16000;
+  const numSamples = Math.round((durationMs / 1000) * sampleRate);
+  const dataSize = numSamples * 2;
   const buffer = Buffer.alloc(44 + dataSize);
   buffer.write('RIFF', 0);
   buffer.writeUInt32LE(36 + dataSize, 4);
@@ -12,8 +14,8 @@ function makeWavBuffer() {
   buffer.writeUInt32LE(16, 16);
   buffer.writeUInt16LE(1, 20);
   buffer.writeUInt16LE(1, 22);
-  buffer.writeUInt32LE(16000, 24);
-  buffer.writeUInt32LE(32000, 28);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * 2, 28);
   buffer.writeUInt16LE(2, 32);
   buffer.writeUInt16LE(16, 34);
   buffer.write('data', 36);
@@ -178,6 +180,69 @@ async function runTests() {
       } finally {
         await new Promise((resolve) => mockBackendServer.close(resolve));
       }
+    }
+
+    // Test 6: POST /option-a with audio < 90ms returns 400
+    {
+      const formData = new FormData();
+      const shortWav = makeWavBuffer(50); // 50ms
+      formData.append('audio', new Blob([shortWav], { type: 'audio/wav' }), 'short.wav');
+      formData.append('word', 'photograph');
+
+      const res = await fetch(`${baseUrl}/option-a`, {
+        method: 'POST',
+        body: formData
+      });
+      assert.strictEqual(res.status, 400);
+      const data = await res.json();
+      assert.strictEqual(data.success, false);
+      assert.match(data.error, /90ms/i);
+      console.log('✓ Option A rejects audio < 90ms with HTTP 400');
+    }
+
+    // Test 7: POST /option-b with audio < 90ms returns 400
+    {
+      const formData = new FormData();
+      const shortWav = makeWavBuffer(60); // 60ms
+      formData.append('audio', new Blob([shortWav], { type: 'audio/wav' }), 'short.wav');
+      formData.append('word', 'photograph');
+
+      const res = await fetch(`${baseUrl}/option-b`, {
+        method: 'POST',
+        body: formData
+      });
+      assert.strictEqual(res.status, 400);
+      const data = await res.json();
+      assert.strictEqual(data.success, false);
+      assert.match(data.error, /90ms/i);
+      console.log('✓ Option B rejects audio < 90ms with HTTP 400');
+    }
+
+    // Test 8: Synthetic Option B fallback returns prominence in 0.0 - 1.0 range
+    {
+      const formData = new FormData();
+      const wav = makeWavBuffer(600);
+      formData.append('audio', new Blob([wav], { type: 'audio/wav' }), 'test.wav');
+      formData.append('word', 'photograph');
+      formData.append('reference_ipa', 'ˈfoʊ.tə.ɡræf');
+
+      // Point to unreachable backend to trigger synthetic fallback
+      const res = await fetch(`${baseUrl}/option-b`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'x-python-backend-url': 'http://127.0.0.1:59999' }
+      });
+      assert.strictEqual(res.status, 200);
+      const data = await res.json();
+      assert.strictEqual(data.success, true);
+      assert.ok(Array.isArray(data.syllables));
+      data.syllables.forEach((s) => {
+        assert.ok(typeof s.prominence === 'number');
+        assert.ok(s.prominence >= 0 && s.prominence <= 1.0, `Prominence must be in 0.0-1.0 range, got: ${s.prominence}`);
+        assert.ok(typeof s.sylStartTime === 'number');
+        assert.ok(typeof s.nucleusStartTime === 'number');
+      });
+      console.log('✓ Synthetic Option B fallback provides normalized prominence <= 1.0 and slice keys');
     }
   } finally {
     delete process.env.PRONUNCIATION_TEST_AZURE_MOCK_RESPONSE;

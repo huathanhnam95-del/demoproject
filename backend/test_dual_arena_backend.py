@@ -115,6 +115,12 @@ class TestDualArenaEndpoints(unittest.TestCase):
         self.assertEqual(data.get('targetWord'), 'record')
         self.assertIn('syllables', data)
         self.assertIn('detectedStressedIndex', data)
+        self.assertTrue(len(data['syllables']) > 0)
+        s0 = data['syllables'][0]
+        self.assertIn('sylStartTime', s0)
+        self.assertIn('sylEndTime', s0)
+        self.assertIn('nucleusStartTime', s0)
+        self.assertIn('nucleusEndTime', s0)
 
     def test_analyze_option_b_infers_syllables_from_reference_ipa(self):
         wav_buf = _make_dummy_wav(duration_s=0.7, freq=220.0)

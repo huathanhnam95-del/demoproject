@@ -7,6 +7,9 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+BACKEND_DIR = PROJECT_ROOT / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 try:
     import parselmouth  # type: ignore
 except ImportError:
@@ -5366,7 +5369,15 @@ def analyze_option_b():
 
     target_word = request.form.get('target_word') or request.form.get('word') or req_json.get('word') or ''
     reference_ipa = request.form.get('reference_ipa') or req_json.get('reference_ipa') or ''
-    expected_syllables = request.form.get('expected_syllables', type=int) if request.form else req_json.get('expected_syllables')
+    raw_expected = request.form.get('expected_syllables') if request.form else None
+    if raw_expected is None and req_json:
+        raw_expected = req_json.get('expected_syllables')
+    expected_syllables = None
+    if raw_expected is not None:
+        try:
+            expected_syllables = int(raw_expected)
+        except (ValueError, TypeError):
+            expected_syllables = None
 
     if not expected_syllables and reference_ipa:
         try:
@@ -5405,13 +5416,17 @@ def analyze_option_b():
         # 2. Ensure each syllable has vowelDuration and interval measured
         pitch_obj = sound.to_pitch(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
         for s in syllables:
-            s_start = float(s.get('startTime', 0))
-            s_end = float(s.get('endTime', s_start))
+            s_start = float(s.get('startTime', s.get('start_time', 0)))
+            s_end = float(s.get('endTime', s.get('end_time', s_start)))
             v_dur, v_start, v_end = measure_vowel_interval(sound, s_start, s_end, pitch_obj)
             s['vowelDuration'] = round(v_dur, 3)
             s['vowel_duration'] = s['vowelDuration']
             s['vowelStartTime'] = round(v_start, 3)
             s['vowelEndTime'] = round(v_end, 3)
+            s['sylStartTime'] = round(s_start, 3)
+            s['sylEndTime'] = round(s_end, 3)
+            s['nucleusStartTime'] = round(v_start, 3)
+            s['nucleusEndTime'] = round(v_end, 3)
 
         # 3. Detect stressed syllable with repaired phonetic corrections & vowel normalization
         prom_scores, detected_idx = compute_syllable_prominence_scores(syllables)

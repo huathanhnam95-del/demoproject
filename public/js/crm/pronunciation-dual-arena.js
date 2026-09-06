@@ -470,7 +470,7 @@
           e.stopPropagation();
           const start = parseFloat(sliceBtn.dataset.start);
           const dur = parseFloat(sliceBtn.dataset.dur);
-          this.playSlice(start, dur);
+          this.playSlice(start, dur, sliceBtn);
         }
       });
 
@@ -584,6 +584,20 @@
           console.warn('AudioDspPipeline enhancement failed, using original audio:', dspErr);
         }
       }
+
+      if (this.currentSliceSource) {
+        try {
+          this.currentSliceSource.stop();
+        } catch (_) {
+          // Ignore slice playback stop errors if already completed
+        }
+        this.currentSliceSource = null;
+      }
+      if (this.currentActiveSliceBtn) {
+        this.currentActiveSliceBtn.classList.remove('is-playing');
+        this.currentActiveSliceBtn = null;
+      }
+      this.lastAudioBuffer = null;
 
       this.state.audioBlob = finalBlob;
       this.state.dspApplied = dspApplied;
@@ -766,6 +780,18 @@
     }
 
     toggleWaveformPlay() {
+      if (this.currentSliceSource) {
+        try {
+          this.currentSliceSource.stop();
+        } catch (_) {
+          // Ignore slice playback stop errors if already completed
+        }
+        this.currentSliceSource = null;
+      }
+      if (this.currentActiveSliceBtn) {
+        this.currentActiveSliceBtn.classList.remove('is-playing');
+        this.currentActiveSliceBtn = null;
+      }
       if (this.wavesurfer) {
         if (this.elements.audioPlayer && !this.elements.audioPlayer.paused) {
           this.elements.audioPlayer.pause();
@@ -773,11 +799,11 @@
         this.wavesurfer.playPause();
       } else if (this.elements.audioPlayer) {
         if (this.elements.audioPlayer.paused) {
-          this.elements.audioPlayer.play();
-          this.setWaveformPlayState(true);
+          this.elements.audioPlayer.play().catch(err => {
+            console.warn('Audio playback failed:', err);
+          });
         } else {
           this.elements.audioPlayer.pause();
-          this.setWaveformPlayState(false);
         }
       }
     }
@@ -823,27 +849,63 @@
       }
     }
 
-    async playSlice(startSec, durSec) {
+    async playSlice(startSec, durSec, btnEl = null) {
+      this.slicePlayToken = (this.slicePlayToken || 0) + 1;
+      const currentToken = this.slicePlayToken;
+
+      // Mutual pause: stop full audio playback if active
+      if (this.wavesurfer && typeof this.wavesurfer.isPlaying === 'function' && this.wavesurfer.isPlaying()) {
+        this.wavesurfer.pause();
+      }
+      if (this.elements.audioPlayer && !this.elements.audioPlayer.paused) {
+        this.elements.audioPlayer.pause();
+      }
+
+      if (this.currentSliceSource) {
+        try {
+          this.currentSliceSource.stop();
+        } catch (_) {
+          // Ignore slice source stop errors
+        }
+        this.currentSliceSource = null;
+      }
+      if (this.currentActiveSliceBtn) {
+        this.currentActiveSliceBtn.classList.remove('is-playing');
+        this.currentActiveSliceBtn = null;
+      }
+
       try {
         const buffer = await this.getDecodedAudioBuffer();
-        if (!buffer) return;
-        const ctx = await this.getAudioContext();
+        if (this.slicePlayToken !== currentToken) return;
+        if (!buffer || buffer.duration <= 0.01) return;
 
-        if (this.currentSliceSource) {
-          try {
-            this.currentSliceSource.stop();
-          } catch (_) {
-            // Ignore slice source stop errors
-          }
-          this.currentSliceSource = null;
-        }
+        const ctx = await this.getAudioContext();
+        if (this.slicePlayToken !== currentToken) return;
+
+        const start = Math.max(0, Math.min(buffer.duration - 0.01, Number(startSec) || 0));
+        const maxDur = Math.max(0, buffer.duration - start);
+        if (maxDur <= 0.005) return;
+        const dur = Math.max(0.01, Math.min(maxDur, Number(durSec) || 0.05));
 
         const source = ctx.createBufferSource();
         source.buffer = buffer;
-        source.connect(ctx.destination);
 
-        const start = Math.max(0, Number(startSec) || 0);
-        const dur = Math.max(0.01, Math.min(buffer.duration - start, Number(durSec) || 0.05));
+        // Micro-envelope ramp (5ms) to eliminate audio clicks/pops on start & stop
+        const gainNode = ctx.createGain();
+        const attack = Math.min(0.005, dur / 4);
+        const release = Math.min(0.005, dur / 4);
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + attack);
+        gainNode.gain.setValueAtTime(1, ctx.currentTime + Math.max(attack, dur - release));
+        gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + dur);
+
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        if (btnEl) {
+          btnEl.classList.add('is-playing');
+          this.currentActiveSliceBtn = btnEl;
+        }
 
         source.start(0, start, dur);
         this.currentSliceSource = source;
@@ -851,9 +913,16 @@
           if (this.currentSliceSource === source) {
             this.currentSliceSource = null;
           }
+          if (btnEl && this.currentActiveSliceBtn === btnEl) {
+            btnEl.classList.remove('is-playing');
+            this.currentActiveSliceBtn = null;
+          }
         };
       } catch (err) {
         console.warn('Audio slice playback error:', err);
+        if (btnEl) {
+          btnEl.classList.remove('is-playing');
+        }
       }
     }
 
@@ -1011,14 +1080,15 @@
         const durMs = Math.round((s.vowelDuration || 0) * 1000);
         const pitchHz = s.maxPitch ? `${s.maxPitch} Hz` : (s.meanPitch ? `${s.meanPitch} Hz` : 'Unvoiced');
         const intDb = s.peakIntensity ? `${s.peakIntensity} dB` : 'N/A';
-        const promPct = Math.round((s.prominence || 0) * 100);
+        const rawProm = typeof s.prominence === 'number' ? s.prominence : 0;
+        const promPct = rawProm > 1 ? Math.min(100, Math.round(rawProm)) : Math.min(100, Math.round(rawProm * 100));
 
-        const sylStart = typeof s.sylStartTime === 'number' ? s.sylStartTime : s.startTime;
-        const sylEnd = typeof s.sylEndTime === 'number' ? s.sylEndTime : s.endTime;
+        const sylStart = typeof s.sylStartTime === 'number' ? s.sylStartTime : (typeof s.startTime === 'number' ? s.startTime : 0);
+        const sylEnd = typeof s.sylEndTime === 'number' ? s.sylEndTime : (typeof s.endTime === 'number' ? s.endTime : sylStart + 0.1);
         const sylDur = Math.max(0.05, Math.round((sylEnd - sylStart) * 1000) / 1000);
 
-        const nucStart = typeof s.nucleusStartTime === 'number' ? s.nucleusStartTime : s.startTime;
-        const nucEnd = typeof s.nucleusEndTime === 'number' ? s.nucleusEndTime : s.endTime;
+        const nucStart = typeof s.nucleusStartTime === 'number' ? s.nucleusStartTime : (typeof s.vowelStartTime === 'number' ? s.vowelStartTime : sylStart);
+        const nucEnd = typeof s.nucleusEndTime === 'number' ? s.nucleusEndTime : (typeof s.vowelEndTime === 'number' ? s.vowelEndTime : (nucStart + (s.vowelDuration || 0.05)));
         const nucDur = Math.max(0.04, Math.round((nucEnd - nucStart) * 1000) / 1000);
 
         let reductionTag = '';
@@ -1111,14 +1181,15 @@
         const durMs = Math.round((s.vowelDuration || s.duration || 0) * 1000);
         const pitchHz = s.maxPitch ? `${s.maxPitch} Hz` : (s.avgPitch ? `${s.avgPitch} Hz` : 'Unvoiced');
         const intDb = s.intensity ? `${s.intensity} dB` : 'N/A';
-        const promPct = Math.round((s.prominence || 0) * 100);
+        const rawProm = typeof s.prominence === 'number' ? s.prominence : 0;
+        const promPct = rawProm > 1 ? Math.min(100, Math.round(rawProm)) : Math.min(100, Math.round(rawProm * 100));
 
-        const sylStart = typeof s.startTime === 'number' ? s.startTime : 0;
-        const sylEnd = typeof s.endTime === 'number' ? s.endTime : sylStart + (s.duration || 0.1);
+        const sylStart = typeof s.sylStartTime === 'number' ? s.sylStartTime : (typeof s.startTime === 'number' ? s.startTime : 0);
+        const sylEnd = typeof s.sylEndTime === 'number' ? s.sylEndTime : (typeof s.endTime === 'number' ? s.endTime : sylStart + (s.duration || 0.1));
         const sylDur = Math.max(0.05, Math.round((sylEnd - sylStart) * 1000) / 1000);
 
-        const nucStart = typeof s.vowelStartTime === 'number' ? s.vowelStartTime : sylStart;
-        const nucEnd = typeof s.vowelEndTime === 'number' ? s.vowelEndTime : (nucStart + (s.vowelDuration || sylDur * 0.5));
+        const nucStart = typeof s.nucleusStartTime === 'number' ? s.nucleusStartTime : (typeof s.vowelStartTime === 'number' ? s.vowelStartTime : sylStart);
+        const nucEnd = typeof s.nucleusEndTime === 'number' ? s.nucleusEndTime : (typeof s.vowelEndTime === 'number' ? s.vowelEndTime : (nucStart + (s.vowelDuration || sylDur * 0.5)));
         const nucDur = Math.max(0.04, Math.round((nucEnd - nucStart) * 1000) / 1000);
 
         return `

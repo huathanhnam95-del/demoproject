@@ -151,10 +151,25 @@ async function runLiveIntegrationTest() {
     assert.ok(sylSliceBtns >= 2, `Expected at least 2 syllable slice buttons, found ${sylSliceBtns}`);
     assert.ok(nucSliceBtns >= 2, `Expected at least 2 nucleus slice buttons, found ${nucSliceBtns}`);
 
-    // Click slice buttons to verify they trigger without page errors
+    // Verify Prominence percentages are bounded <= 100% and > 0%
+    const prominenceTexts = await page.locator('.prominence-num').allTextContents();
+    assert.ok(prominenceTexts.length >= 2, 'Must have at least 2 prominence percentages');
+    prominenceTexts.forEach((txt) => {
+      const match = txt.match(/(\d+)%/);
+      assert.ok(match, `Invalid prominence text: ${txt}`);
+      const pct = parseInt(match[1], 10);
+      assert.ok(pct >= 0 && pct <= 100, `Prominence percentage must be between 0 and 100%, got: ${pct}%`);
+    });
+    console.log('Verified: All prominence percentages are properly bounded (0-100%).');
+
+    // Click slice buttons consecutively to verify rapid multi-click stability without errors
     await page.locator('.btn-slice-syl').first().click();
     await page.locator('.btn-slice-nuc').first().click();
-    console.log('Verified: Audio slice buttons exist and are interactive.');
+    const secondSylBtn = page.locator('.btn-slice-syl').nth(1);
+    if (await secondSylBtn.count() > 0) {
+      await secondSylBtn.click();
+    }
+    console.log('Verified: Audio slice buttons exist, handle rapid multi-clicking, and are interactive.');
 
     // 14. Mobile responsiveness check (grid columns should collapse to 1 column at <= 640px)
     await page.setViewportSize({ width: 375, height: 667 });
@@ -163,7 +178,12 @@ async function runLiveIntegrationTest() {
     });
     const colCount = gridColumns.trim().split(/\s+/).length;
     assert.strictEqual(colCount, 1, `Mobile grid must have 1 column, got: ${gridColumns}`);
-    console.log('Verified: Mobile responsiveness grid collapses to 1 column at 375px.');
+
+    const notesFlexDir = await page.locator('.benchmark-notes-row').evaluate((el) => {
+      return window.getComputedStyle(el).flexDirection;
+    });
+    assert.strictEqual(notesFlexDir, 'column', `Mobile benchmark-notes-row must be column, got: ${notesFlexDir}`);
+    console.log('Verified: Mobile responsiveness grid and notes row collapse to 1 column at 375px.');
 
     assert.strictEqual(pageErrors.length, 0, `Page errors encountered: ${pageErrors.join(', ')}`);
     console.log('ALL LIVE SERVER DUAL ARENA CHECKS PASSED PERFECTLY!');

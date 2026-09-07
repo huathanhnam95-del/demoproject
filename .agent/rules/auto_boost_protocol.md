@@ -4,6 +4,8 @@ trigger: always_on
 
 # Auto-Boost Protocol for Complex Tasks
 
+> **Gemini-only applicability:** This always-on rule applies to Gemini workflows and Gemini agent sessions only. Auto-Boost does not apply to any GPT/Codex session in this workspace; GPT/Codex follows the workspace Light/Medium/Heavy routes.
+
 This rule automatically engages the deep multi-agent reasoning, architectural evaluation, and empirical verification capabilities of `/boost` whenever a task is classified as **Complex**, without requiring the user to manually invoke `/boost`.
 
 ---

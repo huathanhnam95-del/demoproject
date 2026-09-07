@@ -93,6 +93,31 @@ assert.strictEqual(mapped.learningProfile.targetLevel, 'Competent');
 assert.deepStrictEqual(mapped.preferredLearningDays, ['Saturday']);
 assert.deepStrictEqual(mapped.preferredLearningHours, ['09:00-11:00']);
 
+// facebookPersonalOwner coverage
+const createdWithSourceAccount = buildStudentCreateData({
+    name: 'Bob Tran',
+    acquisitionSource: 'Facebook - Personal',
+    facebookPersonalOwner: 'Thành'
+}, context);
+assert.strictEqual(createdWithSourceAccount.facebookPersonalOwner, 'Thành');
+
+const patchedWithOnlyOwner = buildStudentPatchData(createdWithSourceAccount, {
+    facebookPersonalOwner: 'Quỳnh'
+}, context);
+assert.strictEqual(patchedWithOnlyOwner.facebookPersonalOwner, 'Quỳnh');
+
+const mappedOwner = mapStudentRecord({
+    id: 'student-2',
+    ...patchedWithOnlyOwner
+});
+assert.strictEqual(mappedOwner.facebookPersonalOwner, 'Quỳnh');
+
+// Verify facebookPersonalOwner satisfies hasAnyInfoField
+const createdOnlyOwner = buildStudentCreateData({
+    facebookPersonalOwner: 'Nam'
+}, context);
+assert.strictEqual(createdOnlyOwner.facebookPersonalOwner, 'Nam');
+
 assert.throws(
     () => buildStudentCreateData({}, context),
     /Please fill at least 1 field in Info tab before saving/

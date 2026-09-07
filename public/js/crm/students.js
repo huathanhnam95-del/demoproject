@@ -57,7 +57,7 @@ window.CrmStudents = (function () {
     }
 
     function hasAnyInfoField(payload) {
-        return [payload.name, payload.label, payload.phone, payload.email, payload.zalo, payload.facebook, payload.facebookProfileUrl].some(Boolean);
+        return [payload.name, payload.label, payload.phone, payload.email, payload.zalo, payload.facebook, payload.facebookProfileUrl, payload.facebookPersonalOwner].some(Boolean);
     }
 
     function syncScoreInput(element, options = {}) {

@@ -13496,8 +13496,8 @@ mark.crm-highlight:hover {
 }
 
 .crm-availability-time-input {
-  width: 105px;
-  padding: 6px 8px;
+  width: 128px;
+  padding: 6px 6px 6px 8px;
   font-size: 13px;
   font-family: inherit;
   color: var(--crm-text-main);
@@ -13505,6 +13505,7 @@ mark.crm-highlight:hover {
   border: 1px solid var(--crm-border);
   border-radius: var(--crm-radius);
   outline: none;
+  box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 

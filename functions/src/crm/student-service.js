@@ -193,7 +193,7 @@ function normalizeStudentCore(input, fallback = {}) {
 }
 
 function hasAnyInfoField(student) {
-    return [student.name, student.label, student.phone, student.email, student.zalo, student.facebook, student.facebookProfileUrl].some(Boolean);
+    return [student.name, student.label, student.phone, student.email, student.zalo, student.facebook, student.facebookProfileUrl, student.facebookPersonalOwner].some(Boolean);
 }
 
 function hasRecognizedPatch(input) {
@@ -206,6 +206,7 @@ function hasRecognizedPatch(input) {
         'zalo',
         'facebook',
         'facebookProfileUrl',
+        'facebookPersonalOwner',
         'crmId',
         'lifecycleStage',
         'acquisitionSource',
@@ -292,6 +293,7 @@ function mapStudentRecord(data, studentId) {
         facebookProfileUrl: looksLikeUrl(source.facebookProfileUrl)
             ? source.facebookProfileUrl
             : (looksLikeUrl(source.facebook) ? source.facebook : (source.facebookProfileUrl || null)),
+        facebookPersonalOwner: source.facebookPersonalOwner || null,
         crmId: source.crmId || null,
         lifecycleStage: normalizeLifecycleStage(source.lifecycleStage),
         acquisitionSource: source.acquisitionSource || null,

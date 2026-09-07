@@ -200,19 +200,19 @@ window.CrmStudentModal = (function () {
         }
 
         function setupStudentModal() {
-            if (elements.btnNewStudentTriggers.length === 0) return;
-
-            elements.btnNewStudentTriggers.forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    if (typeof openFreshStudentModal === 'function') {
-                        openFreshStudentModal();
-                        return;
-                    }
-                    elements.studentModal.style.display = 'flex';
-                    elements.studentModal.setAttribute('aria-hidden', 'false');
-                    resetStudentModal();
+            if (Array.isArray(elements.btnNewStudentTriggers) && elements.btnNewStudentTriggers.length > 0) {
+                elements.btnNewStudentTriggers.forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        if (typeof openFreshStudentModal === 'function') {
+                            openFreshStudentModal();
+                            return;
+                        }
+                        elements.studentModal.style.display = 'flex';
+                        elements.studentModal.setAttribute('aria-hidden', 'false');
+                        resetStudentModal();
+                    });
                 });
-            });
+            }
 
             const closeStudentModal = () => {
                 if (typeof closeStudentProfile === 'function') {

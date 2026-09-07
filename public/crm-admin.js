@@ -1852,20 +1852,20 @@
       studentModalController.setupStudentModal();
       return;
     }
-    if (elements.btnNewStudentTriggers.length === 0) return;
-
-    // Open Modal
-    elements.btnNewStudentTriggers.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (typeof openFreshStudentModal === 'function') {
-          openFreshStudentModal();
-          return;
-        }
-        elements.studentModal.style.display = 'flex';
-        elements.studentModal.setAttribute('aria-hidden', 'false');
-        resetStudentModal();
+    if (Array.isArray(elements.btnNewStudentTriggers) && elements.btnNewStudentTriggers.length > 0) {
+      // Open Modal
+      elements.btnNewStudentTriggers.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (typeof openFreshStudentModal === 'function') {
+            openFreshStudentModal();
+            return;
+          }
+          elements.studentModal.style.display = 'flex';
+          elements.studentModal.setAttribute('aria-hidden', 'false');
+          resetStudentModal();
+        });
       });
-    });
+    }
 
     // Close Modal Func
     const closeStudentModal = () => {
@@ -2443,6 +2443,7 @@
         zalo: String(elements.inputStudentZalo?.value || '').trim(),
         facebook: String(elements.inputStudentFacebook?.value || '').trim(),
         facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
+        facebookPersonalOwner: String(elements.inputStudentFacebookPersonalOwner?.value || '').trim(),
         acquisitionSource: String(elements.inputStudentAcquisitionSource?.value || '').trim(),
         agentSourceId: String(elements.inputStudentAgentSource?.value || '').trim(),
         learningProfile: {
@@ -2472,7 +2473,7 @@
     if (window.CrmStudents && typeof window.CrmStudents.hasAnyInfoField === 'function') {
       return window.CrmStudents.hasAnyInfoField(payload);
     }
-    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook, payload?.facebookProfileUrl]
+    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook, payload?.facebookProfileUrl, payload?.facebookPersonalOwner]
       .some(v => !!String(v || '').trim());
   }
 

@@ -75,7 +75,44 @@ async function runTest() {
     await page.selectOption('#lead-facebook-personal-owner', 'Thành');
     assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), 'Thành', 'Selected owner should be Thành');
 
-    console.log('✓ Student acquisition source and Source Account dropdown browser check PASSED');
+    // Verify buildPayload and hasAnyInfoField in browser environment
+    const clientCheck = await page.evaluate(() => {
+      const nameInput = document.getElementById('lead-name');
+      if (nameInput) nameInput.value = 'Nguyen Van A';
+
+      // Test dummy time input for computed width
+      const testTime = document.createElement('input');
+      testTime.type = 'time';
+      testTime.className = 'crm-availability-time-input';
+      document.body.appendChild(testTime);
+      const computedWidth = window.getComputedStyle(testTime).width;
+      const computedBoxSizing = window.getComputedStyle(testTime).boxSizing;
+      document.body.removeChild(testTime);
+
+      const payload = window.CrmStudents ? window.CrmStudents.buildPayload({
+        inputStudentName: document.getElementById('lead-name'),
+        inputStudentAcquisitionSource: document.getElementById('lead-source'),
+        inputStudentFacebookPersonalOwner: document.getElementById('lead-facebook-personal-owner')
+      }) : null;
+
+      const hasInfoOnlyOwner = window.CrmStudents ? window.CrmStudents.hasAnyInfoField({
+        facebookPersonalOwner: 'Thành'
+      }) : false;
+
+      return {
+        computedWidth,
+        computedBoxSizing,
+        payloadOwner: payload ? payload.facebookPersonalOwner : null,
+        hasInfoOnlyOwner
+      };
+    });
+
+    assert.strictEqual(clientCheck.computedWidth, '128px', 'Time picker input width should be 128px');
+    assert.strictEqual(clientCheck.computedBoxSizing, 'border-box', 'Time picker box-sizing should be border-box');
+    assert.strictEqual(clientCheck.payloadOwner, 'Thành', 'CrmStudents.buildPayload must extract facebookPersonalOwner');
+    assert.strictEqual(clientCheck.hasInfoOnlyOwner, true, 'hasAnyInfoField must recognize facebookPersonalOwner');
+
+    console.log('✓ Student acquisition source, Source Account dropdown, and time input CSS check PASSED');
   } finally {
     await browser.close();
     server.close();

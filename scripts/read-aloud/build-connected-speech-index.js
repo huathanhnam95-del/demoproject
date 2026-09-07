@@ -5,29 +5,43 @@ const {
 
 function parseArgs(argv) {
   const args = {};
+  const requireValue = (flag, index) => {
+    if (index + 1 >= argv.length || !argv[index + 1]) {
+      throw new Error(`${flag} requires a value.`);
+    }
+    return argv[index + 1];
+  };
   for (let index = 2; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--workbook') {
-      args.workbookPath = argv[index + 1];
+      args.workbookPath = requireValue(arg, index);
       index += 1;
     } else if (arg === '--audio-manifest') {
-      args.audioManifestPath = argv[index + 1];
+      args.audioManifestPath = requireValue(arg, index);
       index += 1;
     } else if (arg === '--public-index') {
-      args.publicIndexPath = argv[index + 1];
+      args.publicIndexPath = requireValue(arg, index);
       index += 1;
     } else if (arg === '--functions-index') {
-      args.functionsIndexPath = argv[index + 1];
+      args.functionsIndexPath = requireValue(arg, index);
+      index += 1;
+    } else if (arg === '--featured-prompts') {
+      args.featuredPromptsPath = requireValue(arg, index);
       index += 1;
     } else if (arg === '--coverage-dir') {
-      args.coverageDir = argv[index + 1];
+      args.coverageDir = requireValue(arg, index);
       index += 1;
     } else if (arg === '--concurrency') {
-      args.concurrency = Number(argv[index + 1]);
+      args.concurrency = Number(requireValue(arg, index));
       index += 1;
     } else if (arg === '--index-version') {
-      args.indexVersion = argv[index + 1];
+      args.indexVersion = requireValue(arg, index);
       index += 1;
+    } else if (arg === '--timestamp') {
+      args.generatedAt = requireValue(arg, index);
+      index += 1;
+    } else {
+      throw new Error(`Unknown argument: ${arg}`);
     }
   }
   return args;

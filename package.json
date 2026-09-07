@@ -13,8 +13,8 @@
     "build:read-aloud:connected-speech-index": "node scripts/read-aloud/build-connected-speech-index.js",
     "report:read-aloud:connected-speech-coverage": "node scripts/read-aloud/report-connected-speech-coverage.js",
     "version:sync": "node scripts/sync-version.js",
-    "deploy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting",
-    "deploy:full": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting,functions:api,firestore:rules",
+    "deploy": "node scripts/release/firebase-release.cjs hosting",
+    "deploy:full": "node scripts/release/firebase-release.cjs full",
     "lint": "eslint .",
     "audit:ui": "impeccable detect public/",
     "audit:ui:phase1": "node scripts/audit/verify-phase1.js",
@@ -24,7 +24,7 @@
     "audit:ui:load": "node scripts/audit/load-check.js",
     "audit:ui:layout": "node scripts/audit/layout-check.js",
     "audit:read-modes": "node scripts/audit/read-mode-cascade.js",
-    "lint:crm": "eslint \"public/crm-admin.js\" \"public/js/classroom-api.js\" \"public/js/crm/*.js\" \"functions/src/routes/admin/*.js\" \"functions/src/crm/*.js\" \"src/routes/admin.js\" --quiet",
+    "lint:crm": "node scripts/crm/verify-crm-suite.js --lint",
     "verify:crm": "node scripts/crm/verify-crm-suite.js",
     "lint:entrance-crm": "eslint public/entrance-test.js public/crm-admin.js public/crm-entrance-test-result.js src/routes/entrance-tests.js src/routes/admin.js src/utils/firebase.js src/entrance-test/test36plus.js --quiet",
     "smoke:entrance-test": "node scripts/smoke-entrance-test.js --start-server --port 8787",
@@ -92,7 +92,12 @@
     "test:sst:unit": "node tests/sst-form-scoring.test.js && node tests/sst-shell-wiring.test.js && node tests/sst-kokoro-guardrails.test.js",
     "test:sst:data": "node tests/sst-data-guardrails.test.js",
     "test:sst:browser": "node tests/browser/sst-mode-browser-check.js",
-    "verify:sst": "npm run test:sst:unit && npm run test:sst:data && npm run test:sst:browser"
+    "verify:sst": "npm run test:sst:unit && npm run test:sst:data && npm run test:sst:browser",
+    "check:structure": "node scripts/structure/check.cjs check",
+    "test:structure": "node --test tests/structure/check.test.cjs",
+    "test:release": "node --test tests/release/firebase-release-cli.test.cjs",
+    "check:crm:selection": "node scripts/crm/verification-selection.cjs check",
+    "test:crm:selection": "node --test tests/crm/verification-selection.test.cjs"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",

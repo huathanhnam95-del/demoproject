@@ -8,33 +8,90 @@ on:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success'
+        && github.event.workflow_run.repository.full_name == github.repository
+        && github.event.workflow_run.head_repository.full_name == github.repository
+        && github.event.workflow_run.head_branch == 'main'
+        && (github.event.workflow_run.event == 'push'
+          || github.event.workflow_run.event == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
+      - name: Validate originating verification run
+        id: validate-source
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          SOURCE_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SOURCE_EVENT: ${{ github.event.workflow_run.event }}
+          SOURCE_REPOSITORY: ${{ github.event.workflow_run.repository.full_name }}
+          SOURCE_HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          sha_pattern='^[0-9a-fA-F]{40}$'
+          if [[ ! "$SOURCE_SHA" =~ $sha_pattern ]]; then
+            echo 'Invalid originating verification head SHA.' >&2
+            exit 2
+          fi
+          if [[ "$SOURCE_CONCLUSION" != 'success' ]]; then
+            echo 'Originating verification run must have succeeded.' >&2
+            exit 2
+          fi
+          if [[ "$SOURCE_BRANCH" != 'main' ]]; then
+            echo 'Originating verification run must target main.' >&2
+            exit 2
+          fi
+          if [[ "$SOURCE_EVENT" != 'push' && "$SOURCE_EVENT" != 'workflow_dispatch' ]]; then
+            echo 'Originating verification run must be a push or workflow_dispatch event.' >&2
+            exit 2
+          fi
+          if [[ "$SOURCE_REPOSITORY" != "$EXPECTED_REPOSITORY" ]]; then
+            echo 'Originating verification run must come from this repository.' >&2
+            exit 2
+          fi
+          if [[ -z "$SOURCE_HEAD_REPOSITORY" || "$SOURCE_HEAD_REPOSITORY" != "$EXPECTED_REPOSITORY" ]]; then
+            echo 'Originating verification head must come from this repository.' >&2
+            exit 2
+          fi
+          printf 'head_sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.validate-source.outputs.head_sha }}
+          lfs: true
+
+      - name: Provision Git LFS inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git lfs install --local
+          git lfs pull
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.19.0
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run version synchronization
-        run: npm run version:sync
-
-      - name: Build read-aloud connected speech index
-        run: npm run build:read-aloud:connected-speech-index
+      - name: Provision pinned Firebase CLI
+        shell: bash
+        run: npm install --prefix "$RUNNER_TEMP/firebase-cli" --no-save --package-lock=false firebase-tools@15.29.0
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LISTENING_TASKS_3AE34 }}'
 
-      - name: Deploy to Firebase Hosting
-        run: npx firebase-tools deploy --project listening-tasks-3ae34 --only hosting --non-interactive
+      - name: Prepare and deploy verified source
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.validate-source.outputs.head_sha }}
+        run: node scripts/release/firebase-release.cjs hosting --sha "$SOURCE_SHA" --project listening-tasks-3ae34 --firebase-cli "$RUNNER_TEMP/firebase-cli/node_modules/firebase-tools/lib/bin/firebase.js" --non-interactive

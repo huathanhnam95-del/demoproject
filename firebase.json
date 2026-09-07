@@ -5,8 +5,7 @@
             "codebase": "default",
             "runtime": "nodejs22",
             "predeploy": [
-                "node scripts/read-aloud/build-connected-speech-index.js",
-                "node scripts/segmentation-study/sync-manifest.js"
+                "node scripts/release/firebase-release.cjs hook --product functions"
             ]
         }
     ],
@@ -43,7 +42,7 @@
     "hosting": {
         "public": "public",
         "predeploy": [
-            "node scripts/read-aloud/build-connected-speech-index.js"
+            "node scripts/release/firebase-release.cjs hook --product hosting"
         ],
         "ignore": [
             "firebase.json",

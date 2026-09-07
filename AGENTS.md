@@ -1,5 +1,11 @@
 # Local Agent Notes
 
+## Repository structure authority
+
+- `agent_docs/project_structure.md` is the single human authority for repository placement, ownership boundaries, dependency direction, generated-output contracts and evidence retention. `README.md` is navigation only; `scripts/structure/policy.json` is the machine-readable companion.
+- Before coding, record an external task contract with the task ID, owner (or an explicit unresolved owner), create/modify/delete/rename paths, output destinations and classes, protected contracts, verification and exceptions. Keep the contract and before snapshot outside Git.
+- At completion, compare the actual worktree/index delta with that declaration and run the focused structure checks. Do not use a blanket path or output declaration to hide newly discovered work.
+
 ## Response Timestamps
 
 - In every final response to the user, include both `Start time` and `End time`.
@@ -9,12 +15,8 @@
 ## Deployed Session Tagging Protocol (`(D)`)
 
 - **Active Development Rule**: Active development sessions (planning, bug fixes, feature work, code edits, audits, test runs) **MUST NEVER** retain the `(D) ` prefix in their title.
-- **Automatic Removal on Resume / New Task**: Whenever a conversation with `(D) ` is resumed with new instructions or feedback, or when a task is started (`Status: In Progress`), the agent MUST immediately strip the `(D) ` prefix in its first response turn as part of its initial tool calls:
-  `python scripts/session_tagger.py remove-deployed`
-  - *Never defer this to after answering*. Run it immediately during turn startup.
-  - Running it is completely safe, idempotent, and fast (exits 0 with `noop` if not tagged).
-- **Tagging on Deployment**: Only when an approved production deployment has been concluded, tag the session with:
-  `python scripts/session_tagger.py mark-deployed`
+- **Resume/new-task removal**: When a tagged `(D) ` session is resumed or a task starts, immediately remove the prefix through the supported task-title API after verifying the task and title identity. Codex must never run the no-ID Antigravity `scripts/session_tagger.py` helper or pass a Codex UUID to it. Antigravity may use that helper only with an explicit, verified Antigravity CID; do not infer a CID from the latest database row.
+- **Deployment tagging**: After an approved production deployment, mark the session `(D) ` through the supported task-title API for Codex after verifying task/title identity. Antigravity uses its helper only with an explicit verified CID.
 
 ## Browser Testing Credentials
 
@@ -66,9 +68,7 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 ## Deployment Rule
 
 - **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.
-- **Production Deployment Session Naming (`(D)`)**:
-  - Whenever a conversation or session is ended with an approved production deployment, change its name to `(D) <title>` to mark it as deployed: `python scripts/session_tagger.py mark-deployed`.
-  - Whenever development resumes or a new task is started in a `(D)` session, immediately remove the prefix during initial tool calls: `python scripts/session_tagger.py remove-deployed` (see Deployed Session Tagging Protocol above). Never defer to after answering.
+- **Production Deployment Session Naming (`(D)`)**: After an approved production deployment, Codex uses the supported task-title API with verified task/title identity to mark the session. Antigravity uses its helper only with an explicit verified CID.
 
 ## Implementation Plan Approval Rule
 
@@ -105,6 +105,10 @@ The project uses three explicit Codex workflow routes. Existing project-specific
 - **Medium route**: selected only when the user asks for it. Enter deployment state, read and follow `agent_docs/workflow/medium_route.md`, and perform the work directly without subagents.
 - **Heavy route**: selected only when the user asks for it. Enter deployment state, read and follow `agent_docs/workflow/heavy_route.md`, and coordinate the installed specialist subagents.
 - Keep the selected route for the session until the user switches it or ends the session. Do not infer Medium or Heavy automatically.
+
+### Current STR-01 routing
+
+- The coordinator may use Astra medium for the independent review and Luna xhigh for the bounded implementation worker for this STR-01 package. This is task-specific routing and does not change the default model or route for unrelated work.
 
 ### Project documentation framework
 

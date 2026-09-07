@@ -41,8 +41,14 @@ function makeAnalysis({ boundaries = [], tokenAnnotations = [] } = {}) {
   const workbookPath = path.join(tempDir, 'RA.xlsx');
   const audioManifestPath = path.join(tempDir, 'manifest.json');
   const publicIndexPath = path.join(tempDir, 'public', 'database', 'RA', 'connected-speech-index.json');
+  const featuredPromptsPath = path.join(tempDir, 'public', 'database', 'RA', 'connected-speech-featured-prompts.json');
   const functionsIndexPath = path.join(tempDir, 'functions', 'src', 'data', 'read-aloud-connected-speech-index.json');
   const coverageDir = path.join(tempDir, 'coverage');
+  const fixedGeneratedAt = '2026-09-07T00:00:00.000Z';
+  const realFeaturedOutputPath = path.resolve(__dirname, '../public/database/RA/connected-speech-featured-prompts.json');
+  const realFeaturedOutputBefore = fs.existsSync(realFeaturedOutputPath)
+    ? fs.readFileSync(realFeaturedOutputPath)
+    : null;
 
   await writeWorkbook(workbookPath, [
     {
@@ -160,19 +166,29 @@ function makeAnalysis({ boundaries = [], tokenAnnotations = [] } = {}) {
     workbookPath,
     audioManifestPath,
     publicIndexPath,
+    featuredPromptsPath,
     functionsIndexPath,
     coverageDir,
+    generatedAt: fixedGeneratedAt,
     concurrency: 2,
     linkingApi
   });
 
   assert.ok(fs.existsSync(publicIndexPath), 'public index should be written');
+  assert.ok(fs.existsSync(featuredPromptsPath), 'featured prompts output should be written in the temporary candidate');
   assert.ok(fs.existsSync(functionsIndexPath), 'functions index should be written');
+  assert.equal(result.index.generatedAt, fixedGeneratedAt, 'generated metadata should use the fixed test timestamp');
 
   const publicIndex = readJson(publicIndexPath);
   const functionsIndex = readJson(functionsIndexPath);
   assert.deepStrictEqual(functionsIndex, publicIndex, 'public and functions index copies should match');
+  assert.deepStrictEqual(fs.readFileSync(functionsIndexPath), fs.readFileSync(publicIndexPath), 'public and functions index bytes should match');
   assert.equal(publicIndex.prompts.length, 4, 'all workbook rows should be indexed');
+
+  const featuredPrompts = readJson(featuredPromptsPath);
+  assert.equal(featuredPrompts.updatedAt, fixedGeneratedAt, 'featured prompt metadata should use the fixed test timestamp');
+  assert.equal(featuredPrompts.version, '1', 'featured prompt metadata should preserve the index version');
+  assert.ok(featuredPrompts.families && featuredPrompts.subtypes, 'featured prompt metadata should retain its curation families');
 
   const avi = publicIndex.prompts.find((prompt) => String(prompt.questionId) === '8');
   const didYou = publicIndex.prompts.find((prompt) => String(prompt.questionId) === '15');
@@ -204,7 +220,9 @@ function makeAnalysis({ boundaries = [], tokenAnnotations = [] } = {}) {
   assert.equal(coverageJson.promptCount, 4, 'coverage should include all prompts');
   assert.equal(coverageJson.promptsWithSampleAudio, 2, 'coverage should count sample audio availability');
   assert.ok(coverageJson.soundChangeCount >= 1, 'coverage should report at least one sound-change prompt');
+  assert.equal(coverageJson.generatedAt, fixedGeneratedAt, 'coverage metadata should use the fixed test timestamp');
   assert.ok(fs.existsSync(path.join(coverageDir, 'summary.md')), 'coverage summary markdown should be written');
+  assert.ok(fs.readFileSync(path.join(coverageDir, 'summary.md'), 'utf8').includes(fixedGeneratedAt), 'coverage summary should retain the fixed test timestamp');
 
   const coverageReport = await reportConnectedSpeechCoverage({
     publicIndexPath,
@@ -212,7 +230,82 @@ function makeAnalysis({ boundaries = [], tokenAnnotations = [] } = {}) {
   });
   assert.equal(coverageReport.coverage.promptCount, 4, 'report script should read the generated index');
 
+  const secondTempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ra-connected-speech-index-repeat-'));
+  const secondWorkbookPath = path.join(secondTempDir, 'RA.xlsx');
+  const secondAudioManifestPath = path.join(secondTempDir, 'manifest.json');
+  const secondPublicIndexPath = path.join(secondTempDir, 'public', 'database', 'RA', 'connected-speech-index.json');
+  const secondFeaturedPromptsPath = path.join(secondTempDir, 'public', 'database', 'RA', 'connected-speech-featured-prompts.json');
+  const secondFunctionsIndexPath = path.join(secondTempDir, 'functions', 'src', 'data', 'read-aloud-connected-speech-index.json');
+  const secondCoverageDir = path.join(secondTempDir, 'coverage');
+  fs.copyFileSync(workbookPath, secondWorkbookPath);
+  fs.copyFileSync(audioManifestPath, secondAudioManifestPath);
+  await buildConnectedSpeechIndex({
+    workbookPath: secondWorkbookPath,
+    audioManifestPath: secondAudioManifestPath,
+    publicIndexPath: secondPublicIndexPath,
+    featuredPromptsPath: secondFeaturedPromptsPath,
+    functionsIndexPath: secondFunctionsIndexPath,
+    coverageDir: secondCoverageDir,
+    generatedAt: fixedGeneratedAt,
+    concurrency: 2,
+    linkingApi
+  });
+  assert.deepStrictEqual(fs.readFileSync(secondPublicIndexPath), fs.readFileSync(publicIndexPath), 'same source and timestamp should produce identical public index bytes');
+  assert.deepStrictEqual(fs.readFileSync(secondFeaturedPromptsPath), fs.readFileSync(featuredPromptsPath), 'same source and timestamp should produce identical featured metadata bytes');
+  assert.deepStrictEqual(fs.readFileSync(secondFunctionsIndexPath), fs.readFileSync(functionsIndexPath), 'same source and timestamp should produce identical functions index bytes');
+  assert.deepStrictEqual(fs.readFileSync(path.join(secondCoverageDir, 'coverage.json')), fs.readFileSync(path.join(coverageDir, 'coverage.json')), 'same source and timestamp should produce identical coverage JSON bytes');
+  assert.deepStrictEqual(fs.readFileSync(path.join(secondCoverageDir, 'summary.md')), fs.readFileSync(path.join(coverageDir, 'summary.md')), 'same source and timestamp should produce identical coverage summary bytes');
+
+  const failedWriteDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ra-connected-speech-index-write-failure-'));
+  const failedPublicIndexPath = path.join(failedWriteDir, 'public-index-blocker');
+  fs.mkdirSync(failedPublicIndexPath, { recursive: true });
+  await assert.rejects(
+    () => buildConnectedSpeechIndex({
+      workbookPath,
+      audioManifestPath,
+      publicIndexPath: failedPublicIndexPath,
+      featuredPromptsPath: path.join(failedWriteDir, 'featured.json'),
+      functionsIndexPath: path.join(failedWriteDir, 'functions.json'),
+      coverageDir: path.join(failedWriteDir, 'coverage'),
+      generatedAt: fixedGeneratedAt,
+      concurrency: 2,
+      linkingApi
+    }),
+    /write|output|directory|index/i,
+    'a failed generated-output write must reject instead of preserving stale output'
+  );
+
+  const invalidTimestampDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ra-connected-speech-index-invalid-time-'));
+  const invalidTimestampOptions = {
+    workbookPath,
+    audioManifestPath,
+    publicIndexPath: path.join(invalidTimestampDir, 'public-index.json'),
+    featuredPromptsPath: path.join(invalidTimestampDir, 'featured.json'),
+    functionsIndexPath: path.join(invalidTimestampDir, 'functions.json'),
+    coverageDir: path.join(invalidTimestampDir, 'coverage'),
+    linkingApi
+  };
+  await assert.rejects(
+    () => buildConnectedSpeechIndex({ ...invalidTimestampOptions, generatedAt: '2026-09-07T00:00:00' }),
+    /ISO-8601|timestamp|offset|generatedAt/i,
+    'a timezone-less timestamp must be rejected'
+  );
+  await assert.rejects(
+    () => buildConnectedSpeechIndex({ ...invalidTimestampOptions, generatedAt: 'not-a-timestamp' }),
+    /ISO-8601|timestamp|generatedAt/i,
+    'an invalid timestamp must be rejected'
+  );
+
+  if (realFeaturedOutputBefore) {
+    assert.deepStrictEqual(fs.readFileSync(realFeaturedOutputPath), realFeaturedOutputBefore, 'test must not rewrite the repository featured prompts output');
+  } else {
+    assert.equal(fs.existsSync(realFeaturedOutputPath), false, 'test must not create the repository featured prompts output');
+  }
+
   fs.rmSync(tempDir, { recursive: true, force: true });
+  fs.rmSync(secondTempDir, { recursive: true, force: true });
+  fs.rmSync(failedWriteDir, { recursive: true, force: true });
+  fs.rmSync(invalidTimestampDir, { recursive: true, force: true });
   console.log('read-aloud connected speech index tests passed');
 })().catch((error) => {
   console.error(error && error.stack ? error.stack : String(error));

@@ -15631,6 +15631,10 @@ mark.crm-highlight:hover {
 body:has(#crm-student-modal[aria-hidden="false"]) {
   --crm-assistant-footer-clearance: calc(3vh + 80px);
 }
+/* Keep student validation feedback clear of Save and Cancel. */
+body:has(#crm-student-modal[aria-hidden="false"]) .crm-toast {
+  bottom: var(--crm-assistant-footer-clearance);
+}
 body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-launcher {
   bottom: var(--crm-assistant-footer-clearance) !important;
 }

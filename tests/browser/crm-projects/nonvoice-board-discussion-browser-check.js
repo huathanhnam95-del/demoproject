@@ -162,8 +162,19 @@ async function main() {
         const member=await (await browser.newContext({viewport:{width:1800,height:1100}})).newPage();await open(member,url,'editor');await member.locator('[data-view="board"]').click();await boardIdle(member);await selectTask(member,'first');
         await member.locator('#projects-board-discussion-input').fill('Second member live browser post');await member.locator('#btn-projects-board-discussion-send').click();await member.getByText('Second member live browser post',{exact:true}).waitFor();
         const fetches=[];const listener=r=>{if(r.method()==='GET'&&/\/tasks\/first\/discussion(?:\?|$)/.test(r.url()))fetches.push(r.url());};page.on('request',listener);
-        await page.locator('#btn-projects-board-refresh').click();await page.getByText('Second member live browser post',{exact:true}).waitFor();
-        assert.strictEqual(await input.inputValue(),'Composer retained during manual refresh');assert.strictEqual(fetches.length,1);page.off('request',listener);
+        try {
+            const refreshedDiscussion=page.waitForResponse(r=>r.request().method()==='GET'&&new URL(r.url()).pathname===`/api/projects/${PROJECT}/tasks/first/discussion`,{timeout:30000});
+            const settled=await Promise.allSettled([
+                refreshedDiscussion,
+                Promise.resolve().then(()=>page.locator('#btn-projects-board-refresh').click({timeout:30000}))
+            ]);
+            const failures=settled.map((entry,index)=>({entry,label:['discussion response','manual refresh click'][index]})).filter(({entry})=>entry.status==='rejected');
+            if(failures.length)throw new AggregateError(failures.map(({entry})=>entry.reason),'Manual refresh failed\n'+failures.map(({entry,label})=>`${label}: ${entry.reason?.stack||entry.reason}`).join('\n'));
+            const response=settled[0].value;assert.strictEqual(response.status(),200);
+            assert.ok((await response.json()).messages.some(message=>message.body==='Second member live browser post'),'Manual refresh response must include the other member post');
+            await boardIdle(page);await page.getByText('Second member live browser post',{exact:true}).waitFor();
+            assert.strictEqual(await input.inputValue(),'Composer retained during manual refresh');assert.strictEqual(fetches.length,1);
+        } finally {page.off('request',listener);}
         result.cases.push('Manual board refresh fetches discussion once, shows second member post and preserves composer');
         await page.screenshot({path:path.join(ARTIFACTS,'board-discussion.png'),fullPage:true});
         result.screenshots.push('board-discussion.png');

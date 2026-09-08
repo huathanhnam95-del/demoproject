@@ -36,14 +36,23 @@ function loadController() {
 }
 
 function createElements() {
-  const document = {
-    createElement: () => ({
+  const makeElement = (initial = {}) => {
+    const attributes = new Map();
+    return {
+      ...initial,
       ownerDocument: document,
       children: [],
-      setAttribute() {},
+      setAttribute(name, value) { attributes.set(String(name), String(value)); },
+      getAttribute(name) { return attributes.has(String(name)) ? attributes.get(String(name)) : null; },
+      hasAttribute(name) { return attributes.has(String(name)); },
+      removeAttribute(name) { attributes.delete(String(name)); },
       append(...children) { this.children.push(...children); },
       replaceChildren(...children) { this.children = children; }
-    })
+    };
+  };
+  const document = {
+    createTextNode: text => ({ textContent: String(text) }),
+    createElement: () => makeElement()
   };
   return {
     inputStudentFinanceEnrollment: { value: '', innerHTML: '' },
@@ -57,16 +66,15 @@ function createElements() {
       addEventListener: () => {},
       contains: () => true
     },
-    studentClassroomMatchSummary: { innerHTML: '' },
+    studentClassroomMatchSummary: makeElement({ innerHTML: '' }),
     inputStudentClassroomMatchSelect: { value: '', innerHTML: '' },
     studentClassroomMatchMeta: { textContent: '' },
     studentClassroomMatchWarning: { textContent: '', style: {} },
     studentFinanceWorkflowBadge: { className: '', textContent: '' },
-    studentFinanceWorkflowNote: {
+    studentFinanceWorkflowNote: makeElement({
       textContent: '',
-      ownerDocument: document,
       insertAdjacentElement() {}
-    },
+    }),
     btnCreateRecommendedEnrollment: { disabled: true }
   };
 }

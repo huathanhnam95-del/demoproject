@@ -160,8 +160,10 @@ test('ninth distinct attempt stops before storage while an existing hash can ret
 });
 test('student cue separates recorded payment from receipt gap and uploads only evidence', async () => {
     const vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
-    const doc = { createTextNode(text) { return { textContent: text }; }, createElement(tag) { return { tag, ownerDocument: doc, children: [], style: {}, events: {},
-        setAttribute() {}, append(...items) { this.children.push(...items); }, replaceChildren(...items) { this.children = items; },
+    const doc = { createTextNode(text) { return { textContent: text }; }, createElement(tag) { const attributes = new Map(); return { tag, ownerDocument: doc, children: [], style: {}, events: {},
+        setAttribute(name, value) { attributes.set(String(name), String(value)); }, getAttribute(name) { return attributes.has(String(name)) ? attributes.get(String(name)) : null; },
+        hasAttribute(name) { return attributes.has(String(name)); }, removeAttribute(name) { attributes.delete(String(name)); },
+        append(...items) { this.children.push(...items); }, replaceChildren(...items) { this.children = items; },
         insertAdjacentElement() {}, addEventListener(name, action) { this.events[name] = action; } }; } };
     const elements = { studentModalTitle: doc.createElement('h2'), studentFinanceWorkflowNote: doc.createElement('p') };
     const modalState = { studentId: 's1', studentSessionKey: 1 }, calls = [];

@@ -8,7 +8,8 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '..', '..');
-const SUPPORTED_FIREBASE_VERSION = '15.29.0';
+const SUPPORTED_FIREBASE_VERSION = '15.2.1';
+const SUPPORTED_FIREBASE_VERSIONS = new Set(['15.2.1', '15.29.0']);
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const PROJECT_ID_RE = /^[a-z][a-z0-9-]{4,62}$/;
 const PROFILE_NAMES = Object.freeze(['hosting', 'functions', 'full']);
@@ -488,6 +489,7 @@ function readGitJson(sourceRoot, sourceSha, relative, options = {}, label = rela
 function normalizeProjectId(value) {
   const text = String(value || '').trim();
   if (/^\d+$/.test(text)) fail('NUMERIC_PROJECT_UNSUPPORTED', 'Numeric Firebase project numbers are unsupported; use the project ID or configured alias.');
+
   if (!PROJECT_ID_RE.test(text)) fail('PROJECT_ID', 'Firebase project must be a valid project ID or configured alias.');
   return text;
 }
@@ -510,7 +512,7 @@ function loadFirebaseCli(options = {}) {
       try { entry = path.join(path.dirname(require.resolve('firebase-tools/package.json', { paths: [options.requireRoot || REPOSITORY_ROOT] })), 'lib/bin/firebase.js'); } catch (_) { /* actionable failure below */ }
     }
   }
-  if (!entry || !path.isAbsolute(entry) || !fs.existsSync(entry)) fail('FIREBASE_CLI_UNSUPPORTED', 'Install Firebase CLI 15.29.0 or provide --firebase-cli with its absolute JavaScript entrypoint.');
+  if (!entry || !path.isAbsolute(entry) || !fs.existsSync(entry)) fail('FIREBASE_CLI_UNSUPPORTED', `Install Firebase CLI (${Array.from(SUPPORTED_FIREBASE_VERSIONS).join(' or ')}) or provide --firebase-cli with its absolute JavaScript entrypoint.`);
   entry = fs.realpathSync(entry);
   let root = path.dirname(entry), metadata;
   while (true) {
@@ -521,7 +523,7 @@ function loadFirebaseCli(options = {}) {
     }
     const parent = path.dirname(root); if (parent === root) break; root = parent;
   }
-  if (!metadata || metadata.version !== SUPPORTED_FIREBASE_VERSION) fail('FIREBASE_CLI_VERSION', 'Firebase CLI 15.29.0 is required.');
+  if (!metadata || !SUPPORTED_FIREBASE_VERSIONS.has(metadata.version)) fail('FIREBASE_CLI_VERSION', `Firebase CLI ${Array.from(SUPPORTED_FIREBASE_VERSIONS).join(' or ')} is required.`);
   const bin = typeof metadata.bin === 'string' ? metadata.bin : metadata.bin?.firebase;
   if (!bin || fs.realpathSync(path.resolve(root, bin)) !== entry) fail('FIREBASE_CLI_UNSUPPORTED', 'Firebase entrypoint must match the selected package executable.');
   const configstorePath = path.join(root, 'lib/configstore.js');
@@ -574,7 +576,7 @@ function resolveFirebaseProject(options = {}) {
   const projects = firebaserc.projects || {};
   const requested = options.project || options.projectArg;
   const cli = options.firebaseCli || loadFirebaseCli({ ...options, loadConfigstore: !requested });
-  if (cli.version !== SUPPORTED_FIREBASE_VERSION) fail('FIREBASE_CLI_VERSION', 'Firebase CLI 15.29.0 is required.');
+  if (!SUPPORTED_FIREBASE_VERSIONS.has(cli.version)) fail('FIREBASE_CLI_VERSION', `Firebase CLI ${Array.from(SUPPORTED_FIREBASE_VERSIONS).join(' or ')} is required.`);
   let selected = options.project || options.projectArg;
   if (selected && /^\d+$/.test(String(selected))) normalizeProjectId(selected);
   if (!selected) {

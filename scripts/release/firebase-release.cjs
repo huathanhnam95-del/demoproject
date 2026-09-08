@@ -254,8 +254,12 @@ function commandResult(command, args, options = {}) {
 function runCommand(command, args, options = {}) {
   const result = commandResult(command, args, options);
   if (result.status !== 0) {
-    const detail = String(result.stderr || result.stdout || '').trim().split(/\r?\n/)[0];
-    fail('COMMAND_FAILED', `${command} ${args.join(' ')} failed${detail ? `: ${detail}` : '.'}`);
+    const stderrText = String(result.stderr || '').trim();
+    const stdoutText = String(result.stdout || '').trim();
+    if (stderrText) console.error(`[COMMAND FAILED STDERR]\n${stderrText}`);
+    if (stdoutText) console.error(`[COMMAND FAILED STDOUT]\n${stdoutText}`);
+    const detail = (stderrText || stdoutText).split(/\r?\n/).slice(-3).join(' | ');
+    fail('COMMAND_FAILED', `${command} ${args.join(' ')} failed (exit code ${result.status})${detail ? `: ${detail}` : '.'}`);
   }
   return result;
 }
@@ -2068,7 +2072,7 @@ function dispatchFirebase(ctx, options = {}) {
   const projectSelector = ctx.project.alias || ctx.project.id;
   const args = [...invocation.prefix, 'deploy', '--project', projectSelector, '--config', ctx.candidateConfigPath, '--only', selector];
   if (ctx.nonInteractive || options.nonInteractive === true) args.push('--non-interactive');
-  const env = { ...(ctx.env || process.env), ...buildHookEnvironment(ctx) };
+  const env = { ...(ctx.env || process.env), FUNCTIONS_DISCOVERY_TIMEOUT: process.env.FUNCTIONS_DISCOVERY_TIMEOUT || '60', ...buildHookEnvironment(ctx) };
   const publisher = options.publisher || ctx.publisher;
   if (typeof publisher === 'function') {
     const result = publisher({ command: invocation.command, args, cwd: ctx.publishCwd || ctx.candidateRoot, env, profile: ctx.profile, selector });

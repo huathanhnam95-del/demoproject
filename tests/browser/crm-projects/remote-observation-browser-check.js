@@ -65,11 +65,42 @@ function deferred() { let resolve,reject; const promise = new Promise((r,j) => {
 async function bounded(promise,label,ms=45000){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>timer=setTimeout(()=>reject(Error(`Timed out: ${label}; cases=${result.cases.length}; routes=${routeFailures.map(e=>e.message).join(';')}`)),ms))]);}finally{clearTimeout(timer);}}
 function checkpoint(name){result.cases.push(name);process.stdout.write(`PASS ${name}\n`);fs.writeFileSync(path.join(ARTIFACTS,'result.json'),JSON.stringify(result,null,2));}
 async function holdResponse(page,pattern,predicate,label){
-    const arrived=deferred(),release=deferred(),fulfilled=deferred();let intercepted=false;
-    const handler=async route=>{try{if(intercepted||!predicate(route.request())){await route.continue();return;}intercepted=true;const response=await route.fetch();arrived.resolve(response);await release.promise;await route.fulfill({response});fulfilled.resolve();}catch(error){routeFailures.push(error);arrived.reject(error);fulfilled.reject(error);}};
+    const arrived=deferred(),release=deferred(),fulfilled=deferred();let intercepted=false;const state={label,arrived:false,released:false,fulfilled:false};
+    const handler=async route=>{try{if(intercepted||!predicate(route.request())){await route.continue();return;}intercepted=true;const response=await route.fetch();state.arrived=true;arrived.resolve(response);await release.promise;await route.fulfill({response});state.fulfilled=true;fulfilled.resolve();}catch(error){routeFailures.push(error);arrived.reject(error);fulfilled.reject(error);}};
     await page.route(pattern,handler);
-    const held={release,fulfilled,wait:()=>bounded(arrived.promise,`${label} arrived`),async finish(){release.resolve();await bounded(fulfilled.promise,`${label} fulfilled`);await page.unroute(pattern,handler);}};activeRoutes.push(held);return held;
+    const held={release,fulfilled,state,wait:()=>bounded(arrived.promise,`${label} arrived`),async finish(){state.released=true;release.resolve();await bounded(fulfilled.promise,`${label} fulfilled`);await page.unroute(pattern,handler);}};activeRoutes.push(held);return held;
 }
+
+// Bounded metadata-only evidence for the held authority-repair window. Response
+// body observers never block the test or replace its original failure.
+function observeViewerRepair(page) {
+    const diagnostic={requests:[],snapshots:[],droppedRequests:0};result.viewerRepairDiagnostic=diagnostic;
+    const tracked=new Map();let stopped=false;
+    const relevant=request=>request.method()==='POST'&&new URL(request.url()).pathname===`/api/projects/${PROJECT}/changes/hydrate`;
+    const onRequest=request=>{
+        if(!relevant(request))return;
+        if(diagnostic.requests.length>=32){diagnostic.droppedRequests++;return;}
+        let ids=[];try{ids=JSON.parse(request.postData()||'{}').messageIds||[];}catch(_){/* metadata remains empty */}
+        const entry={index:diagnostic.requests.length+1,messageIdCount:ids.length,firstMessageId:ids[0]||null,lastMessageId:ids.at(-1)||null,startedAt:Date.now(),finished:false,failed:false,body:'pending'};
+        diagnostic.requests.push(entry);tracked.set(request,entry);
+    };
+    const onFinished=request=>{const entry=tracked.get(request);if(entry){entry.finished=true;entry.finishedAt=Date.now();}};
+    const onFailed=request=>{const entry=tracked.get(request);if(entry){entry.failed=true;entry.failure=request.failure()?.errorText||'request failed';}};
+    const onResponse=response=>{
+        const entry=tracked.get(response.request());if(!entry)return;entry.status=response.status();entry.responseAt=Date.now();
+        response.json().then(json=>{if(stopped)return;entry.body='complete';entry.bodyAt=Date.now();entry.success=json?.success===true;entry.messageCount=Array.isArray(json?.messages)?json.messages.length:null;},()=>{if(!stopped)entry.body='failed';});
+    };
+    page.on('request',onRequest);page.on('requestfinished',onFinished);page.on('requestfailed',onFailed);page.on('response',onResponse);
+    return {
+        async capture(label,holds){
+            let timer;const snapshot={label,at:Date.now(),holds:holds.filter(Boolean).map(hold=>({...hold.state}))};diagnostic.snapshots.push(snapshot);
+            try{snapshot.page=await Promise.race([page.evaluate(()=>{const state=window.projectsDiscussionController?.getState();const oldest=state?.messages.find(message=>message.id==='m000');return{observer:window.projectsRemoteObserver?.getState(),hidden:document.hidden,visibilityState:document.visibilityState,discussion:{role:state?.selection?.role,taskId:state?.selection?.taskId,count:state?.messages.length,oldestPresent:Boolean(oldest),oldestBodyNull:oldest?.body===null}};}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('diagnostic state capture timeout')),1000);})]);}
+            catch(error){snapshot.captureError=error?.name||'capture failed';}finally{clearTimeout(timer);}
+        },
+        stop(){stopped=true;page.off('request',onRequest);page.off('requestfinished',onFinished);page.off('requestfailed',onFailed);page.off('response',onResponse);tracked.clear();}
+    };
+}
+
 function field(page, taskId, kind) { return page.locator(`[data-row-kind="task"][data-task-id="${taskId}"] .crm-board-field[data-field-kind="${kind}"]`); }
 async function saveField(page, taskId, kind, value) {
     const response = page.waitForResponse(r => r.url().endsWith(`/tasks/${taskId}`) && r.request().method() === 'PATCH');
@@ -192,16 +223,18 @@ async function main() {
         for(let i=0;i<100;i++)h.expectStatus(await c.send('/tasks/t/discussion/messages',{operationId:`${PROJECT}-repair-seed-${i}`,messageId:`repair-${String(i).padStart(3,'0')}`,body:`Repair update ${i}`},'editor','POST'),200);
         await owner.waitForFunction(()=>window.projectsDiscussionController.getState().messages.length===167,null,{timeout:60000});
         await owner.waitForResponse(async response=>response.url().includes(`/api/projects/${PROJECT}/changes?`)&&response.status()===200&&(await response.json()).changes?.length===0);
+        const viewerDiagnostic=observeViewerRepair(owner);let viewerRepairHold;let repairFailed=false;
         let repairRequests=0;const ownerRepairHold=await holdResponse(owner,`**/api/projects/${PROJECT}/changes/hydrate`,request=>request.method()==='POST'&&JSON.parse(request.postData()).messageIds?.length>0&&++repairRequests===4,'fourth Owner repair batch');
         const ownerMember=c.db.collection('crmProjectMembers').doc(require('../../../functions/src/crm/projects/access-service').memberDocumentId(PROJECT,c.uids.owner));const savedOwnerMember=(await ownerMember.get()).data();const membershipRevision=(await c.revision()).membershipRevision;
         try{
             await c.projectRef.update({membershipRevision:membershipRevision+1});await ownerRepairHold.wait();
-            const viewerRepairHold=await holdResponse(owner,`**/api/projects/${PROJECT}/changes/hydrate`,request=>request.method()==='POST'&&JSON.parse(request.postData()).messageIds?.length>0,'first Viewer repair batch');
+            viewerRepairHold=await holdResponse(owner,`**/api/projects/${PROJECT}/changes/hydrate`,request=>request.method()==='POST'&&JSON.parse(request.postData()).messageIds?.length>0,'first Viewer repair batch');
             await ownerMember.update({role:'Viewer'});await ownerRepairHold.finish();await viewerRepairHold.wait();
             const protectedState=await owner.evaluate(()=>({role:window.projectsDiscussionController.getState().selection.role,messages:window.projectsDiscussionController.getState().messages,signature:window.projectsRemoteObserver.getState().signature,body:document.getElementById('projects-board-discussion-list').textContent}));
             assert.equal(protectedState.role,'Viewer');assert.equal(protectedState.messages.length,167);assert.equal(protectedState.messages.find(message=>message.id==='m000').body,null);assert.ok(!protectedState.body.includes('Edited oldest remotely'));assert.ok(!protectedState.signature.includes('Viewer'),'authority repair is not acknowledged before hydration completes');
-            await viewerRepairHold.finish();await owner.waitForFunction(()=>window.projectsRemoteObserver.getState().signature.includes('Viewer')&&!window.projectsRemoteObserver.getState().queuedPoll);assert.equal(await owner.evaluate(()=>window.projectsDiscussionController.getState().messages.find(message=>message.id==='m000').body),null);assert.equal(await owner.evaluate(()=>window.projectsDiscussionController.getState().messages.length),167);
-        }finally{await ownerMember.set(savedOwnerMember);}
+            await viewerDiagnostic.capture('before Viewer release',[ownerRepairHold,viewerRepairHold]);
+            await viewerRepairHold.finish();await viewerDiagnostic.capture('after Viewer release',[ownerRepairHold,viewerRepairHold]);await owner.waitForFunction(()=>window.projectsRemoteObserver.getState().signature.includes('Viewer')&&!window.projectsRemoteObserver.getState().queuedPoll);assert.equal(await owner.evaluate(()=>window.projectsDiscussionController.getState().messages.find(message=>message.id==='m000').body),null);assert.equal(await owner.evaluate(()=>window.projectsDiscussionController.getState().messages.length),167);
+        }catch(error){repairFailed=true;throw error;}finally{await viewerDiagnostic.capture(repairFailed?'repair failure':'repair complete',[ownerRepairHold,viewerRepairHold]);viewerDiagnostic.stop();await ownerMember.set(savedOwnerMember);}
         await owner.waitForFunction(()=>window.projectsDiscussionController.getState().selection?.role==='Owner'&&window.projectsRemoteObserver.getState().signature.includes('Owner'));
         checkpoint('A real 167-message partial repair downgrades Owner to Viewer without re-exposing moderated older content or dropping older pages');
         const member=c.db.collection('crmProjectMembers').doc(require('../../../functions/src/crm/projects/access-service').memberDocumentId(PROJECT,c.uids.editor));await member.update({role:'Viewer'});await editor.waitForFunction(()=>document.getElementById('projects-board-discussion-input').disabled);

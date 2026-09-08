@@ -1030,10 +1030,14 @@
             drafts.set(keyForDraft, value);
             const draftVersion = (draftVersions.get(keyForDraft) || 0) + 1;
             draftVersions.set(keyForDraft, draftVersion);
-            return enqueueTaskMutation(taskId, async () => {
+            return enqueueTaskMutation(taskId, async (predecessor) => {
                 if (!scopeIsCurrent(mutationScope)) return;
                 const task = taskFor(taskId);
                 if (!task || !canWrite()) return;
+                // Only acknowledgments from this scoped local queue can advance a draft base.
+                // A newer remotely observed task revision must still conflict and be reviewed.
+                const followsLocal = predecessor?.bases?.includes(baseRevision) === true;
+                const expectedRevision = followsLocal ? predecessor.revision : baseRevision;
                 const patch = kind === 'value' ? { values: { [control.dataset.columnId]: value } } : { [kind]: value };
                 const previous = { ...task, values: { ...(task.values || {}) } };
                 const next = { ...task, ...patch, values: { ...(task.values || {}), ...(patch.values || {}) } };
@@ -1045,7 +1049,7 @@
                 renderVirtualRows();
                 try {
                     const response = await requestMutation(`/api/projects/${encodeURIComponent(mutationProjectId)}/tasks/${encodeURIComponent(taskId)}`, {
-                        operationId: opId, expectedRevision: baseRevision, ...patch
+                        operationId: opId, expectedRevision, ...patch
                     }, { method: 'PATCH' });
                     if (!scopeIsCurrent(mutationScope)) return;
                     const saved = response?.task || response?.result?.task;
@@ -1055,8 +1059,19 @@
                         draftVersions.delete(keyForDraft);
                         draftBases.delete(keyForDraft);
                     }
+                    let lineage;
+                    if (saved && String(saved.id) === String(taskId) && Number.isSafeInteger(saved.revision) && saved.revision > expectedRevision) {
+                        // Preserve newer unsent drafts, including other fields on this task,
+                        // while advancing only bases covered by this exact local write.
+                        for (const [draftKey, draftBase] of draftBases) {
+                            const [draftProjectId, draftTaskId] = JSON.parse(draftKey);
+                            if (draftProjectId === mutationProjectId && draftTaskId === String(taskId) && draftBase === expectedRevision) draftBases.set(draftKey, saved.revision);
+                        }
+                        lineage = { revision: saved.revision, bases: [...(followsLocal ? predecessor.bases : []), expectedRevision] };
+                    }
                     setStatus('Task saved.');
                     deps.onTaskMutation?.();
+                    return lineage;
                 } catch (error) {
                     if (!scopeIsCurrent(mutationScope)) return;
                     if (tasks.get(taskId) === next) tasks.set(taskId, previous);

@@ -180,6 +180,162 @@ async function clientController({ uid = 'admin-1', request, failPayment = true, 
     return { controller, state, calls };
 }
 
+function shellPaymentController({
+    enrollments = [],
+    selectedEnrollmentId = '',
+    classroomMatches = [],
+    selectedClassroomId = '',
+    controllerContext = null,
+    failPayment = false
+} = {}) {
+    const source = fs.readFileSync(path.join(ROOT, 'public', 'crm-admin.js'), 'utf8');
+    const resolverStart = source.indexOf('  function resolveStudentFinanceEnrollmentContext()');
+    const invoiceStart = source.indexOf('  async function createInvoiceForStudent()', resolverStart);
+    const paymentStart = source.indexOf('  async function recordPaymentForStudent(options = {})', invoiceStart);
+    const nextFunctionStart = source.indexOf('  async function refreshCommunicationsManager()', paymentStart);
+    assert.ok(resolverStart >= 0 && invoiceStart > resolverStart && paymentStart > invoiceStart && nextFunctionStart > paymentStart,
+        'CRM shell finance functions must retain their expected boundaries');
+
+    const modalState = {
+        studentId: 'student-1',
+        studentSessionKey: 1,
+        selectedInvoiceId: 'invoice-1',
+        financeEnrollments: enrollments,
+        classroomMatches
+    };
+    const elements = {
+        inputStudentFinanceEnrollment: { value: selectedEnrollmentId },
+        inputStudentClassroomMatchSelect: { value: selectedClassroomId },
+        inputPaymentAmount: { value: '25' },
+        inputPaymentMethod: { value: 'bank-transfer' }
+    };
+    const calls = [];
+    let shouldFail = failPayment;
+    const apiFetchJson = async (url, options = {}) => {
+        const body = options.body ? JSON.parse(options.body) : null;
+        calls.push({ url, options, body });
+        if (url === '/api/admin/payments' && shouldFail) {
+            shouldFail = false;
+            throw new Error('connection lost');
+        }
+        return { paymentId: 'payment-1' };
+    };
+    let resolvedController = controllerContext;
+    if (controllerContext === 'real') {
+        const financeRuntime = {
+            window: {
+                firebase: { auth: () => ({ currentUser: { uid: 'admin-1' } }) }
+            },
+            document: {},
+            console,
+            URL,
+            setTimeout,
+            clearTimeout
+        };
+        const financeSource = fs.readFileSync(path.join(ROOT, 'public', 'js', 'crm', 'student-finance.js'), 'utf8');
+        vm.runInNewContext(financeSource, financeRuntime, { filename: 'student-finance.js' });
+        resolvedController = financeRuntime.window.CrmStudentFinance.createController({
+            apiFetchJson,
+            elements,
+            modalState,
+            isActiveStudentSession: () => true,
+            getCurrentStudentProfile: () => ({ name: 'Student One' }),
+            renderStudentSchedulePrompt: () => {},
+            refreshDashboard: async () => {},
+            showToast: () => {},
+            escapeHtml: (value) => String(value),
+            getAdminCapabilities: () => ({})
+        });
+    }
+    const context = {
+        window: {
+            firebase: { auth: () => ({ currentUser: { uid: 'admin-1' } }) },
+            confirm: () => false,
+            CrmFinance: {
+                buildPaymentPayload: () => ({ amount: 25, method: 'bank-transfer', currency: 'USD' })
+            }
+        },
+        __modalState: modalState,
+        __elements: elements,
+        __controller: resolvedController,
+        __apiFetchJson: apiFetchJson,
+        console,
+        setTimeout,
+        clearTimeout
+    };
+    const body = `(function () {
+        const modalState = __modalState;
+        const elements = __elements;
+        const studentFinanceController = __controller;
+        const apiFetchJson = __apiFetchJson;
+        const refreshStudentFinance = async () => {};
+        const refreshDashboard = async () => {};
+        const showToast = () => {};
+        ${source.slice(resolverStart, invoiceStart)}
+        ${source.slice(paymentStart, nextFunctionStart)}
+        return { resolveStudentFinanceEnrollmentContext, recordPaymentForStudent };
+    })()`;
+    const controller = vm.runInNewContext(body, context, { filename: 'crm-admin-finance-shell.js' });
+    return { ...controller, modalState, elements, calls };
+}
+
+async function testShellPaymentWithoutEnrollmentUsesNullAndRetainsRetryMetadata() {
+    const f = shellPaymentController({
+        classroomMatches: [{ classroomId: 'class-1', courseId: 'course-1' }],
+        selectedClassroomId: 'class-1',
+        failPayment: true
+    });
+    assert.deepEqual(f.resolveStudentFinanceEnrollmentContext(), { enrollmentId: null, courseId: 'course-1' });
+    await assert.rejects(f.recordPaymentForStudent(), /connection lost/);
+    await f.recordPaymentForStudent();
+    const paymentCalls = f.calls.filter((call) => call.url === '/api/admin/payments');
+    assert.equal(paymentCalls.length, 2);
+    assert.equal(paymentCalls[0].body.enrollmentId, null);
+    assert.equal(paymentCalls[1].body.enrollmentId, null);
+    assert.equal(paymentCalls[0].body.operationId, paymentCalls[1].body.operationId);
+    assert.equal(paymentCalls[0].body.paymentDate, paymentCalls[1].body.paymentDate);
+
+    const noClassroom = shellPaymentController();
+    assert.deepEqual(noClassroom.resolveStudentFinanceEnrollmentContext(), { enrollmentId: null, courseId: null });
+}
+
+async function testShellFinanceResolverHandlesSelectionSingleAndAmbiguousContexts() {
+    const selected = shellPaymentController({
+        enrollments: [
+            { enrollmentId: 'enrollment-1', courseId: 'course-1' },
+            { enrollmentId: 'enrollment-2', courseId: 'course-2' }
+        ],
+        selectedEnrollmentId: 'enrollment-2'
+    });
+    assert.deepEqual(selected.resolveStudentFinanceEnrollmentContext(), { enrollmentId: 'enrollment-2', courseId: 'course-2' });
+
+    const single = shellPaymentController({
+        enrollments: [{ enrollmentId: 'enrollment-1', courseId: 'course-1' }]
+    });
+    assert.deepEqual(single.resolveStudentFinanceEnrollmentContext(), { enrollmentId: 'enrollment-1', courseId: 'course-1' });
+
+    const ambiguous = shellPaymentController({
+        enrollments: [
+            { enrollmentId: 'enrollment-1', courseId: 'course-1' },
+            { enrollmentId: 'enrollment-2', courseId: 'course-2' }
+        ]
+    });
+    assert.throws(() => ambiguous.resolveStudentFinanceEnrollmentContext(), /Select the enrollment context first/);
+}
+
+async function testShellFinanceResolverDelegatesToStudentFinanceController() {
+    const delegated = shellPaymentController({
+        controllerContext: 'real'
+    });
+    assert.deepEqual(delegated.resolveStudentFinanceEnrollmentContext(), {
+        enrollmentId: null,
+        courseId: null
+    });
+    await delegated.recordPaymentForStudent();
+    const paymentCall = delegated.calls.find((call) => call.url === '/api/admin/payments');
+    assert.equal(paymentCall.body.enrollmentId, null);
+}
+
 async function testSameOperationReplaysSavedResultAndDoesNotDuplicatePayment() {
     const db = createFakeDb(fixture());
     const router = makeRouter(db);
@@ -346,6 +502,9 @@ async function testClientDoesNotClearNewIdentityAfterLateSuccess() {
 }
 
 (async () => {
+    await testShellPaymentWithoutEnrollmentUsesNullAndRetainsRetryMetadata();
+    await testShellFinanceResolverHandlesSelectionSingleAndAmbiguousContexts();
+    await testShellFinanceResolverDelegatesToStudentFinanceController();
     await testSameOperationReplaysSavedResultAndDoesNotDuplicatePayment();
     await testConcurrentSameOperationReturnsOneReceipt();
     await testComposedRouterInjectsCurrentPaymentAuth();

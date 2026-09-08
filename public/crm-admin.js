@@ -4094,12 +4094,21 @@
   }
 
   function resolveStudentFinanceEnrollmentContext() {
+    if (studentFinanceController && typeof studentFinanceController.resolveStudentFinanceContext === 'function') {
+      return studentFinanceController.resolveStudentFinanceContext();
+    }
+
     const enrollments = Array.isArray(modalState.financeEnrollments) ? modalState.financeEnrollments : [];
     const selectedEnrollmentId = String(elements.inputStudentFinanceEnrollment?.value || '').trim();
+    const classroomMatches = Array.isArray(modalState.classroomMatches) ? modalState.classroomMatches : [];
+    const selectedClassroomId = String(elements.inputStudentClassroomMatchSelect?.value || '').trim();
+    const selectedClassroom = classroomMatches.find((row) => String(row.classroomId || '') === selectedClassroomId)
+      || classroomMatches[0]
+      || null;
     if (!enrollments.length) {
       return {
-        enrollmentId: `manual-${modalState.studentId}`,
-        courseId: null
+        enrollmentId: null,
+        courseId: selectedClassroom?.courseId || null
       };
     }
 
@@ -4107,7 +4116,7 @@
       const selected = enrollments.find((row) => String(row.enrollmentId || '') === selectedEnrollmentId);
       if (selected) {
         return {
-          enrollmentId: selected.enrollmentId || `manual-${modalState.studentId}`,
+          enrollmentId: selected.enrollmentId || null,
           courseId: selected.courseId || null
         };
       }
@@ -4115,7 +4124,7 @@
 
     if (enrollments.length === 1) {
       return {
-        enrollmentId: enrollments[0].enrollmentId || `manual-${modalState.studentId}`,
+        enrollmentId: enrollments[0].enrollmentId || null,
         courseId: enrollments[0].courseId || null
       };
     }

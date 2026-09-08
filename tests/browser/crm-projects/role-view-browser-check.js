@@ -105,11 +105,39 @@ async function main() {
             try {
                 const member = await c.db.collection(PROJECT_COLLECTIONS.members).doc(memberDocumentId(PROJECT, actor.uid)).get();
                 if (actor.denied) {
-                    await record(`${actor.role}: no fixture membership, picker content or direct project access`, async () => {
+                    await record(`${actor.role}: no fixture membership or protected project content`, async () => {
                         assert.equal(member.exists, false);
                         if (actor.role === 'Admin nonmember') assert.equal((await c.db.collection('users').doc(actor.uid).get()).data().isAdmin, true);
                         await login(page, url, actor);
-                        assert.equal(await page.locator(`#projects-board-project-select option[value="${PROJECT}"]`).count(), 0);
+                        let management;
+                        if (actor.role === 'Admin nonmember') {
+                            const listed = await h.request(c.server, '/api/projects', await c.token(actor.key), { signal: AbortSignal.timeout(TIMEOUT) });
+                            report.network.push({ actor: actor.role, transport: 'direct HTTP', method: 'GET', path: '/api/projects', status: listed.status });
+                            assert.equal(listed.status, 200, JSON.stringify(listed.body));
+                            const rows = listed.body.projects.filter(project => project.id === PROJECT);
+                            assert.equal(rows.length, 1, 'Admin management inventory must include the fixture once');
+                            const metadata = rows[0];
+                            const allowed = ['id', 'name', 'title', 'status', 'ownerUid', 'membershipRevision', 'createdAt', 'updatedAt'];
+                            assert.ok(Object.keys(metadata).every(key => allowed.includes(key)), 'Management projection must contain only the approved metadata fields');
+                            for (const key of ['id', 'name', 'title', 'status', 'ownerUid', 'membershipRevision']) assert.ok(Object.hasOwn(metadata, key), `Missing management field ${key}`);
+                            assert.equal(metadata.id, PROJECT); assert.equal(metadata.ownerUid, c.uids.owner);
+                            assert.equal(metadata.membershipRevision, (await c.revision()).membershipRevision);
+                            const picker = page.locator('#projects-project-select');
+                            await picker.locator(`option[value="${PROJECT}"]`).waitFor({ state: 'attached' });
+                            const deniedResponse = page.waitForResponse(response => matches('/views')(response), { timeout: TIMEOUT });
+                            const settled = await Promise.allSettled([deniedResponse, Promise.resolve().then(() => picker.selectOption(PROJECT))]);
+                            const errors = settled.map((entry, index) => ({ entry, label: ['content response', 'management picker selection'][index] })).filter(({ entry }) => entry.status === 'rejected');
+                            if (errors.length) throw new AggregateError(errors.map(({ entry }) => entry.reason), errors.map(({ entry, label }) => `${label}: ${entry.reason?.stack || entry.reason}`).join('\n'));
+                            assert.equal(settled[0].value.status(), 404);
+                            assert.equal((await settled[0].value.json()).success, false);
+                            await page.waitForFunction(() => document.getElementById('projects-board-workspace')?.hidden === true && document.getElementById('projects-board-detail')?.hidden === true && document.getElementById('projects-board-section')?.getAttribute('aria-busy') === 'false', null, { timeout: TIMEOUT });
+                            assert.equal(await page.locator('#projects-board-rows [data-task-id], #projects-view-content [data-view-task]').count(), 0);
+                            for (const id of ['btn-projects-board-add-task', 'btn-projects-board-add-section', 'btn-projects-board-add-column']) assert.equal(await page.locator(`#${id}`).isDisabled(), true);
+                            assert.equal(await picker.locator(`option[value="${PROJECT}"]`).count(), 1, 'Content denial must retain the independent admin management surface');
+                            management = { status: listed.status, fields: Object.keys(metadata).sort(), pickerContainsFixture: true, selectedContentStatus: 404, contentHidden: true, mutationsDisabled: true };
+                        } else {
+                            assert.equal(await page.locator(`#projects-board-project-select option[value="${PROJECT}"]`).count(), 0);
+                        }
                         assert.equal(await page.locator(`[data-task-id="${TASK}"]`).count(), 0);
                         const statuses = {};
                         for (const suffix of ['', '/tasks', '/views', '/calendar?fromDate=2026-09-01&toDate=2026-09-30']) {
@@ -118,7 +146,7 @@ async function main() {
                             assert.equal(response.body.success, false); statuses[suffix || 'project'] = response.status;
                         }
                         statuses.patch = await assertDeniedWrite(c, actor, actor.denied);
-                        return { role: actor.role, membership: null, pickerContainsFixture: false, statuses, persistedTaskUnchanged: true };
+                        return { role: actor.role, membership: null, ...(management ? { management } : { pickerContainsFixture: false }), statuses, persistedTaskUnchanged: true };
                     });
                     continue;
                 }

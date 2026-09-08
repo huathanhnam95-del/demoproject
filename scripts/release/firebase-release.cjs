@@ -306,6 +306,7 @@ function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options 
   if (options.autoProvisionedAssets === false) return [];
   const tracked = new Set((trackedInventory || []).map((item) => String(item.path).replace(/\\/g, '/')));
   const assets = [];
+  const seenPaths = new Set();
   const configuredRoots = Array.isArray(options.mediaRoots) ? options.mediaRoots : [];
   for (const relativeRoot of [...new Set([...PROVISIONED_MEDIA_ROOTS, ...configuredRoots])]) {
     if (typeof relativeRoot !== 'string' || !relativeRoot.trim()) continue;
@@ -314,7 +315,8 @@ function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options 
     if (!fs.existsSync(absoluteRoot)) continue;
     for (const file of listFiles(absoluteRoot, { exclude: ['node_modules', '.git'] })) {
       const relative = `${safeRoot}/${file.path}`;
-      if (tracked.has(relative) || !PROVISIONED_MEDIA_EXTENSIONS.has(path.extname(file.path).toLowerCase())) continue;
+      if (seenPaths.has(relative) || tracked.has(relative) || !PROVISIONED_MEDIA_EXTENSIONS.has(path.extname(file.path).toLowerCase())) continue;
+      seenPaths.add(relative);
       assets.push({ sourcePath: relative, targetPath: relative, size: file.stat.size, sha256: sha256File(file.absolute) });
       if (assets.length > 50000) fail('ASSET_SCOPE', 'Provisioned media inventory exceeds the bounded release scope.');
     }

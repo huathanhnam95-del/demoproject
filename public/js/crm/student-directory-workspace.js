@@ -15,6 +15,7 @@ window.CrmStudentDirectoryWorkspace = (function () {
             refreshDashboard
         } = deps;
         const selectedStudentIds = new Set();
+        let latestRefresh = 0;
 
         function studentDisplayName(student) {
             const name = String(student?.name || '').trim();
@@ -324,38 +325,50 @@ window.CrmStudentDirectoryWorkspace = (function () {
         }
 
         async function refreshStudentLists() {
-            let students = [];
-            try {
-                const json = await apiFetchJson('/api/admin/students?limit=200', { method: 'GET' });
-                students = Array.isArray(json.students) ? json.students : [];
-            } catch (error) {
-                if (Number(error?.status) === 404) {
-                    students = await fetchStudentsFromFirestore(200);
-                } else {
-                    throw error;
-                }
-            }
-
-            dataCache.students = students;
-            pruneSelection(students.map((student) => student.studentId));
-
+            const request = ++latestRefresh;
             const targetContainer = elements.studentsContainer
                 || elements.studentDataContainer
                 || elements.potentialStudentsContainer;
+            const feedback = window.UIContinuity?.begin('crm-students', {
+                region: targetContainer, message: 'Refreshing students…'
+            });
+            try {
+                let students = [];
+                try {
+                    const json = await apiFetchJson('/api/admin/students?limit=200', { method: 'GET' });
+                    students = Array.isArray(json.students) ? json.students : [];
+                } catch (error) {
+                    if (Number(error?.status) === 404) {
+                        students = await fetchStudentsFromFirestore(200);
+                    } else {
+                        throw error;
+                    }
+                }
 
-            if (targetContainer) {
-                renderStudentsTable(targetContainer, students, 'No students in database yet.');
+                if (request !== latestRefresh) return;
+                dataCache.students = students;
+                pruneSelection(students.map((student) => student.studentId));
+
+
+                if (targetContainer) {
+                    renderStudentsTable(targetContainer, students, 'No students in database yet.');
+                }
+
+                if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== targetContainer) {
+                    const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
+                        ? window.CrmStudents.splitStudents(students)
+                        : { potential: students, studentData: [] };
+                    renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
+                    renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
+                }
+
+                await populateAttendanceStudentOptions();
+            } catch (error) {
+                if (request !== latestRefresh) return;
+                throw error;
+            } finally {
+                feedback?.finish();
             }
-
-            if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== targetContainer) {
-                const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
-                    ? window.CrmStudents.splitStudents(students)
-                    : { potential: students, studentData: [] };
-                renderStudentsTable(elements.potentialStudentsContainer, buckets.potential, 'No potential students yet.');
-                renderStudentsTable(elements.studentDataContainer, buckets.studentData, 'No students in database yet.');
-            }
-
-            await populateAttendanceStudentOptions();
         }
 
         return {

@@ -39,7 +39,8 @@
     chatbot: { label: 'Chatbot Management', subTabs: [] },
     devtools: { label: 'Dev Tools', subTabs: [], localOnly: true },
     "pronunciation-samples": { label: 'Pronunciation Samples', subTabs: [] },
-    "voice-cloning": { label: 'Voice Cloning Studio', subTabs: [] }
+    "voice-cloning": { label: 'Voice Cloning Studio', subTabs: [] },
+    projects: { label: 'Projects', subTabs: [] }
   };
 
   const devToolsAccess = window.CrmDevToolsAccess || {
@@ -104,7 +105,10 @@
     studentLookup: '',
     studentReturnRoute: null,
     devToolsAvailable: false,
-    accessMode: 'unknown'
+    accessMode: 'unknown',
+    projectsAuthorized: false,
+    projectsEnabled: false,
+    projectsAccessSummary: null
   };
   const elements = {};
   const dataCache = {
@@ -126,6 +130,8 @@
   let teacherSchedulerController = null;
   let teacherSchedulerInitialized = false;
   let staffWorkspaceController = null;
+  let projectsAccessController = null;
+  let projectsBoardController = null;
   let studentFinanceController = null;
   let liveDeliveryController = null;
   let studentModalController = null;
@@ -677,6 +683,76 @@
     elements.staffCreateTeacherError = document.getElementById('staff-create-teacher-error');
     elements.staffTeacherList = document.getElementById('staff-teacher-list');
     elements.staffAccountList = document.getElementById('staff-account-list');
+    elements.projectsNavContainer = document.getElementById('nav-projects-container');
+    elements.projectsPeopleList = document.getElementById('projects-people-list');
+    elements.staffProjectsPeopleList = document.getElementById('staff-projects-people-list');
+    elements.projectsMemberAccessSection = document.getElementById('projects-member-access-section');
+    elements.projectsProjectSelect = document.getElementById('projects-project-select');
+    elements.projectsMembersList = document.getElementById('projects-members-list');
+    elements.projectsMemberEditor = document.getElementById('projects-member-editor');
+    elements.projectsMemberPerson = document.getElementById('projects-member-person');
+    elements.projectsMemberRole = document.getElementById('projects-member-role');
+    elements.projectsMemberSave = document.getElementById('btn-projects-member-save');
+    elements.projectsCalendarSection = document.getElementById('projects-calendar-section');
+    elements.projectsCalendarTimezone = document.getElementById('projects-calendar-timezone');
+    elements.projectsCalendarWeekdays = document.getElementById('projects-calendar-weekdays');
+    elements.projectsCalendarLeaveDate = document.getElementById('projects-calendar-leave-date');
+    elements.projectsCalendarLeaveScope = document.getElementById('projects-calendar-leave-scope');
+    elements.projectsCalendarLeavePerson = document.getElementById('projects-calendar-leave-person');
+    elements.projectsCalendarLeaveAdd = document.getElementById('btn-projects-calendar-leave-add');
+    elements.projectsCalendarLeaves = document.getElementById('projects-calendar-leaves');
+    elements.projectsAllowanceSection = document.getElementById('projects-allowance-section');
+    elements.projectsAllowanceUsd = document.getElementById('projects-allowance-usd');
+    elements.projectsAllowanceCents = document.getElementById('projects-allowance-cents');
+    elements.projectsCalendarSave = document.getElementById('btn-projects-calendar-save');
+    elements.projectsAllowanceSave = document.getElementById('btn-projects-allowance-save');
+    elements.projectsRefresh = document.getElementById('btn-projects-access-refresh');
+    elements.projectsBoardSection = document.getElementById('projects-board-section');
+    elements.projectsBoardProjectSelect = document.getElementById('projects-board-project-select');
+    elements.projectsBoardRefresh = document.getElementById('btn-projects-board-refresh');
+    elements.projectsBoardAddSection = document.getElementById('btn-projects-board-add-section');
+    elements.projectsBoardAddTask = document.getElementById('btn-projects-board-add-task');
+    elements.projectsBoardAddColumn = document.getElementById('btn-projects-board-add-column');
+    elements.projectsBoardSaveSettings = document.getElementById('btn-projects-board-save-settings');
+    elements.projectsBoardStatus = document.getElementById('projects-board-status');
+    elements.projectsBoardCreateProject = document.getElementById('projects-board-create-project');
+    elements.projectsBoardProjectName = document.getElementById('projects-board-project-name');
+    elements.projectsBoardProjectDescription = document.getElementById('projects-board-project-description');
+    elements.projectsBoardWorkspace = document.getElementById('projects-board-workspace');
+    elements.projectsBoardEmpty = document.getElementById('projects-board-empty');
+    elements.projectsBoardSectionForm = document.getElementById('projects-board-section-form');
+    elements.projectsBoardSectionName = document.getElementById('projects-board-section-name');
+    elements.projectsBoardSaveSection = document.getElementById('btn-projects-board-save-section');
+    elements.projectsBoardCancelSection = document.getElementById('btn-projects-board-cancel-section');
+    elements.projectsBoardTableWrap = document.getElementById('projects-board-table-wrap');
+    elements.projectsBoardTable = document.getElementById('projects-board-table');
+    elements.projectsBoardHeader = document.getElementById('projects-board-header');
+    elements.projectsBoardScroll = document.getElementById('projects-board-scroll');
+    elements.projectsBoardRows = document.getElementById('projects-board-rows');
+    elements.projectsBoardCount = document.getElementById('projects-board-count');
+    elements.projectsBoardDetail = document.getElementById('projects-board-detail');
+    elements.projectsBoardDetailTitle = document.getElementById('projects-board-detail-title');
+    elements.projectsBoardDetailBody = document.getElementById('projects-board-detail-body');
+    elements.projectsBoardDiscussion = document.getElementById('projects-board-discussion');
+    elements.projectsBoardDiscussionList = document.getElementById('projects-board-discussion-list');
+    elements.projectsBoardDiscussionForm = document.getElementById('projects-board-discussion-form');
+    elements.projectsBoardDiscussionInput = document.getElementById('projects-board-discussion-input');
+    elements.projectsBoardDiscussionFile = document.getElementById('projects-board-discussion-file');
+    elements.projectsBoardDiscussionStatus = document.getElementById('projects-board-discussion-status');
+    elements.projectsBoardDiscussionRetry = document.getElementById('btn-projects-board-discussion-retry');
+    elements.projectsBoardDiscussionMention = document.getElementById('projects-board-discussion-mention');
+    elements.projectsBoardDiscussionHistory = document.getElementById('projects-board-discussion-history');
+    elements.projectsBoardRecovery = document.getElementById('projects-board-recovery');
+    elements.projectsBoardSettingsName = document.getElementById('projects-board-settings-name');
+    elements.projectsBoardSettingsDescription = document.getElementById('projects-board-settings-description');
+    elements.projectsBoardStatusNotStarted = document.getElementById('projects-board-status-not-started');
+    elements.projectsBoardStatusInProgress = document.getElementById('projects-board-status-in-progress');
+    elements.projectsBoardStatusBlocked = document.getElementById('projects-board-status-blocked');
+    elements.projectsBoardStatusDone = document.getElementById('projects-board-status-done');
+    elements.projectsBoardColumnForm = document.getElementById('projects-board-column-form');
+    elements.projectsBoardColumnLabel = document.getElementById('projects-board-column-label');
+    elements.projectsBoardColumnType = document.getElementById('projects-board-column-type');
+    elements.projectsBoardColumnOptions = document.getElementById('projects-board-column-options');
 
     elements.btnRefreshAgentSources = document.getElementById('btn-refresh-agent-sources');
     elements.inputAgentSourceName = document.getElementById('agent-source-name');
@@ -1138,12 +1214,23 @@
 
     const adminOk = await isAdminUser(user);
     const teacherOk = adminOk ? false : await isTeacherUser(user);
-    if (!adminOk && !teacherOk) {
-      showGateMessage('Access denied.', 'Admin or teacher privileges required.');
+    const projectsSummary = await fetchProjectsAccessSummary(user);
+    const projectsOk = !!(projectsSummary?.identity?.accountStatus === 'active'
+      && projectsSummary?.identity?.moduleGrants?.projects === true
+      && Array.isArray(projectsSummary?.projects)
+      && projectsSummary.projects.length > 0);
+    state.projectsAuthorized = projectsOk;
+    state.projectsAccessSummary = projectsSummary;
+    state.projectsEnabled = !!(projectsSummary && (projectsSummary.canManagePeople === true || projectsOk));
+    if (!adminOk && !teacherOk && !projectsOk) {
+      showGateMessage('Access denied.', 'An active CRM, Teacher Schedule, or authorized Projects membership is required.');
       setTimeout(() => window.location.replace('index.html'), 2200);
       return;
     }
-    state.accessMode = adminOk ? 'admin' : 'teacher';
+    state.accessMode = adminOk ? 'admin' : (teacherOk ? 'teacher' : 'projects');
+    if (elements.projectsNavContainer) {
+      elements.projectsNavContainer.style.display = state.projectsEnabled ? '' : 'none';
+    }
     updateAdminCapabilityNav();
 
     // Ready
@@ -1159,7 +1246,10 @@
         });
       }
       if (isLikelyLocalEnvironment()) {
-        await initDevTools();
+        // Optional local sync discovery must not delay workspace initialization.
+        initDevTools().catch((error) => {
+          console.error('[Dev Tools] Initialization failed:', error);
+        });
       }
     }
 
@@ -1197,11 +1287,14 @@
         const belController = window.CrmBelAssistant.createController({
           elements,
           showToast,
-          fetchGemmaJSON,
+          request: apiFetchJson,
+          getUid: () => firebase.auth().currentUser?.uid || null,
+          getIdToken: () => firebase.auth().currentUser?.getIdToken(),
           getActivePanel: () => {
             return state.sub ? `${state.main}/${state.sub}` : state.main;
           }
         });
+        state._belController?.dispose?.();
         belController.init();
         // Store reference so panel changes can notify the assistant
         state._belController = belController;
@@ -1545,14 +1638,223 @@
       ? window.CrmStaffWorkspace.createController({
         elements,
         showToast,
-        apiFetchJson,
-        escapeHtml,
-        getCurrentUser: () => window.firebase?.auth?.().currentUser || null
-      })
+         apiFetchJson,
+         escapeHtml,
+         getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+         onAccountsRendered: () => projectsAccessController?.renderPeople?.()
+       })
       : null;
     if (staffWorkspaceController && typeof staffWorkspaceController.init === 'function') {
       staffWorkspaceController.init();
     }
+    window.projectsAssistantController?.dispose?.();
+    window.projectsAssistantController = null;
+    projectsBoardController = window.CrmProjectsBoard && typeof window.CrmProjectsBoard.createController === 'function'
+      ? window.CrmProjectsBoard.createController({
+        elements,
+        apiFetchJson,
+        escapeHtml,
+        showToast,
+        adminMode: state.accessMode === 'admin',
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+        onContextChanged: (snapshot) => { window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); },
+        onTaskSelection: (task) => { window.projectsViewsController?.setTask?.(task); window.projectsViewsController?.syncBoard?.(); },
+        onTaskMutation: () => window.projectsViewsController?.refresh?.(),
+        onProjectAccessDenied: (projectId) => { if (window.projectsNotificationsController) window.projectsNotificationsController.deny(projectId); else projectsAccessController?.handleProjectContentDenied?.(projectId); },
+        getProjectSelection: () => projectsAccessController?.getSelection?.() || null,
+        selectProject: (projectId) => projectsAccessController?.selectProject?.(projectId),
+        refreshProjects: () => projectsAccessController?.refresh?.()
+      })
+      : null;
+    if (projectsBoardController && typeof projectsBoardController.init === 'function') {
+      projectsBoardController.init();
+    }
+    if (window.CrmProjectsDiscussion && typeof window.CrmProjectsDiscussion.createController === 'function') {
+      window.projectsDiscussionController = window.CrmProjectsDiscussion.createController({
+        elements,
+        apiFetchJson,
+        escapeHtml,
+        showToast,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+        getBoardState: () => projectsBoardController?.getState?.() || null
+      });
+      window.projectsDiscussionController.init();
+    }
+    window.projectsRemoteObserver?.dispose?.();
+    window.projectsRemoteObserver = window.CrmProjectsRemoteObserver?.createController({
+      apiFetchJson,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      onDenied: projectId => projectsBoardController?.invalidateAccess?.(projectId),
+      apply: async change => {
+        if (await projectsBoardController?.applyRemote?.(change) === false) return false;
+        if (!change.isCurrent() || await window.projectsDiscussionController?.applyRemote?.(change) === false) return false;
+        const viewState = window.projectsViewsController?.getState?.();
+        if ((change.changes.length || change.authorityChanged) && viewState?.view && viewState.view !== 'board') {
+          await window.projectsViewsController.refresh();
+        }
+        return change.isCurrent();
+      }
+    });
+    projectsBoardController?.attachRemoteObserver?.(window.projectsRemoteObserver);
+    window.projectsDiscussionController?.attachRemoteObserver?.(window.projectsRemoteObserver);
+    if (window.CrmProjectsRecovery && typeof window.CrmProjectsRecovery.createController === 'function') {
+      window.projectsRecoveryController = window.CrmProjectsRecovery.createController({
+        elements,
+        apiFetchJson,
+        showToast,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+        refreshBoard: () => projectsBoardController?.refresh?.()
+      });
+      window.projectsRecoveryController.init();
+    }
+    window.projectsViewsController = window.CrmProjectsViews?.createController({ apiFetchJson, board: projectsBoardController, openStudentLink: async (recordId, isCurrent) => {
+      const linkedUserUid = window.firebase?.auth?.().currentUser?.uid;
+      if (state.accessMode !== 'admin' || !isCurrent()) return;
+      const result = await apiFetchJson(`/api/admin/students/${encodeURIComponent(recordId)}`);
+      if (!isCurrent() || window.firebase?.auth?.().currentUser?.uid !== linkedUserUid) return;
+      if (!result?.student) throw new Error('This student is no longer available.');
+      await openStudentProfile(recordId, result.student, { refreshProfile: false, returnRoute: { main: 'projects', sub: '' } });
+    }, getCurrentUser: () => window.firebase?.auth?.().currentUser || null });
+    window.projectsViewsController?.init();
+    window.projectsAutomationsController = window.CrmAutomations?.createController({
+      root: document.getElementById('projects-automations'),
+      button: document.getElementById('btn-projects-automate'), apiFetchJson,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      refreshBoard: () => projectsBoardController?.refresh?.(),
+      onContentDenied: (projectId) => projectsAccessController?.handleProjectContentDenied?.(projectId),
+      onAccountDenied: () => { window.projectsAutomationsController?.setAccount(''); projectsAccessController?.refresh?.(); }
+    });
+    window.projectsAutomationsController?.init();
+    window.projectsAutomationsController?.setAccount(user.uid);
+    window.projectsBudgetController = window.CrmAiBudget?.createController({
+      root: document.getElementById('projects-ai-budget'), endpoint: '/api/projects/budget', apiFetchJson,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || null
+    });
+    window.projectsBudgetController?.init();
+    window.projectsBudgetController?.setAccount(user.uid);
+    window.projectsBudgetController?.setEligible(projectsOk);
+    function projectsAssistantHints() {
+      const board = projectsBoardController?.getState?.() || {};
+      const views = window.projectsViewsController?.getState?.() || {};
+      const filters = {};
+      for (const key of ['sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate']) {
+        if (typeof views.filters?.[key] === 'string' && views.filters[key]) filters[key] = views.filters[key];
+      }
+      if (!filters.sectionId && board.sections?.length === 1) filters.sectionId = board.sections[0].id;
+      return { projectId: board.project?.id || '', view: views.view || 'board', selectedTaskIds: board.selectedTaskIds || [], filters };
+    }
+    let projectsAssistantFingerprint = '';
+    function syncProjectsAssistantContext(snapshot) {
+      const controller = window.projectsAssistantController;
+      if (!controller) return;
+      controller.syncIdentity();
+      controller.setContext(projectsAssistantHints());
+      if (snapshot?.project) {
+        const fingerprint = JSON.stringify([snapshot.project.id, snapshot.project.revision, snapshot.project.structureRevision,
+          snapshot.project.schemaRevision, snapshot.project.membershipRevision, snapshot.membership?.role,
+          (snapshot.selectedTaskIds || []).map(id => [id, snapshot.tasks?.get?.(id)?.revision])]);
+        if (projectsAssistantFingerprint && fingerprint !== projectsAssistantFingerprint) controller.invalidatePreview?.();
+        projectsAssistantFingerprint = fingerprint;
+      }
+    }
+    window.projectsAssistantController?.dispose?.();
+    window.projectsAssistantController = window.CrmProjectsAssistant?.createController({
+      root: document.getElementById('projects-assistant'), apiFetchJson,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      getContext: projectsAssistantHints,
+      onApplied: async result => { if (result?.project?.id && result.project.id !== projectsAssistantHints().projectId) { await projectsAccessController?.refresh?.(); await projectsAccessController?.selectProject?.(result.project.id); } await projectsBoardController?.refresh?.(); if (result?.task) projectsBoardController?.selectTask?.(result.task); await window.projectsViewsController?.refresh?.(); },
+      onUsageChanged: () => window.projectsBudgetController?.refresh?.(),
+      onAutomationDraft: definition => window.projectsAutomationsController?.acceptDraft?.({ actorUid: user.uid, projectId: projectsAssistantHints().projectId, definition }, { newAutomation: true })
+    });
+    window.projectsAssistantController?.init();
+    const projectsAssistantTimer = setInterval(() => syncProjectsAssistantContext(), 1000);
+    window.addEventListener('pagehide', () => { clearInterval(projectsAssistantTimer); window.projectsAssistantController?.dispose?.(); }, { once: true });
+    const projectsAccessApiFetchJson = async (path, options) => {
+      const actorUid = window.firebase?.auth?.().currentUser?.uid;
+      try { return await apiFetchJson(path, options); }
+      catch (error) {
+        if (actorUid === window.firebase?.auth?.().currentUser?.uid && path === '/api/projects/access' && [401, 403].includes(error?.status)) window.projectsBudgetController?.setEligible(false);
+        throw error;
+      }
+    };
+    let projectsNotificationNavigation = 0, projectsNotificationSelection = '';
+    window.projectsNotificationsController = window.CrmProjectsNotifications?.createController({
+      root: document.getElementById('projects-notifications'), apiFetchJson,
+      getNavigationGeneration: () => projectsNotificationNavigation,
+      onAccessDenied: (projectId) => projectsAccessController?.handleProjectContentDenied?.(projectId || projectsAccessController?.getSelection?.()?.selectedProjectId),
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      openTarget: async (target, isCurrent) => {
+        if (!isCurrent()) return;
+        const expectedNavigation = projectsNotificationNavigation + (projectsNotificationSelection === target.projectId ? 0 : 1);
+        const selected = await projectsAccessController?.selectProject?.(target.projectId);
+        if (!isCurrent() || projectsNotificationNavigation !== expectedNavigation) return;
+        if (!selected) throw new Error('This project is no longer available.');
+        const inProject = () => isCurrent() && projectsNotificationNavigation === expectedNavigation && projectsAccessController?.getSelection?.()?.selectedProjectId === target.projectId;
+        await projectsBoardController?.loadProject?.(target.projectId);
+        if (!inProject()) return;
+        const result = await apiFetchJson(`/api/projects/${encodeURIComponent(target.projectId)}/tasks/${encodeURIComponent(target.taskId)}`);
+        if (!inProject()) return;
+        if (!result.task) throw new Error('This task is no longer available.');
+        projectsBoardController?.selectTask?.(result.task);
+        if (target.messageId) {
+          await window.projectsDiscussionController?.focusMessage?.(target.messageId, { isCurrent: inProject });
+        }
+      }
+    });
+    window.projectsNotificationsController?.init();
+    window.projectsNotificationsController?.setAccount(user.uid);
+    const projectsDocumentUid = String(user.uid || '');
+    let projectsAccountInvalidated = false;
+    projectsAccessController = window.CrmProjectsAccess && typeof window.CrmProjectsAccess.createController === 'function'
+      ? window.CrmProjectsAccess.createController({
+        elements,
+        showToast,
+         apiFetchJson: projectsAccessApiFetchJson,
+         escapeHtml,
+         getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+         adminMode: state.accessMode === 'admin',
+        accessSummary: state.projectsAccessSummary,
+        onProjectsRendered: (selection) => {
+          if (projectsAccountInvalidated || window.firebase?.auth?.().currentUser?.uid !== user.uid) return;
+          const deniedIds = new Set(selection.contentDeniedProjectIds || []);
+          const budgetIdentity = selection.accessSummary?.identity;
+          const budgetEligible = budgetIdentity?.uid === user.uid && budgetIdentity?.accountStatus === 'active'
+            && budgetIdentity?.moduleGrants?.projects === true
+            && (selection.accessSummary?.projects || []).some(project => !deniedIds.has(project.id));
+          window.projectsBudgetController?.setEligible(budgetEligible);
+          const selectedContentDenied = deniedIds.has(selection.selectedProjectId);
+          const contentSelection = { ...selection, projects: (selection.projects || []).filter((project) => !deniedIds.has(project.id)), selectedProjectId: selectedContentDenied ? '' : selection.selectedProjectId, selectedProject: selectedContentDenied ? null : selection.selectedProject };
+          if (projectsNotificationSelection !== contentSelection.selectedProjectId) { projectsNotificationSelection = contentSelection.selectedProjectId; projectsNotificationNavigation++; }
+          window.projectsNotificationsController?.setProjects?.(contentSelection.projects, [...deniedIds]);
+          window.projectsAutomationsController?.setSelection?.(contentSelection.selectedProjectId || '');
+          projectsBoardController?.setProjects?.(contentSelection);
+          window.projectsAutomationsController?.setContext?.(projectsBoardController?.getState?.() || {});
+          window.projectsViewsController?.setProject?.(contentSelection.selectedProjectId || '');
+        }
+      })
+      : null;
+    if (projectsAccessController && typeof projectsAccessController.init === 'function') {
+      projectsAccessController.init();
+    }
+    // Controller scopes are document-local. Re-enter the existing access gate
+    // after an account change instead of retaining the previous account's roles.
+    firebase.auth().onAuthStateChanged((nextUser) => {
+      if (projectsAccountInvalidated || String(nextUser?.uid || '') === projectsDocumentUid) return;
+      projectsAccountInvalidated = true;
+      clearInterval(projectsAssistantTimer);
+      window.projectsAssistantController?.dispose?.();
+      window.projectsBudgetController?.setAccount('');
+      window.projectsAutomationsController?.setAccount('');
+      window.projectsNotificationsController?.setAccount('');
+      window.projectsViewsController?.setProject?.('');
+      projectsBoardController?.setProjects?.({ projects: [], selectedProjectId: '' });
+      window.projectsDiscussionController?.setSelection?.(null);
+      window.projectsRecoveryController?.setSelection?.(null);
+      const panel = document.querySelector('[data-panel="projects"]');
+      if (panel) { panel.hidden = true; panel.inert = true; panel.style.display = 'none'; }
+      showGateMessage('Account changed.', 'Checking access for the current account…');
+      window.location.reload();
+    });
     if (agentSourcesController && typeof agentSourcesController.init === 'function') {
       agentSourcesController.init();
       agentSourcesController.refresh().catch((error) => {
@@ -1564,8 +1866,10 @@
     if (state.accessMode === 'admin') {
       setupLeadComposer();
       setupActivitySurfaces();
-    } else {
+    } else if (state.accessMode === 'teacher') {
       applyTeacherModeLockdown();
+    } else {
+      applyProjectsModeLockdown();
     }
     applyRouteFromHash({ initial: true });
     render();
@@ -1748,17 +2052,33 @@
     }
   }
 
+  async function fetchProjectsAccessSummary(user) {
+    try {
+      if (!user?.getIdToken) return null;
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/projects/access', {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${idToken}` },
+        cache: 'no-store'
+      });
+      const result = await res.json().catch(() => null);
+      return res.ok && result?.success ? result : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function applyTeacherModeLockdown() {
     if (!elements.navItems || !elements.dropdownItems || !elements.panels) return;
 
     elements.navItems.forEach((btn) => {
       const main = String(btn?.dataset?.main || '').trim();
-      const allow = main === 'courses';
+      const allow = main === 'courses' || (main === 'projects' && state.projectsAuthorized);
       btn.style.display = allow ? '' : 'none';
       btn.disabled = !allow;
       btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
       if (allow) {
-        btn.textContent = 'Teacher Schedule';
+        btn.textContent = main === 'projects' ? 'Projects' : 'Teacher Schedule';
       }
     });
 
@@ -1772,17 +2092,42 @@
 
     elements.panels.forEach((panel) => {
       const id = String(panel?.dataset?.panel || '').trim();
-      if (id !== 'courses/teacher-schedule') {
+      if (id !== 'courses/teacher-schedule' && !(id === 'projects' && state.projectsAuthorized)) {
         panel.style.display = 'none';
       }
     });
   }
 
+  function applyProjectsModeLockdown() {
+    if (!elements.navItems || !elements.dropdownItems || !elements.panels) return;
+    elements.navItems.forEach((btn) => {
+      const allow = String(btn?.dataset?.main || '').trim() === 'projects';
+      btn.style.display = allow ? '' : 'none';
+      btn.disabled = !allow;
+      btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
+    });
+    elements.dropdownItems.forEach((btn) => {
+      btn.style.display = 'none';
+      btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
+    });
+    elements.panels.forEach((panel) => {
+      panel.style.display = panel.dataset.panel === 'projects' ? '' : 'none';
+    });
+  }
+
   function setupTabs() {
     // Main Nav Items
-    elements.navItems.forEach((btn) => {
+      elements.navItems.forEach((btn) => {
       btn.addEventListener('click', () => {
         if (state.accessMode === 'teacher') {
+          if (btn.dataset.main === 'projects' && state.projectsAuthorized) {
+            state.main = 'projects';
+            state.sub = '';
+            updateHash();
+            render();
+            return;
+          }
           state.main = 'courses';
           state.sub = 'teacher-schedule';
           updateHash();
@@ -1793,6 +2138,20 @@
           clearStudentProfileState();
         }
         const nextMain = btn.dataset.main;
+        if (state.accessMode === 'projects' && nextMain !== 'projects') {
+          state.main = 'projects';
+          state.sub = '';
+          updateHash();
+          render();
+          return;
+        }
+        if (nextMain === 'projects' && !state.projectsEnabled) {
+          state.main = state.accessMode === 'admin' ? 'staff' : DEFAULT_ROUTE.main;
+          state.sub = '';
+          updateHash();
+          render();
+          return;
+        }
         if (nextMain === 'courses') {
           // Courses is a dropdown parent. It previously returned here, so clicking it
           // looked identical to its siblings but produced no navigation and no feedback.
@@ -1847,28 +2206,25 @@
     setupClassroomModal();
   }
 
-  let studentModalFallbackBound = false;
   function setupStudentModal() {
     if (studentModalController && typeof studentModalController.setupStudentModal === 'function') {
       studentModalController.setupStudentModal();
       return;
     }
-    if (studentModalFallbackBound) return;
-    studentModalFallbackBound = true;
-    if (Array.isArray(elements.btnNewStudentTriggers) && elements.btnNewStudentTriggers.length > 0) {
-      // Open Modal
-      elements.btnNewStudentTriggers.forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (typeof openFreshStudentModal === 'function') {
-            openFreshStudentModal();
-            return;
-          }
-          elements.studentModal.style.display = 'flex';
-          elements.studentModal.setAttribute('aria-hidden', 'false');
-          resetStudentModal();
-        });
+    if (elements.btnNewStudentTriggers.length === 0) return;
+
+    // Open Modal
+    elements.btnNewStudentTriggers.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof openFreshStudentModal === 'function') {
+          openFreshStudentModal();
+          return;
+        }
+        elements.studentModal.style.display = 'flex';
+        elements.studentModal.setAttribute('aria-hidden', 'false');
+        resetStudentModal();
       });
-    }
+    });
 
     // Close Modal Func
     const closeStudentModal = () => {
@@ -2132,9 +2488,6 @@
       elements.inputStudentZalo,
       elements.inputStudentFacebook,
       elements.inputStudentFacebookProfileUrl,
-      elements.inputStudentFacebookPersonalOwner,
-      elements.inputStudentAcquisitionSource,
-      elements.inputStudentAgentSource,
       elements.inputScoreOverall,
       elements.inputScoreListening,
       elements.inputScoreReading,
@@ -2160,8 +2513,6 @@
     inputs.forEach((el) => {
       if (el) el.value = '';
     });
-    if (typeof updateStudentSourceVisibility === 'function') updateStudentSourceVisibility();
-    if (typeof updateLeadSourceVisibility === 'function') updateLeadSourceVisibility();
 
     // Reset UI state
     if (elements.studentIdBadge) {
@@ -2284,23 +2635,14 @@
     }
 
     if (groupOwner) {
-      groupOwner.style.display = isAgent ? 'none' : '';
-    }
-    if (inputOwner) {
-      inputOwner.required = !isAgent;
-      if (isAgent) {
-        inputOwner.value = '';
-      }
+      groupOwner.style.display = '';
     }
 
     if (groupAgent) {
       groupAgent.style.display = isAgent ? '' : 'none';
     }
-    if (inputAgent) {
-      inputAgent.required = isAgent;
-      if (!isAgent) {
-        inputAgent.value = '';
-      }
+    if (!isAgent && inputAgent) {
+      inputAgent.value = '';
     }
   }
   window.updateLeadSourceVisibility = updateLeadSourceVisibility;
@@ -2327,29 +2669,19 @@
     }
 
     if (groupOwner) {
-      groupOwner.style.display = isAgent ? 'none' : '';
-    }
-    if (inputOwner) {
-      inputOwner.required = !isAgent;
-      if (isAgent) {
-        inputOwner.value = '';
-      }
+      groupOwner.style.display = '';
     }
 
     if (groupAgent) {
       groupAgent.style.display = isAgent ? '' : 'none';
     }
-    if (inputAgent) {
-      inputAgent.required = isAgent;
-      if (!isAgent) {
-        inputAgent.value = '';
-      }
+    if (!isAgent && inputAgent) {
+      inputAgent.value = '';
     }
   }
   window.updateStudentSourceVisibility = updateStudentSourceVisibility;
   window.hideStudentModalSurface = hideStudentModalSurface;
   window.openLeadModal = openLeadModal;
-  window.switchStudentTab = switchStudentTab;
 
   function resetLeadComposer() {
     const inputs = [
@@ -2472,7 +2804,6 @@
         zalo: String(elements.inputStudentZalo?.value || '').trim(),
         facebook: String(elements.inputStudentFacebook?.value || '').trim(),
         facebookProfileUrl: String(elements.inputStudentFacebookProfileUrl?.value || '').trim(),
-        facebookPersonalOwner: String(elements.inputStudentFacebookPersonalOwner?.value || '').trim(),
         acquisitionSource: String(elements.inputStudentAcquisitionSource?.value || '').trim(),
         agentSourceId: String(elements.inputStudentAgentSource?.value || '').trim(),
         learningProfile: {
@@ -2502,7 +2833,7 @@
     if (window.CrmStudents && typeof window.CrmStudents.hasAnyInfoField === 'function') {
       return window.CrmStudents.hasAnyInfoField(payload);
     }
-    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook, payload?.facebookProfileUrl, payload?.facebookPersonalOwner]
+    return [payload?.name, payload?.label, payload?.phone, payload?.email, payload?.zalo, payload?.facebook, payload?.facebookProfileUrl]
       .some(v => !!String(v || '').trim());
   }
 
@@ -2660,6 +2991,7 @@
   }
 
   async function apiFetchJson(path, options = {}) {
+    const { responseType, ...fetchOptions } = options;
     const user = firebase.auth().currentUser;
     if (!user) throw new Error('Please log in as admin first.');
     const idToken = await user.getIdToken();
@@ -2669,7 +3001,8 @@
       'Authorization': `Bearer ${idToken}`
     };
 
-    const res = await fetch(path, { ...options, headers, cache: 'no-store' });
+    const res = await fetch(path, { ...fetchOptions, headers, cache: 'no-store' });
+    if (responseType === 'blob' && res.ok) return res.blob();
     const json = await res.json().catch(() => null);
     if (!res.ok || !json?.success) {
       const msg = json?.message || `Request failed (${res.status})`;
@@ -3822,31 +4155,102 @@
     showToast('Invoice created.', 'success');
   }
 
-  async function recordPaymentForStudent() {
+  async function recordPaymentForStudent(options = {}) {
+    if (options.newIntent === true) modalState._manualPaymentIntent = null;
     if (!modalState.studentId) throw new Error('Save the student profile first.');
     if (!modalState.selectedInvoiceId) throw new Error('Select an invoice first.');
     if (!window.CrmFinance || typeof window.CrmFinance.buildPaymentPayload !== 'function') {
       throw new Error('Finance helpers are not available.');
     }
 
+    const actorUid = String(window.firebase?.auth?.().currentUser?.uid || '').trim();
+    if (!actorUid) throw new Error('Current staff identity is unavailable. Sign in again before recording payment.');
     const financeContext = resolveStudentFinanceEnrollmentContext();
     const payload = window.CrmFinance.buildPaymentPayload({
       inputPaymentAmount: elements.inputPaymentAmount,
       inputPaymentMethod: elements.inputPaymentMethod
     });
+    const body = {
+      invoiceId: modalState.selectedInvoiceId,
+      studentId: modalState.studentId,
+      enrollmentId: financeContext.enrollmentId,
+      ...payload
+    };
+    const comparable = (value) => {
+      const next = { ...(value || {}) };
+      delete next.operationId;
+      delete next.paymentDate;
+      return JSON.stringify(next);
+    };
+    const identity = {
+      actorUid,
+      studentId: String(modalState.studentId || '').trim(),
+      invoiceId: String(modalState.selectedInvoiceId || '').trim(),
+      enrollmentId: String(financeContext.enrollmentId || '').trim() || null,
+      sessionKey: modalState.studentSessionKey
+    };
+    const pending = modalState._manualPaymentIntent;
+    if (pending) {
+      const sameTarget = pending.actorUid === identity.actorUid
+        && pending.studentId === identity.studentId
+        && pending.invoiceId === identity.invoiceId
+        && pending.enrollmentId === identity.enrollmentId
+        && pending.sessionKey === identity.sessionKey;
+      if (!sameTarget) {
+        modalState._manualPaymentIntent = null;
+      } else if (comparable(pending.body) !== comparable(body)) {
+        const startNewIntent = typeof window.confirm === 'function'
+          && window.confirm('The previous payment may already have been recorded. Check the payment history before continuing. Record this as a separate payment?');
+        if (!startNewIntent) {
+          throw new Error('Payment details changed after an uncertain save. Start a new payment intent before editing or retrying.');
+        }
+        modalState._manualPaymentIntent = null;
+      }
+    }
+    if (!modalState._manualPaymentIntent) {
+      modalState._manualPaymentIntent = {
+        ...identity,
+        body: {
+          ...body,
+          operationId: typeof window.crypto?.randomUUID === 'function'
+            ? window.crypto.randomUUID()
+            : `manual-payment-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`,
+          paymentDate: payload.paymentDate || new Date().toISOString()
+        }
+      };
+    }
+    const submittedIntent = modalState._manualPaymentIntent;
 
     await apiFetchJson('/api/admin/payments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        invoiceId: modalState.selectedInvoiceId,
-        studentId: modalState.studentId,
-        enrollmentId: financeContext.enrollmentId,
-        ...payload
-      })
+      body: JSON.stringify(submittedIntent.body)
     });
 
-    if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
+    const sameTarget = modalState._manualPaymentIntent === submittedIntent
+      && submittedIntent.actorUid === String(window.firebase?.auth?.().currentUser?.uid || '').trim()
+      && submittedIntent.studentId === String(modalState.studentId || '').trim()
+      && submittedIntent.invoiceId === String(modalState.selectedInvoiceId || '').trim()
+      && submittedIntent.sessionKey === modalState.studentSessionKey;
+    if (!sameTarget) return;
+    let inputsStillMatch = true;
+    try {
+      const currentContext = resolveStudentFinanceEnrollmentContext();
+      const currentPayload = window.CrmFinance.buildPaymentPayload({
+        inputPaymentAmount: elements.inputPaymentAmount,
+        inputPaymentMethod: elements.inputPaymentMethod
+      });
+      inputsStillMatch = comparable(submittedIntent.body) === comparable({
+        invoiceId: modalState.selectedInvoiceId,
+        studentId: modalState.studentId,
+        enrollmentId: currentContext.enrollmentId,
+        ...currentPayload
+      });
+    } catch (error) {
+      inputsStillMatch = false;
+    }
+    modalState._manualPaymentIntent = null;
+    if (inputsStillMatch && elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
     await refreshStudentFinance();
     await refreshDashboard();
     showToast('Payment recorded.', 'success');
@@ -4815,47 +5219,30 @@
     }
   }
 
-  const VALID_STUDENT_TABS = new Set([
-    'info',
-    'learning',
-    'overview',
-    'courses',
-    'finance',
-    'identity',
-    'teaching-sessions'
-  ]);
-
-  function normalizeStudentTabId(tabId) {
-    const raw = String(tabId || '').trim();
-    if (raw === 'student-360') return 'overview';
-    return VALID_STUDENT_TABS.has(raw) ? raw : 'info';
-  }
-
   function switchStudentTab(tabId) {
-    const normalizedTab = normalizeStudentTabId(tabId);
     if (studentModalController && typeof studentModalController.switchStudentTab === 'function') {
-      studentModalController.switchStudentTab(normalizedTab);
+      studentModalController.switchStudentTab(tabId);
       return;
     }
     // Update Sidebar
     elements.studentSidebarItems.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === normalizedTab);
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
     });
 
     // Update Content
     elements.studentTabContents.forEach(content => {
-      const isMatch = content.id === `student-${normalizedTab}`;
+      const isMatch = content.id === `student-${tabId}`;
       content.style.display = isMatch ? 'block' : 'none';
       content.classList.toggle('active', isMatch);
     });
 
-    if (normalizedTab === 'finance' && modalState.studentId) {
+    if (tabId === 'finance' && modalState.studentId) {
       refreshStudentFinance().catch((error) => {
         console.error('[CRM Admin] Failed to refresh student finance:', error);
       });
       return;
     }
-    if (normalizedTab === 'teaching-sessions') {
+    if (tabId === 'teaching-sessions') {
       const targetStudentId = modalState.studentId || (modalState.studentProfile && (modalState.studentProfile.studentId || modalState.studentProfile.id || modalState.studentProfile.crmId));
       if (window.CrmTeachingSessions) {
         if (typeof window.CrmTeachingSessions.setStudentId === 'function') {
@@ -4867,7 +5254,7 @@
       }
       return;
     }
-    if (normalizedTab === 'courses' && modalState.studentId) {
+    if (tabId === 'courses' && modalState.studentId) {
       if (window.CrmStudentCourses && typeof window.CrmStudentCourses.refresh === 'function') {
         window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
           console.error('[CRM Admin] Failed to refresh student courses:', error);
@@ -4875,7 +5262,7 @@
       }
       return;
     }
-    if (normalizedTab === 'info' || normalizedTab === 'overview') {
+    if (tabId === 'info' || tabId === 'student-360' || tabId === 'overview') {
       renderStudentSchedulePrompt();
     }
   }
@@ -4908,13 +5295,32 @@
   }
 
   function applyRouteFromHash({ initial = false } = {}) {
+    const requestedMain = normalizeRouteToken((window.location.hash || '').replace(/^#/, '').split('/')[0]);
+    if (state.accessMode === 'projects' && requestedMain !== 'projects') {
+      // A Projects-only workforce account must not reach legacy CRM panels by
+      // typing a hash directly. Keep the URL and rendered panel canonical.
+      state.main = 'projects';
+      state.sub = '';
+      const canonical = getRouteHash(state.main, state.sub);
+      if (window.location.hash !== canonical) {
+        try { window.history.replaceState(null, '', canonical); } catch (_) { updateHash(); }
+      }
+      return;
+    }
+
     if (state.accessMode === 'teacher') {
       if (state.studentLookup) {
         clearStudentProfileState();
       }
 
-      state.main = 'courses';
-      state.sub = 'teacher-schedule';
+      const requested = normalizeRouteToken((window.location.hash || '').replace(/^#/, '').split('/')[0]);
+      if (requested === 'projects' && state.projectsEnabled && state.projectsAuthorized) {
+        state.main = 'projects';
+        state.sub = '';
+      } else {
+        state.main = 'courses';
+        state.sub = 'teacher-schedule';
+      }
       const canonical = getRouteHash(state.main, state.sub);
       if (window.location.hash !== canonical) {
         try {
@@ -4922,6 +5328,18 @@
         } catch (_) {
           updateHash();
         }
+      }
+      return;
+    }
+
+    if (requestedMain === 'projects' && !state.projectsEnabled) {
+      // Feature-off keeps the ordinary Staff route usable for administrators;
+      // teachers retain their schedule landing page.
+      state.main = state.accessMode === 'admin' ? 'staff' : DEFAULT_ROUTE.main;
+      state.sub = state.accessMode === 'admin' ? '' : DEFAULT_ROUTE.sub;
+      const canonical = getRouteHash(state.main, state.sub);
+      if (window.location.hash !== canonical) {
+        try { window.history.replaceState(null, '', canonical); } catch (_) { updateHash(); }
       }
       return;
     }
@@ -5080,6 +5498,34 @@
       updateHash();
     }
 
+    // Enforce Projects capability before selecting an active panel. This keeps
+    // feature-off and direct-hash navigation from briefly rendering a protected
+    // panel while the redirect is being applied.
+    if (state.accessMode === 'projects' && state.main !== 'projects') {
+      state.main = 'projects';
+      state.sub = '';
+      updateHash();
+      return render();
+    }
+    if (state.main === 'projects' && !state.projectsEnabled) {
+      state.main = state.accessMode === 'admin' ? 'staff' : DEFAULT_ROUTE.main;
+      state.sub = '';
+      updateHash();
+      return render();
+    }
+
+    // A registered placeholder or legacy deep link may have no workspace here.
+    // Resolve it before hiding panels so navigation never leaves an empty shell.
+    const requestedPanel = state.sub ? `${state.main}/${state.sub}` : state.main;
+    const hasPanel = elements.panels.some((panel) => panel.dataset.panel === requestedPanel
+      || (state.main === 'books' && panel.dataset.panel === 'books'));
+    if (!hasPanel) {
+      state.main = DEFAULT_ROUTE.main;
+      state.sub = DEFAULT_ROUTE.sub;
+      updateHash();
+      showToast('This workspace is not available yet. Showing Dashboard.', 'info');
+    }
+
     // Nav active state
     elements.navItems.forEach((btn) => {
       const isActive = btn.dataset.main === state.main;
@@ -5088,6 +5534,7 @@
 
     // Panels
     const activePanel = state.sub ? `${state.main}/${state.sub}` : state.main;
+    const routeChanged = lastRenderedPanel !== activePanel;
     if (lastRenderedPanel === 'dashboard' && activePanel !== 'dashboard') {
       dashboardController?.dispose?.();
     }
@@ -5097,18 +5544,19 @@
     if (lastRenderedPanel === 'voice-cloning' && activePanel !== 'voice-cloning') {
       voiceCloningController?.dispose?.();
     }
-    let hasMatchedPanel = false;
     elements.panels.forEach((panel) => {
       const panelId = panel.dataset.panel;
       const matches = panelId === activePanel
         || (state.main === 'books' && panelId === 'books');
-      if (matches) hasMatchedPanel = true;
-      panel.style.display = matches ? 'block' : 'none';
+      // The teacher scheduler has a legacy display:flex !important rule so it
+      // can occupy the full viewport. Force only inactive panels hidden; an
+      // active panel keeps its existing layout rule (including flex).
+      if (matches) {
+        panel.style.removeProperty('display');
+      } else {
+        panel.style.setProperty('display', 'none', 'important');
+      }
     });
-    if (!hasMatchedPanel && elements.panels.length > 0) {
-      const fallbackPanel = Array.from(elements.panels).find((p) => p.dataset.panel === 'dashboard') || elements.panels[0];
-      if (fallbackPanel) fallbackPanel.style.display = 'block';
-    }
 
     // The document had no <h1> at all across 14 panels — every panel title was an <h2>,
     // so assistive tech got no page title and no top of the outline. Promote whichever
@@ -5125,6 +5573,9 @@
       title.replaceWith(replacement);
     });
 
+    // A click updates the hash and renders synchronously; hashchange then repeats
+    // this route. Do not restart its loads or entrance state a second time.
+    if (!routeChanged) return;
     if (activePanel === 'dashboard') {
       dashboardController?.activate?.().catch((error) => {
         console.error('[CRM Admin] Essay AI dashboard activation failed:', error);
@@ -5162,6 +5613,12 @@
     if (activePanel === 'staff') {
       refreshStaffWorkspace().catch((error) => {
         console.error('[CRM Admin] Staff refresh failed:', error);
+      });
+    }
+
+    if (activePanel === 'projects' && projectsAccessController) {
+      projectsAccessController.refresh().catch((error) => {
+        console.error('[CRM Admin] Projects access refresh failed:', error);
       });
     }
 
@@ -5204,9 +5661,15 @@
     return teacherSchedulerController.refresh();
   }
 
-  function refreshStaffWorkspace() {
-    if (!staffWorkspaceController || typeof staffWorkspaceController.refresh !== 'function') return Promise.resolve();
-    return staffWorkspaceController.refresh();
+  async function refreshStaffWorkspace() {
+    if (staffWorkspaceController && typeof staffWorkspaceController.refresh === 'function') {
+      await staffWorkspaceController.refresh();
+    }
+    // People & Access is part of the Staff account directory. Refresh its
+    // server-owned workforce data whenever Staff opens or reloads.
+    if (state.accessMode === 'admin' && projectsAccessController && typeof projectsAccessController.refreshPeople === 'function') {
+      await projectsAccessController.refreshPeople();
+    }
   }
 
   function refreshRecycleBin() {
@@ -7390,18 +7853,32 @@
 
   // Nav dropdown click-to-toggle (supplements CSS hover)
   (function initNavDropdowns() {
+    function closeAll() {
+      document.querySelectorAll('.crm-nav-dropdown').forEach((dropdown) => {
+        dropdown.classList.remove('is-open');
+        dropdown.querySelector('.crm-nav-item')?.setAttribute('aria-expanded', 'false');
+      });
+    }
     document.querySelectorAll('.crm-nav-dropdown').forEach((dropdown) => {
       const trigger = dropdown.querySelector('.crm-nav-item');
       if (!trigger) return;
       trigger.addEventListener('click', (e) => {
         e.stopPropagation();
         const wasOpen = dropdown.classList.contains('is-open');
-        document.querySelectorAll('.crm-nav-dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
-        if (!wasOpen) dropdown.classList.add('is-open');
+        closeAll();
+        if (!wasOpen) {
+          dropdown.classList.add('is-open');
+          trigger.setAttribute('aria-expanded', 'true');
+        }
       });
     });
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.crm-nav-dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
+    document.addEventListener('click', closeAll);
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      const open = document.querySelector('.crm-nav-dropdown.is-open');
+      if (!open) return;
+      closeAll();
+      open.querySelector('.crm-nav-item')?.focus({ preventScroll: true });
     });
   })();
 
@@ -7422,6 +7899,7 @@
 
     function setOpen(open) {
       shell.classList.toggle('crm-nav-open', open);
+      if (compact.matches) nav.inert = !open;
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       scrim.hidden = !open;
       if (open) {
@@ -7445,6 +7923,7 @@
     function syncViewport() {
       placeMore();
       if (!compact.matches) setOpen(false);
+      nav.inert = compact.matches && !shell.classList.contains('crm-nav-open');
     }
 
     toggle.addEventListener('click', () => setOpen(!shell.classList.contains('crm-nav-open')));

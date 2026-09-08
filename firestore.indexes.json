@@ -1,6 +1,23 @@
 {
   "indexes": [
     {
+      "collectionGroup": "crmProjectEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "projectId", "order": "ASCENDING" },
+        { "fieldPath": "feedShard", "order": "ASCENDING" },
+        { "fieldPath": "feedSequence", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crmAiBudgetReservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "pronunciationSegmentationStudyTasks",
       "queryScope": "COLLECTION",
       "fields": [
@@ -340,7 +357,267 @@
         { "fieldPath": "classId", "order": "ASCENDING" },
         { "fieldPath": "scheduledLocalDate", "order": "ASCENDING" }
       ]
-    }
+    },
+    {
+      "collectionGroup": "discussions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "taskId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "discussions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "taskId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "discussionHistory",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "messageId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectOperations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "projectId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "projectId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "projectId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "read",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "projectId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "read",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "read",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "recipientUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "projectId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "category",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "read",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "recipientUid", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"},
+        {"fieldPath": "__name__", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectAutomationRules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "projectId", "order": "ASCENDING"},
+        {"fieldPath": "__name__", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectAutomationVersions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "projectId", "order": "ASCENDING"},
+        {"fieldPath": "ruleId", "order": "ASCENDING"},
+        {"fieldPath": "__name__", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectAutomationRuns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "projectId", "order": "ASCENDING"},
+        {"fieldPath": "ruleId", "order": "ASCENDING"},
+        {"fieldPath": "__name__", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "crmProjectAutomationRuns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "state", "order": "ASCENDING"},
+        {"fieldPath": "__name__", "order": "ASCENDING"}
+      ]
+    },
+    {"collectionGroup": "crmProjectDueRebuilds", "queryScope": "COLLECTION", "fields": [{"fieldPath": "state", "order": "ASCENDING"}, {"fieldPath": "nextWakeAt", "order": "ASCENDING"}]},
+    {"collectionGroup": "crmProjectAutomationRuns", "queryScope": "COLLECTION", "fields": [{"fieldPath": "state", "order": "ASCENDING"}, {"fieldPath": "createdAt", "order": "ASCENDING"}]},
+    {"collectionGroup": "crmProjectAutomationRuns", "queryScope": "COLLECTION", "fields": [{"fieldPath": "state", "order": "ASCENDING"}, {"fieldPath": "resumeAt", "order": "ASCENDING"}]},
+    {"collectionGroup": "crmProjectAutomationRuns", "queryScope": "COLLECTION", "fields": [{"fieldPath": "state", "order": "ASCENDING"}, {"fieldPath": "lease.expiresAt", "order": "ASCENDING"}]},
+    {"collectionGroup":"crmProjectEvents","queryScope":"COLLECTION","fields":[{"fieldPath":"processingRetryState","order":"ASCENDING"},{"fieldPath":"processingRetryAt","order":"ASCENDING"}]},
+    {"collectionGroup": "crmProjectEvents", "queryScope": "COLLECTION", "fields": [{"fieldPath": "notificationStatus", "order": "ASCENDING"}, {"fieldPath": "createdAt", "order": "ASCENDING"}]},
+    {"collectionGroup": "crmProjectEvents", "queryScope": "COLLECTION", "fields": [{"fieldPath": "automationStatus", "order": "ASCENDING"}, {"fieldPath": "createdAt", "order": "ASCENDING"}]}
   ],
   "fieldOverrides": []
 }

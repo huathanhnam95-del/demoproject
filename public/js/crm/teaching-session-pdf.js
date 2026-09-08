@@ -95,7 +95,7 @@
 
         jspdfLoadPromise = new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
             script.onload = () => {
                 const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
                 if (jsPDF) resolve(jsPDF);
@@ -165,10 +165,19 @@
         doc.text('BEL CRM', MARGIN_L, 10);
         doc.setFont(FONT_NAME, 'normal');
         doc.setFontSize(8.5);
-        doc.text('Báo Cáo Phiên Dạy & Briefing', MARGIN_L + 18, 10);
+        const headerBrand = 'Báo Cáo Phiên Dạy & Briefing';
+        doc.text(headerBrand, MARGIN_L + 18, 10);
+        const headerBrandEnd = MARGIN_L + 18 + doc.getTextWidth(headerBrand);
         doc.setFontSize(8);
         doc.setTextColor(...COLOR_GRAY);
-        doc.text(safeStr(headerInfo), PAGE_W - MARGIN_R, 10, { align: 'right' });
+        const fullHeader = safeStr(headerInfo);
+        const headerMaxWidth = PAGE_W - MARGIN_R - headerBrandEnd - 6;
+        let compactHeader = fullHeader;
+        if (doc.getTextWidth(compactHeader) > headerMaxWidth) {
+            const studentName = fullHeader.split(' — ')[0].trim();
+            compactHeader = wrapText(doc, studentName || fullHeader, headerMaxWidth)[0] || '';
+        }
+        doc.text(compactHeader, PAGE_W - MARGIN_R, 10, { align: 'right' });
 
         doc.setDrawColor(...COLOR_LIGHT);
         doc.setLineWidth(0.3);
@@ -249,48 +258,64 @@
         y += 6;
 
         // Meta Band Card
+        const leftLabelX = MARGIN_L + 4;
+        const leftValueX = MARGIN_L + 24;
+        const rightLabelX = MARGIN_L + 95;
+        const rightValueX = MARGIN_L + 115;
+        const leftValueWidth = rightLabelX - leftValueX - 4;
+        const rightValueWidth = PAGE_W - MARGIN_R - rightValueX - 4;
+
+        doc.setFontSize(FONT_BODY);
+        doc.setFont(FONT_NAME, 'normal');
+        const metadataRows = [
+            {
+                left: ['Học viên:', studentName, leftValueWidth],
+                right: ['Kỹ năng:', focusSkill, rightValueWidth]
+            },
+            {
+                left: ['Chủ đề:', sessionTitle, leftValueWidth],
+                right: ['Thời lượng:', durationText, rightValueWidth]
+            },
+            {
+                left: ['Ngày học:', sessionDate, leftValueWidth],
+                right: ['Giáo viên:', teacherName, rightValueWidth]
+            }
+        ].map((row) => ({
+            leftLabel: row.left[0],
+            leftLines: wrapText(doc, row.left[1], row.left[2]) || [''],
+            rightLabel: row.right[0],
+            rightLines: wrapText(doc, row.right[1], row.right[2]) || ['']
+        }));
+
+        const rowSteps = metadataRows.map((row, index) => Math.max(
+            index === 0 ? 7 : 6,
+            Math.max(row.leftLines.length, row.rightLines.length) * LINE_H
+        ));
+        const lastRowLines = Math.max(metadataRows[2].leftLines.length, metadataRows[2].rightLines.length);
+        const lastRowContentHeight = Math.max(3, (lastRowLines - 1) * LINE_H + 3);
+        const metadataBandHeight = 6 + rowSteps[0] + rowSteps[1] + lastRowContentHeight;
+
+        y = checkPageBreak(doc, y, metadataBandHeight, headerInfo, footerText);
+        doc.setFontSize(FONT_BODY);
+        doc.setFont(FONT_NAME, 'normal');
         doc.setFillColor(...COLOR_CARD_BG);
         doc.setDrawColor(...COLOR_LIGHT);
         doc.setLineWidth(0.3);
-        doc.roundedRect(MARGIN_L, y, CONTENT_W, 22, 2, 2, 'FD');
-
-        doc.setFontSize(FONT_BODY);
+        doc.roundedRect(MARGIN_L, y, CONTENT_W, metadataBandHeight, 2, 2, 'FD');
         doc.setTextColor(...COLOR_BLACK);
-        
-        // Row 1
-        doc.setFont(FONT_NAME, 'bold');
-        doc.text('Học viên:', MARGIN_L + 4, y + 6);
-        doc.setFont(FONT_NAME, 'normal');
-        doc.text(safeStr(studentName), MARGIN_L + 24, y + 6);
 
-        doc.setFont(FONT_NAME, 'bold');
-        doc.text('Kỹ năng:', MARGIN_L + 95, y + 6);
-        doc.setFont(FONT_NAME, 'normal');
-        doc.text(safeStr(focusSkill), MARGIN_L + 115, y + 6);
+        let rowBaseline = y + 6;
+        metadataRows.forEach((row, index) => {
+            doc.setFont(FONT_NAME, 'bold');
+            doc.text(row.leftLabel, leftLabelX, rowBaseline);
+            doc.text(row.rightLabel, rightLabelX, rowBaseline);
+            doc.setFont(FONT_NAME, 'normal');
+            doc.text(row.leftLines, leftValueX, rowBaseline);
+            doc.text(row.rightLines, rightValueX, rowBaseline);
+            if (index < metadataRows.length - 1) rowBaseline += rowSteps[index];
+        });
 
-        // Row 2
-        doc.setFont(FONT_NAME, 'bold');
-        doc.text('Chủ đề:', MARGIN_L + 4, y + 13);
-        doc.setFont(FONT_NAME, 'normal');
-        doc.text(safeStr(sessionTitle), MARGIN_L + 24, y + 13);
-
-        doc.setFont(FONT_NAME, 'bold');
-        doc.text('Thời lượng:', MARGIN_L + 95, y + 13);
-        doc.setFont(FONT_NAME, 'normal');
-        doc.text(safeStr(durationText), MARGIN_L + 115, y + 13);
-
-        // Row 3
-        doc.setFont(FONT_NAME, 'bold');
-        doc.text('Ngày học:', MARGIN_L + 4, y + 19);
-        doc.setFont(FONT_NAME, 'normal');
-        doc.text(safeStr(sessionDate), MARGIN_L + 24, y + 19);
-
-        doc.setFont(FONT_NAME, 'bold');
-        doc.text('Giáo viên:', MARGIN_L + 95, y + 19);
-        doc.setFont(FONT_NAME, 'normal');
-        doc.text(safeStr(teacherName), MARGIN_L + 115, y + 19);
-
-        y += 28;
+        y += metadataBandHeight + 6;
 
         // 60-Second Quick Recap & Readiness
         const summary = norm?.summary || norm?.lesson_summary || {};

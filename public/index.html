@@ -139,6 +139,8 @@
   </script>
   <!-- Load SRS Scheduler as Module for FSRS support -->
   <script type="module" src="/srs-scheduler.js"></script>
+  <link rel="stylesheet" href="/css/ui-continuity.css?v=20260907-v1.8.137">
+  <script src="/js/ui-continuity.js?v=20260907-v1.8.137" defer></script>
 </head>
 
 <body data-site-section="practice" data-site-locale="en">
@@ -978,7 +980,7 @@
             <div class="practice-skill-filter" id="practice-skill-filter" role="group" aria-label="Practice skills">
               <button type="button" class="practice-skill-btn card-speaking" data-practice-skill="speaking"
                 aria-pressed="false">
-                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
+                <svg aria-hidden="true" focusable="false" class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
                   stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
                   <rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor" opacity="0.3" />
                   <path d="M5 10c0 3.87 3.13 7 7 7s7-3.13 7-7" />
@@ -988,15 +990,14 @@
                   <path d="M22 6 a8 8 0 0 1 0 8" opacity="0.3" stroke-width="1" />
                 </svg>
                 <div class="content-wrapper">
-                  <span class="skill-card-icon"><span class="material-symbols-outlined"
-                      style="font-variation-settings: 'FILL' 1;">mic</span></span>
+                  <span class="skill-card-icon"><svg class="practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v3M8 21h8"/></svg></span>
                   <span class="skill-card-text"><strong>Speaking</strong><span>Fluency &amp; Pronunciation</span></span>
-                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                  <span aria-hidden="true" class="material-symbols-outlined skill-card-chevron">chevron_right</span>
                 </div>
               </button>
               <button type="button" class="practice-skill-btn card-listening is-active" data-practice-skill="listening"
                 aria-pressed="true">
-                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
+                <svg aria-hidden="true" focusable="false" class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
                   stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
                   <path d="M3 18v-6a9 9 0 0 1 18 0v6" stroke-width="1" />
                   <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" fill="currentColor"
@@ -1005,16 +1006,15 @@
                   <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.1" />
                 </svg>
                 <div class="content-wrapper">
-                  <span class="skill-card-icon"><span class="material-symbols-outlined"
-                      style="font-variation-settings: 'FILL' 1;">headphones</span></span>
+                  <span class="skill-card-icon"><svg class="practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="8" rx="2"/><rect x="17" y="12" width="4" height="8" rx="2"/></svg></span>
                   <span class="skill-card-text"><strong>Listening</strong><span>Comprehension &amp;
                       Retelling</span></span>
-                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                  <span aria-hidden="true" class="material-symbols-outlined skill-card-chevron">chevron_right</span>
                 </div>
               </button>
               <button type="button" class="practice-skill-btn card-reading" data-practice-skill="reading"
                 aria-pressed="false">
-                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
+                <svg aria-hidden="true" focusable="false" class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.5"
                   stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="currentColor" opacity="0.2" />
                   <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="currentColor" opacity="0.4" />
@@ -1023,15 +1023,14 @@
                   <line x1="14" y1="16" x2="18" y2="16" stroke-width="1" opacity="0.6" />
                 </svg>
                 <div class="content-wrapper">
-                  <span class="skill-card-icon"><span class="material-symbols-outlined"
-                      style="font-variation-settings: 'FILL' 1;">book</span></span>
+                  <span class="skill-card-icon"><svg class="practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 6C9 3 5 3 2 4v15c4-1 7 0 10 2 3-2 6-3 10-2V4c-3-1-7-1-10 2Zm0 0v15M5 8h3M5 12h3M16 8h3M16 12h3"/></svg></span>
                   <span class="skill-card-text"><strong>Reading</strong><span>Vocabulary &amp; Speed</span></span>
-                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                  <span aria-hidden="true" class="material-symbols-outlined skill-card-chevron">chevron_right</span>
                 </div>
               </button>
               <button type="button" class="practice-skill-btn card-writing" data-practice-skill="writing"
                 aria-pressed="false">
-                <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"
+                <svg aria-hidden="true" focusable="false" class="watermark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"
                   xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 12 l8 -8" stroke-width="2" opacity="0.3" stroke-linecap="round" />
                   <path d="M14 14 l8 -8" stroke-width="2" opacity="0.3" stroke-linecap="round" />
@@ -1045,10 +1044,9 @@
                     opacity="0.4" />
                 </svg>
                 <div class="content-wrapper">
-                  <span class="skill-card-icon"><span class="material-symbols-outlined"
-                      style="font-variation-settings: 'FILL' 1;">edit_document</span></span>
+                  <span class="skill-card-icon"><svg class="practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 4H4v17h16v-9M8 16l1-5L18 2l4 4-9 9-5 1ZM16 4l4 4M7 7h3"/></svg></span>
                   <span class="skill-card-text"><strong>Writing</strong><span>Grammar &amp; Structure</span></span>
-                  <span class="material-symbols-outlined skill-card-chevron">chevron_right</span>
+                  <span aria-hidden="true" class="material-symbols-outlined skill-card-chevron">chevron_right</span>
                 </div>
               </button>
             </div>
@@ -1059,20 +1057,7 @@
                 aria-label="Read Aloud mode">
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <rect x="16" y="12" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <line x1="24" y1="22" x2="40" y2="22" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" />
-                      <line x1="24" y1="30" x2="40" y2="30" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" />
-                      <line x1="24" y1="38" x2="32" y2="38" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" />
-                      <path d="M52 28a8 8 0 0 1 0 16" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" />
-                      <path d="M58 24a14 14 0 0 1 0 24" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" opacity="0.5" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="12" height="18" rx="2"/><path d="M6 7h6M6 11h6M6 15h3M18 8a6 6 0 0 1 0 8M21 5a10 10 0 0 1 0 14"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1090,23 +1075,7 @@
                 aria-label="Repeat Sentence mode">
                 <div class="card-visual visual-speak">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Microphone -->
-                      <rect class="mic-body" x="28" y="14" width="16" height="24" rx="8" stroke="currentColor"
-                        stroke-width="3" fill="var(--visual-bg)" />
-                      <path class="mic-stand" d="M36 42v8M28 50h16" stroke="currentColor" stroke-width="3"
-                        stroke-linecap="round" />
-                      <!-- Transcript lines -->
-                      <rect class="transcript-line" x="12" y="58" width="16" height="3" rx="1.5" fill="currentColor"
-                        opacity="0" />
-                      <rect class="transcript-line" x="30" y="58" width="12" height="3" rx="1.5" fill="currentColor"
-                        opacity="0" />
-                      <rect class="transcript-line" x="44" y="58" width="18" height="3" rx="1.5" fill="currentColor"
-                        opacity="0" />
-                      <!-- Checkmark -->
-                      <path class="check-draw" d="M52 20l5 5 10-10" stroke="var(--visual-accent)" stroke-width="3"
-                        stroke-linecap="round" stroke-linejoin="round" opacity="0" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="10" y="7" width="4" height="7" rx="2"/><path d="M7 12a5 5 0 0 0 10 0M12 17v3M9 20h6M3 9a9 9 0 0 1 15-5l3 3M21 2v5h-5M3 22v-5h5M3 17l2 2"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1123,13 +1092,7 @@
                 onclick="window.switchToMode('describe-image')" tabindex="0" role="button" aria-label="Describe Image mode">
                 <div class="card-visual visual-describe-image">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="12" y="16" width="48" height="36" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
-                      <circle cx="28" cy="30" r="5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <path d="M12 44l14-10 10 7 14-12 10 9" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M24 58l12-5 12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5" />
-                      <circle cx="52" cy="22" r="3" fill="var(--visual-accent)" opacity="0.6" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="3" width="20" height="15" rx="2"/><circle cx="8" cy="8" r="2"/><path d="m3 16 5-4 4 3 5-6 5 6M8 22l4-4 4 4"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1146,24 +1109,7 @@
                 aria-label="Retell Lecture mode">
                 <div class="card-visual visual-notes">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Video tile (left) -->
-                      <rect x="6" y="20" width="24" height="16" rx="3" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <polygon points="14,24 14,32 20,28" fill="currentColor" />
-                      <!-- Arrow transfer -->
-                      <path class="transfer-arrow" d="M34 28h8l-2-2M34 28h8l-2 2" stroke="var(--visual-accent)"
-                        stroke-width="2" stroke-linecap="round" />
-                      <!-- Note page (right) -->
-                      <rect x="46" y="16" width="20" height="28" rx="3" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <path class="note-line" d="M50 24h12" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" opacity="0" />
-                      <path class="note-line" d="M50 30h10" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" opacity="0" />
-                      <path class="note-line" d="M50 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        opacity="0" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 5h11v9H2zM6 8l3 2-3 2M16 10h6v12H12v-5M15 17h4M15 20h4M16 4h4v3m-4 0 4-3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1180,15 +1126,7 @@
                 onclick="window.switchToMode('asq')" tabindex="0" role="button" aria-label="Answer Short Questions mode">
                 <div class="card-visual visual-read-aloud">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="14" y="14" width="44" height="36" rx="8" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <path d="M30 56l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                      <circle cx="36" cy="30" r="10" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <path d="M36 24v7" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
-                      <circle cx="36" cy="36" r="1.8" fill="var(--visual-accent)" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3h16v13H9l-6 5V3Z M9 7a3 3 0 0 1 6 0c0 2-3 2-3 4"/><circle cx="12" cy="13" r=".6" fill="currentColor" stroke="none"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1203,17 +1141,7 @@
                 onclick="window.switchToMode('sgd')" tabindex="0" role="button" aria-label="Summarize Group Discussion mode">
                 <div class="card-visual visual-sgd">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Speaker heads / bubbles -->
-                      <circle cx="20" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
-                      <circle cx="52" cy="25" r="8" stroke="currentColor" stroke-width="2.5" />
-                      <circle cx="36" cy="45" r="8" stroke="currentColor" stroke-width="2.5" />
-                      <!-- Dynamic lines indicating speech -->
-                      <path d="M28 25H44" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
-                        opacity="0.6" />
-                      <path d="M28 35L44 35" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round"
-                        opacity="0.4" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="8" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="8" r="2"/><path d="M2 15v-2a3 3 0 0 1 6 0v2M9 12v-2a3 3 0 0 1 6 0v2M16 15v-2a3 3 0 0 1 6 0v2M5 18h14M8 21h8"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1230,14 +1158,7 @@
                 onclick="window.switchToMode('rts')" tabindex="0" role="button" aria-label="Respond To Situation mode">
                 <div class="card-visual visual-sgd">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Speech bubble -->
-                      <rect x="12" y="14" width="48" height="30" rx="8" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
-                      <path d="M24 44l6 10 6-10" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
-                      <!-- Exclamation / situation icon -->
-                      <circle cx="36" cy="26" r="4" fill="var(--visual-accent)" opacity="0.8" />
-                      <line x1="36" y1="31" x2="36" y2="38" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 3h13v10H8l-4 4v-4H2V3ZM18 8h4v12h-4l-4 3v-6M6 7h5M6 10h3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1254,11 +1175,7 @@
                 aria-label="Summarize Spoken Text mode">
                 <div class="card-visual visual-type">
                   <div class="anim-container">
-                    <svg class="ctx-icon ctx-type" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <path d="M10 26h15M10 35h26M10 44h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                      <circle cx="52" cy="34" r="13" stroke="var(--visual-accent)" stroke-width="2"/>
-                      <path d="M48 29v10l9-5-9-5z" fill="var(--visual-accent)"/>
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 6h3l4-3v12l-4-3H2V6ZM12 6a4 4 0 0 1 0 6M17 3h5v18H7v-3M11 18h7M17 7h2M17 11h2"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1273,16 +1190,7 @@
                 onclick="window.switchToMode('lmcma')" tabindex="0" role="button" aria-label="Multiple Choice, Multiple Answers mode">
                 <div class="card-visual visual-lmcma">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <path d="M14 26h10l12-10v36L24 42H14V26z" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
-                      <rect x="42" y="20" width="8" height="8" rx="1.5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <line x1="56" y1="24" x2="66" y2="24" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <rect x="42" y="34" width="8" height="8" rx="1.5" stroke="var(--visual-accent)" stroke-width="2" fill="var(--visual-accent)" opacity="0.8" />
-                      <path d="M44 38 l2 2 l3 -3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <line x1="56" y1="38" x2="66" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <rect x="42" y="48" width="8" height="8" rx="1.5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <line x1="56" y1="52" x2="66" y2="52" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h3l4-3v14l-4-3H2V8ZM15 4h7v6h-7zM15 14h7v6h-7zM16 6l2 2 3-3M16 16l2 2 3-3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1298,20 +1206,7 @@
                 aria-label="Fill In the Blanks mode">
                 <div class="card-visual visual-fill">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Sentence line with blank slot -->
-                      <rect x="8" y="32" width="14" height="4" rx="2" fill="currentColor" />
-                      <rect class="blank-slot" x="26" y="30" width="20" height="12" rx="4" stroke="currentColor"
-                        stroke-width="2" stroke-dasharray="4 2" fill="none" />
-                      <rect x="50" y="32" width="14" height="4" rx="2" fill="currentColor" />
-                      <!-- Word chip (snaps in) -->
-                      <rect class="word-chip" x="28" y="32" width="16" height="8" rx="3" fill="var(--visual-accent)"
-                        opacity="0" />
-                      <!-- Checkmark flash -->
-                      <circle class="chip-check" cx="60" cy="24" r="8" fill="var(--visual-accent)" opacity="0" />
-                      <path class="chip-check-mark" d="M56 24l3 3 6-6" stroke="white" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" opacity="0" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12v-2a9 9 0 0 1 18 0v2M3 12h3v5H3zM18 12h3v5h-3zM3 21h4M17 21h4M10 18h4v5h-4z"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1328,13 +1223,7 @@
                 onclick="window.switchToMode('hcs')" tabindex="0" role="button" aria-label="Highlight Correct Summary mode">
                 <div class="card-visual visual-hcs">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="14" y="16" width="44" height="40" rx="3" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
-                      <line x1="20" y1="26" x2="52" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <rect x="18" y="32" width="36" height="8" rx="1.5" fill="var(--visual-accent)" opacity="0.6" />
-                      <line x1="20" y1="36" x2="52" y2="36" stroke="white" stroke-width="2" stroke-linecap="round" />
-                      <line x1="20" y1="46" x2="38" y2="46" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 5h3l3-3v12l-3-3H2V5ZM12 4h10M12 8h10M3 18h7M3 22h7M13 17h9v6h-9zM15 19l2 2 3-3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1349,16 +1238,7 @@
                 onclick="window.switchToMode('lmcsa')" tabindex="0" role="button" aria-label="Multiple Choice, Single Answer mode">
                 <div class="card-visual visual-lmcsa">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <path d="M14 26h10l12-10v36L24 42H14V26z" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
-                      <circle cx="46" cy="24" r="4.5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <line x1="54" y1="24" x2="64" y2="24" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <circle cx="46" cy="38" r="4.5" stroke="var(--visual-accent)" stroke-width="2" fill="var(--visual-accent)" opacity="0.8" />
-                      <circle cx="46" cy="38" r="1.5" fill="white" />
-                      <line x1="54" y1="38" x2="64" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <circle cx="46" cy="52" r="4.5" stroke="var(--visual-accent)" stroke-width="2" fill="none" />
-                      <line x1="54" y1="52" x2="64" y2="52" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 8h3l4-3v14l-4-3H2V8Z"/><circle cx="18" cy="7" r="4"/><circle cx="18" cy="18" r="4"/><circle cx="18" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1373,11 +1253,7 @@
                 onclick="window.switchToMode('smw')" tabindex="0" role="button" aria-label="Select Missing Word mode">
                 <div class="card-visual visual-smw">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <path d="M14 26h10l12-10v36L24 42H14V26z" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
-                      <rect x="46" y="26" width="16" height="8" rx="2" fill="var(--visual-accent)" opacity="0.8" />
-                      <circle cx="54" cy="46" r="3" fill="currentColor" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 6h3l4-3v12l-4-3H2V6ZM12 6a4 4 0 0 1 0 6M3 21h4M9 21h4M17 17h6v6h-6zM19 14l2 2 2-2"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1392,20 +1268,7 @@
                 onclick="window.switchToMode('hiw')" tabindex="0" role="button" aria-label="Highlight Incorrect Words mode">
                 <div class="card-visual visual-hiw">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Document structure -->
-                      <rect x="14" y="16" width="44" height="40" rx="4" stroke="currentColor" stroke-width="2" fill="var(--visual-bg)" />
-                      <!-- Text lines -->
-                      <line x1="20" y1="26" x2="52" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3" />
-                      <!-- Highlighted incorrect word block (yellow highlight) -->
-                      <rect x="20" y="32" width="20" height="8" rx="2" fill="var(--visual-accent)" opacity="0.8" />
-                      <line x1="22" y1="36" x2="38" y2="36" stroke="white" stroke-width="2" stroke-linecap="round" />
-                      <line x1="44" y1="36" x2="52" y2="36" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3" />
-                      <!-- Another line with a incorrect selection (red highlight) -->
-                      <rect x="34" y="42" width="18" height="8" rx="2" fill="#ef4444" opacity="0.8" />
-                      <line x1="36" y1="46" x2="50" y2="46" stroke="white" stroke-width="2" stroke-linecap="round" />
-                      <line x1="20" y1="46" x2="30" y2="46" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 6h3l4-3v12l-4-3H2V6ZM13 5h9M13 9h9M3 20h6M12 16h10v7H12zM15 18l4 3M19 18l-4 3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1422,26 +1285,7 @@
                 <span class="badge new">Popular</span>
                 <div class="card-visual visual-type">
                   <div class="anim-container">
-                    <svg class="ctx-icon ctx-type" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Waveform -->
-                      <rect class="wave-tick" style="--d:0s" x="8" y="30" width="4" height="12" rx="2"
-                        fill="currentColor" />
-                      <rect class="wave-tick" style="--d:.12s" x="14" y="26" width="4" height="20" rx="2"
-                        fill="currentColor" />
-                      <rect class="wave-tick" style="--d:.24s" x="20" y="32" width="4" height="8" rx="2"
-                        fill="currentColor" />
-                      <!-- Flow arrow (line + chevron) -->
-                      <path class="flow-line" d="M28 36H40" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" />
-                      <path class="flow-head" d="M38 33L41 36L38 39" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" />
-                      <!-- Caret + typing bars -->
-                      <rect class="caret" x="42" y="28" width="2" height="16" rx="1" fill="currentColor" />
-                      <rect class="type-bar" style="--d:.25s" x="48" y="34" width="10" height="4" rx="2"
-                        fill="currentColor" opacity="0" />
-                      <rect class="type-bar" style="--d:.45s" x="48" y="40" width="14" height="4" rx="2"
-                        fill="currentColor" opacity="0" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h3l3-2v8l-3-2H3V4ZM12 4a3 3 0 0 1 0 4"/><rect x="2" y="13" width="20" height="9" rx="2"/><path d="M5 16h1m3 0h1m3 0h1m3 0h2M6 19h12"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1459,23 +1303,7 @@
                 role="button" aria-label="Collo-dictate mode (Collocation dictation)">
                 <div class="card-visual visual-collo">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Two word chips -->
-                      <rect x="10" y="18" width="26" height="14" rx="7" stroke="currentColor" stroke-width="3"
-                        fill="var(--visual-bg)" />
-                      <rect x="36" y="40" width="26" height="14" rx="7" stroke="currentColor" stroke-width="3"
-                        fill="var(--visual-bg)" />
-                      <!-- Link -->
-                      <path d="M34 25h6" stroke="var(--visual-accent)" stroke-width="3" stroke-linecap="round" />
-                      <path d="M32 27l6 6" stroke="var(--visual-accent)" stroke-width="3" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                      <path d="M40 35l6 6" stroke="var(--visual-accent)" stroke-width="3" stroke-linecap="round"
-                        stroke-linejoin="round" />
-                      <!-- Tiny waveform ticks -->
-                      <rect x="12" y="46" width="3" height="10" rx="1.5" fill="currentColor" opacity="0.25" />
-                      <rect x="17" y="42" width="3" height="18" rx="1.5" fill="currentColor" opacity="0.35" />
-                      <rect x="22" y="48" width="3" height="6" rx="1.5" fill="currentColor" opacity="0.25" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h3l3-3v12l-3-3H4V6ZM13 6a4 4 0 0 1 0 6M9 19H6a3 3 0 0 0 0 6M15 19h3a3 3 0 0 1 0 6M8 22h8" transform="translate(0 -1) scale(1 .94)"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1493,20 +1321,7 @@
                 aria-label="Watch Video mode" style="display: none;">
                 <div class="card-visual visual-watch">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Video frame -->
-                      <rect x="10" y="16" width="52" height="32" rx="4" stroke="currentColor" stroke-width="2"
-                        fill="var(--visual-bg)" />
-                      <!-- Play triangle -->
-                      <polygon class="play-pop" points="31,26 31,42 43,34" fill="currentColor" />
-                      <!-- Progress bar -->
-                      <rect x="10" y="52" width="52" height="4" rx="2" fill="currentColor" opacity="0.2" />
-                      <rect class="progress-sweep" x="10" y="52" width="0" height="4" rx="2"
-                        fill="var(--visual-accent)" />
-                      <!-- Subtitle bubble -->
-                      <rect class="subtitle-bubble" x="16" y="42" width="28" height="6" rx="2" fill="currentColor"
-                        opacity="0" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="m10 7 6 4-6 4V7ZM5 18h14"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1524,15 +1339,7 @@
                 onclick="window.switchToMode('rfib')" tabindex="0" role="button" aria-label="Fill in the Blanks (Dropdown) mode">
                                 <div class="card-visual visual-fill">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <rect x="8" y="24" width="12" height="4" rx="2" fill="currentColor" opacity="0.55" />
-                      <rect x="24" y="24" width="22" height="4" rx="2" fill="currentColor" />
-                      <rect class="blank-slot" x="24" y="20" width="22" height="12" rx="4" stroke="currentColor"
-                        stroke-width="2" stroke-dasharray="4 2" fill="none" />
-                      <rect x="50" y="24" width="14" height="4" rx="2" fill="currentColor" opacity="0.55" />
-                      <circle cx="56" cy="48" r="10" fill="var(--visual-accent)" opacity="0.18" />
-                      <path d="M50 48h12" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h18M3 8h11M3 12h5M3 20h18"/><rect x="11" y="11" width="10" height="6" rx="1"/><path d="m14 13 2 2 2-2"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1549,17 +1356,7 @@
                 onclick="window.switchToMode('dd')" tabindex="0" role="button" aria-label="Fill in the Blanks (Drag and Drop) mode">
                                 <div class="card-visual visual-fill">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Representing puzzle/drag elements -->
-                      <rect x="8" y="24" width="12" height="4" rx="2" fill="currentColor" opacity="0.55" />
-                      <rect class="blank-slot" x="24" y="20" width="22" height="12" rx="4" stroke="currentColor"
-                        stroke-width="2" stroke-dasharray="4 2" fill="none" />
-                      <rect x="50" y="24" width="14" height="4" rx="2" fill="currentColor" opacity="0.55" />
-                      <!-- Draggable chip -->
-                      <rect class="word-chip" x="28" y="44" width="16" height="8" rx="3" fill="var(--visual-accent)" />
-                      <!-- Curved drag arrow pointing from draggable chip to slot -->
-                      <path d="M36 40 Q38 32 36 30" stroke="var(--visual-accent)" stroke-width="2" stroke-dasharray="2 2" fill="none" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h18M3 8h12M3 17h4M17 17h4M3 22h18"/><rect x="8" y="12" width="8" height="7" rx="1" stroke-dasharray="2 2"/><path d="m16 7 5 2-3 4-2-6Z"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1576,21 +1373,7 @@
                 onclick="window.switchToMode('rmcsa')" tabindex="0" role="button" aria-label="Multiple Choice, Single Answer mode">
                                 <div class="card-visual visual-fill">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Passages/Lines representation -->
-                      <rect x="8" y="16" width="30" height="3" rx="1" fill="currentColor" opacity="0.55" />
-                      <rect x="8" y="23" width="20" height="3" rx="1" fill="currentColor" opacity="0.55" />
-                      <!-- Multiple choice radio circle buttons -->
-                      <circle cx="47" cy="19" r="3" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <circle cx="47" cy="29" r="3" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <circle cx="47" cy="39" r="3" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <!-- Selected status for single answer -->
-                      <circle cx="47" cy="29" r="1.5" fill="var(--visual-accent)" />
-                      <!-- Option texts -->
-                      <rect x="54" y="18" width="10" height="2" rx="0.5" fill="currentColor" opacity="0.3" />
-                      <rect x="54" y="28" width="10" height="2" rx="0.5" fill="currentColor" />
-                      <rect x="54" y="38" width="10" height="2" rx="0.5" fill="currentColor" opacity="0.3" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 4h10M2 8h7M2 15h10M2 19h7"/><circle cx="18" cy="6" r="4"/><circle cx="18" cy="17" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1607,22 +1390,7 @@
                 onclick="window.switchToMode('rmcma')" tabindex="0" role="button" aria-label="Multiple Choice, Multiple Answers mode">
                                 <div class="card-visual visual-fill">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Passages/Lines representation -->
-                      <rect x="8" y="16" width="30" height="3" rx="1" fill="currentColor" opacity="0.55" />
-                      <rect x="8" y="23" width="20" height="3" rx="1" fill="currentColor" opacity="0.55" />
-                      <!-- Multiple choice checkbox boxes -->
-                      <rect x="44" y="16" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <rect x="44" y="26" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <rect x="44" y="36" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <!-- Checked status for multiple answers -->
-                      <path d="M46 19l1 1 2-2" stroke="var(--visual-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M46 39l1 1 2-2" stroke="var(--visual-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <!-- Option texts -->
-                      <rect x="54" y="18" width="10" height="2" rx="0.5" fill="currentColor" />
-                      <rect x="54" y="28" width="10" height="2" rx="0.5" fill="currentColor" opacity="0.3" />
-                      <rect x="54" y="38" width="10" height="2" rx="0.5" fill="currentColor" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 4h9M2 8h7M2 15h9M2 19h7M14 2h8v8h-8zM14 13h8v8h-8zM16 5l2 2 3-3M16 16l2 2 3-3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1639,20 +1407,7 @@
                 onclick="window.switchToMode('rop')" tabindex="0" role="button" aria-label="Reorder Paragraph mode">
                                 <div class="card-visual visual-fill">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none">
-                      <!-- Left source list boxes -->
-                      <rect x="8" y="14" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6" />
-                      <rect x="8" y="28" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6" />
-                      <rect x="8" y="42" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.6" />
-
-                      <!-- Drag arrow/connector indicator -->
-                      <path d="M34 26 L38 26 L38 32 L42 28 M38 26 L42 30" stroke="var(--visual-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" />
-
-                      <!-- Right target list boxes (reordered) -->
-                      <rect x="42" y="14" width="22" height="10" rx="2" stroke="var(--visual-accent)" stroke-width="1.5" fill="none" />
-                      <rect x="42" y="28" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
-                      <rect x="42" y="42" width="22" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="12" height="4" rx="1"/><rect x="3" y="10" width="12" height="4" rx="1"/><rect x="3" y="17" width="12" height="4" rx="1"/><path d="M20 4v16m-3-13 3-3 3 3m-6 10 3 3 3-3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1671,23 +1426,7 @@
 
                 <div class="card-visual visual-pronounce">
                   <div class="anim-container">
-                    <svg class="ctx-icon ctx-pronounce" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <!-- Mouth profile (outline only) -->
-                      <ellipse cx="18" cy="36" rx="10" ry="12" stroke="currentColor" stroke-width="2" fill="none" />
-                      <path d="M14 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <!-- Link (draws in) -->
-                      <path class="phoneme-link" d="M38 30L50 36L62 32" stroke="var(--visual-accent)" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" />
-                      <!-- Nodes (settle) -->
-                      <circle class="phoneme-node" style="--d:0s" cx="38" cy="30" r="4" fill="currentColor" />
-                      <circle class="phoneme-node" style="--d:.12s" cx="50" cy="36" r="4" fill="currentColor" />
-                      <circle class="phoneme-node" style="--d:.24s" cx="62" cy="32" r="4" fill="currentColor" />
-                      <!-- Stress bar -->
-                      <rect class="stress-bar" x="48" y="44" width="6" height="14" rx="3" fill="var(--visual-accent)" />
-                      <!-- Radiating ring -->
-                      <circle class="radiate-ring" cx="50" cy="36" r="18" stroke="var(--visual-accent)" stroke-width="1"
-                        fill="none" opacity="0" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 10v4M7 6v12M11 3v18M15 8v8M19 5v14M23 10v4"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1723,13 +1462,7 @@
                 onclick="window.switchToMode('essay')" tabindex="0" role="button" aria-label="Write Essay mode">
                 <div class="card-visual visual-essay">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="16" y="10" width="40" height="52" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
-                      <line x1="24" y1="24" x2="48" y2="24" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
-                      <line x1="24" y1="32" x2="44" y2="32" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.7" />
-                      <line x1="24" y1="40" x2="46" y2="40" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
-                      <line x1="24" y1="48" x2="38" y2="48" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.3" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 3H3v19h16v-9M7 7h3M7 11h3M7 17h6M13 13l1-4 7-7 3 3-7 7-4 1ZM19 4l3 3"/></svg>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1744,13 +1477,7 @@
                 onclick="window.switchToMode('swt')" tabindex="0" role="button" aria-label="Summarize Written Text mode">
                 <div class="card-visual visual-essay">
                   <div class="anim-container">
-                    <svg class="ctx-icon" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                      <rect x="16" y="10" width="40" height="52" rx="6" stroke="currentColor" stroke-width="2.5" fill="var(--visual-bg)" />
-                      <line x1="24" y1="22" x2="48" y2="22" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" />
-                      <line x1="24" y1="30" x2="48" y2="30" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.7" />
-                      <line x1="24" y1="38" x2="48" y2="38" stroke="var(--visual-accent)" stroke-width="2" stroke-linecap="round" opacity="0.5" />
-                      <path d="M24 50 L36 46 L48 50" stroke="var(--visual-accent)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8" />
-                    </svg>
+                    <svg class="ctx-icon practice-launcher-icon" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3h18M3 7h18M3 11h18M8 15l4 4 4-4M12 12v7M5 23h14"/></svg>
                   </div>
                 </div>
                 <div class="card-body">

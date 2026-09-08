@@ -15,6 +15,8 @@ const {
 } = require('./local-admin');
 /* eslint-disable no-console */
 
+const CRM_PROJECTS_DEMO_PROJECT = 'demo-crm-projects';
+
 function hasFingerprint(filePath) {
   const baseName = path.basename(String(filePath || ''));
   return /(?:^|[.-])[a-f0-9]{8,}(?:\.[^.]+)+$/i.test(baseName);
@@ -23,6 +25,14 @@ function hasFingerprint(filePath) {
 function hasVersionQuery(req) {
   const value = String(req?.query?.v || '').trim();
   return value.length > 0;
+}
+
+function parseLocalEmulatorEndpoint(value) {
+  const match = String(value || '').trim().match(/^(?:https?:\/\/)?(localhost|127\.0\.0\.1|\[::1\]|::1):(\d+)$/i);
+  if (!match) return null;
+  const port = Number(match[2]);
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) return null;
+  return { host: match[1].replace(/^\[|\]$/g, ''), port };
 }
 
 function setStaticCacheHeaders(res, filePath) {
@@ -107,6 +117,50 @@ function extractCspMetaContent(html) {
   };
 }
 
+function formatLocalEmulatorOrigin(scheme, endpoint) {
+  const host = String(endpoint?.host || '').includes(':')
+    ? `[${endpoint.host}]`
+    : endpoint?.host;
+  return `${scheme}://${host}:${endpoint?.port}`;
+}
+
+function resolveProjectsEmulatorEndpoints(env = process.env, projectId = '') {
+  const configuredProjectId = String(projectId || env.FIREBASE_PROJECT_ID || '').trim();
+  const dedicatedProjectId = String(env.CRM_PROJECTS_EMULATOR_PROJECT || '').trim();
+  if (configuredProjectId !== CRM_PROJECTS_DEMO_PROJECT
+    || (dedicatedProjectId && dedicatedProjectId !== configuredProjectId)) {
+    return null;
+  }
+  const auth = parseLocalEmulatorEndpoint(env.FIREBASE_AUTH_EMULATOR_HOST);
+  const firestore = parseLocalEmulatorEndpoint(env.FIRESTORE_EMULATOR_HOST);
+  if (!auth || !firestore) return null;
+  return { auth, firestore };
+}
+
+function buildLocalCrmAdminDocument(rawHtml, env = process.env, projectId = '') {
+  const source = String(rawHtml || '');
+  const { metaTag, content } = extractCspMetaContent(source);
+  const configuredProjectId = String(projectId || env.FIREBASE_PROJECT_ID || '').trim();
+  const dedicatedProjectId = String(env.CRM_PROJECTS_EMULATOR_PROJECT || '').trim();
+  const isDemoProject = configuredProjectId === CRM_PROJECTS_DEMO_PROJECT
+    && (!dedicatedProjectId || dedicatedProjectId === configuredProjectId);
+  const endpoints = resolveProjectsEmulatorEndpoints(env, projectId);
+  if (!metaTag || !endpoints) {
+    return { html: source, policy: null, endpoints: null, isDemoProject };
+  }
+
+  const exactSources = [
+    formatLocalEmulatorOrigin('http', endpoints.auth),
+    formatLocalEmulatorOrigin('http', endpoints.firestore)
+  ];
+  return {
+    html: source.replace(metaTag, ''),
+    policy: addConnectSrcAllowlist(content, exactSources),
+    endpoints,
+    isDemoProject: true
+  };
+}
+
 function createRateLimiter({ windowMs, max, code, message }) {
   return rateLimit({
     windowMs,
@@ -129,23 +183,29 @@ function createRateLimiter({ windowMs, max, code, message }) {
 function createApp(options = {}) {
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..');
   const logger = options.logger || require('../utils/logger');
-  const defaultRoutes = {
-    transcriptRoutes: require('../routes/transcript'),
-    dictionaryRoutes: require('../routes/dictionary'),
-    aiProxyRoutes: require('../routes/ai-proxy'),
-    adminRoutes: require('../routes/admin'),
-    teacherSchedulerRoutes: require('../routes/teacher-scheduler'),
-    classroomsRoutes: require('../routes/classrooms'),
-    entranceTestRoutes: require('../routes/entrance-tests'),
-    readingJourneyRoutes: require('../routes/reading-journey'),
-    pronunciationTestRoutes: require('../routes/pronunciation-test'),
-    pronunciationAiRoutes: require('../routes/pronunciation-ai'),
-    readAloudRoutes: require('../routes/read-aloud'),
-    repeatSentenceRoutes: require('../routes/repeat-sentence'),
-    echoForgeRoutes: require('../routes/echo-forge').createEchoForgeRouter(),
-    pronunciationComparisonRoutes: require('../../functions/src/routes/pronunciation-comparison')
+  // Resolve a default route only when the caller did not inject one. This
+  // keeps createApp's test/local dependency injection useful without eagerly
+  // loading Firebase-backed legacy modules that the injected app never mounts.
+  const defaultRouteLoaders = {
+    transcriptRoutes: () => require('../routes/transcript'),
+    dictionaryRoutes: () => require('../routes/dictionary'),
+    aiProxyRoutes: () => require('../routes/ai-proxy'),
+    adminRoutes: () => require('../routes/admin'),
+    teacherSchedulerRoutes: () => require('../routes/teacher-scheduler'),
+    classroomsRoutes: () => require('../routes/classrooms'),
+    entranceTestRoutes: () => require('../routes/entrance-tests'),
+    readingJourneyRoutes: () => require('../routes/reading-journey'),
+    pronunciationTestRoutes: () => require('../routes/pronunciation-test'),
+    pronunciationAiRoutes: () => require('../routes/pronunciation-ai'),
+    readAloudRoutes: () => require('../routes/read-aloud'),
+    repeatSentenceRoutes: () => require('../routes/repeat-sentence'),
+    echoForgeRoutes: () => require('../routes/echo-forge').createEchoForgeRouter(),
+    pronunciationComparisonRoutes: () => require('../../functions/src/routes/pronunciation-comparison')
   };
-  const routes = { ...defaultRoutes, ...(options.routes || {}) };
+  const routes = { ...(options.routes || {}) };
+  for (const [name, load] of Object.entries(defaultRouteLoaders)) {
+    if (!Object.prototype.hasOwnProperty.call(routes, name)) routes[name] = load();
+  }
 
   const firebase = options.firebase || require('../utils/firebase');
   const circuitBreaker = options.circuitBreaker || require('../middleware/circuit-breaker');
@@ -156,6 +216,10 @@ function createApp(options = {}) {
 
   app.use(cors());
   app.use(compression());
+  // Projects has a bounded 1 MB JSON envelope for multiline discussions and
+  // bulk commands. Scope the larger parser to both aliases before the legacy
+  // 10 KB parser so unrelated local routes keep their existing limit.
+  app.use(['/api/projects', '/api/admin/projects'], express.json({ limit: '1mb' }));
   app.use(express.json({ limit: '10kb' }));
   app.use(logger.requestMiddleware());
 
@@ -201,25 +265,41 @@ function createApp(options = {}) {
     try {
       const filePath = path.join(publicDir, 'crm-admin.html');
       const rawHtml = fs.readFileSync(filePath, 'utf-8');
-      const { metaTag, content } = extractCspMetaContent(rawHtml);
-
-      // Remove the meta CSP so we can provide a dev-only CSP header instead.
-      const html = metaTag ? rawHtml.replace(metaTag, '') : rawHtml;
-
-      const devPolicy = addConnectSrcAllowlist(content, [
-        'http://localhost:*',
-        'ws://localhost:*',
-        'http://127.0.0.1:*',
-        'ws://127.0.0.1:*'
-      ]);
-
-      if (devPolicy) {
-        res.setHeader('Content-Security-Policy', devPolicy);
+      const clientProjectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
+      let adminProjectId = '';
+      try {
+        adminProjectId = typeof firebase?.admin?.app === 'function'
+          ? String(firebase.admin.app()?.options?.projectId || '').trim()
+          : String(firebase?.admin?.app?.options?.projectId || '').trim();
+      } catch (_) {
+        adminProjectId = '';
       }
+      const document = buildLocalCrmAdminDocument(rawHtml, process.env, clientProjectId || adminProjectId);
+      if (!document.endpoints) {
+        // Preserve the established loopback-only local development behavior
+        // for ordinary Firebase projects. A dedicated demo project fails
+        // closed to the static policy when its endpoints are incomplete or
+        // disagree, so the browser cannot guess another emulator instance.
+        if (document.isDemoProject) return next();
+        const { metaTag, content } = extractCspMetaContent(rawHtml);
+        const html = metaTag ? rawHtml.replace(metaTag, '') : rawHtml;
+        const devPolicy = addConnectSrcAllowlist(content, [
+          'http://localhost:*',
+          'ws://localhost:*',
+          'http://127.0.0.1:*',
+          'ws://127.0.0.1:*'
+        ]);
+        if (devPolicy) res.setHeader('Content-Security-Policy', devPolicy);
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        return res.type('html').send(html);
+      }
+      res.setHeader('Content-Security-Policy', document.policy);
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
-      res.type('html').send(html);
+      res.type('html').send(document.html);
     } catch (err) {
       next(err);
     }
@@ -302,6 +382,7 @@ function createApp(options = {}) {
   const { sendSuccess: fnsSendSuccess, sendError: fnsSendError } = require('../../functions/src/utils/response-helper');
   const createPracticeAttemptsRouter = require('../../functions/src/routes/practice-attempts');
   const createSharedPracticeAttemptsRouter = require('../../functions/src/routes/shared-practice-attempts');
+  const createProjectsRouter = require('../../functions/src/routes/crm/projects');
 
   const routerDeps = {
     db: firebase.db,
@@ -313,6 +394,37 @@ function createApp(options = {}) {
 
   app.use('/api/practice-attempts', functionsAuthMiddleware, practiceAttemptsLimiterByUid, createPracticeAttemptsRouter(routerDeps));
   app.use('/api/shared/practice-attempts', sharedPracticeAttemptsLimiter, createSharedPracticeAttemptsRouter(routerDeps));
+
+  // Projects owns its own verifier-backed identity fence. It must not reuse
+  // the legacy local emulator JWT decoder used by practice routes.
+  if (firebase?.db && typeof firebase.db.collection === 'function'
+    && typeof firebase?.admin?.auth === 'function') {
+    try {
+      const projectsAuth = firebase.admin.auth();
+      if (projectsAuth && typeof projectsAuth.verifyIdToken === 'function'
+        && typeof projectsAuth.getUser === 'function') {
+        const projectsRouter = createProjectsRouter({
+          db: firebase.db,
+          authorizeCrmIdentity: ({ identity }) => !!process.env.ADMIN_EMAIL && identity.authUser?.emailVerified === true && identity.authUser?.email === process.env.ADMIN_EMAIL,
+          auth: projectsAuth,
+          verifyIdToken: (token, checkRevoked) => projectsAuth.verifyIdToken(token, checkRevoked),
+          getAuthUser: (uid) => projectsAuth.getUser(uid),
+          bootstrapAdminEmails: [
+            process.env.ADMIN_EMAIL,
+            resolveLocalAdminEmail({ repoRoot: projectRoot })
+          ].filter(Boolean),
+          sendSuccess: fnsSendSuccess,
+          sendError: fnsSendError,
+          getStorageBucket: firebase.getStorageBucket,
+          serverTimestamp: () => firebase.admin.firestore.FieldValue.serverTimestamp()
+        });
+        app.use('/api/projects', projectsRouter);
+        app.use('/api/admin/projects', projectsRouter);
+      }
+    } catch (error) {
+      logger.warn?.('[Projects] Local router unavailable:', error?.message || error);
+    }
+  }
 
   app.get('/api/health', async (_req, res) => {
     const memory = process.memoryUsage();
@@ -356,6 +468,26 @@ function createApp(options = {}) {
   });
 
   app.get('/api/config', (_req, res) => {
+    const authEmulator = parseLocalEmulatorEndpoint(process.env.FIREBASE_AUTH_EMULATOR_HOST);
+    const firestoreEmulator = parseLocalEmulatorEndpoint(process.env.FIRESTORE_EMULATOR_HOST);
+    const clientProjectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
+    const dedicatedProjectId = String(process.env.CRM_PROJECTS_EMULATOR_PROJECT || '').trim();
+    let adminProjectId = '';
+    try {
+      adminProjectId = typeof firebase?.admin?.app === 'function'
+        ? String(firebase.admin.app()?.options?.projectId || '').trim()
+        : String(firebase?.admin?.app?.options?.projectId || '').trim();
+    } catch (_) {
+      // A partially initialized injected Admin SDK must not make /api/config
+      // publish an emulator override based on incomplete metadata.
+      adminProjectId = '';
+    }
+    const configuredProjectId = clientProjectId || adminProjectId;
+    // The browser override is reserved for the isolated CRM Projects demo.
+    // Ordinary local development often points at another Firebase project and
+    // must continue using the legacy client defaults.
+    const publishProjectsEmulators = configuredProjectId === 'demo-crm-projects'
+      && (!dedicatedProjectId || dedicatedProjectId === configuredProjectId);
     res.json({
       success: true,
       config: {
@@ -367,6 +499,9 @@ function createApp(options = {}) {
         appId: process.env.FIREBASE_APP_ID,
         measurementId: process.env.FIREBASE_MEASUREMENT_ID
       },
+      emulators: publishProjectsEmulators && authEmulator && firestoreEmulator
+        ? { auth: authEmulator, firestore: firestoreEmulator }
+        : undefined,
       features: buildPublicFeatures(process.env)
     });
   });
@@ -511,5 +646,8 @@ module.exports = {
   startServer,
   attachGracefulShutdown,
   hasFingerprint,
-  setStaticCacheHeaders
+  setStaticCacheHeaders,
+  parseLocalEmulatorEndpoint,
+  resolveProjectsEmulatorEndpoints,
+  buildLocalCrmAdminDocument
 };

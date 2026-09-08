@@ -98,9 +98,11 @@ window.CrmVoiceCloningWorkspace = (function () {
                     dom.btnQueueTrigger.disabled = !state.workerReady;
                 }
             } catch (_err) {
+                state.workerReady = false;
+                if (dom.btnQueueTrigger) dom.btnQueueTrigger.disabled = true;
                 if (dom.workerBadge) {
-                    dom.workerBadge.className = 'vc-worker-badge checking';
-                    dom.workerBadge.textContent = 'Voice Worker: Checking…';
+                    dom.workerBadge.className = 'vc-worker-badge offline';
+                    dom.workerBadge.textContent = 'Voice Worker: Status unavailable';
                 }
             }
         }
@@ -612,6 +614,12 @@ window.CrmVoiceCloningWorkspace = (function () {
             if (dom.btnSynthesize) dom.btnSynthesize.disabled = true;
             if (dom.studioStatus) dom.studioStatus.textContent = 'Enqueuing synthesis job…';
 
+            const showSynthesisError = (err) => {
+                showToast('Synthesis failed: ' + (err.message || err), 'error');
+                if (dom.studioStatus) dom.studioStatus.textContent = 'Synthesis error.';
+                if (dom.btnSynthesize) dom.btnSynthesize.disabled = false;
+            };
+
             try {
                 // 1. Submit job to queue
                 const enq = await apiFetchJson('/api/admin/voice-cloning/synthesize', {
@@ -632,34 +640,37 @@ window.CrmVoiceCloningWorkspace = (function () {
                 // 2. Poll job status
                 let attempts = 0;
                 const pollJob = async () => {
-                    attempts++;
-                    const job = await apiFetchJson(`/api/admin/voice-cloning/jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
-                    
-                    if (job.status === 'completed') {
-                        renderSynthesizedOutput(job);
-                        if (dom.btnSynthesize) dom.btnSynthesize.disabled = false;
-                        if (dom.studioStatus) dom.studioStatus.textContent = 'Synthesis complete!';
-                        showToast('Audio synthesized and ready for download!', 'success');
-                        return;
-                    }
+                    try {
+                        attempts++;
+                        const job = await apiFetchJson(`/api/admin/voice-cloning/jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
 
-                    if (job.status === 'failed') {
-                        throw new Error(job.error || 'Worker synthesis failed.');
-                    }
+                        if (job.status === 'completed') {
+                            renderSynthesizedOutput(job);
+                            if (dom.btnSynthesize) dom.btnSynthesize.disabled = false;
+                            if (dom.studioStatus) dom.studioStatus.textContent = 'Synthesis complete!';
+                            showToast('Audio synthesized and ready for download!', 'success');
+                            return;
+                        }
 
-                    if (attempts < 60) {
-                        setTimeout(pollJob, 2000);
-                    } else {
-                        throw new Error('Synthesis timed out waiting for worker.');
+                        if (job.status === 'failed') {
+                            throw new Error(job.error || 'Worker synthesis failed.');
+                        }
+
+                        if (attempts < 60) {
+                            setTimeout(pollJob, 2000);
+                        } else {
+                            throw new Error('Synthesis timed out waiting for worker.');
+                        }
+                    } catch (err) {
+                        // Timer callbacks run after the enclosing request handler returns.
+                        showSynthesisError(err);
                     }
                 };
 
                 setTimeout(pollJob, 1500);
 
             } catch (err) {
-                showToast('Synthesis failed: ' + (err.message || err), 'error');
-                if (dom.studioStatus) dom.studioStatus.textContent = 'Synthesis error.';
-                if (dom.btnSynthesize) dom.btnSynthesize.disabled = false;
+                showSynthesisError(err);
             }
         }
 

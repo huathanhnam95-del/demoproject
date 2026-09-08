@@ -578,6 +578,99 @@ async function main() {
         assert.deepStrictEqual(pageErrors, [], `Unexpected page errors:\n${pageErrors.join('\n')}`);
         assert.deepStrictEqual(consoleErrors, [], `Unexpected console errors:\n${consoleErrors.join('\n')}`);
         console.log(`Screenshot saved to ${path.relative(ROOT, SCREENSHOT_PATH)}`);
+        await page.evaluate(() => {
+            const sibling = document.createElement('aside');
+            sibling.id = 'crm-books-preexisting-inert-sibling';
+            sibling.inert = true;
+            document.body.appendChild(sibling);
+        });
+        // Fullscreen reader owns focus and makes the surrounding workspace inert.
+        for (const [iteration, width] of [1440, 390].entries()) {
+            await page.setViewportSize({ width, height: 900 });
+            await page.click('.crm-books-tab[data-books-tab="pages"]');
+            await page.click('.crm-books-open-bookview');
+            await page.waitForSelector('.crm-bv-overlay', { state: 'visible' });
+            assert.strictEqual(await page.evaluate(() => document.querySelector('.crm-bv-overlay').contains(document.activeElement)), true, 'Opening reader must move focus inside.');
+            assert.strictEqual(await page.locator('[data-panel="books"]').evaluate((element) => element.inert), true, 'Background workspace must be inert.');
+            if (iteration === 0) {
+                const fontSlider = page.locator('.crm-bv-font-slider');
+                const fontBefore = Number(await fontSlider.inputValue());
+                await fontSlider.focus();
+                await page.keyboard.press('ArrowRight');
+                assert.strictEqual(Number(await fontSlider.inputValue()), fontBefore + 10, 'Native range ArrowRight should advance the reader font slider.');
+                await page.keyboard.press('ArrowLeft');
+                assert.strictEqual(Number(await fontSlider.inputValue()), fontBefore, 'Native range ArrowLeft should restore the reader font slider.');
+            }
+            if (iteration === 0) {
+                await page.evaluate(() => {
+                    const sibling = document.createElement('aside');
+                    sibling.id = 'crm-books-dynamic-inert-sibling';
+                    document.body.appendChild(sibling);
+                });
+                await page.waitForFunction(() => document.getElementById('crm-books-dynamic-inert-sibling')?.inert === true);
+                assert.strictEqual(await page.locator('#crm-books-dynamic-inert-sibling').evaluate((element) => element.inert), true, 'A body sibling appended while open must become inert.');
+            }
+            for (let step = 0; step < 56; step += 1) {
+                await page.keyboard.press(step < 28 ? 'Tab' : 'Shift+Tab');
+                assert.strictEqual(await page.evaluate(() => document.querySelector('.crm-bv-overlay').contains(document.activeElement)), true, 'Tab must stay in reader.');
+            }
+            await page.keyboard.press('Escape');
+            assert.strictEqual(await page.locator('[data-panel="books"]').evaluate((element) => element.inert), false, 'Closing must restore the workspace.');
+            assert.strictEqual(await page.locator('#crm-books-preexisting-inert-sibling').evaluate((element) => element.inert), true, 'Closing must preserve a preexisting inert body sibling.');
+            assert.strictEqual(await page.evaluate(() => document.activeElement.matches('.crm-books-open-bookview')), true, 'Closing must focus the replacement opener after rendering.');
+            if (iteration === 0) {
+                assert.strictEqual(await page.locator('#crm-books-dynamic-inert-sibling').evaluate((element) => element.inert), false, 'Closing must restore a dynamically appended sibling to its previous inert state.');
+                await page.evaluate(() => document.getElementById('crm-books-dynamic-inert-sibling')?.remove());
+            }
+            // Reopen before the old closing animation finishes.
+            await page.keyboard.press('Enter');
+            await page.waitForTimeout(300);
+            assert.strictEqual(await page.locator('.crm-bv-overlay').count(), 1, 'An old close timer must not remove a reopened reader.');
+            await page.keyboard.press('Escape');
+            await page.waitForSelector('.crm-bv-overlay', { state: 'detached' });
+            assert.strictEqual(await page.locator('#crm-books-preexisting-inert-sibling').evaluate((element) => element.inert), true, 'A reopened reader must still restore the preexisting inert body sibling.');
+            if (iteration === 0) {
+                const pageInput = page.locator('.crm-books-page-input');
+                const pageBefore = Number(await pageInput.inputValue());
+                await pageInput.focus();
+                await page.keyboard.press('ArrowUp');
+                assert.strictEqual(Number(await pageInput.inputValue()), pageBefore + 1, 'Native number input ArrowUp should advance the page input.');
+                await page.locator('.crm-books-page-input').focus();
+                await page.keyboard.press('ArrowDown');
+                assert.strictEqual(Number(await pageInput.inputValue()), pageBefore, 'Native number input ArrowDown should restore the page input.');
+                await pageInput.blur();
+            }
+        }
+        // Disposal while the reader is open must synchronously remove the
+        // overlay and leave no stale document keydown listener or close timer.
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.click('.crm-books-tab[data-books-tab="pages"]');
+        await page.click('.crm-books-open-bookview');
+        await page.waitForSelector('.crm-bv-overlay', { state: 'visible' });
+        await page.evaluate(() => {
+            const sibling = document.createElement('aside');
+            sibling.id = 'crm-books-dispose-inert-sibling';
+            document.body.appendChild(sibling);
+        });
+        await page.waitForFunction(() => document.getElementById('crm-books-dispose-inert-sibling')?.inert === true);
+        await page.evaluate(() => window.__crmBooksController.dispose());
+        assert.strictEqual(await page.locator('.crm-bv-overlay').count(), 0, 'Disposing an open reader must remove its overlay immediately.');
+        assert.strictEqual(await page.locator('[data-panel="books"]').evaluate((element) => element.inert), false, 'Disposing an open reader must restore the Books panel.');
+        assert.strictEqual(await page.locator('#crm-books-preexisting-inert-sibling').evaluate((element) => element.inert), true, 'Disposal must preserve a preexisting inert body sibling.');
+        assert.strictEqual(await page.locator('#crm-books-dispose-inert-sibling').evaluate((element) => element.inert), false, 'Disposal must restore a dynamic sibling to its previous inert state.');
+        await page.waitForTimeout(350);
+        assert.strictEqual(await page.locator('.crm-bv-overlay').count(), 0, 'Disposal must cancel the pending reader close timer.');
+        assert.strictEqual(await page.evaluate(() => {
+            const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+            document.dispatchEvent(event);
+            return event.defaultPrevented;
+        }), false, 'Disposal must remove the reader keydown listener.');
+        await page.evaluate(() => {
+            document.getElementById('crm-books-dispose-inert-sibling')?.remove();
+            document.getElementById('crm-books-preexisting-inert-sibling')?.remove();
+        });
+        assert.deepStrictEqual(pageErrors, [], `Unexpected page errors after reader lifecycle checks:\n${pageErrors.join('\n')}`);
+        assert.deepStrictEqual(consoleErrors, [], `Unexpected console errors after reader lifecycle checks:\n${consoleErrors.join('\n')}`);
         console.log('crm books UI browser check passed');
     } finally {
         await browser.close();

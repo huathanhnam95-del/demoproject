@@ -340,5 +340,57 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    // CRM Projects privileges, automation records and attachments are
+    // server-owned. The authenticated API rechecks membership per request.
+    match /crmWorkforceAccounts/{uid} { allow read, write: if false; }
+    match /crmProjectMembers/{memberId} { allow read, write: if false; }
+    match /crmProjectOrganizationConfig/{configId} { allow read, write: if false; }
+    match /crmProjectAllowanceConfigs/{configId} { allow read, write: if false; }
+    match /crmProjectAllowanceDefaults/{configId} { allow read, write: if false; }
+    match /crmProjectAccessAudit/{entryId} { allow read, write: if false; }
+    match /crmProjects/{projectId} {
+      allow read, write: if false;
+      match /{document=**} { allow read, write: if false; }
+    }
+    match /crmProjectOperations/{operationId} { allow read, write: if false; }
+    match /crmProjectEvents/{eventId} { allow read, write: if false; }
+    match /crmProjectAutomationRules/{recordId} { allow read, write: if false; }
+    match /crmProjectAutomationVersions/{recordId} { allow read, write: if false; }
+    match /crmProjectAutomationRegistries/{recordId} { allow read, write: if false; }
+    match /crmProjectAutomationPreviews/{recordId} { allow read, write: if false; }
+    match /crmProjectAutomationRuns/{recordId} { allow read, write: if false; }
+    match /crmProjectAutomationJournals/{recordId} { allow read, write: if false; }
+    match /crmProjectDueOccurrences/{recordId} { allow read, write: if false; }
+    match /crmProjectDueIndex/{recordId} { allow read, write: if false; }
+    match /crmProjectDueRebuilds/{recordId} { allow read, write: if false; }
+    match /crmProjectNotifications/{recordId} { allow read, write: if false; }
+    match /crmProjectNotificationPreferences/{recordId} { allow read, write: if false; }
+    match /crmProjectNotificationDeliveries/{recordId} { allow read, write: if false; }
+    match /crmProjectAutomationWorkers/{recordId} { allow read, write: if false; }
+    match /crmProjectCursors/{cursorId} { allow read, write: if false; }
+
+    // Shared AI accounting and voice records are server-only.
+    match /crmAiBudgetAccounts/{recordId} { allow read, write: if false; }
+    match /crmAiBudgetLedgers/{recordId} { allow read, write: if false; }
+    match /crmAiBudgetReservations/{recordId} { allow read, write: if false; }
+    match /crmAiVoiceSessions/{recordId} { allow read, write: if false; }
+    match /crmAiVoiceUtterances/{recordId} { allow read, write: if false; }
+    match /crmAiDrafts/{recordId} { allow read, write: if false; }
+    match /crmAiDraftRevisions/{recordId} { allow read, write: if false; }
+    match /crmAiDraftRequests/{recordId} { allow read, write: if false; }
+    match /crmProjectAiPreviews/{recordId} { allow read, write: if false; }
+    match /crmProjectAiProposals/{recordId} { allow read, write: if false; }
+    match /crmAiVoiceAttestations/{recordId} { allow read, write: if false; }
+
+    // Data Input drafts and maintenance receipts are server-owned.
+    match /crmDataInputDrafts/{document=**} { allow read, write: if false; }
+    match /crmDataInputMaintenance/{document=**} { allow read, write: if false; }
+    match /crmAiBudgetAccounts/{document=**} { allow read, write: if false; }
+    match /crmAiBudgetLedgers/{document=**} { allow read, write: if false; }
+    match /crmAiBudgetReservations/{document=**} { allow read, write: if false; }
+    match /crmAiVoiceSessions/{document=**} { allow read, write: if false; }
+    match /crmAiVoiceUtterances/{document=**} { allow read, write: if false; }
+    match /crmAiVoiceAttestations/{document=**} { allow read, write: if false; }
   }
 }

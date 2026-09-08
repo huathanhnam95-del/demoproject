@@ -1,0 +1,47 @@
+/* Feedback does not change the geometry of the workspace or intercept input. */
+#ui-feedback-stack {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 100001;
+  display: grid;
+  gap: 6px;
+  max-width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.ui-task-feedback {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #121826;
+  color: #f8fafc;
+  font: 500 14px/1.5 'Be Vietnam Pro', system-ui, sans-serif;
+  box-shadow: 0 3px 12px #12182624;
+}
+
+/* Discrete display transitions let existing controllers close immediately.
+   No timer delays a save, a route change or input. Unsupported browsers close
+   immediately; focus/inert state is independent of visual transition support. */
+@supports (transition-behavior: allow-discrete) {
+  .crm-modal-overlay[data-ui-open], .crm-books-modal-overlay[data-ui-open] {
+    opacity: 1;
+    transition: opacity 140ms ease-out, display 140ms allow-discrete;
+  }
+  .crm-modal-overlay[data-ui-open="false"], .crm-books-modal-overlay[data-ui-open="false"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+  @starting-style {
+    .crm-modal-overlay[data-ui-open="true"], .crm-books-modal-overlay[data-ui-open="true"] { opacity: 0; }
+  }
+}
+.crm-modal-overlay[data-ui-open] > .crm-modal-container { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-panel, .crm-modal-overlay, .crm-modal-container, .crm-books-modal-overlay,
+  .crm-nav, .crm-dropdown-menu, .dashboard-panel, .mode-panel,
+  .stage-fade-blur-in, .stage-fade-blur-out {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

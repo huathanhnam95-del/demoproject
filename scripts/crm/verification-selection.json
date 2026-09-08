@@ -1,4 +1,44 @@
 {
   "schemaVersion": 1,
-  "features": []
+  "features": [
+    {
+      "unitTests": [
+        "tests/crm/data-input/context.test.cjs",
+        "tests/crm/data-input/assistance.test.cjs",
+        "tests/crm/data-input/voice-runtime.test.cjs",
+        "tests/crm/data-input/images.test.cjs",
+        "tests/crm/data-input/attachments.test.cjs",
+        "tests/crm/data-input/attachment-storage.test.cjs",
+        "tests/crm/data-input/attachment-cleanup.test.cjs",
+        "tests/crm/data-input/attachment-http.test.cjs",
+        "tests/crm/data-input/conversation.test.cjs",
+        "tests/crm/data-input/draft.test.cjs",
+        "tests/crm/data-input/routes.test.cjs",
+        "tests/crm/data-input/transaction.test.cjs",
+        "tests/crm/data-input/commands.test.cjs",
+        "tests/crm/data-input/commit.test.cjs",
+        "tests/crm/data-input/client.test.cjs",
+        "tests/crm/data-input/voice.test.cjs",
+        "tests/crm/data-input/voice-context.test.cjs",
+        "tests/crm/data-input/voice-panel.test.cjs",
+        "tests/crm/data-input/profile-editor.test.cjs",
+        "tests/crm/data-input/workspace.test.cjs",
+        "tests/crm/data-input/proposal.test.cjs",
+        "tests/crm/data-input/interpretation.test.cjs",
+        "tests/crm/data-input/budget.test.cjs",
+        "tests/crm/data-input/expected-http-error.test.cjs",
+        "tests/crm/data-input/http-native-config.test.cjs",
+        "tests/crm/data-input/native-harness.test.cjs",
+        "tests/crm/data-input/payment-evidence.test.cjs",
+        "tests/crm/data-input/payment-followup.test.cjs",
+        "tests/crm/data-input/manual-payment.test.cjs"
+      ],
+      "sourceRoots": [
+        "functions/src/crm/data-input",
+        "public/js/crm/data-input"
+      ],
+      "testRoot": "tests/crm/data-input",
+      "id": "crm-data-input"
+    }
+  ]
 }

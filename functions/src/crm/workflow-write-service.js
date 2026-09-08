@@ -43,7 +43,7 @@ async function convertLead(db, leadId, context) {
         if (clean(lead.studentId)) {
             const linked = await tx.get(db.collection(C.CRM_STUDENTS).doc(clean(lead.studentId)));
             if (!linked.exists) fail(409, 'BROKEN_STUDENT_LINK', 'The linked student no longer exists.');
-            return { studentId: linked.id, deduped: true };
+            return { studentId: linked.id, deduped: true, paymentFollowupRequired: linked.data()?.paymentFollowupRequired || null };
         }
         if (lead.stage === 'converted') fail(409, 'BROKEN_STUDENT_LINK', 'The converted lead is missing its student link.');
         const tests = await tx.get(db.collection(C.ENTRANCE_TESTS).where('leadId', '==', leadId));
@@ -64,7 +64,7 @@ async function convertLead(db, leadId, context) {
         tx.set(newStudentRef, conversion.student);
         tx.set(leadRef, { ...conversion.leadPatch, crmId, studentId: newStudentRef.id }, { merge: true });
         for (const doc of tests.docs) tx.set(doc.ref, { studentId: newStudentRef.id, crmId, updatedAt: context.serverTimestamp() }, { merge: true });
-        return { studentId: newStudentRef.id, deduped: false };
+        return { studentId: newStudentRef.id, deduped: false, paymentFollowupRequired: conversion.student.paymentFollowupRequired };
     });
 }
 
@@ -94,7 +94,7 @@ function queuePracticeJobs(tx, db, student, context) {
     const uids = [...new Set((Array.isArray(student.linked_user_ids) ? student.linked_user_ids : []).map(clean).filter(Boolean))];
     for (const uid of uids) {
         const jobId = `reconcileUid__${hash(uid)}`;
-        tx.set(db.collection('practiceAccessJobs').doc(jobId), { jobId, kind: 'reconcileUid', uid, runAfterAt: new Date(), status: 'queued', updatedAt: context.serverTimestamp() }, { merge: true });
+        tx.set(db.collection('practiceAccessJobs').doc(jobId), { jobId, kind: 'reconcileUid', uid, runAfterAt: new Date(context.nowMs ?? Date.now()), status: 'queued', updatedAt: context.serverTimestamp() }, { merge: true });
     }
     return uids.length;
 }
@@ -277,4 +277,4 @@ async function saveStudent(db, studentId, input, context) {
     });
 }
 
-module.exports = { convertLead, createEnrollment, updateEnrollment, saveStudent, seedClassSchedule, auditSaved, readSavedData };
+module.exports = { convertLead, createEnrollment, updateEnrollment, saveStudent, seedClassSchedule, auditSaved, readSavedData, queuePracticeJobs };

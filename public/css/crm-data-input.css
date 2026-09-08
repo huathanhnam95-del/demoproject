@@ -1,0 +1,27 @@
+#bel-chat-drawer { width: min(640px, calc(100vw - 32px)) !important; }
+#bel-chat-drawer .crm-input-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+#bel-chat-drawer .crm-input-toolbar > select { flex: 1 1 100%; }
+#bel-chat-drawer .crm-input-action { border-top: 1px solid #e5e7eb; padding: 16px 0; }
+#bel-chat-drawer .crm-input-action h3 { margin: 0 0 12px; font-size: 16px; }
+#bel-chat-drawer .crm-input-field { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; font-size: 13px; }
+#bel-chat-drawer .crm-input-field input,
+#bel-chat-drawer .crm-input-field textarea,
+#bel-chat-drawer .crm-input-field select { max-width: 100%; box-sizing: border-box; }
+#bel-chat-drawer .crm-input-reference { margin-bottom: 16px; }
+#bel-chat-drawer .crm-input-reference > input { margin-bottom: 6px; }
+#bel-chat-drawer .crm-input-search-results button { display: block; margin: 6px 0; white-space: normal; text-align: left; }
+#bel-chat-drawer .crm-input-schedule-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+#bel-chat-drawer .crm-input-schedule-row label { flex: 1 1 100px; min-width: 0; }
+#bel-chat-drawer fieldset { border: 0; padding: 8px 0; display: flex; flex-wrap: wrap; gap: 10px; }
+#bel-chat-drawer fieldset label { flex-direction: row-reverse; align-items: center; }
+#bel-chat-drawer .crm-input-history { font-size: 13px; color: #64748b; }
+#bel-chat-drawer .crm-input-details { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 2fr); gap: 5px 10px; font-size: 13px; }
+#bel-chat-drawer .crm-input-details dd { margin: 0; overflow-wrap: anywhere; }
+#bel-chat-preview details { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+#bel-chat-preview a { display: block; padding: 6px 0; }
+#bel-chat-preview { max-height: 32vh !important; }
+#bel-chat-drawer button:focus-visible, #bel-chat-drawer a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+@media (max-width: 600px) {
+  #bel-chat-drawer { right: 16px !important; bottom: 70px !important; height: calc(100dvh - 100px) !important; }
+  #bel-chat-drawer button { min-height: 40px; }
+}

@@ -50,6 +50,7 @@ window.CrmAgentSourcesWorkspace = (function () {
         const formatDateTime = typeof deps.formatDateTime === 'function' ? deps.formatDateTime : (value) => clean(value) || '-';
 
         let bound = false;
+        let refreshRequestId = 0;
         let selectedAgentSourceId = '';
         let activeCourses = [];
         let localCourseRates = {}; // courseId -> percent
@@ -82,7 +83,7 @@ window.CrmAgentSourcesWorkspace = (function () {
             hydrateSelect(elements.inputStudentAgentSource);
         }
 
-        async function loadCoursesDropdown() {
+        async function loadCoursesDropdown(requestId) {
             if (!elements.selectAgentCourse) return;
             try {
                 let courses = [];
@@ -91,6 +92,7 @@ window.CrmAgentSourcesWorkspace = (function () {
                 } else if (window.ClassroomAPI && typeof window.ClassroomAPI.fetchCourses === 'function') {
                     courses = await window.ClassroomAPI.fetchCourses();
                 }
+                if (requestId !== refreshRequestId) return;
                 activeCourses = (Array.isArray(courses) ? courses : [])
                     .filter((course) => String(course.status || 'active').toLowerCase() === 'active');
                 const select = elements.selectAgentCourse;
@@ -101,6 +103,7 @@ window.CrmAgentSourcesWorkspace = (function () {
                         return `<option value="${escapeHtml(courseId)}">${escapeHtml(label)}</option>`;
                     }).join('');
             } catch (error) {
+                if (requestId !== refreshRequestId) return;
                 console.error('[CRM Admin] Failed to load courses for agent custom rates dropdown:', error);
                 activeCourses = [];
             }
@@ -231,8 +234,14 @@ window.CrmAgentSourcesWorkspace = (function () {
 
         async function refresh() {
             if (!apiFetchJson) return [];
-            await loadCoursesDropdown();
-            const json = await apiFetchJson('/api/admin/agent-sources?limit=500', { method: 'GET' });
+            const requestId = ++refreshRequestId;
+            await loadCoursesDropdown(requestId);
+            if (requestId !== refreshRequestId) return dataCache.agentSources || [];
+            const json = await apiFetchJson('/api/admin/agent-sources?limit=500', { method: 'GET' }).catch((error) => {
+                if (requestId !== refreshRequestId) return null;
+                throw error;
+            });
+            if (requestId !== refreshRequestId) return dataCache.agentSources || [];
             dataCache.agentSources = normalizeList(json?.agentSources);
             hydrateLinkedSelects();
             renderList();

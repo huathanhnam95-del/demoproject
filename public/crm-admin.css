@@ -419,7 +419,7 @@ body {
     background: var(--crm-primary);
     box-shadow: 6px 0 24px rgba(15, 23, 42, 0.24);
     transform: translateX(-100%);
-    transition: transform 0.22s ease;
+    transition: transform 0.22s ease, visibility 0.22s;
   }
 
   .crm-admin.crm-nav-open .crm-nav {
@@ -648,7 +648,7 @@ body {
 
 .ollama-status-badge.offline {
   background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -701,6 +701,10 @@ body {
 
 .crm-icon-btn:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+#btn-vc-worker-refresh {
+  color: var(--crm-text-main);
 }
 
 .crm-user-profile {
@@ -772,8 +776,8 @@ body {
 
 @keyframes crmFadeIn {
   from {
-    opacity: 0;
-    transform: translateY(4px);
+    opacity: 0.94;
+    transform: none;
   }
 
   to {
@@ -2835,7 +2839,8 @@ body {
   overflow: hidden;
 }
 
-[data-panel="courses/teacher-schedule"] {
+[data-panel="courses/teacher-schedule"]:not([style*="display: none"]):not([style*="display:none"]) {
+  display: flex !important;
   flex-direction: column;
   height: calc(100vh - var(--crm-nav-height, 64px) - 16px);
   max-height: calc(100vh - var(--crm-nav-height, 64px) - 16px);
@@ -11446,7 +11451,7 @@ mark.crm-highlight:hover {
 
 .crm-account-badge-teacher {
   background: #e8f0fe;
-  color: #1a73e8;
+  color: #174ea6;
 }
 
 .crm-account-badge-archived {
@@ -15602,5 +15607,139 @@ body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
 @media (max-width: 768px) {
   body:has(#crm-student-modal[aria-hidden="false"]) {
     --crm-assistant-footer-clearance: 80px;
+  }
+}
+
+/* Keep the mind-map controls reachable when the fullscreen header is narrower
+   than the desktop action row. The desktop layout remains unchanged. */
+@media (max-width: 900px) {
+  .crm-books-mindmap-modal .crm-mindmap-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .crm-books-mindmap-modal .crm-mindmap-header-left {
+    flex: 1 1 240px;
+  }
+
+  .crm-books-mindmap-modal .crm-mindmap-header-actions {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .crm-books-mindmap-modal .crm-mindmap-export-dropdown {
+    max-width: calc(100vw - 24px);
+    overflow-x: hidden;
+  }
+
+  .crm-books-mindmap-modal .crm-mindmap-toolbar {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    min-width: 0;
+    max-width: calc(100% - 16px);
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .crm-books-mindmap-modal .crm-mindmap-minimap {
+    bottom: 72px;
+    left: 8px;
+    max-width: calc(100% - 16px);
+  }
+}
+
+/* UI20: keep the student profile shell usable at phone and tablet widths.
+   The horizontal tab strip is the only intentional horizontal scroller;
+   profile content remains vertically scrollable. */
+@media (max-width: 768px) {
+  #crm-student-modal .crm-modal-body {
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  #crm-student-modal .crm-modal-sidebar {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 10px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--crm-border-light);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #crm-student-modal .crm-sidebar-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    border-left: 0;
+    border-bottom: 3px solid transparent;
+    padding: 10px 14px;
+  }
+
+  #crm-student-modal .crm-sidebar-item.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--crm-primary);
+  }
+
+  #crm-student-modal .crm-modal-content {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 20px 16px 28px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #crm-student-modal .crm-tab-content,
+  #crm-student-modal .crm-tab-content > *,
+  #crm-student-modal .crm-form-grid > *,
+  #crm-student-modal .crm-workspace-grid > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #crm-student-modal .crm-workspace-grid {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  #crm-student-modal .crm-entrance-test-header,
+  #crm-student-modal .crm-entrance-test-link-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #crm-student-modal .crm-entrance-test-header {
+    flex-wrap: wrap;
+  }
+
+  #crm-student-modal #student-info .crm-form-group > div:first-child {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  #crm-student-modal #student-identity .crm-form-group > div {
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #crm-student-modal #student-identity .crm-form-group > div .crm-input {
+    min-width: 0;
+    flex: 1 1 180px;
   }
 }

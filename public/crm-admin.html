@@ -17,6 +17,10 @@
   <!-- Reuse main app design tokens -->
   <link rel="stylesheet" href="style.css?v=20260908-v2.0.1&bgm=v2" />
   <link rel="stylesheet" href="crm-admin.css?v=20260908-v2.0.1&bgm=v2" />
+  <link rel="stylesheet" href="/css/ui-continuity.css?v=20260908-v2.0.1">
+  <script src="/js/ui-continuity.js?v=20260908-v2.0.1" defer></script>
+  <link rel="stylesheet" href="css/crm-projects.css?v=20260908-phase9" />
+  <link rel="stylesheet" href="css/crm-data-input.css?v=20260908-v2.0.1&input=20260908-2" />
 </head>
 
 <body>
@@ -52,6 +56,7 @@
             <li><button class="crm-nav-item" data-main="enquiry" data-label="Enquiry">Enquiry</button></li>
             <li><button class="crm-nav-item" data-main="staff" data-label="Staff">Staff</button>
             </li>
+            <li id="nav-projects-container" style="display: none;"><button class="crm-nav-item" data-main="projects" data-label="Projects">Projects</button></li>
             <li><button class="crm-nav-item" data-main="agents" data-label="Agents">Agents</button>
             </li>
             <li><button class="crm-nav-item" data-main="books" data-label="Books">Books</button>
@@ -853,8 +858,8 @@
             <section class="crm-workspace-card" style="margin-top: 16px;">
               <div class="crm-section-header">
                 <div>
-                  <h3>Accounts</h3>
-                  <p class="crm-muted">Manage admin access for all users.</p>
+                  <h3>Accounts &amp; People Access</h3>
+                  <p class="crm-muted">Manage account status, CRM administration access, and Projects access.</p>
                 </div>
               </div>
               <div style="padding: 18px;">
@@ -863,13 +868,14 @@
                 </div>
               </div>
             </section>
+
           </div>
           <div class="crm-side-col">
             <section class="crm-workspace-card">
               <div class="crm-section-header">
                 <div>
                   <h3>Notes</h3>
-                  <p class="crm-muted">Teacher accounts can access CRM Teacher Schedule only.</p>
+              <p class="crm-muted">Teachers retain Teacher Schedule. Projects access requires a module grant and project membership.</p>
                 </div>
               </div>
               <div style="padding: 16px;">
@@ -880,6 +886,161 @@
               </div>
             </section>
           </div>
+        </div>
+      </section>
+
+      <!-- Projects People & Access -->
+      <section class="crm-panel" data-panel="projects" style="display: none;">
+        <div class="crm-panel-header">
+          <div>
+            <h2>Projects</h2>
+            <p>Plan work on the shared project board, then manage workforce access and project membership below.</p>
+          </div>
+          <div class="crm-inline-fields"><button id="btn-projects-access-refresh" class="crm-btn-secondary" type="button">Refresh</button></div>
+        </div>
+        <section id="projects-ai-budget" class="crm-ai-budget" aria-label="Monthly CRM AI budget" hidden></section>
+        <section id="projects-assistant" class="crm-projects-assistant" aria-label="Project assistance"></section>
+        <section id="projects-notifications" class="crm-projects-notifications" aria-label="Project notifications" hidden></section>
+        <section id="projects-board-section" class="crm-projects-board-section" aria-labelledby="projects-board-title">
+          <div class="crm-projects-board-toolbar">
+            <div class="crm-projects-board-heading">
+              <span class="crm-eyebrow">Primary board</span>
+              <h3 id="projects-board-title">Work in one clear view</h3>
+              <p id="projects-board-status" class="crm-muted" aria-live="polite">Choose a project to load its tasks.</p>
+            </div>
+            <div class="crm-projects-board-actions">
+              <label class="crm-projects-board-picker" for="projects-board-project-select"><span class="sr-only">Project</span><select id="projects-board-project-select" class="crm-input" aria-label="Project board"></select></label>
+              <button id="btn-projects-board-create-project" class="crm-btn-primary" type="button">New project</button>
+              <button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button>
+              <button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button>
+            </div>
+          </div>
+          <section id="projects-automations" class="crm-projects-automations" aria-label="Project automations" hidden></section>
+          <section id="projects-board-recovery" class="crm-projects-board-recovery" aria-label="Project recovery controls" hidden></section>
+          <div id="projects-board-create-project" class="crm-projects-board-form" hidden>
+            <label for="projects-board-project-name">Project name</label>
+            <input id="projects-board-project-name" class="crm-input" type="text" maxlength="200" placeholder="e.g. Autumn launch">
+            <label for="projects-board-project-description">Description</label>
+            <textarea id="projects-board-project-description" class="crm-input" rows="2" maxlength="20000" placeholder="What is this project for?"></textarea>
+            <div class="crm-inline-fields"><button id="btn-projects-board-save-project" class="crm-btn-primary" type="button">Create project</button><button id="btn-projects-board-cancel-project" class="crm-btn-secondary" type="button">Cancel</button></div>
+          </div>
+          <div id="projects-board-empty" class="crm-projects-board-empty" hidden>
+            <strong>Start with a project</strong><span>Create a project to give your team a shared place for sections and tasks.</span><button id="btn-projects-board-empty-create" class="crm-btn-primary" type="button">Create a project</button>
+          </div>
+            <div id="projects-board-workspace" class="crm-projects-board-workspace" hidden>
+              <section id="projects-project-links" aria-label="Project CRM links"></section>
+              <section id="projects-views" aria-label="Project views">
+                <nav id="projects-view-tabs" class="crm-projects-view-tabs" aria-label="Task view">
+                  <button type="button" data-view="board" aria-pressed="true">Board</button><button type="button" data-view="kanban" aria-pressed="false">Kanban</button><button type="button" data-view="timeline" aria-pressed="false">Timeline</button><button type="button" data-view="calendar" aria-pressed="false">Calendar</button><button type="button" data-view="charts" aria-pressed="false">Charts</button>
+                </nav>
+                <form id="projects-view-filters" class="crm-projects-view-filters">
+                  <label>Title<input name="title" class="crm-input" type="search" maxlength="200"></label>
+                  <label>Section<select name="sectionId" class="crm-input"><option value="">All sections</option></select></label>
+                  <label>Status<select name="status" class="crm-input"><option value="">All statuses</option><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label>
+                  <label>Accountable owner<select name="ownerUid" class="crm-input"><option value="">All owners</option></select></label>
+                  <label>Assignee<select name="assigneeUid" class="crm-input"><option value="">All assignees</option></select></label>
+                  <label>From<input name="fromDate" class="crm-input" type="date"></label><label>Through<input name="toDate" class="crm-input" type="date"></label>
+                  <button type="submit" class="crm-btn-primary">Apply filters</button><button type="reset" class="crm-btn-secondary">Clear filters</button>
+                </form>
+                <p class="crm-muted">Date filters include overlapping dated tasks. Undated tasks are excluded when a date filter is set. Filters stay shared across views in this project.</p>
+                <p id="projects-view-summary" aria-live="polite"></p><p id="projects-view-status" role="status"></p>
+                <div id="projects-view-content" hidden></div>
+                <div id="projects-view-paging" class="crm-inline-fields" hidden><button id="projects-view-previous" type="button" class="crm-btn-secondary">Previous page</button><button id="projects-view-more" type="button" class="crm-btn-secondary">Load more</button><button id="projects-view-retry" type="button" class="crm-btn-secondary">Refresh view</button></div>
+              </section>
+              <div class="crm-projects-board-controls">
+                <div class="crm-inline-fields"><button id="btn-projects-board-add-section" class="crm-btn-secondary" type="button">Add section</button><button id="btn-projects-board-add-task" class="crm-btn-primary" type="button">Add task</button><button id="btn-projects-board-add-column" class="crm-btn-secondary" type="button">Add column</button></div>
+                <div class="crm-muted" id="projects-board-count" aria-live="polite"></div>
+              </div>
+            <form id="projects-board-section-form" class="crm-projects-board-form" hidden>
+              <label for="projects-board-section-name">Section name</label>
+              <input id="projects-board-section-name" class="crm-input" type="text" maxlength="200" placeholder="e.g. This quarter" autocomplete="off">
+              <div class="crm-inline-fields"><button id="btn-projects-board-save-section" class="crm-btn-primary" type="submit">Add section</button><button id="btn-projects-board-cancel-section" class="crm-btn-secondary" type="button">Cancel</button></div>
+            </form>
+            <div id="projects-board-column-form" class="crm-projects-board-form" hidden>
+              <label for="projects-board-column-label">Column label</label><input id="projects-board-column-label" class="crm-input" type="text" maxlength="120" placeholder="e.g. Effort">
+              <label for="projects-board-column-type">Type</label><select id="projects-board-column-type" class="crm-input"><option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="people">People</option><option value="status">Status</option><option value="priority">Priority</option><option value="dropdown">Dropdown</option></select>
+              <label for="projects-board-column-options">Dropdown options <span class="crm-muted">(one per line)</span></label><textarea id="projects-board-column-options" class="crm-input" rows="2" placeholder="Option one&#10;Option two"></textarea>
+              <div class="crm-inline-fields"><button id="btn-projects-board-save-column" class="crm-btn-primary" type="button">Add column</button><button id="btn-projects-board-cancel-column" class="crm-btn-secondary" type="button">Cancel</button></div>
+            </div>
+            <div id="projects-board-table-wrap" class="crm-projects-board-table-wrap" tabindex="0" aria-label="Project task board">
+              <div id="projects-board-table" class="crm-projects-board-table" role="table" aria-rowcount="0">
+                <div id="projects-board-header" class="crm-projects-board-header" role="row"></div>
+                <div id="projects-board-scroll" class="crm-projects-board-scroll">
+                  <div id="projects-board-rows" class="crm-projects-board-rows" role="rowgroup"></div>
+                </div>
+              </div>
+            </div>
+            <aside id="projects-board-detail" class="crm-projects-board-detail" aria-labelledby="projects-board-detail-title" hidden>
+              <div class="crm-projects-board-detail-head"><div><span class="crm-eyebrow">Selected task</span><h4 id="projects-board-detail-title">Task details</h4></div><button id="btn-projects-board-close-detail" class="crm-btn-secondary crm-btn-sm" type="button" aria-label="Close task details">Close</button></div>
+              <div id="projects-board-detail-body" class="crm-projects-board-detail-body"></div>
+              <section id="projects-task-planning" aria-label="Task scheduling and links"></section>
+              <section id="projects-board-discussion" class="crm-projects-board-discussion" aria-labelledby="projects-board-discussion-title">
+                <div class="crm-projects-board-discussion-head"><div><span class="crm-eyebrow">Discussion</span><h5 id="projects-board-discussion-title">Task conversation</h5></div><div class="crm-inline-fields"><span id="projects-board-discussion-status" class="crm-muted" aria-live="polite"></span><button id="btn-projects-board-discussion-retry" class="crm-btn-secondary crm-btn-sm" type="button" hidden>Retry</button><button id="btn-projects-board-discussion-replace-upload" class="crm-btn-secondary crm-btn-sm" type="button" hidden>Review and retry attachment</button><button id="btn-projects-board-discussion-abandon-upload" class="crm-btn-secondary crm-btn-sm" type="button" hidden>Keep message without attachment</button></div></div>
+                <div id="projects-board-discussion-list" class="crm-projects-board-discussion-list" aria-live="polite"></div>
+                <div id="projects-board-discussion-history" class="crm-projects-board-discussion-history" hidden></div>
+                <form id="projects-board-discussion-form" class="crm-projects-board-discussion-form"><textarea id="projects-board-discussion-input" class="crm-input" rows="3" maxlength="20000" placeholder="Write an update…"></textarea><div class="crm-inline-fields"><label for="projects-board-discussion-mention">Mention members</label><select id="projects-board-discussion-mention" class="crm-input" multiple size="3" aria-label="Mention project members"></select><input id="projects-board-discussion-file" type="file" accept="application/pdf,text/plain,text/csv,image/png,image/jpeg,image/gif,image/webp,application/zip,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label="Attach a file"><button id="btn-projects-board-discussion-send" class="crm-btn-primary" type="submit">Post update</button></div></form>
+              </section>
+
+            </aside>
+            <section id="projects-board-settings" class="crm-projects-board-settings" aria-labelledby="projects-board-settings-title">
+              <div class="crm-section-header"><div><span class="crm-eyebrow">Project settings</span><h4 id="projects-board-settings-title">Project details and schema</h4><p class="crm-muted">Owners can update the project description and shared columns.</p></div></div>
+              <div class="crm-projects-board-settings-grid"><label for="projects-board-settings-name">Name</label><input id="projects-board-settings-name" class="crm-input" type="text" maxlength="200"><label for="projects-board-settings-description">Description</label><textarea id="projects-board-settings-description" class="crm-input" rows="2" maxlength="20000"></textarea><span class="crm-projects-board-settings-subheading">Built-in status labels</span><label for="projects-board-status-not-started">Not started</label><input id="projects-board-status-not-started" class="crm-input" type="text" maxlength="80"><label for="projects-board-status-in-progress">In progress</label><input id="projects-board-status-in-progress" class="crm-input" type="text" maxlength="80"><label for="projects-board-status-blocked">Blocked</label><input id="projects-board-status-blocked" class="crm-input" type="text" maxlength="80"><label for="projects-board-status-done">Done</label><input id="projects-board-status-done" class="crm-input" type="text" maxlength="80"><button id="btn-projects-board-save-settings" class="crm-btn-primary" type="button">Save project details</button></div>
+            </section>
+          </div>
+        </section>
+        <div class="crm-projects-access-layout">
+          <section id="projects-member-access-section" class="crm-projects-access-section" aria-labelledby="projects-member-title">
+            <div class="crm-section-header"><div><h3 id="projects-member-title">Project memberships</h3><p class="crm-muted">A Projects module grant and explicit project membership are both required for content.</p></div></div>
+            <div id="projects-people-list" class="crm-table-container" aria-live="polite"></div>
+            <div class="crm-projects-access-form">
+              <label for="projects-project-select">Project</label><select id="projects-project-select" class="crm-input"></select>
+            </div>
+            <div id="projects-members-list" class="crm-table-container"><div class="crm-muted">Select a project to view memberships.</div></div>
+            <div id="projects-member-editor" class="crm-projects-access-form" hidden>
+              <h4>Add or update a member</h4>
+              <label for="projects-member-person">Person</label><select id="projects-member-person" class="crm-input"></select>
+              <label for="projects-member-role">Role</label><select id="projects-member-role" class="crm-input"><option value="Viewer">Viewer</option><option value="Editor">Editor</option><option value="Owner">Owner</option></select>
+              <button id="btn-projects-member-save" class="crm-btn-secondary" type="button">Save membership</button>
+            </div>
+          </section>
+          <section id="projects-calendar-section" class="crm-projects-access-section" aria-labelledby="projects-calendar-title">
+            <div class="crm-section-header"><div><h3 id="projects-calendar-title">Organization calendar</h3><p class="crm-muted">Vietnam timezone, working week and administrator leave exceptions.</p></div></div>
+            <div class="crm-projects-access-form">
+              <label for="projects-calendar-timezone">Timezone</label><input id="projects-calendar-timezone" class="crm-input" value="Asia/Ho_Chi_Minh">
+              <fieldset id="projects-calendar-weekdays" class="crm-projects-weekdays"><legend>Working weekdays</legend>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="1"> Monday</label>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="2"> Tuesday</label>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="3"> Wednesday</label>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="4"> Thursday</label>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="5"> Friday</label>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="6"> Saturday</label>
+                <label><input type="checkbox" name="projects-calendar-weekday" value="0"> Sunday</label>
+              </fieldset>
+              <div class="crm-projects-leave-editor">
+                <label for="projects-calendar-leave-date">Leave start (inclusive)</label><input id="projects-calendar-leave-date" class="crm-input" type="date">
+                <label for="projects-calendar-leave-end">Leave end (inclusive)</label><input id="projects-calendar-leave-end" class="crm-input" type="date">
+                <label for="projects-calendar-leave-scope">Applies to</label><select id="projects-calendar-leave-scope" class="crm-input"><option value="whole_team">Whole team</option><option value="specific_person">Specific person</option></select>
+                <label for="projects-calendar-leave-person">Person</label><select id="projects-calendar-leave-person" class="crm-input"></select>
+                <button id="btn-projects-calendar-leave-add" class="crm-btn-secondary" type="button">Add exception</button>
+              </div>
+              <fieldset id="projects-calendar-holiday-choices"><legend>Verified holiday choices</legend>
+                <label>Year<input id="projects-calendar-holiday-year" class="crm-input" type="number" min="2026" max="2100" value="2026"></label>
+                <label>Tet scheme<select id="projects-calendar-tet" class="crm-input"><option value="">Requires configuration</option><option value="before1_after3">One day before / three after</option><option value="before2_after2">Two days before / two after</option><option value="before3_after1">Three days before / one after</option></select></label>
+                <label>National Day adjacent holiday<select id="projects-calendar-national" class="crm-input"><option value="">Requires configuration</option><option value="before">September 1</option><option value="after">September 3</option></select></label>
+                <label><input id="projects-calendar-swaps" type="checkbox"> Explicitly adopt approved public-sector working swaps for this year</label>
+                <p class="crm-muted">Public-sector choices are not universal. Proposals are excluded. Verified feed updates preserve manual leave and never move task dates.</p><div id="projects-calendar-provenance"></div>
+              </fieldset>
+              <div id="projects-calendar-leaves" class="crm-stack-list" aria-live="polite"></div>
+              <button id="btn-projects-calendar-save" class="crm-btn-secondary" type="button">Save calendar</button>
+            </div>
+          </section>
+          <section id="projects-allowance-section" class="crm-projects-access-section" aria-labelledby="projects-allowance-title">
+            <div class="crm-section-header"><div><h3 id="projects-allowance-title">Monthly CRM AI allowance</h3><p class="crm-muted">One monthly allowance per eligible staff account across covered CRM AI features. Administrators may set a lower amount, up to the US$5 monthly maximum.</p></div></div>
+            <div class="crm-projects-access-form">
+              <label for="projects-allowance-usd">Default monthly allowance (USD)</label><input id="projects-allowance-usd" class="crm-input" type="number" min="0" max="5" step="0.01" value="5.00">
+              <button id="btn-projects-allowance-save" class="crm-btn-secondary" type="button">Save allowance</button>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -1137,12 +1298,6 @@
                   <option value="Nam">Nam</option>
                   <option value="Thành">Thành</option>
                   <option value="Quỳnh">Quỳnh</option>
-                </select>
-              </div>
-              <div class="crm-form-group" id="lead-agent-source-group" style="display: none;">
-                <label for="lead-agent-source">Agent Source <span style="color:#dc2626;">*</span></label>
-                <select id="lead-agent-source" name="agent_source_id" class="crm-input">
-                  <option value="" disabled selected>Select agent source...</option>
                 </select>
               </div>
             </div>
@@ -2585,6 +2740,20 @@
   <script src="js/crm/scheduler-workspace.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/teacher-scheduler-workspace.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/staff-workspace.js?v=20260908-v2.0.1"></script>
+  <script src="js/crm/ai-assistance/budget.js?v=20260908-monitored"></script>
+  <script src="js/crm/ai-assistance/voice-transport.js?v=20260908-retirement"></script>
+  <script src="js/crm/projects/assistant.js?v=20260908-mute-response"></script>
+  <script src="js/crm/projects/access.js?v=20260907-phase5"></script>
+  <script src="js/crm/projects/state.js?v=20260908-phase9"></script>
+  <script src="js/crm/projects/discussion.js?v=20260907-phase6"></script>
+  <script src="js/crm/projects/recovery.js?v=20260907-phase4"></script>
+  <script src="js/crm/projects/views.js?v=20260907-phase5"></script>
+  <script src="js/crm/projects/notifications.js?v=20260907-phase6"></script>
+  <script src="js/crm/projects/automation-definition-editor.js?v=20260907-phase7"></script>
+  <script src="js/crm/projects/automations-renderer.js?v=20260907-phase7"></script>
+  <script src="js/crm/projects/automations.js?v=20260908-phase9"></script>
+  <script src="js/crm/projects/remote-observer.js?v=20260908-remote"></script>
+  <script src="js/crm/projects/board.js?v=20260908-phase10"></script>
   <script src="js/crm/student-finance.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/live-delivery.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/classroom-modal.js?v=20260908-v2.0.1"></script>
@@ -2605,7 +2774,15 @@
   <script src="js/crm/index.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/entrance-test-link-state.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/devtools-access.js?v=20260908-v2.0.1&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/bel-assistant.js?v=20260908-v2.0.1"></script>
+  <script src="js/crm/ai-assistance/budget.js?v=20260908-monitored"></script>
+  <script src="js/crm/ai-assistance/voice-transport.js?v=20260908-retirement"></script>
+  <script src="js/crm/data-input/client.js?v=20260908-v2.0.1&input=20260908-resume"></script>
+  <script src="js/crm/data-input/attachments.js?v=20260908-v2.0.1&input=20260908-2"></script>
+  <script src="js/crm/data-input/voice.js?v=20260908-v2.0.1&input=20260908-7"></script>
+  <script src="js/crm/data-input/voice-panel.js?v=20260908-v2.0.1&input=20260908-7"></script>
+  <script src="js/crm/data-input/profile-editor.js?v=20260908-v2.0.1&input=20260908-2"></script>
+  <script src="js/crm/data-input/workspace.js?v=20260908-v2.0.1&input=20260908-clarification"></script>
+  <script src="js/crm/bel-assistant.js?v=20260908-v2.0.1&input=20260908-3"></script>
   <script src="arpabet-ipa-map.js?v=20260908-v2.0.1"></script>
   <script src="phonetics.js?v=20260908-v2.0.1"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>

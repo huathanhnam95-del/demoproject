@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "crm-projects-phase-manifest-v1",
+  "phases": [
+    {
+      "id": 0,
+      "name": "verification and isolation foundation",
+      "mandatory": true,
+      "tests": [
+        {
+          "id": "phase0-harness",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/projects/phase0-harness.test.js"]
+        },
+        {
+          "id": "phase0-emulator-roundtrip",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/projects/emulator-roundtrip.test.js"]
+        },
+        {
+          "id": "phase0-emulator-isolation",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/projects/emulator-isolation.test.js"]
+        },
+        {
+          "id": "account-role-management-baseline",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/accounts-role-management.test.js"]
+        },
+        {
+          "id": "task-activity-baseline",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/activity-service.test.js"]
+        },
+        {
+          "id": "scheduler-baseline",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/teacher-scheduler-behavior.test.js"]
+        },
+        {
+          "id": "scheduler-client-baseline",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/teacher-scheduler-client-controller.test.js"]
+        },
+        {
+          "id": "crm-shell-baseline",
+          "required": true,
+          "runner": "node",
+          "args": ["tests/crm/crm-shell-static.test.js"]
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "People & Access",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase1-people-access-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase1-people-access-api.test.js"] },
+        { "id": "phase1-people-access-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase1-people-access-persisted.test.js"] },
+        { "id": "phase1-people-access-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase1-people-access-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "canonical domain and API",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase2-domain-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase2-domain-api.test.js"] },
+        { "id": "phase2-domain-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase2-domain-persisted.test.js"] }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "primary board",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase3-board-contract", "required": true, "runner": "node", "args": ["tests/crm/projects/phase3-board-contract.test.js"] },
+        { "id": "phase3-board-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase3-board-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "discussions history and recovery",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase4-recovery-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase4-recovery-client.test.js"] },
+        { "id": "phase4-discussions-recovery-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase4-discussions-recovery-api.test.js"] },
+        { "id": "phase4-recovery-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase4-recovery-persisted.test.js"] },
+        { "id": "phase4-discussions-recovery-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase4-discussions-recovery-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "shared views calendars and CRM links",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase5-models", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-models.test.js"] },
+        { "id": "phase5-transaction-retry", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-transaction-retry.test.js"] },
+        { "id": "phase5-transaction-retry-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-transaction-retry-persisted.test.js"] },
+        { "id": "phase5-views-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-views-client.test.js"] },
+        { "id": "phase5-board-access-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-board-access-client.test.js"] },
+        { "id": "phase5-access-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-access-client.test.js"] },
+        { "id": "phase5-views-calendar-links-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-views-calendar-links-api.test.js"] },
+        { "id": "phase5-views-calendar-links-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase5-views-calendar-links-persisted.test.js"] },
+        { "id": "phase5-views-calendar-links-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase5-views-calendar-links-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "deterministic engine and in-app notifications",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase6-engine-contract", "required": true, "runner": "node", "args": ["tests/crm/projects/phase6-engine-contract.test.js"] },
+        { "id": "phase6-notifications-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase6-notifications-client.test.js"] },
+        { "id": "phase6-engine-notifications", "required": true, "runner": "node", "args": ["tests/crm/projects/phase6-engine-notifications.test.js"] },
+        { "id": "phase6-due-scheduling-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase6-due-scheduling-persisted.test.js"] },
+        { "id": "phase6-engine-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase6-engine-persisted.test.js"] },
+        { "id": "phase6-notifications-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase6-notifications-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "automation designer",
+      "mandatory": true,
+      "tests": [
+        { "id": "phase7-automation-preview", "required": true, "runner": "node", "args": ["tests/crm/projects/phase7-automation-preview.test.js"] },
+        { "id": "phase7-automation-designer-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase7-automation-designer-api.test.js"] },
+        { "id": "phase7-automation-designer-contract", "required": true, "runner": "node", "args": ["tests/crm/projects/phase7-automation-designer-contract.test.js"] },
+        { "id": "phase7-automation-designer-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase7-automation-designer-client.test.js"] },
+        { "id": "phase7-automation-designer-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase7-automation-designer-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "monitored monthly accounting",
+      "mandatory": true,
+      "tests": [
+        { "id": "native-accounting-policy", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/native-accounting-policy.test.js", "tests/crm/projects/native-provider-usage.test.js"] },
+        { "id": "phase8-budget-accounting", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-accounting.test.js"] },
+        { "id": "phase8-budget-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-api.test.js"] },
+        { "id": "phase8-budget-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-client.test.js"] },
+        { "id": "phase8-data-input-consumer", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-data-input-consumer.test.js"] },
+        { "id": "phase8-budget-concurrency-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-concurrency-persisted.test.js"] },
+        { "id": "phase8-budget-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase8-budget-browser-check.js"] }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "context-aware Gemini drafting and voice",
+      "mandatory": true,
+      "tests": [
+        { "id": "native-provider-integration", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/native-provider-integration.test.js"] },
+        { "args": ["--test", "tests/crm/projects/native-gemini-connector.test.js"], "required": true, "id": "native-gemini-connector-contract", "runner": "node" },
+        { "args": ["--test", "tests/crm/projects/native-voice-runtime.test.js"], "required": true, "id": "native-voice-runtime-contract", "runner": "node" },
+        { "args": ["--test", "tests/crm/projects/shared-voice-identity.test.js"], "required": true, "id": "shared-voice-identity", "runner": "node" },
+        { "args": ["tests/crm/projects/shared-voice-session.test.js"], "required": true, "id": "shared-voice-session", "runner": "node" },
+        { "args": ["tests/crm/projects/shared-voice-transport.test.js"], "required": true, "id": "shared-voice-transport", "runner": "node" },
+        { "args": ["tests/crm/projects/shared-voice-persisted-check.js"], "required": true, "id": "shared-voice-persisted", "runner": "node" },
+        { "args": ["tests/browser/crm-projects/shared-voice-browser-check.js"], "required": true, "id": "shared-voice-browser", "runner": "node" },
+        { "id": "phase9-projects-voice-context", "required": true, "runner": "node", "args": ["tests/crm/projects/phase9-projects-voice-context.test.js"] },
+        { "id": "phase9-projects-voice-context-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase9-projects-voice-context-persisted.js"] },
+        { "id": "phase9-gemini-context-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase9-gemini-context-api.test.js"] },
+        { "id": "phase9-gemini-relay-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase9-gemini-relay-browser-check.js"] },
+        {"id":"phase9-confirmed-batches","required":true,"runner":"node","args":["tests/crm/projects/phase9-confirmed-batches.test.js"]},
+        {"id":"phase9-draft-store","required":true,"runner":"node","args":["tests/crm/projects/phase9-draft-store.test.js"]},
+        {"id":"phase9-projects-drafts","required":true,"runner":"node","args":["tests/crm/projects/phase9-projects-drafts.test.js"]},
+        {"id":"phase9-draft-routes","required":true,"runner":"node","args":["tests/crm/projects/phase9-draft-routes.test.js"]},
+        {"id":"phase9-accounted-generation","required":true,"runner":"node","args":["tests/crm/projects/phase9-accounted-generation.test.js"]},
+        {"id":"phase9-context-details","required":true,"runner":"node","args":["tests/crm/projects/phase9-context-details.test.js"]},
+        {"id":"phase9-proposals","required":true,"runner":"node","args":["tests/crm/projects/phase9-proposals.test.js"]},
+        {"id":"phase9-selection","required":true,"runner":"node","args":["tests/crm/projects/phase9-selection.test.js"]},
+        {"id":"phase9-assistant-client","required":true,"runner":"node","args":["tests/crm/projects/phase9-assistant-client.test.js"]},
+        {"id":"phase9-prepared-creation","required":true,"runner":"node","args":["tests/crm/projects/phase9-prepared-creation.test.js"]},
+        {"id":"creation-drafts-persisted","required":true,"runner":"node","args":["tests/crm/projects/creation-drafts-persisted.js"]},
+        {"id":"phase9-drafts-persisted","required":true,"runner":"node","args":["tests/crm/projects/phase9-drafts-persisted.js"]}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "integration performance and local release candidate",
+      "mandatory": true,
+      "tests": [
+        { "id": "remote-observation-protocol", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/remote-observation.test.js"] },
+        { "id": "remote-observation-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/remote-observation-persisted.js"] },
+        { "id": "remote-observation-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/remote-observation-browser-check.js"] },
+        { "id": "phase10-integration-regression", "required": true, "runner": "node", "args": ["tests/crm/projects/phase10-integration-regression.test.js"] },
+        { "id": "phase10-scroll-render", "required": true, "runner": "node", "args": ["tests/crm/projects/phase10-scroll-render.test.js"] },
+        { "id": "phase10-feature-off-persisted", "required": true, "runner": "node", "args": ["tests/crm/projects/phase10-feature-off-persisted.js"] },
+        { "id": "phase10-performance-browser", "required": true, "runner": "node", "args": ["tests/browser/crm-projects/phase10-performance-browser-check.js"] }
+      ]
+    }
+  ]
+}

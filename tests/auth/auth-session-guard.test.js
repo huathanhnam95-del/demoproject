@@ -123,6 +123,79 @@ async function testCompatHelpers() {
   assert.strictEqual(user?.uid, 'compat-user', 'Compat auth helper should resolve the restored user.');
 }
 
+async function testValidatedEmulatorOverrides() {
+  const calls = { auth: null, firestore: null };
+  const auth = {
+    setPersistence: async () => true,
+    useEmulator(url) { calls.auth = url; },
+    onAuthStateChanged() { return () => {}; },
+    currentUser: null
+  };
+  const firestore = { useEmulator(host, port) { calls.firestore = { host, port }; } };
+  const firebaseRef = {
+    apps: [],
+    initializeApp() { this.apps.push({}); },
+    auth: () => auth,
+    firestore: () => firestore
+  };
+  firebaseRef.auth.Auth = { Persistence: { LOCAL: 'local' } };
+  sandbox.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      success: true,
+      config: { apiKey: 'test-key', projectId: 'demo-crm-projects' },
+      emulators: {
+        auth: { host: '127.0.0.1', port: 9180 },
+        firestore: { host: '127.0.0.1', port: 8188 }
+      }
+    })
+  });
+  await guard.ensureCompatFirebaseFromConfig(firebaseRef);
+  assert.strictEqual(calls.auth, 'http://127.0.0.1:9180');
+  assert.deepStrictEqual(calls.firestore, { host: '127.0.0.1', port: 8188 });
+
+  const invalidFirebase = {
+    apps: [],
+    initializeApp() { this.apps.push({}); },
+    auth: () => auth,
+    firestore: () => firestore
+  };
+  sandbox.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      success: true,
+      config: { apiKey: 'test-key', projectId: 'demo-crm-projects' },
+      emulators: { auth: { host: 'attacker.example', port: 9180 }, firestore: { host: '127.0.0.1', port: 8188 } }
+    })
+  });
+  await assert.rejects(
+    () => guard.ensureCompatFirebaseFromConfig(invalidFirebase),
+    /loopback emulator endpoint/
+  );
+
+  const nonDemoFirebase = {
+    apps: [],
+    initializeApp() { this.apps.push({}); },
+    auth: () => auth,
+    firestore: () => firestore
+  };
+  sandbox.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      success: true,
+      config: { apiKey: 'test-key', projectId: 'legacy-local-project' },
+      emulators: {
+        auth: { host: '127.0.0.1', port: 9180 },
+        firestore: { host: '127.0.0.1', port: 8188 }
+      }
+    })
+  });
+  await assert.rejects(
+    () => guard.ensureCompatFirebaseFromConfig(nonDemoFirebase),
+    /dedicated demo project/
+  );
+}
+
 (async () => {
   await testImmediateUser();
   await testDelayedUser();
@@ -130,6 +203,7 @@ async function testCompatHelpers() {
   await testStableNull();
   await testInitialResolution();
   await testCompatHelpers();
+  await testValidatedEmulatorOverrides();
   console.log('auth session guard passed');
 })().catch((error) => {
   console.error(error);

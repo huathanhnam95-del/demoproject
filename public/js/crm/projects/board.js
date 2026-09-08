@@ -90,6 +90,8 @@
         let loadBusy = false;
         const columnMovesPending = new Set();
         const taskMovesPending = new Set();
+        const refreshIntents = new Set();
+        let latestRefreshIntent = null;
         let authorityPending = true;
         let sectionCreatePending = false;
         let columnEditor = null;
@@ -99,6 +101,7 @@
         function role() { return membership?.role || selection.selectedProject?.role || ''; }
         // Rendering a retained editor never grants mutation authority.
         function canRenderTaskEditor() { return !!project && String(project.id) === currentProjectId() && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project.lifecycle || 'active') === 'active' && (role() === 'Owner' || role() === 'Editor'); }
+        function refreshRequested() { return [...refreshIntents].some(scopeIsCurrent); }
         function canWrite() { return !authorityPending && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && (role() === 'Owner' || role() === 'Editor'); }
         function canSchema() { return !authorityPending && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && role() === 'Owner'; }
         function hasProject() { return !!currentProjectId() && !!project; }
@@ -222,12 +225,12 @@
         }
         function contextSnapshot() {
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { if (project || tasks.size) invalidateAccess(currentProjectId()); resetColumnForm(); selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); }
-            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: new Map(tasks), selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
+            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject() && !refreshRequested(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: new Map(tasks), selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
         }
 
         function setBusy(value) {
             loadBusy = value === true;
-            busy = loadBusy || [...columnMovesPending, ...taskMovesPending].some(scopeIsCurrent);
+            busy = loadBusy || [...columnMovesPending, ...taskMovesPending, ...refreshIntents].some(scopeIsCurrent);
             if (elements.projectsBoardSection) elements.projectsBoardSection.setAttribute('aria-busy', busy ? 'true' : 'false');
             if (elements.projectsBoardProjectSelect) elements.projectsBoardProjectSelect.disabled = !selection.projects.length;
             if (elements.projectsBoardRefresh) elements.projectsBoardRefresh.disabled = busy;
@@ -1021,6 +1024,7 @@
         }
 
         async function saveTaskField(taskId, kind, control) {
+            if (refreshRequested()) return;
             const value = fieldValue(control);
             const mutationScope = captureScope();
             const mutationProjectId = mutationScope.projectId;
@@ -1080,10 +1084,11 @@
                     if (Number(error?.status) === 409 && elements.projectsBoardStatus) {
                         const review = document.createElement('button'); review.type = 'button'; review.className = 'crm-btn-secondary crm-btn-sm'; review.textContent = 'Review and retry'; review.dataset.remoteConflictReview = taskId;
                         review.addEventListener('click', async () => {
+                            if (refreshRequested()) return;
                             review.disabled = true;
                             try {
                                 const latest = await apiFetchJson(`/api/projects/${encodeURIComponent(mutationProjectId)}/tasks/${encodeURIComponent(taskId)}`);
-                                if (!scopeIsCurrent(mutationScope) || !canWrite() || !latest?.task) return;
+                                if (!scopeIsCurrent(mutationScope) || refreshRequested() || !canWrite() || !latest?.task) return;
                                 const observed = taskFor(taskId);
                                 const reviewedTask = Number(observed?.revision || 0) > Number(latest.task.revision || 0) ? observed : latest.task;
                                 const currentValue = kind === 'value' ? reviewedTask.values?.[control.dataset.columnId] : reviewedTask[kind];
@@ -1110,6 +1115,7 @@
         }
 
         async function saveSection(sectionId, control) {
+            if (refreshRequested()) return;
             if (!canSchema()) return;
             const mutationScope = captureScope();
             const mutationProjectId = mutationScope.projectId;
@@ -1148,6 +1154,7 @@
         }
 
         async function createSection() {
+            if (refreshRequested()) return;
             if (!canSchema() || busy || sectionCreatePending) return;
             const title = String(elements.projectsBoardSectionName?.value || '').trim();
             if (!title) {
@@ -1176,6 +1183,7 @@
         }
 
         async function createTask(parentTaskId = null) {
+            if (refreshRequested()) return;
             if (!canWrite()) return;
             const scope = captureScope();
             const sectionId = parentTaskId ? (taskFor(parentTaskId)?.effectiveSectionId || taskFor(parentTaskId)?.sectionId) : (taskFor(selectedTaskId)?.effectiveSectionId || taskFor(selectedTaskId)?.sectionId || sections[0]?.id);
@@ -1252,6 +1260,7 @@
         }
 
         async function createColumn(archive = false) {
+            if (refreshRequested()) return;
             const editor = columnEditor;
             if (!editor || editor.pending || !canSchema() || !scopeIsCurrent(editor.scope)) return;
             archive = archive === true;
@@ -1299,6 +1308,7 @@
         }
 
         async function saveSettings() {
+            if (refreshRequested()) return;
             if (!canSchema() || !project) return;
             const mutationScope = captureScope();
             const mutationProjectId = mutationScope.projectId;
@@ -1350,6 +1360,7 @@
         }
 
         async function moveTask(taskId, destination) {
+            if (refreshRequested()) return;
             const mutationScope = captureScope();
             await waitForTaskQueue(mutationScope, taskId);
             if (!scopeIsCurrent(mutationScope)) return;
@@ -1388,6 +1399,7 @@
         }
 
         async function moveSection(sectionId, index) {
+            if (refreshRequested()) return;
             if (!canSchema()) return;
             const section = sections.find((entry) => String(entry.id) === String(sectionId));
             if (!section) return;
@@ -1404,6 +1416,7 @@
         }
 
         async function moveColumn(columnId, index) {
+            if (refreshRequested()) return;
             if (!canSchema() || busy) return;
             const column = columns.find((entry) => String(entry.id) === String(columnId));
             if (!column) return;
@@ -1598,6 +1611,7 @@
         }
 
         function onDragStart(event) {
+            if (refreshRequested()) { event.preventDefault(); return; }
             if (event.target.closest('[data-action="select-task"]')) { event.preventDefault(); return; }
             if (!canWrite()) { event.preventDefault(); return; }
             const row = event.target.closest('[data-row-kind]');
@@ -1629,6 +1643,7 @@
         }
 
         async function onDrop(event) {
+            if (refreshRequested()) { event.preventDefault(); clearDragInteraction(); return; }
             if (!dragState || dragState.handled) return;
             event.preventDefault();
             const target = event.target.closest('[data-row-kind]');
@@ -1696,7 +1711,27 @@
 
         async function refresh() {
             if (!currentProjectId()) return false;
-            return await loadProject(currentProjectId(), { preserve: true });
+            const intent = captureScope();
+            latestRefreshIntent = intent;
+            refreshIntents.add(intent);
+            // Readiness starts before the observer handshake or local-save queue wait.
+            // Keep admitted saves authorized until the loader drains their queue.
+            setBusy(loadBusy);
+            renderBoard();
+            let refreshed = false;
+            try {
+                refreshed = await loadProject(intent.projectId, { preserve: true });
+                return refreshed;
+            } finally {
+                refreshIntents.delete(intent);
+                if (scopeIsCurrent(intent)) {
+                    if (!refreshed && latestRefreshIntent === intent) authorityPending = true;
+                    const view = snapshotView();
+                    setBusy(loadBusy);
+                    renderBoard();
+                    restoreView(view);
+                }
+            }
         }
 
         function init() {

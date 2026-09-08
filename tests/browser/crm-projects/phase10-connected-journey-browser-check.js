@@ -52,7 +52,19 @@ async function main() {
         const board = page => page.locator('#projects-view-tabs [data-view="board"]');
         const chooseTask = async (page, id) => { await board(page).click(); const row = page.locator(`[data-task-id="${id}"][data-row-kind="task"]`); await row.focus(); await row.press('Enter'); await page.waitForFunction(taskId => window.projectsDiscussionController?.getState()?.selection?.taskId === taskId, id); };
         await record('same canonical project, recursive tasks, typed values and people visible to two current accounts', async () => {
-            for (const page of pages) { await page.locator('[data-task-id="one"]').first().waitFor(); const boardText = await page.locator('#projects-board-table').innerText(); assert.match(boardText, /Estimate/); assert.match(boardText, /Reviewers/); }
+            for (const [columnId, label] of [['estimate', 'Estimate'], ['reviewers', 'Reviewers']]) {
+                const column = await c.projectRef.collection('columns').doc(columnId).get();
+                assert.equal(column.exists, true, `Canonical column ${columnId} must exist`);
+                assert.equal(column.data().label, label, `Canonical column ${columnId} must retain its exact label`);
+                for (const page of pages) {
+                    const field = page.locator(`[data-task-id="one"] [data-field-kind="value"][data-column-id="${columnId}"]`);
+                    await field.waitFor();
+                    assert.equal(await field.getAttribute('aria-label'), label, `Task field ${columnId} must use its canonical column label`);
+                    const heading = page.locator(`#projects-board-header [role="columnheader"] .crm-projects-board-column-label[title="${label}"]`);
+                    assert.equal(await heading.count(), 1, `Column ${columnId} must have one matching header`);
+                    assert.equal(await heading.textContent(), label, `Column ${columnId} must render its exact label independently of CSS capitalization`);
+                }
+            }
             const one = await c.taskData('one'); assert.equal(one.values.estimate, 3); assert.deepEqual(one.values.reviewers, [c.uids.editor]); assert.equal(one.ownerUid, c.uids.owner); assert.deepEqual(one.assigneeUids, [c.uids.editor]);
             assert.equal((await c.taskData('child')).parentTaskId, 'one'); assert.equal((await c.taskData('grandchild')).parentTaskId, 'child');
             h.expectStatus(await f.api(projectPath, 'unauthorized'), 403);

@@ -207,10 +207,33 @@ async function transcodeToMp3(ffmpeg, wavPath, mp3Path) {
   });
 }
 
+// Coverage describes written question manifests, including manifests with failed events.
+// Never silently shrink declared coverage when an output has disappeared or is corrupt.
+function collectQuestionManifestIds(questionRoot, declaredIds = []) {
+  if (!Array.isArray(declaredIds) || declaredIds.some((id) => typeof id !== 'string' || !/^[1-9]\d*$/.test(id))
+    || new Set(declaredIds).size !== declaredIds.length) throw new Error('Invalid questionManifestIds catalog');
+  const files = fs.existsSync(questionRoot) ? fs.readdirSync(questionRoot).filter((name) => name.endsWith('.json')) : [];
+  const ids = new Set(declaredIds);
+  for (const file of files) {
+    const id = file.slice(0, -5);
+    if (!/^[1-9]\d*$/.test(id)) throw new Error(`Invalid question manifest filename: ${file}`);
+    ids.add(id);
+  }
+  for (const id of ids) {
+    const question = JSON.parse(fs.readFileSync(path.join(questionRoot, `${id}.json`), 'utf8'));
+    if (question?.version !== CONTRACT_VERSION || question.questionId !== id
+      || !question.events || typeof question.events !== 'object' || Array.isArray(question.events)) {
+      throw new Error(`Invalid question manifest: ${id}`);
+    }
+  }
+  return [...ids].sort((a, b) => a.length - b.length || a.localeCompare(b));
+}
+
 async function loadOrCreateManifest(workbookPath, runId) {
   const manifestPath = path.join(AUDIO_ROOT, 'manifest.json');
   let manifest = {};
   if (fs.existsSync(manifestPath)) manifest = JSON.parse(await fsp.readFile(manifestPath, 'utf8'));
+  manifest.questionManifestIds = collectQuestionManifestIds(QUESTION_ROOT, manifest.questionManifestIds);
   manifest.version = CONTRACT_VERSION;
   manifest.voice = VOICE;
   manifest.speed = SPEED;
@@ -355,6 +378,8 @@ async function main() {
         }
       }
       await saveJson(path.join(QUESTION_ROOT, `${questionId}.json`), question);
+      manifest.questionManifestIds = [...new Set([...manifest.questionManifestIds, questionId])]
+        .sort((a, b) => a.length - b.length || a.localeCompare(b));
       await saveJson(manifestPath, manifest);
       console.log(`question ${questionId}: ${Object.keys(question.events).length} events`);
     }
@@ -382,4 +407,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseArgs, buildInventory, splitPhonemeWords, getTargetIpa, getGeneratorRevision, shouldReuseAsset, waitForKokoro };
+module.exports = { collectQuestionManifestIds, parseArgs, buildInventory, splitPhonemeWords, getTargetIpa, getGeneratorRevision, shouldReuseAsset, waitForKokoro };

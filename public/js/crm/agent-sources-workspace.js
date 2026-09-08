@@ -68,7 +68,8 @@ window.CrmAgentSourcesWorkspace = (function () {
             if (!select) return;
             const selectedValue = clean(currentValue || select.value);
             const list = getAgentSources();
-            select.innerHTML = '<option value="">No agent source</option>' + list.map(renderAgentOption).join('');
+            const placeholder = list.length === 0 ? 'No agent sources yet' : 'Select agent source...';
+            select.innerHTML = `<option value="" disabled${!selectedValue ? ' selected' : ''}>${placeholder}</option>` + list.map(renderAgentOption).join('');
             if (selectedValue && list.some((row) => row.agentSourceId === selectedValue)) {
                 select.value = selectedValue;
             } else {

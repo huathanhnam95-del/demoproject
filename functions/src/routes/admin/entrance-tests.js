@@ -1,8 +1,9 @@
 const crypto = require('crypto');
 const axios = require('axios');
 const https = require('https');
-const { ENTRANCE_TESTS, CRM_LEADS, CRM_STUDENTS } = require('../../crm/collections');
-const { ensureCrmIdOnDoc } = require('../../crm/business-id-service');
+const { ENTRANCE_TESTS, CRM_LEADS, CRM_STUDENTS, CRM_COUNTERS } = require('../../crm/collections');
+const { formatCrmId } = require('../../crm/business-id-service');
+const { auditSaved } = require('../../crm/workflow-write-service');
 const { buildLeadStageSyncPatch, mapLeadRecord } = require('../../crm/lead-service');
 const { mapStudentRecord } = require('../../crm/student-service');
 const { buildEntranceTestLinks } = require('../../crm/public-origin');
@@ -125,170 +126,64 @@ async function listTestsByField(db, field, value) {
 module.exports = function registerEntranceTestRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
 
-    router.post('/leads/:leadId/entrance-tests', ...requireAdminHandlers, async (req, res) => {
+    async function createEntranceTest(req, res, targetKind) {
         try {
-            const leadId = cleanOptionalString(req.params.leadId);
-            if (!leadId) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing leadId.');
-            }
-
-            const leadRef = db.collection(CRM_LEADS).doc(leadId);
-            const leadSnap = await leadRef.get();
-            if (!leadSnap.exists) {
-                return sendError(res, 404, 'LEAD_NOT_FOUND', 'Lead not found.');
-            }
-
-            const leadEnsure = await ensureCrmIdOnDoc(db, leadRef, leadSnap.data() || {}, {
-                user: req.user,
-                serverTimestamp
-            });
-            const lead = { ...(leadSnap.data() || {}), crmId: leadEnsure.crmId };
+            const isLead = targetKind === 'lead';
+            const targetId = cleanOptionalString(isLead ? req.params.leadId : req.params.studentId);
+            if (!targetId) return sendError(res, 400, 'VALIDATION_ERROR', `Missing ${targetKind}Id.`);
             const testType = cleanOptionalString(req.body?.testType) || DEFAULT_TEST_TYPE;
-            if (!VALID_TEST_TYPES.has(testType)) {
-                return sendError(res, 400, 'INVALID_TEST_TYPE', `Invalid test type: ${testType}`);
-            }
-
+            if (!VALID_TEST_TYPES.has(testType)) return sendError(res, 400, 'INVALID_TEST_TYPE', `Invalid test type: ${testType}`);
             const { token, testId } = await generateUniqueTestIdentity(db);
             const testRef = db.collection(ENTRANCE_TESTS).doc(testId);
-
-            await db.runTransaction(async (tx) => {
-                const existingTestSnap = await tx.get(testRef);
-                if (existingTestSnap.exists) {
-                    throw new Error('TOKEN_ERROR');
+            const targetRef = db.collection(isLead ? CRM_LEADS : CRM_STUDENTS).doc(targetId);
+            const metadata = await db.runTransaction(async (tx) => {
+                const targetSnap = await tx.get(targetRef);
+                if (!targetSnap.exists) throw Object.assign(new Error(`${isLead ? 'Lead' : 'Student profile'} not found.`), { status: 404, code: isLead ? 'LEAD_NOT_FOUND' : 'STUDENT_NOT_FOUND' });
+                const target = targetSnap.data() || {};
+                const leadId = isLead ? targetId : cleanOptionalString(target.leadId);
+                const leadRef = isLead ? targetRef : (leadId ? db.collection(CRM_LEADS).doc(leadId) : null);
+                const leadSnap = isLead ? targetSnap : (leadRef ? await tx.get(leadRef) : null);
+                const lead = leadSnap?.exists ? leadSnap.data() : null;
+                const studentId = isLead ? cleanOptionalString(target.studentId) : targetId;
+                const existingTest = await tx.get(testRef);
+                if (existingTest.exists) throw new Error('TOKEN_ERROR');
+                let crmId = cleanOptionalString(target.crmId) || cleanOptionalString(lead?.crmId);
+                let counterRef;
+                let nextIndex;
+                if (!crmId) {
+                    counterRef = db.collection(CRM_COUNTERS).doc('crmId');
+                    const counter = await tx.get(counterRef);
+                    const value = Number(counter.data()?.nextIndex);
+                    nextIndex = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+                    crmId = formatCrmId(nextIndex);
                 }
-
-                tx.set(testRef, {
-                    leadId,
-                    studentId: cleanOptionalString(lead.studentId),
-                    crmId: cleanOptionalString(lead.crmId),
-                    testType,
-                    version: testType === 'segmental_screening_v1' ? 'segmental_screening_v1' : TEST_VERSION,
-                    status: 'created',
-                    deliveryToken: token,
-                    createdAt: serverTimestamp(),
-                    createdBy: req.user.uid,
-                    createdByEmail: req.user.email || null,
-                    startedAt: null,
-                    submittedAt: null
-                });
-
-                const leadPatch = buildLeadStageSyncPatch(lead, 'test_scheduled', {
-                    user: req.user,
-                    serverTimestamp
-                });
-                if (leadPatch) {
-                    tx.set(leadRef, leadPatch, { merge: true });
-                }
-            });
-
-            await writeAuditLog?.({
-                action: 'entrance_test.create',
-                entityType: 'entrance_test',
-                entityId: testId,
-                metadata: { leadId }
-            }, { user: req.user });
-
-            const links = buildEntranceTestLinks(req, { deliveryToken: token, testId });
-            return sendSuccess(res, {
-                testId,
-                testLink: links.testLink,
-                resultLink: links.resultLink
-            }, 'Entrance test link created.');
-        } catch (error) {
-            return sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
-        }
-    });
-
-    router.post('/students/:studentId/entrance-tests', ...requireAdminHandlers, async (req, res) => {
-        try {
-            const studentId = cleanOptionalString(req.params.studentId);
-            if (!studentId) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'Missing studentId.');
-            }
-
-            const studentRef = db.collection(CRM_STUDENTS).doc(studentId);
-            const studentSnap = await studentRef.get();
-            if (!studentSnap.exists) {
-                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
-            }
-
-            const studentEnsure = await ensureCrmIdOnDoc(db, studentRef, studentSnap.data() || {}, {
-                user: req.user,
-                serverTimestamp
-            });
-            const student = { ...(studentSnap.data() || {}), crmId: studentEnsure.crmId };
-            const leadId = cleanOptionalString(student.leadId);
-            const leadRef = leadId ? db.collection(CRM_LEADS).doc(leadId) : null;
-            const leadSnap = leadRef ? await leadRef.get() : null;
-            const lead = leadSnap && leadSnap.exists ? { ...(leadSnap.data() || {}), crmId: cleanOptionalString(leadSnap.data()?.crmId) || null } : null;
-            if (leadRef && leadSnap?.exists && !cleanOptionalString(lead?.crmId)) {
-                const leadEnsure = await ensureCrmIdOnDoc(db, leadRef, leadSnap.data() || {}, {
-                    user: req.user,
-                    serverTimestamp
-                });
-                lead.crmId = leadEnsure.crmId;
-            }
-
-            const testType = cleanOptionalString(req.body?.testType) || DEFAULT_TEST_TYPE;
-            if (!VALID_TEST_TYPES.has(testType)) {
-                return sendError(res, 400, 'INVALID_TEST_TYPE', `Invalid test type: ${testType}`);
-            }
-
-            const { token, testId } = await generateUniqueTestIdentity(db);
-            const testRef = db.collection(ENTRANCE_TESTS).doc(testId);
-
-            await db.runTransaction(async (tx) => {
-                const existingTestSnap = await tx.get(testRef);
-                if (existingTestSnap.exists) {
-                    throw new Error('TOKEN_ERROR');
-                }
-
-                tx.set(testRef, {
-                    leadId,
-                    studentId,
-                    crmId: cleanOptionalString(student.crmId || lead?.crmId),
-                    testType,
-                    version: testType === 'segmental_screening_v1' ? 'segmental_screening_v1' : TEST_VERSION,
-                    status: 'created',
-                    deliveryToken: token,
-                    createdAt: serverTimestamp(),
-                    createdBy: req.user.uid,
-                    createdByEmail: req.user.email || null,
-                    startedAt: null,
-                    submittedAt: null
-                });
-
+                if (counterRef) tx.set(counterRef, { nextIndex: nextIndex + 1, lastAllocatedCrmId: crmId, updatedAt: serverTimestamp() }, { merge: true });
+                if (!cleanOptionalString(target.crmId)) tx.set(targetRef, { crmId, updatedAt: serverTimestamp(), updatedBy: req.user.uid }, { merge: true });
                 if (leadRef && lead) {
-                    const leadPatch = buildLeadStageSyncPatch(lead, 'test_scheduled', {
-                        user: req.user,
-                        serverTimestamp
-                    });
-                    if (leadPatch) {
-                        tx.set(leadRef, leadPatch, { merge: true });
-                    }
+                    const patch = buildLeadStageSyncPatch(lead, 'test_scheduled', { user: req.user, serverTimestamp }) || {};
+                    if (!cleanOptionalString(lead.crmId)) patch.crmId = crmId;
+                    if (Object.keys(patch).length) tx.set(leadRef, patch, { merge: true });
                 }
+                tx.set(testRef, {
+                    leadId, studentId, crmId, testType,
+                    version: testType === 'segmental_screening_v1' ? 'segmental_screening_v1' : TEST_VERSION,
+                    status: 'created', deliveryToken: token, createdAt: serverTimestamp(),
+                    createdBy: req.user.uid, createdByEmail: req.user.email || null,
+                    startedAt: null, submittedAt: null
+                });
+                return { leadId, studentId };
             });
-
-            await writeAuditLog?.({
-                action: 'entrance_test.create',
-                entityType: 'entrance_test',
-                entityId: testId,
-                metadata: { studentId, leadId: leadId || null }
-            }, { user: req.user });
-
+            const warnings = await auditSaved(writeAuditLog, { action: 'entrance_test.create', entityType: 'entrance_test', entityId: testId, metadata }, { user: req.user });
             const links = buildEntranceTestLinks(req, { deliveryToken: token, testId });
-            return sendSuccess(res, {
-                testId,
-                testLink: links.testLink,
-                resultLink: links.resultLink
-            }, 'Entrance test link created.');
+            return sendSuccess(res, { testId, testLink: links.testLink, resultLink: links.resultLink, ...(warnings.length ? { warnings } : {}) }, 'Entrance test link created.');
         } catch (error) {
-            if ((error?.message || '').includes('STUDENT_NOT_FOUND')) {
-                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
-            }
+            if (error.status) return sendError(res, error.status, error.code, error.message);
             return sendError(res, 500, 'CREATE_TEST_ERROR', 'Failed to create entrance test link.', error?.message || error);
         }
-    });
+    }
+
+    router.post('/leads/:leadId/entrance-tests', ...requireAdminHandlers, (req, res) => createEntranceTest(req, res, 'lead'));
+    router.post('/students/:studentId/entrance-tests', ...requireAdminHandlers, (req, res) => createEntranceTest(req, res, 'student'));
 
     router.get('/leads/:leadId/entrance-tests', ...requireAdminHandlers, async (req, res) => {
         try {
@@ -438,6 +333,8 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 let words = null;
                 let accuracy = null;
                 let asrError = null;
+                let accuracyScore = null;
+                let effectiveAccuracy = null;
 
                 try {
                     const [audioBuffer] = await targetBucket.file(storagePath).download();
@@ -447,6 +344,20 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                     if (expectedText) {
                         accuracy = computeWordAccuracyPercent(expectedText, transcript);
                     }
+
+                    if (Number.isFinite(Number(asrRes?.accuracyScore))) {
+                        accuracyScore = Number(asrRes.accuracyScore);
+                    } else if (Number.isFinite(Number(words?.accuracyScore))) {
+                        accuracyScore = Number(words.accuracyScore);
+                    } else if (Array.isArray(words) && words.length > 0) {
+                        const validScores = words
+                            .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+                            .filter((n) => n !== null);
+                        if (validScores.length > 0) {
+                            accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
+                        }
+                    }
+                    effectiveAccuracy = accuracyScore != null ? accuracyScore : (accuracy?.percent ?? null);
                 } catch (error) {
                     asrError = error?.message || String(error);
                 }
@@ -454,7 +365,9 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 await testRef.update({
                     [`speaking.${questionId}.transcript`]: transcript,
                     [`speaking.${questionId}.words`]: words || null,
-                    [`speaking.${questionId}.accuracyPercent`]: accuracy?.percent ?? null,
+                    [`speaking.${questionId}.accuracyPercent`]: effectiveAccuracy,
+                    [`speaking.${questionId}.accuracyScore`]: accuracyScore,
+                    [`speaking.${questionId}.wordMatchAccuracy`]: accuracy?.percent ?? null,
                     [`speaking.${questionId}.expectedCount`]: accuracy?.expectedCount ?? null,
                     [`speaking.${questionId}.transcriptCount`]: accuracy?.transcriptCount ?? null,
                     [`speaking.${questionId}.distance`]: accuracy?.distance ?? null,
@@ -466,7 +379,8 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                 retried.push({
                     questionId,
                     ok: !!transcript && !asrError,
-                    accuracyPercent: accuracy?.percent ?? null,
+                    accuracyPercent: effectiveAccuracy,
+                    accuracyScore: accuracyScore,
                     asrError: asrError || null
                 });
             }
@@ -516,9 +430,25 @@ module.exports = function registerEntranceTestRoutes(router, deps) {
                     const [audioBuffer] = await targetBucket.file(storagePath).download();
                     const words = await alignAudioWithAzure(audioBuffer, alignTarget, contentType);
                     if (Array.isArray(words) && words.length > 0) {
+                        let accuracyScore = null;
+                        if (Number.isFinite(Number(words.accuracyScore))) {
+                            accuracyScore = Number(words.accuracyScore);
+                        } else {
+                            const validScores = words
+                                .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+                                .filter((n) => n !== null);
+                            if (validScores.length > 0) {
+                                accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
+                            }
+                        }
+
                         updates[`speaking.${questionId}.words`] = words;
                         updates[`speaking.${questionId}.wordsAlignedAt`] = serverTimestamp();
-                        aligned.push({ questionId, wordCount: words.length, ok: true });
+                        if (accuracyScore != null) {
+                            updates[`speaking.${questionId}.accuracyPercent`] = accuracyScore;
+                            updates[`speaking.${questionId}.accuracyScore`] = accuracyScore;
+                        }
+                        aligned.push({ questionId, wordCount: words.length, accuracyPercent: accuracyScore, ok: true });
                     } else {
                         aligned.push({ questionId, wordCount: 0, ok: false, error: 'No words aligned' });
                     }

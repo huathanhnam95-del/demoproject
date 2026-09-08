@@ -20,8 +20,84 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Run structure tests
+        run: npm run test:structure
+
+      - name: Run structure check
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PULL_REQUEST_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          ADOPTION_SHA: ffbc380ae0790d92eb904ddc6edb183748f00c06
+        run: |
+          set -euo pipefail
+
+          sha_pattern='^[0-9a-fA-F]{40}$'
+          zero_sha='0000000000000000000000000000000000000000'
+
+          validate_sha() {
+            local value="$1"
+            local label="$2"
+            if [[ ! "$value" =~ $sha_pattern ]]; then
+              echo "Invalid $label: expected a 40-character hexadecimal commit SHA" >&2
+              exit 2
+            fi
+          }
+
+          ensure_commit() {
+            local value="$1"
+            local label="$2"
+            if ! git cat-file -e "${value}^{commit}" 2>/dev/null; then
+              if ! git fetch --no-tags --depth=1 origin "$value"; then
+                echo "Unable to fetch required $label commit $value" >&2
+                exit 2
+              fi
+            fi
+            if ! git cat-file -e "${value}^{commit}" 2>/dev/null; then
+              echo "Unable to resolve required $label commit $value" >&2
+              exit 2
+            fi
+          }
+
+          validate_sha "$ADOPTION_SHA" adoption
+          ensure_commit "$ADOPTION_SHA" adoption
+
+          case "$EVENT_NAME" in
+            pull_request)
+              base_sha="$PULL_REQUEST_BASE_SHA"
+              validate_sha "$base_sha" pull-request-base
+              ensure_commit "$base_sha" pull-request-base
+              head_sha="$(git rev-parse HEAD)"
+              validate_sha "$head_sha" checked-out-head
+              node scripts/structure/check.cjs check --ci --base "$base_sha" --head "$head_sha" --json
+              ;;
+            push)
+              base_sha="$PUSH_BEFORE_SHA"
+              if [[ "$base_sha" == "$zero_sha" ]]; then
+                node scripts/structure/check.cjs check --ci --full --head "$(git rev-parse HEAD)" --json
+              else
+                validate_sha "$base_sha" push-before
+                ensure_commit "$base_sha" push-before
+                head_sha="$(git rev-parse HEAD)"
+                validate_sha "$head_sha" checked-out-head
+                node scripts/structure/check.cjs check --ci --base "$base_sha" --head "$head_sha" --json
+              fi
+              ;;
+            workflow_dispatch)
+              node scripts/structure/check.cjs check --ci --full --head "$(git rev-parse HEAD)" --json
+              ;;
+            *)
+              echo "Unsupported workflow event for structure comparison: $EVENT_NAME" >&2
+              exit 2
+              ;;
+          esac
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Run release fixture suite
+        run: npm run test:release
 
       - name: Setup Python
         uses: actions/setup-python@v5

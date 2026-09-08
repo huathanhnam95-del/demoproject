@@ -72,6 +72,7 @@
 
     const audioUrls = await fetchSpeakingAudioUrls(targetTestId, test);
     _cachedResultData = { testId: targetTestId, test, lead, student, session, audioUrls };
+    window.__cachedResultData = _cachedResultData;
     renderResult(_cachedResultData);
   }
 
@@ -247,10 +248,30 @@
     };
   }
 
+  function getSpeakingAccuracy(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (typeof entry.accuracyScore === 'number' && Number.isFinite(entry.accuracyScore)) {
+      return Math.round(entry.accuracyScore * 10) / 10;
+    }
+    if (Array.isArray(entry.words) && entry.words.length > 0) {
+      const validScores = entry.words
+        .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+        .filter((n) => n !== null);
+      if (validScores.length > 0) {
+        const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+        return Math.round(avg * 10) / 10;
+      }
+    }
+    if (typeof entry.accuracyPercent === 'number' && Number.isFinite(entry.accuracyPercent)) {
+      return Math.round(entry.accuracyPercent * 10) / 10;
+    }
+    return null;
+  }
+
   function sumSpeakingAveragePercent(speaking) {
     const entries = speaking && typeof speaking === 'object' ? Object.values(speaking) : [];
     const percents = entries
-      .map((e) => (typeof e?.accuracyPercent === 'number' ? e.accuracyPercent : null))
+      .map((e) => getSpeakingAccuracy(e))
       .filter((n) => typeof n === 'number' && Number.isFinite(n));
     if (percents.length === 0) return null;
     const avg = percents.reduce((a, b) => a + b, 0) / percents.length;
@@ -1191,7 +1212,8 @@
           .map((q, idx) => {
             const qId = String(q.questionId || '');
             const entry = speaking[qId] || null;
-            const accuracy = typeof entry?.accuracyPercent === 'number' ? `${entry.accuracyPercent}%` : UI_DASH;
+            const accVal = getSpeakingAccuracy(entry);
+            const accuracy = accVal != null ? `${accVal}%` : UI_DASH;
             const transcript = entry?.transcript ? String(entry.transcript) : '';
             const asrError = entry?.asrError ? String(entry.asrError) : '';
             const audioUrl = audioUrls?.[qId] ? String(audioUrls[qId]) : '';

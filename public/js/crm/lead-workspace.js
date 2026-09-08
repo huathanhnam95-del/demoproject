@@ -75,14 +75,23 @@ window.CrmLeadWorkspace = (function () {
             }
 
             if (groupOwner) {
-                groupOwner.style.display = '';
+                groupOwner.style.display = isAgent ? 'none' : '';
+            }
+            if (inputOwner) {
+                inputOwner.required = !isAgent;
+                if (isAgent) {
+                    inputOwner.value = '';
+                }
             }
 
             if (groupAgent) {
                 groupAgent.style.display = isAgent ? '' : 'none';
             }
-            if (!isAgent && inputAgent) {
-                inputAgent.value = '';
+            if (inputAgent) {
+                inputAgent.required = isAgent;
+                if (!isAgent) {
+                    inputAgent.value = '';
+                }
             }
         }
         window.updateLeadSourceVisibility = updateLeadSourceVisibility;

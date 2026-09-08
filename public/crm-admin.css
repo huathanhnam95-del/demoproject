@@ -2836,7 +2836,6 @@ body {
 }
 
 [data-panel="courses/teacher-schedule"] {
-  display: flex !important;
   flex-direction: column;
   height: calc(100vh - var(--crm-nav-height, 64px) - 16px);
   max-height: calc(100vh - var(--crm-nav-height, 64px) - 16px);
@@ -2844,6 +2843,11 @@ body {
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* Preserve the scheduler layout only while the shell marks this panel active. */
+[data-panel="courses/teacher-schedule"][style*="display: block"] {
+  display: flex !important;
 }
 
 [data-panel="courses/teacher-schedule"] .crm-panel-header {
@@ -15582,3 +15586,21 @@ mark.crm-highlight:hover {
 }
 
 
+
+/* Keep the form assistant above the near-fullscreen student's action footer.
+   The student dialog is 94vh on desktop and full-height on mobile. */
+body:has(#crm-student-modal[aria-hidden="false"]) {
+  --crm-assistant-footer-clearance: calc(3vh + 80px);
+}
+body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-launcher {
+  bottom: var(--crm-assistant-footer-clearance) !important;
+}
+body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
+  bottom: calc(var(--crm-assistant-footer-clearance) + 56px) !important;
+  height: min(680px, calc(100vh - var(--crm-assistant-footer-clearance) - 72px)) !important;
+}
+@media (max-width: 768px) {
+  body:has(#crm-student-modal[aria-hidden="false"]) {
+    --crm-assistant-footer-clearance: 80px;
+  }
+}

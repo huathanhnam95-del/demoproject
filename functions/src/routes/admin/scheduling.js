@@ -1,3 +1,4 @@
+const { seedClassSchedule } = require('../../crm/workflow-write-service');
 const {
     CRM_CLASSROOMS,
     CRM_SCHEDULED_SESSIONS
@@ -15,7 +16,6 @@ const {
     buildReplaceSessionPreview,
     buildScheduleSummary,
     buildScheduledSessionWriteData,
-    buildSeedSessions,
     deriveContractCountState,
     normalizeScheduledSession
 } = require('../../crm/scheduling-service');
@@ -322,51 +322,10 @@ module.exports = function registerSchedulingRoutes(router, deps) {
 
     router.post('/classrooms/:classId/sessions/seed', ...requireAdminHandlers, async (req, res) => {
         try {
-            const classId = cleanOptionalString(req.params.classId);
-            const classroomSnap = await db.collection(CRM_CLASSROOMS).doc(classId).get();
-            if (!classroomSnap.exists) {
-                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
-            }
-
-            const classroom = classroomSnap.data() || {};
-            const scheduleConfig = classroom.scheduleConfig || {};
-            const existingSessions = await listClassSessions(db, classId);
-            const existingContractedSessions = existingSessions.filter(isActiveContractedSession);
-            if (existingContractedSessions.length) {
-                return sendError(res, 409, 'SCHEDULE_ALREADY_SEEDED', 'This class already has scheduled contracted sessions. Use schedule regeneration for future changes.', {
-                    existingSessionCount: existingContractedSessions.length
-                });
-            }
-            const sessions = buildSeedSessions({
-                classId,
-                courseId: classroom.courseId || null,
-                teacherUid: resolveAdminTargetTeacherUid(req.body?.teacherUid, classroom.primaryTeacherUid),
-                sessionMinutes: scheduleConfig.sessionMinutes,
-                timezone: scheduleConfig.timezone,
-                startDate: cleanOptionalString(req.body?.startDate),
-                weekdayNumbers: req.body?.weekdayNumbers,
-                startTime: cleanOptionalString(req.body?.startTime),
-                targetSessionCount: scheduleConfig.targetSessionCount,
-                seedBatchId: cleanOptionalString(req.body?.seedBatchId) || `${classId}-${Date.now()}`
-            });
-
-            for (const session of sessions) {
-                await ensureNoTeacherConflict(db, session);
-                await db.collection(CRM_SCHEDULED_SESSIONS).doc().set({
-                    ...session,
-                    createdAt: serverTimestamp(),
-                    createdBy: req.user?.uid || null,
-                    updatedAt: serverTimestamp(),
-                    updatedBy: req.user?.uid || null
-                });
-            }
-            const scheduleState = await syncClassroomScheduleState(db, classId, { bumpVersion: true });
-            return sendSuccess(res, {
-                count: sessions.length,
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, 'Sessions seeded.');
+            const result = await seedClassSchedule(db, cleanOptionalString(req.params.classId), req.body || {}, { user: req.user, serverTimestamp });
+            return sendSuccess(res, result, 'Sessions seeded.');
         } catch (error) {
+            if (error.status) return sendError(res, error.status, error.code, error.message);
             return sendError(res, 500, 'SEED_SCHEDULE_ERROR', 'Failed to seed schedule.', error?.message || error);
         }
     });

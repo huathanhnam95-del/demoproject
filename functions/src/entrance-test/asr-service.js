@@ -261,10 +261,28 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
             return null;
         }
         const resJson = await res.json();
-        const rawWords = resJson.NBest?.[0]?.Words || [];
+        const nbest = resJson.NBest?.[0];
+        const rawWords = nbest?.Words || [];
 
         const words = extractWordsAndSyllablesFromAzure(rawWords, { calibrateBoundaries: true });
-        return words.length > 0 ? words : null;
+        if (!words || words.length === 0) return null;
+
+        let accuracyScore = null;
+        if (Number.isFinite(Number(nbest?.AccuracyScore))) {
+            accuracyScore = Math.round(Number(nbest.AccuracyScore) * 10) / 10;
+        } else if (Number.isFinite(Number(nbest?.PronunciationAssessment?.AccuracyScore))) {
+            accuracyScore = Math.round(Number(nbest.PronunciationAssessment.AccuracyScore) * 10) / 10;
+        } else {
+            const validScores = words
+                .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+                .filter((n) => n !== null);
+            if (validScores.length > 0) {
+                accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
+            }
+        }
+
+        words.accuracyScore = accuracyScore;
+        return words;
 
     } catch (err) {
         console.warn('[EntranceTest ASR] Azure alignment error:', err?.message || err);
@@ -370,7 +388,8 @@ async function transcribeAudio(audioBuffer, contentType, options = {}) {
 
                     return Object.assign(new String(cleaned), {
                         text: cleaned,
-                        words: words && words.length > 0 ? words : null
+                        words: words && words.length > 0 ? words : null,
+                        accuracyScore: words?.accuracyScore ?? null
                     });
                 }
             } catch (err) {

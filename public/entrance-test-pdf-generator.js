@@ -21,6 +21,7 @@
     const COLOR_GRAY = [120, 120, 120];
     const COLOR_LIGHT = [200, 200, 200];
     const COLOR_CORRECT = [34, 139, 34];   // green
+    const COLOR_AMBER = [217, 119, 6];     // amber
     const COLOR_WRONG = [200, 40, 40];     // red
     const COLOR_BLANK_BG = [255, 224, 130]; // vivid amber background for blanks
     const COLOR_BLANK_TEXT = [13, 71, 161]; // strong blue for blank text in paragraph
@@ -59,6 +60,26 @@
         const d = typeof v === 'string' ? new Date(v) : (v.toDate ? v.toDate() : new Date(v));
         if (isNaN(d.getTime())) return dash();
         return d.toLocaleString();
+    }
+
+    function getSpeakingAccuracy(entry) {
+        if (!entry || typeof entry !== 'object') return null;
+        if (typeof entry.accuracyScore === 'number' && Number.isFinite(entry.accuracyScore)) {
+            return Math.round(entry.accuracyScore * 10) / 10;
+        }
+        if (Array.isArray(entry.words) && entry.words.length > 0) {
+            const validScores = entry.words
+                .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+                .filter((n) => n !== null);
+            if (validScores.length > 0) {
+                const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+                return Math.round(avg * 10) / 10;
+            }
+        }
+        if (typeof entry.accuracyPercent === 'number' && Number.isFinite(entry.accuracyPercent)) {
+            return Math.round(entry.accuracyPercent * 10) / 10;
+        }
+        return null;
     }
 
     function normalizeScoring(test) {
@@ -154,6 +175,108 @@
                 i--; j--;
             } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
                 result.unshift({ type: 'added', word: bWords[j - 1] });
+                j--;
+            } else if (i > 0) {
+                result.unshift({ type: 'missing', word: aWords[i - 1] });
+                i--;
+            }
+        }
+        return result;
+    }
+
+    // High-precision acoustic alignment word-level diff matching crm-entrance-test-result.js
+    function computeAcousticTranscriptDiff(expectedText, transcriptText, words) {
+        if (!expectedText && !transcriptText && (!words || !words.length)) return [];
+
+        function tokenize(text) { return text.trim().split(/\s+/); }
+        const aWords = expectedText ? tokenize(expectedText) : [];
+
+        let bWords = [];
+        if (Array.isArray(words) && words.length > 0) {
+            bWords = words.map(w => ({
+                word: typeof w === 'string' ? w : String(w.word || w.text || ''),
+                accuracyScore: (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Math.round(Number(w.accuracyScore)) : null,
+                errorType: (typeof w === 'object' && w != null && w.errorType) ? String(w.errorType) : 'None'
+            })).filter(w => w.word.length > 0);
+        } else if (transcriptText) {
+            bWords = tokenize(transcriptText).map(text => ({
+                word: text,
+                accuracyScore: null,
+                errorType: 'None'
+            }));
+        }
+
+        const aLen = aWords.length;
+        const bLen = bWords.length;
+
+        function getTokenType(wObj) {
+            if (!wObj || wObj.accuracyScore == null) return 'correct';
+            if (wObj.accuracyScore < 60 || String(wObj.errorType || '').toLowerCase() === 'mispronunciation') {
+                return 'error';
+            }
+            if (wObj.accuracyScore < 80) {
+                return 'uncertain';
+            }
+            return 'correct';
+        }
+
+        if (aLen === 0) {
+            return bWords.map(w => ({ type: 'added', word: w.word }));
+        }
+        if (bLen === 0) {
+            return aWords.map(w => ({ type: 'missing', word: w }));
+        }
+
+        function normalizeSpelling(w) {
+            const rules = [
+                [/isations$/, 'izations'], [/isation$/, 'ization'],
+                [/ised$/, 'ized'], [/ising$/, 'izing'], [/ises$/, 'izes'], [/ise$/, 'ize'],
+                [/ysed$/, 'yzed'], [/ysing$/, 'yzing'], [/yses$/, 'yzes'], [/yse$/, 'yze'],
+                [/(?<=[a-z]{2})oured$/, 'ored'], [/(?<=[a-z]{2})ouring$/, 'oring'],
+                [/(?<=[a-z]{2})ours$/, 'ors'], [/(?<=[a-z]{2})our$/, 'or'],
+                [/(?<=[a-z]{2})tres$/, 'ters'], [/(?<=[a-z]{2})tre$/, 'ter'],
+                [/ence$/, 'ense'],
+                [/([a-z])lled$/, '$1led'], [/([a-z])lling$/, '$1ling'],
+                [/ogue$/, 'og'],
+                [/ae/, 'e'], [/oe(?=[a-z])/, 'e']
+            ];
+            let result = w;
+            for (const [pattern, replacement] of rules) {
+                const replaced = result.replace(pattern, replacement);
+                if (replaced !== result) { result = replaced; break; }
+            }
+            return result;
+        }
+
+        function isMatch(wordA, wordB) {
+            const wbText = typeof wordB === 'object' ? (wordB.word || '') : String(wordB || '');
+            const wa = String(wordA).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
+            const wb = String(wbText).replace(/[.,;:!?\u2019'"]/g, '').toLowerCase();
+            if (!wa && !wb) return wordA === wbText;
+            if (wa === wb) return true;
+            return normalizeSpelling(wa) === normalizeSpelling(wb);
+        }
+
+        const dp = Array(aLen + 1).fill(null).map(() => Array(bLen + 1).fill(0));
+        for (let i = 1; i <= aLen; i++) {
+            for (let j = 1; j <= bLen; j++) {
+                if (isMatch(aWords[i - 1], bWords[j - 1])) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                } else {
+                    dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+
+        let i = aLen, j = bLen;
+        const result = [];
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && isMatch(aWords[i - 1], bWords[j - 1])) {
+                const tokenType = getTokenType(bWords[j - 1]);
+                result.unshift({ type: tokenType, word: bWords[j - 1].word, accuracyScore: bWords[j - 1].accuracyScore });
+                i--; j--;
+            } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+                result.unshift({ type: 'added', word: bWords[j - 1].word });
                 j--;
             } else if (i > 0) {
                 result.unshift({ type: 'missing', word: aWords[i - 1] });
@@ -425,6 +548,12 @@
                 if (token.type === 'correct') {
                     doc.setTextColor(...COLOR_CORRECT);
                     doc.setFont(FONT_NAME, 'normal');
+                } else if (token.type === 'uncertain') {
+                    doc.setTextColor(...COLOR_AMBER);
+                    doc.setFont(FONT_NAME, 'normal');
+                } else if (token.type === 'error') {
+                    doc.setTextColor(...COLOR_WRONG);
+                    doc.setFont(FONT_NAME, 'normal');
                 } else if (token.type === 'added') {
                     doc.setTextColor(...COLOR_WRONG);
                     doc.setFont(FONT_NAME, 'bold');
@@ -618,9 +747,11 @@
             const q = questions[idx];
             const qId = safeStr(q?.questionId || q?.id);
             const entry = speaking[qId] || null;
-            const accuracy = typeof entry?.accuracyPercent === 'number' ? entry.accuracyPercent + '%' : dash();
+            const accVal = getSpeakingAccuracy(entry);
+            const accuracy = accVal != null ? accVal + '%' : dash();
             const transcript = entry?.transcript ? safeStr(entry.transcript) : '';
             const expectedText = q?.text ? safeStr(q.text) : '';
+            const words = Array.isArray(entry?.words) ? entry.words : null;
 
             y = checkPageBreak(doc, y, 20, studentName, footerText);
             y = drawQuestionHeader(doc, y, idx + 1, 'Accuracy: ' + accuracy);
@@ -628,7 +759,10 @@
             y = drawBodyText(doc, y, expectedText, studentName, footerText);
             y += 2;
 
-            if (transcript) {
+            if (words && words.length > 0) {
+                const diffTokens = computeAcousticTranscriptDiff(expectedText, transcript, words);
+                y = drawTranscriptBlock(doc, y, diffTokens, studentName, footerText);
+            } else if (transcript) {
                 const diffTokens = computeTranscriptDiff(expectedText, transcript);
                 y = drawTranscriptBlock(doc, y, diffTokens, studentName, footerText);
             }
@@ -697,7 +831,7 @@
 
     // ==================== MAIN GENERATOR ====================
 
-    window.generateEntranceTestPdf = async function generateEntranceTestPdf(data) {
+    async function generateEntranceTestPdf(data) {
         var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
         if (!JsPDF) {
             throw new Error('jsPDF is not available. Ensure the jsPDF script is loaded.');
@@ -773,5 +907,21 @@
         var filename = 'entrance-test-' + fileStudentName + '-' + dateStr + '.pdf';
 
         doc.save(filename);
-    };
+        return doc;
+    }
+
+    if (typeof window !== 'undefined') {
+        window.generateEntranceTestPdf = generateEntranceTestPdf;
+        window.generateEntranceTestPdf.getSpeakingAccuracy = getSpeakingAccuracy;
+        window.generateEntranceTestPdf.computeAcousticTranscriptDiff = computeAcousticTranscriptDiff;
+        window.generateEntranceTestPdf.computeTranscriptDiff = computeTranscriptDiff;
+    }
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = {
+            generateEntranceTestPdf,
+            getSpeakingAccuracy,
+            computeAcousticTranscriptDiff,
+            computeTranscriptDiff
+        };
+    }
 })();

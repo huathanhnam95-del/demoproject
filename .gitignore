@@ -199,3 +199,4 @@ tools/voice_cloning_lab/samples/
 tools/voice_cloning_lab/**/__pycache__/
 artifacts/
 tmp/
+monday_*.png

@@ -498,6 +498,7 @@ function buildSeedSessions({
     sessionMinutes,
     timezone,
     startDate,
+    endDate,
     weekdayNumbers,
     startTime,
     targetSessionCount,
@@ -505,6 +506,11 @@ function buildSeedSessions({
     slots,
     totalInstructionMinutes
 }) {
+    const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))
+        && Number.isFinite(Date.parse(`${value}T00:00:00Z`))
+        && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+    if (!validDate(startDate)) throw new Error('A valid start date is required to seed sessions.');
+    if (endDate && (!validDate(endDate) || endDate < startDate)) throw new Error('End date must be a valid date on or after the start date.');
     let normalizedSlots = [];
     if (Array.isArray(slots) && slots.length > 0) {
         normalizedSlots = slots.map((slot) => {
@@ -586,6 +592,7 @@ function buildSeedSessions({
     let safetyDays = 1000;
     outerLoop:
     while (safetyDays-- > 0) {
+        if (endDate && cursor > endDate) break;
         const currentWeekday = getWeekdayNumber(cursor);
         const daySlots = normalizedSlots
             .filter((slot) => slot.weekday === currentWeekday)

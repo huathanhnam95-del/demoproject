@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": 1,
+  "adoptionSha": "ffbc380ae0790d92eb904ddc6edb183748f00c06",
+  "supportedRoots": [
+    "public",
+    "functions",
+    "src",
+    "backend",
+    "scripts",
+    "tests",
+    "docs",
+    "agent_docs",
+    "assets",
+    "data",
+    "tools"
+  ],
+  "rootEntries": [
+    { "path": "README.md", "role": "navigation" },
+    { "path": "AGENTS.md", "role": "workspace process" },
+    { "path": "CLAUDE.md", "role": "agent guidance" },
+    { "path": "GEMINI.md", "role": "agent guidance" },
+    { "path": "CHANGELOG.md", "role": "release history" },
+    { "path": "package.json", "role": "package manifest" },
+    { "path": "package-lock.json", "role": "package lock" },
+    { "path": "server.js", "role": "local server entrypoint" },
+    { "path": "server.py", "role": "legacy static HTTP launcher" },
+    { "path": "firebase.json", "role": "Firebase configuration" },
+    { "path": "firebase.essay-ai.json", "role": "Firebase configuration" },
+    { "path": ".firebaserc", "role": "Firebase configuration" },
+    { "path": "firestore.indexes.json", "role": "Firestore configuration" },
+    { "path": "firestore.rules", "role": "Firestore configuration" },
+    { "path": "storage.rules", "role": "Storage configuration" },
+    { "path": ".gcloudignore", "role": "cloud packaging configuration" },
+    { "path": ".gitignore", "role": "Git configuration" },
+    { "path": ".gitattributes", "role": "Git configuration" },
+    { "path": ".eslintrc.json", "role": "lint configuration" },
+    { "path": ".cursorrules", "role": "editor guidance" },
+    { "path": ".geminiignore", "role": "tool configuration" },
+    { "path": ".impeccableignore", "role": "tool configuration" },
+    { "path": ".impeccablerc.json", "role": "tool configuration" },
+    { "path": ".nojekyll", "role": "Hosting configuration" },
+    { "path": "requirements.txt", "role": "Python dependency manifest" },
+    { "path": "pyrefly.toml", "role": "Python tooling configuration" },
+    { "path": "implementation_plan.md", "role": "approved project plan" },
+    { "path": "points-rules.csv", "role": "canonical content input" }
+  ],
+  "registeredRootEntries": [
+    "public/.nojekyll", "public/404.html", "public/arpabet-ipa-map.js", "public/asq-mode.js", "public/auth-ui.js", "public/classroom.css", "public/classroom.html", "public/cmudict.json", "public/collocations.json", "public/content-difficulty-classifier.js", "public/crm-admin.css", "public/crm-admin.html", "public/crm-admin.js", "public/crm-entrance-test-result.css", "public/crm-entrance-test-result.html", "public/crm-entrance-test-result.js", "public/dd-mode.css", "public/dd-mode.js", "public/describe-image-mode.js", "public/design-tokens.css", "public/dictionary-service.js", "public/difficulty-filter.js", "public/echo-forge-pixel.html", "public/echo-forge-sandbox.html", "public/entrance-test-pdf-generator.js", "public/entrance-test.css", "public/entrance-test.html", "public/entrance-test.js", "public/firebase-auth-module.js", "public/firebase-firestore-module.js", "public/hcs-mode.css", "public/hcs-mode.js", "public/hint-system.js", "public/hiw-mode.css", "public/hiw-mode.js", "public/index.html", "public/ipa-dict.json", "public/lmcma-mode.css", "public/lmcma-mode.js", "public/lmcsa-mode.css", "public/lmcsa-mode.js", "public/media__1773314426977.png", "public/media__1773317933944.png", "public/mindmap-preview.html", "public/offline.html", "public/oxford-american-ipa.json", "public/phonetics.js", "public/practice-mode-base.css", "public/progress-roadmap.css", "public/pronunciation-visual-comparison.html", "public/read-aloud-mode.js", "public/read-aloud-question-picker-v7.css", "public/read-mode-base.css", "public/rfib-mode.css", "public/rfib-mode.js", "public/rmcma-mode.css", "public/rmcma-mode.js", "public/rmcsa-mode.css", "public/rmcsa-mode.js", "public/rop-mode.css", "public/rop-mode.js", "public/rts-mode.js", "public/script.js", "public/sgd-mode.js", "public/shop-module.js", "public/site-header.css", "public/skill-icon-preview.html", "public/skill-selection-premium.html", "public/skill-tree-mockup.html", "public/smw-mode.css", "public/smw-mode.js", "public/speaking-practice-controller.css", "public/srs_tests.js", "public/srs-onboarding.css", "public/srs-onboarding.js", "public/srs-review-scaffolding.js", "public/srs-review.css", "public/srs-review.js", "public/srs-scheduler.js", "public/sst-mode.css", "public/sst-mode.js", "public/style-compact.css", "public/style-practice-compact.css", "public/style-scaffolding.css", "public/style.css", "public/survival-style.css", "public/sw.js", "public/swt-mode.css", "public/swt-mode.js", "public/sync-points-rules.js", "public/take-notes-mode.js", "public/The_Oxford_5000.csv", "public/tutorial.js", "public/vietnamese-font-demo.html", "public/vocab-book.css", "public/vocab-book.js", "public/vocab-tutorial.js", "public/vowel_word_bank.csv", "public/watch-admin.css", "public/watch-admin.html", "public/watch-admin.js", "public/watch-mode.js", "public/write-essay-mode.css", "public/write-essay-mode.js", "public/youtube-player.js"
+  ],
+  "domains": [
+    { "id": "learner-public", "roots": ["public", "tests/browser"], "owner": "unassigned" },
+    { "id": "functions-api", "roots": ["functions/src", "src/routes"], "owner": "unassigned" },
+    { "id": "local-audio", "roots": ["backend", "src"], "owner": "unassigned" },
+    { "id": "operators", "roots": ["scripts", "tools"], "owner": "unassigned" },
+    { "id": "verification", "roots": ["tests", "docs/audits"], "owner": "unassigned" }
+  ],
+  "artifactClasses": {
+    "dependency": ["node_modules/**", "**/node_modules/**"],
+    "cache": [".cache/**", "__pycache__/**", "**/__pycache__/**"],
+    "ephemeral-evidence": ["test-results/**", "outputs/**"]
+  },
+  "commands": [
+    {
+      "name": "check:structure",
+      "program": "node",
+      "args": ["scripts/structure/check.cjs", "check"],
+      "target": "scripts/structure/check.cjs",
+      "effects": ["local-write", "external-temp"]
+    },
+    {
+      "name": "test:structure",
+      "program": "node",
+      "args": ["--test", "tests/structure/check.test.cjs"],
+      "target": "tests/structure/check.test.cjs",
+      "effects": ["read-only"]
+    },
+    {
+      "name": "test:release",
+      "program": "node",
+      "args": ["--test", "tests/release/firebase-release-cli.test.cjs"],
+      "target": "tests/release/firebase-release-cli.test.cjs",
+      "effects": ["local-write", "external-temp"]
+    },
+    {
+      "name": "lint:crm",
+      "program": "node",
+      "args": ["scripts/crm/verify-crm-suite.js", "--lint"],
+      "target": "scripts/crm/verify-crm-suite.js",
+      "effects": ["read-only"]
+    },
+    {
+      "name": "verify:crm",
+      "program": "node",
+      "args": ["scripts/crm/verify-crm-suite.js"],
+      "target": "scripts/crm/verify-crm-suite.js",
+      "effects": ["local-write", "emulator-write", "remote-write"]
+    },
+    {
+      "name": "check:crm:selection",
+      "program": "node",
+      "args": ["scripts/crm/verification-selection.cjs", "check"],
+      "target": "scripts/crm/verification-selection.cjs",
+      "effects": ["read-only"]
+    },
+    {
+      "name": "test:crm:selection",
+      "program": "node",
+      "args": ["--test", "tests/crm/verification-selection.test.cjs"],
+      "target": "tests/crm/verification-selection.test.cjs",
+      "effects": ["local-write", "external-temp"]
+    },
+    {
+      "name": "deploy",
+      "program": "node",
+      "args": ["scripts/release/firebase-release.cjs", "hosting"],
+      "target": "scripts/release/firebase-release.cjs",
+      "effects": ["local-write", "remote-write", "billable"]
+    },
+    {
+      "name": "deploy:full",
+      "program": "node",
+      "args": ["scripts/release/firebase-release.cjs", "full"],
+      "target": "scripts/release/firebase-release.cjs",
+      "effects": ["local-write", "remote-write", "billable"]
+    }
+  ],
+  "generatedFamilies": [
+    {
+      "id": "read-aloud-connected-speech-index",
+      "canonicalInputs": [
+        "public/database/RA/RA.xlsx",
+        "public/database/RA/Voice/audio/manifest.json",
+        "scripts/read-aloud/connected-speech-index-core.js"
+      ],
+      "comparisonPairs": [
+        {
+          "source": "public/database/RA/connected-speech-index.json",
+          "outputs": ["functions/src/data/read-aloud-connected-speech-index.json"],
+          "comparisonMode": "byte-identical"
+        }
+      ],
+      "requiredOutputs": [
+        "public/database/RA/connected-speech-featured-prompts.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/coverage.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/summary.md"
+      ],
+      "generator": "scripts/read-aloud/build-connected-speech-index.js",
+      "owner": "unassigned",
+      "provenance": "Workbook and audio manifest are canonical inputs; public and Functions indexes are a byte-identical pair with featured and coverage outputs."
+      ,
+      "identity": {
+        "source": "public/database/RA/connected-speech-index.json",
+        "entriesPath": "prompts",
+        "count": 1449,
+        "manifestFields": {
+          "sourceWorkbookSha256": "7701b5cef9e04bfbec64809cfbb58c96f5c1a3074f6bd2da16b07d27623c0651",
+          "audioManifestSha256": "57c8451d10d8b45c531d60aa789e4fc73fa2461eb1f28a901533fad384996324"
+        }
+      }
+    },
+    {
+      "id": "segmentation-study-v1",
+      "comparisonPairs": [
+        {
+          "source": "scripts/data/segmentation-study-v1.json",
+          "outputs": ["functions/src/data/segmentation-study-v1.json"],
+          "comparisonMode": "byte-identical"
+        }
+      ],
+      "generator": "scripts/segmentation-study/sync-manifest.js",
+      "owner": "unassigned",
+      "provenance": "The ordered 100-entry manifest and canonical manifest hash are identity-sensitive.",
+      "identity": {
+        "source": "scripts/data/segmentation-study-v1.json",
+        "entriesPath": "entries",
+        "count": 100,
+        "manifestHashField": "manifestSha256",
+        "canonicalManifestSha256": "652b4121496038855a8d0abee8a297ecdd7a7ffcbf8d649f48de3a3db21790ec"
+      }
+    },
+    {
+      "id": "segmentation-study-v2",
+      "comparisonPairs": [
+        {
+          "source": "scripts/data/segmentation-study-v2.json",
+          "outputs": ["functions/src/data/segmentation-study-v2.json"],
+          "comparisonMode": "byte-identical"
+        }
+      ],
+      "generator": "scripts/segmentation-study/sync-manifest.js",
+      "owner": "unassigned",
+      "provenance": "The ordered 100-entry manifest and canonical manifest hash are identity-sensitive.",
+      "identity": {
+        "source": "scripts/data/segmentation-study-v2.json",
+        "entriesPath": "entries",
+        "count": 100,
+        "manifestHashField": "manifestSha256",
+        "canonicalManifestSha256": "4db7d2c260fd5be5ac8e050f0cb31dfde2368cdba43453172bfeca4a352adfce"
+      }
+    }
+  ],
+  "exceptions": []
+}

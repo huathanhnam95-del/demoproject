@@ -1,3 +1,20 @@
+## [V2.0.1] - 2026-09-08
+
+### Fixed & Enhanced
+- **Entrance Test Speaking Accuracy & Acoustic Assessment Alignment (`public/crm-entrance-test-result.js`, `public/entrance-test-pdf-generator.js`, `functions/src/routes/entrance-tests.js`, `functions/src/routes/admin/entrance-tests.js`, `src/routes/entrance-tests.js`)**:
+  - Overhauled speaking accuracy calculation to prioritize Azure Speech forced-alignment acoustic accuracy (`accuracyScore` and word-level acoustic averages) over legacy textual edit-distance percentages.
+  - Upgraded PDF export generator with `computeAcousticTranscriptDiff` rendering tri-color acoustic pronunciation tokens (Green $\ge 80$, Amber $60-79$, Red $< 60$ / Mispronunciation, and Grey strikethrough for omitted words).
+  - Synchronized `/speaking/upload` and retry routes across Cloud Functions and Express backend to store Azure acoustic scores and word tokens.
+  - Executed fleet-wide rescore script on entrance test records in Firestore since August 2026.
+
+## [V2.0.0] - 2026-09-08
+
+- User-designated version for the verified repository structure and safeguards production deployment.
+- Deployed source: `9fadfec71222eccc056fb7ccf360f2bf8dd4d2ba`; API revision: `api-00120-duv`; Hosting version: `d953cee15de291f3`.
+- Representative live practice and CRM checks passed; temporary CRM fixtures were removed. Bounded load probe: 55/55 successful requests, not maximum-capacity certification.
+- Version baseline is now 2.0.0. Next production release: 2.0.1, then 2.0.2, incrementing the patch number for each subsequent release unless a different major/minor version is explicitly chosen.
+- This is a retrospective release label. The immutable deployed artifacts still contain their original embedded version; this metadata update does not redeploy or alter those artifacts. Run the existing version synchronization during the next reviewed release preparation.
+
 ## [V1.8.137] - 2026-09-07
 
 ### Added & Enhanced

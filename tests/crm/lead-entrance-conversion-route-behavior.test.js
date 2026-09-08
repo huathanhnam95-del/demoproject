@@ -3,10 +3,11 @@ const express = require('express');
 
 const registerLeadRoutes = require('../../functions/src/routes/admin/leads');
 const registerEntranceTestRoutes = require('../../functions/src/routes/admin/entrance-tests');
+const registerStudentRoutes = require('../../functions/src/routes/admin/students');
 const { CRM_LEADS, CRM_STUDENTS, ENTRANCE_TESTS } = require('../../functions/src/crm/collections');
 const { callRoute, createFakeDb } = require('./route-test-helpers');
 
-function createCrmRouter(db) {
+function createCrmRouter(db, overrides = {}) {
     const router = express.Router();
     const deps = {
         db,
@@ -19,11 +20,13 @@ function createCrmRouter(db) {
         sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
         sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
         serverTimestamp: () => 'SERVER_TS',
-        writeAuditLog: async () => {}
+        writeAuditLog: async () => {},
+        ...overrides
     };
 
     registerLeadRoutes(router, deps);
     registerEntranceTestRoutes(router, deps);
+    registerStudentRoutes(router, deps);
     return router;
 }
 
@@ -144,6 +147,42 @@ async function testLeadEntranceTestConversionKeepsLinkedRecords() {
 }
 
 (async () => {
+    const auditDb = createFakeDb();
+    const auditRouter = createCrmRouter(auditDb, { writeAuditLog: async () => { throw new Error('Injected audit outage'); } });
+    const savedDespiteAudit = await callRoute(auditRouter, '/leads', 'post', { body: { name: 'Saved lead', source: 'web' } });
+    assert.strictEqual(savedDespiteAudit._status, 200, 'An optional audit outage must not report the saved lead as failed.');
+    assert(savedDespiteAudit._json.warnings.includes('AUDIT_LOG_FAILED'));
+    const studentDespiteAudit = await callRoute(auditRouter, '/students', 'post', { body: { name: 'Saved student' } });
+    assert.strictEqual(studentDespiteAudit._status, 200, 'An optional audit outage must not report the saved student as failed.');
+    const forged = await callRoute(createCrmRouter(createFakeDb()), '/leads', 'post', { body: { name: 'Invalid', source: 'web', stage: 'converted', studentId: 'forged' } });
+    assert.strictEqual(forged._status, 400, 'Creation cannot forge conversion linkage.');
+    const invalidTestDb = createFakeDb({ [`${CRM_LEADS}/unallocated`]: { name: 'Local', source: 'web' } });
+    const invalidBefore = JSON.stringify([...invalidTestDb.docs]);
+    const invalidTest = await callRoute(createCrmRouter(invalidTestDb), '/leads/:leadId/entrance-tests', 'post', { params: { leadId: 'unallocated' }, body: { testType: 'unsupported' } });
+    assert.strictEqual(invalidTest._status, 400);
+    assert.strictEqual(JSON.stringify([...invalidTestDb.docs]), invalidBefore, 'Invalid test type must not backfill IDs.');
+    const testRaceDb = createFakeDb({ [`${CRM_LEADS}/test-race`]: { name: 'Local', source: 'web', crmId: 'a0001', stage: 'new' } });
+    const transact = testRaceDb.runTransaction.bind(testRaceDb);
+    testRaceDb.runTransaction = async (callback) => {
+        // A conversion commits after the route's initial lookup but before its save.
+        testRaceDb.docs.set(`${CRM_LEADS}/test-race`, { name: 'Local', source: 'web', crmId: 'a0001', stage: 'converted', studentId: 'converted-student' });
+        return transact(callback);
+    };
+    const racedTest = await callRoute(createCrmRouter(testRaceDb), '/leads/:leadId/entrance-tests', 'post', { params: { leadId: 'test-race' }, body: { testType: 'segmental_screening_v1' }, headers: { host: 'local.test' } });
+    assert.strictEqual(racedTest._status, 200);
+    assert.strictEqual(testRaceDb.docs.get(`${CRM_LEADS}/test-race`).stage, 'converted');
+    assert.strictEqual(testRaceDb.docs.get(`${ENTRANCE_TESTS}/${racedTest._json.testId}`).studentId, 'converted-student');
+    const raceDb = createFakeDb({ [`${CRM_LEADS}/race`]: { name: 'Race', source: 'web', crmId: 'a0001' } });
+    const raceRouter = createCrmRouter(raceDb);
+    const race = await Promise.all([1, 2].map(() => callRoute(raceRouter, '/leads/:leadId/convert', 'post', { params: { leadId: 'race' } })));
+    assert(race.every((res) => res._status === 200), 'Concurrent conversions must recover the same saved result.');
+    assert.strictEqual([...raceDb.docs.keys()].filter((key) => key.startsWith(`${CRM_STUDENTS}/`)).length, 1, 'Concurrent conversion must create one student.');
+    assert.strictEqual(race[0]._json.student.studentId, race[1]._json.student.studentId);
+    const retry = await callRoute(raceRouter, '/leads/:leadId/convert', 'post', { params: { leadId: 'race' } });
+    assert.strictEqual(retry._status, 200);
+    assert.strictEqual(retry._json.student.studentId, race[0]._json.student.studentId);
+    const tamper = await callRoute(raceRouter, '/leads/:leadId', 'patch', { params: { leadId: 'race' }, body: { stage: 'new', studentId: null } });
+    assert.strictEqual(tamper._status, 400, 'Ordinary patches cannot undo conversion linkage.');
     await testLeadCreationRequiresSource();
     await testLeadEntranceTestConversionKeepsLinkedRecords();
     process.stdout.write('lead entrance conversion route behavior passed\n');

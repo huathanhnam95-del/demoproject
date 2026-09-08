@@ -2995,13 +2995,33 @@ class ReadAloudMode {
     if (playBtn) playBtn.textContent = 'Play';
   }
 
+  loadSpeechCoachAudioCatalog() {
+    if (!this.speechCoachAudioCatalogPromise) {
+      this.speechCoachAudioCatalogPromise = fetch('/database/RA/speech-coach-audio/v1/manifest.json', { cache: 'no-cache' })
+        .then((response) => response.ok ? response.json() : null)
+        .then((catalog) => {
+          const ids = catalog?.questionManifestIds;
+          if (catalog?.version !== 'sc-kokoro-v1' || !Array.isArray(ids)
+            || ids.some((id) => typeof id !== 'string' || !/^[1-9]\d*$/.test(id))
+            || new Set(ids).size !== ids.length) return null;
+          return new Set(ids);
+        })
+        .catch(() => null);
+    }
+    return this.speechCoachAudioCatalogPromise;
+  }
+
   async loadSpeechCoachAudioManifest(questionId = this.currentQuestionId) {
     const id = String(questionId || '').trim();
-    if (!id) return null;
+    if (!/^[1-9]\d*$/.test(id)) return null;
     if (this.speechCoachAudioManifestCache.has(id)) return this.speechCoachAudioManifestCache.get(id);
     if (this.speechCoachAudioManifestPromises.has(id)) return this.speechCoachAudioManifestPromises.get(id);
-    const promise = fetch(`/database/RA/speech-coach-audio/v1/questions/${encodeURIComponent(id)}.json`, { cache: 'force-cache' })
-      .then((response) => response.ok ? response.json() : null)
+    const promise = this.loadSpeechCoachAudioCatalog()
+      .then((ids) => {
+        if (ids && !ids.has(id)) return null;
+        return fetch(`/database/RA/speech-coach-audio/v1/questions/${encodeURIComponent(id)}.json`, { cache: 'force-cache' })
+          .then((response) => response.ok ? response.json() : null);
+      })
       .catch(() => null)
       .then((manifest) => {
         this.speechCoachAudioManifestCache.set(id, manifest);

@@ -295,6 +295,14 @@ async function testAdminWorkspaceAllTeachersFilterAndRescheduleHealing() {
 }
 
 (async () => {
+    const seedDb = createFakeDb({
+        [`${CRM_CLASSROOMS}/atomic`]: { name: 'Atomic', primaryTeacherUid: 'teacher', scheduleConfig: { totalInstructionMinutes: 120, sessionMinutes: 60, targetSessionCount: 2, timezone: 'UTC' } },
+        [`${CRM_SCHEDULED_SESSIONS}/busy`]: { classId: 'other', teacherUid: 'teacher', status: 'scheduled', scheduledStartAtUtc: '2026-09-14T09:00:00.000Z', scheduledEndAtUtc: '2026-09-14T10:00:00.000Z' }
+    });
+    const beforeSeed = JSON.stringify([...seedDb.docs]);
+    const seedRes = await callRoute(createSchedulingRouter(seedDb), '/classrooms/:classId/sessions/seed', 'post', { params: { classId: 'atomic' }, body: { startDate: '2026-09-07', weekdayNumbers: [1], startTime: '09:00' } });
+    assert.strictEqual(seedRes._status, 409);
+    assert.strictEqual(JSON.stringify([...seedDb.docs]), beforeSeed, 'A late conflict must not partially seed a class.');
     await testSeedRejectsAlreadySeededContractedClass();
     await testRegenerateAfterSeededSessionsUsesPreviewApplyPath();
     await testAdminWorkspaceAllTeachersFilterAndRescheduleHealing();

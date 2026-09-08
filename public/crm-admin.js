@@ -1847,11 +1847,14 @@
     setupClassroomModal();
   }
 
+  let studentModalFallbackBound = false;
   function setupStudentModal() {
     if (studentModalController && typeof studentModalController.setupStudentModal === 'function') {
       studentModalController.setupStudentModal();
       return;
     }
+    if (studentModalFallbackBound) return;
+    studentModalFallbackBound = true;
     if (Array.isArray(elements.btnNewStudentTriggers) && elements.btnNewStudentTriggers.length > 0) {
       // Open Modal
       elements.btnNewStudentTriggers.forEach(btn => {
@@ -2102,6 +2105,8 @@
   }
 
   function resetStudentModal() {
+    if (elements.btnSaveLead) elements.btnSaveLead.style.display = 'none';
+    if (elements.btnSaveStudent) elements.btnSaveStudent.style.display = 'inline-block';
     if (studentModalController && typeof studentModalController.resetStudentModal === 'function') {
       studentModalController.resetStudentModal();
       return;
@@ -2127,6 +2132,9 @@
       elements.inputStudentZalo,
       elements.inputStudentFacebook,
       elements.inputStudentFacebookProfileUrl,
+      elements.inputStudentFacebookPersonalOwner,
+      elements.inputStudentAcquisitionSource,
+      elements.inputStudentAgentSource,
       elements.inputScoreOverall,
       elements.inputScoreListening,
       elements.inputScoreReading,
@@ -2152,6 +2160,8 @@
     inputs.forEach((el) => {
       if (el) el.value = '';
     });
+    if (typeof updateStudentSourceVisibility === 'function') updateStudentSourceVisibility();
+    if (typeof updateLeadSourceVisibility === 'function') updateLeadSourceVisibility();
 
     // Reset UI state
     if (elements.studentIdBadge) {
@@ -2274,14 +2284,23 @@
     }
 
     if (groupOwner) {
-      groupOwner.style.display = '';
+      groupOwner.style.display = isAgent ? 'none' : '';
+    }
+    if (inputOwner) {
+      inputOwner.required = !isAgent;
+      if (isAgent) {
+        inputOwner.value = '';
+      }
     }
 
     if (groupAgent) {
       groupAgent.style.display = isAgent ? '' : 'none';
     }
-    if (!isAgent && inputAgent) {
-      inputAgent.value = '';
+    if (inputAgent) {
+      inputAgent.required = isAgent;
+      if (!isAgent) {
+        inputAgent.value = '';
+      }
     }
   }
   window.updateLeadSourceVisibility = updateLeadSourceVisibility;
@@ -2308,19 +2327,29 @@
     }
 
     if (groupOwner) {
-      groupOwner.style.display = '';
+      groupOwner.style.display = isAgent ? 'none' : '';
+    }
+    if (inputOwner) {
+      inputOwner.required = !isAgent;
+      if (isAgent) {
+        inputOwner.value = '';
+      }
     }
 
     if (groupAgent) {
       groupAgent.style.display = isAgent ? '' : 'none';
     }
-    if (!isAgent && inputAgent) {
-      inputAgent.value = '';
+    if (inputAgent) {
+      inputAgent.required = isAgent;
+      if (!isAgent) {
+        inputAgent.value = '';
+      }
     }
   }
   window.updateStudentSourceVisibility = updateStudentSourceVisibility;
   window.hideStudentModalSurface = hideStudentModalSurface;
   window.openLeadModal = openLeadModal;
+  window.switchStudentTab = switchStudentTab;
 
   function resetLeadComposer() {
     const inputs = [
@@ -4786,30 +4815,47 @@
     }
   }
 
+  const VALID_STUDENT_TABS = new Set([
+    'info',
+    'learning',
+    'overview',
+    'courses',
+    'finance',
+    'identity',
+    'teaching-sessions'
+  ]);
+
+  function normalizeStudentTabId(tabId) {
+    const raw = String(tabId || '').trim();
+    if (raw === 'student-360') return 'overview';
+    return VALID_STUDENT_TABS.has(raw) ? raw : 'info';
+  }
+
   function switchStudentTab(tabId) {
+    const normalizedTab = normalizeStudentTabId(tabId);
     if (studentModalController && typeof studentModalController.switchStudentTab === 'function') {
-      studentModalController.switchStudentTab(tabId);
+      studentModalController.switchStudentTab(normalizedTab);
       return;
     }
     // Update Sidebar
     elements.studentSidebarItems.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabId);
+      btn.classList.toggle('active', btn.dataset.tab === normalizedTab);
     });
 
     // Update Content
     elements.studentTabContents.forEach(content => {
-      const isMatch = content.id === `student-${tabId}`;
+      const isMatch = content.id === `student-${normalizedTab}`;
       content.style.display = isMatch ? 'block' : 'none';
       content.classList.toggle('active', isMatch);
     });
 
-    if (tabId === 'finance' && modalState.studentId) {
+    if (normalizedTab === 'finance' && modalState.studentId) {
       refreshStudentFinance().catch((error) => {
         console.error('[CRM Admin] Failed to refresh student finance:', error);
       });
       return;
     }
-    if (tabId === 'teaching-sessions') {
+    if (normalizedTab === 'teaching-sessions') {
       const targetStudentId = modalState.studentId || (modalState.studentProfile && (modalState.studentProfile.studentId || modalState.studentProfile.id || modalState.studentProfile.crmId));
       if (window.CrmTeachingSessions) {
         if (typeof window.CrmTeachingSessions.setStudentId === 'function') {
@@ -4821,7 +4867,7 @@
       }
       return;
     }
-    if (tabId === 'courses' && modalState.studentId) {
+    if (normalizedTab === 'courses' && modalState.studentId) {
       if (window.CrmStudentCourses && typeof window.CrmStudentCourses.refresh === 'function') {
         window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
           console.error('[CRM Admin] Failed to refresh student courses:', error);
@@ -4829,7 +4875,7 @@
       }
       return;
     }
-    if (tabId === 'info' || tabId === 'student-360' || tabId === 'overview') {
+    if (normalizedTab === 'info' || normalizedTab === 'overview') {
       renderStudentSchedulePrompt();
     }
   }
@@ -5051,12 +5097,18 @@
     if (lastRenderedPanel === 'voice-cloning' && activePanel !== 'voice-cloning') {
       voiceCloningController?.dispose?.();
     }
+    let hasMatchedPanel = false;
     elements.panels.forEach((panel) => {
       const panelId = panel.dataset.panel;
       const matches = panelId === activePanel
         || (state.main === 'books' && panelId === 'books');
+      if (matches) hasMatchedPanel = true;
       panel.style.display = matches ? 'block' : 'none';
     });
+    if (!hasMatchedPanel && elements.panels.length > 0) {
+      const fallbackPanel = Array.from(elements.panels).find((p) => p.dataset.panel === 'dashboard') || elements.panels[0];
+      if (fallbackPanel) fallbackPanel.style.display = 'block';
+    }
 
     // The document had no <h1> at all across 14 panels — every panel title was an <h2>,
     // so assistive tech got no page title and no top of the outline. Promote whichever

@@ -277,3 +277,37 @@ test('runtime tokenizer is exported identically from source and Functions copies
     sourceService.getPromptTokens('Pick it, up now')
   );
 });
+
+
+test('question coverage preserves incremental outputs and rejects broken declarations', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { collectQuestionManifestIds } = require('../scripts/kokoro/generate_speech_coach_audio.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'speech-coach-catalog-'));
+  const write = (id, overrides = {}) => fs.writeFileSync(path.join(dir, `${id}.json`), JSON.stringify({ version: 'sc-kokoro-v1', questionId: id, events: {}, ...overrides }));
+  try {
+    assert.deepStrictEqual(collectQuestionManifestIds(dir), []);
+    write('731');
+    assert.deepStrictEqual(collectQuestionManifestIds(dir), ['731']);
+    write('8');
+    assert.deepStrictEqual(collectQuestionManifestIds(dir, ['731']), ['8', '731']);
+    write('1052');
+    assert.deepStrictEqual(collectQuestionManifestIds(dir, ['8', '731']), ['8', '731', '1052']);
+    assert.throws(() => collectQuestionManifestIds(dir, ['999']), /ENOENT/);
+    for (const invalid of [null, {}, [731], ['../731'], ['731', '731']]) {
+      assert.throws(() => collectQuestionManifestIds(dir, invalid), /Invalid questionManifestIds/);
+    }
+    for (const overrides of [{ version: 'old' }, { questionId: '9' }, { events: [] }, { events: null }]) {
+      write('731', overrides);
+      assert.throws(() => collectQuestionManifestIds(dir, ['731']), /Invalid question manifest/);
+    }
+    fs.writeFileSync(path.join(dir, '731.json'), '{');
+    assert.throws(() => collectQuestionManifestIds(dir, ['731']), SyntaxError);
+  } finally {
+    const cleanupPath = path.resolve(dir);
+    assert.strictEqual(path.dirname(cleanupPath), path.resolve(os.tmpdir()), 'cleanup must stay directly under the OS temporary root');
+    assert.ok(path.basename(cleanupPath).startsWith('speech-coach-catalog-'), 'cleanup must target this fixture prefix');
+    fs.rmSync(cleanupPath, { recursive: true, force: true });
+  }
+});

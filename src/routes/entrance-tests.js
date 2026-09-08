@@ -15,11 +15,9 @@ const {
     buildPublicSession,
     scoreSubmission
 } = require('../entrance-test/test36plus');
+const { transcribeAudio } = require('../../functions/src/entrance-test/asr-service');
 
 const router = express.Router();
-
-const HF_TOKEN = process.env.HUGGINGFACE_API_KEY;
-const ASR_MODEL = process.env.ENTRANCE_TEST_ASR_MODEL || 'openai/whisper-large-v3';
 
 function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -85,35 +83,6 @@ function getSpeakingQuestionById(questionId) {
     const speaking = TEST_36PLUS.sections.find(s => s.id === 'speaking');
     const q = speaking?.questions?.find(x => x.id === questionId) || null;
     return q;
-}
-
-async function transcribeAudio(buffer, contentType) {
-    if (!HF_TOKEN) {
-        throw new Error('HUGGINGFACE_API_KEY is not configured on the server.');
-    }
-    const asrContentType = normalizeAsrContentType(contentType) || 'application/octet-stream';
-    const url = `https://router.huggingface.co/hf-inference/models/${ASR_MODEL}`;
-    const res = await axios({
-        method: 'POST',
-        url,
-        headers: {
-            Authorization: `Bearer ${HF_TOKEN}`,
-            Accept: 'application/json',
-            'Content-Type': asrContentType,
-            'User-Agent': 'Mozilla/5.0'
-        },
-        httpsAgent: new https.Agent({ family: 4 }),
-        data: buffer,
-        timeout: 120000,
-        validateStatus: () => true
-    });
-
-    if (res.status !== 200 || !res.data || typeof res.data.text !== 'string') {
-        const errMsg = res.data?.error || `ASR failed with status ${res.status}`;
-        throw new Error(String(errMsg));
-    }
-
-    return res.data.text;
 }
 
 // Validate link + return test session (no login)
@@ -299,12 +268,31 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
         });
 
         let transcript = null;
+        let words = null;
         let accuracy = null;
         let asrError = null;
+        let accuracyScore = null;
+        let effectiveAccuracy = null;
 
         try {
-            transcript = await transcribeAudio(audioBuffer, contentType);
+            const asrRes = await transcribeAudio(audioBuffer, contentType, { expectedText: question.expectedText });
+            transcript = typeof asrRes === 'object' && asrRes ? (asrRes.text || String(asrRes)) : String(asrRes || '');
+            words = Array.isArray(asrRes?.words) ? asrRes.words : null;
             accuracy = computeWordAccuracyPercent(question.expectedText, transcript);
+
+            if (Number.isFinite(Number(asrRes?.accuracyScore))) {
+                accuracyScore = Number(asrRes.accuracyScore);
+            } else if (Number.isFinite(Number(words?.accuracyScore))) {
+                accuracyScore = Number(words.accuracyScore);
+            } else if (Array.isArray(words) && words.length > 0) {
+                const validScores = words
+                    .map((w) => (typeof w === 'object' && w != null && Number.isFinite(Number(w.accuracyScore))) ? Number(w.accuracyScore) : null)
+                    .filter((n) => n !== null);
+                if (validScores.length > 0) {
+                    accuracyScore = Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10;
+                }
+            }
+            effectiveAccuracy = accuracyScore != null ? accuracyScore : (accuracy?.percent ?? null);
         } catch (e) {
             asrError = e?.message || String(e);
             console.warn('[EntranceTest] ASR failed:', asrError);
@@ -323,7 +311,10 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
                         bytes: audioBuffer.length
                     },
                     transcript,
-                    accuracyPercent: accuracy?.percent ?? null,
+                    words: words || null,
+                    accuracyPercent: effectiveAccuracy,
+                    accuracyScore: accuracyScore,
+                    wordMatchAccuracy: accuracy?.percent ?? null,
                     expectedCount: accuracy?.expectedCount ?? null,
                     transcriptCount: accuracy?.transcriptCount ?? null,
                     distance: accuracy?.distance ?? null,
@@ -338,7 +329,8 @@ router.post('/speaking/upload', express.raw({ type: () => true, limit: '25mb' })
 
         return sendSuccess(res, {
             transcript,
-            accuracyPercent: accuracy?.percent ?? null,
+            accuracyPercent: effectiveAccuracy,
+            accuracyScore: accuracyScore,
             asrError: asrError || null
         });
     } catch (e) {

@@ -1,4 +1,5 @@
 {
+  "questionManifestIds": ["8", "731", "1052"],
   "version": "sc-kokoro-v1",
   "voice": "af_heart",
   "speed": 1,

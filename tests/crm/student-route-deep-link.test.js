@@ -223,7 +223,7 @@ function createFakeDb(initialDocs = {}) {
     assert.strictEqual(uppercaseLookupRes._status, 200);
     assert.strictEqual(uppercaseLookupRes._json.student.crmId, 'a0004');
     assert.strictEqual(uppercaseLookupRes._json.student.studentId, 'student-upper');
-    assert.strictEqual(db.docs.get(`${CRM_STUDENTS}/student-upper`).crmId, 'a0004');
+    assert.strictEqual(db.docs.get(`${CRM_STUDENTS}/student-upper`).crmId, 'A0004', 'Read-only lookup must not rewrite stored casing.');
 
     const listHandlers = getRouteHandlers(router, '/students', 'get');
     assert(listHandlers.length > 0, 'Expected student list route to be mounted.');
@@ -234,8 +234,9 @@ function createFakeDb(initialDocs = {}) {
         ? listRes._json.students.find((student) => student.studentId === 'student-legacy')
         : null;
     assert(legacyRow, 'Expected legacy student to be returned in the list.');
-    assert.strictEqual(legacyRow.crmId, 'a0002');
-    assert.strictEqual(db.docs.get(`${CRM_STUDENTS}/student-legacy`).crmId, 'a0002');
+    assert.strictEqual(legacyRow.crmId, null);
+    assert.strictEqual(db.docs.get(`${CRM_STUDENTS}/student-legacy`).crmId, undefined, 'Listing students must not allocate a legacy ID.');
+    assert.strictEqual(db.docs.get(`${CRM_COUNTERS}/crmId`).nextIndex, 1, 'GET must not advance the counter.');
 
     const createHandlers = getRouteHandlers(router, '/students', 'post');
     assert(createHandlers.length > 0, 'Expected student create route to be mounted.');
@@ -251,7 +252,7 @@ function createFakeDb(initialDocs = {}) {
     assert.strictEqual(createRes._json.success, true);
     assert.ok(String(createRes._json.studentId || '').trim(), 'Create response should include a studentId.');
     assert.strictEqual(createRes._json.student.studentId, createRes._json.studentId);
-    assert.strictEqual(createRes._json.student.crmId, 'a0003');
+    assert.strictEqual(createRes._json.student.crmId, 'a0002');
 
     const duplicateDb = createFakeDb({
         [`${CRM_COUNTERS}/crmId`]: { nextIndex: 20 },

@@ -3,14 +3,10 @@ const {
     CRM_CLASSROOMS
 } = require('../../crm/collections');
 const {
-    allocateNextCrmId,
-    ensureCrmIdOnDoc,
     isValidCrmId,
     normalizeCrmId
 } = require('../../crm/business-id-service');
 const {
-    buildStudentCreateData,
-    buildStudentPatchData,
     mapStudentRecord
 } = require('../../crm/student-service');
 const {
@@ -19,7 +15,7 @@ const {
 const {
     mapClassroomRecord
 } = require('../../crm/course-service');
-const { enqueuePracticeAccessJob } = require('../../crm/practice-access-service');
+const { saveStudent, auditSaved, readSavedData } = require('../../crm/workflow-write-service');
 
 module.exports = function registerStudentRoutes(router, deps) {
     const { db, sendSuccess, sendError, requireAdminHandlers, serverTimestamp, writeAuditLog } = deps;
@@ -39,9 +35,7 @@ module.exports = function registerStudentRoutes(router, deps) {
         }
 
         const data = doc && typeof doc.data === 'function' ? (doc.data() || {}) : (doc || {});
-        const studentRef = doc?.ref || db.collection(CRM_STUDENTS).doc(studentId);
-        const ensure = await ensureCrmIdOnDoc(db, studentRef, data, context);
-        return buildStudentRecord(studentId, data, ensure.crmId);
+        return buildStudentRecord(studentId, data, normalizeCrmId(data.crmId));
     }
 
     async function hydrateDocsWithConcurrency(docs, context = {}, options = {}) {
@@ -119,29 +113,12 @@ module.exports = function registerStudentRoutes(router, deps) {
 
     router.post('/students', ...requireAdminHandlers, async (req, res) => {
         try {
-            const allocation = await allocateNextCrmId(db, { serverTimestamp });
-            const student = buildStudentCreateData({
-                ...(req.body || {}),
-                crmId: allocation.crmId
-            }, {
-                user: req.user,
-                serverTimestamp,
-            });
-
-            const ref = db.collection(CRM_STUDENTS).doc();
-            await ref.set(student);
-            const studentRecord = buildStudentRecord(ref.id, student, student.crmId);
-            await writeAuditLog?.({
-                action: 'student.create',
-                entityType: 'student',
-                entityId: ref.id
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                studentId: ref.id,
-                crmId: studentRecord.crmId,
-                student: studentRecord
-            }, 'Student profile created.');
+            const result = await saveStudent(db, null, req.body || {}, { user: req.user, serverTimestamp });
+            const saved = await readSavedData(db.collection(CRM_STUDENTS).doc(result.studentId), result.student);
+            const studentRecord = buildStudentRecord(result.studentId, saved.data, saved.data.crmId);
+            const warnings = await auditSaved(writeAuditLog, { action: 'student.create', entityType: 'student', entityId: result.studentId }, { user: req.user });
+            warnings.push(...saved.warnings);
+            return sendSuccess(res, { studentId: result.studentId, crmId: studentRecord.crmId, student: studentRecord, ...(warnings.length ? { warnings } : {}) }, 'Student profile created.');
         } catch (error) {
             if ((error?.message || '').includes('Please fill at least 1 field')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
@@ -274,40 +251,14 @@ module.exports = function registerStudentRoutes(router, deps) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing or invalid studentId.');
             }
 
-            const ref = db.collection(CRM_STUDENTS).doc(studentId);
-            const snap = await ref.get();
-            if (!snap.exists) {
-                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student profile not found.');
-            }
-
-            const next = buildStudentPatchData(snap.data() || {}, req.body || {}, {
-                user: req.user,
-                serverTimestamp
-            });
-            await ref.set(next, { merge: true });
-            await writeAuditLog?.({
-                action: 'student.update',
-                entityType: 'student',
-                entityId: studentId
-            }, { user: req.user });
-
-            const updatedSnap = await ref.get();
-
-            // Override changes can affect practice access for linked accounts.
-            const linked = updatedSnap.exists ? (updatedSnap.data()?.linked_user_ids || []) : [];
-            const uids = Array.isArray(linked) ? linked.map((x) => String(x || '').trim()).filter(Boolean) : [];
-            await Promise.all(uids.map((targetUid) => enqueuePracticeAccessJob(db, 'reconcileUid', targetUid, { runAfterAt: new Date() })));
-
-            const student = await hydrateStudentDoc({
-                id: studentId,
-                data: () => (updatedSnap.data() || {}),
-                ref
-            }, {
-                user: req.user,
-                serverTimestamp
-            });
-            return sendSuccess(res, { studentId, crmId: student.crmId || null, student }, 'Student profile updated.');
+            const result = await saveStudent(db, studentId, req.body || {}, { user: req.user, serverTimestamp });
+            const saved = await readSavedData(db.collection(CRM_STUDENTS).doc(studentId), result.student);
+            const warnings = await auditSaved(writeAuditLog, { action: 'student.update', entityType: 'student', entityId: studentId }, { user: req.user });
+            warnings.push(...saved.warnings);
+            const student = buildStudentRecord(studentId, saved.data, saved.data.crmId);
+            return sendSuccess(res, { studentId, crmId: student.crmId || null, student, ...(warnings.length ? { warnings } : {}) }, 'Student profile updated.');
         } catch (error) {
+            if (error.status) return sendError(res, error.status, error.code, error.message);
             if ((error?.message || '').includes('No student fields provided')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }

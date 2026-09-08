@@ -154,6 +154,9 @@ function normalizeLeadCore(input, fallback = {}) {
 }
 
 function buildLeadCreateData(input, context = {}) {
+    if (cleanOptionalString(input?.studentId) || input?.stage === 'converted') {
+        throw Object.assign(new Error('Conversion linkage can only be created by the conversion action.'), { status: 400, code: 'VALIDATION_ERROR' });
+    }
     const lead = normalizeLeadCore(input, {
         stage: 'new',
         ownerUid: context.user?.uid || null,
@@ -168,6 +171,11 @@ function buildLeadCreateData(input, context = {}) {
 }
 
 function buildLeadPatchData(existing, input, context = {}) {
+    if ((Object.prototype.hasOwnProperty.call(input || {}, 'studentId') && cleanOptionalString(input.studentId) !== cleanOptionalString(existing.studentId))
+        || (input?.stage === 'converted' && existing.stage !== 'converted')
+        || (existing.stage === 'converted' && input?.stage && input.stage !== 'converted')) {
+        throw Object.assign(new Error('Conversion linkage can only be changed by the conversion action.'), { status: 400, code: 'VALIDATION_ERROR' });
+    }
     const patch = normalizeLeadCore(input, existing);
     const recognized = [
         'name', 'label', 'phone', 'email', 'zalo', 'facebook',

@@ -6,6 +6,20 @@ const path = require('path');
 
 (async () => {
   const app = express();
+  let catalogRequests = 0;
+  let catalogBody = { version: 'sc-kokoro-v1', questionManifestIds: ['731', '997', '998', '999'] };
+  const questionRequests = [];
+  app.get('/database/RA/speech-coach-audio/v1/manifest.json', (_req, res) => {
+    catalogRequests += 1;
+    res.json(catalogBody);
+  });
+  app.use('/database/RA/speech-coach-audio/v1/questions', (req, res, next) => {
+    // Synthetic responses must reach this counter even when production fetch uses force-cache.
+    // This tests the fetch decision; HTTP cache reuse is independent of that decision.
+    res.set('Cache-Control', 'no-store');
+    questionRequests.push(req.path);
+    next();
+  });
   const readyEvent = (eventId, hexCharacter) => {
     const assetId = String(hexCharacter).repeat(64);
     return ({
@@ -52,8 +66,12 @@ const path = require('path');
     const value = app.listen(0, '127.0.0.1', () => resolve(value));
   });
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const questionResponses = [];
+  page.on('response', (response) => {
+    if (response.url().includes('/speech-coach-audio/v1/questions/')) questionResponses.push({ url: response.url(), status: response.status() });
+  });
 
   await page.addInitScript(() => {
     sessionStorage.setItem('onboarding_complete', 'true');
@@ -96,6 +114,22 @@ const path = require('path');
       }
     };
   });
+
+  catalogRequests = 0;
+  questionRequests.length = 0;
+  const coverage = await page.evaluate(async () => {
+    const ra = window.ReadAloudMode || window.currentPracticeModeInstance;
+    ra.speechCoachAudioCatalogPromise = null;
+    for (const id of ['731', '1203']) ra.speechCoachAudioManifestCache.delete(id);
+    const [known, missing, repeated] = await Promise.all([
+      ra.loadSpeechCoachAudioManifest('731'), ra.loadSpeechCoachAudioManifest('1203'), ra.loadSpeechCoachAudioManifest('1203')
+    ]);
+    return { known: known?.questionId, missing, repeated };
+  });
+  assert.deepStrictEqual(coverage, { known: '731', missing: null, repeated: null });
+  assert.strictEqual(catalogRequests, 1, 'concurrent questions must share one catalog request');
+  assert.strictEqual(questionRequests.filter((url) => url === '/731.json').length, 1);
+  assert.ok(!questionRequests.includes('/1203.json'), 'unsupported question must not request a speculative manifest');
 
   await page.evaluate(() => {
     const ra = window.ReadAloudMode || window.currentPracticeModeInstance;
@@ -233,6 +267,8 @@ const path = require('path');
     return document.querySelectorAll('.sc-model-play-btn:disabled').length;
   });
   assert.strictEqual(missingManifest, 1, 'missing manifest must disable Model playback');
+  assert.ok(questionRequests.includes('/999.json'), 'declared missing output must still be requested');
+  assert.ok(questionResponses.some(({ url, status }) => url.endsWith('/999.json') && status === 404), 'declared missing output must expose its real 404');
 
   for (const questionId of ['998', '997']) {
     const unavailable = await page.evaluate(async (id) => {
@@ -246,6 +282,19 @@ const path = require('path');
       return document.querySelectorAll('.sc-model-play-btn:disabled').length;
     }, questionId);
     assert.strictEqual(unavailable, 1, `${questionId} manifest must not expose invalid Model playback`);
+  }
+
+  for (const legacyCatalog of [{ version: 'sc-kokoro-v1' }, { version: 'sc-kokoro-v1', questionManifestIds: [731] }]) {
+    catalogBody = legacyCatalog;
+    const before = questionRequests.filter((url) => url === '/731.json').length;
+    const knownId = await page.evaluate(async () => {
+      const ra = window.ReadAloudMode || window.currentPracticeModeInstance;
+      ra.speechCoachAudioCatalogPromise = null;
+      ra.speechCoachAudioManifestCache.delete('731');
+      return (await ra.loadSpeechCoachAudioManifest('731'))?.questionId;
+    });
+    assert.strictEqual(knownId, '731', 'legacy or invalid catalogs must retain compatibility fetching');
+    assert.strictEqual(questionRequests.filter((url) => url === '/731.json').length, before + 1);
   }
 
   console.log('Speech Coach model audio browser check passed:', JSON.stringify(result));

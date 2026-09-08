@@ -22,30 +22,47 @@ window.CrmStudentModal = (function () {
         } = deps;
         const entranceTestUi = window.CrmEntranceTests || null;
 
+        const VALID_STUDENT_TABS = new Set([
+            'info',
+            'learning',
+            'overview',
+            'courses',
+            'finance',
+            'identity',
+            'teaching-sessions'
+        ]);
+
+        function normalizeStudentTabId(tabId) {
+            const raw = String(tabId || '').trim();
+            if (raw === 'student-360') return 'overview';
+            return VALID_STUDENT_TABS.has(raw) ? raw : 'info';
+        }
+
         function switchStudentTab(tabId) {
+            const normalizedTab = normalizeStudentTabId(tabId);
             elements.studentSidebarItems.forEach((btn) => {
-                btn.classList.toggle('active', btn.dataset.tab === tabId);
+                btn.classList.toggle('active', btn.dataset.tab === normalizedTab);
             });
 
             elements.studentTabContents.forEach((content) => {
-                const isMatch = content.id === `student-${tabId}`;
+                const isMatch = content.id === `student-${normalizedTab}`;
                 content.style.display = isMatch ? 'block' : 'none';
                 content.classList.toggle('active', isMatch);
             });
 
-            if (tabId !== 'courses') {
+            if (normalizedTab !== 'courses') {
                 if (window.CrmStudentCourses && typeof window.CrmStudentCourses.destroyAvailabilityMatrix === 'function') {
                     window.CrmStudentCourses.destroyAvailabilityMatrix();
                 }
             }
 
-            if (tabId === 'finance' && modalState.studentId) {
+            if (normalizedTab === 'finance' && modalState.studentId) {
                 refreshStudentFinance().catch((error) => {
                     console.error('[CRM Admin] Failed to refresh student finance:', error);
                 });
                 return;
             }
-            if (tabId === 'courses') {
+            if (normalizedTab === 'courses') {
                 if (window.CrmStudentCourses) {
                     if (modalState.studentId) {
                         window.CrmStudentCourses.refresh(modalState.studentId, modalState.studentProfile).catch((error) => {
@@ -61,7 +78,7 @@ window.CrmStudentModal = (function () {
                 }
                 return;
             }
-            if (tabId === 'teaching-sessions') {
+            if (tabId === 'teaching-sessions' || normalizedTab === 'teaching-sessions') {
                 const targetStudentId = modalState.studentId || (modalState.studentProfile && (modalState.studentProfile.studentId || modalState.studentProfile.id || modalState.studentProfile.crmId));
                 if (window.CrmTeachingSessions) {
                     if (typeof window.CrmTeachingSessions.setStudentId === 'function') {
@@ -73,7 +90,7 @@ window.CrmStudentModal = (function () {
                 }
                 return;
             }
-            if (tabId === 'info' || tabId === 'student-360' || tabId === 'overview') {
+            if (normalizedTab === 'info' || normalizedTab === 'overview') {
                 renderStudentSchedulePrompt();
             }
         }
@@ -130,6 +147,8 @@ window.CrmStudentModal = (function () {
             inputs.forEach((el) => {
                 if (el) el.value = '';
             });
+            if (typeof window.updateStudentSourceVisibility === 'function') window.updateStudentSourceVisibility();
+            if (typeof window.updateLeadSourceVisibility === 'function') window.updateLeadSourceVisibility();
             if (window.CrmStudents && typeof window.CrmStudents.syncScoreDecorations === 'function') {
                 window.CrmStudents.syncScoreDecorations(elements);
             }
@@ -199,7 +218,10 @@ window.CrmStudentModal = (function () {
             }
         }
 
+        let modalSetupBound = false;
         function setupStudentModal() {
+            if (modalSetupBound) return;
+            modalSetupBound = true;
             if (Array.isArray(elements.btnNewStudentTriggers) && elements.btnNewStudentTriggers.length > 0) {
                 elements.btnNewStudentTriggers.forEach((btn) => {
                     btn.addEventListener('click', () => {

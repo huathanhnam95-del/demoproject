@@ -69,6 +69,7 @@ function createReq({ params = {}, body = {}, query = {}, headers = {}, ip = '127
 function createFakeDb(initialDocs = {}) {
     const docs = new Map(Object.entries(initialDocs).map(([key, value]) => [key, clone(value)]));
     let autoId = 0;
+    let transactionTail = Promise.resolve();
 
     function docKey(collectionName, docId) {
         return `${collectionName}/${docId}`;
@@ -76,7 +77,7 @@ function createFakeDb(initialDocs = {}) {
 
     function listCollectionDocs(collectionName) {
         return Array.from(docs.entries())
-            .filter(([key]) => key.startsWith(`${collectionName}/`))
+            .filter(([key]) => key.startsWith(`${collectionName}/`) && !key.slice(collectionName.length + 1).includes('/'))
             .map(([key, value]) => ({
                 id: key.slice(collectionName.length + 1),
                 data: clone(value)
@@ -100,11 +101,12 @@ function createFakeDb(initialDocs = {}) {
     function makeSnapshot(ref, collectionName, docId) {
         const key = docKey(collectionName, docId);
         const exists = docs.has(key);
+        const data = clone(docs.get(key) || null);
         return {
             exists,
             id: docId,
             ref,
-            data: () => clone(docs.get(key) || null)
+            data: () => clone(data)
         };
     }
 
@@ -125,6 +127,9 @@ function createFakeDb(initialDocs = {}) {
                     throw new Error(`Missing fake doc: ${key}`);
                 }
                 docs.set(key, { ...(docs.get(key) || {}), ...clone(patch) });
+            },
+            async delete() {
+                docs.delete(key);
             },
             collection(subcollectionName) {
                 return makeCollectionRef(`${collectionName}/${docId}/${subcollectionName}`);
@@ -186,6 +191,7 @@ function createFakeDb(initialDocs = {}) {
     function makeCollectionRef(collectionName) {
         return {
             doc(docId) {
+                if (arguments.length && (typeof docId !== 'string' || !docId)) throw new Error('Document ID must be a nonempty string, or omitted.');
                 const resolvedId = docId || `${collectionName.replace(/[^\w-]+/g, '-')}-auto-${++autoId}`;
                 return makeDocRef(collectionName, resolvedId);
             },
@@ -228,18 +234,32 @@ function createFakeDb(initialDocs = {}) {
             };
         },
         async runTransaction(callback) {
-            const tx = {
-                get(ref) {
-                    return ref.get();
-                },
-                set(ref, patch, options = {}) {
-                    return ref.set(patch, options);
-                },
-                update(ref, patch) {
-                    return ref.update(patch);
+            // Serial execution models atomic isolation for route tests; real
+            // Firestore retry/locking behavior still requires emulator coverage.
+            const run = transactionTail.then(async () => {
+                const operations = [];
+                const before = new Map([...docs].map(([key, value]) => [key, clone(value)]));
+                const tx = {
+                    get(ref) {
+                        if (operations.length) throw new Error('Transaction reads must precede writes.');
+                        return ref.get();
+                    },
+                    set(ref, patch, options = {}) { operations.push(() => ref.set(patch, options)); return tx; },
+                    update(ref, patch) { operations.push(() => ref.update(patch)); return tx; },
+                    delete(ref) { operations.push(() => ref.delete()); return tx; }
+                };
+                try {
+                    const result = await callback(tx);
+                    for (const operation of operations) await operation();
+                    return result;
+                } catch (error) {
+                    docs.clear();
+                    for (const [key, value] of before) docs.set(key, value);
+                    throw error;
                 }
-            };
-            return callback(tx);
+            });
+            transactionTail = run.catch(() => {});
+            return run;
         }
     };
 }

@@ -411,4 +411,166 @@ test('computeTranscriptDiffHtml: preserves Oxford American IPA and coaching tips
     assert.ok(parsed[1].tip.includes('Relax your tongue flat'));
 });
 
+const {
+    getSpeakingAccuracy: getPdfSpeakingAccuracy,
+    computeAcousticTranscriptDiff
+} = require('../public/entrance-test-pdf-generator.js');
+
+function getCrmSpeakingAccuracyFn() {
+    const fileContent = fs.readFileSync(path.resolve(__dirname, '..', 'public', 'crm-entrance-test-result.js'), 'utf8');
+    const fnMatch = fileContent.match(/function getSpeakingAccuracy\(entry\) {[\s\S]*?\n  \}/);
+    if (!fnMatch) {
+        throw new Error('Could not find getSpeakingAccuracy in public/crm-entrance-test-result.js');
+    }
+    const scriptSource = `
+        ${fnMatch[0]}
+        this.getSpeakingAccuracy = getSpeakingAccuracy;
+    `;
+    const context = vm.createContext({});
+    const script = new vm.Script(scriptSource);
+    script.runInContext(context);
+    return context.getSpeakingAccuracy;
+}
+
+test('crm getSpeakingAccuracy: prioritizes accuracyScore over words average and accuracyPercent', () => {
+    const getCrmSpeakingAccuracy = getCrmSpeakingAccuracyFn();
+
+    // 1. Has accuracyScore -> returns accuracyScore
+    const entry1 = {
+        accuracyScore: 62.0,
+        accuracyPercent: 86.5,
+        words: [{ word: 'test', accuracyScore: 90 }]
+    };
+    assert.strictEqual(getCrmSpeakingAccuracy(entry1), 62.0);
+
+    // 2. No accuracyScore, has words array -> returns average of words accuracyScore
+    const entry2 = {
+        accuracyPercent: 94.7,
+        words: [
+            { word: 'Statistical', accuracyScore: 80 },
+            { word: 'literacy', accuracyScore: 50 },
+            { word: 'data', accuracyScore: 20 }
+        ]
+    };
+    assert.strictEqual(getCrmSpeakingAccuracy(entry2), 50.0);
+
+    // 3. No accuracyScore and no words -> falls back to accuracyPercent
+    const entry3 = {
+        accuracyPercent: 75.4
+    };
+    assert.strictEqual(getCrmSpeakingAccuracy(entry3), 75.4);
+
+    // 4. Empty or invalid entry -> returns null
+    assert.strictEqual(getCrmSpeakingAccuracy(null), null);
+    assert.strictEqual(getCrmSpeakingAccuracy({}), null);
+});
+
+test('pdf getSpeakingAccuracy: matches CRM priority logic exactly', () => {
+    // 1. Has accuracyScore
+    const entry1 = {
+        accuracyScore: 45.3,
+        accuracyPercent: 94.7,
+        words: [{ word: 'test', accuracyScore: 90 }]
+    };
+    assert.strictEqual(getPdfSpeakingAccuracy(entry1), 45.3);
+
+    // 2. Average of words
+    const entry2 = {
+        accuracyPercent: 92.5,
+        words: [
+            { word: 'I', accuracyScore: 30 },
+            { word: 'am', accuracyScore: 20 }
+        ]
+    };
+    assert.strictEqual(getPdfSpeakingAccuracy(entry2), 25.0);
+
+    // 3. Fallback
+    const entry3 = {
+        accuracyPercent: 88.2
+    };
+    assert.strictEqual(getPdfSpeakingAccuracy(entry3), 88.2);
+
+    // 4. Invalid
+    assert.strictEqual(getPdfSpeakingAccuracy(null), null);
+});
+
+test('pdf computeAcousticTranscriptDiff: correctly classifies tri-color tiers and omissions', () => {
+    const expected = 'Statistical literacy is the ability to accurately understand the data.';
+    const words = [
+        { word: 'Statistical', accuracyScore: 85, errorType: 'None' },
+        { word: 'literacy', accuracyScore: 68, errorType: 'None' },
+        { word: 'is', accuracyScore: 92, errorType: 'None' },
+        { word: 'the', accuracyScore: 88, errorType: 'None' },
+        { word: 'ability', accuracyScore: 84, errorType: 'None' },
+        { word: 'to', accuracyScore: 90, errorType: 'None' },
+        { word: 'accurately', accuracyScore: 18, errorType: 'Mispronunciation' },
+        { word: 'understand', accuracyScore: 87, errorType: 'None' },
+        { word: 'the', accuracyScore: 91, errorType: 'None' },
+        { word: 'data', accuracyScore: 55, errorType: 'Mispronunciation' }
+    ];
+
+    const tokens = computeAcousticTranscriptDiff(expected, '', words);
+
+    // Find token for 'accurately'
+    const accuratelyToken = tokens.find(t => t.word === 'accurately');
+    assert.ok(accuratelyToken, 'Token for accurately must exist');
+    assert.strictEqual(accuratelyToken.type, 'error', 'accurately must have error status');
+    assert.strictEqual(accuratelyToken.accuracyScore, 18);
+
+    // Find token for 'literacy'
+    const literacyToken = tokens.find(t => t.word === 'literacy');
+    assert.ok(literacyToken, 'Token for literacy must exist');
+    assert.strictEqual(literacyToken.type, 'uncertain', 'literacy must have uncertain status');
+
+    // Find token for 'Statistical'
+    const statToken = tokens.find(t => t.word === 'Statistical');
+    assert.ok(statToken, 'Token for Statistical must exist');
+    assert.strictEqual(statToken.type, 'correct', 'Statistical must have correct status');
+
+    // Test omission
+    const expectedWithOmission = 'Statistical literacy is always needed.';
+    const wordsWithOmission = [
+        { word: 'Statistical', accuracyScore: 90 },
+        { word: 'literacy', accuracyScore: 85 }
+    ];
+    const omissionTokens = computeAcousticTranscriptDiff(expectedWithOmission, '', wordsWithOmission);
+    const omittedWords = omissionTokens.filter(t => t.type === 'missing');
+    assert.ok(omittedWords.length >= 3, 'Must identify omitted words');
+    assert.ok(omittedWords.some(t => t.word === 'is'));
+    assert.ok(omittedWords.some(t => t.word === 'always'));
+    assert.ok(omittedWords.some(t => t.word.startsWith('needed')));
+});
+
+test('Target test 1983b8708db913c7907bcb519827e570548755d80abf148f1659f275a71c7672 rescore simulation', () => {
+    const q1 = {
+        accuracyPercent: 62.0,
+        accuracyScore: 62.0,
+        wordMatchAccuracy: 86.5
+    };
+    const q2 = {
+        accuracyPercent: 45.3,
+        accuracyScore: 45.3,
+        wordMatchAccuracy: 94.7
+    };
+    const q3 = {
+        accuracyPercent: 25.8,
+        accuracyScore: 25.8,
+        wordMatchAccuracy: 92.5
+    };
+
+    assert.strictEqual(getPdfSpeakingAccuracy(q1), 62.0);
+    assert.strictEqual(getPdfSpeakingAccuracy(q2), 45.3);
+    assert.strictEqual(getPdfSpeakingAccuracy(q3), 25.8);
+
+    const getCrmSpeakingAccuracy = getCrmSpeakingAccuracyFn();
+    assert.strictEqual(getCrmSpeakingAccuracy(q1), 62.0);
+    assert.strictEqual(getCrmSpeakingAccuracy(q2), 45.3);
+    assert.strictEqual(getCrmSpeakingAccuracy(q3), 25.8);
+
+    assert.notStrictEqual(getPdfSpeakingAccuracy(q1), 86.5);
+    assert.notStrictEqual(getPdfSpeakingAccuracy(q2), 94.7);
+    assert.notStrictEqual(getPdfSpeakingAccuracy(q3), 92.5);
+});
+
+
 

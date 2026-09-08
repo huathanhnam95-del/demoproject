@@ -2016,3 +2016,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1021,2026-09-06,Release V1.8.136: Deploy RFIB distractor contrast CRM scheduler and Write Essay naturalization,Done,2026-09-06
 1022,2026-09-07,Release V1.8.137: Deploy Pronunciation Dual Arena lexical stress assessment and audio remediation,Done,2026-09-07
 1023,2026-09-07,Fix availability schedule time picker input text clipping and student source account save in CRM,Done,2026-09-07
+1024,2026-09-07,Fix CRM tab routing stuck on teacher schedule and restore agent source dropdown visibility,Done,2026-09-07
+1025,2026-09-08,Explore new repository safeguard infrastructure and commits to adapt workflows,Done,2026-09-08
+1026,2026-09-08,Investigate Drive C disk space usage,Done,2026-09-08
+1027,2026-09-08,Update entrance test speaking accuracy scoring and PDF export to Azure pronunciation assessment system,Done,2026-09-08

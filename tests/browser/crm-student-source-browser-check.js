@@ -112,7 +112,68 @@ async function runTest() {
     assert.strictEqual(clientCheck.payloadOwner, 'Thành', 'CrmStudents.buildPayload must extract facebookPersonalOwner');
     assert.strictEqual(clientCheck.hasInfoOnlyOwner, true, 'hasAnyInfoField must recognize facebookPersonalOwner');
 
-    console.log('✓ Student acquisition source, Source Account dropdown, and time input CSS check PASSED');
+    // Verify Agent source selection in student modal
+    await page.selectOption('#lead-source', 'Agent');
+    const ownerGroupDisplay = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display);
+    const ownerRequired = await page.$eval('#lead-facebook-personal-owner', (el) => el.required);
+    const agentGroupDisplay = await page.$eval('#lead-agent-source-group', (el) => el.style.display);
+    const agentRequired = await page.$eval('#lead-agent-source', (el) => el.required);
+
+    assert.strictEqual(ownerGroupDisplay, 'none', 'Source Account group must be hidden when source is Agent');
+    assert.strictEqual(ownerRequired, false, 'Source Account must not be required when hidden');
+    assert.strictEqual(agentGroupDisplay, '', 'Agent Source group must be visible when source is Agent');
+    assert.strictEqual(agentRequired, true, 'Agent Source must be required when source is Agent');
+
+    // Test student tab switching including 'student-360' normalization
+    const tabSwitchCheck = await page.evaluate(() => {
+      const results = {};
+      // Test switching to 'student-360'
+      if (window.CrmStudentModal && typeof window.CrmStudentModal.switchStudentTab === 'function') {
+        window.CrmStudentModal.switchStudentTab('student-360');
+      } else if (typeof window.switchStudentTab === 'function') {
+        window.switchStudentTab('student-360');
+      }
+
+      const overviewPanel = document.getElementById('student-overview');
+      const overviewBtn = document.querySelector('.crm-sidebar-item[data-tab="overview"]');
+      results.overviewVisible = overviewPanel && overviewPanel.style.display === 'block';
+      results.overviewActive = overviewPanel && overviewPanel.classList.contains('active');
+      results.btnActive = overviewBtn && overviewBtn.classList.contains('active');
+
+      // Test switching back to 'info'
+      if (window.CrmStudentModal && typeof window.CrmStudentModal.switchStudentTab === 'function') {
+        window.CrmStudentModal.switchStudentTab('info');
+      } else if (typeof window.switchStudentTab === 'function') {
+        window.switchStudentTab('info');
+      }
+
+      const infoPanel = document.getElementById('student-info');
+      const infoBtn = document.querySelector('.crm-sidebar-item[data-tab="info"]');
+      results.infoVisible = infoPanel && infoPanel.style.display === 'block';
+      results.infoActive = infoPanel && infoPanel.classList.contains('active');
+      results.infoBtnActive = infoBtn && infoBtn.classList.contains('active');
+      return results;
+    });
+
+    assert.strictEqual(tabSwitchCheck.overviewVisible, true, 'Student 360 overview panel must be visible after switchStudentTab("student-360")');
+    assert.strictEqual(tabSwitchCheck.overviewActive, true, 'Student 360 overview panel must have active class');
+    assert.strictEqual(tabSwitchCheck.btnActive, true, 'Sidebar button for Student 360 must have active class');
+    assert.strictEqual(tabSwitchCheck.infoVisible, true, 'Info panel must be visible after switchStudentTab("info")');
+    assert.strictEqual(tabSwitchCheck.infoBtnActive, true, 'Sidebar button for Info must have active class');
+
+    // Also test interactive user clicks on modal sidebar tabs
+    await page.click('.crm-sidebar-item[data-tab="overview"]');
+    assert.strictEqual(await page.$eval('#student-overview', (el) => el.style.display), 'block', 'Clicking Student 360 must show overview panel');
+    assert.strictEqual(await page.$eval('.crm-sidebar-item[data-tab="overview"]', (el) => el.classList.contains('active')), true, 'Student 360 button must be active');
+
+    await page.click('.crm-sidebar-item[data-tab="learning"]');
+    assert.strictEqual(await page.$eval('#student-learning', (el) => el.style.display), 'block', 'Clicking Learning Profile must show learning panel');
+    assert.strictEqual(await page.$eval('#student-overview', (el) => el.style.display), 'none', 'Student 360 must be hidden when switching to learning');
+
+    await page.click('.crm-sidebar-item[data-tab="info"]');
+    assert.strictEqual(await page.$eval('#student-info', (el) => el.style.display), 'block', 'Clicking Info must restore info panel');
+
+    console.log('✓ Student acquisition source, Source Account dropdown, Agent Source toggling, student tab switching, and time input CSS check PASSED');
   } finally {
     await browser.close();
     server.close();

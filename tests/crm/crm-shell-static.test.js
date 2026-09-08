@@ -12,7 +12,7 @@ const agentSourcesWorkspace = read('public/js/crm/agent-sources-workspace.js');
 const leadWorkspace = read('public/js/crm/lead-workspace.js');
 const schedulerWorkspace = read('public/js/crm/scheduler-workspace.js');
 const packageJson = JSON.parse(read('package.json'));
-const CRM_ADMIN_ASSET_VERSION = '20260907-v1.8.137';
+const CRM_ADMIN_ASSET_VERSION = '20260908-v2.0.1';
 
 assert(!html.includes('id="lead-templates-automations"'), 'Removed Templates and Automations UI must not remain in the CRM shell.');
 assert(/<select id="lead-source"[^>]*\brequired\b/.test(html), 'Lead source must be required.');
@@ -411,7 +411,8 @@ assert(
 );
 
 assert(
-    typeof packageJson.scripts['lint:crm'] === 'string' && packageJson.scripts['lint:crm'].includes('public/js/crm'),
+    typeof packageJson.scripts['lint:crm'] === 'string' &&
+    (packageJson.scripts['lint:crm'].includes('public/js/crm') || packageJson.scripts['lint:crm'].includes('scripts/crm/verify-crm-suite.js')),
     'package.json must expose a lint:crm script for CRM browser and route modules.'
 );
 

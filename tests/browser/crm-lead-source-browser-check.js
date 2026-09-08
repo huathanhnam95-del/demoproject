@@ -82,7 +82,31 @@ async function runTest() {
     const isMsChecked = await page.$eval('#lead-salutation-ms', (el) => el.checked);
     assert.strictEqual(isMsChecked, true, 'Ms radio should be checked when clicked');
 
-    console.log('✓ Lead source, Source Account dropdown, and Mr/Ms salutation browser check PASSED');
+    // Verify Agent selection toggles Agent Source and hides Source Account
+    await page.selectOption('#lead-source', 'Agent');
+    const ownerGroupDisplayAfterAgent = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display);
+    const ownerRequiredAfterAgent = await page.$eval('#lead-facebook-personal-owner', (el) => el.required);
+    const agentGroupDisplayAfterAgent = await page.$eval('#lead-agent-source-group', (el) => el.style.display);
+    const agentRequiredAfterAgent = await page.$eval('#lead-agent-source', (el) => el.required);
+
+    assert.strictEqual(ownerGroupDisplayAfterAgent, 'none', 'Source Account group must be hidden when source is Agent');
+    assert.strictEqual(ownerRequiredAfterAgent, false, 'Source Account must not be required when hidden');
+    assert.strictEqual(agentGroupDisplayAfterAgent, '', 'Agent Source group must be visible when source is Agent');
+    assert.strictEqual(agentRequiredAfterAgent, true, 'Agent Source must be required when source is Agent');
+
+    // Verify switching back to non-Agent restores Source Account
+    await page.selectOption('#lead-source', 'Zalo - Personal');
+    const ownerGroupDisplayAfterZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display);
+    const ownerRequiredAfterZalo = await page.$eval('#lead-facebook-personal-owner', (el) => el.required);
+    const agentGroupDisplayAfterZalo = await page.$eval('#lead-agent-source-group', (el) => el.style.display);
+    const agentRequiredAfterZalo = await page.$eval('#lead-agent-source', (el) => el.required);
+
+    assert.strictEqual(ownerGroupDisplayAfterZalo, '', 'Source Account group must be visible when source is Zalo - Personal');
+    assert.strictEqual(ownerRequiredAfterZalo, true, 'Source Account must be required when source is Zalo - Personal');
+    assert.strictEqual(agentGroupDisplayAfterZalo, 'none', 'Agent Source group must be hidden when source is Zalo - Personal');
+    assert.strictEqual(agentRequiredAfterZalo, false, 'Agent Source must not be required when hidden');
+
+    console.log('✓ Lead source, Source Account dropdown, Agent Source toggling, and Mr/Ms salutation browser check PASSED');
   } finally {
     await browser.close();
     server.close();

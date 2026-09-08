@@ -15,6 +15,47 @@ const DEFAULT_COVERAGE_DIR = path.join(PROJECT_ROOT, 'docs', 'audits', 'read-alo
 const INDEX_VERSION = '1';
 const REQUIRED_HEADERS = ['ID', 'TITLE', 'ANSWER', 'ANSWER FOR COMPARE OR TRANSCRIPT', 'Word count'];
 
+function compareStableStrings(left, right) {
+  const leftText = String(left ?? '');
+  const rightText = String(right ?? '');
+  if (leftText === rightText) return 0;
+  return leftText < rightText ? -1 : 1;
+}
+
+function normalizeGeneratedAt(value) {
+  if (value == null) {
+    return new Date().toISOString();
+  }
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error('generatedAt must be a non-empty ISO-8601 timestamp.');
+  }
+  const normalizedValue = value.trim();
+  const match = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/);
+  if (!match) {
+    throw new Error('generatedAt must be a full ISO-8601 timestamp with Z or an explicit offset.');
+  }
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, offset] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+  const offsetHour = offset === 'Z' ? 0 : Number(offset.slice(1, 3));
+  const offsetMinute = offset === 'Z' ? 0 : Number(offset.slice(4, 6));
+  const daysInMonth = month >= 1 && month <= 12
+    ? new Date(Date.UTC(year, month, 0)).getUTCDate()
+    : 0;
+  if (day < 1 || day > daysInMonth || hour > 23 || minute > 59 || second > 59 || offsetHour > 23 || offsetMinute > 59) {
+    throw new Error(`Invalid generatedAt timestamp: ${value}`);
+  }
+  const timestamp = new Date(normalizedValue);
+  if (Number.isNaN(timestamp.getTime())) {
+    throw new Error(`Invalid generatedAt timestamp: ${value}`);
+  }
+  return timestamp.toISOString();
+}
+
 function normalizeCell(value) {
   if (value == null) return '';
   if (typeof value === 'object' && Array.isArray(value.richText)) {
@@ -65,25 +106,12 @@ function writeJsonIfChanged(filePath, data) {
   ensureDir(filePath);
   const next = `${JSON.stringify(data, null, 2)}\n`;
   if (fs.existsSync(filePath)) {
-    try {
-      const current = fs.readFileSync(filePath, 'utf8');
-      if (current === next) {
-        return false;
-      }
-    } catch (_) {}
-  }
-  try {
-    fs.writeFileSync(filePath, next, 'utf8');
-  } catch (err) {
-    try {
-      const tmpPath = `${filePath}.tmp.${Date.now()}`;
-      fs.writeFileSync(tmpPath, next, 'utf8');
-      fs.copyFileSync(tmpPath, filePath);
-      fs.unlinkSync(tmpPath);
-    } catch (_) {
-      console.warn(`[Warning] Could not rewrite ${filePath}, preserving existing index.`);
+    const current = fs.readFileSync(filePath, 'utf8');
+    if (current === next) {
+      return false;
     }
   }
+  fs.writeFileSync(filePath, next, 'utf8');
   return true;
 }
 
@@ -299,7 +327,7 @@ function buildCoverageSummary(index) {
       const leftScore = (left.hasSoundChanges ? 3 : 0) + (left.hasReducedWords ? 2 : 0) + (left.hasLinking ? 1 : 0);
       const rightScore = (right.hasSoundChanges ? 3 : 0) + (right.hasReducedWords ? 2 : 0) + (right.hasLinking ? 1 : 0);
       if (rightScore !== leftScore) return rightScore - leftScore;
-      return String(left.questionId || left.rowKey || '').localeCompare(String(right.questionId || right.rowKey || ''), 'en');
+      return compareStableStrings(left.questionId || left.rowKey || '', right.questionId || right.rowKey || '');
     })
     .slice(0, 12)
     .map((prompt) => ({
@@ -334,7 +362,7 @@ function buildCoverageMarkdown(index, coverage) {
   lines.push(`- Prompts with sound changes: ${coverage.soundChangeCount}`);
   lines.push('');
   lines.push('## Sound Change Subtypes');
-  const subtypeEntries = Object.entries(coverage.soundChangeSubtypeCounts || {}).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]));
+  const subtypeEntries = Object.entries(coverage.soundChangeSubtypeCounts || {}).sort((left, right) => right[1] - left[1] || compareStableStrings(left[0], right[0]));
   if (subtypeEntries.length === 0) {
     lines.push('- None found');
   } else {
@@ -381,7 +409,7 @@ function buildFeaturedPromptCuration(index, coverage) {
       .slice()
       .sort((left, right) => (
         (right.soundChangeCount || 0) - (left.soundChangeCount || 0)
-        || String(left.questionId || '').localeCompare(String(right.questionId || ''), 'en')
+        || compareStableStrings(left.questionId || '', right.questionId || '')
       ))
       .map((prompt) => prompt.questionId)
   );
@@ -454,6 +482,7 @@ async function buildConnectedSpeechIndex(options = {}) {
   const functionsIndexPath = options.functionsIndexPath || DEFAULT_FUNCTIONS_INDEX_PATH;
   const coverageDir = options.coverageDir || DEFAULT_COVERAGE_DIR;
   const indexVersion = String(options.indexVersion || INDEX_VERSION);
+  const generatedAt = normalizeGeneratedAt(options.generatedAt ?? options.timestamp);
   const linkingApi = options.linkingApi || loadReadAloudLinkingApi();
 
   const workbookSha256 = hashFile(workbookPath);
@@ -483,7 +512,7 @@ async function buildConnectedSpeechIndex(options = {}) {
 
   const index = {
     indexVersion,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     sourceWorkbookSha256: workbookSha256,
     audioManifestSha256,
     prompts
@@ -501,7 +530,7 @@ async function buildConnectedSpeechIndex(options = {}) {
   fs.writeFileSync(path.join(coverageDir, 'coverage.json'), `${JSON.stringify({ ...coverage, indexVersion, generatedAt: index.generatedAt }, null, 2)}\n`, 'utf8');
   fs.writeFileSync(path.join(coverageDir, 'summary.md'), summaryMarkdown, 'utf8');
 
-  return { index, coverage, publicIndexPath, functionsIndexPath, coverageDir };
+  return { index, coverage, publicIndexPath, featuredPromptsPath, functionsIndexPath, coverageDir };
 }
 
 async function reportConnectedSpeechCoverage(options = {}) {
@@ -529,6 +558,8 @@ module.exports = {
   DEFAULT_COVERAGE_DIR,
   normalizeCell,
   normalizeKeyText,
+  compareStableStrings,
+  normalizeGeneratedAt,
   getQuestionId,
   getRowKey,
   getReferenceText,

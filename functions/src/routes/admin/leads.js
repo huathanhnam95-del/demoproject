@@ -8,9 +8,9 @@ const {
 const {
     buildLeadCreateData,
     buildLeadPatchData,
-    buildLeadConversion,
     mapLeadRecord
 } = require('../../crm/lead-service');
+const { convertLead, auditSaved } = require('../../crm/workflow-write-service');
 const { mapStudentRecord } = require('../../crm/student-service');
 
 module.exports = function registerLeadRoutes(router, deps) {
@@ -47,21 +47,22 @@ module.exports = function registerLeadRoutes(router, deps) {
             if (!String(req.body?.source || '').trim()) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Lead source is required.');
             }
-            const allocation = await allocateNextCrmId(db, { serverTimestamp });
             const lead = buildLeadCreateData(req.body || {}, {
                 user: req.user,
-                serverTimestamp,
-                crmId: allocation.crmId
+                serverTimestamp
             });
+            const allocation = await allocateNextCrmId(db, { serverTimestamp });
+            lead.crmId = allocation.crmId;
             const ref = db.collection(CRM_LEADS).doc();
             await ref.set(lead);
-            await writeAuditLog?.({
+            const warnings = await auditSaved(writeAuditLog, {
                 action: 'lead.create',
                 entityType: 'lead',
                 entityId: ref.id
             }, { user: req.user });
-            return sendSuccess(res, { leadId: ref.id }, 'Lead created.');
+            return sendSuccess(res, { leadId: ref.id, ...(warnings.length ? { warnings } : {}) }, 'Lead created.');
         } catch (error) {
+            if (error.status) return sendError(res, error.status, error.code, error.message);
             if ((error?.message || '').includes('lead contact field')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
@@ -79,23 +80,21 @@ module.exports = function registerLeadRoutes(router, deps) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing or invalid leadId.');
             }
             const ref = db.collection(CRM_LEADS).doc(leadId);
-            const snap = await ref.get();
-            if (!snap.exists) {
-                return sendError(res, 404, 'LEAD_NOT_FOUND', 'Lead not found.');
-            }
-            const next = buildLeadPatchData(snap.data() || {}, req.body || {}, {
-                user: req.user,
-                serverTimestamp
+            await db.runTransaction(async (tx) => {
+                const snap = await tx.get(ref);
+                if (!snap.exists) throw Object.assign(new Error('Lead not found.'), { status: 404, code: 'LEAD_NOT_FOUND' });
+                const next = buildLeadPatchData(snap.data() || {}, req.body || {}, { user: req.user, serverTimestamp });
+                tx.set(ref, next, { merge: true });
             });
-            await ref.set(next, { merge: true });
-            await writeAuditLog?.({
+            const warnings = await auditSaved(writeAuditLog, {
                 action: 'lead.update',
                 entityType: 'lead',
                 entityId: leadId
             }, { user: req.user });
             const updatedSnap = await ref.get();
-            return sendSuccess(res, { lead: mapLeadRecord(updatedSnap, leadId) }, 'Lead updated.');
+            return sendSuccess(res, { lead: mapLeadRecord(updatedSnap, leadId), ...(warnings.length ? { warnings } : {}) }, 'Lead updated.');
         } catch (error) {
+            if (error.status) return sendError(res, error.status, error.code, error.message);
             if ((error?.message || '').includes('No lead fields provided') || (error?.message || '').includes('Invalid lead stage')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }
@@ -110,71 +109,22 @@ module.exports = function registerLeadRoutes(router, deps) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing or invalid leadId.');
             }
 
+            const result = await convertLead(db, leadId, { user: req.user, serverTimestamp });
+            const studentRef = db.collection(CRM_STUDENTS).doc(result.studentId);
             const leadRef = db.collection(CRM_LEADS).doc(leadId);
-            const leadSnap = await leadRef.get();
-            if (!leadSnap.exists) {
-                return sendError(res, 404, 'LEAD_NOT_FOUND', 'Lead not found.');
-            }
-
-            const lead = leadSnap.data() || {};
-            if (lead.stage === 'converted' && lead.studentId) {
-                return sendError(res, 409, 'LEAD_ALREADY_CONVERTED', 'Lead has already been converted.');
-            }
-
-            const crmIdAllocation = String(lead.crmId || '').trim()
-                ? null
-                : await allocateNextCrmId(db, { serverTimestamp });
-            const crmId = String(lead.crmId || crmIdAllocation?.crmId || '').trim() || null;
-
-            const conversion = buildLeadConversion({
-                leadId,
-                lead,
-                context: {
-                    user: req.user,
-                    serverTimestamp,
-                    crmId
-                }
-            });
-
-            const studentRef = db.collection(CRM_STUDENTS).doc();
-            const linkedTestSnap = await db.collection('entranceTests').where('leadId', '==', leadId).get();
-            const batch = db.batch();
-            batch.set(studentRef, conversion.student);
-            batch.set(leadRef, {
-                ...conversion.leadPatch,
-                ...(crmId ? { crmId } : {}),
-                studentId: studentRef.id
-            }, { merge: true });
-            linkedTestSnap.docs.forEach((doc) => {
-                batch.set(doc.ref, {
-                studentId: studentRef.id,
-                crmId: crmId || conversion.student?.crmId || null,
-                updatedAt: serverTimestamp()
-                }, { merge: true });
-            });
-            await batch.commit();
-            await Promise.all([
-                writeAuditLog?.({
-                    action: 'lead.convert',
-                    entityType: 'lead',
-                    entityId: leadId,
-                    metadata: { studentId: studentRef.id }
-                }, { user: req.user }),
-                writeAuditLog?.({
-                    action: 'student.create_from_lead',
-                    entityType: 'student',
-                    entityId: studentRef.id,
-                    metadata: { leadId }
-                }, { user: req.user })
-            ]);
-
-            const studentSnap = await studentRef.get();
-            const updatedLeadSnap = await leadRef.get();
+            const warnings = result.deduped ? [] : (await Promise.all([
+                auditSaved(writeAuditLog, { action: 'lead.convert', entityType: 'lead', entityId: leadId, metadata: { studentId: result.studentId } }, { user: req.user }),
+                auditSaved(writeAuditLog, { action: 'student.create_from_lead', entityType: 'student', entityId: result.studentId, metadata: { leadId } }, { user: req.user })
+            ])).flat();
+            const [studentSnap, updatedLeadSnap] = await Promise.all([studentRef.get(), leadRef.get()]);
             return sendSuccess(res, {
                 lead: mapLeadRecord(updatedLeadSnap, leadId),
-                student: mapStudentRecord(studentSnap, studentRef.id)
-            }, 'Lead converted.');
+                student: mapStudentRecord(studentSnap, result.studentId),
+                deduped: result.deduped,
+                ...(warnings.length ? { warnings } : {})
+            }, result.deduped ? 'Lead already converted.' : 'Lead converted.');
         } catch (error) {
+            if (error.status) return sendError(res, error.status, error.code, error.message);
             if ((error?.message || '').includes('Please fill at least 1 field')) {
                 return sendError(res, 400, 'VALIDATION_ERROR', error.message);
             }

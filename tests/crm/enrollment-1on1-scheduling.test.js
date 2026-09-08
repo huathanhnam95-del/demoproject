@@ -313,6 +313,60 @@ async function testAttendanceContractAndValidationEdgeCases() {
 
 (async function runAll() {
     try {
+        const seed = {
+            [`${CRM_STUDENTS}/safe-student`]: { name: 'Local integrity fixture' },
+            [`${CRM_COURSES}/safe-course`]: { name: 'Course', courseType: '1on1', deliveryTemplate: { totalInstructionMinutes: 240, defaultSessionMinutes: 120, timezone: 'Asia/Ho_Chi_Minh' } },
+            [`${CRM_CLASSROOMS}/safe-class`]: { name: 'Class', courseId: 'safe-course' }
+        };
+        const body = { studentId: 'safe-student', courseId: 'safe-course', startDate: '2026-09-07', slots: [{ weekday: 1, startTime: '14:00', durationMinutes: 120 }] };
+        for (const input of [
+            { studentId: 'missing', classId: 'safe-class' },
+            { studentId: 'safe-student', classId: 'missing' },
+            { studentId: 'safe-student', classId: 'safe-class', courseId: 'wrong-course' },
+            { ...body, slots: [{ weekday: 'invalid', startTime: '14:00', durationMinutes: 120 }] },
+            { ...body, startDate: '2026-02-31' }
+        ]) {
+            const db = createFakeDb(seed);
+            const before = JSON.stringify([...db.docs]);
+            const res = await callRoute(createEnrollmentRouter(db), '/enrollments', 'post', { body: input });
+            assert(res._status >= 400 && res._status < 500, `Invalid enrollment should be rejected: ${JSON.stringify(input)}; got ${res._status}`);
+            assert.strictEqual(JSON.stringify([...db.docs]), before, 'Invalid enrollment must not write any documents.');
+        }
+        const db = createFakeDb(seed);
+        const router = createEnrollmentRouter(db);
+        const repeated = await Promise.all([1, 2].map(() => callRoute(router, '/enrollments', 'post', { body })));
+        assert(repeated.every((res) => res._status === 200));
+        assert.strictEqual(repeated[0]._json.enrollment.enrollmentId, repeated[1]._json.enrollment.enrollmentId);
+        assert.strictEqual([...db.docs.keys()].filter((key) => key.startsWith(`${CRM_ENROLLMENTS}/`)).length, 1);
+        assert.strictEqual([...db.docs.keys()].filter((key) => key.startsWith(`${CRM_SCHEDULED_SESSIONS}/`)).length, 2);
+        const datedDb = createFakeDb(seed);
+        const dated = await callRoute(createEnrollmentRouter(datedDb), '/enrollments', 'post', { body: { ...body, endDate: '2026-09-08' } });
+        assert.strictEqual(dated._status, 200);
+        assert.strictEqual(dated._json.enrollment.endDate, '2026-09-08');
+        assert.strictEqual([...datedDb.docs.keys()].filter((key) => key.startsWith(`${CRM_SCHEDULED_SESSIONS}/`)).length, 1, 'Optional end date bounds scheduled lessons.');
+        const conflictDb = createFakeDb({ ...seed, [`${CRM_SCHEDULED_SESSIONS}/busy`]: { classId: 'other-class', teacherUid: 'teacher', status: 'scheduled', scheduledStartAtUtc: '2026-09-14T07:00:00.000Z', scheduledEndAtUtc: '2026-09-14T09:00:00.000Z' } });
+        const beforeConflict = JSON.stringify([...conflictDb.docs]);
+        const conflict = await callRoute(createEnrollmentRouter(conflictDb), '/enrollments', 'post', { body: { ...body, teacherUid: 'teacher' } });
+        assert.strictEqual(conflict._status, 409);
+        assert.strictEqual(JSON.stringify([...conflictDb.docs]), beforeConflict, 'A conflict in the second lesson must leave no class, enrollment or first lesson.');
+        const memberDb = createFakeDb(seed);
+        const memberRouter = createEnrollmentRouter(memberDb);
+        const memberCreated = await callRoute(memberRouter, '/enrollments', 'post', { body: { studentId: 'safe-student', classId: 'safe-class', studentUid: 'old-user' } });
+        const memberId = memberCreated._json.enrollmentId;
+        const memberUpdated = await callRoute(memberRouter, '/enrollments/:enrollmentId', 'patch', { params: { enrollmentId: memberId }, body: { studentUid: 'new-user' } });
+        assert.strictEqual(memberUpdated._status, 200);
+        assert(!memberDb.docs.has(`${CRM_CLASSROOMS}/safe-class/members/old-user`), 'Changing the linked account must remove the old membership.');
+        assert(memberDb.docs.has(`${CRM_CLASSROOMS}/safe-class/members/new-user`));
+        const abortDb = createFakeDb(seed);
+        const abortBefore = JSON.stringify([...abortDb.docs]);
+        const originalTransaction = abortDb.runTransaction.bind(abortDb);
+        abortDb.runTransaction = (callback) => originalTransaction(async (tx) => {
+            await callback(tx);
+            throw new Error('Injected failure before commit');
+        });
+        const aborted = await callRoute(createEnrollmentRouter(abortDb), '/enrollments', 'post', { body });
+        assert.strictEqual(aborted._status, 500);
+        assert.strictEqual(JSON.stringify([...abortDb.docs]), abortBefore, 'Aborted transaction must roll back the entire enrollment plan.');
         console.log('Running 1-on-1 Enrollment & Scheduling Backend Tests...');
         await testAutoProvision1on1EnrollmentAndSeedSessions();
         await testGetStudentEnrollmentsEnriched();

@@ -2022,3 +2022,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1027,2026-09-08,Update entrance test speaking accuracy scoring and PDF export to Azure pronunciation assessment system,Done,2026-09-08
 1028,2026-09-08,Locate Dota 2 beta installation folder and analyze status,Done,2026-09-08
 1029,2026-09-08,Forensic safety audit of Documents Codex directory,Done,2026-09-08
+1030,2026-09-08,Deploy Release V2.0.1 and verify live entrance test acoustic scores and PDF,In Progress,

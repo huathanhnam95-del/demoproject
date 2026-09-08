@@ -6126,6 +6126,9 @@ window.CrmBooksWorkspace = (function () {
 
         async function selectBook(bookId) {
             cancelPageTurn();
+            // Invalidate any compilation response that belongs to a book being
+            // replaced while the explorer switches selection.
+            compilationRequestId += 1;
             selectedBookId = clean(bookId);
             const thisSelection = ++selectionCounter;
             selectedBook = books.find((b) => b.bookId === selectedBookId) || null;
@@ -7451,8 +7454,10 @@ window.CrmBooksWorkspace = (function () {
 
         // ─── Phase 3: Research Compilation ───
         let compilationOpen = false;
+        let compilationRequestId = 0;
 
         function openCompilationModal() {
+            compilationRequestId += 1;
             document.querySelector('.crm-books-compile-overlay')?.remove();
             compilationOpen = true;
             const notes = loadBookNotes(selectedBookId);
@@ -7515,6 +7520,7 @@ window.CrmBooksWorkspace = (function () {
 
         function closeCompilationModal() {
             compilationOpen = false;
+            compilationRequestId += 1;
             document.querySelector('.crm-books-compile-overlay')?.remove();
         }
 
@@ -7550,35 +7556,63 @@ window.CrmBooksWorkspace = (function () {
         }
 
         async function runCompilation() {
+            if (!compilationOpen) return;
             const sources = gatherCompilationSources();
             const preview = document.querySelector('.crm-books-compile-preview');
             const runBtn = document.querySelector('.crm-books-compile-run');
             const dlBtn = document.querySelector('.crm-books-compile-download');
             if (!preview || !runBtn) return;
 
+            const requestId = ++compilationRequestId;
+            const bookIdAtStart = selectedBookId;
+
             runBtn.disabled = true;
+            runBtn.setAttribute('aria-busy', 'true');
             runBtn.textContent = 'Compiling…';
-            preview.innerHTML = '<div class="crm-books-compile-preview-placeholder">AI is synthesizing your research…</div>';
+            // A retry starts a new artifact lifecycle. Clear the previous
+            // markdown before the request so Download cannot expose stale
+            // content while the request is loading or after it fails.
+            delete preview.dataset.compiledMarkdown;
+            if (dlBtn) {
+                dlBtn.disabled = true;
+                dlBtn.setAttribute('aria-disabled', 'true');
+            }
+            preview.innerHTML = '<div class="crm-books-compile-preview-placeholder" role="status" aria-live="polite">AI is synthesizing your research…</div>';
 
             try {
-                const res = await apiPost(`/api/admin/books/${selectedBookId}/compile`, {
+                const res = await apiPost(`/api/admin/books/${bookIdAtStart}/compile`, {
                     bookTitle: selectedBook?.title || '',
                     sources
                 });
+                if (requestId !== compilationRequestId || !compilationOpen || selectedBookId !== bookIdAtStart) return;
                 const markdown = res.markdown || res.document || '# Research Compilation\n\nNo content generated.';
                 preview.innerHTML = `<pre class="crm-books-compile-result">${escapeHtml(markdown)}</pre>`;
                 preview.dataset.compiledMarkdown = markdown;
-                if (dlBtn) dlBtn.disabled = false;
+                if (dlBtn) {
+                    dlBtn.disabled = false;
+                    dlBtn.setAttribute('aria-disabled', 'false');
+                }
             } catch (err) {
-                preview.innerHTML = `<div class="crm-books-compile-preview-placeholder" style="color:#dc2626;">Compilation failed: ${escapeHtml(err.message || 'Unknown error')}</div>`;
+                if (requestId !== compilationRequestId || !compilationOpen || selectedBookId !== bookIdAtStart) return;
+                delete preview.dataset.compiledMarkdown;
+                if (dlBtn) {
+                    dlBtn.disabled = true;
+                    dlBtn.setAttribute('aria-disabled', 'true');
+                }
+                preview.innerHTML = `<div class="crm-books-compile-preview-placeholder" role="alert" style="color:#dc2626;">Compilation failed: ${escapeHtml(err.message || 'Unknown error')}</div>`;
             } finally {
-                runBtn.disabled = false;
-                runBtn.textContent = 'Compile with AI';
+                if (requestId === compilationRequestId && compilationOpen && selectedBookId === bookIdAtStart) {
+                    runBtn.disabled = false;
+                    runBtn.removeAttribute('aria-busy');
+                    runBtn.textContent = 'Compile with AI';
+                }
             }
         }
 
         function downloadCompilation() {
             const preview = document.querySelector('.crm-books-compile-preview');
+            const downloadButton = document.querySelector('.crm-books-compile-download');
+            if (downloadButton?.disabled) return;
             const md = preview?.dataset.compiledMarkdown;
             if (!md) return;
             const blob = new Blob([md], { type: 'text/markdown' });
@@ -7595,14 +7629,12 @@ window.CrmBooksWorkspace = (function () {
         // ─── Phase 4: Cross-Book Knowledge Graph ───
         let bookLinks = [];
         let knowledgeGraphOpen = false;
+        let knowledgeGraphRequestId = 0;
+        let knowledgeGraphState = { status: 'idle', error: null };
 
         async function loadBookLinks() {
-            try {
-                const res = await apiGet('/api/admin/book-links');
-                bookLinks = Array.isArray(res?.links) ? res.links : [];
-            } catch (_) {
-                bookLinks = [];
-            }
+            const res = await apiGet('/api/admin/book-links');
+            return Array.isArray(res?.links) ? res.links : [];
         }
 
         async function createBookLink(sourceBookId, sourceNodeId, sourceTitle, targetBookId, targetNodeId, targetTitle, label) {
@@ -7630,17 +7662,45 @@ window.CrmBooksWorkspace = (function () {
         }
 
         function openKnowledgeGraph() {
+            const requestId = ++knowledgeGraphRequestId;
             knowledgeGraphOpen = true;
-            loadBookLinks().then(() => renderKnowledgeGraphModal());
+            bookLinks = [];
+            knowledgeGraphState = { status: 'loading', error: null };
+            renderKnowledgeGraphModal();
+            loadBookLinks().then((links) => {
+                if (!knowledgeGraphOpen || requestId !== knowledgeGraphRequestId) return;
+                bookLinks = links;
+                knowledgeGraphState = { status: 'ready', error: null };
+                renderKnowledgeGraphModal();
+            }).catch((err) => {
+                if (!knowledgeGraphOpen || requestId !== knowledgeGraphRequestId) return;
+                bookLinks = [];
+                knowledgeGraphState = { status: 'error', error: err?.message || 'Unable to load book links.' };
+                renderKnowledgeGraphModal('.crm-books-kg-retry');
+            });
         }
 
         function closeKnowledgeGraph() {
             knowledgeGraphOpen = false;
+            knowledgeGraphRequestId += 1;
             document.querySelector('.crm-books-kg-overlay')?.remove();
         }
 
-        function renderKnowledgeGraphModal() {
+        function renderKnowledgeGraphModal(focusSelector = '.crm-books-kg-close') {
             document.querySelector('.crm-books-kg-overlay')?.remove();
+
+            if (knowledgeGraphState.status === 'loading') {
+                document.body.insertAdjacentHTML('beforeend', '<div class="crm-books-kg-overlay" role="dialog" aria-modal="true" aria-labelledby="crm-books-kg-title"><div class="crm-books-kg-modal"><div class="crm-books-kg-header"><h3 id="crm-books-kg-title">Knowledge Graph</h3><div class="crm-books-kg-actions"><button class="crm-books-kg-close" type="button" aria-label="Close Knowledge Graph">✕</button></div></div><div class="crm-books-kg-state crm-books-kg-loading" role="status" aria-live="polite">Loading Knowledge Graph…</div></div></div>');
+                document.querySelector(focusSelector)?.focus?.({ preventScroll: true });
+                return;
+            }
+
+            if (knowledgeGraphState.status === 'error') {
+                const message = escapeHtml(knowledgeGraphState.error || 'Unable to load book links.');
+                document.body.insertAdjacentHTML('beforeend', `<div class="crm-books-kg-overlay" role="dialog" aria-modal="true" aria-labelledby="crm-books-kg-title"><div class="crm-books-kg-modal"><div class="crm-books-kg-header"><h3 id="crm-books-kg-title">Knowledge Graph</h3><div class="crm-books-kg-actions"><button class="crm-books-kg-close" type="button" aria-label="Close Knowledge Graph">✕</button></div></div><div class="crm-books-kg-state crm-books-kg-error" role="alert">Knowledge Graph unavailable: ${message}<div style="margin-top:12px;"><button class="crm-books-kg-retry crm-btn crm-btn-primary crm-btn-sm" type="button">Retry</button></div></div></div></div>`);
+                document.querySelector(focusSelector)?.focus?.({ preventScroll: true });
+                return;
+            }
 
             const bookNodes = books.filter(b => b.status === 'ready').map(b => ({
                 id: b.bookId,
@@ -7681,11 +7741,11 @@ window.CrmBooksWorkspace = (function () {
                     `</g>`;
             }).join('');
 
-            let html = '<div class="crm-books-kg-overlay">';
+            let html = '<div class="crm-books-kg-overlay" role="dialog" aria-modal="true" aria-labelledby="crm-books-kg-title">';
             html += '<div class="crm-books-kg-modal">';
-            html += '<div class="crm-books-kg-header"><h3>Knowledge Graph</h3><div class="crm-books-kg-actions">';
+            html += '<div class="crm-books-kg-header"><h3 id="crm-books-kg-title">Knowledge Graph</h3><div class="crm-books-kg-actions">';
             html += '<button class="crm-books-kg-add-link crm-btn crm-btn-secondary crm-btn-sm">+ Link Books</button>';
-            html += '<button class="crm-books-kg-close">✕</button></div></div>';
+            html += '<button class="crm-books-kg-close" type="button" aria-label="Close Knowledge Graph">✕</button></div></div>';
             html += `<div class="crm-books-kg-viewport"><svg viewBox="0 0 800 600" width="100%" height="100%">${svgEdges}${svgNodes}</svg></div>`;
 
             if (bookLinks.length > 0) {
@@ -7694,10 +7754,13 @@ window.CrmBooksWorkspace = (function () {
                     html += `<div class="crm-books-kg-link-item"><span>${escapeHtml(l.sourceTitle || l.sourceBookId)} → ${escapeHtml(l.targetTitle || l.targetBookId)}</span><span class="crm-books-kg-link-label">${escapeHtml(l.label || '')}</span><button class="crm-books-kg-link-delete" data-link-id="${l.id}">✕</button></div>`;
                 });
                 html += '</div>';
+            } else {
+                html += '<div class="crm-books-kg-empty" role="status">No links between books yet.</div>';
             }
 
             html += '</div></div>';
             document.body.insertAdjacentHTML('beforeend', html);
+            document.querySelector(focusSelector)?.focus?.({ preventScroll: true });
         }
 
         function showLinkBooksPicker() {
@@ -9831,6 +9894,10 @@ window.CrmBooksWorkspace = (function () {
                     closeKnowledgeGraph();
                     return;
                 }
+                if (e.target.closest('.crm-books-kg-retry')) {
+                    openKnowledgeGraph();
+                    return;
+                }
                 if (e.target.closest('.crm-books-kg-add-link')) {
                     showLinkBooksPicker();
                     return;
@@ -9846,7 +9913,10 @@ window.CrmBooksWorkspace = (function () {
                         const fromBook = books.find(b => b.bookId === fromId);
                         const toBook = books.find(b => b.bookId === toId);
                         if (fromId && toId && fromId !== toId) {
-                            createBookLink(fromId, '', fromBook?.title || '', toId, '', toBook?.title || '', labelInput?.value || 'related').then(() => renderKnowledgeGraphModal());
+                            const requestId = knowledgeGraphRequestId;
+                            createBookLink(fromId, '', fromBook?.title || '', toId, '', toBook?.title || '', labelInput?.value || 'related').then(() => {
+                                if (knowledgeGraphOpen && requestId === knowledgeGraphRequestId) renderKnowledgeGraphModal();
+                            });
                         } else {
                             showToast?.('Select two different books.', 'error');
                         }
@@ -9855,7 +9925,10 @@ window.CrmBooksWorkspace = (function () {
                 }
                 const kgDeleteBtn = e.target.closest('.crm-books-kg-link-delete');
                 if (kgDeleteBtn) {
-                    deleteBookLink(kgDeleteBtn.dataset.linkId).then(() => renderKnowledgeGraphModal());
+                    const requestId = knowledgeGraphRequestId;
+                    deleteBookLink(kgDeleteBtn.dataset.linkId).then(() => {
+                        if (knowledgeGraphOpen && requestId === knowledgeGraphRequestId) renderKnowledgeGraphModal();
+                    });
                     return;
                 }
             });

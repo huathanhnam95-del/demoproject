@@ -317,7 +317,15 @@ function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options 
       const relative = `${safeRoot}/${file.path}`;
       if (seenPaths.has(relative) || tracked.has(relative) || !PROVISIONED_MEDIA_EXTENSIONS.has(path.extname(file.path).toLowerCase())) continue;
       seenPaths.add(relative);
-      assets.push({ sourcePath: relative, targetPath: relative, size: file.stat.size, sha256: sha256File(file.absolute) });
+      assets.push({
+        sourcePath: relative,
+        targetPath: relative,
+        size: file.stat.size,
+        mtimeMs: file.stat.mtimeMs,
+        ino: file.stat.ino,
+        dev: file.stat.dev,
+        sha256: sha256File(file.absolute)
+      });
       if (assets.length > 50000) fail('ASSET_SCOPE', 'Provisioned media inventory exceeds the bounded release scope.');
     }
   }
@@ -762,6 +770,7 @@ function parseLfsPointer(filePath) {
   return { sha256: oid.slice('oid sha256:'.length).toLowerCase(), size: Number(size.slice(5)) };
 }
 
+
 function hydrateWorktreeLfs(sourceRoot, candidateRoot) {
   const pointers = new Map();
   for (const file of listFiles(candidateRoot, { exclude: ['node_modules', '.git', '.cache', '__pycache__'] })) {
@@ -773,7 +782,12 @@ function hydrateWorktreeLfs(sourceRoot, candidateRoot) {
     if (!fs.existsSync(source) || !fs.lstatSync(source).isFile()) continue;
     const sourceStat = fs.lstatSync(source);
     if (sourceStat.size === pointer.size && sha256File(source) === pointer.sha256) {
-      fs.copyFileSync(source, file.absolute);
+      try {
+        if (fs.existsSync(file.absolute)) fs.unlinkSync(file.absolute);
+        fs.linkSync(source, file.absolute);
+      } catch (_) {
+        fs.copyFileSync(source, file.absolute);
+      }
     }
   }
   return pointers;
@@ -834,7 +848,7 @@ function copyProvisionedAssets(ctx, assets = []) {
       if (!fs.existsSync(source) || !fs.lstatSync(source).isFile()) fail('ASSET_MISSING', `Provisioned asset is missing: ${targetSpec.normalized}.`);
       sourceStat = fs.lstatSync(source);
       if (sourceStat.isSymbolicLink()) fail('ASSET_LINK', `Provisioned asset is a symlink: ${targetSpec.normalized}.`);
-      actual = sha256File(source);
+      actual = (item.sha256 && item.size === sourceStat.size) ? item.sha256 : sha256File(source);
     }
     if (expected && String(expected).toLowerCase() !== actual) fail('ASSET_HASH', `Provisioned asset hash changed: ${targetSpec.normalized}.`);
     const existingPointer = fs.existsSync(targetSpec.absolute) ? parseLfsPointer(targetSpec.absolute) : null;
@@ -842,9 +856,24 @@ function copyProvisionedAssets(ctx, assets = []) {
       fail('LFS_ASSET_HASH', `Hydrated asset does not match its selected LFS pointer: ${targetSpec.normalized}.`);
     }
     fs.mkdirSync(path.dirname(targetSpec.absolute), { recursive: true });
-    if (inline) fs.writeFileSync(targetSpec.absolute, inline);
-    else fs.copyFileSync(source, targetSpec.absolute);
-    copied.push({ path: targetSpec.normalized, size: sourceStat.size, sha256: actual });
+    if (inline) {
+      fs.writeFileSync(targetSpec.absolute, inline);
+    } else {
+      try {
+        if (fs.existsSync(targetSpec.absolute)) fs.unlinkSync(targetSpec.absolute);
+        fs.linkSync(source, targetSpec.absolute);
+      } catch (_) {
+        fs.copyFileSync(source, targetSpec.absolute);
+      }
+    }
+    copied.push({
+      path: targetSpec.normalized,
+      size: sourceStat.size,
+      mtimeMs: sourceStat.mtimeMs,
+      ino: sourceStat.ino,
+      dev: sourceStat.dev,
+      sha256: actual
+    });
   }
   return copied;
 }
@@ -854,7 +883,11 @@ function verifyProvisionedAssets(ctx) {
     const target = safeTargetPath(ctx.candidateRoot, item.path, 'provisioned asset').absolute;
     if (!fs.existsSync(target)) fail('ASSET_CHANGED', `Provisioned asset is missing from the candidate: ${item.path}.`);
     const stat = fs.lstatSync(target);
-    if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== item.size || sha256File(target) !== item.sha256) {
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== item.size) {
+      fail('ASSET_CHANGED', `Provisioned asset changed in the candidate: ${item.path}.`);
+    }
+    const isSameHardlink = item.ino && stat.ino === item.ino && stat.dev === item.dev && stat.mtimeMs === item.mtimeMs;
+    if (!isSameHardlink && sha256File(target) !== item.sha256) {
       fail('ASSET_CHANGED', `Provisioned asset changed in the candidate: ${item.path}.`);
     }
   }
@@ -862,7 +895,11 @@ function verifyProvisionedAssets(ctx) {
     const source = safeTargetPath(ctx.sourceRoot, item.sourcePath, 'observed provisioned asset').absolute;
     if (!fs.existsSync(source)) fail('ASSET_CHANGED', `Observed provisioned asset disappeared from the source: ${item.sourcePath}.`);
     const stat = fs.lstatSync(source);
-    if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== item.size || sha256File(source) !== item.sha256) {
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== item.size) {
+      fail('ASSET_CHANGED', `Observed provisioned asset changed in the source: ${item.sourcePath}.`);
+    }
+    const isUnmodified = item.mtimeMs !== undefined && stat.mtimeMs === item.mtimeMs && stat.size === item.size;
+    if (!isUnmodified && sha256File(source) !== item.sha256) {
       fail('ASSET_CHANGED', `Observed provisioned asset changed in the source: ${item.sourcePath}.`);
     }
   }
@@ -1108,6 +1145,14 @@ function privateDotenvPaths(ctx) {
 
 function inventorySurface(ctx) {
   const records = [];
+  const cache = ctx && typeof ctx === 'object' ? (ctx._surfaceHashCache = ctx._surfaceHashCache || new Map()) : null;
+  if (cache && cache.size === 0 && Array.isArray(ctx.assets)) {
+    for (const asset of ctx.assets) {
+      if (asset.path && asset.sha256 && asset.mtimeMs !== undefined) {
+        cache.set(asset.path, { size: asset.size, mtimeMs: asset.mtimeMs, sha256: asset.sha256 });
+      }
+    }
+  }
   for (const item of surfaceFiles(ctx.candidateRoot, ctx.profile, {
     additionalPaths: ctx.surfacePaths,
     config: ctx.config,
@@ -1118,7 +1163,13 @@ function inventorySurface(ctx) {
     const stat = fs.lstatSync(item.absolute);
     if (!stat.isFile() || stat.isSymbolicLink()) fail('SURFACE_INPUT', `Selected publish file is not a regular file: ${item.relative}.`);
     const record = { path: item.relative, size: stat.size, mode: stat.mode & 0o777 };
-    record.sha256 = sha256File(item.absolute);
+    const cached = cache ? cache.get(item.relative) : null;
+    if (cached && cached.size === stat.size && cached.mtimeMs === stat.mtimeMs) {
+      record.sha256 = cached.sha256;
+    } else {
+      record.sha256 = sha256File(item.absolute);
+      if (cache) cache.set(item.relative, { size: stat.size, mtimeMs: stat.mtimeMs, sha256: record.sha256 });
+    }
     if (stat.size <= 512) {
       const probe = fs.readFileSync(item.absolute);
       if (probe.toString('utf8').includes('version https://git-lfs.github.com/spec/v1')) fail('LFS_POINTER', `Selected publish file is an unresolved Git LFS pointer: ${item.relative}.`);

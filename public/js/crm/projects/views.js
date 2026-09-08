@@ -14,6 +14,7 @@
         let cursor = null, previous = [], pageIndex = 0, loading = false, mutation = false, calendarSequence = 0;
         let projectLinks = [], projectLinkAccess = false, projectLinkSequence = 0, projectLookupSequence = 0, projectLinkBusy = false;
         let taskLinkSequence = 0;
+        let projectLinkLayoutKey = '';
         let taskKey = '', datesVersion = 0, calendarMonth = new Date().toISOString().slice(0, 7);
         const uid = () => String(deps.getCurrentUser?.()?.uid || '');
         const scope = () => ({ uid: uid(), projectId, generation });
@@ -165,8 +166,7 @@
                 let result = await api(`${base()}/views?${params}`);
                 if (query.empty) result = { ...result, tasks: [], matchingTaskCount: 0, hasMore: false, nextCursor: null, aggregates: { activeLeafTaskCount: 0, completedLeafTaskCount: 0, completionPercent: 0, byStatus: {}, byOwnerUid: {} } };
                 if (!current(s) || sequence !== readSequence) return;
-                const previousRole = response?.membership?.role;
-                response = result; syncPredecessorPicker(); if (previousRole !== result.membership?.role) renderProjectLinks();
+                response = result; syncPredecessorPicker(); renderProjectLinks();
                 if (result.linkAccess?.canManage === false) { links = []; projectLinks = []; canManageLinks = false; projectLinkAccess = false; renderLinks(); renderProjectLinks(); }
                 loadProjectLinks();
                 cursor = nextCursor; previous = nextPrevious; pageIndex = nextIndex;
@@ -226,15 +226,33 @@
             if (projectId) refresh();
         }
         const canEditProjectLinks = () => projectLinkAccess && response?.membership?.role === 'Owner' && response?.project?.lifecycle === 'active';
+        function syncProjectLinkControls() {
+            el('projects-project-links')?.querySelectorAll?.('#projects-project-link-lookup input, #projects-project-link-lookup select, #projects-project-link-lookup button, #projects-project-link-options button, [data-project-link-remove]').forEach((control) => {
+                control.disabled = projectLinkBusy || !canEditProjectLinks();
+            });
+        }
+        function clearProjectLookup() {
+            projectLookupSequence++;
+            el('projects-project-link-options')?.replaceChildren();
+        }
         function renderProjectLinks() {
             const target = el('projects-project-links'); if (!target) return;
-            const statusDraft = el('projects-project-link-status')?.textContent || '';
-            const queryDraft = el('projects-project-link-query')?.value || '', typeDraft = el('projects-project-link-type')?.value || 'lead';
-            if (!projectId) { target.innerHTML = ''; return; }
-            target.innerHTML = `<h4>Project CRM links</h4>${projectLinkAccess || projectLinks.length ? `<ul>${projectLinks.map((link, i) => `<li>${escape(link.label)} (${escape(link.type)})${link.type === 'student' ? ` <button type="button" data-project-student-link="${i}">Open student</button>` : (safeHref(link.href) ? ` <a href="${escape(link.href)}">${link.type === 'lead' ? 'View leads' : 'View classrooms'}</a>` : '')}${canEditProjectLinks() ? ` <button type="button" data-project-link-remove="${i}"${projectLinkBusy ? ' disabled' : ''}>Remove</button>` : ''}</li>`).join('')}</ul>${canEditProjectLinks() ? '<form id="projects-project-link-lookup" class="crm-inline-fields"><label>Record type<select id="projects-project-link-type" class="crm-input"><option value="lead">Lead</option><option value="student">Student</option><option value="classroom">Classroom</option></select></label><label>Find CRM record<input id="projects-project-link-query" type="search" class="crm-input" maxlength="200"></label><button class="crm-btn-secondary" type="submit">Search authorized records</button></form><div id="projects-project-link-options"></div>' : ''}` : '<p class="crm-muted">Independent CRM access is required to view project links.</p>'}<p id="projects-project-link-status" role="status"></p>`;
-            if (el('projects-project-link-status')) el('projects-project-link-status').textContent = statusDraft;
-            if (el('projects-project-link-query')) el('projects-project-link-query').value = queryDraft;
-            if (el('projects-project-link-type')) el('projects-project-link-type').value = typeDraft;
+            if (!projectId) { projectLinkLayoutKey = ''; target.innerHTML = ''; return; }
+            const readable = projectLinkAccess || projectLinks.length > 0;
+            const editable = canEditProjectLinks();
+            const layoutKey = JSON.stringify([projectId, actorUid, generation, readable, editable, response?.membership?.role, response?.project?.lifecycle]);
+            const list = projectLinks.map((link, i) => `<li>${escape(link.label)} (${escape(link.type)})${link.type === 'student' ? ` <button type="button" data-project-student-link="${i}">Open student</button>` : (safeHref(link.href) ? ` <a href="${escape(link.href)}">${link.type === 'lead' ? 'View leads' : 'View classrooms'}</a>` : '')}${editable ? ` <button type="button" data-project-link-remove="${i}"${projectLinkBusy ? ' disabled' : ''}>Remove</button>` : ''}</li>`).join('');
+            if (layoutKey !== projectLinkLayoutKey) {
+                // A scope or authority transition invalidates lookup results.
+                // Same-authority refreshes update only the persisted links list.
+                clearProjectLookup();
+                projectLinkLayoutKey = layoutKey;
+                target.innerHTML = `<h4>Project CRM links</h4>${readable ? `<ul id="projects-project-link-list">${list}</ul>${editable ? '<form id="projects-project-link-lookup" class="crm-inline-fields"><label>Record type<select id="projects-project-link-type" class="crm-input"><option value="lead">Lead</option><option value="student">Student</option><option value="classroom">Classroom</option></select></label><label>Find CRM record<input id="projects-project-link-query" type="search" class="crm-input" maxlength="200"></label><button class="crm-btn-secondary" type="submit">Search authorized records</button></form><div id="projects-project-link-options"></div>' : ''}` : '<p class="crm-muted">Independent CRM access is required to view project links.</p>'}<p id="projects-project-link-status" role="status"></p>`;
+            } else {
+                const targetList = el('projects-project-link-list');
+                if (targetList && targetList.innerHTML !== list) targetList.innerHTML = list;
+            }
+            syncProjectLinkControls();
         }
         async function loadProjectLinks() {
             const s = scope(), sequence = ++projectLinkSequence;
@@ -245,26 +263,28 @@
             } catch (error) { if (current(s) && sequence === projectLinkSequence) { projectLinkAccess = false; projectLinks = []; renderProjectLinks(); } }
         }
         async function lookupProjectLinks() {
-            if (!canEditProjectLinks()) return;
+            if (projectLinkBusy || !canEditProjectLinks()) return;
             const s = scope(), sequence = ++projectLookupSequence;
             const params = new URLSearchParams({ type: el('projects-project-link-type').value, query: el('projects-project-link-query').value, limit: '25' });
             try {
                 const result = await api(`${base()}/crm-link-options?${params}`);
-                if (!current(s) || sequence !== projectLookupSequence) return;
+                if (!current(s) || sequence !== projectLookupSequence || !canEditProjectLinks()) return;
                 el('projects-project-link-options')?.replaceChildren(...array(result.options).map((option) => {
                     const button = document.createElement('button'); button.type = 'button'; button.className = 'crm-btn-secondary'; button.textContent = `Link ${option.label}`;
-                    button.addEventListener('click', () => { if (current(s)) saveProjectLinks([...projectLinks, option]); }); return button;
+                    button.addEventListener('click', () => { if (current(s) && sequence === projectLookupSequence && canEditProjectLinks()) saveProjectLinks([...projectLinks, option]); }); return button;
                 }));
+                syncProjectLinkControls();
             } catch (error) { if (current(s) && sequence === projectLookupSequence) { projectLinks = []; projectLinkAccess = false; renderProjectLinks(); } }
         }
         async function saveProjectLinks(next) {
             if (projectLinkBusy || !canEditProjectLinks()) return;
-            const s = scope(); projectLinkBusy = true;
+            const s = scope(); projectLinkBusy = true; syncProjectLinkControls();
             const body = JSON.stringify({ operationId: operationId(), expectedRevision: response.project.revision, links: [...new Map(next.map((l) => [`${l.type}:${l.recordId}`, { type: l.type, recordId: l.recordId }])).values()] });
             try {
                 const request = () => api(`${base()}/links`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
                 try { await request(); } catch (error) { if (error.status || !current(s)) throw error; await request(); }
                 if (!current(s)) return;
+                clearProjectLookup();
                 await refresh(); if (current(s)) await loadProjectLinks();
             } catch (error) {
                 if (current(s)) {
@@ -404,7 +424,9 @@
         }
         function init() {
             el('projects-project-links')?.addEventListener('submit', (event) => { event.preventDefault(); if (event.target.id === 'projects-project-link-lookup') lookupProjectLinks(); });
-            el('projects-project-links')?.addEventListener('input', () => { projectLookupSequence++; el('projects-project-link-options')?.replaceChildren(); });
+            const projectLookupChanged = (event) => { if (['projects-project-link-query', 'projects-project-link-type'].includes(event.target.id)) clearProjectLookup(); };
+            el('projects-project-links')?.addEventListener('input', projectLookupChanged);
+            el('projects-project-links')?.addEventListener('change', projectLookupChanged);
             el('projects-project-links')?.addEventListener('click', (event) => { if (event.target.dataset.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
             el('projects-view-tabs')?.addEventListener('click', (event) => { const button = event.target.closest('[data-view]'); if (button && button.dataset.view !== view) { const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar'; view = button.dataset.view; if (monthScopeChanged) resetViewPage(); else render(); } });
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };

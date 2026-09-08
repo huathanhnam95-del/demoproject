@@ -50,9 +50,33 @@ async function seed(c) {
     await h.createProject(other); await h.addMember(other, 'viewer', 'Viewer'); await h.createSection(other, 's1', 'Second section', 0); await h.createTask(other, 'p5-second-task', { sectionId: 's1', title: 'Second project isolated task' });
     return { parent: await c.data(PARENT), total: 623, leaves: 622, done: 156 };
 }
+
+function throwSettlementFailures(label, entries) {
+    const failures = entries.filter((entry) => entry.result.status === 'rejected');
+    if (!failures.length) return;
+    if (failures.length === 1) throw failures[0].result.reason;
+    const causes = failures.map((entry) => entry.result.reason);
+    const detail = failures.map((entry) => entry.name + ': ' + (entry.result.reason?.stack || entry.result.reason)).join('\n');
+    const aggregate = new AggregateError(causes, label + ' failed\n' + detail);
+    aggregate.causes = failures.map((entry) => ({ name: entry.name, error: entry.result.reason }));
+    throw aggregate;
+}
+
 async function responseAction(page, method, suffix, action, status = 200) {
+    page.setDefaultTimeout(30000);
     const pending = page.waitForResponse(r => r.request().method() === method && new URL(r.url()).pathname.endsWith(suffix), { timeout: 30000 });
-    await action(); const response = await pending; const body = await response.json(); assert.strictEqual(response.status(), status, `${method} ${suffix}: ${JSON.stringify(body)}`); return body;
+    const settled = await Promise.allSettled([
+        pending,
+        Promise.resolve().then(action)
+    ]);
+    throwSettlementFailures(method + ' ' + suffix, [
+        { name: 'response', result: settled[0] },
+        { name: 'action', result: settled[1] }
+    ]);
+    const response = settled[0].value;
+    const body = await response.json();
+    assert.strictEqual(response.status(), status, method + ' ' + suffix + ': ' + JSON.stringify(body));
+    return body;
 }
 async function idle(page) { await page.waitForFunction(() => window.projectsViewsController?.getState()?.response && document.getElementById('projects-view-status')?.textContent === '', null, { timeout: 30000 }); }
 async function chooseProject(page, id = PROJECT) {
@@ -72,15 +96,24 @@ async function chooseProject(page, id = PROJECT) {
 async function open(page, url, role = 'owner') { await page.goto(`${url}/__phase5-login?email=${encodeURIComponent(h.USERS[role])}`, { waitUntil: 'domcontentloaded' }); await page.waitForURL(/crm-admin.html#projects$/); await chooseProject(page); }
 async function view(page, name) { await page.locator(`#projects-view-tabs [data-view="${name}"]`).click(); await idle(page); assert.strictEqual(await page.locator(`#projects-view-tabs [data-view="${name}"]`).getAttribute('aria-pressed'), 'true'); }
 async function filter(page, title = '') { for (const name of ['sectionId', 'status', 'ownerUid', 'assigneeUid']) await page.locator(`#projects-view-filters select[name="${name}"]`).selectOption(''); for (const name of ['fromDate', 'toDate']) await page.locator(`#projects-view-filters input[name="${name}"]`).fill(''); await page.locator('#projects-view-filters input[name="title"]').fill(title); await responseAction(page, 'GET', `/${PROJECT}/views`, () => page.locator('#projects-view-filters button[type="submit"]').click()); await idle(page); }
+
 async function filterWithBoardContext(page, title) {
-    const expectedPath = `/api/projects/${encodeURIComponent(PROJECT)}/tasks`;
+    page.setDefaultTimeout(30000);
+    const expectedPath = '/api/projects/' + encodeURIComponent(PROJECT) + '/tasks';
     const boardTasksResponse = page.waitForResponse(response => {
         const url = new URL(response.url());
         if (response.request().method() !== 'GET' || url.pathname !== expectedPath || url.searchParams.get('includeAncestorContext') !== 'true') return false;
         try { return JSON.parse(url.searchParams.get('filters') || '{}').title === title; } catch (_) { return false; }
     }, { timeout: 30000 });
-    await filter(page, title);
-    const response = await boardTasksResponse;
+    const settled = await Promise.allSettled([
+        boardTasksResponse,
+        Promise.resolve().then(() => filter(page, title))
+    ]);
+    throwSettlementFailures('filterWithBoardContext', [
+        { name: 'board tasks response', result: settled[0] },
+        { name: 'filter action', result: settled[1] }
+    ]);
+    const response = settled[0].value;
     assert.strictEqual(response.status(), 200, 'Filtered Board tasks read must succeed');
     const payload = await response.json();
     const parent = (payload.tasks || []).find(task => task.id === PARENT);

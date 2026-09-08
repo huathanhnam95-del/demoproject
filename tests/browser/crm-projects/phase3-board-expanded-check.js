@@ -172,6 +172,17 @@ async function selectBoardProject(page, projectId, taskId = null) {
     else await page.waitForSelector('#projects-board-workspace:not([hidden])', { timeout: 30000 });
 }
 
+async function assertBoardDetailTitle(page, taskId, expectedTitle) {
+    const row = page.locator('[data-task-id="' + taskId + '"]');
+    await row.waitFor({ state: 'visible', timeout: 30000 });
+    await row.focus({ timeout: 30000 });
+    await row.press('Enter', { timeout: 30000 });
+    await page.locator('#projects-board-detail').waitFor({ state: 'visible', timeout: 30000 });
+    await page.waitForFunction((title) => document.getElementById('projects-board-detail-title')?.textContent === title, expectedTitle, { timeout: 30000 });
+    assert.strictEqual(await page.locator('#projects-board-detail-title').textContent(), expectedTitle, 'board detail must render the canonical task title.');
+    assert.strictEqual(await page.locator('#projects-board-detail-body dl').filter({ has: page.locator('dt', { hasText: /^Task ID$/ }) }).locator('dd').textContent(), taskId, 'board detail must belong to the selected task.');
+}
+
 async function waitForBoardInteractive(page) {
     await page.waitForFunction(() => {
         const workspace = document.getElementById('projects-board-workspace');
@@ -1079,6 +1090,54 @@ async function runLayoutAndReorderCase(context) {
     return { projectId, sectionA, sectionB, taskA, taskB, columns: [columnB, columnA] };
 }
 
+
+function throwSettledFailures(label, entries) {
+    const failures = entries.filter((entry) => entry.result.status === 'rejected');
+    if (!failures.length) return;
+    if (failures.length === 1) throw failures[0].result.reason;
+    const causes = failures.map((entry) => entry.result.reason);
+    const detail = failures.map((entry) => entry.name + ': ' + (entry.result.reason?.stack || entry.result.reason)).join('\n');
+    const aggregate = new AggregateError(causes, label + ' failed\n' + detail);
+    aggregate.causes = failures.map((entry) => ({ name: entry.name, error: entry.result.reason }));
+    throw aggregate;
+}
+
+async function settleConflictReview(page, review, projectId, taskId, accept) {
+    const taskPath = '/api/projects/' + projectId + '/tasks/' + taskId;
+    const reviewGet = page.waitForResponse((response) => response.url().endsWith(taskPath)
+        && response.request().method() === 'GET', { timeout: 30000 });
+    const acceptPatch = accept
+        ? page.waitForResponse((response) => response.url().endsWith(taskPath)
+            && response.request().method() === 'PATCH' && response.status() === 200, { timeout: 30000 })
+        : Promise.resolve(null);
+    const dialogWait = page.waitForEvent('dialog', { timeout: 30000 }).then(async (dialog) => {
+        const info = { type: dialog.type(), message: dialog.message() };
+        try {
+            assert.strictEqual(info.type, 'confirm', 'Review must request explicit confirmation.');
+            assert.match(info.message, /Editable after held refresh/, 'Review must show the saved value before the decision.');
+        } catch (error) {
+            await dialog.dismiss();
+            throw error;
+        }
+        if (accept) await dialog.accept();
+        else await dialog.dismiss();
+        return info;
+    });
+    const settled = await Promise.allSettled([
+        reviewGet,
+        acceptPatch,
+        dialogWait,
+        Promise.resolve().then(() => review.click({ timeout: 30000 }))
+    ]);
+    throwSettledFailures('Review ' + (accept ? 'accept' : 'decline') + ' ' + taskPath, [
+        { name: 'saved-value GET', result: settled[0] },
+        { name: 'retained-draft PATCH', result: settled[1] },
+        { name: 'confirmation dialog', result: settled[2] },
+        { name: 'Review click', result: settled[3] }
+    ]);
+    return { response: settled[0].value, patch: settled[1].value, dialog: settled[2].value };
+}
+
 async function runDeferredRemoteAndFailureCase(context, typed, pagination) {
     const ownerToken = contextValue(context, 'ownerToken');
     const page = contextValue(context, 'page');
@@ -1242,19 +1301,64 @@ async function runDeferredRemoteAndFailureCase(context, typed, pagination) {
         const failedBefore = projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${typed.taskId}`) && entry.method === 'PATCH');
         const failure = await failOneProjectRequest(page, (request) => request.method() === 'PATCH'
             && request.url().endsWith(`/tasks/${typed.taskId}`) && request.url().includes(`/projects/${typed.projectId}/`));
-        const failedResponse = page.waitForResponse((response) => response.url().endsWith(`/api/projects/${typed.projectId}/tasks/${typed.taskId}`)
+
+        const failedResponse = page.waitForResponse((response) => response.url().endsWith('/api/projects/' + typed.projectId + '/tasks/' + typed.taskId)
             && response.request().method() === 'PATCH' && response.status() === 409, { timeout: 30000 });
-        const failedTitle = page.locator(`[data-task-id="${typed.taskId}"] input[data-field-kind="title"]`);
-        await failedTitle.fill('Known conflict title');
-        await failedTitle.blur();
-        for (let attempt = 0; attempt < 20 && !failure.seen.length; attempt += 1) await page.waitForTimeout(50);
-        await failedResponse;
-        await page.waitForTimeout(200);
-        const failedOperation = failure.seen[0]?.postDataJSON?.();
+        const failedTitle = page.locator('[data-task-id="' + typed.taskId + '"] input[data-field-kind="title"]');
+        const failedSettled = await Promise.allSettled([
+            failedResponse,
+            Promise.resolve().then(async () => {
+                await failedTitle.fill('Known conflict title', { timeout: 30000 });
+                await failedTitle.blur({ timeout: 30000 });
+            })
+        ]);
         await failure.dispose();
-        assert.strictEqual(projectMutationCount(context, (entry) => entry.url.endsWith(`/tasks/${typed.taskId}`) && entry.method === 'PATCH'), failedBefore + 1, 'known failure must issue exactly one PATCH.');
+        throwSettledFailures('Known conflict save', [
+            { name: '409 response', result: failedSettled[0] },
+            { name: 'title fill and blur', result: failedSettled[1] }
+        ]);
+        const failedResponseResult = failedSettled[0].value;
+        const failedBody = await failedResponseResult.json();
+        const failedOperation = failure.seen[0]?.postDataJSON?.();
+        assert.strictEqual(failedResponseResult.status(), 409, 'known failure must return HTTP 409.');
+        assert.strictEqual(failedBody.success, false, 'known failure must return an unsuccessful response body.');
+        assert.strictEqual(failedBody.error, 'EXPECTED_REVISION_CONFLICT', 'known failure must preserve the conflict error class.');
+        assert.match(String(failedBody.message || ''), /forced Phase3 test conflict/, 'known failure must preserve the conflict message.');
+        assert.strictEqual(projectMutationCount(context, (entry) => entry.url.endsWith('/tasks/' + typed.taskId) && entry.method === 'PATCH'), failedBefore + 1, 'known failure must issue exactly one PATCH.');
         assert.ok(failedOperation?.operationId, 'known failure must preserve the operation ID for retry/diagnosis.');
-        assert.strictEqual(await failedTitle.inputValue(), 'Editable after held refresh', 'known failure must roll back to the last authoritative title.');
+        const persistedAfterFailure = await listTasks(context, ownerToken, typed.projectId);
+        assert.strictEqual(persistedAfterFailure.tasks.find((entry) => entry.id === typed.taskId)?.title, 'Editable after held refresh', 'known failure must leave the API record at the last authoritative title.');
+        await assertBoardDetailTitle(page, typed.taskId, 'Editable after held refresh');
+        assert.strictEqual(await failedTitle.inputValue(), 'Known conflict title', 'known failure must retain the local draft for review.');
+        const review = page.locator('[data-remote-conflict-review="' + typed.taskId + '"]');
+        await review.waitFor({ state: 'visible', timeout: 30000 });
+        await page.locator('#projects-board-status.crm-projects-board-error-text').waitFor({ state: 'visible', timeout: 30000 });
+        assert.match(await page.locator('#projects-board-status').textContent(), /forced Phase3 test conflict/, 'known failure must visibly explain the rejected save.');
+        assert.strictEqual(await review.isEnabled(), true, 'known failure must expose an enabled Review and retry action.');
+
+        const beforeReviewPatches = projectMutationCount(context, (entry) => entry.url.endsWith('/tasks/' + typed.taskId) && entry.method === 'PATCH');
+        const declined = await settleConflictReview(page, review, typed.projectId, typed.taskId, false);
+        assert.strictEqual(declined.response.status(), 200, 'Review must read the current saved task before asking for confirmation.');
+        assert.strictEqual(declined.dialog?.type, 'confirm', 'Review must use an explicit confirmation dialog.');
+        assert.match(declined.dialog?.message || '', /Editable after held refresh/, 'Review must show the saved canonical value.');
+        assert.strictEqual(projectMutationCount(context, (entry) => entry.url.endsWith('/tasks/' + typed.taskId) && entry.method === 'PATCH'), beforeReviewPatches, 'declining Review must issue no additional PATCH.');
+        const persistedAfterDecline = await listTasks(context, ownerToken, typed.projectId);
+        assert.strictEqual(persistedAfterDecline.tasks.find((entry) => entry.id === typed.taskId)?.title, 'Editable after held refresh', 'declining Review must leave the API record unchanged.');
+        await assertBoardDetailTitle(page, typed.taskId, 'Editable after held refresh');
+        assert.strictEqual(await failedTitle.inputValue(), 'Known conflict title', 'declining Review must retain the local draft.');
+        await review.waitFor({ state: 'visible', timeout: 30000 });
+        assert.strictEqual(await review.isEnabled(), true, 'declining Review must restore the enabled retry action.');
+
+        const accepted = await settleConflictReview(page, review, typed.projectId, typed.taskId, true);
+        assert.strictEqual(accepted.response.status(), 200, 'accepted Review must read the current saved task.');
+        assert.strictEqual(accepted.patch?.status(), 200, 'accepted Review must persist the retained draft.');
+        assert.strictEqual(accepted.dialog?.type, 'confirm', 'accepted Review must use the same explicit confirmation dialog.');
+        assert.match(accepted.dialog?.message || '', /Editable after held refresh/, 'accepted Review must show the saved canonical value.');
+        const persistedAfterAccept = await listTasks(context, ownerToken, typed.projectId);
+        assert.strictEqual(persistedAfterAccept.tasks.find((entry) => entry.id === typed.taskId)?.title, 'Known conflict title', 'accepted Review must persist the retained draft before uncertain retry coverage.');
+        await assertBoardDetailTitle(page, typed.taskId, 'Known conflict title');
+        assert.strictEqual(await failedTitle.inputValue(), 'Known conflict title', 'accepted Review must leave the retained title in the editor.');
+        assert.strictEqual(await page.locator('[data-remote-conflict-review="' + typed.taskId + '"]').count(), 0, 'accepted Review must clear the conflict action before uncertain retry coverage.');
 
         const retry = await abortFirstProjectRequest(page, (request) => request.method() === 'PATCH'
             && request.url().endsWith(`/tasks/${typed.taskId}`) && request.url().includes(`/projects/${typed.projectId}/`));

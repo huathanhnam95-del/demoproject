@@ -355,7 +355,7 @@
         }
 
         async function selectProject(projectId, { refreshMembers: shouldRefreshMembers = true } = {}) {
-            if (pending) return false;
+            if (mutationPending) return false;
             const nextId = String(projectId || '').trim();
             if (nextId && !projects.some((project) => String(project.id) === nextId)) return false;
             contentDeniedProjectIds.delete(nextId);

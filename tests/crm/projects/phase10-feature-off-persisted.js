@@ -12,7 +12,12 @@ async function main() {
         const collections = [...new Set(['crmProjectOperations', 'crmProjectEvents', 'crmProjectAiPreviews', 'crmProjectAiProposals', ...Object.values(AI_ASSISTANCE_COLLECTIONS), ...Object.values(AI_DRAFT_COLLECTIONS), ...Object.values(AI_VOICE_COLLECTIONS), ...Object.values(h.COLLECTIONS)])];
         const documents = new Map();
         const project = await c.projectRef.get(); documents.set(project.ref.path, project.data());
-        for (const child of ['tasks', 'sections', 'columns', 'discussions']) collections.push(`${c.projectRef.path}/${child}`);
+        // Include the project membership fence in the persisted baseline as
+        // well as content and feed state. Disabled requests must not be able
+        // to alter any project-scoped record, even when the caller has an
+        // otherwise valid account.
+        collections.push('crmProjectMembers');
+        for (const child of ['tasks', 'sections', 'columns', 'discussions', 'changeHeads']) collections.push(`${c.projectRef.path}/${child}`);
         for (const collection of collections) {
             const rows = await suite.db.collection(collection).get();
             for (const row of rows.docs) documents.set(row.ref.path, row.data());
@@ -37,11 +42,14 @@ async function main() {
         assert.equal((await suite.db.collection('crmProjectEvents').doc(operationId).get()).exists, true);
         assert.equal(f.generationCalls.length, 1);
         const before = await snapshot(), serializedBefore = JSON.stringify(before), dispatches = f.generationCalls.length;
+        assert.ok(before.some(([key, value]) => key.startsWith(c.projectRef.path + '/changeHeads/') && value.sequence > 0), 'Feature-off snapshot must include actual nonempty committed change heads');
         const token = await suite.token('owner');
         for (const key of flags) process.env[key] = '0';
         try {
             await h.caseRun('feature-off denies authenticated reads and all mutation/proposal/apply routes without writes or dispatch', async () => {
                 const requests = [
+                    ['GET', '/' + c.projectId + '/changes'], ['POST', '/' + c.projectId + '/changes/hydrate', { taskIds: ['one'], messageIds: [] }],
+
                     ['GET', `/${c.projectId}/tasks/one`], ['GET', `/${c.projectId}`], ['GET', `/ai/drafts/${draft.draftId}`], ['GET', '/ai/config'], ['GET', '/budget'],
                     ['PATCH', `/${c.projectId}/tasks/one`, { operationId: c.op('denied-edit'), expectedRevision: taskBefore.revision, title: 'Must not persist' }],
                     ['POST', '/ai/proposals', { ...proposalInput, requestId: c.op('denied-proposal') }],

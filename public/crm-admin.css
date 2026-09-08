@@ -6129,6 +6129,13 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
+/* Let the wrapped toolbar scroll away when it exceeds the phone reader height. */
+@media (max-width: 640px) {
+  .crm-books-pages-sticky-bar {
+    position: static;
+  }
+}
+
 /* Sub-tabs for Pages reading mode */
 .crm-books-pages-subtabs {
   display: flex;

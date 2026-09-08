@@ -23180,3 +23180,10 @@ h1, h2, h3, .panel-title, .dashboard-title {
   color: #5b21b6;
   border: 1px solid #ddd6fe;
 }
+
+/* Keep Describe Image actions scrollable above the fixed phone toolbar and assistant. */
+@media (max-width: 640px) {
+  #mode-describe-image {
+    padding-bottom: 220px;
+  }
+}

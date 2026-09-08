@@ -245,12 +245,12 @@ function commandResult(command, args, options = {}) {
     encoding: options.encoding || 'utf8',
     shell: false,
     windowsHide: true,
-    input: options.input
+    input: options.input,
+    maxBuffer: options.maxBuffer || 64 * 1024 * 1024
   });
   if (result.error) fail('COMMAND_ERROR', `${command} could not be started: ${result.error.message}`);
   return result;
 }
-
 function runCommand(command, args, options = {}) {
   const result = commandResult(command, args, options);
   if (result.status !== 0) {

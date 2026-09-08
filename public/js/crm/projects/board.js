@@ -89,6 +89,7 @@
         let busy = false;
         let loadBusy = false;
         const columnMovesPending = new Set();
+        const taskMovesPending = new Set();
         let authorityPending = true;
         let sectionCreatePending = false;
         let columnEditor = null;
@@ -226,7 +227,7 @@
 
         function setBusy(value) {
             loadBusy = value === true;
-            busy = loadBusy || [...columnMovesPending].some(scopeIsCurrent);
+            busy = loadBusy || [...columnMovesPending, ...taskMovesPending].some(scopeIsCurrent);
             if (elements.projectsBoardSection) elements.projectsBoardSection.setAttribute('aria-busy', busy ? 'true' : 'false');
             if (elements.projectsBoardProjectSelect) elements.projectsBoardProjectSelect.disabled = !selection.projects.length;
             if (elements.projectsBoardRefresh) elements.projectsBoardRefresh.disabled = busy;
@@ -1358,8 +1359,8 @@
             const mutationProjectId = mutationScope.projectId;
             const opId = operationId(`move-${taskId}`);
             const operationPendingKey = pendingKeyFor(mutationScope, taskId);
-            const view = snapshotView();
-            let moveSucceeded = false;
+            taskMovesPending.add(mutationScope);
+            setBusy(loadBusy);
             movePending.add(operationPendingKey);
             pending.set(operationPendingKey, opId);
             renderBoard();
@@ -1369,7 +1370,6 @@
                 boardRevision.structureRevision = Number(response?.structureRevision ?? response?.result?.structureRevision ?? boardRevision.structureRevision);
                 expandDestinationAncestry(destination);
                 selectedTaskId = String(taskId);
-                moveSucceeded = true;
                 await loadProject(mutationProjectId, { preserve: true });
             } catch (error) {
                 if (!scopeIsCurrent(mutationScope)) return;
@@ -1377,19 +1377,12 @@
             } finally {
                 if (pending.get(operationPendingKey) === opId) pending.delete(operationPendingKey);
                 movePending.delete(operationPendingKey);
+                taskMovesPending.delete(mutationScope);
                 if (scopeIsCurrent(mutationScope)) {
+                    const completionView = snapshotView();
+                    setBusy(loadBusy);
                     renderBoard();
-                    if (moveSucceeded) {
-                        const target = elements.projectsBoardRows?.querySelector(`[data-task-id="${CSS.escape(String(taskId))}"]`);
-                        if (target) {
-                            focusedRowId = target.dataset.rowId || focusedRowId;
-                            target.focus?.();
-                        } else {
-                            restoreView(view);
-                        }
-                    } else {
-                        restoreView(view);
-                    }
+                    restoreView(completionView);
                 }
             }
         }
@@ -1462,7 +1455,7 @@
 
         async function selectedSiblingMove(delta, indentDelta = 0) {
             const task = taskFor(selectedTaskId);
-            if (!task || !canWrite()) return;
+            if (!task || !canWrite() || busy) return;
             const taskId = String(task.id);
             const parentId = task.parentTaskId || null;
             const sectionId = task.effectiveSectionId || task.sectionId;

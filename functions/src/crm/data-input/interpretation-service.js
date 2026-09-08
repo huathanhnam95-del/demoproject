@@ -3,6 +3,7 @@ const { createHash } = require('node:crypto');
 const { CRM_DATA_INPUT_DRAFTS } = require('../collections');
 const { buildProposalRequest, parseProposal } = require('./proposal-service');
 const { applyChanges, LIMITS } = require('./draft-service');
+const { isBudgetAdmissionDenial } = require('../../ai-assistance/providers/accounted-generation');
 const idPattern = /^[a-zA-Z0-9_-]{1,128}$/;
 function fail(code, message, status = 400) { throw Object.assign(new Error(message), { code, status }); }
 function id(value) { if (typeof value !== 'string' || !idPattern.test(value)) fail('INVALID_ID', 'Invalid interpretation identity.'); }
@@ -11,6 +12,10 @@ function publicResult(record) {
     return { operationId: record.operationId, messageId: record.messageId, text: record.text, baseRevision: record.baseRevision, status: record.status,
         ...(record.appliedRevision !== undefined ? { appliedRevision: record.appliedRevision } : {}),
         ...(record.proposal ? { proposal: record.proposal } : {}), ...(record.errorCode ? { errorCode: record.errorCode } : {}) };
+}
+function replayStartResult(record) {
+    if (record.status === 'rejected' && record.errorCode === 'BUDGET_EXHAUSTED') fail('BUDGET_EXHAUSTED', 'Monthly AI allowance is exhausted. You can still edit the draft manually.', 409);
+    return record;
 }
 /** The injected provider owns shared admission, reservation, dispatch and usage
  * settlement. This service contains no native transport or budget implementation.
@@ -124,7 +129,7 @@ function createInterpretationService({ db, authorize, provider = null, context =
                 available(draft, expectedRevision);
                 return { draft };
             });
-            if (preflight.replay) return preflight.replay;
+            if (preflight.replay) return replayStartResult(preflight.replay);
             let image;
             if (attachmentId) {
                 if (provider?.supportsImages !== true || typeof attachments?.read !== 'function') fail('INTERPRETATION_UNAVAILABLE', 'Image interpretation is not available.', 503);
@@ -151,7 +156,7 @@ function createInterpretationService({ db, authorize, provider = null, context =
                 tx.set(ref, record);
                 return { ref, record, request, context: proposalContext };
             });
-            if (claim.replay) return claim.replay;
+            if (claim.replay) return replayStartResult(claim.replay);
             async function finish(status, proposal = null, errorCode = null) {
                 return db.runTransaction(async tx => {
                     const { draft } = await owned(tx, actorUid, draftId);
@@ -171,7 +176,12 @@ function createInterpretationService({ db, authorize, provider = null, context =
                 // Outside the database transaction. The provider must recheck
                 // current authority immediately before its actual dispatch.
                 raw = await provider.generate({ actorUid, feature: 'crm-data-input', purpose: 'draft', operationId: claim.record.operationId, request: claim.request });
-            } catch { return finish('unknown', null, 'INTERPRETATION_UNCERTAIN'); }
+            } catch (error) {
+                if (isBudgetAdmissionDenial(error)) {
+                    return replayStartResult(await finish('rejected', null, 'BUDGET_EXHAUSTED'));
+                }
+                return finish('unknown', null, 'INTERPRETATION_UNCERTAIN');
+            }
             let parsed;
             try { parsed = parseProposal(raw, claim.context); }
             catch { return finish('rejected', null, 'INVALID_PROPOSAL'); }

@@ -268,6 +268,21 @@ test('uncertain interpretation blocks another request and final review until rec
     assert.equal(f.state.calls.filter(call => call.url.endsWith('/interpretations') && call.method === 'POST').length, 1);
 });
 
+test('budget rejection remains actionable without locking manual draft review or retaining an uncertain pointer', async () => {
+    const f = setup();
+    const client = createClient({ ...f.options, request: (url, options) => url.endsWith('/interpretations')
+        ? Promise.reject(Object.assign(new Error('Monthly AI allowance is exhausted. You can still edit the draft manually.'), { status: 409, payload: { error: 'BUDGET_EXHAUSTED' } }))
+        : f.options.request(url, options) });
+    await client.edit([action]);
+    await assert.rejects(client.interpret('Add Lan'), /allowance is exhausted/);
+    assert.equal(client.getState().interpretation.status, 'rejected');
+    assert.match(client.getState().error, /edit the draft manually/);
+    assert.equal([...f.store.values()].some(value => value.includes('interpretationMessageId')), false);
+    await client.review();
+    assert.ok(client.getState().preview);
+    assert.equal(f.state.committed, false);
+});
+
 test('late interpretation errors cannot alter the newly signed-in account state', async () => {
     const f = setup(); let rejectRequest;
     const client = createClient({ ...f.options, request: (url, options) => url.endsWith('/interpretations') ? new Promise((_resolve, reject) => { rejectRequest = reject; }) : f.options.request(url, options) });

@@ -4,6 +4,10 @@ const { reject, strict, text, digest, deepFreeze } = require('../accounting/mone
 const { DATA_INPUT_FEATURE } = require('../adapters/data-input');
 const MAX_DESCRIPTOR_BYTES = 60000;
 const PROJECTS_PURPOSES = new Set(['planning', 'task_draft', 'task_correction', 'automation_draft']);
+// Only this server bridge can prove that a budget rejection preceded dispatch.
+// A provider error with a matching code or copied properties is not that proof.
+const budgetAdmissionDenials = new WeakSet();
+function isBudgetAdmissionDenial(error) { return budgetAdmissionDenials.has(error); }
 function ordered(value) {
     if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'number' && Number.isFinite(value)) return value;
     if (Array.isArray(value)) return value.map(ordered);
@@ -74,7 +78,13 @@ function createAccountedGenerationProvider({ ledger, engineeringMode = false, en
         const reservationRequest = checked.descriptor.image ? deepFreeze({ ...request, descriptor: { ...checked.descriptor, image: { attachmentId: checked.descriptor.image.attachmentId, sha256: checked.descriptor.image.sha256, width: checked.descriptor.image.width, height: checked.descriptor.image.height, bytesLength: checked.descriptor.image.bytesLength, mimeType: 'image/png' } } }) : request;
         // Stable operation identity causes changed descriptors to conflict;
         // the ledger digest binds every descriptor byte and engineering bound.
-        const reservation = await feature.reserve(actorUid, { requestId: digest([featureName, operationId]), purpose, context, model: mapping.model, boundsVersion: mapping.boundsVersion, request: reservationRequest });
+        let reservation;
+        try {
+            reservation = await feature.reserve(actorUid, { requestId: digest([featureName, operationId]), purpose, context, model: mapping.model, boundsVersion: mapping.boundsVersion, request: reservationRequest });
+        } catch (error) {
+            if (error instanceof Error && error.code === 'BUDGET_EXHAUSTED' && error.status === 409) budgetAdmissionDenials.add(error);
+            throw error;
+        }
         const dispatch = await feature.authorizeDispatch(actorUid, reservation.reservationId);
         if (!dispatch.sendPermit) reject('RESPONSE_RECOVERY_REQUIRED', 'This operation already consumed its send permit; trusted response recovery is required.', 409);
         const permit = dispatch.sendPermit;
@@ -108,4 +118,4 @@ function createAccountedGenerationProvider({ ledger, engineeringMode = false, en
     }
     return Object.freeze({ supportsImages: native && nativeMode === true && mapping !== null, generateWithAccounting, async generate(input) { return (await generateWithAccounting(input)).output; } });
 }
-module.exports = { createAccountedGenerationProvider, MAX_DESCRIPTOR_BYTES };
+module.exports = { createAccountedGenerationProvider, isBudgetAdmissionDenial, MAX_DESCRIPTOR_BYTES };

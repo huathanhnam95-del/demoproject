@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createAccountedGenerationProvider } = require('../../../functions/src/ai-assistance/providers/accounted-generation');
+const { createAccountedGenerationProvider, isBudgetAdmissionDenial } = require('../../../functions/src/ai-assistance/providers/accounted-generation');
 const { createLedgerService } = require('../../../functions/src/ai-assistance/accounting/ledger-service');
 const { createProjectsBudgetFeatureAdapter } = require('../../../functions/src/crm/projects/budget-service');
 const { createDataInputBudgetFeatureAdapter } = require('../../../functions/src/ai-assistance/adapters/data-input');
@@ -17,7 +17,7 @@ function fixture(options = {}) {
     };
     const trusted = new WeakSet();
     const ledger = createLedgerService({ db, runTransaction, now: () => new Date('2026-09-08T00:00:00Z'), engineeringMode: true, nativeMode: options.native === true,
-        nativePolicy: { versionId: 'native-policy', kind: 'estimated', models: ['gemini-3.8-flash'], deriveEstimatedQuantities(request) { assert.equal(request.maxOutputTokens, 128); assert.equal(digest(request.descriptor), request.descriptorDigest); return { inputText: String(request.inputBytes), outputText: String(request.maxOutputTokens), inputAudio: '0' }; } }, resolveAllowance: async () => ({ allowanceNano: '5000000000' }),
+        nativePolicy: { versionId: 'native-policy', kind: 'estimated', models: ['gemini-3.8-flash'], deriveEstimatedQuantities(request) { assert.equal(request.maxOutputTokens, 128); assert.equal(digest(request.descriptor), request.descriptorDigest); return { inputText: String(request.inputBytes), outputText: String(request.maxOutputTokens), inputAudio: '0' }; } }, resolveAllowance: async () => ({ allowanceNano: options.allowanceNano ?? '5000000000' }),
         featureAdapters: { projects: createProjectsBudgetFeatureAdapter({ accessService, engineeringModels: ['engineering-generation'] }), 'crm-data-input': createDataInputBudgetFeatureAdapter({ authorize: async ({ tx, actorUid }) => { assert.ok(tx); return actorUid === 'staff' && !state.revoked; }, engineeringModels: ['engineering-generation'] }) },
         pricingRegistry: [{ versionId: 'engineering-price', provider: 'engineering-provider', model: 'engineering-generation', serviceTier: 'standard', effectiveAt: '2026-01-01T00:00:00Z', expiresAt: '2028-01-01T00:00:00Z', ratesNano: { inputBytes: '1', outputBytes: '1' } },
             { versionId: 'native-price', provider: 'gemini', model: 'gemini-3.8-flash', serviceTier: 'standard', effectiveAt: '2026-01-01T00:00:00Z', expiresAt: '2028-01-01T00:00:00Z', ratesNano: { inputText: '1', outputText: '1', inputAudio: '1' } }],
@@ -45,6 +45,33 @@ function fixture(options = {}) {
     const call = { actorUid: 'staff', feature: 'projects', purpose: 'planning', context: { projectId: 'project-one' }, operationId: 'operation', request };
     return { rows, state, ledger, provider, call };
 }
+
+test('budget admission denial has unforgeable provenance and causes zero transport or ledger writes', async () => {
+    const f = fixture({ native: true, allowanceNano: '0' });
+    await assert.rejects(f.provider.generate(f.call), error => {
+        assert.equal(error.code, 'BUDGET_EXHAUSTED');
+        assert.equal(error.status, 409);
+        assert.equal(isBudgetAdmissionDenial(error), true);
+        assert.equal(isBudgetAdmissionDenial({ ...error }), false);
+        assert.equal(isBudgetAdmissionDenial(Object.assign(new Error('untrusted'), { code: error.code, status: 409, dispatchNotStarted: true })), false);
+        return true;
+    });
+    assert.equal(f.state.io, 0);
+    assert.equal(f.rows.size, 0);
+});
+
+test('post-dispatch provider failure is never a budget admission denial', async () => {
+    const f = fixture({ native: true, throwTransport: true });
+    await assert.rejects(f.provider.generate(f.call), error => {
+        assert.equal(error.code, 'PROVIDER_GENERATION_FAILED');
+        assert.equal(isBudgetAdmissionDenial(error), false);
+        return true;
+    });
+    assert.equal(f.state.io, 1);
+    const reservation = [...f.rows.values()].find(row => row.reservationId);
+    assert.equal(reservation.state, 'usage_unknown');
+    assert.ok(BigInt((await f.ledger.forFeature('projects').getBudget('staff')).pendingNano) > 0n);
+});
 
 test('all registered Projects purposes recheck canonical project permission at reserve and dispatch', async () => {
     for (const [purpose, options] of [['planning', {}], ['task_draft', { write: true }], ['task_correction', { write: true }], ['automation_draft', { owner: true }]]) {

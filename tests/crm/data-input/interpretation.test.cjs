@@ -167,6 +167,39 @@ test('uncertain provider responses never cause automatic redispatch', async () =
     assert.equal(f.state.calls, 1);
 });
 
+test('trusted budget denial persists rejection and replays 409 without another admission or draft mutation', async () => {
+    const { createAccountedGenerationProvider } = require('../../../functions/src/ai-assistance/providers/accounted-generation');
+    let admissions = 0, dispatches = 0;
+    const provider = createAccountedGenerationProvider({
+        ledger: { forFeature: () => ({ async reserve() { admissions++; throw Object.assign(new Error('Monthly AI allowance is exhausted.'), { code: 'BUDGET_EXHAUSTED', status: 409 }); } }), settle() { assert.fail('No settlement'); }, markUnknown() { assert.fail('No unknown expense'); } },
+        engineeringMode: true,
+        engineeringMapping: { sourceModel: 'gemini-3.8-flash', model: 'engineering-test', boundsVersion: 'fixture', maxOutputBytes: 1024 },
+        async transport() { dispatches++; assert.fail('No provider dispatch'); }
+    });
+    const f = fixture(request => provider.generate(request));
+    const before = structuredClone(f.rows.get('crmDataInputDrafts/d1'));
+    for (const service of [f.service, createInterpretationService(f.options)]) {
+        await assert.rejects(service.start(input), error => error.status === 409 && error.code === 'BUDGET_EXHAUSTED');
+    }
+    assert.equal(admissions, 1);
+    assert.equal(dispatches, 0);
+    assert.equal(f.state.calls, 1);
+    assert.deepEqual(f.rows.get('crmDataInputDrafts/d1'), before);
+    const record = f.rows.get('crmDataInputDrafts/d1/interpretations/m1');
+    assert.equal(record.status, 'rejected');
+    assert.equal(record.errorCode, 'BUDGET_EXHAUSTED');
+    assert.equal((await f.service.get(input)).status, 'rejected');
+});
+
+test('untrusted budget-shaped provider error remains uncertain and cannot enable redispatch', async () => {
+    const f = fixture(async () => { throw Object.assign(new Error('Private detail'), { code: 'BUDGET_EXHAUSTED', status: 409, dispatchNotStarted: true }); });
+    const result = await f.service.start(input);
+    assert.equal(result.status, 'unknown');
+    assert.equal(result.errorCode, 'INTERPRETATION_UNCERTAIN');
+    assert.deepEqual(await f.service.start(input), result);
+    assert.equal(f.state.calls, 1);
+});
+
 test('a concurrent manual edit marks the proposal stale without overwriting the draft', async () => {
     const f = fixture(async (_request, _state, rows) => { rows.get('crmDataInputDrafts/d1').revision = 1; return output; });
     const result = await f.service.start(input);

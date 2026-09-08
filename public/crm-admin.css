@@ -12719,6 +12719,33 @@ mark.crm-highlight:hover {
   flex: 1;
 }
 
+/* Teaching-session mobile audio wraps metadata before the full-width native control. */
+@media (max-width: 640px) {
+  #crm-teaching-session-modal .crm-session-docked-audio {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+  }
+
+  #crm-teaching-session-modal .crm-session-docked-audio .crm-docked-audio-info {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  #crm-teaching-session-modal .crm-session-docked-audio .crm-docked-audio-meta {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  #crm-teaching-session-modal .crm-session-docked-audio audio {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 34px;
+  }
+}
+
 /* Markdown Fallback Styling */
 .teaching-session-markdown-content {
   line-height: 1.6;

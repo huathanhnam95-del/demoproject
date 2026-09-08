@@ -1185,6 +1185,7 @@ function verifyUnexpectedSurfaceFiles(ctx) {
 
 function isDependencyInstallPath(ctx, relative) {
   const normalized = normalizeRelativePath(relative, 'surface path');
+  if (normalized === 'node_modules' || normalized.startsWith('node_modules/')) return true;
   const roots = Array.isArray(ctx.functionsSourceDirs) && ctx.functionsSourceDirs.length
     ? ctx.functionsSourceDirs
     : [path.join(ctx.candidateRoot, 'functions')];
@@ -1213,6 +1214,7 @@ function verifyTrackedSource(ctx) {
   const failures = [];
   for (const item of ctx.trackedInventory) {
     const relative = String(item.path).replace(/\\/g, '/');
+    if (relative === 'node_modules' || relative.startsWith('node_modules/') || relative.startsWith('functions/node_modules/')) continue;
     const candidate = path.join(ctx.candidateRoot, ...relative.split('/'));
     if (allowed.has(relative)) {
       if (!fs.existsSync(candidate) || !fs.lstatSync(candidate).isFile()) failures.push(relative);

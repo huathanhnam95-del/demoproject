@@ -4625,6 +4625,137 @@
       window.CrmTeachingSessions.setStudentId(id);
     }
     const studentSession = beginStudentSession(id);
+    let profileRefreshGeneration = 0;
+    let profileRefreshFocusPending = false;
+    const getProfileStatus = () => {
+      const modal = elements.studentModal || document.getElementById('crm-student-modal');
+      if (!modal) return null;
+      let host = modal.querySelector('#crm-student-profile-status');
+      if (!host) {
+        host = modal.ownerDocument.createElement('div');
+        host.id = 'crm-student-profile-status';
+        host.className = 'crm-student-profile-status crm-muted';
+        const titleRow = modal.querySelector('.crm-modal-title-row');
+        if (titleRow) titleRow.insertAdjacentElement('afterend', host);
+        else modal.querySelector('.crm-modal-header')?.append(host);
+      }
+      return host;
+    };
+    const clearProfileStatus = () => {
+      const host = getProfileStatus();
+      if (!host) return;
+      host.hidden = true;
+      host.removeAttribute('aria-busy');
+      host.removeAttribute('role');
+      host.removeAttribute('aria-live');
+      host.replaceChildren();
+    };
+    const renderProfileStatus = (state, message, retry) => {
+      const host = getProfileStatus();
+      if (!host) return;
+      host.replaceChildren();
+      if (state === 'hidden') {
+        clearProfileStatus();
+        return;
+      }
+      host.hidden = false;
+      host.setAttribute('role', state === 'error' ? 'alert' : 'status');
+      host.setAttribute('aria-live', state === 'error' ? 'assertive' : 'polite');
+      host.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+      const text = host.ownerDocument.createElement('span');
+      text.textContent = String(message || '');
+      host.append(text);
+      if (typeof retry === 'function') {
+        const button = host.ownerDocument.createElement('button');
+        button.type = 'button';
+        button.id = 'btn-retry-student-profile';
+        button.className = 'crm-btn-secondary';
+        button.textContent = 'Retry';
+        button.addEventListener('click', () => {
+          profileRefreshFocusPending = document.activeElement === button;
+          retry();
+        });
+        host.append(host.ownerDocument.createTextNode(' '), button);
+      }
+    };
+    const captureProfileControlState = () => {
+      const modal = elements.studentModal || document.getElementById('crm-student-modal');
+      if (!modal) return new Map();
+      return new Map(Array.from(modal.querySelectorAll('input, textarea, select'))
+        .filter((control) => !control.closest('#student-finance') && control.type !== 'file')
+        .map((control) => [control, {
+          value: control.value,
+          checked: 'checked' in control ? control.checked : null,
+          selected: control.multiple ? Array.from(control.selectedOptions).map((option) => option.value) : null
+        }]));
+    };
+    const sameProfileControlState = (left, right) => left.value === right.value
+      && left.checked === right.checked
+      && JSON.stringify(left.selected) === JSON.stringify(right.selected);
+    const restoreProfileControlState = (baselineState, currentState) => {
+      baselineState.forEach((baseline, control) => {
+        const current = currentState.get(control);
+        if (!control || !control.isConnected || !current || sameProfileControlState(current, baseline)) return;
+        control.value = current.value;
+        if ('checked' in control && current.checked !== null) control.checked = current.checked;
+        if (control.multiple && Array.isArray(current.selected)) {
+          Array.from(control.options).forEach((option) => { option.selected = current.selected.includes(option.value); });
+        }
+      });
+    };
+    let profileRefreshBaseline = null;
+    const runProfileRefresh = async (session) => {
+      const requestGeneration = ++profileRefreshGeneration;
+      const restoreFocus = profileRefreshFocusPending;
+      profileRefreshFocusPending = false;
+      const focusAfterReplacement = (target) => {
+        if (!restoreFocus || (document.activeElement !== document.body && document.activeElement !== document.documentElement)) return;
+        if (target && target.isConnected && !target.hidden && target.getClientRects().length) target.focus();
+      };
+      if (!profileRefreshBaseline) profileRefreshBaseline = captureProfileControlState();
+      renderProfileStatus('loading', 'Refreshing student profile…');
+      try {
+        const fresh = await fetchStudentProfile(id);
+        if (!isActiveStudentSession(session) || requestGeneration !== profileRefreshGeneration) return;
+        if (!fresh || typeof fresh !== 'object') throw new Error('Student profile is unavailable.');
+        const currentState = captureProfileControlState();
+        modalState.studentProfile = fresh;
+        const freshCrmId = normalizeCrmId(fresh.crmId || '');
+        if (freshCrmId) {
+          resolvedCrmId = freshCrmId;
+          state.studentLookup = freshCrmId;
+          if (elements.studentIdBadge) {
+            elements.studentIdBadge.textContent = `ID: ${freshCrmId}`;
+            elements.studentIdBadge.style.display = 'inline-flex';
+          }
+          if (syncHash && window.location.hash !== getRouteHash('students', freshCrmId)) {
+            setStudentProfileHash(freshCrmId);
+          }
+        }
+        if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
+          window.CrmStudents.applyToForm(elements, fresh);
+        }
+        if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
+          window.CrmStudent360.applyToForm(elements, fresh);
+        }
+        restoreProfileControlState(profileRefreshBaseline, currentState);
+        displayStoredAiSummary(fresh);
+        renderStudentSchedulePrompt();
+        clearProfileStatus();
+        focusAfterReplacement(elements.btnSaveStudent);
+      } catch (error) {
+        if (!isActiveStudentSession(session) || requestGeneration !== profileRefreshGeneration) return;
+        const missing = Number(error?.status) === 404 || /missing|unavailable/i.test(String(error?.message || ''));
+        renderProfileStatus(
+          'error',
+          missing ? 'Student profile is unavailable.' : 'Unable to refresh student profile.',
+          () => runProfileRefresh(session)
+        );
+        focusAfterReplacement(getProfileStatus()?.querySelector('#btn-retry-student-profile'));
+        console.error('[CRM Admin] Failed to refresh student profile after open:', error);
+      }
+    };
+    clearProfileStatus();
 
     if (elements.studentIdBadge) {
       elements.studentIdBadge.textContent = `ID: ${resolvedCrmId || normalizeCrmId(id) || id}`;
@@ -4660,37 +4791,8 @@
     }
 
     if (refreshProfile) {
-      fetchStudentProfile(id).then((fresh) => {
-        if (!isActiveStudentSession(studentSession)) {
-          return;
-        }
-        if (!fresh) return;
-        modalState.studentProfile = fresh;
-        const freshCrmId = normalizeCrmId(fresh.crmId || '');
-        if (freshCrmId) {
-          resolvedCrmId = freshCrmId;
-          state.studentLookup = freshCrmId;
-          if (elements.studentIdBadge) {
-            elements.studentIdBadge.textContent = `ID: ${freshCrmId}`;
-            elements.studentIdBadge.style.display = 'inline-flex';
-          }
-          if (syncHash && window.location.hash !== getRouteHash('students', freshCrmId)) {
-            setStudentProfileHash(freshCrmId);
-          }
-        }
-        if (window.CrmStudents && typeof window.CrmStudents.applyToForm === 'function') {
-          window.CrmStudents.applyToForm(elements, fresh);
-        }
-        if (window.CrmStudent360 && typeof window.CrmStudent360.applyToForm === 'function') {
-          window.CrmStudent360.applyToForm(elements, fresh);
-        }
-        displayStoredAiSummary(fresh);
-        renderStudentSchedulePrompt();
-      }).catch((error) => {
-        if (isActiveStudentSession(studentSession)) {
-          console.error('[CRM Admin] Failed to refresh student profile after open:', error);
-        }
-      });
+      profileRefreshBaseline = captureProfileControlState();
+      runProfileRefresh(studentSession);
     }
 
     await refreshEntranceTestsList(studentSession);
@@ -4752,11 +4854,51 @@
     const studentId = String(session?.studentId || modalState.studentId || '').trim();
     if (!studentId) return;
     if (session && !isActiveStudentSession(session)) return;
+    const requestSession = session || { studentId, key: modalState.studentSessionKey };
+    const requestGeneration = Number(modalState.studentIdentityRequestGeneration || 0) + 1;
+    modalState.studentIdentityRequestGeneration = requestGeneration;
+    const restoreFocus = !!modalState.studentIdentityFocusPending;
+    modalState.studentIdentityFocusPending = false;
+    const focusAfterReplacement = (target) => {
+      if (!restoreFocus || (document.activeElement !== document.body && document.activeElement !== document.documentElement)) return;
+      if (target && target.isConnected && target.getClientRects().length) target.focus();
+    };
+    if (elements.linkedUidsUl && !elements.linkedUidsUl.hasAttribute('tabindex')) elements.linkedUidsUl.setAttribute('tabindex', '-1');
+    const active = () => isActiveStudentSession(requestSession)
+      && Number(modalState.studentIdentityRequestGeneration || 0) === requestGeneration;
+    const renderState = (state, message, retry) => {
+      if (!elements.linkedUidsUl || !active()) return;
+      elements.linkedUidsUl.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+      const item = elements.linkedUidsUl.ownerDocument.createElement('li');
+      item.className = state === 'empty' ? 'text-muted' : 'crm-student-identity-state';
+      item.setAttribute('role', state === 'error' || state === 'unavailable' ? 'alert' : 'status');
+      item.setAttribute('aria-live', state === 'error' || state === 'unavailable' ? 'assertive' : 'polite');
+      item.textContent = String(message || '');
+      if (typeof retry === 'function') {
+        const button = elements.linkedUidsUl.ownerDocument.createElement('button');
+        button.type = 'button';
+        button.id = 'btn-retry-student-identity';
+        button.className = 'crm-btn-secondary';
+        button.textContent = 'Retry';
+        button.addEventListener('click', () => {
+          modalState.studentIdentityFocusPending = document.activeElement === button;
+          retry();
+        });
+        item.append(elements.linkedUidsUl.ownerDocument.createTextNode(' '), button);
+      }
+      elements.linkedUidsUl.replaceChildren(item);
+    };
+    renderState('loading', 'Loading linked accounts…');
     try {
       // Re-fetch the student document to get class_code and linked_user_ids
       const snap = await firebase.firestore().collection('crmStudents').doc(studentId).get();
-      if (!snap.exists) return;
-      if (session && !isActiveStudentSession(session)) return;
+      if (!active()) return;
+      if (!snap.exists) {
+        if (elements.inputClassCodeDisplay) elements.inputClassCodeDisplay.value = '';
+        renderState('unavailable', 'Student identity is unavailable.', () => refreshStudentIdentity(session));
+        focusAfterReplacement(elements.linkedUidsUl?.querySelector('#btn-retry-student-identity'));
+        return;
+      }
       const data = snap.data();
 
       if (elements.inputClassCodeDisplay) {
@@ -4766,7 +4908,8 @@
       if (elements.linkedUidsUl) {
         const uids = data.linked_user_ids || [];
         if (uids.length === 0) {
-          elements.linkedUidsUl.innerHTML = '<li class="text-muted">No accounts linked yet.</li>';
+          renderState('empty', 'No accounts linked yet.');
+          focusAfterReplacement(elements.linkedUidsUl);
         } else {
           elements.linkedUidsUl.innerHTML = uids.map(uid => `
             <li>
@@ -4774,12 +4917,15 @@
               <span class="crm-test-status submitted">Linked</span>
             </li>
           `).join('');
+          elements.linkedUidsUl.setAttribute('aria-busy', 'false');
+          focusAfterReplacement(elements.linkedUidsUl);
         }
       }
     } catch (e) {
-      if (!session || isActiveStudentSession(session)) {
-        console.error('[CRM Admin] Failed to refresh identity:', e);
-      }
+      if (!active()) return;
+      renderState('error', 'Unable to load linked accounts.', () => refreshStudentIdentity(session));
+      focusAfterReplacement(elements.linkedUidsUl?.querySelector('#btn-retry-student-identity'));
+      console.error('[CRM Admin] Failed to refresh identity:', e);
     }
   }
 
@@ -7807,6 +7953,10 @@
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `crm-toast ${type}`;
+    const isAlert = type === 'error' || type === 'warning';
+    toast.setAttribute('role', isAlert ? 'alert' : 'status');
+    toast.setAttribute('aria-live', isAlert ? 'assertive' : 'polite');
+    toast.setAttribute('aria-atomic', 'true');
     toast.textContent = String(message || '');
     document.body.appendChild(toast);
 

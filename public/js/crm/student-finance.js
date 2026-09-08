@@ -267,7 +267,120 @@ window.CrmStudentFinance = (function () {
             const studentId = String(session?.studentId || modalState.studentId || '').trim();
             if (!studentId) return;
             if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
+            const requestSession = session || { studentId, key: modalState.studentSessionKey };
+            const requestGeneration = Number(modalState.studentFinanceRequestGeneration || 0) + 1;
+            modalState.studentFinanceRequestGeneration = requestGeneration;
+            const restoreFocus = !!modalState.studentFinanceFocusPending;
+            modalState.studentFinanceFocusPending = false;
+            const focusAfterReplacement = (target) => {
+                if (!restoreFocus || (document.activeElement !== document.body && document.activeElement !== document.documentElement)) return;
+                if (target && target.isConnected && target.getClientRects().length) target.focus();
+            };
+            if (elements.studentFinanceWorkflowNote && !elements.studentFinanceWorkflowNote.hasAttribute('tabindex')) elements.studentFinanceWorkflowNote.setAttribute('tabindex', '-1');
+            const active = () => (typeof isActiveStudentSession === 'function'
+                ? isActiveStudentSession(requestSession)
+                : String(modalState.studentId || '').trim() === studentId
+                    && Number(modalState.studentSessionKey || 0) === Number(requestSession.key || 0))
+                && Number(modalState.studentFinanceRequestGeneration || 0) === requestGeneration;
+            const statusAttributes = (element) => {
+                if (!element) return null;
+                if (!element.__crmFinanceStatusAttributes) {
+                    element.__crmFinanceStatusAttributes = {
+                        role: element.getAttribute('role'),
+                        ariaLive: element.getAttribute('aria-live'),
+                        ariaAtomic: element.getAttribute('aria-atomic')
+                    };
+                }
+                return element.__crmFinanceStatusAttributes;
+            };
+            const restoreStatusAttributes = (element) => {
+                const original = element?.__crmFinanceStatusAttributes;
+                if (!element || !original) return;
+                ['role', 'aria-live', 'aria-atomic'].forEach((attribute) => element.removeAttribute(attribute));
+                if (original.role !== null) element.setAttribute('role', original.role);
+                if (original.ariaLive !== null) element.setAttribute('aria-live', original.ariaLive);
+                if (original.ariaAtomic !== null) element.setAttribute('aria-atomic', original.ariaAtomic);
+            };
+            const addRetry = (container, id, label = 'Retry') => {
+                if (!container || !active()) return;
+                const button = container.ownerDocument.createElement('button');
+                button.type = 'button';
+                button.id = id;
+                button.className = 'crm-btn-secondary';
+                button.textContent = label;
+                button.addEventListener('click', async () => {
+                    if (!active()) return;
+                    modalState.studentFinanceFocusPending = document.activeElement === button;
+                    button.disabled = true;
+                    try {
+                        await refreshStudentFinance(session);
+                    } catch (error) {
+                        if (active()) showToast(error?.message || 'Finance refresh failed. Retry.', 'error');
+                    }
+                });
+                container.append(container.ownerDocument.createTextNode(' '), button);
+            };
+            const setSectionStatus = (element, message, retryId = null) => {
+                if (!element || !active()) return;
+                statusAttributes(element);
+                element.removeAttribute('aria-busy');
+                element.setAttribute('role', 'alert');
+                element.setAttribute('aria-live', 'assertive');
+                element.setAttribute('aria-atomic', 'true');
+                element.textContent = String(message || '');
+                if (retryId) addRetry(element, retryId);
+            };
+            const setLoadingState = () => {
+                if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = 'Loading…';
+                if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = 'Loading…';
+                if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = 'Loading…';
+                if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = 'Loading…';
+                if (elements.studentFinanceEnrollmentMeta) elements.studentFinanceEnrollmentMeta.textContent = 'Loading enrollment context…';
+                if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">Loading finance summary…</div>';
+                if (elements.studentClassroomMatchSummary) {
+                    restoreStatusAttributes(elements.studentClassroomMatchSummary);
+                    elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Loading classroom recommendations…</div>';
+                    elements.studentClassroomMatchSummary.setAttribute('aria-busy', 'true');
+                }
+                if (elements.studentClassroomMatchMeta) elements.studentClassroomMatchMeta.textContent = 'Loading classroom recommendations…';
+                if (elements.btnCreateRecommendedEnrollment) elements.btnCreateRecommendedEnrollment.disabled = true;
+                if (elements.studentFinanceWorkflowNote) {
+                    restoreStatusAttributes(elements.studentFinanceWorkflowNote);
+                    elements.studentFinanceWorkflowNote.setAttribute('aria-busy', 'true');
+                    elements.studentFinanceWorkflowNote.textContent = 'Loading finance summary…';
+                }
+            };
+            const setUnavailableValues = () => {
+                if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = 'Unavailable';
+                if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = 'Unavailable';
+                if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = 'Unavailable';
+                if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = 'Unavailable';
+                if (elements.studentFinanceEnrollmentMeta) elements.studentFinanceEnrollmentMeta.textContent = 'Finance data is unavailable.';
+                if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">Finance data is unavailable.</div>';
+            };
+            const renderInvoiceList = (invoices) => {
+                if (!elements.studentInvoiceList) return;
+                if (!invoices.length) {
+                    elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
+                } else {
+                    elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
+          <div class="crm-task-item">
+            <div class="crm-task-head">
+              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
+              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
+            </div>
+            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.netAmount) : String(invoice.netAmount || 0))} | Outstanding ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.outstandingAmount) : String(invoice.outstandingAmount || 0))}</div>
+            <div class="crm-task-actions">
+              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
+            </div>
+          </div>
+        `).join('');
+                }
+            };
+            setLoadingState();
             await refreshPaymentFollowup(studentId);
+            if (!active()) return;
 
             if (elements.studentInvoiceList && !elements.studentInvoiceList.__crmInvoiceSelectHandlerBound) {
                 elements.studentInvoiceList.addEventListener('click', (event) => {
@@ -295,20 +408,23 @@ window.CrmStudentFinance = (function () {
                     invoices: []
                 });
             const attendanceSummaryPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
-                ? window.ClassroomAPI.fetchAttendanceSummary({ studentId })
+                ? Promise.resolve().then(() => window.ClassroomAPI.fetchAttendanceSummary({ studentId }))
                 : Promise.resolve({ students: [] });
-            const [json, attendanceJson] = await Promise.all([
+            const [financeSummaryResult, attendanceSummaryResult] = await Promise.allSettled([
                 financeSummaryPromise,
                 attendanceSummaryPromise
             ]);
-            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
-
-            const totalInvoiced = Number(json.totalInvoiced || 0);
-            const totalPaid = Number(json.totalPaid || 0);
-            const totalOutstanding = Number(json.totalOutstanding || 0);
-            const nextDueDate = String(json.nextDueDate || '').trim() || '-';
-            const invoices = Array.isArray(json.invoices) ? json.invoices : [];
-            const currencyTotals = Array.isArray(json.currencyTotals) ? json.currencyTotals : [];
+            if (!active()) return;
+            const summaryError = financeSummaryResult.status === 'rejected';
+            const attendanceError = attendanceSummaryResult.status === 'rejected';
+            const json = summaryError ? null : financeSummaryResult.value;
+            const attendanceJson = attendanceError ? null : attendanceSummaryResult.value;
+            const totalInvoiced = Number(json?.totalInvoiced || 0);
+            const totalPaid = Number(json?.totalPaid || 0);
+            const totalOutstanding = Number(json?.totalOutstanding || 0);
+            const nextDueDate = String(json?.nextDueDate || '').trim() || '-';
+            const invoices = Array.isArray(json?.invoices) ? json.invoices : [];
+            const currencyTotals = Array.isArray(json?.currencyTotals) ? json.currencyTotals : [];
             const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
             const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
             const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
@@ -318,27 +434,63 @@ window.CrmStudentFinance = (function () {
                 : null;
             const classroomMatchCourseId = String(currentEnrollment?.courseId || availableEnrollments[0]?.courseId || '').trim();
 
-            const classroomMatchesPromise = hasCapability('classroomMatches')
+            const classroomMatchesPromise = !summaryError && !attendanceError && hasCapability('classroomMatches')
                 && window.ClassroomAPI
                 && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
-                ? window.ClassroomAPI.fetchClassroomMatches(studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch(() => ({
+                ? Promise.resolve().then(() => window.ClassroomAPI.fetchClassroomMatches(studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {})).catch(() => ({
                     matches: [],
                     recommendedClassroom: null,
                     classroomCount: 0,
                     courseId: null,
                     error: true
                 }))
-                : Promise.resolve({
-                    matches: [],
-                    recommendedClassroom: null,
-                    classroomCount: 0,
-                    courseId: null,
-                    unsupported: true
-                });
+                : Promise.resolve(summaryError || attendanceError
+                    ? {
+                        matches: [],
+                        recommendedClassroom: null,
+                        classroomCount: 0,
+                        courseId: null,
+                        error: true
+                    }
+                    : {
+                        matches: [],
+                        recommendedClassroom: null,
+                        classroomCount: 0,
+                        courseId: null,
+                        unsupported: true
+                    });
 
             const classroomMatchesJson = await classroomMatchesPromise;
-            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
-            const financeWorkflow = window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
+            if (!active()) return;
+            if (summaryError || attendanceError) {
+                if (summaryError) {
+                    setUnavailableValues();
+                    if (elements.studentFinanceWorkflowBadge) {
+                        elements.studentFinanceWorkflowBadge.className = 'crm-task-priority low';
+                        elements.studentFinanceWorkflowBadge.textContent = 'unavailable';
+                    }
+                    setSectionStatus(elements.studentFinanceWorkflowNote, 'Finance summary is unavailable.', 'btn-retry-student-finance');
+                    setSectionStatus(elements.studentClassroomMatchSummary, 'Classroom recommendations are unavailable until Finance is refreshed.', 'btn-retry-student-classroom-matches');
+                } else {
+                    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
+                    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
+                    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
+                    if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+                    if (elements.studentFinanceEnrollmentMeta) elements.studentFinanceEnrollmentMeta.textContent = 'Attendance data is unavailable.';
+                    renderInvoiceList(invoices);
+                    if (elements.studentFinanceWorkflowBadge) {
+                        elements.studentFinanceWorkflowBadge.className = 'crm-task-priority low';
+                        elements.studentFinanceWorkflowBadge.textContent = 'unavailable';
+                    }
+                    setSectionStatus(elements.studentFinanceWorkflowNote, 'Attendance summary is unavailable.', 'btn-retry-student-finance');
+                    setSectionStatus(elements.studentClassroomMatchSummary, 'Classroom recommendations are unavailable until attendance is refreshed.', 'btn-retry-student-classroom-matches');
+                }
+                if (elements.studentClassroomMatchMeta) elements.studentClassroomMatchMeta.textContent = 'Classroom recommendations are unavailable.';
+                focusAfterReplacement(elements.studentFinanceWorkflowNote);
+                return;
+            }
+
+            const financeWorkflow = !summaryError && window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
                 ? window.CrmFinance.deriveWorkflowState({
                     invoices,
                     enrollments: availableEnrollments,
@@ -374,34 +526,29 @@ window.CrmStudentFinance = (function () {
                     : 'No enrollment linked yet. You can bill first, then assign the student after payment confirmation.';
             }
 
-            if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
-            if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
-            if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
-            if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+            {
+                if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
+                if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
+                if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
+                if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+            }
 
             renderMatches(classroomMatchesJson);
+            if (elements.studentClassroomMatchSummary) {
+                elements.studentClassroomMatchSummary.removeAttribute('aria-busy');
+                restoreStatusAttributes(elements.studentClassroomMatchSummary);
+            }
+            if (elements.studentFinanceWorkflowNote) {
+                elements.studentFinanceWorkflowNote.removeAttribute('aria-busy');
+                restoreStatusAttributes(elements.studentFinanceWorkflowNote);
+            }
             renderWorkflow(financeWorkflow);
             renderStudentSchedulePrompt();
-
-            if (elements.studentInvoiceList) {
-                if (!invoices.length) {
-                    elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
-                } else {
-                    elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
-          <div class="crm-task-item">
-            <div class="crm-task-head">
-              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
-              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
-            </div>
-            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
-            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.netAmount) : String(invoice.netAmount || 0))} | Outstanding ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.outstandingAmount) : String(invoice.outstandingAmount || 0))}</div>
-            <div class="crm-task-actions">
-              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
-            </div>
-          </div>
-        `).join('');
-                }
+            renderInvoiceList(invoices);
+            if (classroomMatchesJson?.error && elements.studentClassroomMatchSummary) {
+                setSectionStatus(elements.studentClassroomMatchSummary, 'Classroom recommendations are temporarily unavailable.', 'btn-retry-student-classroom-matches');
             }
+            focusAfterReplacement(elements.studentFinanceWorkflowNote);
         }
 
         function resolveContext() {

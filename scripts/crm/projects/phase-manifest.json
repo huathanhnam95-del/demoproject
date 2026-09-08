@@ -143,6 +143,12 @@
       "mandatory": true,
       "tests": [
         { "id": "native-accounting-policy", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/native-accounting-policy.test.js", "tests/crm/projects/native-provider-usage.test.js"] },
+        { "id": "usage-credit-policy", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/usage-credit-policy.test.js"] },
+        { "id": "usage-quota-service", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/usage-quota-service.test.js"] },
+        { "id": "usage-quota-migration", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/usage-quota-migration.test.js"] },
+        { "id": "usage-meter", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/usage-meter.test.js"] },
+        { "id": "usage-provider-metering", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/usage-provider-metering.test.js"] },
+        { "id": "usage-credit-client", "required": true, "runner": "node", "args": ["--test", "tests/crm/projects/usage-credit-client.test.js"] },
         { "id": "phase8-budget-accounting", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-accounting.test.js"] },
         { "id": "phase8-budget-api", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-api.test.js"] },
         { "id": "phase8-budget-client", "required": true, "runner": "node", "args": ["tests/crm/projects/phase8-budget-client.test.js"] },

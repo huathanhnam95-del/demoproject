@@ -301,6 +301,14 @@ const PROVISIONED_MEDIA_ROOTS = Object.freeze([
   'public/media'
 ]);
 const PROVISIONED_MEDIA_EXTENSIONS = Object.freeze(new Set(['.wav', '.mp3', '.m4a', '.ogg', '.webm', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif']));
+const KNOWN_BINARY_EXTENSIONS = Object.freeze(new Set([
+  '.wav', '.mp3', '.m4a', '.ogg', '.webm', '.flac', '.aac', '.wma',
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.ico', '.bmp', '.tiff',
+  '.pdf', '.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt',
+  '.zip', '.gz', '.tgz', '.tar', '.7z', '.rar',
+  '.exe', '.dll', '.so', '.dylib', '.bin',
+  '.pkl', '.pth', '.onnx', '.tflite'
+]));
 
 function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options = {}) {
   if (options.autoProvisionedAssets === false) return [];
@@ -684,13 +692,65 @@ function exportGitTreeRaw(sourceRoot, sourceSha, destination, inventory, options
   if (options.git && typeof options.git.run === 'function') fail('GIT_TREE', 'Raw Git tree export requires the Git executable.');
   const entries = validateRawTreeEntries(Array.isArray(inventory) ? inventory : captureTrackedInventory(sourceRoot, sourceSha, options));
   const externalRunRoot = path.resolve(options.externalRunRoot || options.externalRoot || path.dirname(destination));
-  const batchPath = path.join(externalRunRoot, `.source-blobs-${process.pid}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}.batch`);
-  assertExternalRoot(sourceRoot, externalRunRoot, 'Git export spool');
   fs.mkdirSync(externalRunRoot, { recursive: true });
   fs.mkdirSync(destination, { recursive: true });
+
+  const checkInput = entries.map((item) => `${String(item.oid || item.sha1 || '').toLowerCase()}\n`).join('');
+  const checkResult = spawnSync(options.git || 'git', ['--no-lazy-fetch', 'cat-file', '--batch-check'], {
+    cwd: sourceRoot,
+    input: checkInput,
+    maxBuffer: 64 * 1024 * 1024,
+    windowsHide: true,
+    shell: false
+  });
+  if (checkResult.error || checkResult.status !== 0) fail('GIT_TREE', 'Could not inspect the selected Git blobs.');
+  const blobSizes = new Map();
+  for (const line of String(checkResult.stdout || '').trim().split(/\r?\n/)) {
+    if (!line) continue;
+    const parts = line.split(/\s+/);
+    if (parts.length >= 3 && parts[1] === 'blob') {
+      blobSizes.set(parts[0].toLowerCase(), Number(parts[2]));
+    }
+  }
+
+  const entriesToSpool = [];
+  for (const item of entries) {
+    const relative = normalizeRelativePath(item.path, 'Git tree path');
+    const mode = String(item.mode || '100644');
+    const expectedOid = String(item.oid || item.sha1 || '').toLowerCase();
+    const blobSize = blobSizes.get(expectedOid);
+    const ext = path.extname(relative).toLowerCase();
+    let hardlinked = false;
+    if (KNOWN_BINARY_EXTENSIONS.has(ext) && typeof blobSize === 'number') {
+      const source = path.join(sourceRoot, ...relative.split('/'));
+      if (fs.existsSync(source)) {
+        const sourceStat = fs.lstatSync(source);
+        if (sourceStat.isFile() && !sourceStat.isSymbolicLink() && sourceStat.size === blobSize) {
+          const target = rejectLinkAncestors(destination, path.join(destination, ...relative.split('/')), 'Git tree path');
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          try {
+            if (fs.existsSync(target)) fs.unlinkSync(target);
+            fs.linkSync(source, target);
+            try { fs.chmodSync(target, parseInt(mode, 8) & 0o777); } catch (_) { /* Windows may reject POSIX modes. */ }
+            hardlinked = true;
+          } catch (_) {
+            hardlinked = false;
+          }
+        }
+      }
+    }
+    if (!hardlinked) {
+      entriesToSpool.push(item);
+    }
+  }
+
+  if (!entriesToSpool.length) return;
+
+  const batchPath = path.join(externalRunRoot, `.source-blobs-${process.pid}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}.batch`);
+  assertExternalRoot(sourceRoot, externalRunRoot, 'Git export spool');
   const output = fs.openSync(batchPath, 'wx', 0o600);
   try {
-    const input = entries.map((item) => `${String(item.oid || item.sha1 || '').toLowerCase()}\n`).join('');
+    const input = entriesToSpool.map((item) => `${String(item.oid || item.sha1 || '').toLowerCase()}\n`).join('');
     const result = spawnSync(options.git || 'git', ['--no-lazy-fetch', 'cat-file', '--batch'], {
       cwd: sourceRoot,
       input,
@@ -705,7 +765,7 @@ function exportGitTreeRaw(sourceRoot, sourceSha, destination, inventory, options
   const inputFd = fs.openSync(batchPath, 'r');
   try {
     const reader = batchReader(inputFd);
-    for (const item of entries) {
+    for (const item of entriesToSpool) {
       const relative = normalizeRelativePath(item.path, 'Git tree path');
       const mode = String(item.mode || '100644');
       const header = reader.readLine().split(/\s+/);

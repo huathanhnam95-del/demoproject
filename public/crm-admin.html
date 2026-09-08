@@ -9,7 +9,8 @@
   <link rel="stylesheet" href="/design-tokens.css?v=20260908-v2.0.1">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="fonts/be-vietnam-pro.css">
 
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 http://localhost:8081 http://127.0.0.1:8081 https://localhost:8081 https://127.0.0.1:8081 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
@@ -1178,7 +1179,7 @@
   </div>
 
   <button id="bel-chat-launcher" class="crm-btn-primary" type="button"
-    style="position: fixed; right: 24px; bottom: 24px; z-index: 9999;">BEL Assistant</button>
+    style="position: fixed; right: 24px; bottom: 24px; z-index: 9999;" aria-label="BEL Assistant"><span>BEL</span><span class="crm-assistant-label-detail"> Assistant</span></button>
   <aside id="bel-chat-drawer"
     style="position: fixed; right: 24px; bottom: 80px; width: min(460px, calc(100vw - 32px)); height: min(76vh, 680px); background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.2); z-index: 9999; display: none; overflow: hidden;">
     <div style="display: flex; flex-direction: column; height: 100%;">
@@ -2401,7 +2402,7 @@
           </div>
 
           <!-- Review Board Section -->
-          <div id="classroom-review-board" class="crm-tab-content crm-kanban-board" style="display: none;">
+          <div id="classroom-review-board" class="crm-tab-content crm-kanban-board" tabindex="0" role="region" aria-label="Classroom review board" style="display: none;">
             <!-- Column: Missing (Dynamically calculated based on Due Date) -->
             <div class="kanban-col">
               <h4 class="kanban-col-header missing-col">Missing</h4>

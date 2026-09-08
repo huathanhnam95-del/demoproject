@@ -1,29 +1,15 @@
 'use strict';
 const { createLedgerService } = require('../../ai-assistance/accounting/ledger-service');
-const { centsToNano, reject } = require('../../ai-assistance/accounting/money-pricing');
+const { reject } = require('../../ai-assistance/accounting/money-pricing');
 const { createDataInputBudgetFeatureAdapter } = require('../../ai-assistance/adapters/data-input');
 const { createAccountedGenerationProvider } = require('../../ai-assistance/providers/accounted-generation');
 const { createVoiceSessionService } = require('../../ai-assistance/voice/session-service');
 const { createVoiceConfirmationService } = require('../../ai-assistance/voice/confirmation-service');
 const { createVoiceContextAdapter } = require('./voice-context');
 
-// Existing shared allowance configuration also consumed by CRM Projects.
-// Ledger identity remains UID/month, regardless of these historical names.
+// Compatibility export delegates to the shared resolver; this consumer owns no pool or credit arithmetic.
 function createSharedAllowanceResolver(db) {
-    return async (tx, uid) => {
-        const [override, defaults] = await Promise.all([
-            tx.get(db.collection('crmProjectAllowanceConfigs').doc(uid)),
-            tx.get(db.collection('crmProjectAllowanceDefaults').doc('default'))
-        ]);
-        function configured(snapshot) {
-            if (!snapshot.exists) return null;
-            const value = snapshot.data();
-            if (!value || value.currency !== 'USD') reject('INVALID_ALLOWANCE', 'Allowance currency configuration is invalid.', 409);
-            return centsToNano(value.monthlyAllowanceCents);
-        }
-        const own = configured(override), fallback = configured(defaults);
-        return { allowanceNano: own ?? fallback ?? centsToNano(500) };
-    };
+    return require('../../ai-assistance/accounting/allowance-service').createAllowanceResolver({ db });
 }
 
 /** Explicit server composition; config is never sourced from request fields. */
@@ -42,7 +28,7 @@ function createDataInputAssistance({ db, authorize, now = Date.now, config = {} 
         featureAdapters: { ...config.additionalFeatureAdapters, 'crm-data-input': featureAdapter }, resolveAllowance: createSharedAllowanceResolver(db),
         pricingRegistry: nativeMode ? native.pricingRegistry : engineeringMode ? config.pricingRegistry || [] : [], boundsRegistry: engineeringMode ? config.boundsRegistry || {} : {},
         providerAdapters: nativeMode ? { gemini: native.accountingAdapter } : engineeringMode ? config.providerAdapters || {} : {}, engineeringMode,
-        nativeMode, nativePolicy: native?.policy });
+        nativeMode, nativePolicy: native?.policy, usageQuota: config.usageQuota ?? { enabled: true } });
     const adapter = createVoiceContextAdapter({ db, authorize, authorizeRecord: ({ tx, actorUid }) => authorize({ tx, actorUid }), now });
     const voiceOptions = { db, runTransaction: run => db.runTransaction(run), now, featureAdapters: { 'crm-data-input': adapter }, engineeringMode, nativeMode };
     const sessions = createVoiceSessionService(voiceOptions), confirmationService = createVoiceConfirmationService(voiceOptions);

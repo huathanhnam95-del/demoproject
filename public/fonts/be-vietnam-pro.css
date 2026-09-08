@@ -1,0 +1,51 @@
+/* Full Be Vietnam Pro character coverage, including decomposed Vietnamese marks.
+   Source and license: BeVietnamPro-OFL.txt. No text normalization is required. */
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./BeVietnamPro-Light.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./BeVietnamPro-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./BeVietnamPro-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./BeVietnamPro-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./BeVietnamPro-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./BeVietnamPro-Italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./BeVietnamPro-SemiBoldItalic.woff2') format('woff2');
+}

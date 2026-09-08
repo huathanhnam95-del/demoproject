@@ -17,3 +17,19 @@ test('engineering labels remain unchanged and invalid metadata does not render a
     const bad=fixture({policyMode:'<script>'});await bad.controller.setEligible(true);assert.equal(bad.controller.getState().budget,null);
     assert.throws(()=>f.scope.CrmAiBudget.validateBudget({...f.value,possibleOverage:'true'},'staff1'));
 });
+
+test('data input shared budget panel renders credits and only the server voice estimate', async () => {
+    const value = { schemaVersion: 2, quotaMode: 'usage_credits', timezone: 'Asia/Ho_Chi_Minh',
+        allowanceMicrocredits: '5000000000', usedMicrocredits: '1000000000', reservedMicrocredits: '500000000',
+        legacyCarryMicrocredits: '0', remainingMicrocredits: '3500000000', overdrawnMicrocredits: '0',
+        calibrationVersion: 'crm-ai-usage-v1-2026-09', voiceEstimate: {remainingSeconds: 123,profileVersion:'fixture-v1',basis:'Server estimate for this usage profile.'},
+        equivalence: {currency:'USD',monthlyTargetNano:'5000000000',invoiceCap:false} };
+    const f=fixture(value); await f.controller.setEligible(true);
+    assert.equal(f.controller.getState().budget.schemaVersion,2);
+    assert.equal(f.controller.getState().budget.remainingMicrocredits,'3500000000');
+    assert.ok(f.root.innerHTML.includes('3,500'));
+    assert.ok(f.root.innerHTML.includes('Approx. 2.1 voice minutes'));
+    assert.ok(f.root.innerHTML.includes('not a guaranteed provider invoice cap'));
+    const invalid=fixture({...value,remainingMicrocredits:'3500000001'}); await invalid.controller.setEligible(true);
+    assert.equal(invalid.controller.getState().budget,null);
+});

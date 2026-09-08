@@ -23,7 +23,7 @@ async function setup(options = {}) {
         async delete() { state.deleted++; if (options.cleanupFailure) throw options.cleanupFailure; } };
     const admin = { initializeApp(config, name) { state.config = config; state.appName = name; return app; } };
     if (options.startupFailure) return { f, state, admin };
-    const composition = await composeVoice({ config: { projectId: 'demo-crm-runtime', engineeringMode: true, nativeReady: true, ...options.config }, admin,
+    const composition = await composeVoice({ config: { projectId: 'demo-crm-runtime', usageQuota: { enabled: false }, engineeringMode: true, nativeReady: true, ...options.config }, admin,
         nativeCredentials: options.nativeCredentials, createVoiceProvider: options.createVoiceProvider });
     return { ...f, state, admin, composition, budget: uid => composition.ledger.forFeature('crm-data-input').getBudget(uid) };
 }
@@ -185,7 +185,48 @@ test('shared runtime gives the owned composition the dedicated fixture credentia
         FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9170', CRM_VOICE_ALLOWED_ORIGINS: 'http://127.0.0.1:9270', CRM_VOICE_NATIVE_ENABLED: 'true',
         CRM_VOICE_GEMINI_API_KEY: 'fixture-dedicated', GEMINI_API_KEY: 'fixture-legacy' },
         compose: async options => { assert.equal(options.nativeCredentials.apiKey, 'fixture-dedicated'); composed = true;
-            return composeVoice({ ...options, admin: f.admin, createVoiceProvider: () => Object.assign(() => { throw Error('No dispatch expected'); }, { native: true }) }); },
+            return composeVoice({ ...options, admin: f.admin, createLiveUsageDescriptor: () => { throw Error('No admission expected'); }, createVoiceProvider: () => Object.assign(() => { throw Error('No dispatch expected'); }, { native: true }) }); },
         relayFactory: () => ({ server: new EventEmitter(), async close() {} }) });
     assert.equal(composed, true); await runtime.close(); assert.equal(f.state.deleted, 2);
+});
+
+test('native credit runtime requires an injected trusted usage descriptor and forwards only its request', async () => {
+    const assistancePath = require.resolve('../../../functions/src/crm/data-input/assistance-service');
+    const runtimePath = require.resolve('../../../functions/src/crm/data-input/voice-runtime-composition');
+    const savedAssistance = require.cache[assistancePath].exports, savedRuntime = require.cache[runtimePath];
+    const context = { instructions: 'Private composed instruction' }, captured = [];
+    let deleted = 0;
+    const admin = { initializeApp: () => ({ firestore: () => ({}), auth: () => ({}), delete: async () => { deleted++; } }) };
+    const provider = Object.assign(() => assert.fail('No provider calls'), { native: true });
+    try {
+        require.cache[assistancePath].exports = { createDataInputAssistance(options) {
+            captured.push(options.config);
+            return { ledger: {}, sessions: { providerChannel: () => ({ getContext: async () => context }) } };
+        } };
+        delete require.cache[runtimePath];
+        const { composeVoice: compose } = require(runtimePath);
+        const options = { config: { projectId: 'demo-crm-runtime', nativeEnabled: true }, admin, nativeCredentials: { apiKey: 'fixture-key' }, createVoiceProvider: () => provider };
+        await assert.rejects(compose(options), /descriptor/i);
+        const scope = { actorUid: 'staff1', feature: 'crm-data-input', sessionId: 's1', epoch: 1 };
+        const request = { kind: 'live', inputBytes: 819, audioBytes: 3840000, maxOutputTokens: 512 };
+        let descriptorCalls = 0;
+        const composed = await compose({ ...options, createLiveUsageDescriptor: args => {
+            descriptorCalls++; assert.equal(args.scope, scope); assert.equal(args.context, context);
+            return { request, contextText: 'Private composed instruction' };
+        } });
+        try {
+            assert.deepEqual(captured.at(-1).usageQuota, { enabled: true });
+            const admission = await composed.features['crm-data-input'].admission(scope);
+            assert.equal(admission.request, request); assert.equal(descriptorCalls, 1);
+            assert.equal(Object.hasOwn(admission, 'contextText'), false);
+            assert.equal(JSON.stringify(admission).includes('Private composed instruction'), false);
+        } finally { await composed.close(); }
+        const legacy = await compose({ ...options, config: { ...options.config, usageQuota: { enabled: false } } });
+        try { assert.equal((await legacy.features['crm-data-input'].admission(scope)).request.inputBytes, Buffer.byteLength(JSON.stringify(context))); }
+        finally { await legacy.close(); }
+        assert.equal(deleted, 3);
+    } finally {
+        require.cache[assistancePath].exports = savedAssistance;
+        require.cache[runtimePath] = savedRuntime;
+    }
 });

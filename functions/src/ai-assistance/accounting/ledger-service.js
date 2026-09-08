@@ -7,8 +7,21 @@ const { validateNormalizedEvidence } = require('./provider-accounting');
 const snapshotData = snapshot => snapshot?.exists ? snapshot.data() : null;
 const MAX_EVIDENCE = 32;
 const { NATIVE_MODELS } = require('./native-policy');
-function createLedgerService({ db, runTransaction, now = () => new Date(), featureAdapters, resolveAllowance, pricingRegistry = STANDARD_PRICING, boundsRegistry = {}, providerAdapters = {}, engineeringMode = false, nativeMode = false, nativePolicy = null }) {
+const { createUsageQuotaService } = require('./usage-quota-service');
+const { CALIBRATION_VERSION } = require('./usage-credit-policy');
+const { MIGRATION_VERSION } = require('./usage-quota-migration');
+function createLedgerService({ db, runTransaction, now = () => new Date(), featureAdapters, resolveAllowance, pricingRegistry = STANDARD_PRICING, boundsRegistry = {}, providerAdapters = {}, engineeringMode = false, nativeMode = false, nativePolicy = null, usageQuota = null }) {
     if (!db || typeof runTransaction !== 'function' || typeof resolveAllowance !== 'function') throw new Error('Accounting requires database, transaction runner and allowance resolver.');
+    if (usageQuota !== null) { strict(usageQuota, ['enabled']); if (typeof usageQuota.enabled !== 'boolean') reject('INVALID_USAGE_POLICY', 'Explicit quota enablement is required.'); }
+    const quotaEnabled = usageQuota?.enabled === true;
+    const quota = createUsageQuotaService({ db });
+    const quotaGuard = guard => quotaEnabled ? { ...guard, usageQuotaVersion: CALIBRATION_VERSION } : guard;
+    const quotaMoney = (value, enabled = quotaEnabled) => enabled ? { ...value, usageQuotaMigrationVersion: MIGRATION_VERSION } : value;
+    const quotaAllowance = allowance => {
+        const value = allowance.allowanceMicrocredits ?? allowance.allowanceNano;
+        if (validateAllowanceNano(value) !== validateAllowanceNano(allowance.allowanceNano)) reject('INVALID_ALLOWANCE', 'Credit calibration disagrees with the configured allowance.', 409);
+        return value;
+    };
     const features = new Map(Object.entries(featureAdapters || {}).map(([key, adapter]) => {
         text(key, 'feature'); if (typeof adapter.authorize !== 'function' || typeof adapter.normalizeContext !== 'function' || !Array.isArray(adapter.models)) throw new Error('Registered feature requires authority, context normalization and model allowlist.');
         return [key, Object.freeze({ ...adapter, models: Object.freeze([...adapter.models]) })];
@@ -27,6 +40,7 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
     function guardData(value, uid) {
         if (!value) return { uid, unknownCount: 0, estimatedUnknownCount: 0, boundsViolated: false, dispatchedByMonth: {} };
         if (value.uid !== uid || !Number.isSafeInteger(value.unknownCount) || value.unknownCount < 0 || typeof value.boundsViolated !== 'boolean') reject('LEDGER_INTEGRITY', 'Account guard is invalid.', 409);
+        if (value.usageQuotaVersion !== undefined && value.usageQuotaVersion !== CALIBRATION_VERSION) reject('LEDGER_INTEGRITY', 'Unknown quota cutover version.', 409);
         // Older guards count every intent as unknown. Retain that conservative
         // fence when their month map is absent; never infer released obligations.
         const map = value.dispatchedByMonth === undefined ? {} : value.dispatchedByMonth;
@@ -46,7 +60,14 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
         if (value.uid !== uid || value.month !== month || value.currency !== 'USD' || !Number.isSafeInteger(value.revision) || value.revision < 0) reject('LEDGER_INTEGRITY', 'Monthly ledger is invalid.', 409);
         integer(value.settledNano); integer(value.pendingNano); return value;
     }
-    function blockReason(guard, month = vietnamMonth(now()), allowEstimated = nativeAvailable()) { return guard.boundsViolated ? 'BOUNDS_VIOLATED' : guard.unknownCount > 0 && (!allowEstimated || guard.unknownCount !== guard.estimatedUnknownCount) ? 'USAGE_UNKNOWN' : Object.keys(guard.dispatchedByMonth).some(key => key !== month) ? 'PRIOR_MONTH_DISPATCH' : guard.estimatedUnknownCount >= 8 ? 'NATIVE_UNKNOWN_LIMIT' : null; }
+    function blockReason(guard, month = vietnamMonth(now()), allowEstimated = nativeAvailable()) {
+        if (guard.boundsViolated) return 'BOUNDS_VIOLATED';
+        if (quotaEnabled) return null;
+        // Updated legacy writers must honor the per-account cutover. Deployment
+        // must still drain old binaries which do not know this marker.
+        if (guard.usageQuotaVersion) return 'USAGE_QUOTA_CUTOVER';
+        return guard.unknownCount > 0 && (!allowEstimated || guard.unknownCount !== guard.estimatedUnknownCount) ? 'USAGE_UNKNOWN' : Object.keys(guard.dispatchedByMonth).some(key => key !== month) ? 'PRIOR_MONTH_DISPATCH' : guard.estimatedUnknownCount >= 8 ? 'NATIVE_UNKNOWN_LIMIT' : null;
+    }
     function checkedDispatchCounters(reservation, guard) {
         if (reservation.estimatedUnknownCounted !== undefined && typeof reservation.estimatedUnknownCounted !== 'boolean'
             || reservation.estimatedUnknownCounted && (!reservation.unknownCounted || reservation.reservationKind !== 'estimated' || guard.estimatedUnknownCount < 1)
@@ -61,7 +82,7 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
         if (!Number.isSafeInteger(unknownCount)) reject('LEDGER_INTEGRITY', 'Unknown usage counter overflow.', 409);
         return { ...guard, unknownCount, estimatedUnknownCount: guard.estimatedUnknownCount + (!reservation.unknownCounted && reservation.reservationKind === 'estimated' ? 1 : 0) };
     }
-    function receipt(reservation) { return { reservationId: reservation.reservationId, uid: reservation.uid, month: reservation.month, feature: reservation.feature, purpose: reservation.purpose, model: reservation.model, state: reservation.state, maximumNano: reservation.maximumNano, settledNano: reservation.settledNano || '0', pricingVersion: reservation.pricing.versionId, boundsVersion: reservation.boundsVersion, engineeringOnly: reservation.engineeringOnly, reservationKind: reservation.reservationKind || 'proven', reservedNano: reservation.maximumNano, estimatedNano: reservation.reservationKind === 'estimated' ? reservation.maximumNano : null, estimateExceeded: reservation.estimateExceeded === true, costBasis: reservation.costBasis || null, createdAt: reservation.createdAt, updatedAt: reservation.updatedAt }; }
+    function receipt(reservation) { return { reservationId: reservation.reservationId, uid: reservation.uid, month: reservation.month, feature: reservation.feature, purpose: reservation.purpose, model: reservation.model, state: reservation.state, maximumNano: reservation.maximumNano, settledNano: reservation.settledNano || '0', pricingVersion: reservation.pricing.versionId, boundsVersion: reservation.boundsVersion, engineeringOnly: reservation.engineeringOnly, reservationKind: reservation.reservationKind || 'proven', reservedNano: reservation.maximumNano, estimatedNano: reservation.reservationKind === 'estimated' ? reservation.maximumNano : null, estimateExceeded: reservation.estimateExceeded === true, costBasis: reservation.costBasis || null, createdAt: reservation.createdAt, updatedAt: reservation.updatedAt, ...(reservation.quota ? { quota: JSON.parse(JSON.stringify(reservation.quota)) } : {}) }; }
     async function authorize(transaction, name, actorUid, purpose, context, operation) {
         text(actorUid, 'UID'); const adapter = feature(name);
         const authority = await adapter.authorize(transaction, { actorUid, purpose, context, operation });
@@ -97,12 +118,13 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
             const ledger = ledgerData(snapshotData(await transaction.get(ledgerRef(actorUid, month))), actorUid, month);
             const allowance = await resolveAllowance(transaction, actorUid); const allowanceNano = validateAllowanceNano(allowance.allowanceNano);
             if (blockReason(guard, month, estimated && nativeAvailable())) reject(blockReason(guard, month, estimated && nativeAvailable()), 'Unresolved billing blocks further admission.', 409);
-            if (integer(ledger.settledNano) + integer(ledger.pendingNano) + integer(maximumNano) > allowanceNano) reject('BUDGET_EXHAUSTED', 'Monthly AI allowance is exhausted.', 409);
+            if (!quotaEnabled && integer(ledger.settledNano) + integer(ledger.pendingNano) + integer(maximumNano) > allowanceNano) reject('BUDGET_EXHAUSTED', 'Monthly AI allowance is exhausted.', 409);
             const dispatchBefore = new Date(Math.min(Date.parse(monthEnd(month)), Date.parse(pricing.expiresAt))).toISOString();
             const reservation = { reservationId, uid: actorUid, month, feature: name, purpose: input.purpose, context, model: input.model, requestDigest, pricing, boundsVersion: input.boundsVersion, maximumQuantities, maximumNano, reservationKind: estimated ? 'estimated' : 'proven', engineeringOnly: !estimated, state: 'reserved', unknownCounted: false, dispatchCounted: false, evidence: [], dispatchBefore, createdAt: date.toISOString(), updatedAt: date.toISOString() };
+            if (quotaEnabled) reservation.quota = await quota.reserve(transaction, { ...reservation, usageRequest: input.request }, ledger, quotaAllowance(allowance));
             transaction.create(document('reservations', reservationId), reservation);
-            transaction.set(ledgerRef(actorUid, month), { ...ledger, pendingNano: (integer(ledger.pendingNano) + integer(maximumNano)).toString(), revision: ledger.revision + 1, updatedAt: timestamp() });
-            transaction.set(accountRef(actorUid), guard); return { ...receipt(reservation), replayed: false };
+            transaction.set(ledgerRef(actorUid, month), { ...quotaMoney(ledger), pendingNano: (integer(ledger.pendingNano) + integer(maximumNano)).toString(), revision: ledger.revision + 1, updatedAt: timestamp() });
+            transaction.set(accountRef(actorUid), quotaGuard(guard)); return { ...receipt(reservation), replayed: false };
         });
     }
     async function authorizeDispatch(name, actorUid, reservationId) {
@@ -120,9 +142,15 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
             const count = (guard.dispatchedByMonth[reservation.month] || 0) + 1;
             if (!Number.isSafeInteger(count)) reject('LEDGER_INTEGRITY', 'Dispatch counter overflow.', 409);
             const token = crypto.randomUUID(); const next = { ...reservation, state: 'dispatch_intent', dispatchToken: token, unknownCounted: false, dispatchCounted: true, updatedAt: timestamp() };
+            if (quotaEnabled) {
+                if (!reservation.quota) reject('USAGE_QUOTA_READMISSION_REQUIRED', 'Cancel the undispatched legacy reservation and admit a bounded usage request.', 409);
+                const money = ledgerData(snapshotData(await transaction.get(ledgerRef(actorUid, reservation.month))), actorUid, reservation.month);
+                const allowance = await resolveAllowance(transaction, actorUid);
+                next.quota = await quota.dispatch(transaction, reservation, money, quotaAllowance(allowance));
+            }
             transaction.set(document('reservations', reservationId), next);
-            transaction.set(accountRef(actorUid), { ...guard, dispatchedByMonth: { ...guard.dispatchedByMonth, [reservation.month]: count } });
-            return { ...receipt(next), replayed: false, sendPermit: { reservationId, token, provider: reservation.pricing.provider, model: reservation.model, engineeringOnly: reservation.engineeringOnly, dispatchIdentity: reservationId } };
+            transaction.set(accountRef(actorUid), { ...quotaGuard(guard), dispatchedByMonth: { ...guard.dispatchedByMonth, [reservation.month]: count } });
+            return { ...receipt(next), replayed: false, sendPermit: { reservationId, token, provider: reservation.pricing.provider, model: reservation.model, engineeringOnly: reservation.engineeringOnly, dispatchIdentity: reservationId, ...(next.quota ? { quota: JSON.parse(JSON.stringify(next.quota)) } : {}) } };
         });
     }
     async function cancelBeforeDispatch(name, actorUid, reservationId) {
@@ -134,8 +162,10 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
             const ledger = ledgerData(snapshotData(await transaction.get(ledgerRef(actorUid, reservation.month))), actorUid, reservation.month); const guard = guardData(snapshotData(await transaction.get(accountRef(actorUid))), actorUid);
             const pending = integer(ledger.pendingNano) - integer(reservation.maximumNano); if (pending < 0n) reject('LEDGER_INTEGRITY', 'Reservation exceeds pending ledger.', 409);
             const next = { ...reservation, state: 'canceled_before_dispatch', updatedAt: timestamp() };
-            transaction.set(document('reservations', reservationId), next); transaction.set(accountRef(actorUid), guard);
-            transaction.set(ledgerRef(actorUid, reservation.month), { ...ledger, pendingNano: pending.toString(), revision: ledger.revision + 1, updatedAt: timestamp() }); return receipt(next);
+            if (reservation.quota) next.quota = await quota.cancel(transaction, reservation, ledger);
+            else if (quotaEnabled || guard.usageQuotaVersion) await quota.reconcileLegacy(transaction, reservation, ledger, '0');
+            transaction.set(document('reservations', reservationId), next); transaction.set(accountRef(actorUid), quotaGuard(guard));
+            transaction.set(ledgerRef(actorUid, reservation.month), { ...quotaMoney(ledger, quotaEnabled || !!guard.usageQuotaVersion), pendingNano: pending.toString(), revision: ledger.revision + 1, updatedAt: timestamp() }); return receipt(next);
         });
     }
     async function markUnknown(reservationId) {
@@ -173,14 +203,15 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
             if (pending < 0n || reservation.unknownCounted && guard.unknownCount < 1) reject('LEDGER_INTEGRITY', 'Pending usage counters are inconsistent.', 409);
             const estimateExceeded = integer(cost) > integer(reservation.maximumNano) || Object.entries(evidence.quantities).some(([key, count]) => integer(count) > integer(reservation.maximumQuantities[key] || '0'));
             const violated = reservation.reservationKind !== 'estimated' && estimateExceeded;
+            if (!reservation.quota && (quotaEnabled || guard.usageQuotaVersion)) await quota.reconcileLegacy(transaction, reservation, ledger, cost);
             next.estimateExceeded = reservation.reservationKind === 'estimated' && estimateExceeded;
             next.costBasis = 'reported_usage_calculation';
             next.state = 'settled'; next.settledNano = cost; next.unknownCounted = false; next.estimatedUnknownCounted = false; next.dispatchCounted = false; next.boundsViolated = violated; next.settledAt = timestamp();
             transaction.set(document('reservations', reservationId), next);
-            transaction.set(ledgerRef(reservation.uid, reservation.month), { ...ledger, pendingNano: pending.toString(), settledNano: (integer(ledger.settledNano) + integer(cost)).toString(), revision: ledger.revision + 1, updatedAt: timestamp() });
+            transaction.set(ledgerRef(reservation.uid, reservation.month), { ...quotaMoney(ledger, quotaEnabled || !!guard.usageQuotaVersion), pendingNano: pending.toString(), settledNano: (integer(ledger.settledNano) + integer(cost)).toString(), revision: ledger.revision + 1, updatedAt: timestamp() });
             const dispatchedByMonth = { ...guard.dispatchedByMonth };
             if (reservation.dispatchCounted) { dispatchedByMonth[reservation.month]--; if (!dispatchedByMonth[reservation.month]) delete dispatchedByMonth[reservation.month]; }
-            transaction.set(accountRef(reservation.uid), { ...guard, dispatchedByMonth, unknownCount: guard.unknownCount - (reservation.unknownCounted ? 1 : 0), estimatedUnknownCount: guard.estimatedUnknownCount - (reservation.estimatedUnknownCounted ? 1 : 0), boundsViolated: guard.boundsViolated || violated }); return { ...receipt(next), boundsViolated: violated, replayed: false };
+            transaction.set(accountRef(reservation.uid), { ...quotaGuard(guard), dispatchedByMonth, unknownCount: guard.unknownCount - (reservation.unknownCounted ? 1 : 0), estimatedUnknownCount: guard.estimatedUnknownCount - (reservation.estimatedUnknownCounted ? 1 : 0), boundsViolated: guard.boundsViolated || violated }); return { ...receipt(next), boundsViolated: violated, replayed: false };
         }); } catch (error) {
             // A malformed trusted report cannot turn an ambiguous dispatch into
             // free allowance. Preserve the original error and durable obligation.
@@ -192,8 +223,26 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
         await authorize(transaction, name, actorUid, null, null, 'read'); const month = vietnamMonth(now());
         const guard = guardData(snapshotData(await transaction.get(accountRef(actorUid))), actorUid); const ledger = ledgerData(snapshotData(await transaction.get(ledgerRef(actorUid, month))), actorUid, month);
         const allowance = await resolveAllowance(transaction, actorUid); const availableNano = (validateAllowanceNano(allowance.allowanceNano) - integer(ledger.settledNano) - integer(ledger.pendingNano)).toString();
-        return { uid: actorUid, month, currency: 'USD', allowanceNano: allowance.allowanceNano, settledNano: ledger.settledNano, pendingNano: ledger.pendingNano, availableNano, blocked: !!blockReason(guard, month), blockReason: blockReason(guard, month), paidDispatchAvailable: nativeAvailable(), policyMode: nativeAvailable() ? 'monitored_target' : 'engineering', possibleOverage: nativeAvailable(), costBasis: 'reported_usage_calculation', targetExceeded: integer(ledger.settledNano) > validateAllowanceNano(allowance.allowanceNano), unknownCount: guard.unknownCount, estimatedUnknownCount: guard.estimatedUnknownCount };
+        const providerAccounting = { uid: actorUid, month, currency: 'USD', allowanceNano: allowance.allowanceNano, settledNano: ledger.settledNano, pendingNano: ledger.pendingNano, availableNano, blocked: !!blockReason(guard, month), blockReason: blockReason(guard, month), paidDispatchAvailable: nativeAvailable(), policyMode: nativeAvailable() ? 'monitored_target' : 'engineering', possibleOverage: nativeAvailable(), costBasis: 'reported_usage_calculation', targetExceeded: integer(ledger.settledNano) > validateAllowanceNano(allowance.allowanceNano), unknownCount: guard.unknownCount, estimatedUnknownCount: guard.estimatedUnknownCount };
+        if (!quotaEnabled) return providerAccounting;
+        const result = await quota.budget(transaction, { uid: actorUid, month, money: ledger, allowance: quotaAllowance(allowance), providerAccounting, blockedReason: blockReason(guard, month) });
+        if (ledger.usageQuotaMigrationVersion !== MIGRATION_VERSION) transaction.set(ledgerRef(actorUid, month), { ...quotaMoney(ledger), revision: ledger.revision + 1, updatedAt: timestamp() });
+        transaction.set(accountRef(actorUid), quotaGuard(guard)); return result;
     }); }
+    async function recordUsage(reservationId, evidence) {
+        if (!quotaEnabled) reject('USAGE_QUOTA_DISABLED', 'Server usage metering is not enabled.', 409);
+        text(reservationId, 'reservation ID');
+        return execute(async transaction => {
+            const reservation = snapshotData(await transaction.get(document('reservations', reservationId)));
+            if (!reservation?.quota) reject('RESERVATION_NOT_FOUND', 'Metered usage reservation not found.', 404);
+            if (!['dispatch_intent', 'usage_unknown', 'settled'].includes(reservation.state)) reject('INVALID_USAGE_STATE', 'Usage must belong to dispatched work.', 409);
+            const money = ledgerData(snapshotData(await transaction.get(ledgerRef(reservation.uid, reservation.month))), reservation.uid, reservation.month);
+            const result = await quota.record(transaction, reservation, money, evidence);
+            const next = { ...reservation, quota: result.quota };
+            if (!result.replayed) transaction.set(document('reservations', reservationId), next);
+            return { ...receipt(next), replayed: result.replayed };
+        });
+    }
     async function listReservations(name, actorUid, options = {}) {
         strict(options, ['cursor', 'pageSize']); const pageSize = options.pageSize === undefined ? 25 : Number(options.pageSize); if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 50) reject('INVALID_PAGE_SIZE', 'Page size must be 1 through 50.');
         const scope = digest([actorUid, name]); let after = null;
@@ -201,6 +250,6 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
         return execute(async transaction => { await authorize(transaction, name, actorUid, null, null, 'read'); let query = db.collection(AI_ASSISTANCE_COLLECTIONS.reservations).where('uid', '==', actorUid).orderBy('__name__'); if (after) query = query.startAfter(after); const snapshot = await transaction.get(query.limit(pageSize + 1)); const rows = snapshot.docs.slice(0, pageSize); const hasMore = snapshot.docs.length > pageSize; return { items: rows.map(row => receipt(row.data())), hasMore, nextCursor: hasMore ? Buffer.from(JSON.stringify({ scope, id: rows[rows.length - 1].id })).toString('base64url') : null }; });
     }
     function forFeature(name) { feature(name); return Object.freeze({ reserve: (uid, input) => reserve(name, uid, input), authorizeDispatch: (uid, id) => authorizeDispatch(name, uid, id), cancelBeforeDispatch: (uid, id) => cancelBeforeDispatch(name, uid, id), getBudget: uid => getBudget(name, uid), listReservations: (uid, options) => listReservations(name, uid, options) }); }
-    return Object.freeze({ forFeature, settle, markUnknown });
+    return Object.freeze({ forFeature, settle, markUnknown, recordUsage });
 }
 module.exports = { createLedgerService, MAX_EVIDENCE };

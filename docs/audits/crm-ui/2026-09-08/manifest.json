@@ -378,5 +378,126 @@
     "fixedFinding": "F-04",
     "unsupportedClaimRemoved": "Persistent individual field association not established by original form-wide validation repro",
     "sourceChainNote": "Prior UI26 application chain preserved; UI27 applied directly to combined candidate"
+  },
+  "ui28FixAll": {
+    "status": "external-tested; integration pending",
+    "baseSha": "813015aea8826e15f0548a3102938694e4002b08",
+    "externalManifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\integration-package\\manifest.json",
+    "externalManifestSha256": "f159597823a4c1249d1375754aa007f48201d633fc2af594d762161ef4cd7b8b",
+    "patchSha256": "8a461192a39d76d16a413887fdfac610ebc23515831f32bc79949ebcf3773d09",
+    "coverageRows": 256,
+    "coverageCounts": {
+      "pass": 201,
+      "finding": 49,
+      "not-applicable": 1,
+      "blocked": 5
+    },
+    "evidence": [
+      {
+        "finding": "F-03",
+        "family": "Typography",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\font-run3\\font-result.json",
+        "sha256": "aa001b97524dff70af275751562534244f86d0390ba7f83e4d67deddc6f65595",
+        "conclusion": "PASS; baseline fallback reproduced; exact custom PostScript face and unchanged NFD text at390/1440"
+      },
+      {
+        "finding": "F-01",
+        "family": "Course/Classroom",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\modal-candidate2\\run-result.json",
+        "sha256": "752937c7781113891d8cde7681101ca34a27ad78fc8ae92983864fb984b978c9",
+        "conclusion": "PASS;360/390/768/1440 actual openers/tabs/drafts/Cancel; bounded Review Board keyboard scroll"
+      },
+      {
+        "finding": "READING",
+        "family": "Reading",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\reading-candidate1\\reading-content-mobile-result.json",
+        "sha256": "225a9f8b18051e9fd27534983bbcf9680085aa1a697738a5b9a9b3d8e9ef658f",
+        "conclusion": "PASS; four families390/768; predates additive top scroll padding"
+      },
+      {
+        "finding": "READING",
+        "family": "Reading desktop",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\reading-candidate2\\reading-content-mobile-result.json",
+        "sha256": "43b74488d5354db85e7e7839c01ea29e2e33a9e996b5f4602ebdce0041eba532",
+        "conclusion": "Desktop four families pass; original360DD header failure RETAINED; superseded at360 by candidate3"
+      },
+      {
+        "finding": "READING",
+        "family": "Reading360",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\reading-candidate3\\reading-content-mobile-result.json",
+        "sha256": "bbf0abedee519dffad82c9761d9c9510add2951313d6ab36b5dcb380adea4331",
+        "conclusion": "PASS; final HTML four families360"
+      },
+      {
+        "finding": "F-16",
+        "family": "SST390",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\sst-candidate2.log",
+        "sha256": "434f1bf81af31d8c333e859594c221ab54ccbfe0ac0d4511963730271b7d353d",
+        "conclusion": "PASS; four strict Retry owns:true; real MP3 Range; synthetic scoring; predates top padding"
+      },
+      {
+        "finding": "F-16",
+        "family": "SST360",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\sst-candidate360.log",
+        "sha256": "d123e101cf92f7ad1696f1a11eb96969edfb107f82aeb4583b59c66d5c6729ff",
+        "conclusion": "PASS; final HTML four strict Retry owns:true"
+      },
+      {
+        "finding": "F-13",
+        "family": "Agents390",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\agents-candidate1\\open204-shared-controls.json",
+        "sha256": "53755c67fe8a576f1e5e9dd6dd5877f54e4235adca6893e0ed9a3c89e41a80ff",
+        "conclusion": "PASS; actual center click adds0to1"
+      },
+      {
+        "finding": "F-13",
+        "family": "Agents360/1440",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\agents-candidate2\\open204-shared-controls.json",
+        "sha256": "d979ea17c680c3604605fd716cd8dfa0f39dd51669240487a970d44f57dbdd8b",
+        "conclusion": "Targeted PASS; both actual centers own and add0to1; raw aggregate pass-with-findings: generic sample y800.59 outside800pxviewport returns null"
+      },
+      {
+        "finding": "ENTRANCE",
+        "family": "Entrance",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\entrance-candidate1\\run-20260908T222105Z\\entrance-result-audit.json",
+        "sha256": "dcb7dd5690bccdc3e32fdf54fa898f941fc89af3530117e31099a6efca8cd9a9",
+        "conclusion": "PASS;12cases populated/empty/error at360/390/768/1440; initial Back visible"
+      },
+      {
+        "finding": "F-12",
+        "family": "Teaching",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\teaching-candidate1\\teaching-result.json",
+        "sha256": "25fe32fcb62c08ffe7f0a4760438fa10f24cae122298347d0427413199e7100b",
+        "conclusion": "PASS; native audio and actual four tab navigation at360/390/768/844/1440; synthetic session entry"
+      },
+      {
+        "finding": "F-10",
+        "family": "Identity",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\identity-candidate1\\f04-result.json",
+        "sha256": "39948562f6b83293220734ecdc9edda630394373e5b17f2d57468eab3843d109",
+        "conclusion": "PASS; six empty/error/retry cases at390/1440; mocked auth/storage"
+      },
+      {
+        "finding": "TEST-STALE-04",
+        "family": "Books fixture",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\stale-test-proposal\\validation\\run1\\books\\execution-receipt.json",
+        "sha256": "0c70637814b011259a56b99cc0438d91e3a99e7a12bd15e040b5f20b9e12d9d6",
+        "conclusion": "PASS; repaired stale expectation, OCR-v2 retained"
+      },
+      {
+        "finding": "TEST-STALE-06",
+        "family": "Courses fixture",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\stale-test-proposal\\validation\\student-courses-run2\\execution-receipt.json",
+        "sha256": "d01ef8594cf05aa90a679b76c7a3dbd8514b8369b5f39b4bce8b62255b4b881d",
+        "conclusion": "PASS; repaired canonical push-forward mock; original assertions retained"
+      }
+    ],
+    "limitations": [
+      "Chrome152 fixture checks are not native provider, physical device or production persistence proof",
+      "Reading390/768/1440 and SST390 predate final additive header padding; final360 reading/SST exercised final HTML",
+      "Agents raw generic inventory finding retained; sampled center outsideviewport; actual strict AddCourse passes",
+      "Failed UTF8/font-family/serving/CRLF adapters and original360DD failure retained",
+      "Scheduler focused Node suite passed earlier this turn; no preserved standalone raw stdout receipt; no new scheduler source patch"
+    ]
   }
 }

@@ -33,7 +33,11 @@ test('current-user budget routes enforce authentication, staff access and bounde
     const server = http.createServer(app); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     async function request(route, uid = 'staff') { const r = await fetch(`http://127.0.0.1:${server.address().port}/api/projects${route}`, { headers: uid ? { Authorization: `Bearer ${uid}` } : {} }); return { status: r.status, body: await r.json(), cache: r.headers.get('cache-control') }; }
     try {
-        const valid = await request('/budget'); assert.equal(valid.status, 200); assert.equal(valid.body.budget.uid, 'staff'); assert.equal(valid.body.budget.allowanceNano, '5000000000'); assert.equal(valid.body.budget.paidDispatchAvailable, false); assert.equal(valid.cache, 'no-store');
+        const valid = await request('/budget'); assert.equal(valid.status, 200); assert.equal(valid.body.budget.uid, 'staff');
+        assert.equal(valid.body.budget.schemaVersion, 2); assert.equal(valid.body.budget.quotaMode, 'usage_credits');
+        assert.equal(valid.body.budget.allowanceMicrocredits, '5000000000'); assert.equal(valid.body.budget.remainingMicrocredits, '5000000000');
+        assert.equal(valid.body.budget.providerAccounting.allowanceNano, '5000000000'); assert.equal(valid.body.budget.equivalence.invoiceCap, false);
+        assert.equal(valid.body.budget.paidDispatchAvailable, false); assert.equal(valid.cache, 'no-store');
         assert.equal((await request('/budget', '')).status, 401);
         for (const uid of ['student', 'revoked']) for (const route of ['/budget', '/budget/reservations']) assert.equal((await request(route, uid)).status, 403);
         for (const route of ['/budget?uid=other', '/budget?price=1', '/budget/reservations?uid=other', '/budget/reservations?pageSize=51', '/budget/reservations?pageSize=0', '/budget/reservations?pageSize=1&pageSize=2', '/budget/reservations?pageSize=1.5', '/budget/reservations?cursor=', `/budget/reservations?cursor=${'x'.repeat(1025)}`, '/budget/reservations?cursor=not-a-valid-cursor']) assert.equal((await request(route)).status, 400, route);

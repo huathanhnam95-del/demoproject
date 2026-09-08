@@ -1,9 +1,9 @@
 'use strict';
-const { PROJECT_COLLECTIONS } = require('./access-service');
 const { runTransactionWithClosedRetry } = require('./domain/transaction-retry');
 const { isProjectsFeatureEnabled } = require('./feature-config');
 const { createLedgerService } = require('../../ai-assistance/accounting/ledger-service');
-const { centsToNano, reject, strict, text } = require('../../ai-assistance/accounting/money-pricing');
+const { reject, strict, text } = require('../../ai-assistance/accounting/money-pricing');
+const { createAllowanceResolver } = require('../../ai-assistance/accounting/allowance-service');
 
 const PROJECTS_BUDGET_FEATURE = 'projects';
 const PROJECTS_AI_PURPOSES = Object.freeze({ planning: 'read', task_draft: 'write', task_correction: 'write', automation_draft: 'owner' });
@@ -17,21 +17,7 @@ function assertStaffIdentity(identity) {
     return identity;
 }
 function createProjectsAllowanceResolver({ db }) {
-    return async function resolveAllowance(transaction, uid) {
-        const [overrideSnapshot, defaultSnapshot] = await Promise.all([
-            transaction.get(db.collection(PROJECT_COLLECTIONS.allowance).doc(uid)),
-            transaction.get(db.collection(PROJECT_COLLECTIONS.allowanceDefaults).doc('default'))
-        ]);
-        function configured(snapshot) {
-            if (!snapshot?.exists) return null;
-            const value = snapshot.data();
-            if (!value || value.currency !== 'USD') reject('INVALID_ALLOWANCE', 'Allowance currency configuration is invalid.', 409);
-            // Existing records must not silently fall back when malformed.
-            return centsToNano(value.monthlyAllowanceCents);
-        }
-        const override = configured(overrideSnapshot); const fallback = configured(defaultSnapshot);
-        return { allowanceNano: override ?? fallback ?? centsToNano(500) };
-    };
+    return createAllowanceResolver({ db });
 }
 function createProjectsBudgetFeatureAdapter({ accessService, engineeringModels = [] }) {
     return Object.freeze({
@@ -53,11 +39,11 @@ function createProjectsBudgetFeatureAdapter({ accessService, engineeringModels =
         }
     });
 }
-function createProjectsBudgetService({ db, accessService, now = () => new Date(), ledgerService, additionalFeatureAdapters = {}, pricingRegistry, boundsRegistry, providerAdapters, engineeringMode = false, engineeringModels = [], nativeMode = false, nativePolicy = null }) {
+function createProjectsBudgetService({ db, accessService, now = () => new Date(), ledgerService, additionalFeatureAdapters = {}, pricingRegistry, boundsRegistry, providerAdapters, engineeringMode = false, engineeringModels = [], nativeMode = false, nativePolicy = null, usageQuota = nativeMode ? { enabled: true } : undefined }) {
     const featureAdapter = createProjectsBudgetFeatureAdapter({ accessService, engineeringModels: engineeringMode ? engineeringModels : [] });
     const resolveAllowance = createProjectsAllowanceResolver({ db });
     if (Object.hasOwn(additionalFeatureAdapters, PROJECTS_BUDGET_FEATURE)) reject('FEATURE_REGISTRATION_CONFLICT', 'Projects adapter cannot be replaced.');
-    const ledger = ledgerService || createLedgerService({ db, now, runTransaction: callback => runTransactionWithClosedRetry(db, callback), featureAdapters: { ...additionalFeatureAdapters, [PROJECTS_BUDGET_FEATURE]: featureAdapter }, resolveAllowance, pricingRegistry, boundsRegistry, providerAdapters, engineeringMode, nativeMode, nativePolicy });
+    const ledger = ledgerService || createLedgerService({ db, now, runTransaction: callback => runTransactionWithClosedRetry(db, callback), featureAdapters: { ...additionalFeatureAdapters, [PROJECTS_BUDGET_FEATURE]: featureAdapter }, resolveAllowance, pricingRegistry, boundsRegistry, providerAdapters, engineeringMode, nativeMode, nativePolicy, usageQuota });
     const feature = ledger.forFeature(PROJECTS_BUDGET_FEATURE);
     return Object.freeze({ getBudget: identity => feature.getBudget(identity.uid), listReservations: (identity, options) => feature.listReservations(identity.uid, options), ledger, feature, featureAdapter, resolveAllowance });
 }

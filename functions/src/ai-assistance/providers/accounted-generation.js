@@ -2,6 +2,7 @@
 const crypto = require('node:crypto');
 const { reject, strict, text, digest, deepFreeze } = require('../accounting/money-pricing');
 const { DATA_INPUT_FEATURE } = require('../adapters/data-input');
+const { quotaBounds, assertWithinBounds, usageEvidence } = require('../accounting/usage-meter');
 const MAX_DESCRIPTOR_BYTES = 60000;
 const PROJECTS_PURPOSES = new Set(['planning', 'task_draft', 'task_correction', 'automation_draft']);
 // Only this server bridge can prove that a budget rejection preceded dispatch.
@@ -87,7 +88,9 @@ function createAccountedGenerationProvider({ ledger, engineeringMode = false, en
         }
         const dispatch = await feature.authorizeDispatch(actorUid, reservation.reservationId);
         if (!dispatch.sendPermit) reject('RESPONSE_RECOVERY_REQUIRED', 'This operation already consumed its send permit; trusted response recovery is required.', 409);
-        const permit = dispatch.sendPermit;
+        const quota = dispatch.quota || dispatch.sendPermit.quota || reservation.quota;
+        const permit = quota ? { ...dispatch.sendPermit, quota } : dispatch.sendPermit;
+        const bounds = native ? quotaBounds(quota, 'generation') : null;
         let settled;
         try {
             if (permit.reservationId !== reservation.reservationId || permit.model !== mapping.model ||
@@ -105,6 +108,10 @@ function createAccountedGenerationProvider({ ledger, engineeringMode = false, en
                 // Domain consumers remain responsible for responseSchema
                 // and authorization validation before using this JSON.
                 try { JSON.parse(response.output); } catch (_) { reject('INVALID_OUTPUT', 'Provider output is not valid JSON.', 502); }
+            }
+            if (bounds) {
+                assertWithinBounds(response.metering, bounds);
+                settled = await ledger.recordUsage(reservation.reservationId, usageEvidence({ eventId: 'generation-final', stage: 'generation', counters: response.metering }));
             }
             const accounting = deepFreeze({ ...settled, unresolved: settled.state !== 'settled', policyMode: native ? 'monitored_target' : 'engineering', possibleOverage: native });
             if (onAccounting) await onAccounting(accounting);

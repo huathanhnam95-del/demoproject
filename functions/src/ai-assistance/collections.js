@@ -3,7 +3,10 @@
 const AI_ASSISTANCE_COLLECTIONS = Object.freeze({
     accounts: 'crmAiBudgetAccounts',
     ledgers: 'crmAiBudgetLedgers',
-    reservations: 'crmAiBudgetReservations'
+    reservations: 'crmAiBudgetReservations',
+    usageMonths: 'crmAiUsageMonths',
+    usageReservations: 'crmAiUsageReservations',
+    usageEvents: 'crmAiUsageEvents'
 });
 
 const AI_VOICE_COLLECTIONS = Object.freeze({

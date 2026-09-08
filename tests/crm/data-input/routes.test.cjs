@@ -96,7 +96,10 @@ test('budget route uses authenticated UID and native-off capabilities do not exp
     const capability = (await f.call('get /data-input/capabilities')).data;
     assert.equal(capability.budget, true); assert.equal(capability.voice, false); assert.equal(capability.voiceRelayUrl, null);
     const response = await f.call('get /data-input/budget');
-    assert.equal(response.status, 200); assert.equal(response.data.budget.uid, 'staff-1'); assert.equal(response.data.budget.allowanceNano, '5000000000');
+    assert.equal(response.status, 200); assert.equal(response.data.budget.uid, 'staff-1'); assert.equal(response.data.budget.schemaVersion, 2); assert.equal(response.data.budget.quotaMode, 'usage_credits');
+    assert.equal(response.data.budget.allowanceMicrocredits, '5000000000');
+    assert.equal(response.data.budget.remainingMicrocredits, '5000000000');
+    assert.equal(response.data.budget.equivalence.invoiceCap, false);
     assert.equal(response.data.budget.paidDispatchAvailable, false);
     f.state.user.role = 'student'; assert.equal((await f.call('get /data-input/budget')).status, 403);
 });
@@ -104,7 +107,7 @@ test('budget route uses authenticated UID and native-off capabilities do not exp
 test('voice commit only accepts opaque references under explicit server engineering composition', async () => {
     const off = setup();
     assert.equal((await off.call('post /data-input/conversations/:draftId/commit', { previewId: 'p1', voiceAttestationId: 'a1' }, { draftId: 'd1' })).code, 'VOICE_UNAVAILABLE');
-    const f = setup(null, true, { dataInputAssistanceConfig: { engineeringMode: true, voiceRelayUrl: 'http://127.0.0.1:9271' } });
+    const f = setup(null, true, { dataInputAssistanceConfig: { engineeringMode: true, usageQuota: { enabled: false }, voiceRelayUrl: 'http://127.0.0.1:9271' } });
     assert.equal((await f.call('get /data-input/capabilities')).data.voice, true);
     const created = await f.call('post /data-input/conversations', { requestId: 'voice' }), params = { draftId: created.data.draftId };
     const context = await f.call('post /data-input/conversations/:draftId/voice-context', {}, params);

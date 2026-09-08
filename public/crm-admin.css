@@ -15781,3 +15781,59 @@ body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
     flex: 1 1 180px;
   }
 }
+
+/* Keep the assistant available without covering narrow form actions. */
+@media (max-width: 768px) {
+  #bel-chat-launcher {
+    right: 12px !important;
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+  }
+  #bel-chat-launcher .crm-assistant-label-detail { display: none; }
+}
+
+/* Course and Classroom use the same narrow-screen tab layout as Student. */
+@media (max-width: 768px) {
+  :is(#crm-course-modal, #crm-classroom-modal) { padding: 0; }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-modal-container {
+    width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0;
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-modal-body {
+    min-width: 0; min-height: 0; flex-direction: column;
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-modal-sidebar {
+    width: 100%; min-width: 0; flex: 0 0 auto; flex-direction: row;
+    gap: 2px; overflow-x: auto; overflow-y: hidden; padding: 8px 10px 0;
+    border-right: 0; border-bottom: 1px solid var(--crm-border-light);
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-sidebar-item {
+    flex: 0 0 auto; white-space: nowrap; border-left: 0;
+    border-bottom: 3px solid transparent; padding: 10px 14px;
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-sidebar-item.active {
+    border-bottom-color: var(--crm-primary);
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-modal-content {
+    width: 100%; min-width: 0; min-height: 0; padding: 20px 16px 28px;
+    overflow-x: auto; overflow-y: auto;
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) :is(.crm-form-grid, .crm-workspace-grid) {
+    grid-template-columns: minmax(0, 1fr); min-width: 0;
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) :is(.crm-tab-content, .crm-form-group, .crm-workspace-card) {
+    min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+  }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-inline-fields { flex-wrap: wrap; }
+  :is(#crm-course-modal, #crm-classroom-modal) .crm-inline-fields > .crm-input {
+    flex: 1 1 180px; min-width: 0; max-width: 100%;
+  }
+  #crm-teaching-session-modal .crm-session-viewer-nav {
+    min-width: 0; flex-wrap: wrap; padding-inline: 12px;
+  }
+  #crm-teaching-session-modal .crm-session-tabs-group {
+    min-width: 0; max-width: 100%; flex-wrap: wrap;
+  }
+}

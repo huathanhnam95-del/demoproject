@@ -98,7 +98,7 @@ function createProjectsRouter(rawDeps = {}) {
     const router = express.Router();
     const automationService = deps.automationService || createAutomationRuleService({ db: deps.db, accessService: service, now: deps.now });
     const notificationService = deps.notificationService || createProjectsNotificationService({ db: deps.db, accessService: service, now: deps.now });
-    const budgetService = deps.budgetService || createProjectsBudgetService({ db: deps.db, accessService: service, now: deps.now, ...(native ? { nativeMode: true, nativePolicy: native.policy, pricingRegistry: native.pricingRegistry, providerAdapters: { gemini: native.accountingAdapter } } : {}) });
+    const budgetService = deps.budgetService || createProjectsBudgetService({ db: deps.db, accessService: service, now: deps.now, usageQuota: deps.usageQuota ?? { enabled: true }, ...(native ? { nativeMode: true, nativePolicy: native.policy, pricingRegistry: native.pricingRegistry, providerAdapters: { gemini: native.accountingAdapter } } : {}) });
     let proposalService = deps.proposalService;
     function proposals() {
         if (!proposalService) proposalService = createProjectsProposalService({ db: deps.db, accessService: service, draftService,

@@ -14,7 +14,7 @@ function setup(config = {}) {
         f.rows.clear(); for (const [key, value] of current.rows) f.rows.set(key, value);
         return result;
     };
-    const service = createDataInputAssistance({ db: f.db, authorize: async ({ actorUid }) => state.allowed && actorUid === 'staff1', now: () => Date.UTC(2026, 8, 30, 17), config });
+    const service = createDataInputAssistance({ db: f.db, authorize: async ({ actorUid }) => state.allowed && actorUid === 'staff1', now: () => Date.UTC(2026, 8, 30, 17), config: { usageQuota: { enabled: false }, ...config } });
     return { ...f, state, service };
 }
 test('data input reads the same UID monthly allowance configuration with a five dollar ceiling', async () => {
@@ -173,4 +173,53 @@ for (const completeUsage of [true, false]) test(`owned PNG descriptor reaches na
     f.state.allowed = false;
     await assert.rejects(f.service.provider.generate({ ...input, operationId: 'denied-image' }), error => error.code === 'ACCOUNT_INELIGIBLE');
     assert.equal(calls.length, 1);
+});
+
+test('shared usage quota defaults on for native composition and schema2 budget passes through unchanged', async () => {
+    const ledgerPath = require.resolve('../../../functions/src/ai-assistance/accounting/ledger-service');
+    const servicePath = require.resolve('../../../functions/src/crm/data-input/assistance-service');
+    const originalLedger = require.cache[ledgerPath].exports, originalService = require.cache[servicePath];
+    const budget = Object.freeze({ schemaVersion: 2, uid: 'staff1', month: '2026-10', allowanceMicrocredits: '5000000000' });
+    const captured = [];
+    try {
+        require.cache[ledgerPath].exports = { ...originalLedger, createLedgerService(options) {
+            captured.push(options);
+            return { settle() { assert.fail('No settlement'); }, markUnknown() { assert.fail('No dispatch'); }, forFeature(feature) { assert.equal(feature, 'crm-data-input'); return { getBudget: async uid => { assert.equal(uid, 'staff1'); return budget; } }; } };
+        } };
+        delete require.cache[servicePath];
+        const { createDataInputAssistance: compose } = require(servicePath);
+        const native = createNativeGemini({ apiKey: 'fixture-key', fetchImpl: async () => assert.fail('No provider dispatch') });
+        const db = fixture().db;
+        const service = compose({ db, authorize: async () => true, config: { nativeMode: true, native } });
+        assert.deepEqual(captured.at(-1).usageQuota, { enabled: true });
+        assert.equal(await service.getBudget('staff1'), budget);
+        const legacy = { enabled: false };
+        compose({ db, authorize: async () => true, config: { nativeMode: true, native, usageQuota: legacy } });
+        assert.equal(captured.at(-1).usageQuota, legacy);
+        const explicit = { enabled: true };
+        compose({ db, authorize: async () => true, config: { engineeringMode: true, usageQuota: explicit } });
+        assert.equal(captured.at(-1).usageQuota, explicit);
+        compose({ db, authorize: async () => true });
+        assert.equal(captured.at(-1).usageQuota.enabled, true);
+    } finally {
+        require.cache[ledgerPath].exports = originalLedger;
+        require.cache[servicePath] = originalService;
+    }
+});
+
+
+test('credit budget is shared schema2 even when paid dispatch is unavailable', async () => {
+    const f = setup({ usageQuota: { enabled: true } });
+    const value = await f.service.getBudget('staff1');
+    assert.equal(value.schemaVersion, 2); assert.equal(value.quotaMode, 'usage_credits');
+    assert.equal(value.allowanceMicrocredits, '5000000000');
+    assert.equal(value.remainingMicrocredits, '5000000000');
+    assert.equal(value.paidDispatchAvailable, false);
+    assert.equal(value.equivalence.invoiceCap, false);
+    f.rows.set('crmProjectAllowanceDefaults/default', {currency: 'USD', monthlyAllowanceCents: 250});
+    assert.equal((await f.service.getBudget('staff1')).allowanceMicrocredits, '2500000000');
+    f.rows.set('crmProjectAllowanceConfigs/staff1', {currency: 'USD', monthlyAllowanceCents: 0});
+    assert.equal((await f.service.getBudget('staff1')).allowanceMicrocredits, '0');
+    f.state.allowed = false;
+    await assert.rejects(f.service.getBudget('staff1'), error => error.code === 'ACCOUNT_INELIGIBLE');
 });

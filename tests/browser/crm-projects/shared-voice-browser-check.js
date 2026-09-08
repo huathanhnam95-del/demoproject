@@ -11,7 +11,7 @@ const { createVoiceSessionService } = require('../../../functions/src/ai-assista
 const { createRelayServer } = require('../../../services/crm-voice-relay/server');
 const { AI_VOICE_COLLECTIONS: V } = require('../../../functions/src/ai-assistance/collections');
 const ROOT = path.resolve(__dirname, '../../..');
-const EXTERNAL = path.resolve(process.env.CRM_DATA_INPUT_CHECKOUT || 'C:/Cursor AI-data-input-20260907');
+const EXTERNAL = path.resolve(process.env.CRM_DATA_INPUT_CHECKOUT || ROOT);
 const ARTIFACTS = path.join(ROOT, 'test-results/crm-projects/shared-voice-browser');
 const report = { provenance: 'Synthetic engineering provider transcription; native Chrome audio plumbing only', cases: [], relayDiagnostics: [], pageErrors: [], sources: [], screenshots: [], network: [], startedAt: new Date().toISOString() };
 function pcm(samples, rate, frequency) { const bytes = Buffer.alloc(samples * 2); for (let n = 0; n < samples; n++) bytes.writeInt16LE(Math.round(9000 * Math.sin(2 * Math.PI * frequency * n / rate)), n * 2); return bytes; }
@@ -86,12 +86,31 @@ async function main() {
             const rows = await suite.db.collection(V.utterances).where('sessionId', '==', driver.scope.sessionId).get(); const final = rows.docs.map(doc => doc.data()).filter(row => row.state === 'final'); assert.equal(final.length, 1); assert.equal(final[0].text, 'Create a student named Synthetic Lan.'); assert.equal(final[0].attestationId, null);
             report.durableUtterance = { sessionId: driver.scope.sessionId, utteranceId, bytesReceived: driver.utterances.get(utteranceId), state: final[0].state, attestationId: final[0].attestationId }; await shot('final-draft-text');
         });
-        await run('24k assistant audio uses native playback; interrupt stops playback while capture continues', async () => {
+        await run('24k assistant audio uses native playback; mute stops response playback while capture continues', async () => {
             const driver = drivers[0], data = pcm(12000, 24000, 660).toString('base64');
             for (let n = 0; n < 4; n++) driver.emit({ assistant: { parts: [{ audio: { data, sampleRate: 24000 } }] } });
-            await page.waitForFunction(() => nativeVoiceEvidence.starts.length >= 4); const before = driver.chunks.length;
-            await page.getByRole('button', { name: 'Interrupt reply', exact: true }).click(); await until(() => driver.interrupts === 1, 'provider interrupt'); await until(() => driver.chunks.length > before + 2, 'capture continues');
-            const audio = await page.evaluate(() => ({ starts: nativeVoiceEvidence.starts, stops: nativeVoiceEvidence.stops, tracks: nativeVoiceEvidence.tracks.map(t => t.readyState) })); assert.ok(audio.starts.every(e => e.sampleRate === 24000)); assert.ok(audio.stops.length > 0); assert.ok(audio.tracks.includes('live')); report.playback = audio;
+            await page.waitForFunction(() => nativeVoiceEvidence.starts.length >= 4);
+            const before = driver.chunks.length;
+            const beforeStarts = await page.evaluate(() => nativeVoiceEvidence.starts.length);
+            const beforeStops = await page.evaluate(() => nativeVoiceEvidence.stops.length);
+            const reservationBefore = (await suite.db.collection(h.AI_ASSISTANCE_COLLECTIONS.reservations).doc(driver.permit.reservationId).get()).data();
+            assert.ok(reservationBefore, 'mute case must have a durable accounting reservation');
+            await page.getByRole('button', { name: 'Mute response', exact: true }).click();
+            await page.getByRole('button', { name: 'Response muted', exact: true }).waitFor();
+            await until(() => driver.chunks.length > before + 2, 'capture continues after response mute');
+            driver.emit({ assistant: { parts: [{ audio: { data, sampleRate: 24000 } }] } });
+            await page.waitForTimeout(100);
+            const audio = await page.evaluate(() => ({ starts: nativeVoiceEvidence.starts, stops: nativeVoiceEvidence.stops, tracks: nativeVoiceEvidence.tracks.map(t => t.readyState) }));
+            assert.ok(audio.starts.every(e => e.sampleRate === 24000));
+            assert.ok(audio.stops.length > beforeStops, 'mute must stop active response playback');
+            assert.equal(audio.starts.length, beforeStarts, 'late response audio must remain muted');
+            assert.ok(audio.tracks.includes('live'), 'capture must remain live');
+            assert.equal(driver.closed, false, 'mute must not close the provider session');
+            const reservationAfter = (await suite.db.collection(h.AI_ASSISTANCE_COLLECTIONS.reservations).doc(driver.permit.reservationId).get()).data();
+            assert.ok(reservationAfter, 'mute must retain the accounting reservation');
+            assert.equal(reservationAfter.state, reservationBefore.state, 'mute must not transition accounting state');
+            assert.equal(reservationAfter.unknownCounted, false, 'mute must not create an unknown-usage outcome');
+            report.playback = { ...audio, captureChunksBefore: before, captureChunksAfter: driver.chunks.length, accounting: { state: reservationAfter.state, dispatchCounted: reservationAfter.dispatchCounted, unknownCounted: reservationAfter.unknownCounted }, providerCancellationEvidence: { status: 'unmeasured', reason: 'This engineeringMode fixture invokes provider.interrupt for the control frame; nativeMode is required to prove no provider cancellation.' } };
         });
         const clean = async () => page.waitForFunction(() => nativeVoiceEvidence.tracks.every(t => t.readyState === 'ended') && nativeVoiceEvidence.contexts.every(c => c.state === 'closed'));
         const newSession = async () => { await until(() => drivers.every(d => d.closed), 'previous provider cleanup'); await until(async () => (await suite.db.collection(h.AI_ASSISTANCE_COLLECTIONS.reservations).doc(drivers.at(-1).permit.reservationId).get()).data()?.state === 'usage_unknown', 'durable unknown accounting'); assert.equal((await accounting.dataInput.getBudget(uid)).blockReason, 'USAGE_UNKNOWN'); await h.resetBudget(suite, uid); await page.evaluate(uid => { window.testUid = uid; window.panel.refresh(); }, uid); const count = drivers.length; await page.getByRole('button', { name: 'Start voice', exact: true }).click(); await until(() => drivers.length > count && drivers.at(-1).chunks.length >= 3, 'next live session'); return drivers.at(-1); };

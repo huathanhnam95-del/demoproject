@@ -237,7 +237,7 @@ async function main() {
                 try {
                     await open(mp, url, 'viewer'); await filter(mp, 'Phase5'); await selectTask(mp);
                     await mp.locator('#projects-project-select').selectOption(PROJECT);
-                    await mp.locator(`#projects-members-list [data-uid="${c.uids.owner}"]`).waitFor();
+                    await mp.locator(`#projects-members-list .crm-stack-item[data-uid="${c.uids.owner}"]`).waitFor();
                     await mp.route(pattern, async route => {
                         if (handled) return route.continue(); handled = true;
                         const response = await route.fetch(); announce(); await barrier;

@@ -43,3 +43,45 @@ Canonical `settled-all-9bfa6573.json` completed with62/67 commands passing and c
 Test-only checkpoint d1958b5b653c90b4d8b8304f620ac0f4ebbfb47c repaired those assumptions. Custom diagnostic `regression-repairs-d1958b5b.json` passed6/6 commands, including the seed and all five prior failures: board contract6 cases, Phase5Chrome16/16, Phase6Chrome11/11, Phase8persisted8/8 and Phase10Chrome5/5. The custom manifest explicitly does not certify a canonical phase or a new full all-phase pass.
 
 The latest performance report retains strict p95<=20ms wheel/drag and p75<=200ms interaction-to-paint thresholds, actual trusted input, a persisted10000-task/30-column/depth21 fixture,500 expanded tasks, bounded DOM, optimistic write/reload checks and a separate Chrome trace. Aggregate active-frame p95 is16.8ms and interaction-to-paint p75 is50.8ms. Native voice remains unmeasured. These local machine figures are not production latency or field INP.
+
+---
+
+## Superseding Phase 10 evidence and acceptance-status addendum — 2026-09-08
+
+This addendum is appended to the historical Phase 10 audit. It preserves every historical diagnostic and appends the current frozen-candidate status. Where the historical audit says “hard-disabled” or requires “hard-cap evidence,” the superseding policy and evidence wording below controls current reporting.
+
+### Current frozen snapshot
+
+- Snapshot date: 2026-09-08 (Asia/Bangkok).
+- Candidate: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI`, exact `HEAD` `d4b5441a731ce83a48a2d8967a0dcb96855034ad`.
+- Canonical r2 source was `d34accb14d6758d8531423caa5b828948a5af71f`; the exact retry r3 source is the frozen `d4b5441a731ce83a48a2d8967a0dcb96855034ad`.
+- No product code, runtime configuration, deployment target or production data were changed by this addendum.
+
+### Superseding interpretation of budget and native gates
+
+The current authorized budget language is a monitored shared USD 5 per staff account per calendar month across all live-chat services. It is not a provider-invoice hard cap. Bounded admission, reservation, metering, reconciliation and stopping on unknown usage remain required. No-overshoot is an admission and ledger rule; it is not an absolute invoice cap. A campaign estimate or operational ceiling does not authorize dispatch.
+
+The nonpaid wrapper forced native-off flags and missing-provider-credential environment are execution safeguards for that wrapper. They do not establish that the engineering/provider path is permanently hard-disabled. Physical microphone/speaker verification and Vietnamese ASR fidelity remain unverified; native end-of-speech/rendered-audio latency remains unmeasured. Earlier controlled native provider-output evidence does exist in the candidate native decision record (`native-edit-12`, project creation15, rename17, task creation18 and response mute19), but it is not this snapshot native latency campaign or release gate. The historical native-hard-disabled phrasing must be read as a current nonpaid-run safety setting only.
+
+### Current Phase 10 evidence
+
+- The retained performance report is `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\test-results\crm-projects\phase10-performance-browser\report.json`, SHA-256 `94d390e24d2d7329ac1296fe5c0e2d9307eee741fc3506c3f57efe2ed9efd989`.
+- All five declared performance cases passed. The artifact records 455 active frame samples at p95 16.9 ms and 40 trusted interaction samples at p75 48.5 ms. The fixture verified persisted 10,000-task/30-column/depth-21 integrity, expanded 500 logical tasks, retained bounded DOM and captured a separate trace.
+- The report explicitly records native voice as `UNMEASURED`; synthetic relay timings cannot satisfy the native gate. Do not convert the nonpaid browser result into a native latency result or field INP claim.
+
+### Current frozen-candidate acceptance snapshot
+
+- Canonical r2 evidence: 57/77 required tests passed after excluding the runner seed command; its raw report is 58/78 commands including that seed.
+- Exact r3 retry evidence: 12/20 required descriptors passed and 8 failed; its raw report is 13/21 commands including the seed.
+- Honest cross-revision union: 69/77 required tests. Acceptance is unfinished. Connected journey and supplements remain pending.
+- The current r3 report lists these eight unresolved descriptors: `phase1-people-access-browser`, `phase3-board-browser`, `phase4-recovery-persisted`, `phase4-discussions-recovery-browser`, `phase5-views-calendar-links-browser`, `phase6-notifications-browser`, `shared-voice-browser` and `phase9-gemini-relay-browser`. A later repair or rerun must retain this provenance and report new results against the exact successor SHA.
+
+### Release and rollback boundary
+
+This audit addendum authorizes no push, deployment, production mutation, provider call or runtime window. The user owns production release approval; main/coordinator prepares and audits exact-SHA evidence, source/config/routes/secret/target inventory, pending journey/supplement/retry execution and native admission. Preserve historical reports, external copies and failed observations. Any rollback must stop new effects while preserving durable drafts, receipts and usage obligations before restoring a verified prior revision; no rollback occurred in this snapshot.
+
+### Supporting evidence paths
+
+- Canonical r2 report: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\work\final-acceptance\projects-final-d34accb-20260908-r2\canonical\report.json`.
+- Exact r3 retry report: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\work\final-acceptance\projects-final-d4b5441-20260908-r3\retry\report.json`.
+- External plan and native protocol: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\acceptance-plan.md` and `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\latency\README.md`.

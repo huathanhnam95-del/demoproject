@@ -1743,6 +1743,11 @@
       if (!filters.sectionId && board.sections?.length === 1) filters.sectionId = board.sections[0].id;
       return { projectId: board.project?.id || '', view: views.view || 'board', selectedTaskIds: board.selectedTaskIds || [], filters };
     }
+    function projectsAssistantReady() {
+      const board = projectsBoardController?.getSnapshot?.() || {};
+      const actorUid = window.firebase?.auth?.().currentUser?.uid || '';
+      return !!actorUid && board.actorUid === actorUid && board.authorizationReady === true && !!board.project?.id;
+    }
     let projectsAssistantFingerprint = '';
     function syncProjectsAssistantContext(snapshot) {
       const controller = window.projectsAssistantController;
@@ -1762,6 +1767,7 @@
       root: document.getElementById('projects-assistant'), apiFetchJson,
       getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
       getContext: projectsAssistantHints,
+      isProjectReady: projectsAssistantReady,
       onApplied: async result => { if (result?.project?.id && result.project.id !== projectsAssistantHints().projectId) { await projectsAccessController?.refresh?.(); await projectsAccessController?.selectProject?.(result.project.id); } await projectsBoardController?.refresh?.(); if (result?.task) projectsBoardController?.selectTask?.(result.task); await window.projectsViewsController?.refresh?.(); },
       onUsageChanged: () => window.projectsBudgetController?.refresh?.(),
       onAutomationDraft: definition => window.projectsAutomationsController?.acceptDraft?.({ actorUid: user.uid, projectId: projectsAssistantHints().projectId, definition }, { newAutomation: true })

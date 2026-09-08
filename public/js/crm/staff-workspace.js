@@ -64,6 +64,7 @@ window.CrmStaffWorkspace = (function () {
         const elements = deps.elements || {};
         const showToast = typeof deps.showToast === 'function' ? deps.showToast : null;
         const apiFetchJson = typeof deps.apiFetchJson === 'function' ? deps.apiFetchJson : null;
+        const onAccountsRendered = typeof deps.onAccountsRendered === 'function' ? deps.onAccountsRendered : null;
         const escape = typeof deps.escapeHtml === 'function' ? deps.escapeHtml : escapeHtml;
         const getCurrentUser = typeof deps.getCurrentUser === 'function'
             ? deps.getCurrentUser
@@ -256,7 +257,7 @@ window.CrmStaffWorkspace = (function () {
                     </thead>
                     <tbody>
                         ${visible.map((acc) => `
-                            <tr${acc.archived ? ' class="crm-account-row-archived"' : ''}>
+                            <tr data-account-uid="${escape(acc.uid)}"${acc.archived ? ' class="crm-account-row-archived"' : ''}>
                                 <td class="crm-account-check-cell">
                                     ${acc.isProtected
                                         ? ''
@@ -309,6 +310,7 @@ window.CrmStaffWorkspace = (function () {
             }
 
             syncBulkActionState();
+            onAccountsRendered?.();
         }
 
         function renderAccountList(accounts, currentUid, bootstrapEmails = ['huathanhnam95@gmail.com']) {

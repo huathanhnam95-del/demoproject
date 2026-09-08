@@ -88,6 +88,83 @@ async function main() {
             await select(['three']); report.selectionSteps.push(await selectionSnapshot());
             assert.equal(await page.locator('[data-action="select-task"]:checked').count(), 3); const before = await page.evaluate(() => window.projectsAssistantController.getState().context.selectedTaskIds); await page.locator('[data-task-id="parent"]').focus(); await page.locator('[data-task-id="parent"]').press('Enter'); await page.locator('#projects-board-detail').waitFor({ state: 'visible' }); assert.deepEqual(await page.evaluate(() => window.projectsAssistantController.getState().context.selectedTaskIds), before); assert.deepEqual(await page.evaluate(() => window.voiceLifecycle), []); await openAssistant(); assert.match(await page.locator('[data-assistant-action="start"]').locator('..').innerText(), /Native paid assistance is unavailable/);
         });
+        await run('board refresh preserves the focused assistant textarea node, caret, and context', async () => {
+            const projectPath = `/api/projects/${encodeURIComponent(c.projectId)}`;
+            const routePattern = `**${projectPath}`;
+            let projectResponseHeld = false;
+            let releaseProjectResponse = () => {};
+            let projectResponseReachedResolve;
+            const projectResponseReached = new Promise(resolve => { projectResponseReachedResolve = resolve; });
+            const projectResponseRelease = new Promise(resolve => { releaseProjectResponse = resolve; });
+            const waitForProjectResponse = async () => {
+                let timeout;
+                try {
+                    await Promise.race([projectResponseReached, new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Timed out waiting for the held project response.')), 10000); })]);
+                } finally { clearTimeout(timeout); }
+            };
+            let routeInstalled = false;
+            const driversBefore = drivers.length;
+            const voiceLifecycleBefore = await page.evaluate(() => [...window.voiceLifecycle]);
+            let priorInstruction = '';
+            try {
+                await page.route(routePattern, async route => {
+                    const request = route.request();
+                    const pathname = new URL(request.url()).pathname;
+                    if (projectResponseHeld || request.method() !== 'GET' || pathname !== projectPath) { await route.continue(); return; }
+                    projectResponseHeld = true;
+                    const response = await route.fetch();
+                    projectResponseReachedResolve();
+                    await projectResponseRelease;
+                    await route.fulfill({ response });
+                });
+                routeInstalled = true;
+                await page.locator('#btn-projects-board-refresh').click();
+                await waitForProjectResponse();
+                await openAssistant();
+                const instruction = page.locator('[data-assistant-instruction]');
+                priorInstruction = await instruction.inputValue();
+                const knownInstruction = 'Keep this exact instruction while the board refresh is pending.';
+                await instruction.fill(knownInstruction);
+                await instruction.focus();
+                await instruction.evaluate(node => node.setSelectionRange(7, 31, 'backward'));
+                const instructionHandle = await instruction.elementHandle();
+                assert.ok(instructionHandle, 'The assistant instruction textarea must have a live element handle');
+                const beforeAssistant = await state();
+                const selectedTaskIds = beforeAssistant.context.selectedTaskIds.slice();
+                const draft = beforeAssistant.draft;
+                const preview = beforeAssistant.preview;
+                assert.deepEqual(await page.evaluate(() => ({
+                    refresh: document.getElementById('btn-projects-board-refresh')?.disabled,
+                    addSection: document.getElementById('btn-projects-board-add-section')?.disabled,
+                    addTask: document.getElementById('btn-projects-board-add-task')?.disabled,
+                    addColumn: document.getElementById('btn-projects-board-add-column')?.disabled,
+                    saveSettings: document.getElementById('btn-projects-board-save-settings')?.disabled
+                })), { refresh: true, addSection: true, addTask: true, addColumn: true, saveSettings: true }, 'Board mutation and refresh controls must be disabled while the project read is held');
+                releaseProjectResponse();
+                await page.waitForFunction(id => {
+                    const refresh = document.getElementById('btn-projects-board-refresh');
+                    const workspace = document.getElementById('projects-board-workspace');
+                    return refresh && !refresh.disabled && workspace && !workspace.hidden
+                        && document.getElementById('projects-board-project-select')?.value === id
+                        && window.projectsAssistantController?.getState()?.context.projectId === id
+                        && window.projectsViewsController?.getState()?.projectId === id;
+                }, c.projectId);
+                assert.equal(await instructionHandle.evaluate(node => node === document.querySelector('[data-assistant-instruction]')), true, 'Refresh must preserve the exact assistant textarea node');
+                assert.equal(await instructionHandle.evaluate(node => document.activeElement === node), true, 'Refresh must preserve assistant textarea focus');
+                assert.deepEqual(await instructionHandle.evaluate(node => ({ value: node.value, selectionStart: node.selectionStart, selectionEnd: node.selectionEnd, selectionDirection: node.selectionDirection })), { value: knownInstruction, selectionStart: 7, selectionEnd: 31, selectionDirection: 'backward' });
+                const afterAssistant = await state();
+                assert.deepEqual(afterAssistant.context.selectedTaskIds, selectedTaskIds, 'Refresh must preserve selected task IDs');
+                assert.deepEqual(afterAssistant.draft, draft, 'Refresh must preserve the current draft');
+                assert.deepEqual(afterAssistant.preview, preview, 'Refresh must preserve the current preview');
+                assert.equal(drivers.length, driversBefore, 'Refresh must not create a voice provider session');
+                assert.deepEqual(await page.evaluate(() => [...window.voiceLifecycle]), voiceLifecycleBefore, 'Refresh must not start microphone/provider lifecycle');
+            } finally {
+                releaseProjectResponse();
+                if (routeInstalled) await page.unroute(routePattern).catch(() => {});
+                const currentInstruction = page.locator('[data-assistant-instruction]');
+                if (await currentInstruction.count()) await currentInstruction.fill(priorInstruction).catch(() => {});
+            }
+        });
         await run('actual final user transcript appends once and records durable provenance without domain effects', async () => {
             const before = await c.taskData('one'); const driver = await start(); const events = await page.evaluate(() => window.voiceLifecycle); assert.ok(events.indexOf('prepared') < events.indexOf('microphone')); assert.ok(Buffer.concat(driver.chunks).some(byte => byte)); await settle(driver);
             driver.emit({ userTranscription: { utteranceId: driver.utteranceId, eventId: 'ordinary-final', text: 'Plan the selected tasks.', final: true } }); await page.waitForFunction(() => document.querySelector('[data-assistant-instruction]').value.includes('Plan the selected tasks.'));
@@ -115,7 +192,7 @@ async function main() {
         await run('focused checked checkbox receives remote title and Editor to Viewer restrictions without focus loss', async () => {
             const context = await browser.newContext({ viewport: { width: 1500, height: 1000 } }), editor = await context.newPage(); try { await login(editor, f.baseUrl, 'editor', c.projectId); const checkbox = editor.locator('[data-task-id="two"] [data-action="select-task"]'); await checkbox.click(); await checkbox.focus(); await c.edit('two', { title: 'Remote title while focused' }); await c.memberRef('editor').update({ role: 'Viewer', revision: 99 }); await editor.evaluate(() => document.getElementById('btn-projects-board-refresh').click()); await until(async () => (await editor.locator('[data-task-id="two"]').innerText()).includes('Remote title while focused'), 'focused row title'); assert.equal(await checkbox.isChecked(), true); assert.equal(await checkbox.evaluate(node => document.activeElement === node), true); assert.equal(await editor.locator('[data-task-id="two"] [data-field-kind="status"]').isDisabled(), true); await editor.screenshot({ path: path.join(OUT, 'focused-viewer.png') }); report.screenshots.push(path.join(OUT, 'focused-viewer.png')); } finally { await c.memberRef('editor').update({ role: 'Editor', revision: 100 }); await context.close(); }
         });
-        report.finalState = await state(); assert.deepEqual(report.errors, [], 'No unexpected browser runtime errors'); assert.equal(report.cases.length, 8); assert.ok(report.workletResponses?.some(row => row.status === 200), 'Actual server delivered the native AudioWorklet module');
+        report.finalState = await state(); assert.deepEqual(report.errors, [], 'No unexpected browser runtime errors'); assert.equal(report.cases.length, 9); assert.ok(report.workletResponses?.some(row => row.status === 200), 'Actual server delivered the native AudioWorklet module');
     } catch (error) { report.setupOrRunError = error.stack; if (page) { report.failureReadiness = await page.evaluate(() => ({ pickerValue: document.getElementById('projects-board-project-select')?.value, accessPending: document.getElementById('btn-projects-access-refresh')?.disabled, boardStatus: document.getElementById('projects-board-status')?.textContent, assistantProjectId: window.projectsAssistantController?.getState()?.context.projectId, viewsProjectId: window.projectsViewsController?.getState()?.projectId })).catch(() => null); await shot('failure').catch(() => {}); } process.exitCode = 1; }
     finally { report.pcm = drivers.map((driver, index) => { const bytes = Buffer.concat(driver.chunks); fs.writeFileSync(path.join(OUT, `received-${index}.pcm`), bytes); return { sessionId: driver.scope.sessionId, bytes: bytes.length, sha256: hash(bytes), chunks: driver.chunks.map(chunk => chunk.length), syntheticProvider: true }; }); if (page && !page.isClosed()) report.lifecycle = await page.evaluate(() => window.voiceLifecycle).catch(() => []); await browser?.close(); await relay?.close(); await f?.close(); report.finishedAt = new Date().toISOString(); save(); }
 }

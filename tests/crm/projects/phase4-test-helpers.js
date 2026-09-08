@@ -342,6 +342,9 @@ function retainedContentSnapshot(snapshot) {
         events: snapshot.events.map((row) => ({ id: row.id, data: stableJson(row.data) }))
     };
     for (const [name, rows] of Object.entries(snapshot.subcollections)) {
+        // Change-feed heads are mutable counters; lifecycle tests assert their
+        // exact deltas separately instead of treating them as retained content.
+        if (name === 'changeHeads') continue;
         normalized.subcollections[name] = rows.map((row) => ({
             id: row.id,
             // Descendants are compared byte-for-byte at the field level. A

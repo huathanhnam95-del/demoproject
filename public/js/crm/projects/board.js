@@ -50,6 +50,7 @@
             : null;
         let bound = false;
         let sharedFilters = {};
+        let filterGeneration = 0;
         let projectEpoch = 0;
         let refreshSequence = 0;
         let activeLoad = null;
@@ -86,14 +87,15 @@
         const draftBases = new Map();
         let remoteObserver = null;
         let busy = false;
+        let authorityPending = true;
         let sectionCreatePending = false;
         let columnEditor = null;
         const settingsDrafts = new Map();
 
         function currentProjectId() { return String(selection.selectedProjectId || '').trim(); }
         function role() { return membership?.role || selection.selectedProject?.role || ''; }
-        function canWrite() { return (project?.lifecycle || 'active') === 'active' && (role() === 'Owner' || role() === 'Editor'); }
-        function canSchema() { return String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && role() === 'Owner'; }
+        function canWrite() { return !authorityPending && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && (role() === 'Owner' || role() === 'Editor'); }
+        function canSchema() { return !authorityPending && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && role() === 'Owner'; }
         function hasProject() { return !!currentProjectId() && !!project; }
         function captureScope() {
             return { uid: deps.getCurrentUser?.()?.uid || '', projectId: currentProjectId(), epoch: projectEpoch, stateToken: stateModel?.beginRefresh() || null };
@@ -214,8 +216,8 @@
             setSelectedTaskIds(selectedTaskIds.includes(taskId) ? selectedTaskIds.filter(id => id !== taskId) : [...selectedTaskIds, taskId]);
         }
         function contextSnapshot() {
-            if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { resetColumnForm(); selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); }
-            return { project, actorUid: controllerActorUid, filterOptionsReady: !!project && !busy, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: new Map(tasks), selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
+            if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { if (project || tasks.size) invalidateAccess(currentProjectId()); resetColumnForm(); selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); }
+            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: new Map(tasks), selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
         }
 
         function setBusy(value) {
@@ -284,7 +286,7 @@
         function invalidateAccess(deniedProjectId, notifyViews = true) {
             if (String(deniedProjectId || '') !== currentProjectId()) return;
             remoteObserver?.stop(); draftBases.clear();
-            projectEpoch++; refreshSequence++;
+            projectEpoch++; refreshSequence++; authorityPending = true;
             stateModel?.switchProject('');
             selection = { projects: selection.projects.filter((entry) => String(entry.id) !== String(deniedProjectId)), selectedProjectId: '', selectedProject: null };
             project = null; membership = null; members = []; sections = []; columns = []; tasks = new Map();
@@ -320,6 +322,7 @@
                 globalScope.CrmProjectsRecovery?.setSelection(null);
                 globalScope.CrmProjectsDiscussion?.setSelection(null);
                 projectEpoch += 1;
+                authorityPending = true;
                 stateModel?.switchProject(nextId);
                 resetSectionForm(); resetColumnForm();
             }
@@ -367,10 +370,10 @@
             setStatus(selection.projects.length ? 'Choose a project to load its tasks.' : 'No project memberships are available.');
         }
 
-        function queryPath(projectId, parentTaskId = null, cursor = null) {
+        function queryPath(projectId, parentTaskId = null, cursor = null, queryFilters = sharedFilters) {
             const filters = parentTaskId
-                ? { ...sharedFilters, parentTaskId, parentScope: 'direct' }
-                : { ...sharedFilters, parentScope: 'root' };
+                ? { ...queryFilters, parentTaskId, parentScope: 'direct' }
+                : { ...queryFilters, parentScope: 'root' };
             const params = new URLSearchParams({ pageSize: '200', filters: JSON.stringify(filters), sort: JSON.stringify({ field: 'rank', direction: 'asc' }) });
             params.set('includeAncestorContext', 'true');
             if (cursor) params.set('cursor', cursor);
@@ -380,8 +383,10 @@
         async function fetchBranch(projectId, parentTaskId = null, loadSequence = refreshSequence, cursor = null) {
             if (!apiFetchJson) return null;
             const key = parentTaskId || '__root__';
-            const response = await apiFetchJson(queryPath(projectId, parentTaskId, cursor));
-            if (loadSequence !== refreshSequence || projectId !== currentProjectId()) return null;
+            const scope = captureScope();
+            const queryGeneration = filterGeneration, queryFilters = { ...sharedFilters };
+            const response = await apiFetchJson(queryPath(projectId, parentTaskId, cursor, queryFilters));
+            if (queryGeneration !== filterGeneration || loadSequence !== refreshSequence || projectId !== currentProjectId() || !scopeIsCurrent(scope) || scope.uid !== controllerActorUid) return null;
             asArray(response?.tasks).forEach((task) => tasks.set(String(task.id), { ...task }));
             if (Array.isArray(response?.sections)) sections = response.sections.slice().sort(rankCompare);
             if (Array.isArray(response?.columns)) columns = response.columns.slice().sort(rankCompare);
@@ -395,15 +400,15 @@
 
         async function loadBranch(parentTaskId = null, { append = false, render = true, fenced = false } = {}) {
             const projectId = currentProjectId();
-            if (!projectId) return false;
+            if (!projectId || busy) return false;
             if (remoteObserver && !fenced) return remoteObserver.snapshot(projectId, () => loadBranch(parentTaskId, { append, render, fenced: true }));
             const loadSequence = refreshSequence;
             const key = parentTaskId || '__root__';
             const cursor = append ? branchCursors.get(key) : null;
             if (append && !cursor) return false;
             try {
-                await fetchBranch(projectId, parentTaskId, loadSequence, cursor);
-                if (loadSequence !== refreshSequence) return false;
+                const response = await fetchBranch(projectId, parentTaskId, loadSequence, cursor);
+                if (!response || loadSequence !== refreshSequence) return false;
                 if (render) renderBoard();
                 return true;
             } catch (error) {
@@ -417,7 +422,8 @@
 
         async function loadAllBranch(parentTaskId = null, { render = true, fenced = false } = {}) {
             const key = parentTaskId || '__root__';
-            const chainKey = JSON.stringify([currentProjectId(), projectEpoch, refreshSequence, key, fenced]);
+            const queryGeneration = filterGeneration;
+            const chainKey = JSON.stringify([currentProjectId(), projectEpoch, refreshSequence, queryGeneration, key, fenced]);
             const existing = branchLoadChains.get(chainKey);
             if (existing) {
                 const result = await existing;
@@ -425,9 +431,9 @@
                 return result;
             }
             const chain = (async () => {
-                if (!await loadBranch(parentTaskId, { render, fenced })) return false;
+                if (!await loadBranch(parentTaskId, { render, fenced }) || queryGeneration !== filterGeneration) return false;
                 while (branchHasMore.get(key) === true) {
-                    if (!await loadBranch(parentTaskId, { append: true, render, fenced })) return false;
+                    if (queryGeneration !== filterGeneration || !await loadBranch(parentTaskId, { append: true, render, fenced }) || queryGeneration !== filterGeneration) return false;
                 }
                 return true;
             })();
@@ -441,14 +447,17 @@
 
         async function loadProject(projectId, options = {}) {
             const normalized = String(projectId || '').trim();
-            if (remoteObserver && !options.fenced) return remoteObserver.snapshot(normalized, () => loadProject(normalized, { ...options, fenced: true }));
+            // Capture filter intent before either observer or active-load queues.
+            const entryFilterGeneration = options.filterGeneration ?? filterGeneration;
+            const requestOptions = { ...options, filterGeneration: entryFilterGeneration, filterSnapshot: { ...(options.filterSnapshot || sharedFilters) } };
+            if (remoteObserver && !options.fenced) return remoteObserver.snapshot(normalized, () => loadProject(normalized, { ...requestOptions, fenced: true }));
             const entryEpoch = projectEpoch;
-            const entryIsCurrent = () => normalized === currentProjectId() && entryEpoch === projectEpoch;
+            const entryIsCurrent = () => normalized === currentProjectId() && entryEpoch === projectEpoch && entryFilterGeneration === filterGeneration;
             if (!normalized || !entryIsCurrent()) return false;
             const prior = activeLoad && activeLoad.projectId === normalized ? activeLoad.promise : null;
             if (prior) await prior;
             if (!entryIsCurrent()) return false;
-            const promise = loadProjectInternal(normalized, { ...options, expectedEpoch: entryEpoch });
+            const promise = loadProjectInternal(normalized, { ...requestOptions, expectedEpoch: entryEpoch });
             const record = { projectId: normalized, promise };
             activeLoad = record;
             try {
@@ -461,125 +470,131 @@
         async function loadProjectInternal(projectId, options = {}) {
             const normalized = String(projectId || '').trim();
             const expectedEpoch = Number.isInteger(options.expectedEpoch) ? options.expectedEpoch : projectEpoch;
-            const loadIsCurrent = () => normalized === currentProjectId() && expectedEpoch === projectEpoch;
+            const actorUid = String(deps.getCurrentUser?.()?.uid || '');
+            const expectedFilterGeneration = options.filterGeneration ?? filterGeneration;
+            const loadFilters = { ...(options.filterSnapshot || sharedFilters) };
+            const loadIsCurrent = () => normalized === currentProjectId() && expectedEpoch === projectEpoch && expectedFilterGeneration === filterGeneration
+                && actorUid === controllerActorUid && actorUid === String(deps.getCurrentUser?.()?.uid || '');
             if (!normalized || !apiFetchJson || !loadIsCurrent()) return false;
             const preserve = options.preserve === true && String(project?.id || '') === normalized;
-            const view = preserve ? snapshotView() : null;
-            const expandedToRestore = preserve ? Array.from(expanded) : [];
-            let preserved = null;
             if (!preserve) {
-                drafts = new Map();
-                settingsDrafts.clear();
-                expanded = new Set();
-                selectedTaskId = '';
-                selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]);
-                focusedRowId = '';
+                drafts = new Map(); settingsDrafts.clear(); expanded = new Set();
+                selectedTaskId = ''; selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); focusedRowId = '';
+                project = null; membership = null; members = []; sections = []; columns = []; tasks = new Map();
+                loadedBranches = new Set(); branchCursors = new Map(); branchHasMore = new Map();
+                boardRevision.structureRevision = 0; boardRevision.schemaRevision = 0;
             }
             const loadSequence = ++refreshSequence;
             if (preserve) {
-                await waitForProjectTaskQueues(normalized, projectEpoch);
+                await waitForProjectTaskQueues(normalized, expectedEpoch);
                 if (loadSequence !== refreshSequence || !loadIsCurrent()) return false;
-                preserved = {
-                    project,
-                    membership,
-                    members: members.slice(),
-                    sections: sections.slice(),
-                    columns: columns.slice(),
-                    tasks: new Map(tasks),
-                    loadedBranches: new Set(loadedBranches),
-                    branchCursors: new Map(branchCursors),
-                    branchHasMore: new Map(branchHasMore),
-                    structureRevision: boardRevision.structureRevision,
-                    schemaRevision: boardRevision.schemaRevision
-                };
             }
             const stateToken = stateModel?.beginRefresh();
+            const current = () => {
+                if (loadSequence === refreshSequence && normalized === currentProjectId() && actorUid !== String(deps.getCurrentUser?.()?.uid || '')) invalidateAccess(normalized);
+                return loadSequence === refreshSequence && loadIsCurrent() && (!stateToken || stateModel.isCurrent(stateToken));
+            };
+            // Retain a selectable read model while a separate fresh snapshot loads.
+            // Cached membership never authorizes writes during or after a failed refresh.
+            authorityPending = true;
             setBusy(true);
-            if (preserve && preserved) {
-                renderBoard();
-                setStatus('Refreshing project board…');
-            } else {
+            if (preserve) { renderBoard(); setStatus('Refreshing project board…'); }
+            else {
                 if (elements.projectsBoardWorkspace) elements.projectsBoardWorkspace.hidden = true;
                 if (elements.projectsBoardEmpty) elements.projectsBoardEmpty.hidden = true;
                 setStatus('Loading project board…');
             }
-            project = null;
-            membership = null;
-            tasks = new Map();
-            sections = [];
-            columns = [];
-            members = [];
-            loadedBranches = new Set();
-            branchCursors = new Map();
-            branchHasMore = new Map();
-            boardRevision.structureRevision = 0;
-            boardRevision.schemaRevision = 0;
             let successMessage = '';
+            let publishView = null;
+            const read = async (url) => {
+                try { return await apiFetchJson(url); }
+                catch (error) {
+                    if (current() && [401, 403, 404].includes(Number(error?.status))) invalidateAccess(normalized);
+                    throw error;
+                }
+            };
             try {
                 const [projectResponse, memberResponse] = await Promise.all([
-                    apiFetchJson(`/api/projects/${encodeURIComponent(normalized)}`),
-                    apiFetchJson(`/api/projects/${encodeURIComponent(normalized)}/member-directory`)
+                    read(`/api/projects/${encodeURIComponent(normalized)}`),
+                    read(`/api/projects/${encodeURIComponent(normalized)}/member-directory`)
                 ]);
-                if (loadSequence !== refreshSequence || !loadIsCurrent() || (stateToken && !stateModel.isCurrent(stateToken))) return false;
-                project = projectResponse?.project || null;
-                membership = projectResponse?.membership || selection.selectedProject || null;
-                members = asArray(memberResponse?.people);
-                globalScope.CrmProjectsRecovery?.setSelection({ projectId: normalized, role: role(), lifecycle: project?.lifecycle || 'active' });
-                boardRevision.structureRevision = Number(project?.structureRevision || 0);
-                boardRevision.schemaRevision = Number(project?.schemaRevision || 0);
-                if ((project?.lifecycle || 'active') !== 'active') {
-                    setSelectedTaskIds([]);
-                    successMessage = `Project is ${project.lifecycle}. Use project records and recovery to restore it.`;
+                if (!current()) return false;
+                const nextProject = projectResponse?.project;
+                const nextMembership = projectResponse?.membership;
+                if (String(nextProject?.id || '') !== normalized || !['Owner', 'Editor', 'Viewer'].includes(nextMembership?.role)) {
+                    invalidateAccess(normalized); return false;
+                }
+                // Publish a downgrade immediately, even while the task GET is held.
+                membership = nextMembership;
+                if ((nextProject.lifecycle || 'active') !== 'active') setSelectedTaskIds([]);
+                const nextTasks = new Map(), nextLoaded = new Set(), nextCursors = new Map(), nextMore = new Map();
+                let nextSections = [], nextColumns = [];
+                let nextStructure = Number(nextProject.structureRevision || 0), nextSchema = Number(nextProject.schemaRevision || 0);
+                const readBranch = async (parentTaskId = null) => {
+                    let cursor = null;
+                    do {
+                        const response = await read(queryPath(normalized, parentTaskId, cursor, loadFilters));
+                        if (!current()) return false;
+                        asArray(response?.tasks).forEach(task => nextTasks.set(String(task.id), { ...task }));
+                        if (Array.isArray(response?.sections)) nextSections = response.sections.slice().sort(rankCompare);
+                        if (Array.isArray(response?.columns)) nextColumns = response.columns.slice().sort(rankCompare);
+                        nextStructure = Number(response?.revision?.structureRevision ?? nextStructure);
+                        nextSchema = Number(response?.revision?.schemaRevision ?? nextSchema);
+                        cursor = response?.nextCursor || null;
+                    } while (cursor);
+                    const key = parentTaskId || '__root__';
+                    nextLoaded.add(key); nextCursors.set(key, null); nextMore.set(key, false);
                     return true;
-                }
-                if (!await loadAllBranch(null, { render: false, fenced: true })) {
-                    if (loadSequence !== refreshSequence || !loadIsCurrent() || (stateToken && !stateModel.isCurrent(stateToken))) return false;
-                    throw new Error('Tasks could not be loaded.');
-                }
-                for (const parentTaskId of expandedToRestore) {
-                    if (loadSequence !== refreshSequence || !loadIsCurrent() || (stateToken && !stateModel.isCurrent(stateToken))) return false;
-                    if (!await loadAllBranch(parentTaskId, { render: false, fenced: true })) {
-                        if (loadSequence !== refreshSequence || !loadIsCurrent() || (stateToken && !stateModel.isCurrent(stateToken))) return false;
-                        throw new Error('A task branch could not be loaded.');
+                };
+                if ((nextProject.lifecycle || 'active') === 'active') {
+                    if (!await readBranch()) return false;
+                    // Consult current expansion so user actions during the refresh survive.
+                    let pendingExpansion = true;
+                    while (pendingExpansion) {
+                        pendingExpansion = false;
+                        for (const id of expanded) {
+                            if (!nextTasks.has(id) || nextLoaded.has(id)) continue;
+                            if (!await readBranch(id)) return false;
+                            pendingExpansion = true;
+                        }
                     }
                 }
-                if (loadSequence !== refreshSequence || !loadIsCurrent() || (stateToken && !stateModel.isCurrent(stateToken))) return false;
+                if (!current()) return false;
+                publishView = preserve ? snapshotView() : null;
+                // An absent task is only known removed when its parent branch was
+                // fully reloaded without filters. Unloaded descendants retain intent.
+                const previousTasks = tasks;
+                const removed = new Set(Object.keys(loadFilters).length ? [] : [...previousTasks]
+                    .filter(([id, task]) => nextLoaded.has(task.parentTaskId || '__root__') && !nextTasks.has(id)).map(([id]) => id));
+                expanded = new Set([...expanded].filter(id => {
+                    const seen = new Set();
+                    for (let ancestor = id; ancestor && !seen.has(ancestor); ancestor = previousTasks.get(ancestor)?.parentTaskId) {
+                        if (removed.has(ancestor)) return false;
+                        seen.add(ancestor);
+                    }
+                    return true;
+                }));
+                project = nextProject; membership = nextMembership; members = asArray(memberResponse?.people);
+                tasks = nextTasks; sections = nextSections; columns = nextColumns;
+                loadedBranches = nextLoaded; branchCursors = nextCursors; branchHasMore = nextMore;
+                boardRevision.structureRevision = nextStructure; boardRevision.schemaRevision = nextSchema;
+                if (!tasks.has(selectedTaskId)) selectedTaskId = '';
+                authorityPending = false;
                 setSelectedTaskIds(selectedTaskIds);
                 authorityRevision += 1;
-                successMessage = `${role() || 'Viewer'} access · ${tasks.size} loaded task${tasks.size === 1 ? '' : 's'}.`;
+                successMessage = (project.lifecycle || 'active') === 'active'
+                    ? `${role()} access · ${tasks.size} loaded task${tasks.size === 1 ? '' : 's'}.`
+                    : `Project is ${project.lifecycle}. Use project records and recovery to restore it.`;
                 return true;
             } catch (error) {
-                if (loadSequence !== refreshSequence || !loadIsCurrent() || (stateToken && !stateModel.isCurrent(stateToken))) return false;
-                if ([401, 403, 404].includes(Number(error?.status))) { invalidateAccess(normalized); return false; }
-                if (preserved) {
-                    project = preserved.project;
-                    membership = preserved.membership;
-                    members = preserved.members;
-                    sections = preserved.sections;
-                    columns = preserved.columns;
-                    tasks = preserved.tasks;
-                    loadedBranches = preserved.loadedBranches;
-                    branchCursors = preserved.branchCursors;
-                    branchHasMore = preserved.branchHasMore;
-                    boardRevision.structureRevision = preserved.structureRevision;
-                    boardRevision.schemaRevision = preserved.schemaRevision;
-                    if (Number(error?.status) === 403) setStatus('This project needs an explicit membership before its board can be opened.', 'error');
-                    else setStatus(error?.message || 'Project board could not be refreshed.', 'error');
-                } else {
-                    project = null;
-                    membership = null;
-                    if (Number(error?.status) === 403) setStatus('This project needs an explicit membership before its board can be opened.', 'error');
-                    else setStatus(error?.message || 'Project board could not be loaded.', 'error');
-                    if (elements.projectsBoardWorkspace) elements.projectsBoardWorkspace.hidden = true;
-                }
+                if (!current()) return false;
+                setStatus(error?.message || 'Project board could not be refreshed.', 'error');
                 return false;
             } finally {
-                if (loadSequence === refreshSequence && loadIsCurrent()) {
+                if (current()) {
+                    const view = publishView || (preserve ? snapshotView() : null);
                     setBusy(false);
-                    if (project) {
-                        renderBoard();
-                        restoreView(view);
-                    }
+                    if (project) { renderBoard(); restoreView(view); }
                     if (successMessage) setStatus(successMessage);
                 }
             }
@@ -971,6 +986,7 @@
             let lastError = null;
             while (attempt <= retries) {
                 try {
+                    if ((authorityPending && path !== '/api/projects') || String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) throw new Error('Refresh project access before making changes.');
                     return await apiFetchJson(path, { method: options.method || 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
                 } catch (error) {
                     lastError = error;
@@ -1439,13 +1455,35 @@
             return moveTask(task.id, { parentTaskId: parentId, sectionId: parentId ? null : (task.effectiveSectionId || task.sectionId), index: nextIndex });
         }
 
-        function toggleTask(taskId) {
+        async function toggleTask(taskId) {
             const id = String(taskId || '');
             if (!id) return;
             if (expanded.has(id)) { expanded.delete(id); renderBoard(); return; }
             expanded.add(id);
             renderBoard();
-            if (!loadedBranches.has(id)) loadAllBranch(id);
+            const scope = captureScope(), sequence = refreshSequence;
+            const current = () => scopeIsCurrent(scope) && sequence === refreshSequence && !busy;
+            if (!loadedBranches.has(id) && !await loadAllBranch(id)) return;
+            // Reopening a collapsed branch restores only reachable expanded paths.
+            // Descendants behind another collapsed ancestor remain unloaded.
+            let pendingExpansion = true;
+            while (current() && pendingExpansion) {
+                pendingExpansion = false;
+                for (const childId of expanded) {
+                    if (!current()) return;
+                    const child = taskFor(childId);
+                    if (!child || loadedBranches.has(childId)) continue;
+                    let reachable = true;
+                    const seen = new Set();
+                    for (let parentId = child.parentTaskId; parentId && !seen.has(parentId); parentId = taskFor(parentId)?.parentTaskId) {
+                        if (!expanded.has(parentId)) { reachable = false; break; }
+                        seen.add(parentId);
+                    }
+                    if (!reachable) continue;
+                    if (!await loadAllBranch(childId)) return;
+                    pendingExpansion = true;
+                }
+            }
         }
 
         function startExpandHover(taskId) {
@@ -1712,7 +1750,7 @@
         }
         return { init, refresh, setProjects, loadProject, invalidateAccess, setSelectedTaskIds, getSnapshot: contextSnapshot,
             attachRemoteObserver(observer) { remoteObserver = observer; }, applyRemote,
-            setFilters: (filters) => { sharedFilters = { ...filters }; return refresh(); },
+            setFilters: (filters) => { sharedFilters = { ...filters }; filterGeneration++; if (currentProjectId()) { authorityPending = true; setBusy(true); } return refresh(); },
             selectTask: (task) => { if (!task?.id || !hasProject()) return; tasks.set(String(task.id), task); asArray(task.pathIds).filter((id) => id !== task.id).forEach((id) => expanded.add(String(id))); selectedTaskId = String(task.id); renderDetail(); renderVirtualRows(); },
             getState: contextSnapshot };
     }

@@ -3,12 +3,15 @@
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const stable = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
     const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
-    function createController({ root, apiFetchJson, getCurrentUser, getContext, onApplied = () => {}, onUsageChanged = () => {}, onAutomationDraft = () => {}, transportFactory } = {}) {
+    function createController({ root, apiFetchJson, getCurrentUser, getContext, isProjectReady = () => true, onApplied = () => {}, onUsageChanged = () => {}, onAutomationDraft = () => {}, transportFactory } = {}) {
         let actor = '', hints = {}, contextKey = '', generation = 0, voiceGeneration = 0, disposed = false, initialized = false, busy = false;
         let instruction = '', answer = '', notices = [], status = '', config = null, draft = null, preview = null, actionId = '', transport = null, prepared = null, abort = null, stream = null, voiceActive = false, voiceFinishing = false;
         let creationMode = false, creationSourceProject = '', responseAudioMuted = false;
         const effectiveContext = () => creationMode && (getContext()?.projectId || '') === creationSourceProject ? { mode: 'create_project' } : (getContext() || {});
         const hasContext = () => !!hints.projectId || hints.mode === 'create_project';
+        // Readiness is deliberately separate from context identity and voice lifetime.
+        const actionReady = () => !!actor && actor === uid() && (hints.mode === 'create_project' || (!!hints.projectId && isProjectReady() === true));
+        let renderedReady = null;
         const transcripts = new Set(), proofs = new Set();
         const uid = () => getCurrentUser()?.uid || '';
         function refreshUsage(owner) { if (!disposed && owner && owner === actor && owner === uid()) { try { Promise.resolve(onUsageChanged()).catch(() => {}); } catch (_) { /* Usage refresh must not interrupt assistance. */ } } }
@@ -37,9 +40,22 @@
         function invalidatePreview() { generation++; preview = null; busy = false; void stopVoice(); status = 'Project data changed. Create a fresh preview before confirming.'; render(); }
         function render() {
             if (disposed) return;
+            renderedReady = actionReady();
             const expanded = root.querySelector?.('details')?.open ?? false;
             const actions = draft?.actions || [];
-            root.innerHTML = `<details ${expanded ? 'open' : ''}><summary>Project assistance</summary><button type="button" data-assistant-action="creation" ${busy || !actor ? 'disabled' : ''}>${creationMode ? 'Use current project' : 'Create a new project'}</button><p>${escape((hints.selectedTaskIds || []).length)} selected tasks · ${escape(hints.view || 'board')} view</p><p>${config?.nativePaidAvailable ? 'Voice assistance is available. Usage is monitored against your monthly target; some costs may remain provisional.' : config?.engineeringOnly ? 'Engineering voice test. Native paid assistance is unavailable.' : 'Native paid assistance is unavailable.'}</p><label>Instructions<textarea data-assistant-instruction maxlength="8000">${escape(instruction)}</textarea></label><div>${[['plan', 'Plan'], ['draft', 'Draft changes'], ['automation', 'Propose automation']].map(([key, label]) => `<button type="button" data-assistant-action="${key}" ${busy || !actor || !hasContext() ? 'disabled' : ''}>${label}</button>`).join('')}</div><p role="status" aria-live="polite">${escape(status)}</p><p data-assistant-answer>${escape(answer)}</p><ul>${notices.map(note => `<li>${escape(note)}</li>`).join('')}</ul>${draft ? `<h4>Current draft · revision ${escape(draft.revision)}</h4><ol>${actions.map(action => `<li>${escape(describe(action))}</li>`).join('')}</ol>${draft.status === 'committed' ? '<p>This draft has been committed.</p>' : `<label>Action to correct<select data-assistant-correction>${actions.map(action => `<option value="${escape(action.actionId)}" ${action.actionId === actionId ? 'selected' : ''}>${escape(describe(action))}</option>`).join('')}</select></label><button type="button" data-assistant-action="correct" ${busy ? 'disabled' : ''}>Request correction</button><button type="button" data-assistant-action="preview" ${busy ? 'disabled' : ''}>Preview changes</button><button type="button" data-assistant-action="decline" ${busy ? 'disabled' : ''}>Decline draft</button>`}` : ''}<button type="button" data-assistant-action="restore" ${busy ? 'disabled' : ''}>Restore saved draft</button>${preview ? `<h4>Visible preview</h4><ol>${(preview.actions || actions).map(action => `<li>${escape(describe(action))}</li>`).join('')}</ol><p>${escape(impactText(preview.impact))}</p><p>Review these changes. Confirm this preview by speaking when voice is connected.</p>` : ''}<button type="button" data-assistant-action="start" ${voiceActive || !config?.voiceAvailable || !actor ? 'disabled' : ''}>Start voice</button><button type="button" data-assistant-action="finish" ${!voiceActive || voiceFinishing ? 'disabled' : ''}>Finish speaking</button><button type="button" data-assistant-action="stop">Stop voice</button><button type="button" data-assistant-action="interrupt" ${!voiceActive || responseAudioMuted ? 'disabled' : ''}>Mute response</button></details>`;
+            root.innerHTML = `<details ${expanded ? 'open' : ''}><summary>Project assistance</summary><button type="button" data-assistant-action="creation" ${busy || !actor ? 'disabled' : ''}>${creationMode ? 'Use current project' : 'Create a new project'}</button><p>${escape((hints.selectedTaskIds || []).length)} selected tasks · ${escape(hints.view || 'board')} view</p><p>${config?.nativePaidAvailable ? 'Voice assistance is available. Usage is monitored against your monthly target; some costs may remain provisional.' : config?.engineeringOnly ? 'Engineering voice test. Native paid assistance is unavailable.' : 'Native paid assistance is unavailable.'}</p><label>Instructions<textarea data-assistant-instruction maxlength="8000">${escape(instruction)}</textarea></label><div>${[['plan', 'Plan'], ['draft', 'Draft changes'], ['automation', 'Propose automation']].map(([key, label]) => `<button type="button" data-assistant-action="${key}" ${busy || !actor || !hasContext() || !renderedReady ? 'disabled' : ''}>${label}</button>`).join('')}</div><p role="status" aria-live="polite">${escape(status)}</p><p data-assistant-answer>${escape(answer)}</p><ul>${notices.map(note => `<li>${escape(note)}</li>`).join('')}</ul>${draft ? `<h4>Current draft · revision ${escape(draft.revision)}</h4><ol>${actions.map(action => `<li>${escape(describe(action))}</li>`).join('')}</ol>${draft.status === 'committed' ? '<p>This draft has been committed.</p>' : `<label>Action to correct<select data-assistant-correction>${actions.map(action => `<option value="${escape(action.actionId)}" ${action.actionId === actionId ? 'selected' : ''}>${escape(describe(action))}</option>`).join('')}</select></label><button type="button" data-assistant-action="correct" ${busy || !renderedReady ? 'disabled' : ''}>Request correction</button><button type="button" data-assistant-action="preview" ${busy || !renderedReady ? 'disabled' : ''}>Preview changes</button><button type="button" data-assistant-action="decline" ${busy || !renderedReady ? 'disabled' : ''}>Decline draft</button>`}` : ''}<button type="button" data-assistant-action="restore" ${busy || !renderedReady ? 'disabled' : ''}>Restore saved draft</button>${preview ? `<h4>Visible preview</h4><ol>${(preview.actions || actions).map(action => `<li>${escape(describe(action))}</li>`).join('')}</ol><p>${escape(impactText(preview.impact))}</p><p>Review these changes. Confirm this preview by speaking when voice is connected.</p>` : ''}<button type="button" data-assistant-action="start" ${busy || voiceActive || !config?.voiceAvailable || !actor || !renderedReady ? 'disabled' : ''}>Start voice</button><button type="button" data-assistant-action="finish" ${!voiceActive || voiceFinishing ? 'disabled' : ''}>Finish speaking</button><button type="button" data-assistant-action="stop">Stop voice</button><button type="button" data-assistant-action="interrupt" ${!voiceActive || responseAudioMuted ? 'disabled' : ''}>Mute response</button></details>`;
+        }
+        function syncReadinessControls() {
+            renderedReady = actionReady();
+            // Keep the mounted instruction editor, focus and caret untouched.
+            const gated = new Set(['plan', 'draft', 'automation', 'correct', 'preview', 'decline', 'restore', 'start']);
+            for (const button of root.querySelectorAll?.('[data-assistant-action]') || []) {
+                const action = button.dataset.assistantAction;
+                if (!gated.has(action)) continue;
+                button.disabled = action === 'start'
+                    ? busy || voiceActive || !config?.voiceAvailable || !actor || !renderedReady
+                    : busy || !actor || !hasContext() || !renderedReady;
+            }
         }
         async function stopVoice() {
             const owner = actor;
@@ -56,7 +72,7 @@
         function setContext(value = getContext() || {}) {
             if (creationMode && (value.projectId || '') !== creationSourceProject) creationMode = false;
             if (creationMode) value = { mode: 'create_project' };
-            syncIdentity(); const key = stable(value); if (key === contextKey) return;
+            syncIdentity(); const key = stable(value); if (key === contextKey) { if (renderedReady !== actionReady()) syncReadinessControls(); return; }
             const changedProject = hints.projectId !== value.projectId || hints.mode !== value.mode;
             generation++; hints = clone(value); contextKey = key; preview = null; busy = false; answer = '';
             if (changedProject) { draft = null; actionId = ''; void stopVoice(); }
@@ -64,9 +80,9 @@
             status = 'Context updated. Create a fresh preview before confirming changes.'; render();
         }
         async function perform(work, retireVoice = true) {
-            syncIdentity(); setContext(); if (!actor || !hasContext() || busy || disposed) return;
+            syncIdentity(); setContext(); if (!actor || !hasContext() || busy || disposed || !actionReady()) return;
             const epoch = generation, owner = actor; busy = true; render();
-            try { if (retireVoice) await stopVoice(); if (current(epoch)) await work(epoch); } catch (_) { if (current(epoch)) { status = 'Assistance is unavailable. Your instructions and saved draft are still available.'; } }
+            try { if (retireVoice) await stopVoice(); if (current(epoch) && actionReady()) await work(epoch); } catch (_) { if (current(epoch)) { status = 'Assistance is unavailable. Your instructions and saved draft are still available.'; } }
             finally { refreshUsage(owner); if (current(epoch)) { busy = false; render(); } }
         }
         const post = (path, body) => apiFetchJson(`/api/projects/ai/${path}`, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
@@ -108,25 +124,29 @@
         }
         async function decline() { return perform(async epoch => { if (!draftId() || draft.status === 'committed') return; const result = await post(`drafts/${encodeURIComponent(draftId())}/decline`, { expectedRevision: draft.revision, requestId: requestId() }); if (!current(epoch)) return; acceptDraft(result.draft || result); status = 'Draft declined. It remains available for recovery.'; }); }
         async function startVoice() {
-            syncIdentity(); setContext(); if (!config?.voiceAvailable || !actor || !hasContext() || disposed || busy) return;
+            syncIdentity(); setContext(); if (!config?.voiceAvailable || !actor || !hasContext() || disposed || busy || !actionReady()) return;
             await stopVoice(); const epoch = generation, voiceEpoch = ++voiceGeneration, owner = actor;
             abort = new globalScope.AbortController();
             try {
                 const factory = transportFactory || globalScope.CrmAiVoiceTransport?.createTransport;
                 transport = factory({ getUid: uid, getIdToken: () => getCurrentUser().getIdToken(), getContext: contextHints, baseUrl: config.relayUrl, workletUrl: '/js/crm/ai-assistance/voice-audio-worklet.js' });
                 const local = transport; prepared = await local.prepare({ actorUid: owner, feature: 'projects', signal: abort.signal });
-                if (!current(epoch) || voiceEpoch !== voiceGeneration) { await local.close(); return; }
+                if (!current(epoch) || voiceEpoch !== voiceGeneration || !actionReady()) { await local.close(); return; }
                 const media = await globalScope.navigator.mediaDevices.getUserMedia({ audio: true });
-                if (!current(epoch) || voiceEpoch !== voiceGeneration) { media.getTracks().forEach(track => track.stop()); await local.close(); return; }
+                if (!current(epoch) || voiceEpoch !== voiceGeneration || !actionReady()) { media.getTracks().forEach(track => track.stop()); await local.close(); return; }
                 stream = media; voiceActive = true;
                 await prepared.connect({ stream: media, onEvent: event => {
                     if (!current(epoch) || voiceEpoch !== voiceGeneration || owner !== uid()) return;
                     if ((event.type === 'transcript' || event.type === 'user_transcription') && event.final === true && typeof event.text === 'string' && typeof event.utteranceId === 'string') {
                         if (!preview && !transcripts.has(event.utteranceId)) {
                             transcripts.add(event.utteranceId); instruction = `${instruction}${instruction ? '\n' : ''}${event.text}`.slice(0, 8000); render();
+                            if (!actionReady()) return;
                             void (async () => { await propose('task_draft'); if (current(epoch) && draft?.status === 'active' && !preview && !busy) await previewDraft(); })();
                         }
                     } else if (event.type === 'confirmation_ready' && preview && draftId() && typeof event.attestationId === 'string' && !proofs.has(event.attestationId)) {
+                        // A proof delivered while authorization is pending is discarded,
+                        // never queued or replayed when the board becomes ready again.
+                        if (!actionReady()) { proofs.add(event.attestationId); status = 'Project access is refreshing. Confirm again after it is ready.'; render(); return; }
                         const visible = preview.previewId, id = draftId(), applyOwner = actor, applyProject = hints.projectId;
                         void perform(async () => {
                             if (preview?.previewId !== visible || draftId() !== id) return;

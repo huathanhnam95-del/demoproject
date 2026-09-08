@@ -19,6 +19,7 @@ const {
 } = require('./phase4-test-helpers');
 const { runAttachmentFaultCases } = require('./phase4-attachment-fault-cases');
 const { PROJECT_COLLECTIONS } = require('../../../functions/src/crm/projects/access-service');
+const { shardFor } = require('../../../functions/src/crm/projects/change-feed-service');
 const { archiveRecords, purgeExpiredRecycleEntries } = require('../../../functions/src/crm/recycle-bin-service');
 const { resolveTaskState } = require('../../../functions/src/crm/projects/domain/hierarchy');
 
@@ -30,6 +31,10 @@ async function taskData(context, taskId) {
     const snapshot = await taskRef(context, taskId).get();
     assert.ok(snapshot.exists, `missing persisted task ${taskId}`);
     return { id: snapshot.id, ...snapshot.data() };
+}
+
+function changeHeadSequences(snapshot) {
+    return new Map((snapshot.subcollections.changeHeads || []).map(({ id, data }) => [id, data.sequence]));
 }
 
 async function main() {
@@ -228,6 +233,14 @@ async function main() {
         expectStatus(archiveSection, 200, 'archive standalone section before parent');
         const baseline = await snapshotProject(context, { includeOperations: false });
         const baselineRetained = retainedContentSnapshot(baseline);
+        const baselineHeads = changeHeadSequences(baseline);
+        const archiveHeadId = String(shardFor('phase4-persisted-project-archive'));
+        const restoreHeadId = String(shardFor('phase4-persisted-project-restore'));
+        for (const [headId, sequence] of baselineHeads) {
+            assert.ok(Number.isSafeInteger(sequence) && sequence >= 0, `baseline change head ${headId} must have a non-negative safe-integer sequence.`);
+        }
+        const baselineArchiveSequence = baselineHeads.get(archiveHeadId) ?? 0;
+        const baselineRestoreSequence = baselineHeads.get(restoreHeadId) ?? 0;
         const projectSnapshot = await context.db.collection(PROJECT_COLLECTIONS.projects).doc(context.projectId).get();
         const projectData = projectSnapshot.data();
         const archiveProject = await jsonRequest(context.server, `/api/projects/${context.projectId}/archive`, ownerToken, 'POST', {
@@ -236,6 +249,10 @@ async function main() {
         });
         expectStatus(archiveProject, 200, 'archive project subtree');
         const archived = await snapshotProject(context, { includeOperations: false });
+        const archivedHeads = changeHeadSequences(archived);
+        const expectedArchivedHeads = new Map(baselineHeads);
+        expectedArchivedHeads.set(archiveHeadId, baselineArchiveSequence + 1);
+        assert.deepStrictEqual(archivedHeads, expectedArchivedHeads, 'successful project archive must advance only its exact feed head by one.');
         assert.strictEqual(archived.project.data.lifecycle, 'archived', 'project archive must persist an archived lifecycle.');
         const archivedTasks = new Map(archived.subcollections.tasks.map((row) => [row.id, row]));
         const archivedSections = new Map((archived.subcollections.sections || []).map((row) => [row.id, row]));
@@ -249,6 +266,9 @@ async function main() {
             expectedStructureRevision: projectData.structureRevision + 1, restoreChain: true
         });
         assert.strictEqual(viewerRestore.status, 403);
+        const afterDeniedRestore = await snapshotProject(context, { includeOperations: false });
+        const afterDeniedRestoreHeads = changeHeadSequences(afterDeniedRestore);
+        assert.deepStrictEqual(afterDeniedRestoreHeads, archivedHeads, 'denied restore must not advance any feed head.');
         const restoreProject = await jsonRequest(context.server, `/api/projects/${context.projectId}/restore`, ownerToken, 'POST', {
             operationId: 'phase4-persisted-project-restore', expectedRevision: projectData.revision + 1,
             expectedStructureRevision: projectData.structureRevision + 1, restoreChain: true
@@ -261,6 +281,15 @@ async function main() {
         const reloadedContext = { ...context, app: reloadedApp, db: reloadedApp.firestore() };
         const restored = await snapshotProject(reloadedContext, { includeOperations: false });
         await reloadedApp.delete();
+        const restoredHeads = changeHeadSequences(restored);
+        const archivedRestoreSequence = archivedHeads.get(restoreHeadId) ?? 0;
+        const expectedArchivedRestoreSequence = restoreHeadId === archiveHeadId
+            ? baselineRestoreSequence + 1
+            : baselineRestoreSequence;
+        assert.strictEqual(archivedRestoreSequence, expectedArchivedRestoreSequence, 'archive must advance the restore head only when both operations share a shard.');
+        const expectedRestoredHeads = new Map(afterDeniedRestoreHeads);
+        expectedRestoredHeads.set(restoreHeadId, archivedRestoreSequence + 1);
+        assert.deepStrictEqual(restoredHeads, expectedRestoredHeads, 'successful project restore must advance only its exact feed head by one.');
         assert.deepStrictEqual(retainedContentSnapshot(restored), baselineRetained, 'recovery must retain all persisted content across reload-equivalent reads.');
         const restoredProject = await context.db.collection(PROJECT_COLLECTIONS.projects).doc(context.projectId).get();
         assert.strictEqual(restoredProject.data().lifecycle, 'active');
@@ -300,6 +329,8 @@ async function main() {
         assert.strictEqual((await context.db.collection('crmRecycleBin').doc(legacyId).get()).exists, false);
         assert.strictEqual((await context.db.collection('crmLeads').doc(legacyLeadId).get()).exists, false);
         const afterPurge = await snapshotProject(context, { includeOperations: false });
+        const afterPurgeHeads = changeHeadSequences(afterPurge);
+        assert.deepStrictEqual(afterPurgeHeads, restoredHeads, 'legacy purge must leave all project feed heads unchanged.');
         assert.deepStrictEqual(retainedContentSnapshot(afterPurge), retainedContentSnapshot(restored), 'legacy purge must not remove project data or attachment metadata.');
         const postPurgeDownload = await request(context.server, `/api/projects/${context.projectId}/tasks/${leaf.id}/discussion/messages/${messageIds[2].id}/attachments/${attachment.id}/download`, ownerToken);
         expectStatus(postPurgeDownload, 200, 'attachment after legacy purge');

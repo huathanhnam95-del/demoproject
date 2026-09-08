@@ -236,3 +236,57 @@ The user then explicitly resolved scope: staff accounts with CRM access only; no
 ## Autonomous local-readiness goal - September 7, 2026
 
 The user requested autonomous goals for Projects, safeguards and data input while away. Projects owns its goal and `complete-crm-projects-locally` heartbeat; continue the existing roadmap with real Chrome and persisted evidence to local deployment readiness. Inspect active workers/resources before each continuation; never duplicate ownership. No deployment tonight, remote push, production mutation or unauthorized paid call. Keep paid Live disabled without proven bounds and report external prerequisites honestly. Other tasks own their own goals/checkouts; do not resume unrelated work.
+
+---
+
+## Superseding acceptance-policy and evidence addendum — 2026-09-08
+
+This addendum is appended to the historical record above. It supersedes any conflicting acceptance-policy wording in that record while preserving the historical decisions, diagnostics and evidence verbatim. It is a current snapshot, not a rewrite of the original plan.
+
+### Snapshot provenance
+
+- Snapshot date: 2026-09-08 (Asia/Bangkok).
+- Frozen candidate under review: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI`, exact `HEAD` `d4b5441a731ce83a48a2d8967a0dcb96855034ad`.
+- Historical source files copied without changing their content: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\docs\plans\2026-09-07-crm-projects\approved-execution.md` and `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\docs\plans\2026-09-07-crm-projects\phase10-audit.md`.
+- The copies and this addendum are external review artifacts under `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\audit-addenda`. No product code, runtime configuration, deployment target or production record was changed by this addendum.
+
+### Superseding budget and execution policy
+
+- The currently authorized policy is a **monitored shared USD 5 per staff account per calendar month across all live-chat services**. It is monitored, not a provider-invoice hard cap. No-overshoot is an admission and ledger rule; it is not an absolute invoice cap. The historical hard-cap gate language is superseded for current reporting.
+- Bounded admission, reservation, actual metering, reconciliation, no overshoot and stopping on unknown usage remain required engineering controls. A planning estimate or campaign ceiling is an operational stop condition for its declared campaign; it must not be represented as an invoice cap.
+- This policy update does not reopen permission for paid dispatch. The user owns production release approval; the coordinator prepares and audits the candidate, explicit runtime window, credential/admission checks, exact successor SHA, source/config/route/secret inventory and final acceptance evidence.
+- Model and routing record for this snapshot: Astra Medium owns root orchestration and substantial work; Luna X High handles basic tightly scoped work; adaptive Astra High/X High is available when evidence warrants escalation; Standard was instructed; actual running service tier is not tool-verified; no nested delegation is authorized.
+
+### Superseding native capability wording
+
+- “Native hard-disabled” claims in the historical plan are superseded as absolute capability statements. The nonpaid acceptance harness intentionally forces native paid execution off and removes provider credentials; that is a runtime safety posture for this run.
+- Native engineering/provider capability and earlier controlled paid evidence exist in the candidate’s `docs\plans\2026-09-07-crm-projects\native-runtime-decision.md` and the external acceptance material. Those artifacts do not establish current release readiness.
+- Physical microphone/speaker verification and Vietnamese ASR fidelity remain unverified; native end-of-speech/rendered-audio latency remains unmeasured, so no native p95 claim is made. Earlier controlled native provider-output evidence does exist: `native-edit-12`, project creation15, rename17, task creation18 and response mute19 are recorded in the candidate native decision document. That evidence does not constitute this snapshot native latency campaign or release gate. The external `latency\README.md` remains a measurement protocol and offline calibration package.
+- No provider call, production mutation, push or deployment is authorized by this document. Native capability remains a separately gated evidence track owned by the coordinator.
+
+### Current frozen-candidate acceptance snapshot
+
+- Canonical r2 report on source `d34accb14d6758d8531423caa5b828948a5af71f`: 57 of 77 required canonical tests passed after excluding the runner’s fixture-seed command from the required-test denominator. The raw report summary is 58 of 78 commands because that seed command is included.
+- Exact twenty-test retry r3 report on source `d4b5441a731ce83a48a2d8967a0dcb96855034ad`: 12 of 20 required retry descriptors passed and 8 failed. The raw report summary is 13 of 21 commands because it includes the fixture-seed command.
+- The honest cross-revision union is 69/77 (69 of 77) required tests. This is not a completed acceptance result. Journey and supplements remain pending separate runs.
+- The retained Phase 10 performance artifact records all five declared cases passed, 455 active frame samples at p95 16.9 ms, and 40 trusted interaction samples at p75 48.5 ms. These are local browser-rendering figures under the declared fixture; they are not field INP, production latency or native voice evidence.
+- The eight current r3 retry failures remain open in the report: `phase1-people-access-browser`, `phase3-board-browser`, `phase4-recovery-persisted`, `phase4-discussions-recovery-browser`, `phase5-views-calendar-links-browser`, `phase6-notifications-browser`, `shared-voice-browser` and `phase9-gemini-relay-browser`. Ongoing repairs or external patches must be revalidated against the frozen successor and must not be silently counted as passes.
+- The external staff repaint patch is sealed at `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\staff-repaint-fix\staff-repaint-fix.patch` (SHA-256 `3d900fd58aa37d1d36453d20557a6396db2b66fe136d0a15c64539bc341ef00e`). It has not been applied to this candidate and does not change the totals above.
+
+### Release, rollback and evidence boundaries
+
+- The user owns production release approval. Main/coordinator prepares and audits the final gate, exact candidate SHA, declared source paths, runtime configuration, routes, secret names, target inventory and any later execution window. This addendum grants none of those actions.
+- Before any future release, retain raw candidate-generated reports and external copies, verify the settled successor and planned patch hashes, rerun pending journey/supplement/retry scope as applicable, and separately review native evidence. No historical report may be overwritten.
+- Any rollback must follow the reviewed feature-admission and durable-record procedure in the historical plan: stop new effects, preserve drafts/receipts/usage obligations and restore the verified prior revision. No production rollback or data mutation occurred here.
+
+### Evidence references and hashes
+
+- Candidate canonical r2 report: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\work\final-acceptance\projects-final-d34accb-20260908-r2\canonical\report.json` (SHA-256 `b964256988c2459dc70382852d6bef0f19fd3ab5b54483eda326bc8f7b9ae88b`).
+- Candidate exact retry r3 report: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\work\final-acceptance\projects-final-d4b5441-20260908-r3\retry\report.json` (SHA-256 `b5a8d886ef48b647af000021e0515dce4d7444607570fda3fb9957dd8b1aa3bf`).
+- Candidate strict performance report: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\test-results\crm-projects\phase10-performance-browser\report.json` (SHA-256 `94d390e24d2d7329ac1296fe5c0e2d9307eee741fc3506c3f57efe2ed9efd989`).
+- External preserved retry inventory: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\r2-failure-inventory.json` (SHA-256 `d10c134a04b7e6f83746c1567cef5de869e5eb61960f864e59cce32e003c44`).
+- External fixed retry manifest: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\retry-manifest.json` (SHA-256 `f4b560dc27fa43c0c0406f318dab1dae966e05ee79a98b7835c7812afbd3985d`).
+- External final patch checkpoint used for execution authority: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\final-review-checkpoint.json` (SHA-256 `8eca65988f8f1aa7b0b4ef39675e927cfc5c7ed10b2358ff327e0c3997c6426f`). The historical `root-release-checkpoint.json` remains immutable and is not treated as final execution authority.
+- External acceptance plan: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\acceptance-plan.md` (SHA-256 `7261376fdac85c75056e63791f74adbd812d9ed39a6a37346c780ad42bf627f4`).
+- External native latency protocol: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\latency\README.md` (SHA-256 `3d71bdb6568033991836a1427f16adab040d39cbcfe870f08445e86abc9c34d7`).
+- Candidate native engineering decision: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\docs\plans\2026-09-07-crm-projects\native-runtime-decision.md` (SHA-256 `657685523a5daa1b9bf8f23a7fc15faa4686e3668b6383f215e16054d3e7fe26`).

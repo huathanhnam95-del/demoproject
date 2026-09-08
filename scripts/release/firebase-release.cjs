@@ -316,7 +316,7 @@ function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options 
       const relative = `${safeRoot}/${file.path}`;
       if (tracked.has(relative) || !PROVISIONED_MEDIA_EXTENSIONS.has(path.extname(file.path).toLowerCase())) continue;
       assets.push({ sourcePath: relative, targetPath: relative, size: file.stat.size, sha256: sha256File(file.absolute) });
-      if (assets.length > 10000) fail('ASSET_SCOPE', 'Provisioned media inventory exceeds the bounded release scope.');
+      if (assets.length > 50000) fail('ASSET_SCOPE', 'Provisioned media inventory exceeds the bounded release scope.');
     }
   }
   return assets;

@@ -11,12 +11,12 @@
         const current = s => !disposed && s.epoch === epoch && s.projectId === projectId && s.actorUid === currentUid();
         const path = s => `/api/projects/${encodeURIComponent(s.projectId)}/changes`;
         function enqueue(work) { const result = lane.catch(() => {}).then(work); lane = result.catch(() => {}); return result; }
-        function stop() { epoch++; projectId = ''; actorUid = ''; cursor = ''; signature = ''; pendingPage = null; pendingSnapshot = null; clearTimeout(timer); timer = null; }
+        function stop() { epoch++; lane = Promise.resolve(); queuedPoll = false; projectId = ''; actorUid = ''; cursor = ''; signature = ''; pendingPage = null; pendingSnapshot = null; clearTimeout(timer); timer = null; }
         function select(id) {
             if (projectId === id && actorUid === currentUid()) return;
             stop(); projectId = id; actorUid = currentUid(); delay = 1500;
         }
-        function schedule() { clearTimeout(timer); if (!disposed && projectId && visible()) timer = setTimeout(tick, delay); }
+        function schedule(s) { if (!current(s)) return; clearTimeout(timer); if (!disposed && projectId && visible()) timer = setTimeout(tick, delay); }
         function denied(error, s) {
             if (!current(s)) return;
             if ([401, 403, 404].includes(Number(error?.status))) { stop(); deps.onDenied?.(s.projectId); }
@@ -53,14 +53,16 @@
                 throw error;
             }
         }
-        // Snapshot loads and poll/apply/ack share one lane. A late initial,
+        // Snapshot loads and poll/apply/ack share one lane per scope. Scope
+        // changes detach the old lane; current checks fence its late completions.
+        // A late initial,
         // branch or discussion response cannot overwrite an acknowledged event.
         function snapshot(id, load) {
             select(String(id)); const s = scope();
             return enqueue(async () => {
                 if (!current(s)) return false;
                 try { return await loadSnapshot({ s, load }); }
-                finally { schedule(); }
+                finally { schedule(s); }
             });
         }
         async function poll(s) {
@@ -103,7 +105,7 @@
             if (queuedPoll || !projectId || disposed) return;
             if (actorUid !== currentUid()) { const oldProjectId = projectId; stop(); deps.onDenied?.(oldProjectId); return; }
             const s = scope(); queuedPoll = true;
-            enqueue(() => poll(s)).catch(error => denied(error, s)).finally(() => { queuedPoll = false; schedule(); });
+            enqueue(() => poll(s)).catch(error => denied(error, s)).finally(() => { if (!current(s)) return; queuedPoll = false; schedule(s); });
         }
         function visibilityChanged() { if (visible()) tick(); else clearTimeout(timer); }
         globalScope.document?.addEventListener('visibilitychange', visibilityChanged);

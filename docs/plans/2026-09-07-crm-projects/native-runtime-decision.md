@@ -31,4 +31,3 @@ Current image acceptance: payment a03 passed on e3e427996e8e1b97da9dae78ba36bd26
 
 
 Native scenario acceptance is complete; the coordinator retains combined-candidate integration, mounted UI/role audit, domain/feature-off regressions and shared staff/month accounting gates. Dedicated native runners/Auth are stopped. Runtime source remains e0561a34108ce1824df68f4429800b22ead9074b; this final update is documentation only. Sanitized evidence and exact handoff are in C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\outputs.
-

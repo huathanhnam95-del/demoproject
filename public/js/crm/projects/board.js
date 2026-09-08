@@ -87,6 +87,8 @@
         const draftBases = new Map();
         let remoteObserver = null;
         let busy = false;
+        let loadBusy = false;
+        const columnMovesPending = new Set();
         let authorityPending = true;
         let sectionCreatePending = false;
         let columnEditor = null;
@@ -221,8 +223,9 @@
         }
 
         function setBusy(value) {
-            busy = value === true;
-            if (elements.projectsBoardSection) elements.projectsBoardSection.setAttribute('aria-busy', value ? 'true' : 'false');
+            loadBusy = value === true;
+            busy = loadBusy || [...columnMovesPending].some(scopeIsCurrent);
+            if (elements.projectsBoardSection) elements.projectsBoardSection.setAttribute('aria-busy', busy ? 'true' : 'false');
             if (elements.projectsBoardProjectSelect) elements.projectsBoardProjectSelect.disabled = !selection.projects.length;
             if (elements.projectsBoardRefresh) elements.projectsBoardRefresh.disabled = busy;
             if (elements.projectsBoardAddTask) elements.projectsBoardAddTask.disabled = busy || !canWrite();
@@ -245,6 +248,7 @@
             return {
                 scrollTop,
                 scrollLeft,
+                externalFocus: !!active && active !== document.body && !Object.entries(elements).some(([name, element]) => name.startsWith('projectsBoard') && element && (element === active || element.contains?.(active))),
                 activeId: row?.dataset?.rowId || focusedRowId,
                 controlId: active?.id || '',
                 taskId: taskRow?.dataset?.taskId || '',
@@ -261,6 +265,7 @@
             if (!view) return;
             if (elements.projectsBoardScroll) elements.projectsBoardScroll.scrollTop = view.scrollTop || 0;
             if (elements.projectsBoardScroll) elements.projectsBoardScroll.scrollLeft = view.scrollLeft || 0;
+            if (view.externalFocus) return;
             let target = view.controlId ? document.getElementById(view.controlId) : null;
             if (!target && view.taskId && view.selectionControl) {
                 target = elements.projectsBoardRows?.querySelector(`[data-task-id="${CSS.escape(view.taskId)}"] [data-action="select-task"]`) || null;
@@ -1382,19 +1387,27 @@
         }
 
         async function moveColumn(columnId, index) {
-            if (!canSchema()) return;
+            if (!canSchema() || busy) return;
             const column = columns.find((entry) => String(entry.id) === String(columnId));
             if (!column) return;
             const destinationIndex = normalizedInsertionIndex(index, Math.max(0, columns.length - 1));
             const currentIndex = sourceExcludedInsertionIndex(columns, columnId);
             if (destinationIndex !== null && currentIndex !== null && destinationIndex === currentIndex) return;
             const scope = captureScope();
+            columnMovesPending.add(scope);
+            setBusy(loadBusy);
+            renderBoard();
+            setStatus('Moving column...');
             try {
                 const response = await requestMutation(`/api/projects/${encodeURIComponent(scope.projectId)}/columns/${encodeURIComponent(columnId)}/move`, { operationId: operationId('column-move'), expectedRevision: column.revision, expectedSchemaRevision: boardRevision.schemaRevision, index });
                 if (!scopeIsCurrent(scope)) return;
                 boardRevision.schemaRevision = Number(response?.schemaRevision ?? response?.result?.schemaRevision ?? boardRevision.schemaRevision);
                 await loadProject(scope.projectId, { preserve: true });
             } catch (error) { if (scopeIsCurrent(scope)) setStatus(error?.message || 'Column move conflicted; refresh and retry.', 'error'); }
+            finally {
+                columnMovesPending.delete(scope);
+                if (scopeIsCurrent(scope)) { setBusy(loadBusy); renderBoard(); }
+            }
         }
 
         function appendChildCountHint(parentTaskId) {

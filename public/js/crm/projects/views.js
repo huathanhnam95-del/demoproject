@@ -166,7 +166,7 @@
                 if (query.empty) result = { ...result, tasks: [], matchingTaskCount: 0, hasMore: false, nextCursor: null, aggregates: { activeLeafTaskCount: 0, completedLeafTaskCount: 0, completionPercent: 0, byStatus: {}, byOwnerUid: {} } };
                 if (!current(s) || sequence !== readSequence) return;
                 const previousRole = response?.membership?.role;
-                response = result; if (previousRole !== result.membership?.role) renderProjectLinks();
+                response = result; syncPredecessorPicker(); if (previousRole !== result.membership?.role) renderProjectLinks();
                 if (result.linkAccess?.canManage === false) { links = []; projectLinks = []; canManageLinks = false; projectLinkAccess = false; renderLinks(); renderProjectLinks(); }
                 loadProjectLinks();
                 cursor = nextCursor; previous = nextPrevious; pageIndex = nextIndex;
@@ -275,7 +275,7 @@
         }
         function setTask(next) {
             const nextKey = next ? `${projectId}:${next.id}` : '';
-            if (nextKey === taskKey) { task = next; if (task && el('projects-task-derived')) el('projects-task-derived').innerHTML = derived(task) + warningList(task.dependencyWarnings) + warningList(task.calendarWarnings); syncTaskPermissions(); return; }
+            if (nextKey === taskKey) { task = next; if (task && el('projects-task-derived')) el('projects-task-derived').innerHTML = derived(task) + warningList(task.dependencyWarnings) + warningList(task.calendarWarnings); syncPredecessorPicker(); syncTaskPermissions(); return; }
             taskGeneration++; lookupSequence++; datesVersion++; taskKey = nextKey; task = next; preview = null; links = []; canManageLinks = false;
             renderTask();
             syncTaskPermissions();
@@ -287,11 +287,26 @@
             planning?.querySelectorAll?.('#projects-task-links button, #projects-task-links input, #projects-task-links select').forEach((control) => { if (control.dataset?.studentLink === undefined) control.disabled = !canManageLinks || !canWrite() || mutation; });
             if (el('projects-task-apply')) el('projects-task-apply').disabled = !canWrite() || mutation || !preview?.canApply;
         }
+        function predecessorOptions() {
+            return response?.project?.id === projectId && uid() === actorUid
+                ? array(response.tasks).filter((entry) => entry.id !== task?.id) : [];
+        }
+        function syncPredecessorPicker() {
+            const picker = el('projects-task-predecessor-picker');
+            if (!picker || !task) return;
+            const selected = picker.value;
+            const options = predecessorOptions();
+            const markup = '<option value="">Choose a task</option>' + options.map((entry) => `<option value="${escape(entry.id)}">${escape(entry.title || 'Untitled task')}</option>`).join('');
+            // Refresh only the authorized page options, preserving the detail
+            // form, unsaved dates/dependencies and the exact schedule preview.
+            if (picker.innerHTML !== markup) picker.innerHTML = markup;
+            picker.value = options.some((entry) => String(entry.id) === selected) ? selected : '';
+        }
         function renderTask() {
             const target = el('projects-task-planning');
             if (!target) return;
             if (!task) { target.innerHTML = ''; return; }
-            target.innerHTML = `<h5>Schedule and dependencies</h5><div id="projects-task-derived">${derived(task)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-projects-view-filters"><label>Proposed start<input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></label><label>Proposed due<input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></label><button type="submit" class="crm-btn-secondary"${canWrite() ? '' : ' disabled'}>Preview date change</button></form><div id="projects-task-preview"></div><form id="projects-task-dependencies"><label>Add a predecessor from this view page<select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${array(response?.tasks).filter((t) => t.id !== task.id).map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></label><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary">Add predecessor</button><p class="crm-muted">Picker shows the current authorized page only. You can paste another same-project task ID below.</p><label>Finish-to-start predecessors (task IDs, one per line)<textarea id="projects-task-predecessors" class="crm-input" rows="3"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></label><p class="crm-muted">Same project only. Missing or archived predecessors remain warnings. Saving dependencies never moves dates; cycles are rejected.</p><button type="submit" class="crm-btn-secondary"${canWrite() ? '' : ' disabled'}>Save dependencies</button></form><p id="projects-task-status" role="status"></p><h5>CRM links</h5><div id="projects-task-links"></div>`;
+            target.innerHTML = `<h5>Schedule and dependencies</h5><div id="projects-task-derived">${derived(task)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-projects-view-filters"><label>Proposed start<input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></label><label>Proposed due<input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></label><button type="submit" class="crm-btn-secondary"${canWrite() ? '' : ' disabled'}>Preview date change</button></form><div id="projects-task-preview"></div><form id="projects-task-dependencies"><label>Add a predecessor from this view page<select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></label><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary">Add predecessor</button><p class="crm-muted">Picker shows the current authorized page only. You can paste another same-project task ID below.</p><label>Finish-to-start predecessors (task IDs, one per line)<textarea id="projects-task-predecessors" class="crm-input" rows="3"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></label><p class="crm-muted">Same project only. Missing or archived predecessors remain warnings. Saving dependencies never moves dates; cycles are rejected.</p><button type="submit" class="crm-btn-secondary"${canWrite() ? '' : ' disabled'}>Save dependencies</button></form><p id="projects-task-status" role="status"></p><h5>CRM links</h5><div id="projects-task-links"></div>`;
         }
         async function loadLinks() {
             const s = taskScope(), sequence = ++taskLinkSequence;

@@ -629,6 +629,8 @@ async function main() {
         await setRecoveryFilter(editorPage, 'archived', 'task');
         await applyRecoveryAction(editorPage, fixture.leaf.id, 'restore');
         await editorContext.close();
+        await selectProjectTask(ownerPage, PROJECT_ID, fixture.tasks.map((task) => task.id));
+        await postedMessage.first().waitFor({ state: 'visible', timeout: 30000 });
 
         // Exercise the real Chrome edit and Owner moderation flows, including
         // prompt-driven controls rendered by the discussion client.

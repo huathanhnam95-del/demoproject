@@ -96,6 +96,8 @@
 
         function currentProjectId() { return String(selection.selectedProjectId || '').trim(); }
         function role() { return membership?.role || selection.selectedProject?.role || ''; }
+        // Rendering a retained editor never grants mutation authority.
+        function canRenderTaskEditor() { return !!project && String(project.id) === currentProjectId() && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project.lifecycle || 'active') === 'active' && (role() === 'Owner' || role() === 'Editor'); }
         function canWrite() { return !authorityPending && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && (role() === 'Owner' || role() === 'Editor'); }
         function canSchema() { return !authorityPending && String(deps.getCurrentUser?.()?.uid || '') === controllerActorUid && (project?.lifecycle || 'active') === 'active' && role() === 'Owner'; }
         function hasProject() { return !!currentProjectId() && !!project; }
@@ -257,7 +259,8 @@
                 selectionControl: active?.dataset?.action === 'select-task',
                 columnId: active?.dataset?.columnId || '',
                 selectionStart: typeof active?.selectionStart === 'number' ? active.selectionStart : null,
-                selectionEnd: typeof active?.selectionEnd === 'number' ? active.selectionEnd : null
+                selectionEnd: typeof active?.selectionEnd === 'number' ? active.selectionEnd : null,
+                selectionDirection: active?.selectionDirection || 'none'
             };
         }
 
@@ -281,7 +284,7 @@
             if (target) {
                 target.focus?.();
                 if (view.selectionStart !== null && typeof target.setSelectionRange === 'function') {
-                    try { target.setSelectionRange(view.selectionStart, view.selectionEnd ?? view.selectionStart); } catch (_) { /* select range is optional */ }
+                    try { target.setSelectionRange(view.selectionStart, view.selectionEnd ?? view.selectionStart, view.selectionDirection || 'none'); } catch (_) { /* select range is optional */ }
                 }
                 return;
             }
@@ -530,7 +533,9 @@
                     invalidateAccess(normalized); return false;
                 }
                 // Publish a downgrade immediately, even while the task GET is held.
+                const previousRole = role();
                 membership = nextMembership;
+                if (previousRole !== nextMembership.role) renderBoard();
                 if ((nextProject.lifecycle || 'active') !== 'active') setSelectedTaskIds([]);
                 const nextTasks = new Map(), nextLoaded = new Set(), nextCursors = new Map(), nextMore = new Map();
                 let nextSections = [], nextColumns = [];
@@ -662,14 +667,15 @@
             const disabled = canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? '' : ' disabled';
             const label = escape(column.label || column.id);
             const unavailable = column.type === 'dropdown' && value && !asArray(column.options).some(option => option.key === value);
-            if (!canWrite()) return `<span class="crm-board-null">${escape(unavailable ? `${value} (unavailable)` : value === null || value === undefined || value === '' ? '—' : (Array.isArray(value) ? value.join(', ') : value))}</span>`;
+            if (!canRenderTaskEditor()) return `<span class="crm-board-null">${escape(unavailable ? `${value} (unavailable)` : value === null || value === undefined || value === '' ? '—' : (Array.isArray(value) ? value.join(', ') : value))}</span>`;
             if (column.type === 'status') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${statusOptions(value, column.statusLabels || {})}</select>`;
             if (column.type === 'priority') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${priorityOptions(value || 'none')}</select>`;
             if (column.type === 'dropdown') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}><option value="">Clear</option>${unavailable ? `<option value="${escape(value)}" selected disabled>${escape(value)} (unavailable)</option>` : ''}${asArray(column.options).map((option) => `<option value="${escape(option.key)}"${value === option.key ? ' selected' : ''}>${escape(option.label || option.key)}</option>`).join('')}</select>`;
             if (column.type === 'people') return `<select multiple class="crm-board-field crm-board-people-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${memberOptions(value, true)}</select>`;
             const inputType = column.type === 'number' ? 'number' : (column.type === 'date' ? 'date' : 'text');
             const inputValue = Array.isArray(value) ? value.join(', ') : (value ?? '');
-            return `<input class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" type="${inputType}" value="${escape(inputValue)}" aria-label="${label}"${disabled}>`;
+            const inputState = (authorityPending || busy) && canRenderTaskEditor() ? ' readonly' : disabled;
+            return `<input class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" type="${inputType}" value="${escape(inputValue)}" aria-label="${label}"${inputState}>`;
         }
 
         function taskRowMarkup(row) {
@@ -690,8 +696,9 @@
             const indent = Math.min(24, row.depth * 22);
             const expander = hasPotentialChildren(task) ? `<button type="button" class="crm-board-expander" data-action="toggle-task" aria-label="${expanded.has(String(task.id)) ? 'Collapse' : 'Expand'} ${escape(title)}" aria-expanded="${expanded.has(String(task.id)) ? 'true' : 'false'}">${expanded.has(String(task.id)) ? '▾' : '▸'}</button>` : '<span class="crm-board-expander" aria-hidden="true"></span>';
             const selectionCheckbox = selectableTask(task) ? `<input type="checkbox" data-action="select-task" aria-label="Select ${escape(title)}"${selectedTaskIds.includes(String(task.id)) ? ' checked' : ''}>` : '';
-            const titleCell = canWrite()
-                ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${disabled}>`
+            const inputState = (authorityPending || busy) && canRenderTaskEditor() ? ' readonly' : disabled;
+            const titleCell = canRenderTaskEditor()
+                ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${inputState}>`
                 : `<span class="crm-board-title-text">${escape(title)}</span>`;
             return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px">
               <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${titleCell}</div>
@@ -771,10 +778,12 @@
             const currentControl = activeElement.closest?.('.crm-board-field');
             const freshControl = freshCell.querySelector?.('.crm-board-field');
             if (!currentControl || !freshControl || currentControl.disabled || freshControl.disabled) return false;
-            return currentControl.tagName === freshControl.tagName
+            const compatible = currentControl.tagName === freshControl.tagName
                 && currentControl.type === freshControl.type
                 && (currentControl.dataset.fieldKind || '') === (freshControl.dataset.fieldKind || '')
                 && (currentControl.dataset.columnId || '') === (freshControl.dataset.columnId || '');
+            if (compatible && currentControl.tagName === 'INPUT') currentControl.readOnly = freshControl.readOnly;
+            return compatible;
         }
 
         function syncRowMetadata(node, fresh) {

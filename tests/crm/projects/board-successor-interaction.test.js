@@ -12,21 +12,21 @@ function fixture(){
  const dom=new JSDOM('<textarea data-assistant-instruction></textarea><section id="board"><p id="status"></p><button id="add"></button><div id="scroll"><div id="table"><div id="header"></div><div id="rows"></div></div></div></section>');
  const document=dom.window.document;
  const elements=Object.fromEntries(Object.entries({projectsBoardSection:'board',projectsBoardStatus:'status',projectsBoardAddTask:'add',projectsBoardScroll:'scroll',projectsBoardTable:'table',projectsBoardHeader:'header',projectsBoardRows:'rows'}).map(([name,id])=>[name,document.getElementById(id)]));
- let columnOrder=['A','B'],postHold=null,projectHold=null;const calls=[];
+ let columnOrder=['A','B'],postHold=null,projectHold=null,taskHold=null,role='Owner',remoteTitle='Task One';const calls=[];
  const context={console,document,URLSearchParams,crypto:{randomUUID:()=>String(Math.random())},CSS:{escape:value=>value},setTimeout,clearTimeout,clearInterval,requestAnimationFrame:fn=>fn()};
  vm.runInNewContext(source,context);
  const board=context.CrmProjectsBoard.createController({elements,getCurrentUser:()=>({uid:'actor'}),apiFetchJson:async(url,options)=>{
   calls.push({url,method:options?.method||'GET'});
   if(options){const result=await postHold.promise;columnOrder=['B','A'];return result;}
   if(url.endsWith('/member-directory'))return{people:[]};
-  if(url.includes('/tasks?'))return{tasks:[{id:'one',title:'Task One',sectionId:'s',rank:'0/1',lifecycle:'active',revision:1}],sections:[{id:'s',name:'Section',rank:'0/1'}],columns:columnOrder.map((id,index)=>({id,label:id,type:'text',rank:`${index}/1`,revision:1})),revision:{schemaRevision:1}};
+  if(url.includes('/tasks?')){if(taskHold)await taskHold.promise;return{tasks:[{id:'one',title:remoteTitle,sectionId:'s',rank:'0/1',lifecycle:'active',revision:1}],sections:[{id:'s',name:'Section',rank:'0/1'}],columns:columnOrder.map((id,index)=>({id,label:id,type:'text',rank:`${index}/1`,revision:1})),revision:{schemaRevision:1}};}
   if(projectHold)await projectHold.promise;
-  return{project:{id:url.split('/').pop(),lifecycle:'active',revision:1},membership:{role:'Owner'}};
+  return{project:{id:url.split('/').pop(),lifecycle:'active',revision:1},membership:{role}};
  }});
  board.init();const select=id=>board.setProjects({projects:[{id,role:'Owner'}],selectedProjectId:id});select('a');
  function move(){const from=elements.projectsBoardHeader.querySelector('[data-column-id="A"]');const to=elements.projectsBoardHeader.querySelector('[data-column-id="B"]');const drag=new dom.window.Event('dragstart',{bubbles:true,cancelable:true});drag.dataTransfer={setData(){}};from.dispatchEvent(drag);to.dispatchEvent(new dom.window.Event('drop',{bubbles:true,cancelable:true}));}
  const labels=()=>[...elements.projectsBoardHeader.querySelectorAll('.crm-projects-board-column-label')].slice(5).map(node=>node.textContent);
- return{board,document,elements,calls,select,move,labels,post(){postHold=deferred();return postHold;},holdProject(){projectHold=deferred();return projectHold;},releaseProject(){projectHold=null;},busy:()=>elements.projectsBoardSection.getAttribute('aria-busy'),queue(){const gate=deferred();board.attachRemoteObserver({snapshot:async(_id,load)=>{await gate.promise;return load();},stop(){}});return gate;}};
+ return{board,document,elements,calls,select,move,labels,role:value=>role=value,title:value=>remoteTitle=value,holdTasks(){taskHold=deferred();return taskHold;},post(){postHold=deferred();return postHold;},holdProject(){projectHold=deferred();return projectHold;},releaseProject(){projectHold=null;},busy:()=>elements.projectsBoardSection.getAttribute('aria-busy'),queue(){const gate=deferred();board.attachRemoteObserver({snapshot:async(_id,load)=>{await gate.promise;return load();},stop(){}});return gate;}};
 }
 test('column move stays pending through POST, another loader and delayed observer reconciliation while checkbox remains usable',async()=>{
  const h=fixture();await tick();const post=h.post(),queue=h.queue();h.move();await tick();
@@ -55,4 +55,34 @@ test('ordinary board field focus and caret remain owned by the board during remo
  const h=fixture();await tick();const field=h.elements.projectsBoardRows.querySelector('[data-field-kind="title"]');field.focus();field.setSelectionRange(2,6);
  const state=h.board.getSnapshot();await h.board.applyRemote({isCurrent:()=>true,authority:{project:{...state.project,schemaRevision:1},membership:{role:'Owner'}},changes:[{taskId:'one'}],hydration:{unavailableTaskIds:[],tasks:[{...state.tasks.get('one')}]}});
  const current=h.elements.projectsBoardRows.querySelector('[data-field-kind="title"]');assert.equal(h.document.activeElement,current);assert.equal(current.selectionStart,2);assert.equal(current.selectionEnd,6);
+});
+function dirtyEditor(h,selector='[data-field-kind="title"]'){
+ const editor=h.elements.projectsBoardRows.querySelector(selector);editor.value='Local dirty draft';editor.dispatchEvent(new h.document.defaultView.Event('input',{bubbles:true}));editor.focus();editor.setSelectionRange(5,8,'backward');h.elements.projectsBoardScroll.scrollTop=17;h.elements.projectsBoardScroll.scrollLeft=29;return editor;
+}
+for(const selector of ['[data-field-kind="title"]','input[data-column-id="A"]']) test(`held full refresh retains original dirty editor and caret without PATCH (${selector})`,async()=>{
+ const h=fixture();await tick();const editor=dirtyEditor(h,selector),held=h.holdProject();h.title('Remote title');const refresh=h.board.refresh();await tick();
+ assert.equal(editor.isConnected,true);assert.equal(h.document.activeElement,editor);assert.equal(editor.value,'Local dirty draft');assert.equal(editor.selectionStart,5);assert.equal(editor.selectionEnd,8);assert.equal(editor.selectionDirection,'backward');assert.equal(editor.readOnly,true);assert.equal(editor.disabled,false);assert.equal(h.elements.projectsBoardRows.querySelector('select[data-field-kind="status"]').disabled,true);
+ editor.dispatchEvent(new h.document.defaultView.Event('change',{bubbles:true}));await tick();assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+ held.resolve();await refresh;assert.equal(h.elements.projectsBoardRows.querySelector(selector),editor);assert.equal(h.document.activeElement,editor);assert.equal(editor.value,'Local dirty draft');assert.equal(editor.selectionStart,5);assert.equal(editor.selectionEnd,8);assert.equal(editor.selectionDirection,'backward');assert.equal(editor.readOnly,false);assert.equal(h.elements.projectsBoardRows.querySelector('select[data-field-kind="status"]').disabled,false);
+ assert.equal(h.elements.projectsBoardScroll.scrollTop,17);assert.equal(h.elements.projectsBoardScroll.scrollLeft,29);assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+});
+test('failed full refresh retains a readonly dirty editor and blocks mutation until fresh authorization',async()=>{
+ const h=fixture();await tick();const editor=dirtyEditor(h),held=h.holdProject(),refresh=h.board.refresh();await tick();held.reject(Object.assign(new Error('Temporary failure'),{status:503}));await refresh;
+ assert.equal(h.document.activeElement,editor);assert.equal(editor.isConnected,true);assert.equal(editor.value,'Local dirty draft');assert.equal(editor.selectionStart,5);assert.equal(editor.readOnly,true);assert.equal(h.busy(),'false');assert.equal(h.board.getSnapshot().authorizationReady,false);
+ editor.dispatchEvent(new h.document.defaultView.Event('change',{bubbles:true}));await tick();assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+ h.releaseProject();await h.board.refresh();assert.equal(h.document.activeElement,editor);assert.equal(editor.readOnly,false);assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+});
+test('external focus takeover during held dirty refresh wins over prior board focus',async()=>{
+ const h=fixture();await tick();const editor=dirtyEditor(h),held=h.holdProject(),refresh=h.board.refresh();await tick();assert.equal(editor.isConnected,true);
+ const external=h.document.querySelector('[data-assistant-instruction]');external.value='Now working here';external.focus();external.setSelectionRange(2,7);held.resolve();await refresh;
+ assert.equal(h.document.activeElement,external);assert.equal(external.selectionStart,2);assert.equal(external.selectionEnd,7);assert.equal(h.elements.projectsBoardRows.querySelector('[data-field-kind="title"]').value,'Local dirty draft');assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+});
+test('fresh Viewer authority removes dirty editing controls before a held task page returns',async()=>{
+ const h=fixture();await tick();h.elements.projectsBoardRows.querySelector('[data-action="select-task"]').click();const editor=dirtyEditor(h);h.role('Viewer');const taskPage=h.holdTasks(),refresh=h.board.refresh();await tick();
+ assert.equal(h.board.getSnapshot().membership.role,'Viewer');assert.deepEqual([...h.board.getSnapshot().selectedTaskIds],['one']);assert.equal(h.elements.projectsBoardRows.querySelector('[data-action="select-task"]').checked,true);assert.equal(h.elements.projectsBoardRows.querySelector('[data-field-kind="title"]'),null);assert.equal(editor.isConnected,false);assert.equal(h.elements.projectsBoardAddTask.disabled,true);assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+ taskPage.resolve();await refresh;assert.equal(h.elements.projectsBoardRows.querySelector('[data-field-kind="title"]'),null);assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
+});
+test('revoked authority clears dirty editor state rather than restoring it',async()=>{
+ const h=fixture();await tick();const editor=dirtyEditor(h),held=h.holdProject(),refresh=h.board.refresh();await tick();held.reject(Object.assign(new Error('Revoked'),{status:403}));await refresh;
+ assert.equal(editor.isConnected,false);assert.equal(h.elements.projectsBoardRows.innerHTML,'');assert.equal(h.board.getSnapshot().project,null);assert.equal(h.calls.some(call=>call.method==='PATCH'),false);
 });

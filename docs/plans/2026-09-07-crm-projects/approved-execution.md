@@ -290,3 +290,59 @@ This addendum is appended to the historical record above. It supersedes any conf
 - External acceptance plan: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\acceptance-plan.md` (SHA-256 `7261376fdac85c75056e63791f74adbd812d9ed39a6a37346c780ad42bf627f4`).
 - External native latency protocol: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\latency\README.md` (SHA-256 `3d71bdb6568033991836a1427f16adab040d39cbcfe870f08445e86abc9c34d7`).
 - Candidate native engineering decision: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\docs\plans\2026-09-07-crm-projects\native-runtime-decision.md` (SHA-256 `657685523a5daa1b9bf8f23a7fc15faa4686e3668b6383f215e16054d3e7fe26`).
+
+
+## Successor acceptance addendum — approved execution contract
+
+**Date:** 2026-09-09 (Asia/Bangkok)
+**Status:** settled local acceptance and release limitations; historical evidence is retained below its original revision.
+
+This dated addendum preserves the complete historical document prefix byte-for-byte.
+
+## Current execution snapshot
+
+- Candidate checkout: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI`.
+- Current candidate snapshot is the 341-path test-only HEAD `f402bb778158d0d2084db13091ec04d61f0f5e0c`; the new source changes are test-only and production paths remain unchanged. The journey, shared-shell and performance reports were produced at evidence revision `725f16b012fc595938ba6d717b0f6da235849df3`, so that provenance is kept explicit.
+- Governance base used for the current successor documentation: `2e1fa31962d2580a643f840c2112ed8e520b1fe2`.
+- The retained Projects acceptance inventory contains passing evidence for 77/77 descriptors across named revisions. It is cross-revision evidence, not one canonical current 77/77 run. Historical failures and their artifacts remain preserved.
+- No candidate source/configuration edits, push, deployment, production mutation, or current deployed-configuration verification were performed by this documentation step.
+
+## Settled local evidence
+
+The latest narrow run `projects-journey-725f16b01-20260909-r1` completed seed, discussion, and connected journey commands with exit code 0. Its staged report is `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-journey-725f16b01-20260909-r1\successor\staged\report.json` (SHA-256 `830518195037de256d1f2a6c204889dd70d436b94b7fef7bcb912c819dabe661`). The connected-journey artifact is `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-journey-725f16b01-20260909-r1\successor\artifacts\test-results\crm-projects\phase10-connected-journey\report.json` (SHA-256 `5f491dfa250e7c74e23183d15d31d7bfaac20fa3f97beb757e70302900d36605`). It records six passed cases covering two current accounts, persisted confirmation/Undo/reload and teacher-reference retention.
+
+That journey evidence uses engineering proposal/confirmation responses, synthetic audio and service assembly fixtures. It does not prove real provider behavior, physical microphone/speaker behavior, Vietnamese ASR fidelity or spoken Undo. `paidProviderCalls` is zero.
+
+The shared-shell successor smoke passed at evidence revision `725f16b012fc595938ba6d717b0f6da235849df3`. Its raw result is `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\shared-shell-successor\runs\20260909-023259-048\smoke-results.json` (SHA-256 `34A19602CC939E709C0B7001C2451378B20BCC539055574A62CE988C77972981`). Projects and Data Input initialized; each shared budget/voice script loaded once in the DOM and once by request; provider, native and blocked measured attempts were zero; 62 total guarded attempts were 60 local and 2 other; fetch, http, https, undici fetch/request and WebSocket capabilities were reported. Budget initialization was ineligible because the synthetic fixture had no assigned project, so this is not a monthly-balance proof.
+
+The final performance successor is now **PASS 5/5** from evidence revision `725f16b012fc595938ba6d717b0f6da235849df3`. The raw browser report is `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-perf-725f16b01-20260909-r1\successor\artifacts\test-results\crm-projects\phase10-performance-browser\report.json` (SHA-256 `377B258BF213245FBD9EF69B4FA5F8DDBCE39F56E940DF745DB5F15B7D5ADDA8`). It records active-frame p95 16.8 ms and interaction-to-paint p75 46.9 ms with persisted 10,000-task/30-column/depth-21 integrity, 500 expanded tasks, trusted wheel/drag input and a retained Chrome trace. This is not native voice latency or field INP.
+
+Latest supporting reports include:
+
+- Phase 9 refresh: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-phase9-19d6e664f-20260909-r1\successor\staged\report.json`, SHA-256 `ee169b70881041b173dab3bf7094ab1906b922d7d45aaeeb987d6a0decd4265c`, 9/9 declared phase cases passed.
+- Phase 3 plus remote observation: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-final-19d6e664f-20260909-r1\successor\staged\report.json`, SHA-256 `8cd99fa2a315df14fa9283197c653757962cdece005d97ff80de5d3c68b14317`; the Phase 3 and remote commands passed, while other descriptors in that broader report retain their own failures.
+- Retained calendar supplement: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-supplements-4be62dfd2-20260909-r1\supplements\artifacts\test-results\crm-projects\nonvoice-calendar-browser\report.json`, SHA-256 `5dbce2881d078d06e5d929124fdb40917b2b73d4e471a39ce641e94bc409159a`.
+
+## Policy and release inventory boundary
+
+The superseding policy is a monitored shared USD 5 per staff account per calendar month across all live-chat services. It supersedes historical provider-invoice hard-cap wording; it is a monitored admission, metering, reconciliation and ledger policy, not a provider invoice cap. Standard is requested; the actual service tier is unverified.
+
+The checked-in release inventory was verified read-only: `firebase.json` uses public Hosting; Functions uses Node.js 22; `/api/**` rewrites to `api` in `us-central1`; `firestore.rules`, `firestore.indexes.json` and `storage.rules` are present; the scheduled export is `crmProjectsAutomationProcessor/us-central1`; the relay Dockerfile runs `services/crm-voice-relay/runtime.js` on Node 22 and validates its allowed-origins, native-enabled and paired composition module/SHA settings; candidate `.firebaserc` is absent. This is checked-in configuration evidence only. Deployed targets, deployed config/secrets, index readiness, service identity and the prior deployed rollback revision are unverified.
+
+Any future rollback must inventory exact targets, disable new feature/automation admission first, preserve durable drafts, receipts and ledger obligations, retain exact target/rollback records, and restore a verified prior API/Hosting revision. No push, deployment, production mutation or rollback occurred in this documentation step.
+
+## Acceptance rows and remaining gates
+
+- **BLOCK-196:** scoped integrated local acceptance is closed, qualified by the shared-shell and journey fixture limitations above.
+- **BLOCK-197:** verified by the 20-case real Chrome supplement at `f402bb778158d0d2084db13091ec04d61f0f5e0c`, run `projects-roles-f402bb778-20260909-r2`. Owner, Editor and Viewer each read all five views with explicit task-control permissions; Owner/Editor UI edits persist; Viewer PATCH returns 403 and preserves the complete task. The nonmember administrator receives only the allowlisted management metadata, while selecting the project yields 404 with hidden task content and disabled mutations; all direct protected reads/writes return 404. The unauthorized account sees the access-denied gate and receives 403, with denied mutations preserving the complete task. This is 15 member/view cases plus two permitted saves, one Viewer denial and two nonmember boundary cases; it does not label nonmembers as having project view access. Raw report: `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\results\projects-roles-f402bb778-20260909-r2\successor\artifacts\test-results\crm-projects\role-view-browser\report.json`, SHA-256 `7e2725dbac3876e3c88825060c8e1e01bcc23a6a387e0b772921bea746265f11`. Assertion source: `C:\Users\Admin\.codex\worktrees\crm-projects-integration-candidate-20260908b\Cursor AI\tests\browser\crm-projects\role-view-browser-check.js`, SHA-256 `c7351af5f2c8942f438cf5b370b458e781f79d6062ab94190c6a8b28c27bc758`. The earlier ef9ed run retained 18 passing cases and a failed administrator-picker assumption; the corrected test preserves those cases and verifies management metadata separately from protected content.
+- **BLOCK-198:** verified in the Data Input scope at `C:\Users\Admin\Documents\Codex\crm-data-input-2026-09-07\execution\successor-acceptance-matrix.json`, revision `44a98a56`, with its unrelated-scope qualification retained.
+- **BLOCK-199:** qualified only; historical real-provider tests and synthetic microphone evidence exist, while native latency remains unmeasured and physical microphone/speaker experience remains unverified.
+- **BLOCK-200:** verified by `C:\Users\Admin\Documents\Codex\crm-data-input-2026-09-07\execution\combined-final-c12c2f0d-20260908\chrome-real-results-fixed.json`, with the recovery supplement `combined-recovery-c12-20260908/recovery-results.json` at revision `44a98a56`.
+
+The six accepted UI documents were copied byte-for-byte into their planned repository destinations from `C:\Users\Admin\Documents\Codex\2026-09-08\crm-projects-recovery\work\final-acceptance-package\final-delivery-staging`; the staging manifest SHA-256 is `a179990c16952008bd08b3ae9c8d0c2da04f10f16ecbb56900eb9f0d4c6824ea`. Their 242 historical evidence rows are preserved as historical UI evidence, not current-source claims.
+
+No additional paid dispatch is authorized. The previously requested USD 2.05 allowance for 20 real-provider trials remains unanswered. Native/provider limitations, no-push/no-deploy status and the distinction between local acceptance and release readiness remain in force.
+
+The source checkpoint before this documentation commit is `f402bb778158d0d2084db13091ec04d61f0f5e0c` with 341 governance-base changed paths. This documentation integration adds six accepted UI paths and appends two existing audit records, for 347 planned changed paths. The coordinating task owns the final exact-SHA structure replay after the documentation commit; its result must be recorded separately.
+
+The coordinating task's settled cross-owner mapping is `C:\Users\Admin\Documents\Codex\2026-09-08\crm-integration\ui-cross-owner-closure-f402bb7.json`, SHA-256 `16aef7826a06cc84c15cad0d2cd17a3319557e64f88789ee79e13e25f4babe33`. It supersedes the earlier mapping while preserving the original UI coverage rows.

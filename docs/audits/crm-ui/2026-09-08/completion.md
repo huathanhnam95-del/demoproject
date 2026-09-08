@@ -1,0 +1,19 @@
+# Assigned local audit complete — combined acceptance remains separate
+
+The assigned remaining local CRM/practice UI audit is complete with documented findings. OPEN-205 now has executed evidence for six listening families and seven speaking/notes families at desktop and mobile. Retell Lecture is a typed-notes flow in the current source; ASQ Stop submits automatically. Test existence and hardcoded success counts are not used as proof.
+
+coverage.csv contains242 heterogeneous evidence rows: {"blocked": 5, "finding": 48, "not-applicable": 1, "pass": 188}. These are evidence rows, not242 unique workflows or a complete Cartesian matrix. No local row remains planned. Historical failures remain alongside later fixes.
+
+UI25 fixes mobile Books selection using only scoped toolbar positioning; actual baseline/candidate pointer selection and highlight persistence passed390/1440. UI26 adds Describe Image visible load/error/empty feedback with Retry and scoped mobile action clearance. Its final current-source happy flows passed1440/390/360, and503→Retry→200 recovery plus in-flight deduplication passed1440/390. The combined three-file remediation structure check reports0; patch reconstruction preserves the real index.
+
+The application chain now has26 changed source/test paths through UI26, tree bf83cb1482b927635b7702c78e9d848989135b4c. UI23 remains a separate two-file supplement against b507; its sparse raw structure1 qualification is unchanged. No previous sealed patch was rewritten.
+
+Five explicit evidence boundaries remain: four combined role/persisted/receipt acceptance rows are owned by the integration coordinator, and one physical-device/provider row requires that separate evidence. Later owner-reported acceptance is not represented as independently executed by this UI task. The original full cross-owner audit therefore is not labeled unconditionally complete here.
+
+Remaining recommendations include NFD font fallback F-03 and recoverable scroll/usability risks F-13/F-16. F-04 is fixed by UI23/UI27; no accepted bounded UI defect remains open in this assigned scope. Those are audited observations, not unexecuted local cases. Separate teaching shell overflow observations remain outside the native audio sizing fix.
+
+Synthetic microphone/recognition/scoring/auth and mocked storage remain distinct from physical audio quality, provider correctness and production persistence. Real teaching MP3 playback, pinned parsers/PDF/Mermaid and each substitute media fixture retain their exact individual provenance. Expected blocked-resource console diagnostics remain visible; no blanket zero-console or full WCAG claim is made.
+
+The earlier screenshot-deletion incident remains recorded: root restored all eight original tracked PNGs by exact index blobs and hashes. ENOSPC zero-byte artifacts and failed adapters were retained. No UI-root commit, push, deployment or external demo integration occurred.
+
+UI27 closes the remaining F-04 toast/footer defect. The integration coordinator ran focused-check-v2 in installed Chrome: invalid-save and failed-save at 1440x900 and 390x844 all passed, with zero findings, stable source hashes, alert/assertive/atomic semantics, uncovered Save/Cancel hit points and actual Cancel within one second. Test source was d34accb14 plus CSS SHA256 08983239722eedac79861db525078e1fcf0c226bba3c5393b8f3a027bd97d3c7, subsequently committed as d4b5441a731ce83a48a2d8967a0dcb96855034ad. UI root inspected the receipt and verified the tested CSS hash and normalized committed CSS content; it did not rerun the browser. Evidence: combined-ui27-toast-check/f04-result.json (SHA256 66f517f3dbd9933ca0aeab5a38d0ecfcdcfbb26496228fa8c973b5a6d01d37db). The original form-wide validation accepts any one Info field; F-04 never established a missing association with an individually required field, so that unsupported residual claim is removed.

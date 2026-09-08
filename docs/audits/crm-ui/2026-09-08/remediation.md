@@ -1,0 +1,11 @@
+# Remediation state through UI27
+
+UI18–20 locally fix Student narrow-shell reflow and Books mind-map controls. UI21 fixes Books BGM lifecycle/error recovery. UI22 fixes stale compilation output and Graph loading/error/retry. UI23 is the separate b507 four-function supplement for Profile/Identity/Finance errors; its raw sparse structure1 qualification remains explicit. UI24 fixes teaching native-audio sizing at five tested viewports.
+
+UI25 now fixes Books mobile selection with a seven-line CSS change. UI26 fixes Describe Image load recovery and mobile action clearance. Final source Chrome evidence and structure0 are sealed with exact separate patches in final-bounded-remediation. Integration is coordinator-owned; no production publication is authorized by this document.
+
+All remaining local listening/speaking/typed-notes flow families are now executed. Synthetic device/provider/storage boundaries and four cross-owner integration rows remain separate. F-03 NFD fallback and F-13/F-16 scroll usability recommendations remain documented; do not silently normalize stored source text or alter pronunciation provenance.
+
+The external Tangible demo remains excluded. Historical failures, original16 throughUI24 packages and UI23 qualification are preserved.
+
+UI27 closes the remaining F-04 toast/footer defect. The integration coordinator ran focused-check-v2 in installed Chrome: invalid-save and failed-save at 1440x900 and 390x844 all passed, with zero findings, stable source hashes, alert/assertive/atomic semantics, uncovered Save/Cancel hit points and actual Cancel within one second. Test source was d34accb14 plus CSS SHA256 08983239722eedac79861db525078e1fcf0c226bba3c5393b8f3a027bd97d3c7, subsequently committed as d4b5441a731ce83a48a2d8967a0dcb96855034ad. UI root inspected the receipt and verified the tested CSS hash and normalized committed CSS content; it did not rerun the browser. Evidence: combined-ui27-toast-check/f04-result.json (SHA256 66f517f3dbd9933ca0aeab5a38d0ecfcdcfbb26496228fa8c973b5a6d01d37db). The original form-wide validation accepts any one Info field; F-04 never established a missing association with an individually required field, so that unsupported residual claim is removed.

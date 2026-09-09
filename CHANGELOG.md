@@ -1,3 +1,20 @@
+## [V2.0.2] - 2026-09-09
+
+### Added & Enhanced
+- **CRM Projects Tab & Workspace UI (`public/crm-admin.html`, `public/crm-admin.js`, `public/css/crm-projects.css`, `public/js/crm/projects/*`, `functions/src/routes/crm/projects/*`)**:
+  - Integrated complete CRM Projects domain architecture: projects rail, customizable views (Board, Kanban, Timeline, Calendar, Charts), native modal dialogs, and discussions.
+  - Implemented 46px virtualized task rows with status color-coding, assigned owner avatars, and collapsible group headers.
+  - Added dedicated Settings modal with Project, Members, Calendar, and Allowance configuration panels.
+  - Integrated full revision checking, optimistic update rollbacks, and offline drafting support.
+- **Teacher Scheduler Drag & Drop and Series Reschedule (`public/js/crm/teacher-scheduler-workspace.js`, `functions/src/crm/scheduling-service.js`, `functions/src/routes/teacher/scheduler.js`)**:
+  - Added drag-and-drop session rescheduling with dynamic day bounds and collision avoidance.
+  - Added Scope Choice Modal for recurring series: choose between "This session only" and "This and all following".
+  - Implemented atomic rollback and interactive toast with 1-click Undo.
+- **Student Management Directory Filters & Search (`public/js/crm/student-directory-workspace.js`, `public/crm-admin.html`, `public/crm-admin.css`)**:
+  - Added real-time Vietnamese diacritic-insensitive search across student names, emails, and phone numbers.
+  - Added assigned teacher filter pills (`All`, `Shawn`, `Hứa Thanh Nam`, `Unassigned`).
+  - Streamlined student modal navigation by consolidating overview into student details.
+
 ## [V2.0.1] - 2026-09-08
 
 ### Fixed & Enhanced

@@ -262,7 +262,7 @@
             return {
                 scrollTop,
                 scrollLeft,
-                externalFocus: !!active && active !== document.body && !Object.entries(elements).some(([name, element]) => name.startsWith('projectsBoard') && element && (element === active || element.contains?.(active))),
+                externalFocus: !!active && active !== document.body && !row && !taskRow && !sectionRow && !Object.entries(elements).some(([name, element]) => name.startsWith('projectsBoard') && element && (element === active || element.contains?.(active))),
                 activeId: row?.dataset?.rowId || focusedRowId,
                 controlId: active?.id || '',
                 taskId: taskRow?.dataset?.taskId || '',

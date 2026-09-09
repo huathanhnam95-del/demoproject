@@ -146,14 +146,22 @@
         async function applyStatus(id, nextStatus) {
             const found = array(response?.tasks).find((t) => t.id === id);
             if (!found || found.status === nextStatus || !canWrite() || mutation) return;
+            const prevStatus = found.status;
             board?.selectTask(found);
             setTask(found);
             found.status = nextStatus;
             render();
             try {
-                await mutate(`${base()}/tasks/${encodeURIComponent(id)}`, { expectedRevision: found.revision, status: nextStatus });
+                const ok = await mutate(`${base()}/tasks/${encodeURIComponent(id)}`, { expectedRevision: found.revision, status: nextStatus });
+                if (!ok && found.status === nextStatus) {
+                    found.status = prevStatus;
+                    render();
+                    refresh();
+                }
             } catch (err) {
+                found.status = prevStatus;
                 status(err?.message || 'Could not update task status');
+                render();
                 refresh();
             }
         }
@@ -203,10 +211,10 @@
             return !!t.derived && (Number(t.activeChildCount) > 0 || (Number(t.derived.activeLeafCount) > 0 && rows.some((child) => child.id !== t.id && (child.parentTaskId === t.id || array(child.pathIds).includes(t.id)))));
         }
         function timelineMarkup(rows) {
-            if (!rows.length) return '<p>No dated tasks on this page.</p>';
             const hasDerivedSpan = (t) => hasDerivedTimelineSpan(t, rows);
             const day = (value) => Date.parse(`${value}T00:00:00Z`) / 86400000;
             const dates = rows.flatMap((t) => [t.startDate, t.dueDate, ...(hasDerivedSpan(t) ? [t.derived.startDate, t.derived.dueDate] : [])]).filter(Boolean).map(day).filter(Number.isFinite);
+            if (!rows.length || !dates.length) return '<p>No dated tasks on this page.</p>';
             const start = Math.min(...dates), end = Math.max(...dates), span = Math.max(1, end - start + 1);
             const dateLabel = (offset) => new Date((start + offset) * 86400000).toISOString().slice(0, 10);
             const bar = (from, to, derivedBar) => {
@@ -338,6 +346,7 @@
                 for (const name of ['sectionId', 'ownerUid', 'assigneeUid']) {
                     const control = form.elements.namedItem(name); if (control) control.innerHTML = '<option value="">Access unavailable</option>';
                 }
+                syncFilterBadge();
             }
             for (const id of ['projects-view-content', 'projects-project-links', 'projects-task-planning', 'projects-view-summary', 'projects-board-detail-body']) {
                 const target = el(id); if (target) { target.innerHTML = ''; target.textContent = ''; }
@@ -587,14 +596,14 @@
                 const calNavBtn = event.target.closest('[data-cal-nav]');
                 if (calNavBtn) {
                     const nav = calNavBtn.dataset.calNav;
-                    const [y, m] = calendarMonth.split('-').map(Number);
-                    let targetDate;
+                    let nextMonth;
                     if (nav === 'today') {
-                        targetDate = new Date();
+                        nextMonth = new Date().toISOString().slice(0, 7);
                     } else {
-                        targetDate = new Date(Date.UTC(y, m - 1 + Number(nav), 1));
+                        const [y, m] = calendarMonth.split('-').map(Number);
+                        const targetDate = new Date(Date.UTC(y, m - 1 + Number(nav), 1));
+                        nextMonth = `${targetDate.getUTCFullYear()}-${String(targetDate.getUTCMonth() + 1).padStart(2, '0')}`;
                     }
-                    const nextMonth = `${targetDate.getUTCFullYear()}-${String(targetDate.getUTCMonth() + 1).padStart(2, '0')}`;
                     if (nextMonth !== calendarMonth) {
                         calendarMonth = nextMonth;
                         resetViewPage();
@@ -608,7 +617,10 @@
             let dragTaskId = null;
             el('projects-view-content')?.addEventListener('dragstart', (e) => {
                 const card = e.target.closest ? e.target.closest('[data-kanban-task], [data-card]') : null;
-                if (!card || !canWrite() || mutation) return;
+                if (!card || !canWrite() || mutation) {
+                    e.preventDefault?.();
+                    return;
+                }
                 dragTaskId = card.dataset.kanbanTask || card.dataset.card;
                 card.classList.add('drag');
                 if (e.dataTransfer) {
@@ -625,6 +637,7 @@
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
                 if (!col || !dragTaskId || !canWrite() || mutation) return;
                 e.preventDefault();
+                if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
                 (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => { if (c !== col) c.classList.remove('over'); });
                 col.classList.add('over');
             });
@@ -636,7 +649,7 @@
             });
             el('projects-view-content')?.addEventListener('drop', async (e) => {
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
-                const id = dragTaskId;
+                const id = dragTaskId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
                 dragTaskId = null;
                 (el('projects-view-content')?.querySelectorAll?.('.kcard.drag') || []).forEach((c) => c.classList.remove('drag'));
                 (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => c.classList.remove('over'));

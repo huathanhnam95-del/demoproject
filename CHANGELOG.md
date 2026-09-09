@@ -1,3 +1,20 @@
+## [V2.0.3] - 2026-09-09
+
+### Added & Enhanced
+- **Teacher Schedule Visual Bug Sweep & Google-Calendar-Style Drag Editing (`public/js/crm/teacher-scheduler-workspace.js`, `public/crm-admin.css`, `public/crm-admin.html`, `functions/src/crm/scheduling-service.js`, `functions/src/routes/teacher/scheduler.js`)**:
+  - Mutually exclusive popovers (`openQuickAdd` vs `openSessionBubble`), outside-click dismiss, and topmost-only Escape key handling.
+  - Viewport-fixed positioning escaping container `overflow: hidden` with flip-above-anchor layout.
+  - Dynamic day columns (`--scheduler-day-count: N`) with 14-day date range clamping.
+  - Compact 30-min pill layout (`.is-compact`) preventing height truncation and separating `completedBadge` from `.pill-title`.
+  - Google-Calendar-style session drag editing with Scope Choice Modal ("This session only" vs "This and all following"), live dry-run counts, conflict surfacing, dynamic `allowPartial` consent, and token-validated 1-click Undo toast.
+  - Backend atomic series reschedule (`POST /sessions/:sessionId/reschedule-series`) with DST-safe UTC day arithmetic, `expectedScheduleVersion` concurrency checks, and early candidate cap ($>400$).
+  - Parallelized bulk reschedule (`POST /scheduler/sessions/bulk-reschedule`) with `Promise.all` reads and sanitized scheduled window projections.
+- **CRM Projects Advanced Workspace Views (`public/crm-admin.html`, `public/js/crm/projects/*`, `public/css/crm-projects.css`)**:
+  - Kanban board view with pointer drag-and-drop column transitions.
+  - Interactive Gantt view with dependency lines, calendar navigation, and visual progress charts.
+  - Collapsible utility rail featuring notifications, automations, and quick-filter settings.
+  - Smooth workspace transitions, keyboard hints, toolbar density switches, and dark theme tokens.
+
 ## [V2.0.2] - 2026-09-09
 
 ### Added & Enhanced

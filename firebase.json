@@ -1,158 +1,108 @@
 {
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs22",
-      "predeploy": [
-        "node scripts/release/firebase-release.cjs hook --product functions"
-      ]
-    }
-  ],
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "emulators": {
+    "functions": [
+        {
+            "source": "functions",
+            "codebase": "default",
+            "runtime": "nodejs22",
+            "predeploy": [
+                "node scripts/release/firebase-release.cjs hook --product functions"
+            ]
+        }
+    ],
     "firestore": {
-      "port": 8080,
-      "host": "localhost"
-    },
-    "auth": {
-      "port": 9099,
-      "host": "localhost"
-    },
-    "functions": {
-      "port": 5001,
-      "host": "localhost"
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
     },
     "storage": {
-      "port": 9199,
-      "host": "localhost"
+        "rules": "storage.rules"
     },
-    "ui": {
-      "enabled": true,
-      "port": 4000,
-      "host": "localhost"
-    }
-  },
-  "hosting": {
-    "public": "public",
-    "predeploy": [
-      "node scripts/release/firebase-release.cjs hook --product hosting"
-    ],
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "headers": [
-      {
-        "source": "/index.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/crm-admin.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/crm-admin.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/crm-admin.css",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/crm-entrance-test-result.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/crm-entrance-test-result.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/crm-entrance-test-result.css",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/js/**",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/entrance-test-ui-lab.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      },
-      {
-        "source": "/entrance-test-prototype.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, max-age=0, must-revalidate"
-          }
-        ]
-      }
-    ],
-    "rewrites": [
-      {
-        "source": "/api/**",
-        "function": {
-          "functionId": "api",
-          "region": "us-central1"
+    "emulators": {
+        "firestore": {
+            "port": 8080,
+            "host": "localhost"
+        },
+        "auth": {
+            "port": 9099,
+            "host": "localhost"
+        },
+        "functions": {
+            "port": 5001,
+            "host": "localhost"
+        },
+        "storage": {
+            "port": 9199,
+            "host": "localhost"
+        },
+        "ui": {
+            "enabled": true,
+            "port": 4000,
+            "host": "localhost"
         }
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
+    },
+    "hosting": {
+        "public": "public",
+        "predeploy": [
+            "node scripts/release/firebase-release.cjs hook --product hosting"
+        ],
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "headers": [
+            {
+                "source": "/index.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-admin.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-admin.js",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-admin.css",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-entrance-test-result.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-entrance-test-result.js",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-entrance-test-result.css",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/js/**",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/entrance-test-ui-lab.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/entrance-test-prototype.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            }
+        ],
+        "rewrites": [
+            {
+                "source": "/api/**",
+                "function": {
+                    "functionId": "api",
+                    "region": "us-central1"
+                }
+            },
+            {
+                "source": "**",
+                "destination": "/index.html"
+            }
+        ]
+    }
 }

@@ -1,5 +1,6 @@
 const USERS = 'users';
 const CRM_LEADS = 'crmLeads';
+const CRM_DATA_INPUT_DRAFTS = 'crmDataInputDrafts';
 const CRM_STUDENTS = 'crmStudents';
 const CRM_AGENT_SOURCES = 'crmAgentSources';
 const CRM_COURSES = 'crmCourses';
@@ -12,6 +13,7 @@ const CRM_ATTENDANCE_RECORDS = 'crmAttendanceRecords';
 const CRM_SCHEDULED_SESSIONS = 'crmScheduledSessions';
 const CRM_INVOICES = 'crmInvoices';
 const CRM_PAYMENTS = 'crmPayments';
+const CRM_PAYMENT_OPERATIONS = 'crmPaymentOperations';
 const CRM_COMMISSIONS = 'crmCommissions';
 const CRM_TEMPLATES = 'crmTemplates';
 const CRM_AUTOMATION_RULES = 'crmAutomationRules';
@@ -40,6 +42,7 @@ const CLASSROOM_LIVE_SESSIONS = 'liveSessions';
 module.exports = {
     USERS,
     CRM_LEADS,
+    CRM_DATA_INPUT_DRAFTS,
     CRM_STUDENTS,
     CRM_AGENT_SOURCES,
     CRM_COURSES,
@@ -52,6 +55,7 @@ module.exports = {
     CRM_SCHEDULED_SESSIONS,
     CRM_INVOICES,
     CRM_PAYMENTS,
+    CRM_PAYMENT_OPERATIONS,
     CRM_COMMISSIONS,
     CRM_TEMPLATES,
     CRM_AUTOMATION_RULES,

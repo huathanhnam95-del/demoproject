@@ -1,0 +1,9 @@
+{
+  "name": "crm-voice-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Authenticated feature-neutral CRM voice relay; native paid dispatch disabled",
+  "main": "server.js",
+  "engines": { "node": ">=22" },
+  "dependencies": { "ws": "8.21.3" }
+}

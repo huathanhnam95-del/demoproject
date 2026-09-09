@@ -1922,6 +1922,7 @@
     if (leavingMode === 'rop') window.ROPMode?.onExit?.();
 
     modeTransitionToken += 1;
+    window.UIContinuity?.cancel('practice-mode');
     const exitToken = modeTransitionToken;
     const isCurrentTransition = () => exitToken === modeTransitionToken;
     if (leavingMode && window.SpeakingPracticeController?.unmount) {
@@ -1934,12 +1935,6 @@
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
     if (activePanel && dashboard && !prefersReducedMotion) {
-      activePanel.classList.add('stage-fade-blur-out');
-      await new Promise(resolve => setTimeout(resolve, 160));
-      if (!isCurrentTransition()) {
-        activePanel.classList.remove('stage-fade-blur-out');
-        return false;
-      }
       activePanel.classList.remove('stage-fade-blur-out');
       document.querySelectorAll('.mode-panel').forEach(panel => {
         panel.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
@@ -1986,7 +1981,7 @@
    * Called by Learning Center mode buttons
    * @param {string} mode - 'type', 'speak', 'extended', 'watch', 'notes', 'pronounce'
    */
-  window.switchToMode = async function (mode) {
+  async function activatePracticeMode(mode) {
     if (!mode) return;
 
     const transitionToken = ++modeTransitionToken;
@@ -2184,15 +2179,8 @@
           }
         });
       } else {
-        if (outgoingStage && !prefersReducedMotion) {
-          outgoingStage.classList.add('stage-fade-blur-out');
-          await new Promise(resolve => setTimeout(resolve, 160));
-          if (!isCurrentTransition()) {
-            outgoingStage.classList.remove('stage-fade-blur-out');
-            return false;
-          }
-          outgoingStage.classList.remove('stage-fade-blur-out');
-        }
+        // Keep outgoing content readable until the next state is ready; never delay the action for motion.
+        outgoingStage?.classList.remove('stage-fade-blur-out');
 
         document.querySelectorAll('.mode-panel').forEach(panel => {
           if (panel !== modePanel) {
@@ -2344,15 +2332,8 @@
       syncSpeakingPracticeController(mode, PracticeScopeManager.getScope(), leavingMode);
 
       if (deferSelectedPanelReveal) {
-        if (outgoingStage && !prefersReducedMotion) {
-          outgoingStage.classList.add('stage-fade-blur-out');
-          await new Promise(resolve => setTimeout(resolve, 160));
-          if (!isCurrentTransition()) {
-            outgoingStage.classList.remove('stage-fade-blur-out');
-            return false;
-          }
-          outgoingStage.classList.remove('stage-fade-blur-out');
-        }
+        // Keep outgoing content readable until the next state is ready; never delay the action for motion.
+        outgoingStage?.classList.remove('stage-fade-blur-out');
 
         const dashboard = document.querySelector('.dashboard-modern-container');
         if (dashboard) {
@@ -2391,7 +2372,7 @@
         // Trigger tutorial after a short delay for UI to settle
         if (getModeMeta(mode)?.hasTutorial) {
           setTimeout(() => {
-            if (typeof window.startTutorial === 'function') {
+            if (isCurrentTransition() && typeof window.startTutorial === 'function') {
               window.startTutorial(mode, false); // Not forced, but first-time
             }
           }, 500);
@@ -2421,6 +2402,18 @@
       const currentRoute = PracticeRouter.parseRoute(window.location.pathname);
       const currentQuestionId = currentRoute?.mode === mode ? currentRoute.questionId : null;
       PracticeRouter.pushRoute(mode, currentQuestionId);
+    }
+  }
+
+  window.switchToMode = async function (mode) {
+    if (!mode) return;
+    const feedback = window.UIContinuity?.begin('practice-mode', {
+      message: `Opening ${getResolvedModeMeta(mode)?.label || mode}…`
+    });
+    try {
+      return await activatePracticeMode(mode);
+    } finally {
+      feedback?.finish();
     }
   };
 

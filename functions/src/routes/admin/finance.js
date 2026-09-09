@@ -2,32 +2,20 @@ const {
     CRM_INVOICES,
     CRM_PAYMENTS,
     CRM_COMMISSIONS,
-    CRM_ENROLLMENTS,
     CRM_STUDENTS,
     CRM_COURSES,
-    CRM_CLASSROOMS,
-    CLASSROOM_MEMBERS,
     CRM_AGENT_SOURCES
 } = require('../../crm/collections');
 const {
     buildInvoiceCreateData,
     buildInvoicePatchData,
-    buildPaymentCreateData,
-    buildPaidEnrollmentSyncPatch,
-    applyPaymentToInvoice,
-    buildCommissionRecords,
-    buildAgentSourceCommissionRecord,
     summarizeFinance,
     mapInvoiceRecord,
     mapPaymentRecord
 } = require('../../crm/finance-service');
-const {
-    buildEnrollmentPatchData,
-    buildClassroomMemberData
-} = require('../../crm/enrollment-service');
-const {
-    buildStudentPatchData
-} = require('../../crm/student-service');
+const { recordPayment } = require('../../crm/finance-write-service');
+const { createAdmission } = require('../../crm/data-input/authorization');
+const { auditSaved } = require('../../crm/workflow-write-service');
 
 function normalizeRateBps(value) {
     if (value === null || value === undefined || value === '') return null;
@@ -173,169 +161,36 @@ module.exports = function registerFinanceRoutes(router, deps) {
 
     router.post('/payments', ...requireAdminHandlers, async (req, res) => {
         try {
-            const payment = buildPaymentCreateData(req.body || {}, {
-                user: req.user,
-                serverTimestamp
-            });
-            const invoiceRef = db.collection(CRM_INVOICES).doc(payment.invoiceId);
-            const invoiceSnap = await invoiceRef.get();
-            if (!invoiceSnap.exists) {
-                return sendError(res, 404, 'INVOICE_NOT_FOUND', 'Invoice not found.');
-            }
-
-            const invoice = mapInvoiceRecord(invoiceSnap, payment.invoiceId);
-            if (String(invoice.status || '').trim().toLowerCase() === 'paid') {
-                return sendError(res, 400, 'INVOICE_ALREADY_PAID', 'This invoice is already paid and cannot accept additional payments.');
-            }
-            payment.currency = invoice.currency || payment.currency || 'VND';
-            if (String(invoice.studentId || '') !== String(payment.studentId || '')) {
-                return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment student must match the invoice student.');
-            }
-            const effectiveEnrollmentId = String(payment.enrollmentId || invoice.enrollmentId || '').trim();
-            if (invoice.enrollmentId && effectiveEnrollmentId && String(invoice.enrollmentId || '') !== effectiveEnrollmentId) {
-                return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment enrollment must match the invoice enrollment.');
-            }
-            payment.enrollmentId = effectiveEnrollmentId || null;
-
-            let enrollmentRef = null;
-            let enrollment = null;
-            if (payment.enrollmentId) {
-                enrollmentRef = db.collection(CRM_ENROLLMENTS).doc(payment.enrollmentId);
-                const enrollmentSnap = await enrollmentRef.get();
-                if (!enrollmentSnap.exists) {
-                    return sendError(res, 404, 'ENROLLMENT_NOT_FOUND', 'Enrollment not found.');
-                }
-                enrollment = enrollmentSnap.data() || {};
-                if (String(enrollment.studentId || '') !== String(payment.studentId || '')) {
-                    return sendError(res, 400, 'PAYMENT_MISMATCH', 'Payment student must match the enrollment student.');
-                }
-            }
-
-            const studentRef = db.collection(CRM_STUDENTS).doc(payment.studentId);
-            const studentSnap = await studentRef.get();
-            if (!studentSnap.exists) {
-                return sendError(res, 404, 'STUDENT_NOT_FOUND', 'Student not found.');
-            }
-
-            const paymentRef = db.collection(CRM_PAYMENTS).doc();
-            await paymentRef.set(payment);
-
-            const paymentSnap = await db.collection(CRM_PAYMENTS).where('invoiceId', '==', payment.invoiceId).get();
-            const payments = paymentSnap.docs.map((doc) => mapPaymentRecord(doc, doc.id));
-            const updatedInvoice = applyPaymentToInvoice(invoice, payments);
-            const invoiceWasPaid = String(invoice.status || '').trim().toLowerCase() === 'paid';
-            const invoiceNowPaid = String(updatedInvoice.status || '').trim().toLowerCase() === 'paid';
-            const invoicePatch = {
-                ...updatedInvoice
-            };
-            if (!invoiceWasPaid && invoiceNowPaid && !invoice.paidAt) {
-                invoicePatch.paidAt = serverTimestamp();
-            }
-            await invoiceRef.set(invoicePatch, { merge: true });
-            const latestInvoiceSnap = await invoiceRef.get();
-            const latestInvoice = mapInvoiceRecord(latestInvoiceSnap, payment.invoiceId);
-
-            let updatedEnrollment = enrollment;
-            let updatedStudent = studentSnap.data() || {};
-            let enrollmentActivated = false;
-            if (latestInvoice.status === 'paid' && enrollmentRef && enrollment) {
-                const syncPatch = buildPaidEnrollmentSyncPatch({
-                    invoice: latestInvoice,
-                    enrollment,
-                    student: studentSnap.data() || {}
-                }, {
-                    user: req.user,
-                    serverTimestamp
-                });
-
-                if (syncPatch) {
-                    updatedEnrollment = buildEnrollmentPatchData(enrollment, syncPatch.enrollmentPatch, {
-                        user: req.user,
-                        serverTimestamp
-                    });
-                    await enrollmentRef.set(updatedEnrollment, { merge: true });
-
-                    if (updatedEnrollment.studentUid && updatedEnrollment.classId) {
-                        await db.collection(CRM_CLASSROOMS)
-                            .doc(updatedEnrollment.classId)
-                            .collection(CLASSROOM_MEMBERS)
-                            .doc(updatedEnrollment.studentUid)
-                            .set(buildClassroomMemberData(updatedEnrollment), { merge: true });
-                    }
-
-                    updatedStudent = buildStudentPatchData(studentSnap.data() || {}, syncPatch.studentPatch, {
-                        user: req.user,
-                        serverTimestamp
-                    });
-                    await studentRef.set(updatedStudent, { merge: true });
-                    enrollmentActivated = true;
-                }
-            }
-
-            const commissions = buildCommissionRecords({
-                invoiceId: payment.invoiceId,
-                paymentId: paymentRef.id,
-                studentId: payment.studentId,
-                enrollmentId: payment.enrollmentId,
-                commissionSplits: invoice.commissionSplits
-            }, {
+            const authClient = deps.paymentAuth || (deps.admin && typeof deps.admin.auth === 'function' ? deps.admin.auth() : null);
+            const authorize = createAdmission({ db, authClient, identity: req.user });
+            const result = await recordPayment(db, req.body || {}, {
                 user: req.user,
                 serverTimestamp,
-                currency: invoice.currency || payment.currency || 'VND'
+                nowMs: Date.now(),
+                authorize
             });
-
-            await Promise.all(commissions.map((commission) => db.collection(CRM_COMMISSIONS).doc().set(commission)));
-            let agentSourceCommissionsCreated = 0;
-            if (!invoiceWasPaid && invoiceNowPaid) {
-                const existingAgentCommissionSnap = await db.collection(CRM_COMMISSIONS)
-                    .where('invoiceId', '==', payment.invoiceId)
-                    .where('role', '==', 'agent_source')
-                    .limit(1)
-                    .get();
-                if (existingAgentCommissionSnap.empty) {
-                    const agentSourceCommission = buildAgentSourceCommissionRecord({
-                        invoice: latestInvoice,
-                        paymentId: paymentRef.id
-                    }, {
-                        user: req.user,
-                        serverTimestamp,
-                        currency: latestInvoice.currency || 'VND'
-                    });
-                    if (agentSourceCommission) {
-                        await db.collection(CRM_COMMISSIONS).doc().set(agentSourceCommission);
-                        agentSourceCommissionsCreated = 1;
-                    }
-                }
-            }
-            await writeAuditLog?.({
+            const auditWarnings = result.__operationReplay ? [] : await auditSaved(writeAuditLog, {
                 action: 'payment.create',
                 entityType: 'payment',
-                entityId: paymentRef.id,
+                entityId: result.paymentId,
                 metadata: {
-                    invoiceId: payment.invoiceId,
-                    studentId: payment.studentId,
-                    commissionsCreated: commissions.length,
-                    agentSourceCommissionsCreated,
-                    enrollmentActivated,
-                    invoiceStatus: latestInvoice.status
+                    invoiceId: result.payment.invoiceId,
+                    studentId: result.payment.studentId,
+                    commissionsCreated: result.commissionsCreated,
+                    agentSourceCommissionsCreated: result.agentSourceCommissionsCreated,
+                    enrollmentActivated: result.enrollmentActivated,
+                    invoiceStatus: result.invoice.status
                 }
             }, { user: req.user });
-
-            return sendSuccess(res, {
-                paymentId: paymentRef.id,
-                payment,
-                invoice: latestInvoice,
-                commissionsCreated: commissions.length,
-                agentSourceCommissionsCreated,
-                enrollmentActivated,
-                enrollment: enrollmentActivated ? updatedEnrollment : null,
-                student: enrollmentActivated ? updatedStudent : null
-            }, 'Payment recorded.');
+            return sendSuccess(res, auditWarnings.length ? { ...result, warnings: auditWarnings } : result, 'Payment recorded.');
         } catch (error) {
-            if ((error?.message || '').includes('Payment requires')) {
-                return sendError(res, 400, 'VALIDATION_ERROR', error.message);
+            const message = error?.message || error;
+            if ((message || '').includes('Payment requires')) {
+                return sendError(res, 400, 'VALIDATION_ERROR', message);
             }
-            return sendError(res, 500, 'CREATE_PAYMENT_ERROR', 'Failed to record payment.', error?.message || error);
+            const status = Number.isInteger(error?.status) ? error.status : 500;
+            const code = error?.code || 'CREATE_PAYMENT_ERROR';
+            return sendError(res, status, code, status >= 500 ? 'Failed to record payment.' : message, status >= 500 ? message : undefined);
         }
     });
 

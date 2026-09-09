@@ -77,6 +77,57 @@
             const key = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
             el[key] = document.getElementById(id);
         });
+        ensureLoadStatusUi();
+    }
+
+    function ensureLoadStatusUi() {
+        if (!el.questionSelectDi) return;
+        const selector = el.questionSelectDi.closest('.question-selector');
+        if (!selector) return;
+        const existing = document.getElementById('di-load-status');
+        if (existing) {
+            el.diLoadStatus = existing;
+            el.diLoadStatusText = existing.querySelector('#di-load-status-text');
+            el.diLoadRetryBtn = existing.querySelector('#di-load-retry-btn');
+            return;
+        }
+
+        const status = document.createElement('div');
+        status.id = 'di-load-status';
+        status.className = 'di-load-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.setAttribute('aria-atomic', 'true');
+        status.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;min-height:24px;color:#475569;';
+
+        const text = document.createElement('span');
+        text.id = 'di-load-status-text';
+
+        const retry = document.createElement('button');
+        retry.id = 'di-load-retry-btn';
+        retry.className = 'modern-btn modern-btn--compact';
+        retry.type = 'button';
+        retry.textContent = 'Retry loading images';
+        retry.hidden = true;
+        retry.setAttribute('aria-describedby', 'di-load-status-text');
+
+        status.append(text, retry);
+        const navRow = selector.querySelector('.question-nav-row');
+        if (navRow) navRow.insertAdjacentElement('afterend', status);
+        else selector.appendChild(status);
+        el.diLoadStatus = status;
+        el.diLoadStatusText = text;
+        el.diLoadRetryBtn = retry;
+    }
+
+    function setLoadStatus(state, message, canRetry) {
+        if (!el.diLoadStatus || !el.diLoadStatusText || !el.diLoadRetryBtn) return;
+        el.diLoadStatus.hidden = !message;
+        el.diLoadStatus.dataset.state = state || '';
+        el.diLoadStatusText.textContent = message || '';
+        el.diLoadRetryBtn.hidden = !canRetry;
+        el.diLoadStatus.style.color = state === 'error' ? '#b91c1c' : '#475569';
+        el.diLoadStatus.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
     }
 
     function init() {
@@ -126,15 +177,29 @@
 
     function loadEntries() {
         if (loadEntriesPromise) return loadEntriesPromise;
+        if (el.playDiBtn) el.playDiBtn.disabled = true;
+        setLoadStatus('loading', 'Loading image questions…', false);
         loadEntriesPromise = (async () => {
             try {
                 const resp = await fetch(DI_JSON_PATH);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
-                entries = Array.isArray(data) ? data : (data.questions || []);
+                const nextEntries = Array.isArray(data) ? data : data?.questions;
+                if (!Array.isArray(nextEntries)) throw new Error('Invalid Describe Image question data');
+                entries = nextEntries;
             } catch (err) {
                 console.warn('[DI] JSON load failed, using empty set:', err.message);
                 entries = [];
+                filteredEntries = [];
+                currentEntry = null;
+                currentEntryIndex = 0;
+                hasLoadedEntries = false;
+                populateQuestionSelect();
+                if (el.currentQuestionIdDi) el.currentQuestionIdDi.textContent = '—';
+                if (el.playDiBtn) el.playDiBtn.disabled = true;
+                hide(el.diPracticeArea);
+                setLoadStatus('error', 'Unable to load Describe Image questions. Check your connection and retry.', true);
+                return;
             }
             hasLoadedEntries = entries.length > 0;
             filteredEntries = [...entries];
@@ -143,8 +208,19 @@
                 currentEntryIndex = 0;
                 currentEntry = filteredEntries[0];
                 updateQuestionDisplay();
+                if (el.playDiBtn) el.playDiBtn.disabled = false;
+                setLoadStatus('success', '', false);
+            } else {
+                currentEntry = null;
+                currentEntryIndex = 0;
+                if (el.currentQuestionIdDi) el.currentQuestionIdDi.textContent = '—';
+                if (el.playDiBtn) el.playDiBtn.disabled = true;
+                hide(el.diPracticeArea);
+                setLoadStatus('empty', 'No Describe Image questions are available right now.', true);
             }
-        })();
+        })().finally(() => {
+            loadEntriesPromise = null;
+        });
         return loadEntriesPromise;
     }
 
@@ -210,6 +286,7 @@
 
         // Play
         el.playDiBtn?.addEventListener('click', startPractice);
+        el.diLoadRetryBtn?.addEventListener('click', () => loadEntries());
 
         // Stop recording
         el.diStopBtn?.addEventListener('click', () => stopRecording());

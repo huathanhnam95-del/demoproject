@@ -16,6 +16,8 @@ window.CrmDashboardWorkspace = (function () {
             return capabilities[name] === true;
         }
 
+        let dashboardRequestId = 0;
+
         const essayAiState = {
             active: false,
             ready: false,
@@ -187,14 +189,20 @@ window.CrmDashboardWorkspace = (function () {
 
         async function refreshDashboard() {
             if (!window.CrmDashboard) return;
+            const requestId = ++dashboardRequestId;
 
-            const [summaryJson, funnelJson, revenueJson, duplicatesJson, auditJson] = await Promise.all([
+            const responses = await Promise.all([
                 apiFetchJson('/api/admin/dashboard/summary', { method: 'GET' }),
                 apiFetchJson('/api/admin/dashboard/funnel', { method: 'GET' }),
                 apiFetchJson('/api/admin/dashboard/revenue', { method: 'GET' }),
                 apiFetchJson('/api/admin/duplicates', { method: 'GET' }),
                 apiFetchJson('/api/admin/audit-logs', { method: 'GET' })
-            ]);
+            ]).catch((error) => {
+                if (requestId !== dashboardRequestId) return null;
+                throw error;
+            });
+            if (requestId !== dashboardRequestId) return;
+            const [summaryJson, funnelJson, revenueJson, duplicatesJson, auditJson] = responses;
 
             const summary = summaryJson.summary || {};
             const funnel = funnelJson.funnel || {};
@@ -216,6 +224,8 @@ window.CrmDashboardWorkspace = (function () {
                     ? (readAloudUsageResult.value.usageSummary || null)
                     : null;
             }
+
+            if (requestId !== dashboardRequestId) return;
 
             if (elements.dashboardSummaryCards) {
                 const cards = window.CrmDashboard.buildSummaryCards(summary);

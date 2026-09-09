@@ -36,6 +36,24 @@ function loadController() {
 }
 
 function createElements() {
+  const makeElement = (initial = {}) => {
+    const attributes = new Map();
+    return {
+      ...initial,
+      ownerDocument: document,
+      children: [],
+      setAttribute(name, value) { attributes.set(String(name), String(value)); },
+      getAttribute(name) { return attributes.has(String(name)) ? attributes.get(String(name)) : null; },
+      hasAttribute(name) { return attributes.has(String(name)); },
+      removeAttribute(name) { attributes.delete(String(name)); },
+      append(...children) { this.children.push(...children); },
+      replaceChildren(...children) { this.children = children; }
+    };
+  };
+  const document = {
+    createTextNode: text => ({ textContent: String(text) }),
+    createElement: () => makeElement()
+  };
   return {
     inputStudentFinanceEnrollment: { value: '', innerHTML: '' },
     studentFinanceEnrollmentMeta: { textContent: '' },
@@ -48,12 +66,15 @@ function createElements() {
       addEventListener: () => {},
       contains: () => true
     },
-    studentClassroomMatchSummary: { innerHTML: '' },
+    studentClassroomMatchSummary: makeElement({ innerHTML: '' }),
     inputStudentClassroomMatchSelect: { value: '', innerHTML: '' },
     studentClassroomMatchMeta: { textContent: '' },
     studentClassroomMatchWarning: { textContent: '', style: {} },
     studentFinanceWorkflowBadge: { className: '', textContent: '' },
-    studentFinanceWorkflowNote: { textContent: '' },
+    studentFinanceWorkflowNote: makeElement({
+      textContent: '',
+      insertAdjacentElement() {}
+    }),
     btnCreateRecommendedEnrollment: { disabled: true }
   };
 }
@@ -61,6 +82,7 @@ function createElements() {
 async function runCase(capabilities) {
   const { createController, sandbox } = loadController();
   let matchCalls = 0;
+  let followupCalls = 0;
   sandbox.window.ClassroomAPI = {
     fetchAttendanceSummary: async () => ({ students: [] }),
     fetchClassroomMatches: async () => {
@@ -75,13 +97,19 @@ async function runCase(capabilities) {
   };
 
   const controller = createController({
-    apiFetchJson: async () => ({
+    apiFetchJson: async (url) => {
+      if (url.endsWith('/payment-followup')) {
+        followupCalls += 1;
+        return { required: false, payments: [], requiredActions: [] };
+      }
+      return {
       totalInvoiced: 0,
       totalPaid: 0,
       totalOutstanding: 0,
       nextDueDate: '-',
       invoices: []
-    }),
+      };
+    },
     elements: createElements(),
     modalState: {
       studentId: 'student-1',
@@ -98,6 +126,7 @@ async function runCase(capabilities) {
   });
 
   await controller.refreshStudentFinance();
+  assert.strictEqual(followupCalls, 1, 'Payment follow-up must refresh regardless of classroom-match capability.');
   return matchCalls;
 }
 
@@ -120,7 +149,7 @@ async function runCase(capabilities) {
     'Student finance should request classroom matches when the backend advertises that capability.'
   );
 
-  console.log('student finance optional feature gating passed');
+  process.stdout.write('student finance optional feature gating passed\n');
 })().catch((error) => {
   console.error(error);
   process.exit(1);

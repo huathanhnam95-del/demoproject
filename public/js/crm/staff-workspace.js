@@ -64,12 +64,15 @@ window.CrmStaffWorkspace = (function () {
         const elements = deps.elements || {};
         const showToast = typeof deps.showToast === 'function' ? deps.showToast : null;
         const apiFetchJson = typeof deps.apiFetchJson === 'function' ? deps.apiFetchJson : null;
+        const onAccountsRendered = typeof deps.onAccountsRendered === 'function' ? deps.onAccountsRendered : null;
         const escape = typeof deps.escapeHtml === 'function' ? deps.escapeHtml : escapeHtml;
         const getCurrentUser = typeof deps.getCurrentUser === 'function'
             ? deps.getCurrentUser
             : () => (window.firebase?.auth?.().currentUser || null);
 
         let bound = false;
+        let teacherRefresh = 0;
+        let accountRefresh = 0;
 
         let accountCache = [];
         let accountCurrentUid = '';
@@ -254,7 +257,7 @@ window.CrmStaffWorkspace = (function () {
                     </thead>
                     <tbody>
                         ${visible.map((acc) => `
-                            <tr${acc.archived ? ' class="crm-account-row-archived"' : ''}>
+                            <tr data-account-uid="${escape(acc.uid)}"${acc.archived ? ' class="crm-account-row-archived"' : ''}>
                                 <td class="crm-account-check-cell">
                                     ${acc.isProtected
                                         ? ''
@@ -307,6 +310,7 @@ window.CrmStaffWorkspace = (function () {
             }
 
             syncBulkActionState();
+            onAccountsRendered?.();
         }
 
         function renderAccountList(accounts, currentUid, bootstrapEmails = ['huathanhnam95@gmail.com']) {
@@ -327,31 +331,45 @@ window.CrmStaffWorkspace = (function () {
 
         async function refreshTeachers() {
             if (!apiFetchJson) return false;
+            const request = ++teacherRefresh;
+            const feedback = window.UIContinuity?.begin('crm-teachers', {
+                region: elements.staffTeacherList, message: 'Refreshing teachers…'
+            });
             try {
                 const payload = await apiFetchJson('/api/admin/teachers', { method: 'GET' });
+                if (request !== teacherRefresh) return false;
                 const teachers = Array.isArray(payload?.teachers) ? payload.teachers : [];
                 renderTeacherList(teachers);
                 return true;
             } catch (error) {
-                renderTeacherList([]);
+                if (request !== teacherRefresh) return false;
                 showToast?.(error?.message || 'Failed to load teachers.', 'error');
                 return false;
+            } finally {
+                feedback?.finish();
             }
         }
 
         async function refreshAccounts() {
             if (!apiFetchJson) return false;
+            const request = ++accountRefresh;
+            const feedback = window.UIContinuity?.begin('crm-accounts', {
+                region: elements.staffAccountList, message: 'Refreshing accounts…'
+            });
             try {
                 const payload = await apiFetchJson('/api/admin/accounts', { method: 'GET' });
+                if (request !== accountRefresh) return false;
                 const accounts = Array.isArray(payload?.accounts) ? payload.accounts : [];
                 const currentUser = getCurrentUser?.();
                 const currentUid = String(currentUser?.uid || '').trim();
                 renderAccountList(accounts, currentUid);
                 return true;
             } catch (error) {
-                renderAccountList([]);
+                if (request !== accountRefresh) return false;
                 showToast?.(error?.message || 'Failed to load accounts.', 'error');
                 return false;
+            } finally {
+                feedback?.finish();
             }
         }
 

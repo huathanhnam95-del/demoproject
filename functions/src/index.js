@@ -55,6 +55,8 @@ const {
     runBookTextRevisionQueue
 } = require('./crm/book-ingest-service');
 const { getStorageBucket } = require('./utils/firebase_admin_init');
+const { createAttachmentStorage } = require('./crm/data-input/attachment-storage');
+const { createAttachmentCleanup } = require('./crm/data-input/attachment-cleanup');
 
 async function runCrmAutomationQueue() {
     const db = getFirestore();
@@ -135,6 +137,21 @@ module.exports = {
         timeoutSeconds: 300,
         secrets: ['AZURE_SPEECH_KEY']
     }, apiApp),
+    crmProjectsAutomationProcessor: onSchedule({ region: 'us-central1', schedule: 'every 1 minutes', timeoutSeconds: 300 }, async () => {
+        const { getAuth } = require('firebase-admin/auth');
+        const { createProjectsAccessService } = require('./crm/projects/access-service');
+        const { createProjectsCommandService } = require('./crm/projects/domain/command-service');
+        const { createAutomationProcessor } = require('./crm/projects/automation/processor');
+        const db = getFirestore();
+        const accessService = createProjectsAccessService({ db, auth: getAuth() });
+        const commandService = createProjectsCommandService({ db, accessService });
+        const result = await createAutomationProcessor({ db, accessService, commandService }).processBatch({
+            limit: 50,
+            maxPages: 10,
+            budgetMs: 30000
+        });
+        console.info('crmProjectsAutomationProcessor', { metrics: result.metrics, paused: result.paused || false });
+    }),
     crmAutomationRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {
         await runCrmAutomationQueue();
     }),
@@ -170,5 +187,16 @@ module.exports = {
     }, async () => {
         const db = getFirestore();
         await runBookTextRevisionQueue(db, { now: new Date(), getStorageBucket });
+    }),
+    crmDataInputAttachmentCleanupRunner: onSchedule({
+        region: 'us-central1',
+        schedule: 'every 5 minutes',
+        timeoutSeconds: 300,
+        memory: '256MiB',
+        maxInstances: 1,
+        concurrency: 1
+    }, async () => {
+        const storage = createAttachmentStorage({ bucket: await getStorageBucket() });
+        await createAttachmentCleanup({ db: getFirestore(), storage }).run();
     })
 };

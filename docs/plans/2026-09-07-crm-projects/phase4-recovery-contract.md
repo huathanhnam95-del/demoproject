@@ -1,0 +1,27 @@
+# Phase4 discussions, history and recovery execution contract
+
+This refines the already approved eleven-phase implementation. Phase3 source is 3972062e; closure is 5cad0720. Root owns architecture, review and these documents. A fresh isolated Luna coder owns implementation/tests. No new approval gate, deployment, production mutation or paid calls.
+
+## Shared boundary and records
+
+Reuse current transaction authorization, operation digest/idempotency, event recording, revision maps and effective hierarchy. Keep focused services under functions/src/crm/projects; refactor the command executor only as needed to share its actual transaction boundary. No parallel weaker access or mutation path. All reads and retries recheck current account/grant/membership, including messages, history and files. Admin without explicit membership cannot read content.
+
+Store task-addressed discussions, replies and attachment metadata in project-owned collections with stable IDs, revisions and retained history. Author can edit own message; Owner can moderate with a recorded reason and retained original/version history. Editor cannot edit another author. Viewer reads only. Validate reply belongs to the same task/project and mention targets are eligible project members. Render text safely, with explicit mention selection rather than arbitrary user IDs. Discussion target follows the board's selected stable task at any depth. Guard stale reads and pending writes after navigation.
+
+Private attachment bytes use server-controlled object storage and authenticated upload/download endpoints. Bound bytes and accepted types explicitly, sanitize download names, and use attachment Content-Disposition plus nosniff. Never return public bearer download URLs or let the client supply bucket/object paths. Bind metadata to project/task/message and operation; prevent foreign attachment reuse. Handle interrupted upload/finalization idempotently without publishing partial files. Recheck current access on byte reads; suspension/revocation must deny previously acquired links. Retain objects on Archive/Trash. Use the local Storage emulator for actual byte round-trip/access evidence; extend the managed harness narrowly with exclusive ownership and cleanup checks. Preserve existing Storage rules outside the feature prefix.
+
+## Recovery and Undo
+
+Owner manages project/section lifecycle; Owner/Editor manage task subtree lifecycle. Use inherited lifecycle tombstones so large subtree archival is atomic without rewriting descendants. Distinguish pre-existing child Archive/Trash states and preserve them on restoring the parent. Queries and UI expose active/Archive/Trash appropriately; archived/trashed data cannot be ordinarily edited. No automatic permanent purge, no enrollment in legacy crmRecycleBin. Restore preserves descendants, discussions, file bytes/metadata, custom values, order and historical inactive assignees; restoring never grants access.
+
+An unavailable ancestor requires explicit restore-chain or a valid active destination, with role, cycle, structure and record revision fences. Do not silently move or reactivate other records. Whole project/section recovery must retain references for later notifications/runs.
+
+History lists actual logical operations with affected records and actors, bounded continuation and stable ordering. Extend revision-safe Undo beyond existing moves to ordinary fields, ownership/assignees/dates and grouped bulk changes plus lifecycle operations. Check affected record revisions (and structural/schema fences where relevant), preserve unrelated records, reject newer edits, increment revisions and write a new inverse/history entry. Never touch any AI spending records. Avoid requiring unrelated task revisions for a local field Undo. Preserve historical inactive assignments on restoration without allowing new ineligible assignments.
+
+Provide bounded atomic bulk task updates with one logical operation and complete inverse; reject over-limit before writes, not after partial commits. Retrying after an interrupted response must return the same committed operation; test interruption and exact reload state. A larger resumable batch is unnecessary if a documented user-visible bound is enforced honestly.
+
+## UI and verification
+
+Use focused discussion/recovery client modules and narrow board detail/integration callbacks, preserving Phase3 keyed rows and editor state. Provide actual reply/edit/moderation/upload/download flows, history and Undo, lifecycle controls and recovery location choices. Flat readable BEL style; no fake future tabs. Owner/Editor/Viewer actions must reflect current authority and pending state.
+
+Manifest Phase4 must include API, real Auth/Firestore/Storage persisted checks and real Chrome. Prove nested subtree restore after full reload by comparing all retained content and bytes; previous child lifecycle preservation; inactive assignee history; unavailable ancestors/destinations; concurrent Undo conflict; bulk interrupted-response retry; author/Owner/Viewer/revoked/suspended/nonmember access; foreign reply/mention/file denial; direct-client protected-data denial; legacy purge isolation. Chrome proves actual detail flows and persisted reload, not just route mocks. Root audits source, assertions and settled screenshots, then commits and runs the exact committed canonical package independently. Preserve earlier canonical suites as regressions. No phase advancement with unresolved acceptance defects.

@@ -18,6 +18,8 @@ const registerCourseRoutes = require('./courses');
 const registerAgentSourceRoutes = require('./agent-sources');
 const registerIdentityRoutes = require('./identity');
 const registerLeadRoutes = require('./leads');
+const registerDataInputRoutes = require('./data-input');
+const registerPaymentEvidenceRoutes = require('./payment-evidence');
 const registerEntranceTestRoutes = require('./entrance-tests');
 const registerBulkDeleteRoutes = require('./bulk-delete');
 const registerRecycleBinRoutes = require('./recycle-bin');
@@ -282,6 +284,17 @@ module.exports = function createCrmRouter(rawDeps) {
     registerAgentSourceRoutes(router, routeDeps);
     registerIdentityRoutes(router, routeDeps);
     registerLeadRoutes(router, routeDeps);
+    registerPaymentEvidenceRoutes(router, { ...routeDeps, paymentEvidenceAuth: resolveAuthClient(deps) });
+    registerDataInputRoutes(router, {
+        ...routeDeps,
+        dataInputAuth: resolveAuthClient(deps),
+        dataInputProvider: deps.dataInputProvider || null,
+        ...(Object.hasOwn(deps, 'dataInputAssistanceConfig') ? { dataInputAssistanceConfig: deps.dataInputAssistanceConfig } : {}),
+        dataInputNativeConfigOptions: deps.dataInputNativeConfigOptions,
+        dataInputEnabled: deps.dataInputEnabled === undefined
+            ? process.env.CRM_DATA_INPUT_ENABLED === 'true'
+            : deps.dataInputEnabled === true
+    });
     registerEntranceTestRoutes(router, routeDeps);
     registerBulkDeleteRoutes(router, routeDeps);
     registerRecycleBinRoutes(router, routeDeps);
@@ -289,7 +302,7 @@ module.exports = function createCrmRouter(rawDeps) {
     registerEnrollmentRoutes(router, routeDeps);
     registerAttendanceRoutes(router, routeDeps);
     registerSchedulingRoutes(router, routeDeps);
-    registerFinanceRoutes(router, routeDeps);
+    registerFinanceRoutes(router, { ...routeDeps, paymentAuth: resolveAuthClient(deps) });
     registerAutomationRoutes(router, routeDeps);
     registerReportingRoutes(router, routeDeps);
     registerReadAloudReportingRoutes(router, routeDeps);

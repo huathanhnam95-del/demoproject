@@ -7,6 +7,7 @@ const {
     buildPaidEnrollmentSyncPatch,
     applyPaymentToInvoice,
     buildCommissionRecords,
+    mapInvoiceRecord,
     buildAgentSourceCommissionRecord,
     summarizeFinance,
     deriveFinanceWorkflowState
@@ -247,5 +248,18 @@ assert.throws(
     () => buildPaymentCreateData({ invoiceId: 'invoice-1', amount: 0 }, context),
     /Payment requires/
 );
+
+for (const currency of ['USD', 'AUD', 'VND']) {
+    const expected = currency === 'VND' ? 10 : 10.25;
+    const splits = { counselor: { actorUid: 'staff-1', amount: 10.25 } };
+    const created = buildInvoiceCreateData({ studentId: 's1', amount: 100, currency, commissionSplits: splits }, context);
+    assert.strictEqual(created.commissionSplits.counselor.amount, expected, `${currency} invoice create preserves currency precision`);
+    assert.strictEqual(buildInvoicePatchData(created, { notes: 'Unrelated edit' }, context).commissionSplits.counselor.amount, expected, `${currency} unrelated patch preserves split`);
+    assert.strictEqual(buildInvoicePatchData(created, { commissionSplits: splits }, context).commissionSplits.counselor.amount, expected, `${currency} split patch`);
+    assert.strictEqual(mapInvoiceRecord(created, 'i1').commissionSplits.counselor.amount, expected, `${currency} invoice reload`);
+    const records = buildCommissionRecords({ invoiceId: 'i1', paymentId: 'p1', studentId: 's1', commissionSplits: splits }, { ...context, currency });
+    assert.strictEqual(records[0].amount, expected, `${currency} persisted commission amount`);
+    assert.strictEqual(records[0].currency, currency);
+}
 
 console.log('finance service passed');

@@ -133,6 +133,7 @@
   let staffWorkspaceController = null;
   let projectsAccessController = null;
   let projectsBoardController = null;
+  let projectsWorkspaceController = null;
   let studentFinanceController = null;
   let liveDeliveryController = null;
   let studentModalController = null;
@@ -1658,7 +1659,7 @@
         showToast,
         adminMode: state.accessMode === 'admin',
         getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
-        onContextChanged: (snapshot) => { window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); },
+        onContextChanged: (snapshot) => { projectsWorkspaceController?.setContext?.(snapshot); window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); },
         onTaskSelection: (task) => { window.projectsViewsController?.setTask?.(task); window.projectsViewsController?.syncBoard?.(); },
         onTaskMutation: () => window.projectsViewsController?.refresh?.(),
         onProjectAccessDenied: (projectId) => { if (window.projectsNotificationsController) window.projectsNotificationsController.deny(projectId); else projectsAccessController?.handleProjectContentDenied?.(projectId); },
@@ -1835,6 +1836,7 @@
           window.projectsNotificationsController?.setProjects?.(contentSelection.projects, [...deniedIds]);
           window.projectsAutomationsController?.setSelection?.(contentSelection.selectedProjectId || '');
           projectsBoardController?.setProjects?.(contentSelection);
+          projectsWorkspaceController?.setSelection?.(contentSelection);
           window.projectsAutomationsController?.setContext?.(projectsBoardController?.getState?.() || {});
           window.projectsViewsController?.setProject?.(contentSelection.selectedProjectId || '');
         }
@@ -1843,11 +1845,21 @@
     if (projectsAccessController && typeof projectsAccessController.init === 'function') {
       projectsAccessController.init();
     }
+    projectsWorkspaceController?.dispose?.();
+    projectsWorkspaceController = window.CrmProjectsWorkspace?.createController({
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
+      onManageAccess: () => { window.location.hash = '#staff'; }
+    });
+    projectsWorkspaceController?.init?.();
+    projectsWorkspaceController?.setSelection?.(projectsAccessController?.getSelection?.());
+    projectsWorkspaceController?.setContext?.(projectsBoardController?.getState?.());
     // Controller scopes are document-local. Re-enter the existing access gate
     // after an account change instead of retaining the previous account's roles.
     firebase.auth().onAuthStateChanged((nextUser) => {
       if (projectsAccountInvalidated || String(nextUser?.uid || '') === projectsDocumentUid) return;
       projectsAccountInvalidated = true;
+      projectsWorkspaceController?.dispose?.();
       clearInterval(projectsAssistantTimer);
       window.projectsAssistantController?.dispose?.();
       window.projectsBudgetController?.setAccount('');
@@ -5697,6 +5709,7 @@
     // Panels
     const activePanel = state.sub ? `${state.main}/${state.sub}` : state.main;
     const routeChanged = lastRenderedPanel !== activePanel;
+    if (activePanel !== 'projects') projectsWorkspaceController?.closeForNavigation?.();
     if (lastRenderedPanel === 'dashboard' && activePanel !== 'dashboard') {
       dashboardController?.dispose?.();
     }
@@ -5736,6 +5749,7 @@
       if (title.tagName === wantedTag) return;
       const replacement = document.createElement(wantedTag.toLowerCase());
       replacement.className = title.className;
+      if (title.id) replacement.id = title.id;
       while (title.firstChild) replacement.appendChild(title.firstChild);
       title.replaceWith(replacement);
     });

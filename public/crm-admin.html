@@ -903,78 +903,63 @@
 
       <!-- Projects People & Access -->
       <section class="crm-panel" data-panel="projects" style="display: none;">
-        <div class="crm-panel-header">
-          <div>
-            <h2>Projects</h2>
-            <p>Plan work on the shared project board, then manage workforce access and project membership below.</p>
-          </div>
-          <div class="crm-inline-fields"><button id="btn-projects-access-refresh" class="crm-btn-secondary" type="button">Refresh</button></div>
-        </div>
-        <section id="projects-ai-budget" class="crm-ai-budget" aria-label="Monthly CRM AI budget" hidden></section>
-        <section id="projects-assistant" class="crm-projects-assistant" aria-label="Project assistance"></section>
-        <section id="projects-notifications" class="crm-projects-notifications" aria-label="Project notifications" hidden></section>
-        <section id="projects-board-section" class="crm-projects-board-section" aria-labelledby="projects-board-title">
-          <div class="crm-projects-board-toolbar">
-            <div class="crm-projects-board-heading">
-              <span class="crm-eyebrow">Primary board</span>
-              <h3 id="projects-board-title">Work in one clear view</h3>
+        <div class="crm-projects-workspace-shell">
+          <aside id="projects-workspace-rail" aria-label="Projects sidebar">
+            <div class="crm-projects-workspace-brand"><span aria-hidden="true">B</span>BEL workspace</div>
+            <div class="crm-projects-workspace-rail-heading">Projects</div>
+            <nav id="projects-workspace-projects" aria-label="Choose a project"></nav>
+            <button id="btn-projects-board-create-project" class="crm-btn-primary" type="button">New project</button>
+            <div class="crm-projects-workspace-rail-footer"><button id="btn-projects-access-refresh" class="crm-btn-secondary" type="button">Refresh</button></div>
+          </aside>
+          <main id="projects-workspace-main">
+            <div class="crm-projects-workspace-breadcrumb"><button id="projects-workspace-rail-toggle" type="button" class="crm-btn-secondary" aria-controls="projects-workspace-rail" aria-expanded="false" aria-label="Toggle Projects sidebar">☰</button><span>Workspace / Projects</span></div>
+            <div class="crm-projects-workspace-heading crm-panel-header">
+              <div><h2 id="projects-workspace-name">Projects</h2><p id="projects-workspace-description">A shared place to plan work and keep your team moving.</p></div>
+              <div class="crm-projects-workspace-heading-actions"><button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button><button type="button" class="crm-btn-secondary" data-projects-open="projects-workspace-settings">Settings</button><button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button></div>
+            </div>
+            <div id="projects-workspace-onboarding" class="crm-projects-workspace-onboarding" hidden>
+              <h3 id="projects-workspace-onboarding-title">Choose a project to get started</h3><p id="projects-workspace-onboarding-message">Your project tasks will appear here.</p><button id="projects-workspace-manage-access" type="button" class="crm-btn-primary">Manage access</button>
+            </div>
+            <section id="projects-board-section" class="crm-projects-board-section" aria-labelledby="projects-board-title">
+              <h3 id="projects-board-title" class="sr-only">Project board</h3>
               <p id="projects-board-status" class="crm-muted" aria-live="polite">Choose a project to load its tasks.</p>
-            </div>
-            <div class="crm-projects-board-actions">
-              <label class="crm-projects-board-picker" for="projects-board-project-select"><span class="sr-only">Project</span><select id="projects-board-project-select" class="crm-input" aria-label="Project board"></select></label>
-              <button id="btn-projects-board-create-project" class="crm-btn-primary" type="button">New project</button>
-              <button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button>
-              <button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button>
-            </div>
-          </div>
-          <section id="projects-automations" class="crm-projects-automations" aria-label="Project automations" hidden></section>
-          <section id="projects-board-recovery" class="crm-projects-board-recovery" aria-label="Project recovery controls" hidden></section>
-          <div id="projects-board-create-project" class="crm-projects-board-form" hidden>
-            <label for="projects-board-project-name">Project name</label>
-            <input id="projects-board-project-name" class="crm-input" type="text" maxlength="200" placeholder="e.g. Autumn launch">
-            <label for="projects-board-project-description">Description</label>
-            <textarea id="projects-board-project-description" class="crm-input" rows="2" maxlength="20000" placeholder="What is this project for?"></textarea>
-            <div class="crm-inline-fields"><button id="btn-projects-board-save-project" class="crm-btn-primary" type="button">Create project</button><button id="btn-projects-board-cancel-project" class="crm-btn-secondary" type="button">Cancel</button></div>
-          </div>
-          <div id="projects-board-empty" class="crm-projects-board-empty" hidden>
+              <label class="crm-projects-board-picker" for="projects-board-project-select" hidden><span class="sr-only">Project</span><select id="projects-board-project-select" class="crm-input" aria-label="Project board"></select></label>
+              <div id="projects-board-empty" class="crm-projects-board-empty" hidden>
             <strong>Start with a project</strong><span>Create a project to give your team a shared place for sections and tasks.</span><button id="btn-projects-board-empty-create" class="crm-btn-primary" type="button">Create a project</button>
           </div>
-            <div id="projects-board-workspace" class="crm-projects-board-workspace" hidden>
-              <section id="projects-project-links" aria-label="Project CRM links"></section>
-              <section id="projects-views" aria-label="Project views">
-                <nav id="projects-view-tabs" class="crm-projects-view-tabs" aria-label="Task view">
+              <div id="projects-board-workspace" class="crm-projects-board-workspace" hidden>
+                <section id="projects-views" aria-label="Project views">
+                  <nav id="projects-view-tabs" class="crm-projects-view-tabs" aria-label="Task view">
                   <button type="button" data-view="board" aria-pressed="true">Board</button><button type="button" data-view="kanban" aria-pressed="false">Kanban</button><button type="button" data-view="timeline" aria-pressed="false">Timeline</button><button type="button" data-view="calendar" aria-pressed="false">Calendar</button><button type="button" data-view="charts" aria-pressed="false">Charts</button>
                 </nav>
-                <form id="projects-view-filters" class="crm-projects-view-filters">
-                  <label>Title<input name="title" class="crm-input" type="search" maxlength="200"></label>
-                  <label>Section<select name="sectionId" class="crm-input"><option value="">All sections</option></select></label>
-                  <label>Status<select name="status" class="crm-input"><option value="">All statuses</option><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label>
-                  <label>Accountable owner<select name="ownerUid" class="crm-input"><option value="">All owners</option></select></label>
-                  <label>Assignee<select name="assigneeUid" class="crm-input"><option value="">All assignees</option></select></label>
-                  <label>From<input name="fromDate" class="crm-input" type="date"></label><label>Through<input name="toDate" class="crm-input" type="date"></label>
-                  <button type="submit" class="crm-btn-primary">Apply filters</button><button type="reset" class="crm-btn-secondary">Clear filters</button>
-                </form>
-                <p class="crm-muted">Date filters include overlapping dated tasks. Undated tasks are excluded when a date filter is set. Filters stay shared across views in this project.</p>
-                <p id="projects-view-summary" aria-live="polite"></p><p id="projects-view-status" role="status"></p>
-                <div id="projects-view-content" hidden></div>
-                <div id="projects-view-paging" class="crm-inline-fields" hidden><button id="projects-view-previous" type="button" class="crm-btn-secondary">Previous page</button><button id="projects-view-more" type="button" class="crm-btn-secondary">Load more</button><button id="projects-view-retry" type="button" class="crm-btn-secondary">Refresh view</button></div>
-              </section>
-              <div class="crm-projects-board-controls">
-                <div class="crm-inline-fields"><button id="btn-projects-board-add-section" class="crm-btn-secondary" type="button">Add section</button><button id="btn-projects-board-add-task" class="crm-btn-primary" type="button">Add task</button><button id="btn-projects-board-add-column" class="crm-btn-secondary" type="button">Add column</button></div>
-                <div class="crm-muted" id="projects-board-count" aria-live="polite"></div>
-              </div>
-            <form id="projects-board-section-form" class="crm-projects-board-form" hidden>
+                  <form id="projects-view-filters" class="crm-projects-view-filters">
+                    <button id="btn-projects-board-add-task" class="crm-btn-primary" type="button">+ New task</button>
+                    <label class="crm-projects-workspace-search"><span class="sr-only">Search tasks</span><input name="title" class="crm-input" type="search" placeholder="Search this board" maxlength="200"></label>
+                    <details class="crm-projects-workspace-filter"><summary>Filter</summary><div class="crm-projects-workspace-filter-popover">
+                      <label>Section<select name="sectionId" class="crm-input"><option value="">All sections</option></select></label>
+<label>Status<select name="status" class="crm-input"><option value="">All statuses</option><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label>
+<label>Accountable owner<select name="ownerUid" class="crm-input"><option value="">All owners</option></select></label>
+<label>Assignee<select name="assigneeUid" class="crm-input"><option value="">All assignees</option></select></label>
+<label>From<input name="fromDate" class="crm-input" type="date"></label>
+<label>Through<input name="toDate" class="crm-input" type="date"></label>
+                      <div class="crm-inline-fields"><button type="submit" class="crm-btn-primary">Apply filters</button><button type="reset" class="crm-btn-secondary">Clear filters</button></div>
+                      <p class="crm-muted">Date filters include overlapping dated tasks. Undated tasks are excluded when a date filter is set. Filters stay shared across views in this project.</p>
+                    </div></details>
+                    <button id="btn-projects-board-add-section" class="crm-btn-secondary" type="button">Add section</button>
+                    <button id="btn-projects-board-add-column" class="crm-btn-secondary" type="button">+ Column</button>
+                  </form>
+                  <p id="projects-view-summary" aria-live="polite"></p>
+<p id="projects-view-status" role="status"></p>
+<div id="projects-view-content" hidden></div>
+<div id="projects-view-paging" class="crm-inline-fields" hidden><button id="projects-view-previous" type="button" class="crm-btn-secondary">Previous page</button><button id="projects-view-more" type="button" class="crm-btn-secondary">Load more</button><button id="projects-view-retry" type="button" class="crm-btn-secondary">Refresh view</button></div>
+                </section>
+                <div class="crm-projects-board-controls"><div class="crm-muted" id="projects-board-count" aria-live="polite"></div></div>
+                <form id="projects-board-section-form" class="crm-projects-board-form" hidden>
               <label for="projects-board-section-name">Section name</label>
               <input id="projects-board-section-name" class="crm-input" type="text" maxlength="200" placeholder="e.g. This quarter" autocomplete="off">
               <div class="crm-inline-fields"><button id="btn-projects-board-save-section" class="crm-btn-primary" type="submit">Add section</button><button id="btn-projects-board-cancel-section" class="crm-btn-secondary" type="button">Cancel</button></div>
             </form>
-            <div id="projects-board-column-form" class="crm-projects-board-form" hidden>
-              <label for="projects-board-column-label">Column label</label><input id="projects-board-column-label" class="crm-input" type="text" maxlength="120" placeholder="e.g. Effort">
-              <label for="projects-board-column-type">Type</label><select id="projects-board-column-type" class="crm-input"><option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="people">People</option><option value="status">Status</option><option value="priority">Priority</option><option value="dropdown">Dropdown</option></select>
-              <label for="projects-board-column-options">Dropdown options <span class="crm-muted">(one per line)</span></label><textarea id="projects-board-column-options" class="crm-input" rows="2" placeholder="Option one&#10;Option two"></textarea>
-              <div class="crm-inline-fields"><button id="btn-projects-board-save-column" class="crm-btn-primary" type="button">Add column</button><button id="btn-projects-board-cancel-column" class="crm-btn-secondary" type="button">Cancel</button></div>
-            </div>
-            <div id="projects-board-table-wrap" class="crm-projects-board-table-wrap" tabindex="0" aria-label="Project task board">
+                <div id="projects-board-table-wrap" class="crm-projects-board-table-wrap" tabindex="0" aria-label="Project task board">
               <div id="projects-board-table" class="crm-projects-board-table" role="table" aria-rowcount="0">
                 <div id="projects-board-header" class="crm-projects-board-header" role="row"></div>
                 <div id="projects-board-scroll" class="crm-projects-board-scroll">
@@ -982,8 +967,30 @@
                 </div>
               </div>
             </div>
-            <aside id="projects-board-detail" class="crm-projects-board-detail" aria-labelledby="projects-board-detail-title" hidden>
-              <div class="crm-projects-board-detail-head"><div><span class="crm-eyebrow">Selected task</span><h4 id="projects-board-detail-title">Task details</h4></div><button id="btn-projects-board-close-detail" class="crm-btn-secondary crm-btn-sm" type="button" aria-label="Close task details">Close</button></div>
+                <details class="crm-projects-workspace-utility"><summary>Linked CRM records</summary><section id="projects-project-links" aria-label="Project CRM links"></section></details>
+              </div>
+            </section>
+            <details class="crm-projects-workspace-utility"><summary>Assistance &amp; activity</summary>
+              <section id="projects-assistant" class="crm-projects-assistant" aria-label="Project assistance"></section>
+              <section id="projects-notifications" class="crm-projects-notifications" aria-label="Project notifications" hidden></section>
+              <section id="projects-automations" class="crm-projects-automations" aria-label="Project automations" hidden></section>
+              <section id="projects-board-recovery" class="crm-projects-board-recovery" aria-label="Project recovery controls" hidden></section>
+            </details>
+            <dialog data-projects-dialog aria-label="Create a project" id="projects-board-create-project" class="crm-projects-board-form" hidden>
+            <label for="projects-board-project-name">Project name</label>
+            <input id="projects-board-project-name" class="crm-input" type="text" maxlength="200" placeholder="e.g. Autumn launch">
+            <label for="projects-board-project-description">Description</label>
+            <textarea id="projects-board-project-description" class="crm-input" rows="2" maxlength="20000" placeholder="What is this project for?"></textarea>
+            <div class="crm-inline-fields"><button id="btn-projects-board-save-project" class="crm-btn-primary" type="button">Create project</button><button id="btn-projects-board-cancel-project" data-projects-close class="crm-btn-secondary" type="button">Cancel</button></div>
+          </dialog>
+            <dialog data-projects-dialog aria-label="Add or edit a column" id="projects-board-column-form" class="crm-projects-board-form" hidden>
+              <label for="projects-board-column-label">Column label</label><input id="projects-board-column-label" class="crm-input" type="text" maxlength="120" placeholder="e.g. Effort">
+              <label for="projects-board-column-type">Type</label><select id="projects-board-column-type" class="crm-input"><option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="people">People</option><option value="status">Status</option><option value="priority">Priority</option><option value="dropdown">Dropdown</option></select>
+              <label for="projects-board-column-options">Dropdown options <span class="crm-muted">(one per line)</span></label><textarea id="projects-board-column-options" class="crm-input" rows="2" placeholder="Option one&#10;Option two"></textarea>
+              <div class="crm-inline-fields"><button id="btn-projects-board-save-column" class="crm-btn-primary" type="button">Add column</button><button id="btn-projects-board-cancel-column" data-projects-close class="crm-btn-secondary" type="button">Cancel</button></div>
+            </dialog>
+            <dialog data-projects-dialog aria-label="Task details" id="projects-board-detail" class="crm-projects-board-detail" aria-labelledby="projects-board-detail-title" hidden>
+              <div class="crm-projects-board-detail-head"><div><span class="crm-eyebrow">Selected task</span><h4 id="projects-board-detail-title">Task details</h4></div><button id="btn-projects-board-close-detail" data-projects-close class="crm-btn-secondary crm-btn-sm" type="button" aria-label="Close task details">Close</button></div>
               <div id="projects-board-detail-body" class="crm-projects-board-detail-body"></div>
               <section id="projects-task-planning" aria-label="Task scheduling and links"></section>
               <section id="projects-board-discussion" class="crm-projects-board-discussion" aria-labelledby="projects-board-discussion-title">
@@ -993,15 +1000,15 @@
                 <form id="projects-board-discussion-form" class="crm-projects-board-discussion-form"><textarea id="projects-board-discussion-input" class="crm-input" rows="3" maxlength="20000" placeholder="Write an update…"></textarea><div class="crm-inline-fields"><label for="projects-board-discussion-mention">Mention members</label><select id="projects-board-discussion-mention" class="crm-input" multiple size="3" aria-label="Mention project members"></select><input id="projects-board-discussion-file" type="file" accept="application/pdf,text/plain,text/csv,image/png,image/jpeg,image/gif,image/webp,application/zip,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label="Attach a file"><button id="btn-projects-board-discussion-send" class="crm-btn-primary" type="submit">Post update</button></div></form>
               </section>
 
-            </aside>
-            <section id="projects-board-settings" class="crm-projects-board-settings" aria-labelledby="projects-board-settings-title">
+            </dialog>
+            <dialog id="projects-workspace-settings" data-projects-dialog aria-label="Project settings" hidden>
+              <div class="crm-projects-workspace-dialog-heading"><h3>Project settings</h3><button type="button" class="crm-btn-secondary crm-btn-sm" data-projects-close aria-label="Close project settings">Close</button></div>
+              <nav role="tablist" class="crm-projects-workspace-settings-tabs" aria-label="Project settings sections"><button type="button" role="tab" id="projects-settings-tab-project" aria-controls="projects-settings-panel-project" data-projects-settings-tab="project" aria-selected="true">Project</button><button type="button" role="tab" id="projects-settings-tab-members" aria-controls="projects-settings-panel-members" data-projects-settings-tab="members" aria-selected="false">Members</button><button type="button" role="tab" id="projects-settings-tab-calendar" aria-controls="projects-settings-panel-calendar" data-projects-settings-tab="calendar" aria-selected="false">Calendar</button><button type="button" role="tab" id="projects-settings-tab-allowance" aria-controls="projects-settings-panel-allowance" data-projects-settings-tab="allowance" aria-selected="false">Allowance</button></nav>
+              <section role="tabpanel" id="projects-settings-panel-project" aria-labelledby="projects-settings-tab-project" data-projects-settings-panel="project"><section id="projects-board-settings" class="crm-projects-board-settings" aria-labelledby="projects-board-settings-title">
               <div class="crm-section-header"><div><span class="crm-eyebrow">Project settings</span><h4 id="projects-board-settings-title">Project details and schema</h4><p class="crm-muted">Owners can update the project description and shared columns.</p></div></div>
               <div class="crm-projects-board-settings-grid"><label for="projects-board-settings-name">Name</label><input id="projects-board-settings-name" class="crm-input" type="text" maxlength="200"><label for="projects-board-settings-description">Description</label><textarea id="projects-board-settings-description" class="crm-input" rows="2" maxlength="20000"></textarea><span class="crm-projects-board-settings-subheading">Built-in status labels</span><label for="projects-board-status-not-started">Not started</label><input id="projects-board-status-not-started" class="crm-input" type="text" maxlength="80"><label for="projects-board-status-in-progress">In progress</label><input id="projects-board-status-in-progress" class="crm-input" type="text" maxlength="80"><label for="projects-board-status-blocked">Blocked</label><input id="projects-board-status-blocked" class="crm-input" type="text" maxlength="80"><label for="projects-board-status-done">Done</label><input id="projects-board-status-done" class="crm-input" type="text" maxlength="80"><button id="btn-projects-board-save-settings" class="crm-btn-primary" type="button">Save project details</button></div>
-            </section>
-          </div>
-        </section>
-        <div class="crm-projects-access-layout">
-          <section id="projects-member-access-section" class="crm-projects-access-section" aria-labelledby="projects-member-title">
+            </section></section>
+              <section data-projects-settings-panel="members" hidden><section id="projects-member-access-section" class="crm-projects-access-section" aria-labelledby="projects-member-title">
             <div class="crm-section-header"><div><h3 id="projects-member-title">Project memberships</h3><p class="crm-muted">A Projects module grant and explicit project membership are both required for content.</p></div></div>
             <div id="projects-people-list" class="crm-table-container" aria-live="polite"></div>
             <div class="crm-projects-access-form">
@@ -1014,8 +1021,8 @@
               <label for="projects-member-role">Role</label><select id="projects-member-role" class="crm-input"><option value="Viewer">Viewer</option><option value="Editor">Editor</option><option value="Owner">Owner</option></select>
               <button id="btn-projects-member-save" class="crm-btn-secondary" type="button">Save membership</button>
             </div>
-          </section>
-          <section id="projects-calendar-section" class="crm-projects-access-section" aria-labelledby="projects-calendar-title">
+          </section></section>
+              <section data-projects-settings-panel="calendar" hidden><section id="projects-calendar-section" class="crm-projects-access-section" aria-labelledby="projects-calendar-title">
             <div class="crm-section-header"><div><h3 id="projects-calendar-title">Organization calendar</h3><p class="crm-muted">Vietnam timezone, working week and administrator leave exceptions.</p></div></div>
             <div class="crm-projects-access-form">
               <label for="projects-calendar-timezone">Timezone</label><input id="projects-calendar-timezone" class="crm-input" value="Asia/Ho_Chi_Minh">
@@ -1045,14 +1052,16 @@
               <div id="projects-calendar-leaves" class="crm-stack-list" aria-live="polite"></div>
               <button id="btn-projects-calendar-save" class="crm-btn-secondary" type="button">Save calendar</button>
             </div>
-          </section>
-          <section id="projects-allowance-section" class="crm-projects-access-section" aria-labelledby="projects-allowance-title">
+          </section></section>
+              <section data-projects-settings-panel="allowance" hidden><section id="projects-ai-budget" class="crm-ai-budget" aria-label="Monthly CRM AI budget" hidden></section><section id="projects-allowance-section" class="crm-projects-access-section" aria-labelledby="projects-allowance-title">
             <div class="crm-section-header"><div><h3 id="projects-allowance-title">Monthly CRM AI allowance</h3><p class="crm-muted">One monthly allowance per eligible staff account across covered CRM AI features. Administrators may set a lower amount, up to the US$5 monthly maximum.</p></div></div>
             <div class="crm-projects-access-form">
               <label for="projects-allowance-usd">Default monthly allowance (USD)</label><input id="projects-allowance-usd" class="crm-input" type="number" min="0" max="5" step="0.01" value="5.00">
               <button id="btn-projects-allowance-save" class="crm-btn-secondary" type="button">Save allowance</button>
             </div>
-          </section>
+          </section></section>
+            </dialog>
+          </main>
         </div>
       </section>
 
@@ -2808,6 +2817,7 @@
   <script src="js/crm/pronunciation-dual-arena.js?v=20260908-v2.0.1"></script>
   <script src="js/entrance-test-ui-fonts.js?v=20260908-v2.0.1&etui=20260909-etui2"></script>
   <script src="js/crm/entrance-test-ui-lab.js?v=20260908-v2.0.1&etui=20260909-etui2"></script>
+  <script src="js/crm/projects/workspace.js?v=20260909-design"></script>
   <script src="crm-admin.js?v=20260908-v2.0.1"></script>
   <script src="js/crm/segmentation-study.js?v=20260908-v2.0.1" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->

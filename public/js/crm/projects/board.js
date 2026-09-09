@@ -7,6 +7,12 @@
     const PRIORITY_LABELS = { none: 'None', low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
     const ROW_HEIGHT = 46;
     const OVERSCAN = 8;
+    const GROUP_COLORS = ['#7c5cdb', '#16815d', '#3978cf', '#bd641d', '#bc4778'];
+    function groupColor(id) {
+        let hash = 0;
+        for (const character of String(id || '')) hash = ((hash * 31) + character.codePointAt(0)) >>> 0;
+        return GROUP_COLORS[hash % GROUP_COLORS.length];
+    }
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -63,6 +69,7 @@
         let columns = [];
         let tasks = new Map();
         let expanded = new Set();
+        const collapsedSections = new Set();
         let loadedBranches = new Set();
         let branchCursors = new Map();
         let branchHasMore = new Map();
@@ -303,7 +310,7 @@
             selection = { projects: selection.projects.filter((entry) => String(entry.id) !== String(deniedProjectId)), selectedProjectId: '', selectedProject: null };
             project = null; membership = null; members = []; sections = []; columns = []; tasks = new Map();
             selectedTaskId = ''; selectedTaskIds = []; focusedRowId = ''; logicalRows = [];
-            expanded.clear(); loadedBranches.clear(); branchCursors.clear(); branchHasMore.clear(); branchLoadChains.clear();
+            expanded.clear(); collapsedSections.clear(); loadedBranches.clear(); branchCursors.clear(); branchHasMore.clear(); branchLoadChains.clear();
             drafts.clear(); draftVersions.clear(); settingsDrafts.clear(); pending.clear(); movePending.clear();
             boardRevision.structureRevision = 0; boardRevision.schemaRevision = 0;
             clearDragInteraction(); resetSectionForm(); resetColumnForm(); setBusy(false); renderProjectPicker();
@@ -353,7 +360,7 @@
                 project = null;
                 membership = null; members = []; sections = []; columns = []; tasks = new Map();
                 selectedTaskId = ''; selectedTaskIds = []; focusedRowId = ''; logicalRows = [];
-                expanded.clear(); loadedBranches.clear(); branchCursors.clear(); branchHasMore.clear();
+                expanded.clear(); collapsedSections.clear(); loadedBranches.clear(); branchCursors.clear(); branchHasMore.clear();
                 drafts.clear(); draftVersions.clear(); settingsDrafts.clear();
                 for (const name of ['projectsBoardRows', 'projectsBoardHeader', 'projectsBoardDetailBody', 'projectsBoardDetailTitle', 'projectsBoardCount']) {
                     if (elements[name]) { elements[name].innerHTML = ''; elements[name].textContent = ''; }
@@ -490,7 +497,7 @@
             if (!normalized || !apiFetchJson || !loadIsCurrent()) return false;
             const preserve = options.preserve === true && String(project?.id || '') === normalized;
             if (!preserve) {
-                drafts = new Map(); settingsDrafts.clear(); expanded = new Set();
+                drafts = new Map(); settingsDrafts.clear(); expanded = new Set(); collapsedSections.clear();
                 selectedTaskId = ''; selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); focusedRowId = '';
                 project = null; membership = null; members = []; sections = []; columns = []; tasks = new Map();
                 loadedBranches = new Set(); branchCursors = new Map(); branchHasMore = new Map();
@@ -643,7 +650,7 @@
             };
             sections.forEach((section) => {
                 rows.push({ kind: 'section', id: `section:${section.id}`, section, depth: 0 });
-                rootsForSection(section.id).forEach((task) => appendTask(task, 0));
+                if (!collapsedSections.has(String(section.id))) rootsForSection(section.id).forEach((task) => appendTask(task, 0));
             });
             return rows;
         }
@@ -663,6 +670,15 @@
                 options.push(`<option value="${escape(uid)}"${selected.has(uid) ? ' selected' : ''}>${escape(person.displayName || person.email || uid)}</option>`);
             });
             return options.join('');
+        }
+        function ownerInitials(uid) {
+            const person = members.find((entry) => String(entry.uid) === String(uid));
+            const parts = asText(person?.displayName || person?.email || uid).trim().split(/\s+/).filter(Boolean);
+            return parts.length ? Array.from(parts[0])[0].toLocaleUpperCase() + (parts.length > 1 ? Array.from(parts[parts.length - 1])[0].toLocaleUpperCase() : '') : '—';
+        }
+        function taskGroupColor(task) {
+            const root = asArray(task.pathIds).map((id) => taskFor(id)).find((entry) => entry && !entry.parentTaskId);
+            return groupColor(task.effectiveSectionId || task.sectionId || root?.effectiveSectionId || root?.sectionId);
         }
         function customCell(task, column) {
             const raw = task.values?.[column.id] ?? null;
@@ -698,16 +714,17 @@
             const startDate = drafts.has(startDateKey) ? drafts.get(startDateKey) : (task.startDate || '');
             const dueDate = drafts.has(dueDateKey) ? drafts.get(dueDateKey) : (task.dueDate || '');
             const indent = Math.min(24, row.depth * 22);
+            const status = drafts.get(draftKeyFor(task.id, 'status')) ?? task.status ?? 'not_started';
             const expander = hasPotentialChildren(task) ? `<button type="button" class="crm-board-expander" data-action="toggle-task" aria-label="${expanded.has(String(task.id)) ? 'Collapse' : 'Expand'} ${escape(title)}" aria-expanded="${expanded.has(String(task.id)) ? 'true' : 'false'}">${expanded.has(String(task.id)) ? '▾' : '▸'}</button>` : '<span class="crm-board-expander" aria-hidden="true"></span>';
             const selectionCheckbox = selectableTask(task) ? `<input type="checkbox" data-action="select-task" aria-label="Select ${escape(title)}"${selectedTaskIds.includes(String(task.id)) ? ' checked' : ''}>` : '';
             const inputState = (authorityPending || busy) && canRenderTaskEditor() ? ' readonly' : disabled;
             const titleCell = canRenderTaskEditor()
                 ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${inputState}>`
                 : `<span class="crm-board-title-text">${escape(title)}</span>`;
-            return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px">
-              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${titleCell}</div>
-              <div class="crm-projects-board-cell" role="cell"><select class="crm-board-field" data-field-kind="status" aria-label="Status"${disabled}>${statusOptions(task.status || 'not_started', project?.statusLabels || {})}</select></div>
-              <div class="crm-projects-board-cell" role="cell"><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
+            return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
+              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
+              <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}"><select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
+              <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
               <div class="crm-projects-board-cell" role="cell"><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
               <div class="crm-projects-board-cell crm-board-date-cell" role="cell"><input class="crm-board-field" data-field-kind="startDate" type="date" value="${escape(startDate)}" aria-label="Start date"${disabled}><input class="crm-board-field" data-field-kind="dueDate" type="date" value="${escape(dueDate)}" aria-label="Due date"${disabled}></div>
               ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell">${customCell(task, column)}</div>`).join('')}
@@ -719,8 +736,8 @@
             const title = asText(section.title, 'Section');
             const editable = canSchema() && !busy
                 ? `<input class="crm-board-section-input crm-board-field" data-field-kind="section-title" type="text" value="${escape(title)}" aria-label="Section title">`
-                : `<span>${escape(title)}</span>`;
-            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px"><div role="cell"><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell"><span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
+                : `<span class="crm-board-group-title">${escape(title)}</span>`;
+            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell"><span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
         }
 
         function renderHeader() {
@@ -808,10 +825,10 @@
             else if (!current && next) node.querySelector('.crm-projects-board-task-title')?.prepend(next.cloneNode(true));
             else if (current && next) { current.checked = next.checked; current.setAttribute('aria-label', next.getAttribute('aria-label')); }
         }
-        function syncFocusedSelectionCell(cell, freshCell, checkbox) {
-            const nextCheckbox = freshCell?.querySelector('[data-action="select-task"]');
+        function syncFocusedSelectionCell(cell, freshCell, checkbox, action = 'select-task') {
+            const nextCheckbox = freshCell?.querySelector(`[data-action="${action}"]`);
             if (!cell || !nextCheckbox || !cell.contains(checkbox)) return false;
-            // Keep the focused checkbox attached. Refresh its surroundings so
+            // Keep the focused action attached. Refresh its surroundings so
             // current permissions and remote titles never retain stale editors.
             for (const child of Array.from(cell.childNodes)) if (child !== checkbox) child.remove();
             for (const attribute of Array.from(cell.attributes)) if (!freshCell.hasAttribute(attribute.name)) cell.removeAttribute(attribute.name);
@@ -859,12 +876,20 @@
             const fresh = createRowNode(row);
             if (!fresh) return;
             syncRowMetadata(node, fresh);
+            node.style.setProperty('--crm-project-group-color', row.kind === 'section' ? groupColor(row.section.id) : taskGroupColor(row.task));
+            // Refresh decoration without replacing a focused native editor.
+            for (const selector of ['.crm-board-status-cell', '[data-field-kind="status"]']) {
+                const current = node.querySelector(selector), next = fresh.querySelector(selector);
+                if (current && next) current.setAttribute('data-status', next.getAttribute('data-status'));
+            }
+            const avatar = node.querySelector('.crm-board-owner-avatar');
+            if (avatar) avatar.textContent = fresh.querySelector('.crm-board-owner-avatar')?.textContent || '—';
             syncSelectionCheckbox(node, fresh);
             if (interactionPinned && activeElement?.dataset?.action !== 'select-task') {
                 syncPinnedExpander(node, fresh);
                 return;
             }
-            const focusedCell = (activeElement?.classList?.contains('crm-board-field') || activeElement?.dataset?.action === 'select-task')
+            const focusedCell = (activeElement?.classList?.contains('crm-board-field') || ['select-task', 'toggle-section', 'open-detail'].includes(activeElement?.dataset?.action))
                 ? activeElement.closest?.('[role="cell"]')
                 : null;
             const cells = Array.from(node.children);
@@ -873,6 +898,16 @@
             for (let index = 0; index < cellCount; index += 1) {
                 const cell = cells[index];
                 const freshCell = freshCells[index];
+                if (cell && cell === focusedCell && ['toggle-section', 'open-detail'].includes(activeElement?.dataset?.action)) {
+                    const action = activeElement.dataset.action;
+                    const next = freshCell?.querySelector(`[data-action="${action}"]`);
+                    if (next) {
+                        if (action === 'toggle-section') activeElement.setAttribute('aria-expanded', next.getAttribute('aria-expanded'));
+                        activeElement.setAttribute('aria-label', next.getAttribute('aria-label'));
+                        activeElement.textContent = next.textContent;
+                        if (syncFocusedSelectionCell(cell, freshCell, activeElement, action)) continue;
+                    }
+                }
                 if (cell && cell === focusedCell && activeElement?.dataset?.action === 'select-task' && syncFocusedSelectionCell(cell, freshCell, activeElement)) continue;
                 if (cell && cell === focusedCell && canPreserveFocusedEditor(cell, freshCell, activeElement)) continue;
                 if (cell && freshCell) cell.replaceWith(freshCell);
@@ -1142,7 +1177,7 @@
             if (!name) { showToast('Enter a project name.', 'error'); return; }
             const creationScope = captureScope();
             try {
-                const response = await requestMutation('/api/projects/', { operationId: operationId('project-create'), name, description: String(elements.projectsBoardProjectDescription?.value || '') }, { retries: 0 });
+                const response = await requestMutation('/api/projects', { operationId: operationId('project-create'), name, description: String(elements.projectsBoardProjectDescription?.value || '') }, { retries: 0 });
                 const created = response?.project || response?.result?.project;
                 if (elements.projectsBoardCreateProject) elements.projectsBoardCreateProject.hidden = true;
                 if (elements.projectsBoardProjectName) elements.projectsBoardProjectName.value = '';
@@ -1668,9 +1703,18 @@
         function onBoardClick(event) {
             const row = event.target.closest('[data-row-id]');
             const action = event.target.closest('[data-action]')?.dataset?.action;
+            if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { invalidateAccess(currentProjectId()); return; }
+            if (action === 'toggle-section' && row?.dataset?.rowKind === 'section') {
+                const id = String(row.dataset.sectionId || '');
+                if (!sections.some((section) => String(section.id) === id)) return;
+                if (collapsedSections.has(id)) collapsedSections.delete(id); else collapsedSections.add(id);
+                renderVirtualRows();
+                return;
+            }
             if (action === 'select-task' && row) { event.stopPropagation(); toggleSelection(row.dataset.taskId); event.target.checked = selectedTaskIds.includes(row.dataset.taskId); return; }
             if (action === 'toggle-task' && row) { toggleTask(row.dataset.taskId); return; }
             if (action === 'drag-handle') return;
+            if (action !== 'open-detail' && event.target.closest('input, select, textarea, button, a')) return;
             if (row?.dataset?.rowKind === 'task') { selectedTaskId = row.dataset.taskId; focusedRowId = row.dataset.rowId; renderDetail(); renderVirtualRows(); }
         }
 

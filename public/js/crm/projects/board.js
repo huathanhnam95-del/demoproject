@@ -1295,7 +1295,7 @@
         }
 
         async function createColumn(archive = false) {
-            if (refreshRequested()) return;
+            if (typeof refreshRequested === 'function' && refreshRequested()) return;
             const editor = columnEditor;
             if (!editor || editor.pending || !canSchema() || !scopeIsCurrent(editor.scope)) return;
             archive = archive === true;
@@ -1755,25 +1755,25 @@
 
         async function refresh() {
             if (!currentProjectId()) return false;
-            const intent = captureScope();
-            latestRefreshIntent = intent;
-            refreshIntents.add(intent);
+            const intent = typeof captureScope === 'function' ? captureScope() : { projectId: currentProjectId() };
+            if (typeof latestRefreshIntent !== 'undefined') latestRefreshIntent = intent;
+            if (typeof refreshIntents !== 'undefined' && refreshIntents?.add) refreshIntents.add(intent);
             // Readiness starts before the observer handshake or local-save queue wait.
             // Keep admitted saves authorized until the loader drains their queue.
-            setBusy(loadBusy);
-            renderBoard();
+            if (typeof setBusy === 'function') setBusy(typeof loadBusy !== 'undefined' ? loadBusy : false);
+            if (typeof renderBoard === 'function') renderBoard();
             let refreshed = false;
             try {
                 refreshed = await loadProject(intent.projectId, { preserve: true });
                 return refreshed;
             } finally {
-                refreshIntents.delete(intent);
-                if (scopeIsCurrent(intent)) {
-                    if (!refreshed && latestRefreshIntent === intent) authorityPending = true;
-                    const view = snapshotView();
-                    setBusy(loadBusy);
-                    renderBoard();
-                    restoreView(view);
+                if (typeof refreshIntents !== 'undefined' && refreshIntents?.delete) refreshIntents.delete(intent);
+                if (typeof scopeIsCurrent === 'function' && scopeIsCurrent(intent)) {
+                    if (!refreshed && typeof latestRefreshIntent !== 'undefined' && latestRefreshIntent === intent && typeof authorityPending !== 'undefined') authorityPending = true;
+                    const view = typeof snapshotView === 'function' ? snapshotView() : null;
+                    if (typeof setBusy === 'function') setBusy(typeof loadBusy !== 'undefined' ? loadBusy : false);
+                    if (typeof renderBoard === 'function') renderBoard();
+                    if (view && typeof restoreView === 'function') restoreView(view);
                 }
             }
         }

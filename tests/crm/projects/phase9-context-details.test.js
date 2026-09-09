@@ -5,13 +5,13 @@ const { createProjectsContextDetails } = require('../../../functions/src/crm/pro
 const { createTaskLinksService } = require('../../../functions/src/crm/projects/task-links-service');
 const { memberDocumentId } = require('../../../functions/src/crm/projects/access-service');
 function fixture() {
-    const records = new Map(), reads = [], identities = new Map();
+    const records = new Map(), reads = [], identities = new Map(), eligibilityCalls = [];
     const ref = (path, filters = []) => ({ path, filters, collection: name => ref(`${path}/${name}`), doc: name => ref(`${path}/${name}`), where: (key, op, value) => { assert.equal(op, '=='); return ref(path, [...filters, [key, value]]); }, limit: count => ({ path, filters, count }) });
     const snap = (path, value) => ({ id: path.split('/').pop(), exists: value !== undefined, data: () => structuredClone(value) });
     const db = { collection: name => ref(name), runTransaction: () => assert.fail('No nested transactions') };
     const tx = { async get(query) { reads.push(query.path); if (query.count) { assert.ok(query.count <= 100); return { docs: [...records].filter(([path, value]) => path.startsWith(`${query.path}/`) && path.split('/').length === query.path.split('/').length + 1 && query.filters.every(([key, expected]) => value[key] === expected)).slice(0, query.count).map(([path, value]) => snap(path, value)) }; } return snap(query.path, records.get(query.path)); } };
     const access = { identity: { uid: 'staff' }, role: 'Viewer', project: { data: { crmLinks: [{ type: 'lead', recordId: 'lead1' }] } } };
-    const accessService = { async assertTransactionEligible(transaction, uid) { assert.equal(transaction, tx); const entry = identities.get(uid); if (entry instanceof Error) throw entry; return entry || { uid, profile: { displayName: 'Mai', email: 'PRIVATE_EMAIL' } }; }, async assertTransactionContentAccess(transaction, actor, project) { assert.equal(transaction, tx); assert.equal(actor, 'staff'); assert.equal(project, 'p'); return access; } };
+    const accessService = { async assertTransactionEligible(transaction, uid) { assert.equal(transaction, tx); eligibilityCalls.push(uid); const entry = identities.get(uid); if (entry instanceof Error) throw entry; return entry || { uid, profile: { displayName: 'Mai', email: 'PRIVATE_EMAIL' } }; }, async assertTransactionContentAccess(transaction, actor, project) { assert.equal(transaction, tx); assert.equal(actor, 'staff'); assert.equal(project, 'p'); return access; } };
     const state = { crm: false, now: Date.parse('2026-09-08T16:59:59Z') };
     const links = createTaskLinksService({ db, accessService, authorizeCrmIdentity: async ({ transaction }) => { assert.equal(transaction, tx); return state.crm; } });
     const service = createProjectsContextDetails({ db, accessService, now: () => state.now, taskLinksService: links });
@@ -19,7 +19,7 @@ function fixture() {
     records.set('crmProjects/p/sections/s', { projectId: 'p', lifecycle: 'active' });
     const task = id => records.set(`crmProjects/p/tasks/${id}`, { projectId: 'p', lifecycle: 'active', sectionId: 's' });
     const resolve = (selectedTaskIds = []) => service.resolve({ tx, actorUid: 'staff', projectId: 'p', selectedTaskIds, access });
-    return { records, reads, identities, member, task, resolve, access, state, links, tx, db, accessService };
+    return { records, reads, identities, eligibilityCalls, member, task, resolve, access, state, links, tx, db, accessService };
 }
 test('people retain duplicate names and only canonical currently eligible membership; unexpected eligibility errors propagate', async () => {
     const f = fixture(); f.member('b'); f.member('a'); f.member('inactive', { active: false }); f.member('revoked'); f.member('forged', {}, 'forged'); f.member('badrole', { role: 'Admin' });
@@ -71,4 +71,17 @@ test('public link readers delegate to the same transaction helpers and preserve 
     assert.deepEqual(await f.links.projectLinks({ uid: 'staff' }, 'p'), await f.links.projectLinksInTransaction(f.tx, { uid: 'staff' }, 'p'));
     assert.deepEqual(await f.links.readLinks({ uid: 'staff' }, 'p', 't'), await f.links.readLinksInTransaction(f.tx, { uid: 'staff' }, 'p', 't'));
     assert.equal(opened, 2);
+});
+
+test('each repeated context resolves current eligible members with fresh calls and the same readset', async () => {
+    const f = fixture(); f.member('a'); f.member('deleted'); f.member('inactive', { active: false });
+    f.identities.set('deleted', Object.assign(new Error('deleted'), { code: 'UNAUTHORIZED' }));
+    const first = await f.resolve(); const reads = [...f.reads];
+    assert.deepEqual(f.eligibilityCalls, ['a', 'deleted']);
+    assert.deepEqual(first.people, { members: [{ uid: 'a', displayName: 'Mai', role: 'Editor' }], incomplete: false });
+    f.reads.length = 0;
+    assert.deepEqual(await f.resolve(), first); assert.deepEqual(f.reads, reads);
+    assert.deepEqual(f.eligibilityCalls, ['a', 'deleted', 'a', 'deleted']);
+    f.identities.set('a', Object.assign(new Error('revoked'), { code: 'REVOKED_TOKEN' }));
+    assert.deepEqual((await f.resolve()).people.members, []);
 });

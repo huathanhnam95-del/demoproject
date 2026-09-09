@@ -8,20 +8,38 @@ const order = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const sortedLinks = links => [...links].sort((a, b) => order(a.type, b.type) || order(a.recordId, b.recordId));
 function createProjectsContextDetails({ db, accessService, now = Date.now, taskLinksService = null }) {
     async function resolve({ tx, actorUid, projectId, selectedTaskIds, access }) {
-        const membership = await tx.get(db.collection('crmProjectMembers').where('projectId', '==', projectId).limit(100));
+        // Drain both independent reads before any failure can end this transaction.
+        const [membershipOutcome, calendarOutcome] = await Promise.allSettled([
+            Promise.resolve().then(() => tx.get(db.collection('crmProjectMembers').where('projectId', '==', projectId).limit(100))),
+            Promise.resolve().then(() => tx.get(db.collection('crmProjectOrganizationConfig').doc('calendar')))
+        ]);
+        if (membershipOutcome.status === 'rejected') throw membershipOutcome.reason;
+        const membership = membershipOutcome.value;
         const people = [];
-        for (const doc of membership.docs) {
-            const row = doc.data();
-            if (row.projectId !== projectId || !row.uid || doc.id !== memberDocumentId(projectId, row.uid) || row.active === false || !['Owner', 'Editor', 'Viewer'].includes(row.role)) continue;
-            let identity;
-            try { identity = await accessService.assertTransactionEligible(tx, row.uid); }
-            catch (error) { if (ELIGIBILITY_DENIALS.has(error.code)) continue; throw error; }
-            if (identity.uid !== row.uid) reject('INVALID_CONTEXT_IDENTITY', 'Member identity changed.', 409);
-            const name = identity.profile?.displayName || identity.profile?.name || identity.authUser?.displayName || '';
-            people.push({ uid: row.uid, displayName: typeof name === 'string' ? name.trim().slice(0, 200) : '', role: row.role });
+        for (let offset = 0; offset < membership.docs.length; offset += 4) {
+            const chunk = membership.docs.slice(offset, offset + 4);
+            const outcomes = await Promise.allSettled(chunk.map(async doc => {
+                const row = doc.data();
+                if (row.projectId !== projectId || !row.uid || doc.id !== memberDocumentId(projectId, row.uid) || row.active === false || !['Owner', 'Editor', 'Viewer'].includes(row.role)) return null;
+                let identity;
+                try { identity = await accessService.assertTransactionEligible(tx, row.uid); }
+                catch (error) { if (ELIGIBILITY_DENIALS.has(error.code)) return null; throw error; }
+                return { row, identity };
+            }));
+            // Completion order must not change denial filtering or first error.
+            for (let index = 0; index < chunk.length; index++) {
+                const outcome = outcomes[index];
+                if (outcome.status === 'rejected') throw outcome.reason;
+                if (!outcome.value) continue;
+                const { row, identity } = outcome.value;
+                if (identity.uid !== row.uid) reject('INVALID_CONTEXT_IDENTITY', 'Member identity changed.', 409);
+                const name = identity.profile?.displayName || identity.profile?.name || identity.authUser?.displayName || '';
+                people.push({ uid: row.uid, displayName: typeof name === 'string' ? name.trim().slice(0, 200) : '', role: row.role });
+            }
         }
         people.sort((a, b) => order(a.displayName, b.displayName) || order(a.uid, b.uid));
-        const snapshot = await tx.get(db.collection('crmProjectOrganizationConfig').doc('calendar'));
+        if (calendarOutcome.status === 'rejected') throw calendarOutcome.reason;
+        const snapshot = calendarOutcome.value;
         const config = snapshot.exists ? snapshot.data() : {};
         const current = new Date(now());
         if (!Number.isFinite(current.getTime())) reject('INVALID_CONTEXT_TIME', 'Current date is unavailable.', 409);

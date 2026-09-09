@@ -367,8 +367,13 @@ function createProjectsAccessService(deps = {}) {
         if (!normalizedProjectId) throw new ProjectsAccessError(400, 'INVALID_PROJECT_ID', 'Invalid project ID.');
         const projectRef = ref(PROJECT_COLLECTIONS.projects, normalizedProjectId);
         const memberRef = ref(PROJECT_COLLECTIONS.members, memberDocumentId(normalizedProjectId, identity.uid));
-        const projectSnap = await transaction.get(projectRef);
-        const memberSnap = await transaction.get(memberRef);
+        const outcomes = await Promise.allSettled([
+            Promise.resolve().then(() => transaction.get(projectRef)),
+            Promise.resolve().then(() => transaction.get(memberRef))
+        ]);
+        // Keep the original project-first read failure precedence.
+        for (const outcome of outcomes) if (outcome.status === 'rejected') throw outcome.reason;
+        const [projectSnap, memberSnap] = outcomes.map(outcome => outcome.value);
         if (!projectSnap?.exists) throw new ProjectsAccessError(404, 'PROJECT_NOT_FOUND', 'Project not found.');
         const membership = memberSnap?.exists
             ? canonicalMembership(memberSnap, normalizedProjectId, identity.uid)

@@ -5,8 +5,6 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const ROOT = process.cwd();
-const SCREENSHOT_PATH = path.join(ROOT, 'tmp', 'crm-books-mindmap-browser-check.png');
-const INSPECTOR_SCREENSHOT_PATH = path.join(ROOT, 'tmp', 'crm-books-mindmap-inspector-browser-check.png');
 
 const BOOK = {
     bookId: 'book-1',
@@ -140,13 +138,12 @@ function installMemoryLocalStorage() {
 }
 
 async function main() {
-    fs.mkdirSync(path.dirname(SCREENSHOT_PATH), { recursive: true });
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ headless: true, channel: 'chrome' });
     const pageErrors = [];
     const consoleErrors = [];
 
     try {
-        const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+        const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, acceptDownloads: true });
         page.on('pageerror', (error) => pageErrors.push(error.message));
         page.on('console', (message) => {
             if (message.type() === 'error') consoleErrors.push(message.text());
@@ -211,6 +208,17 @@ async function main() {
             </div>
           </div>
         `);
+
+        // Keep the browser fixture's Books panel, API mocks, and assertions
+        // while loading the authoritative production mind-map markup.
+        const crmAdminHtml = fs.readFileSync(path.join(ROOT, 'public', 'crm-admin.html'), 'utf8');
+        const modalStart = crmAdminHtml.indexOf('<div id="crm-books-mindmap-modal"');
+        const modalEnd = crmAdminHtml.indexOf('<!-- CRM Books Elaborate', modalStart);
+        assert.ok(modalStart >= 0 && modalEnd > modalStart, 'Authoritative mind-map modal markup should be present.');
+        await page.evaluate((markup) => {
+            document.querySelector('#crm-books-mindmap-modal')?.remove();
+            document.body.insertAdjacentHTML('beforeend', markup);
+        }, crmAdminHtml.slice(modalStart, modalEnd));
 
         await page.evaluate(installMemoryLocalStorage);
         await page.addStyleTag({ path: path.join(ROOT, 'public', 'crm-admin.css') });
@@ -354,8 +362,6 @@ async function main() {
         const catNodes = await page.$$('.crm-mindmap-node.category');
         assert.strictEqual(catNodes.length, 2, 'Should render 2 category nodes');
 
-        await page.screenshot({ path: SCREENSHOT_PATH });
-
         // Click a subtopic node to open full note inspector drawer
         await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_1_1"]');
         await page.waitForSelector('#crm-mindmap-inspector[style*="display: flex"]');
@@ -392,8 +398,6 @@ async function main() {
         await page.evaluate(({ bookId, notes }) => window.localStorage.setItem(`crm_books_notes_${bookId}`, notes), { bookId: BOOK.bookId, notes: notesBeforeDeletion });
         await page.click('.crm-mindmap-node.subtopic[data-sub-id="sub_2_1"]');
 
-        await page.screenshot({ path: INSPECTOR_SCREENSHOT_PATH });
-
         await page.click('.crm-mindmap-source-ref');
         await page.waitForSelector('#crm-mindmap-reader-overlay[style*="display: flex"]');
         const citedPassage = await page.textContent('.crm-mindmap-reader-citation');
@@ -428,6 +432,194 @@ async function main() {
             'Insufficient blocks must not expose a whole-note source fallback.'
         );
 
+        // UI-19 regression coverage: use the real modal controls at desktop
+        // and narrow viewports, including actual Close, Escape, export, and
+        // touch-scrolling behavior.
+        const initialInspectorClose = page.locator('#crm-mindmap-inspector-close');
+        if (await initialInspectorClose.isVisible().catch(() => false)) {
+            await initialInspectorClose.click();
+        }
+        await page.locator('#crm-mindmap-close-btn').click();
+        await page.waitForFunction(() => document.querySelector('#crm-books-mindmap-modal')?.style.display === 'none');
+
+        const viewportMatrix = [
+            { width: 1440, height: 900, id: '1440x900' },
+            { width: 768, height: 844, id: '768x844' },
+            { width: 390, height: 844, id: '390x844' },
+            { width: 360, height: 844, id: '360x844' },
+            { width: 844, height: 844, id: '844x844' },
+            { width: 844, height: 390, id: '844x390' }
+        ];
+
+        for (const viewport of viewportMatrix) {
+            await page.setViewportSize({ width: viewport.width, height: viewport.height });
+            await page.evaluate(() => {
+                const dropdown = document.querySelector('#crm-mindmap-export-dropdown');
+                if (dropdown) dropdown.style.display = 'none';
+            });
+            await page.locator('.crm-books-create-mindmap-btn').click();
+            await page.waitForSelector('#crm-books-mindmap-modal[style*="display: flex"]', { timeout: 10000 });
+            await page.waitForTimeout(80);
+            await page.waitForSelector('.crm-mindmap-node.central', { timeout: 10000 });
+
+            const geometry = await page.evaluate(() => {
+                const rectFor = (selector) => {
+                    const element = document.querySelector(selector);
+                    if (!element) return null;
+                    const rect = element.getBoundingClientRect();
+                    return {
+                        left: rect.left,
+                        right: rect.right,
+                        top: rect.top,
+                        bottom: rect.bottom,
+                        width: rect.width,
+                        height: rect.height
+                    };
+                };
+                return {
+                    headerActions: rectFor('.crm-mindmap-header-actions'),
+                    close: rectFor('#crm-mindmap-close-btn'),
+                    export: rectFor('#crm-mindmap-export-btn'),
+                    toolbar: rectFor('#crm-mindmap-toolbar'),
+                    viewport: { width: window.innerWidth, height: window.innerHeight }
+                };
+            });
+            assert.ok(geometry.headerActions, `${viewport.id}: mind-map header actions should render.`);
+            assert.ok(geometry.close, `${viewport.id}: Close should render.`);
+            assert.ok(geometry.export, `${viewport.id}: Export should render.`);
+            assert.ok(
+                geometry.headerActions.right <= geometry.viewport.width + 1,
+                `${viewport.id}: header actions must fit within the viewport (${geometry.headerActions.right} > ${geometry.viewport.width}).`
+            );
+            for (const [name, rect] of [['Close', geometry.close], ['Export', geometry.export]]) {
+                assert.ok(rect.left >= -1 && rect.right <= geometry.viewport.width + 1, `${viewport.id}: ${name} must be inside the viewport.`);
+                const centerHit = await page.evaluate(({ selector, rect }) => {
+                    const hit = document.elementFromPoint((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
+                    return !!hit?.closest(selector);
+                }, { selector: name === 'Close' ? '#crm-mindmap-close-btn' : '#crm-mindmap-export-btn', rect });
+                assert.ok(centerHit, `${viewport.id}: ${name} center should hit the control.`);
+            }
+
+            const focusableCount = await page.evaluate(() => {
+                const modal = document.querySelector('#crm-books-mindmap-modal');
+                if (!modal) return 0;
+                return Array.from(modal.querySelectorAll(
+                    'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+                )).filter((element) => {
+                    const style = getComputedStyle(element);
+                    return element.getClientRects().length > 0
+                        && style.visibility !== 'hidden'
+                        && style.display !== 'none'
+                        && !element.closest('[inert]');
+                }).length;
+            });
+            assert.ok(focusableCount > 0, `${viewport.id}: modal should expose focusable controls.`);
+            const focusTraversalSteps = Math.min(focusableCount + 2, 80);
+            for (let step = 0; step < focusTraversalSteps; step += 1) {
+                await page.keyboard.press('Tab');
+                const focusInside = await page.evaluate(() => {
+                    const modal = document.querySelector('#crm-books-mindmap-modal');
+                    return !!modal?.contains(document.activeElement);
+                });
+                assert.strictEqual(focusInside, true, `${viewport.id}: Tab focus must remain inside the mind-map dialog.`);
+            }
+            for (let step = 0; step < focusTraversalSteps; step += 1) {
+                await page.keyboard.press('Shift+Tab');
+                const focusInside = await page.evaluate(() => {
+                    const modal = document.querySelector('#crm-books-mindmap-modal');
+                    return !!modal?.contains(document.activeElement);
+                });
+                assert.strictEqual(focusInside, true, `${viewport.id}: Shift+Tab focus must remain inside the mind-map dialog.`);
+            }
+
+            if (viewport.id === '1440x900') {
+                await page.locator('#crm-mindmap-export-btn').click();
+                await page.waitForSelector('#crm-mindmap-export-dropdown[style*="display: block"]');
+                const downloadPromise = page.waitForEvent('download');
+                await page.locator('.crm-mindmap-export-option[data-export="markdown"]').click();
+                const download = await downloadPromise;
+                assert.strictEqual(download.suggestedFilename(), 'mindmap_book-1.md', 'Markdown export should use the book filename.');
+                const stream = await download.createReadStream();
+                assert.ok(stream, 'Markdown export should provide a readable download stream.');
+                const chunks = [];
+                for await (const chunk of stream) chunks.push(chunk);
+                const markdown = Buffer.concat(chunks).toString('utf8');
+                assert.match(markdown, /Functional Load in Pronunciation/, 'Markdown export should contain the mind-map title.');
+                await page.evaluate(() => {
+                    const dropdown = document.querySelector('#crm-mindmap-export-dropdown');
+                    if (dropdown) dropdown.style.display = 'none';
+                });
+
+                // Escape first closes an open inspector, then closes the map.
+                await page.locator('.crm-mindmap-node.subtopic').first().click();
+                await page.waitForSelector('#crm-mindmap-inspector[style*="display: flex"]');
+                await page.keyboard.press('Escape');
+                await page.waitForFunction(() => {
+                    const modal = document.querySelector('#crm-books-mindmap-modal');
+                    const inspector = document.querySelector('#crm-mindmap-inspector');
+                    return modal?.style.display !== 'none' && inspector?.style.display === 'none';
+                });
+            }
+
+            if (viewport.id === '390x844') {
+                const toolbarMetrics = await page.locator('#crm-mindmap-toolbar').evaluate((toolbar) => ({
+                    clientWidth: toolbar.clientWidth,
+                    scrollWidth: toolbar.scrollWidth,
+                    overflowX: getComputedStyle(toolbar).overflowX,
+                    touchAction: getComputedStyle(toolbar).touchAction
+                }));
+                assert.ok(toolbarMetrics.scrollWidth > toolbarMetrics.clientWidth, '390x844: toolbar should expose horizontal content to scroll.');
+                assert.match(toolbarMetrics.overflowX, /auto|scroll/, '390x844: toolbar should use horizontal overflow scrolling.');
+                assert.match(toolbarMetrics.touchAction, /pan-x/, '390x844: toolbar should permit horizontal touch panning.');
+                const toolbarControlHit = await page.locator('#crm-mindmap-toolbar button').first().evaluate((button) => {
+                    const rect = button.getBoundingClientRect();
+                    const hit = document.elementFromPoint((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
+                    return hit?.closest('#crm-mindmap-toolbar')?.id || null;
+                });
+                assert.strictEqual(toolbarControlHit, 'crm-mindmap-toolbar', '390x844: the minimap must not cover the toolbar controls.');
+
+                const toolbarBox = await page.locator('#crm-mindmap-toolbar').boundingBox();
+                assert.ok(toolbarBox, '390x844: toolbar should have a hit area.');
+                const cdp = await page.context().newCDPSession(page);
+                await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+                await page.locator('#crm-mindmap-toolbar').evaluate((toolbar) => { toolbar.scrollLeft = 0; });
+                const touchY = toolbarBox.y + toolbarBox.height / 2;
+                const startX = toolbarBox.x + toolbarBox.width - 8;
+                const endX = toolbarBox.x + 8;
+                const touchPoint = (x) => ({ x, y: touchY, radiusX: 1, radiusY: 1, force: 1, id: 1 });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [touchPoint(startX)] });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [touchPoint(startX - (startX - endX) / 3)] });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [touchPoint(endX)] });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+                await page.waitForTimeout(80);
+                const scrolledLeft = await page.locator('#crm-mindmap-toolbar').evaluate((toolbar) => toolbar.scrollLeft);
+                await cdp.detach();
+                assert.ok(scrolledLeft > 0, `390x844: touch drag should scroll the toolbar (scrollLeft=${scrolledLeft}).`);
+            }
+
+            if (viewport.id === '390x844' || viewport.id === '360x844') {
+                await page.locator('#crm-mindmap-close-btn').click();
+                await page.waitForFunction(() => document.querySelector('#crm-books-mindmap-modal')?.style.display === 'none');
+                const pointerCloseFocus = await page.evaluate(() => document.activeElement?.matches('.crm-books-create-mindmap-btn'));
+                assert.strictEqual(pointerCloseFocus, true, `${viewport.id}: pointer Close should restore opener focus.`);
+                await page.locator('.crm-books-create-mindmap-btn').click();
+                await page.waitForSelector('#crm-books-mindmap-modal[style*="display: flex"]', { timeout: 10000 });
+                await page.waitForSelector('.crm-mindmap-node.central', { timeout: 10000 });
+            }
+
+            await page.keyboard.press('Escape');
+            await page.waitForFunction(() => document.querySelector('#crm-books-mindmap-modal')?.style.display === 'none');
+            const focusRestored = await page.evaluate(() => document.activeElement?.matches('.crm-books-create-mindmap-btn'));
+            assert.strictEqual(focusRestored, true, `${viewport.id}: Escape should restore focus to Create Mind Map.`);
+        }
+
+        // The fixture intentionally exercises the bounded citation-upgrade outage;
+        // its logged error is expected, while every other browser console error fails.
+        const expectedConsoleErrorPrefixes = [
+            'Failed to open mind map: Error: simulated citation upgrade outage'
+        ];
+        const unexpectedConsoleErrors = consoleErrors.filter((message) => !expectedConsoleErrorPrefixes.some((prefix) => message.startsWith(prefix)));
+        assert.deepStrictEqual(unexpectedConsoleErrors, [], `Unexpected browser console errors: ${unexpectedConsoleErrors.join('; ')}`);
         assert.deepStrictEqual(pageErrors, [], `Unexpected page errors: ${pageErrors.join('; ')}`);
         console.log('CRM Books Mind Map browser check passed successfully!');
     } finally {

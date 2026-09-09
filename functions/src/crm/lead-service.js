@@ -154,7 +154,7 @@ function normalizeLeadCore(input, fallback = {}) {
 }
 
 function buildLeadCreateData(input, context = {}) {
-    if (cleanOptionalString(input?.studentId) || input?.stage === 'converted') {
+    if (cleanOptionalString(input?.studentId) || cleanOptionalString(input?.stage) === 'converted') {
         throw Object.assign(new Error('Conversion linkage can only be created by the conversion action.'), { status: 400, code: 'VALIDATION_ERROR' });
     }
     const lead = normalizeLeadCore(input, {
@@ -171,9 +171,11 @@ function buildLeadCreateData(input, context = {}) {
 }
 
 function buildLeadPatchData(existing, input, context = {}) {
+    const requestedStage = cleanOptionalString(input?.stage);
+    const currentStage = cleanOptionalString(existing.stage);
     if ((Object.prototype.hasOwnProperty.call(input || {}, 'studentId') && cleanOptionalString(input.studentId) !== cleanOptionalString(existing.studentId))
-        || (input?.stage === 'converted' && existing.stage !== 'converted')
-        || (existing.stage === 'converted' && input?.stage && input.stage !== 'converted')) {
+        || (requestedStage === 'converted' && currentStage !== 'converted')
+        || (currentStage === 'converted' && requestedStage && requestedStage !== 'converted')) {
         throw Object.assign(new Error('Conversion linkage can only be changed by the conversion action.'), { status: 400, code: 'VALIDATION_ERROR' });
     }
     const patch = normalizeLeadCore(input, existing);
@@ -260,6 +262,8 @@ function buildLeadConversion({ leadId, lead, context = {} }) {
         preferredLearningHours: cleanOptionalArray(lead.preferredLearningHours),
         counselingNotes
     }, context);
+
+    student.paymentFollowupRequired = { version: 1, source: 'lead_conversion' };
 
     return {
         student,

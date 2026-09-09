@@ -151,9 +151,10 @@ async function main() {
         await page.click('.crm-books-tab[data-books-tab="pages"]');
         await page.waitForSelector('.crm-books-page-content');
 
-        // Check Page 1 text under legacy contract: segmenter splits ANeglectedSpecias -> A Neglected Spec ias
+        // Check Page 1 text under legacy contract: repair normalizes ANeglectedSpecias -> A Neglected Species
         const page1ContentLegacy = await page.textContent('.crm-books-page-content');
-        assert.match(page1ContentLegacy, /Spec ias/, 'Legacy contract with corrupt text runs segmenter (Specias -> Spec ias)');
+        assert.match(page1ContentLegacy, /A Neglected Species/, 'Legacy renderer repairs Specias to Species');
+        assert.doesNotMatch(page1ContentLegacy, /Spec ias/, 'Legacy renderer must not retain the obsolete split artifact');
         await page.screenshot({ path: SCREENSHOT_LEGACY_PATH });
 
         // Trigger revision activation to OCR-v2

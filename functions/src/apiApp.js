@@ -10,6 +10,7 @@ const { CRM_LEADS } = require('./crm/collections');
 const { buildLeadStageSyncPatch } = require('./crm/lead-service');
 const { buildEntranceTestAdminList } = require('./crm/entrance-test-link-recovery');
 const createCrmRouter = require('./routes/admin/create-crm-router');
+const createProjectsRouter = require('./routes/crm/projects');
 const createTeacherSchedulerRouter = require('./routes/teacher/scheduler');
 const createStudentClassroomsRouter = require('./routes/student/classrooms');
 const entranceTestRoutes = require('./routes/entrance-tests');
@@ -42,6 +43,10 @@ const app = express();
 const { buildPublicFeatures } = require('./public-feature-config');
 app.set('trust proxy', true); // Cloud Functions runs behind Google's load balancer
 app.use(cors({ origin: true }));
+// Projects supports bounded discussion bodies and bulk command envelopes up
+// to the feature limit. Keep this parser scoped to both aliases so legacy
+// routes retain their existing parser behavior.
+app.use(['/api/projects', '/api/admin/projects'], express.json({ limit: '1mb' }));
 app.use(express.json());
 
 // Expose public Firebase client configuration without rate-limiting blocks.
@@ -118,6 +123,22 @@ const adminMiddleware = async (req, res, next) => {
         return sendError(res, 500, 'ADMIN_CHECK_ERROR', 'Failed to verify admin status.', error?.message || error);
     }
 };
+
+// Projects has its own current-account and membership fence. Keep it separate
+// from the broad legacy admin middleware so workforce access never widens
+// student, lead, or scheduling routes.
+const projectsRouter = createProjectsRouter({
+    db,
+    authorizeCrmIdentity: ({ identity }) => identity.profile?.isAdmin === true,
+    auth: getAuth(),
+    verifyIdToken: (token, checkRevoked) => getAuth().verifyIdToken(token, checkRevoked),
+    getAuthUser: (uid) => getAuth().getUser(uid),
+    bootstrapAdminEmails: getBootstrapAdminEmails(),
+    getStorageBucket,
+    sendSuccess,
+    sendError,
+    serverTimestamp: () => FieldValue.serverTimestamp()
+});
 
 async function resolveAdminStatus({ req }) {
     const uid = String(req.user.uid || '').trim();
@@ -389,6 +410,8 @@ app.use('/api/admin/essay-ai', essayAiAdminRouter);
 app.use('/api/admin/voice-cloning', voiceCloningAdminRouter);
 app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
+app.use('/api/projects', projectsRouter);
+app.use('/api/admin/projects', projectsRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/student', studentClassroomsRouter);
 app.use('/api', studentClassroomsRouter);

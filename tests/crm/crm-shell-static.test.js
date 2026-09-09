@@ -35,6 +35,19 @@ for (const ref of localAssetRefs) {
     );
 }
 
+const localPath = (ref) => ref.split(/[?#]/, 1)[0];
+for (const asset of [
+    'js/crm/ai-assistance/budget.js',
+    'js/crm/ai-assistance/voice-transport.js'
+]) {
+    const refs = localAssetRefs.filter((ref) => localPath(ref) === asset);
+    assert.equal(
+        refs.length,
+        1,
+        `CRM admin shell asset "${asset}" must be loaded exactly once.`
+    );
+}
+
 for (const marker of [
     'ðŸ',     // common mojibake prefix for emojis
     'â€¦',    // ellipsis

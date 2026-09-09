@@ -158,6 +158,15 @@ service firebase.storage {
       allow read, write: if false;
     }
 
+    // CRM Projects and Data Input attachments are served through authenticated
+    // Functions routes after membership/ownership checks.
+    match /crm-projects/{projectId}/{allPaths=**} {
+      allow read, write: if false;
+    }
+    match /crm-data-input/{allPaths=**} {
+      allow read, write: if false;
+    }
+
     // CRM Teaching Session audio recordings (admin/teacher upload up to 250MB)
     match /teachingSessions/{studentId}/{fileName} {
       allow read: if isSignedIn();

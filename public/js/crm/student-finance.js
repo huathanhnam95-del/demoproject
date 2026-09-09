@@ -12,6 +12,119 @@ window.CrmStudentFinance = (function () {
             escapeHtml,
             getAdminCapabilities
         } = deps;
+        let followupRequest = 0;
+        let pendingPaymentIntent = null;
+        function newPaymentOperationId() {
+            if (typeof window.crypto?.randomUUID === 'function') return window.crypto.randomUUID();
+            return `manual-payment-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+        }
+        function paymentBodyWithoutRetryMetadata(body) {
+            const comparable = { ...(body || {}) };
+            delete comparable.operationId;
+            delete comparable.paymentDate;
+            return comparable;
+        }
+        function samePaymentIntent(left, right) {
+            return JSON.stringify(paymentBodyWithoutRetryMetadata(left))
+                === JSON.stringify(paymentBodyWithoutRetryMetadata(right));
+        }
+        function paymentActorUid() {
+            return String(window.firebase?.auth?.().currentUser?.uid || '').trim();
+        }
+        function resetPaymentIntent() {
+            pendingPaymentIntent = null;
+        }
+        function followupHost(key, anchor) {
+            if (!anchor) return null;
+            if (!elements[key]) {
+                const host = anchor.ownerDocument.createElement('div');
+                host.setAttribute('aria-live', 'polite');
+                anchor.insertAdjacentElement('afterend', host); elements[key] = host;
+            }
+            return elements[key];
+        }
+        async function refreshPaymentFollowup(studentId) {
+            const request = ++followupRequest, sessionKey = modalState.studentSessionKey;
+            const uid = window.firebase?.auth?.().currentUser?.uid;
+            const active = () => request === followupRequest && modalState.studentId === studentId
+                && modalState.studentSessionKey === sessionKey && window.firebase?.auth?.().currentUser?.uid === uid;
+            const note = followupHost('studentPaymentFollowupNote', elements.studentModalTitle);
+            const host = followupHost('studentPaymentEvidence', elements.studentFinanceWorkflowNote);
+            if (note) { note.hidden = false; note.textContent = 'Checking payment follow-up…'; }
+            if (host) { host.replaceChildren(); host.hidden = true; }
+            try {
+                const status = await apiFetchJson(`/api/admin/students/${encodeURIComponent(studentId)}/payment-followup`);
+                if (!active()) return;
+                if (note) {
+                    note.hidden = !status.required;
+                    note.textContent = !status.required ? '' : status.paymentStatus === 'not_recorded'
+                        ? 'Required follow-up: no payment is recorded yet. Complete payment details and attach the receipt in Finance. Conversion is saved.'
+                        : status.evidenceStatus === 'missing'
+                            ? 'Required follow-up: payment is recorded; a receipt image is still missing. Add it in Finance.'
+                            : 'Payment details and receipt images are complete. See Finance for current invoice balances.';
+                    if (status.required && status.requiredActions.length) {
+                        const open = note.ownerDocument.createElement('button'); open.type = 'button'; open.className = 'crm-btn-secondary'; open.textContent = 'Open Finance';
+                        open.addEventListener('click', () => { if (active()) Array.from(elements.studentSidebarItems || []).find(item => item.dataset.tab === 'finance')?.click(); });
+                        note.append(open);
+                    }
+                }
+                if (!host) return;
+                host.hidden = !status.required && !status.payments.length;
+                const doc = host.ownerDocument, heading = doc.createElement('h4'); heading.textContent = 'Payment receipt images'; host.append(heading);
+                const explanation = doc.createElement('p');
+                explanation.textContent = status.paymentStatus === 'not_recorded'
+                    ? 'Record the actual payment using the payment form below, then attach its receipt. An image alone does not record money.'
+                    : 'Receipt images document recorded payments. They do not independently verify bank receipt or change invoice balances.';
+                host.append(explanation);
+                for (const payment of status.payments) {
+                    const row = doc.createElement('div'), label = doc.createElement('p');
+                    label.textContent = `Payment ${payment.paymentId}: ${payment.amount} ${payment.currency || ''} — ${payment.evidencePresent ? 'receipt attached' : 'receipt missing'}`; row.append(label);
+                    const message = doc.createElement('p'); message.setAttribute('role', 'status');
+                    const action = doc.createElement('button'); action.type = 'button'; action.className = 'crm-btn-secondary';
+                    if (payment.evidencePresent) {
+                        action.textContent = 'View receipt';
+                        action.addEventListener('click', async () => {
+                            if (!active()) return; action.disabled = true;
+                            try {
+                                const blob = await apiFetchJson(`/api/admin/payments/${encodeURIComponent(payment.paymentId)}/evidence`, { responseType: 'blob' });
+                                if (!active()) return;
+                                const image = doc.createElement('img'), url = URL.createObjectURL(blob);
+                                image.alt = `Receipt for payment ${payment.paymentId}`; image.style.maxWidth = '100%'; image.style.maxHeight = '360px';
+                                image.onload = image.onerror = () => URL.revokeObjectURL(url); image.src = url; row.append(image); action.hidden = true;
+                            } catch (error) { if (active()) message.textContent = error?.message || 'Receipt could not be loaded.'; }
+                            finally { if (active()) action.disabled = false; }
+                        });
+                    } else {
+                        const input = doc.createElement('input'); input.type = 'file'; input.accept = 'image/png,image/jpeg,image/webp'; input.setAttribute('aria-label', `Receipt image for payment ${payment.paymentId}`); row.append(input);
+                        const preview = doc.createElement('img'); preview.alt = 'Selected receipt image preview'; preview.hidden = true; preview.style.maxWidth = '100%'; preview.style.maxHeight = '260px';
+                        const notice = doc.createElement('p'); notice.textContent = 'Review this image before attaching it. The first receipt is preserved; a different image cannot replace it here.';
+                        const reviewed = doc.createElement('input'); reviewed.type = 'checkbox'; reviewed.setAttribute('aria-label', `Reviewed receipt for payment ${payment.paymentId}`);
+                        const reviewLabel = doc.createElement('label'); reviewLabel.append(reviewed, doc.createTextNode(' I checked that this is the correct receipt for this payment.'));
+                        input.addEventListener('change', () => {
+                            reviewed.checked = false; preview.hidden = true;
+                            const image = input.files?.[0]; if (!image) return;
+                            const url = URL.createObjectURL(image); preview.onload = preview.onerror = () => URL.revokeObjectURL(url); preview.src = url; preview.hidden = false;
+                        });
+                        row.append(notice, preview, reviewLabel);
+                        action.textContent = 'Attach receipt';
+                        action.addEventListener('click', async () => {
+                            if (!active()) return;
+                            const image = input.files?.[0]; if (!image) { message.textContent = 'Choose a receipt image first.'; return; }
+                            if (!reviewed.checked) { message.textContent = 'Preview the selected image and confirm it is the correct receipt.'; return; }
+                            action.disabled = input.disabled = true;
+                            try {
+                                await apiFetchJson(`/api/admin/payments/${encodeURIComponent(payment.paymentId)}/evidence`, { method: 'PUT', headers: { 'Content-Type': image.type }, body: image });
+                                if (active()) await refreshPaymentFollowup(studentId);
+                            } catch (error) { if (active()) message.textContent = error?.message || 'Receipt upload failed. Retry the same image.'; }
+                            finally { if (active()) action.disabled = input.disabled = false; }
+                        });
+                    }
+                    row.append(action, message); host.append(row);
+                }
+            } catch (error) {
+                if (active() && note) { note.hidden = false; note.textContent = error?.message || 'Payment follow-up could not be checked. Reopen Finance to retry.'; }
+            }
+        }
 
         function hasCapability(name) {
             const capabilities = typeof getAdminCapabilities === 'function'
@@ -154,6 +267,120 @@ window.CrmStudentFinance = (function () {
             const studentId = String(session?.studentId || modalState.studentId || '').trim();
             if (!studentId) return;
             if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
+            const requestSession = session || { studentId, key: modalState.studentSessionKey };
+            const requestGeneration = Number(modalState.studentFinanceRequestGeneration || 0) + 1;
+            modalState.studentFinanceRequestGeneration = requestGeneration;
+            const restoreFocus = !!modalState.studentFinanceFocusPending;
+            modalState.studentFinanceFocusPending = false;
+            const focusAfterReplacement = (target) => {
+                if (!restoreFocus || (document.activeElement !== document.body && document.activeElement !== document.documentElement)) return;
+                if (target && target.isConnected && target.getClientRects().length) target.focus();
+            };
+            if (elements.studentFinanceWorkflowNote && !elements.studentFinanceWorkflowNote.hasAttribute('tabindex')) elements.studentFinanceWorkflowNote.setAttribute('tabindex', '-1');
+            const active = () => (typeof isActiveStudentSession === 'function'
+                ? isActiveStudentSession(requestSession)
+                : String(modalState.studentId || '').trim() === studentId
+                    && Number(modalState.studentSessionKey || 0) === Number(requestSession.key || 0))
+                && Number(modalState.studentFinanceRequestGeneration || 0) === requestGeneration;
+            const statusAttributes = (element) => {
+                if (!element) return null;
+                if (!element.__crmFinanceStatusAttributes) {
+                    element.__crmFinanceStatusAttributes = {
+                        role: element.getAttribute('role'),
+                        ariaLive: element.getAttribute('aria-live'),
+                        ariaAtomic: element.getAttribute('aria-atomic')
+                    };
+                }
+                return element.__crmFinanceStatusAttributes;
+            };
+            const restoreStatusAttributes = (element) => {
+                const original = element?.__crmFinanceStatusAttributes;
+                if (!element || !original) return;
+                ['role', 'aria-live', 'aria-atomic'].forEach((attribute) => element.removeAttribute(attribute));
+                if (original.role !== null) element.setAttribute('role', original.role);
+                if (original.ariaLive !== null) element.setAttribute('aria-live', original.ariaLive);
+                if (original.ariaAtomic !== null) element.setAttribute('aria-atomic', original.ariaAtomic);
+            };
+            const addRetry = (container, id, label = 'Retry') => {
+                if (!container || !active()) return;
+                const button = container.ownerDocument.createElement('button');
+                button.type = 'button';
+                button.id = id;
+                button.className = 'crm-btn-secondary';
+                button.textContent = label;
+                button.addEventListener('click', async () => {
+                    if (!active()) return;
+                    modalState.studentFinanceFocusPending = document.activeElement === button;
+                    button.disabled = true;
+                    try {
+                        await refreshStudentFinance(session);
+                    } catch (error) {
+                        if (active()) showToast(error?.message || 'Finance refresh failed. Retry.', 'error');
+                    }
+                });
+                container.append(container.ownerDocument.createTextNode(' '), button);
+            };
+            const setSectionStatus = (element, message, retryId = null) => {
+                if (!element || !active()) return;
+                statusAttributes(element);
+                element.removeAttribute('aria-busy');
+                element.setAttribute('role', 'alert');
+                element.setAttribute('aria-live', 'assertive');
+                element.setAttribute('aria-atomic', 'true');
+                element.textContent = String(message || '');
+                if (retryId) addRetry(element, retryId);
+            };
+            const setLoadingState = () => {
+                if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = 'Loading…';
+                if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = 'Loading…';
+                if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = 'Loading…';
+                if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = 'Loading…';
+                if (elements.studentFinanceEnrollmentMeta) elements.studentFinanceEnrollmentMeta.textContent = 'Loading enrollment context…';
+                if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">Loading finance summary…</div>';
+                if (elements.studentClassroomMatchSummary) {
+                    restoreStatusAttributes(elements.studentClassroomMatchSummary);
+                    elements.studentClassroomMatchSummary.innerHTML = '<div class="crm-muted">Loading classroom recommendations…</div>';
+                    elements.studentClassroomMatchSummary.setAttribute('aria-busy', 'true');
+                }
+                if (elements.studentClassroomMatchMeta) elements.studentClassroomMatchMeta.textContent = 'Loading classroom recommendations…';
+                if (elements.btnCreateRecommendedEnrollment) elements.btnCreateRecommendedEnrollment.disabled = true;
+                if (elements.studentFinanceWorkflowNote) {
+                    restoreStatusAttributes(elements.studentFinanceWorkflowNote);
+                    elements.studentFinanceWorkflowNote.setAttribute('aria-busy', 'true');
+                    elements.studentFinanceWorkflowNote.textContent = 'Loading finance summary…';
+                }
+            };
+            const setUnavailableValues = () => {
+                if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = 'Unavailable';
+                if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = 'Unavailable';
+                if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = 'Unavailable';
+                if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = 'Unavailable';
+                if (elements.studentFinanceEnrollmentMeta) elements.studentFinanceEnrollmentMeta.textContent = 'Finance data is unavailable.';
+                if (elements.studentInvoiceList) elements.studentInvoiceList.innerHTML = '<div class="crm-muted">Finance data is unavailable.</div>';
+            };
+            const renderInvoiceList = (invoices) => {
+                if (!elements.studentInvoiceList) return;
+                if (!invoices.length) {
+                    elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
+                } else {
+                    elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
+          <div class="crm-task-item">
+            <div class="crm-task-head">
+              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
+              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
+            </div>
+            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
+            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.netAmount) : String(invoice.netAmount || 0))} | Outstanding ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.outstandingAmount) : String(invoice.outstandingAmount || 0))}</div>
+            <div class="crm-task-actions">
+              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
+            </div>
+          </div>
+        `).join('');
+                }
+            };
+            setLoadingState();
+            await refreshPaymentFollowup(studentId);
+            if (!active()) return;
 
             if (elements.studentInvoiceList && !elements.studentInvoiceList.__crmInvoiceSelectHandlerBound) {
                 elements.studentInvoiceList.addEventListener('click', (event) => {
@@ -161,7 +388,9 @@ window.CrmStudentFinance = (function () {
                         ? event.target.closest('.btn-select-invoice')
                         : null;
                     if (!button || !elements.studentInvoiceList.contains(button)) return;
-                    modalState.selectedInvoiceId = String(button.dataset.invoiceId || '').trim();
+                    const nextInvoiceId = String(button.dataset.invoiceId || '').trim();
+                    if (pendingPaymentIntent && pendingPaymentIntent.invoiceId !== nextInvoiceId) resetPaymentIntent();
+                    modalState.selectedInvoiceId = nextInvoiceId;
                     showToast(`Selected ${modalState.selectedInvoiceId} for payment.`, 'success');
                 });
                 elements.studentInvoiceList.__crmInvoiceSelectHandlerBound = true;
@@ -179,20 +408,23 @@ window.CrmStudentFinance = (function () {
                     invoices: []
                 });
             const attendanceSummaryPromise = window.ClassroomAPI && typeof window.ClassroomAPI.fetchAttendanceSummary === 'function'
-                ? window.ClassroomAPI.fetchAttendanceSummary({ studentId })
+                ? Promise.resolve().then(() => window.ClassroomAPI.fetchAttendanceSummary({ studentId }))
                 : Promise.resolve({ students: [] });
-            const [json, attendanceJson] = await Promise.all([
+            const [financeSummaryResult, attendanceSummaryResult] = await Promise.allSettled([
                 financeSummaryPromise,
                 attendanceSummaryPromise
             ]);
-            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
-
-            const totalInvoiced = Number(json.totalInvoiced || 0);
-            const totalPaid = Number(json.totalPaid || 0);
-            const totalOutstanding = Number(json.totalOutstanding || 0);
-            const nextDueDate = String(json.nextDueDate || '').trim() || '-';
-            const invoices = Array.isArray(json.invoices) ? json.invoices : [];
-            const currencyTotals = Array.isArray(json.currencyTotals) ? json.currencyTotals : [];
+            if (!active()) return;
+            const summaryError = financeSummaryResult.status === 'rejected';
+            const attendanceError = attendanceSummaryResult.status === 'rejected';
+            const json = summaryError ? null : financeSummaryResult.value;
+            const attendanceJson = attendanceError ? null : attendanceSummaryResult.value;
+            const totalInvoiced = Number(json?.totalInvoiced || 0);
+            const totalPaid = Number(json?.totalPaid || 0);
+            const totalOutstanding = Number(json?.totalOutstanding || 0);
+            const nextDueDate = String(json?.nextDueDate || '').trim() || '-';
+            const invoices = Array.isArray(json?.invoices) ? json.invoices : [];
+            const currencyTotals = Array.isArray(json?.currencyTotals) ? json.currencyTotals : [];
             const enrollmentRows = Array.isArray(attendanceJson?.students) ? attendanceJson.students : [];
             const activeEnrollments = enrollmentRows.filter((row) => String(row.status || '') === 'active');
             const availableEnrollments = activeEnrollments.length ? activeEnrollments : enrollmentRows;
@@ -202,27 +434,63 @@ window.CrmStudentFinance = (function () {
                 : null;
             const classroomMatchCourseId = String(currentEnrollment?.courseId || availableEnrollments[0]?.courseId || '').trim();
 
-            const classroomMatchesPromise = hasCapability('classroomMatches')
+            const classroomMatchesPromise = !summaryError && !attendanceError && hasCapability('classroomMatches')
                 && window.ClassroomAPI
                 && typeof window.ClassroomAPI.fetchClassroomMatches === 'function'
-                ? window.ClassroomAPI.fetchClassroomMatches(studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {}).catch(() => ({
+                ? Promise.resolve().then(() => window.ClassroomAPI.fetchClassroomMatches(studentId, classroomMatchCourseId ? { courseId: classroomMatchCourseId } : {})).catch(() => ({
                     matches: [],
                     recommendedClassroom: null,
                     classroomCount: 0,
                     courseId: null,
                     error: true
                 }))
-                : Promise.resolve({
-                    matches: [],
-                    recommendedClassroom: null,
-                    classroomCount: 0,
-                    courseId: null,
-                    unsupported: true
-                });
+                : Promise.resolve(summaryError || attendanceError
+                    ? {
+                        matches: [],
+                        recommendedClassroom: null,
+                        classroomCount: 0,
+                        courseId: null,
+                        error: true
+                    }
+                    : {
+                        matches: [],
+                        recommendedClassroom: null,
+                        classroomCount: 0,
+                        courseId: null,
+                        unsupported: true
+                    });
 
             const classroomMatchesJson = await classroomMatchesPromise;
-            if (session && typeof isActiveStudentSession === 'function' && !isActiveStudentSession(session)) return;
-            const financeWorkflow = window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
+            if (!active()) return;
+            if (summaryError || attendanceError) {
+                if (summaryError) {
+                    setUnavailableValues();
+                    if (elements.studentFinanceWorkflowBadge) {
+                        elements.studentFinanceWorkflowBadge.className = 'crm-task-priority low';
+                        elements.studentFinanceWorkflowBadge.textContent = 'unavailable';
+                    }
+                    setSectionStatus(elements.studentFinanceWorkflowNote, 'Finance summary is unavailable.', 'btn-retry-student-finance');
+                    setSectionStatus(elements.studentClassroomMatchSummary, 'Classroom recommendations are unavailable until Finance is refreshed.', 'btn-retry-student-classroom-matches');
+                } else {
+                    if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
+                    if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
+                    if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
+                    if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+                    if (elements.studentFinanceEnrollmentMeta) elements.studentFinanceEnrollmentMeta.textContent = 'Attendance data is unavailable.';
+                    renderInvoiceList(invoices);
+                    if (elements.studentFinanceWorkflowBadge) {
+                        elements.studentFinanceWorkflowBadge.className = 'crm-task-priority low';
+                        elements.studentFinanceWorkflowBadge.textContent = 'unavailable';
+                    }
+                    setSectionStatus(elements.studentFinanceWorkflowNote, 'Attendance summary is unavailable.', 'btn-retry-student-finance');
+                    setSectionStatus(elements.studentClassroomMatchSummary, 'Classroom recommendations are unavailable until attendance is refreshed.', 'btn-retry-student-classroom-matches');
+                }
+                if (elements.studentClassroomMatchMeta) elements.studentClassroomMatchMeta.textContent = 'Classroom recommendations are unavailable.';
+                focusAfterReplacement(elements.studentFinanceWorkflowNote);
+                return;
+            }
+
+            const financeWorkflow = !summaryError && window.CrmFinance && typeof window.CrmFinance.deriveWorkflowState === 'function'
                 ? window.CrmFinance.deriveWorkflowState({
                     invoices,
                     enrollments: availableEnrollments,
@@ -258,34 +526,29 @@ window.CrmStudentFinance = (function () {
                     : 'No enrollment linked yet. You can bill first, then assign the student after payment confirmation.';
             }
 
-            if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
-            if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
-            if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
-            if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+            {
+                if (elements.studentFinanceInvoiced) elements.studentFinanceInvoiced.textContent = formatGroupedMoney(totalInvoiced, currencyTotals, 'totalInvoiced');
+                if (elements.studentFinancePaid) elements.studentFinancePaid.textContent = formatGroupedMoney(totalPaid, currencyTotals, 'totalPaid');
+                if (elements.studentFinanceOutstanding) elements.studentFinanceOutstanding.textContent = formatGroupedMoney(totalOutstanding, currencyTotals, 'totalOutstanding');
+                if (elements.studentFinanceNextDue) elements.studentFinanceNextDue.textContent = nextDueDate;
+            }
 
             renderMatches(classroomMatchesJson);
+            if (elements.studentClassroomMatchSummary) {
+                elements.studentClassroomMatchSummary.removeAttribute('aria-busy');
+                restoreStatusAttributes(elements.studentClassroomMatchSummary);
+            }
+            if (elements.studentFinanceWorkflowNote) {
+                elements.studentFinanceWorkflowNote.removeAttribute('aria-busy');
+                restoreStatusAttributes(elements.studentFinanceWorkflowNote);
+            }
             renderWorkflow(financeWorkflow);
             renderStudentSchedulePrompt();
-
-            if (elements.studentInvoiceList) {
-                if (!invoices.length) {
-                    elements.studentInvoiceList.innerHTML = '<div class="crm-muted">No invoices yet.</div>';
-                } else {
-                    elements.studentInvoiceList.innerHTML = invoices.map((invoice) => `
-          <div class="crm-task-item">
-            <div class="crm-task-head">
-              <strong>Invoice ${escapeHtml(invoice.invoiceId || '')}</strong>
-              <span class="crm-task-priority medium">${escapeHtml(invoice.status || 'open')}</span>
-            </div>
-            <div class="crm-task-meta">Due ${escapeHtml(String(invoice.dueDate || '-'))}</div>
-            <div class="crm-timeline-meta" style="margin-top: 6px;">Net ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.netAmount) : String(invoice.netAmount || 0))} | Outstanding ${escapeHtml(window.CrmFinance ? window.CrmFinance.formatMoney(invoice.outstandingAmount) : String(invoice.outstandingAmount || 0))}</div>
-            <div class="crm-task-actions">
-              <button type="button" class="crm-btn-secondary btn-select-invoice" data-invoice-id="${escapeHtml(invoice.invoiceId || '')}">Select</button>
-            </div>
-          </div>
-        `).join('');
-                }
+            renderInvoiceList(invoices);
+            if (classroomMatchesJson?.error && elements.studentClassroomMatchSummary) {
+                setSectionStatus(elements.studentClassroomMatchSummary, 'Classroom recommendations are temporarily unavailable.', 'btn-retry-student-classroom-matches');
             }
+            focusAfterReplacement(elements.studentFinanceWorkflowNote);
         }
 
         function resolveContext() {
@@ -387,31 +650,92 @@ window.CrmStudentFinance = (function () {
             showToast('Invoice created.', 'success');
         }
 
-        async function recordPaymentForStudent() {
+        async function recordPaymentForStudent(options = {}) {
+            if (options.newIntent === true) resetPaymentIntent();
             if (!modalState.studentId) throw new Error('Save the student profile first.');
             if (!modalState.selectedInvoiceId) throw new Error('Select an invoice first.');
             if (!window.CrmFinance || typeof window.CrmFinance.buildPaymentPayload !== 'function') {
                 throw new Error('Finance helpers are not available.');
             }
 
+            const actorUid = paymentActorUid();
+            if (!actorUid) throw new Error('Current staff identity is unavailable. Sign in again before recording payment.');
             const financeContext = resolveContext();
             const payload = window.CrmFinance.buildPaymentPayload({
                 inputPaymentAmount: elements.inputPaymentAmount,
                 inputPaymentMethod: elements.inputPaymentMethod
             });
+            const baseBody = {
+                invoiceId: modalState.selectedInvoiceId,
+                studentId: modalState.studentId,
+                enrollmentId: financeContext.enrollmentId,
+                ...payload
+            };
+            const identity = {
+                actorUid,
+                studentId: String(modalState.studentId || '').trim(),
+                invoiceId: String(modalState.selectedInvoiceId || '').trim(),
+                enrollmentId: String(financeContext.enrollmentId || '').trim() || null,
+                sessionKey: modalState.studentSessionKey
+            };
+
+            if (pendingPaymentIntent) {
+                const sameTarget = pendingPaymentIntent.actorUid === identity.actorUid
+                    && pendingPaymentIntent.studentId === identity.studentId
+                    && pendingPaymentIntent.invoiceId === identity.invoiceId
+                    && pendingPaymentIntent.enrollmentId === identity.enrollmentId
+                    && pendingPaymentIntent.sessionKey === identity.sessionKey;
+                if (!sameTarget) resetPaymentIntent();
+                else if (!samePaymentIntent(pendingPaymentIntent.body, baseBody)) {
+                    const startNewIntent = typeof window.confirm === 'function'
+                        && window.confirm('The previous payment may already have been recorded. Check the payment history before continuing. Record this as a separate payment?');
+                    if (!startNewIntent) {
+                        throw new Error('Payment details changed after an uncertain save. Start a new payment intent before editing or retrying.');
+                    }
+                    resetPaymentIntent();
+                }
+            }
+
+            if (!pendingPaymentIntent) {
+                const body = {
+                    ...baseBody,
+                    operationId: newPaymentOperationId(),
+                    paymentDate: payload.paymentDate || new Date().toISOString()
+                };
+                pendingPaymentIntent = { ...identity, body };
+            }
+            const submittedIntent = pendingPaymentIntent;
 
             await apiFetchJson('/api/admin/payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    invoiceId: modalState.selectedInvoiceId,
-                    studentId: modalState.studentId,
-                    enrollmentId: financeContext.enrollmentId,
-                    ...payload
-                })
+                body: JSON.stringify(submittedIntent.body)
             });
 
-            if (elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
+            const sameTarget = pendingPaymentIntent === submittedIntent
+                && submittedIntent.actorUid === paymentActorUid()
+                && submittedIntent.studentId === String(modalState.studentId || '').trim()
+                && submittedIntent.invoiceId === String(modalState.selectedInvoiceId || '').trim()
+                && submittedIntent.sessionKey === modalState.studentSessionKey;
+            if (!sameTarget) return;
+            let inputsStillMatch = true;
+            try {
+                const currentContext = resolveContext();
+                const currentPayload = window.CrmFinance.buildPaymentPayload({
+                    inputPaymentAmount: elements.inputPaymentAmount,
+                    inputPaymentMethod: elements.inputPaymentMethod
+                });
+                inputsStillMatch = samePaymentIntent(submittedIntent.body, {
+                    invoiceId: modalState.selectedInvoiceId,
+                    studentId: modalState.studentId,
+                    enrollmentId: currentContext.enrollmentId,
+                    ...currentPayload
+                });
+            } catch (error) {
+                inputsStillMatch = false;
+            }
+            resetPaymentIntent();
+            if (inputsStillMatch && elements.inputPaymentAmount) elements.inputPaymentAmount.value = '';
             await refreshStudentFinance();
             await refreshDashboard();
             showToast('Payment recorded.', 'success');
@@ -424,7 +748,8 @@ window.CrmStudentFinance = (function () {
             createRecommendedEnrollment,
             resolveStudentFinanceContext: resolveContext,
             createInvoiceForStudent,
-            recordPaymentForStudent
+            recordPaymentForStudent,
+            resetPaymentIntent
         };
     }
 

@@ -50,14 +50,14 @@ function formatMoneyValue(value, currency = DEFAULT_CURRENCY) {
     }).format(amount);
 }
 
-function normalizeCommissionSplits(raw) {
+function normalizeCommissionSplits(raw, currency = DEFAULT_CURRENCY) {
     const source = raw && typeof raw === 'object' ? raw : {};
     const next = {};
     ['counselor', 'teacher', 'agent'].forEach((role) => {
         if (!source[role]) return;
         next[role] = {
             actorUid: cleanOptionalString(source[role].actorUid),
-            amount: normalizeMoney(source[role].amount)
+            amount: normalizeMoney(source[role].amount, currency)
         };
     });
     return next;
@@ -92,7 +92,7 @@ function buildInvoiceCreateData(input, context = {}) {
         agentSourceId: cleanOptionalString(input?.agentSourceId),
         agentCommissionBps: normalizeRateBps(input?.agentCommissionBps),
         paidAt: null,
-        commissionSplits: normalizeCommissionSplits(input?.commissionSplits),
+        commissionSplits: normalizeCommissionSplits(input?.commissionSplits, currency),
         createdAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         createdBy: context.user?.uid || null,
         createdByEmail: context.user?.email || null
@@ -127,8 +127,8 @@ function buildInvoicePatchData(existing, input, context = {}) {
         netAmount,
         outstandingAmount: Math.max(0, netAmount - paidAmount),
         commissionSplits: Object.prototype.hasOwnProperty.call(payload, 'commissionSplits')
-            ? normalizeCommissionSplits(payload.commissionSplits)
-            : normalizeCommissionSplits(existing?.commissionSplits),
+            ? normalizeCommissionSplits(payload.commissionSplits, currency)
+            : normalizeCommissionSplits(existing?.commissionSplits, currency),
         updatedAt: context.serverTimestamp ? context.serverTimestamp() : new Date(),
         updatedBy: context.user?.uid || null
     };
@@ -216,8 +216,8 @@ function applyPaymentToInvoice(invoice, payments) {
 }
 
 function buildCommissionRecords({ invoiceId, paymentId, studentId, enrollmentId, commissionSplits }, context = {}) {
-    const splits = normalizeCommissionSplits(commissionSplits);
     const currency = normalizeCurrency(context.currency);
+    const splits = normalizeCommissionSplits(commissionSplits, currency);
     return Object.entries(splits)
         .filter(([, split]) => split.actorUid && split.amount > 0)
         .map(([role, split]) => ({
@@ -332,7 +332,7 @@ function mapInvoiceRecord(doc, invoiceId) {
         agentSourceId: data.agentSourceId || null,
         agentCommissionBps: normalizeRateBps(data.agentCommissionBps),
         paidAt: data.paidAt || null,
-        commissionSplits: normalizeCommissionSplits(data.commissionSplits),
+        commissionSplits: normalizeCommissionSplits(data.commissionSplits, data.currency),
         createdAt: data.createdAt || null,
         createdBy: data.createdBy || null,
         createdByEmail: data.createdByEmail || null,

@@ -797,6 +797,11 @@ async function runTests() {
             contractUnitIndex: 1
         };
 
+        // Keep this historical fixture on the same week as its completed session.
+        // The controller otherwise defaults empty date inputs to the current week.
+        testElements.inputTeacherSchedulerFromDate.value = '2026-08-31';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-06';
+
         const mockGlobal = {
             window: {
                 innerWidth: 1440,

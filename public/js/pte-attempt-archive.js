@@ -309,6 +309,87 @@
 
   let boundProgressModalKeyDown = null;
   let isProgressModalListenersInitialized = false;
+  let progressModalOpener = null;
+
+  function focusModalElement(element) {
+    if (!element || !element.isConnected || typeof element.focus !== 'function') return false;
+    if (element.disabled || element.getAttribute?.('aria-hidden') === 'true') return false;
+    try {
+      element.focus({ preventScroll: true });
+    } catch (_) {
+      try { element.focus(); } catch (_) { return false; }
+    }
+    return document.activeElement === element;
+  }
+
+  function captureProgressModalOpener(modal) {
+    const activeElement = document.activeElement;
+    if (!activeElement || activeElement === document.body || modal.contains(activeElement)) return null;
+    return typeof activeElement.focus === 'function' ? activeElement : null;
+  }
+
+  function getModalFocusableElements(container) {
+    if (!container) return [];
+    return Array.from(container.querySelectorAll(
+      'button, [href], input, select, textarea, audio[controls], video[controls], [tabindex]:not([tabindex="-1"]):not([data-pte-focus-guard])'
+    )).filter((element) => {
+      const style = window.getComputedStyle(element);
+      return !element.disabled
+        && style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && element.getClientRects().length > 0;
+    });
+  }
+
+  function trapModalFocus(event, container) {
+    const focusable = getModalFocusableElements(container);
+    if (!focusable.length) {
+      event.preventDefault();
+      focusModalElement(container);
+      return;
+    }
+
+    // Native media controls own their internal Tab traversal. Let the
+    // browser move through those controls; the review focus guard catches the
+    // eventual exit from the overlay and returns focus to its first control.
+    if (document.activeElement?.matches?.('audio[controls], video[controls]')) return;
+
+    const currentIndex = focusable.indexOf(document.activeElement);
+    const nextIndex = event.shiftKey
+      ? (currentIndex <= 0 ? focusable.length - 1 : currentIndex - 1)
+      : (currentIndex === -1 || currentIndex === focusable.length - 1 ? 0 : currentIndex + 1);
+
+    if ((event.shiftKey && currentIndex <= 0)
+      || (!event.shiftKey && (currentIndex === -1 || currentIndex === focusable.length - 1))) {
+      event.preventDefault();
+      focusModalElement(focusable[nextIndex]);
+    }
+  }
+
+  function createModalFocusGuard(container) {
+    const guard = document.createElement('span');
+    guard.dataset.pteFocusGuard = 'true';
+    guard.tabIndex = 0;
+    guard.setAttribute('aria-hidden', 'true');
+    guard.setAttribute('role', 'presentation');
+    guard.style.cssText = [
+      'position:fixed',
+      'width:1px',
+      'height:1px',
+      'padding:0',
+      'margin:-1px',
+      'overflow:hidden',
+      'clip:rect(0 0 0 0)',
+      'clip-path:inset(50%)',
+      'white-space:nowrap',
+      'border:0'
+    ].join(';');
+    guard.addEventListener('focus', () => {
+      const firstFocusable = getModalFocusableElements(container)[0];
+      if (firstFocusable) focusModalElement(firstFocusable);
+    });
+    return guard;
+  }
 
   /**
    * Panels carry data-tab-panel so tab -> panel stays a direct match. The
@@ -604,6 +685,9 @@
     const modal = document.getElementById('progress-attempts-modal');
     if (!modal) return;
 
+    const opener = progressModalOpener;
+    progressModalOpener = null;
+
     modal.style.display = 'none';
     modal.classList.remove('active');
     document.body.style.overflow = '';
@@ -611,12 +695,22 @@
     // Remove window keydown listener
     if (boundProgressModalKeyDown) {
       window.removeEventListener('keydown', boundProgressModalKeyDown);
+      boundProgressModalKeyDown = null;
     }
+
+    focusModalElement(opener);
   }
 
   function openProgressModal(defaultTab = 'vocabulary') {
     const modal = document.getElementById('progress-attempts-modal');
     if (!modal) return;
+
+    const modalAlreadyOpen = modal.classList.contains('active');
+    const preserveNestedReview = modalAlreadyOpen && Boolean(activeModal);
+
+    if (!modalAlreadyOpen) {
+      progressModalOpener = captureProgressModalOpener(modal);
+    }
 
     // Initialize static listeners once
     initProgressModalListeners(modal);
@@ -625,15 +719,29 @@
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // Highlight correct tab and show correct content
-    switchProgressTab(defaultTab);
+    // A live review owns focus and its row opener. Reopening the parent while
+    // it is active must not rerender the history list or detach that opener.
+    if (!preserveNestedReview) {
+      // Highlight correct tab and show correct content
+      switchProgressTab(defaultTab);
+
+      // Put keyboard focus inside the modal as soon as it opens.
+      focusModalElement(document.getElementById('progress-attempts-close'));
+    }
 
     // Bind window-level Escape key listener (cleaned up on close)
     if (boundProgressModalKeyDown) {
       window.removeEventListener('keydown', boundProgressModalKeyDown);
     }
     boundProgressModalKeyDown = (e) => {
-      if (e.key === 'Escape') closeProgressModal();
+      if (e.defaultPrevented) return;
+      if (activeModal) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeProgressModal();
+        return;
+      }
+      if (e.key === 'Tab') trapModalFocus(e, modal);
     };
     window.addEventListener('keydown', boundProgressModalKeyDown);
   }
@@ -813,6 +921,7 @@
 
   let activeModal = null;
   let activeModalKeydownHandler = null;
+  let activeModalOpener = null;
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -1391,6 +1500,8 @@
   }
 
   function closeActiveModal() {
+    const opener = activeModalOpener;
+    activeModalOpener = null;
     if (activeModal) {
       activeModal.remove();
       activeModal = null;
@@ -1399,10 +1510,15 @@
       window.removeEventListener('keydown', activeModalKeydownHandler);
       activeModalKeydownHandler = null;
     }
+    focusModalElement(opener);
   }
 
   async function openReviewModal(attemptId) {
+    const opener = document.activeElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null;
     closeActiveModal();
+    activeModalOpener = opener && typeof opener.focus === 'function' ? opener : null;
     injectModalStyles();
 
     const overlay = document.createElement('div');
@@ -1424,6 +1540,7 @@
     `;
     
     overlay.appendChild(container);
+    overlay.appendChild(createModalFocusGuard(overlay));
     document.body.appendChild(overlay);
     activeModal = overlay;
 
@@ -1435,10 +1552,14 @@
 
     activeModalKeydownHandler = (e) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         closeActiveModal();
+        return;
       }
+      if (e.key === 'Tab') trapModalFocus(e, overlay);
     };
     window.addEventListener('keydown', activeModalKeydownHandler);
+    focusModalElement(closeBtn);
 
     try {
       const data = await getAttempt(attemptId);

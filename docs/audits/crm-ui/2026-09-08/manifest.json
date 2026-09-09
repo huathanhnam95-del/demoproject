@@ -1,0 +1,503 @@
+{
+  "baseSha": "9fadfec71222eccc056fb7ccf360f2bf8dd4d2ba",
+  "sourceVersion": "Original16 plus sealed UI18,19,20,21,22,24,25,26; UI23 separate b507 supplement",
+  "sourceFiles": [
+    {
+      "path": "public/crm-admin.css",
+      "sha256": "473b9755eec4ec9901f42022de25c8651d5682401e2ff30eacc15f9a567e0b15",
+      "normalizedSha256": "9d1146a4fc9ab89679473d7c7406be5aa9deefc9f0543301d134a570186618bd",
+      "bytes": 366140
+    },
+    {
+      "path": "public/crm-admin.html",
+      "sha256": "599ed3bd485e7f0e92235c618e2002da2abcae9156e92280e6d2389b227d5c32",
+      "normalizedSha256": "599ed3bd485e7f0e92235c618e2002da2abcae9156e92280e6d2389b227d5c32",
+      "bytes": 170715
+    },
+    {
+      "path": "public/crm-admin.js",
+      "sha256": "ae030aa74ad12b532b74c78e8b7bbca6387280339bea290dd1c6ea3700a5658e",
+      "normalizedSha256": "9a80c34d13082ab823b55638f4bf92e75254a828da10a222784a62558d11eab7",
+      "bytes": 341812
+    },
+    {
+      "path": "public/css/ui-continuity.css",
+      "sha256": "736c8c080a8f15ff053fa2d6fa9e0546048a6f55757b37e1f76f2da43b7be2d7",
+      "normalizedSha256": "736c8c080a8f15ff053fa2d6fa9e0546048a6f55757b37e1f76f2da43b7be2d7",
+      "bytes": 1622
+    },
+    {
+      "path": "public/describe-image-mode.js",
+      "sha256": "37e5e8a51cf57b87d796c19a7f9243d3a103eaca7e7300776aab1d2affaa5da2",
+      "normalizedSha256": "aa3d64e376b9e0b41749c7ded926766c7c7dedbe5d2c29721513d6cfb96fe91a",
+      "bytes": 35615
+    },
+    {
+      "path": "public/index.html",
+      "sha256": "3c6e81ca158b247bb8e9359b770e4f17f5f4e54536d3cfc140379ee88768d392",
+      "normalizedSha256": "3c6e81ca158b247bb8e9359b770e4f17f5f4e54536d3cfc140379ee88768d392",
+      "bytes": 346952
+    },
+    {
+      "path": "public/js/crm/agent-sources-workspace.js",
+      "sha256": "f9d3f944796f38632fd31dd4230fd2dffa37d28e598dbc8ba3ff5590ebd23b03",
+      "normalizedSha256": "3e8d40d5d7aad045c980e837615c667fc5cef38e2bab4bd66f9b83e9dfb8b0a9",
+      "bytes": 22147
+    },
+    {
+      "path": "public/js/crm/books-workspace.js",
+      "sha256": "46db97dad54476a4efff7bfbb5687b38cf170483d1b78d93ff530186ce59a7c2",
+      "normalizedSha256": "223c7ef77ff25a858b7cf50f9d69a2a1e84cab31986a7100b8c2b36658fb5218",
+      "bytes": 541718
+    },
+    {
+      "path": "public/js/crm/dashboard-workspace.js",
+      "sha256": "cd97200d18f55cd9cb49c8460f3fe9201a17a40e990cdd353240dc0d704fe587",
+      "normalizedSha256": "e17c9349423e48a90306d245df7ebb0ebbf1b23a18659de8196d313e156e301f",
+      "bytes": 24536
+    },
+    {
+      "path": "public/js/crm/staff-workspace.js",
+      "sha256": "99dbc41c69e843ebf465699ee758e7ca645567128ffd31b29924a471ed502499",
+      "normalizedSha256": "bb398307175cbecab11f3f6a7126b931154403f5f3e9481ae6b79589bd029076",
+      "bytes": 30920
+    },
+    {
+      "path": "public/js/crm/student-directory-workspace.js",
+      "sha256": "c8a85f76c1e09715eb6f946f25002203779232735d928af894602a8c68fc9a3c",
+      "normalizedSha256": "c8a85f76c1e09715eb6f946f25002203779232735d928af894602a8c68fc9a3c",
+      "bytes": 16961
+    },
+    {
+      "path": "public/js/crm/teaching-session-pdf.js",
+      "sha256": "245010ee5af3a3f157ae3b27dc72be006d2b125bff9546f93d30215e4772fabc",
+      "normalizedSha256": "6b162eb17ca98f0cd66551d7c27253dc7b1aeb9d31d13f147e7eb6b64e1e6343",
+      "bytes": 26613
+    },
+    {
+      "path": "public/js/crm/voice-cloning-workspace.js",
+      "sha256": "66ecb32d14ebdc6b49b355723a47be6c6bd56b0b170a82c7aec2b7076e68d3c1",
+      "normalizedSha256": "758c5989807e0ed3d3f8d93bfe6f2bbf2a545dcf3598364597015a00079650ec",
+      "bytes": 39041
+    },
+    {
+      "path": "public/js/pte-attempt-archive.js",
+      "sha256": "6f22b1be898b1daa1f661deac0addca1d638e62396dcff2359d8b48f79d2efd3",
+      "normalizedSha256": "1d410d8443f8607133f33da2d04c0d983701d6aaa59dbe5c029231ee000885ff",
+      "bytes": 71961
+    },
+    {
+      "path": "public/js/ui-continuity.js",
+      "sha256": "6b0260f7b04f75e50b2832b4de7886ed03ce1942dd3a23f2aaffdc116de06268",
+      "normalizedSha256": "6b0260f7b04f75e50b2832b4de7886ed03ce1942dd3a23f2aaffdc116de06268",
+      "bytes": 6170
+    },
+    {
+      "path": "public/script.js",
+      "sha256": "44797652925e0f403a6e5594d984c6776a3c02e4e242e1f510d0fd30cbffe915",
+      "normalizedSha256": "44797652925e0f403a6e5594d984c6776a3c02e4e242e1f510d0fd30cbffe915",
+      "bytes": 436389
+    },
+    {
+      "path": "public/style.css",
+      "sha256": "6f22ccfd5ea3290f03cafae97df932c4b3dc57d3568d91c752006ce9eadc0b95",
+      "normalizedSha256": "2cd99e0e32b44aeaa0893d9205f497ba8fc1e7927d00d731460fd67d1d03815c",
+      "bytes": 481847
+    },
+    {
+      "path": "tests/browser/crm-books-bgm-browser-check.js",
+      "sha256": "a89b4720cb53725c2b9d2397f099eaec24e2605f12f23d96946073c27482d10b",
+      "normalizedSha256": "a89b4720cb53725c2b9d2397f099eaec24e2605f12f23d96946073c27482d10b",
+      "bytes": 29442
+    },
+    {
+      "path": "tests/browser/crm-books-compilation-graph-browser-check.js",
+      "sha256": "2ce7aee1f96fc2457cf7bb9c3e54e43de752080b143549e9af57614e60e07785",
+      "normalizedSha256": "2ce7aee1f96fc2457cf7bb9c3e54e43de752080b143549e9af57614e60e07785",
+      "bytes": 24139
+    },
+    {
+      "path": "tests/browser/crm-books-mind-map-browser-check.js",
+      "sha256": "cd15203edd91dd60b34ecc007176cbda780fcef31c5632568c76f2d90c0e77fe",
+      "normalizedSha256": "e2807fff837bf43f21c0196e36e37c35e0ad01060d3100eb4b11fdb6e2c303e4",
+      "bytes": 37319
+    },
+    {
+      "path": "tests/browser/crm-books-ui-browser-check.js",
+      "sha256": "bbac4f514168257839512f6a1f09df351d9d08e5399d1f35c981a93f5a604cf0",
+      "normalizedSha256": "3d697ea34a7823be7728f52258ec6b37b3f19abc4dbe3e249499726942d71dc1",
+      "bytes": 50244
+    },
+    {
+      "path": "tests/browser/crm-refresh-order-browser-check.py",
+      "sha256": "1287d2c6feb0bbb40703cfd094c6dbdeb224f3988d859544a7c809ec20f9069e",
+      "normalizedSha256": "1287d2c6feb0bbb40703cfd094c6dbdeb224f3988d859544a7c809ec20f9069e",
+      "bytes": 4216
+    },
+    {
+      "path": "tests/browser/crm-teaching-session-pdf-cold-check.py",
+      "sha256": "5e002ef2e875e698918d8e078c461f7b6957894c7475fb512051657eee0aefd1",
+      "normalizedSha256": "5e002ef2e875e698918d8e078c461f7b6957894c7475fb512051657eee0aefd1",
+      "bytes": 12220
+    },
+    {
+      "path": "tests/browser/crm-voice-studio-polling-check.py",
+      "sha256": "f353c69dafb3000bfcf93341bd98c34959b466f08b8dfdce7a7594e9c8a9a78a",
+      "normalizedSha256": "f353c69dafb3000bfcf93341bd98c34959b466f08b8dfdce7a7594e9c8a9a78a",
+      "bytes": 3745
+    },
+    {
+      "path": "tests/browser/track-progress-modal-browser-check.js",
+      "sha256": "4ac036f8189946801f446f3d62a4b7dc16229abeb69d7006586c96c5b5b3330b",
+      "normalizedSha256": "937c6d3174014aedfb5f1f4bf2daedc990210f3f93fce57c09deae3e2110020e",
+      "bytes": 42919
+    },
+    {
+      "path": "tests/browser/ui-continuity-browser-check.py",
+      "sha256": "c1c6fcb43d0442833849a3018dc2fd1e2718be96143cf4f9c59816a505442703",
+      "normalizedSha256": "c1c6fcb43d0442833849a3018dc2fd1e2718be96143cf4f9c59816a505442703",
+      "bytes": 9555
+    }
+  ],
+  "excluded": [
+    "external motion-demo directory and all motion-preference integration",
+    "other worktrees and Projects/data-input source",
+    "production configuration and version/release files"
+  ],
+  "evidenceRoot": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287",
+  "ownership": "Root owns audit records; main integration owns combined candidate/runtime. UI23 writes only two files in separate b507 checkout and is not included here.",
+  "overlapMap": {
+    "public/crm-admin.js": [
+      "shared asset-independent route fallback",
+      "navigation/focus/duplicate render handling",
+      "practice-independent optional sync startup"
+    ],
+    "public/crm-admin.html": [
+      "shared continuity CSS/JS registration only"
+    ],
+    "public/crm-admin.css": [
+      "Original shell fixes; sealed teaching/PDF/fullscreen styles; UI19mobile controls; UI20Student mobile shell"
+    ],
+    "public/index.html": [
+      "practice launcher icons and shared continuity assets"
+    ],
+    "public/script.js": [
+      "practice routing pending/cancellation and removed decorative waits"
+    ],
+    "public/style.css": [
+      "practice launcher icon sizing and scoped entrance adjustments"
+    ],
+    "newPaymentFollowup": [
+      "UI23 sealed separate b507 patch; both payment function bodies unchanged; combined acceptance main-owned"
+    ],
+    "public/js/crm/books-workspace.js": [
+      "UI18fullscreen;UI19mobile mindmap;UI21BGM;UI22compilation and Graph states"
+    ]
+  },
+  "priorSnapshot": {
+    "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\audit-reconciliation-ui24\\before-documents\\docs\\audits\\crm-ui\\2026-09-08\\manifest.json",
+    "sha256": "12b4318c5b09f8a7e46bb6cbb95dcfe4c0c4c147b3fa656eb8105ecc7167e529"
+  },
+  "applicationChain": {
+    "manifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\final-bounded-remediation\\ui26-manifest.json",
+    "manifestSha256": "778633d256d105c7fc0f089bf5ff231908d1a6aa2dd29238030b101fb82da8eb",
+    "candidateTree": "bf83cb1482b927635b7702c78e9d848989135b4c",
+    "sourcePathCount": 26,
+    "patch": {
+      "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\final-bounded-remediation\\ui26.patch",
+      "sha256": "cd25170824025ba5d958e3d2c9cb6bfda69988fc90ff8b15579b16526da87289"
+    },
+    "previousUI24": {
+      "manifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\teaching-audio-sizing-fix\\package-run-20260908T132718Z\\ui24-manifest.json",
+      "manifestSha256": "11171f49762715a14776aea54d56c4d765bd99a3aabc1bb4faffc9579c635044",
+      "candidateTree": "ba1089c56de444ff12e506ba6b9e4d60f0026bb9",
+      "patch": {
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\teaching-audio-sizing-fix\\package-run-20260908T132718Z\\ui24.patch",
+        "sha256": "dbba39d556512e2f7d6f3596ecada770f8f4a1c7f7733b6c92881b2bf6d0b170",
+        "changedPaths": [
+          "public/crm-admin.css"
+        ]
+      },
+      "chainSha256": "484b964403a33e05911e109069c0e4a6c3e5b648b718e17107e66d90d179c7db",
+      "sourcePathCount": 25
+    },
+    "supplements": [
+      {
+        "name": "ui25",
+        "manifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\final-bounded-remediation\\ui25-manifest.json",
+        "sha256": "262b7c2d2e57d2b9b3857cae776c95b0dc23ac60fbfaea3ee19ce77f99c05fe1"
+      },
+      {
+        "name": "ui26",
+        "manifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\final-bounded-remediation\\ui26-manifest.json",
+        "sha256": "778633d256d105c7fc0f089bf5ff231908d1a6aa2dd29238030b101fb82da8eb"
+      }
+    ]
+  },
+  "evidenceReconciliation": {
+    "rootReview": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\remaining-audit\\root-shared-teaching-review.json",
+    "sha256": "570c5e9d6656dbdaf8f7eb4164241ba76b377ffb092654001d3a24d01d54fa93",
+    "coverageRowCount": 242,
+    "statusCounts": {
+      "blocked": 5,
+      "finding": 48,
+      "not-applicable": 1,
+      "pass": 188
+    },
+    "originalAuditComplete": false,
+    "assignedLocalAuditComplete": true,
+    "remainingLocalPlannedRows": 0,
+    "remainingCrossOwnerOrPhysicalBoundaryRows": 5,
+    "finalEvidence": [
+      {
+        "path": "remaining-speaking-ra-20260908/read-aloud-result.json",
+        "sha256": "0b262632a229b1ddabeeb71ae9d2367c2b4f935de1e9cbee85c097268a9f15af"
+      },
+      {
+        "path": "remaining-speaking-ra-20260908/read-aloud-mobile-result.json",
+        "sha256": "da54185bb348ff4ff5e5bd1b5cef403388133231f3d4e65aa9ae5a9098d878e4"
+      },
+      {
+        "path": "remaining-speaking-rts-20260908/root-result.json",
+        "sha256": "ffc605b32f406f49fc4517d6b9a1a24e57603c7bd6d9a198df601a2acbfccfcc"
+      },
+      {
+        "path": "remaining-speaking-sgd-20260908/root-result.json",
+        "sha256": "7468b0b5c2a143f61222d2c842d9fd87d30bf78be5e839ada75efbdf8d2cbbf4"
+      },
+      {
+        "path": "remaining-speaking-notes-20260908/root-result.json",
+        "sha256": "6e985e06a1a9fd2d4e8b1137e4476518cb7adb1177fb7c4e152ef280de00a9b6"
+      },
+      {
+        "path": "remaining-speaking-repeat-sentence-20260908/root-result.json",
+        "sha256": "a405cee6edb81ee7688415e36453cd2c4c7a54ed6434dc0db359e5def666ba1e"
+      },
+      {
+        "path": "remaining-speaking-asq-20260908/asq-desktop-result.json",
+        "sha256": "a8476c3d123ee87d1f24ced1ddc6ca747b93ef188980514053bba823e6d901de"
+      },
+      {
+        "path": "remaining-speaking-asq-20260908/asq-mobile-result.json",
+        "sha256": "52868190572b4ac5d8a75213c99ae7f8556b4158fe271961d1b208ff949ac145"
+      },
+      {
+        "path": "final-bounded-remediation/describe-image-final/describe-image-after-v5.json",
+        "sha256": "c6eb55189d31bd23b6ed41d97e315a100ebbd22c8feb09b3dd78f8e1d1e798ff"
+      },
+      {
+        "path": "remaining-listening-sst-20260908/root-result.json",
+        "sha256": "96e9979d0c2f2d2ac183f8886957f951a7f08668855141cd1310a94f07406222"
+      },
+      {
+        "path": "remaining-listening-lmcsa-20260908/run-desktop-v2/lmcsa-desktop1440x900.json",
+        "sha256": "e0a4c6c21ac2151569891721c2334a76929ae9d2a5d48aef588b3f446e88648a"
+      },
+      {
+        "path": "remaining-listening-lmcsa-20260908/run-mobile-v2/lmcsa-mobile390x844.json",
+        "sha256": "3b212a4f2bec36bb97b744bb935c09d78c0819eaecae9774d7d47cabaefc4b49"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-lmcma-desktop-v2/lmcma-desktop1440x900.json",
+        "sha256": "f7f6662bc163c106a5a34cc2c2339c9b10c86a579ac28a54240deebf5968116b"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-lmcma-mobile-v2/lmcma-mobile390x844.json",
+        "sha256": "13b3f67d66ea0f36638928f63dc570ddba4d76f1b26d9a14045b10bed7bf0af5"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-smw-desktop/smw-desktop1440x900.json",
+        "sha256": "d6dbdd4634f0993a9f33fb5624844765994dbb38201c2ae35640a9f799099419"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-smw-mobile/smw-mobile390x844.json",
+        "sha256": "f7d2a1bb825a9b209474d0d2aa4c254c7bcb7931a34b67b6b4bfc438fc844d1d"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-hiw-desktop-v2/hiw-desktop1440x900.json",
+        "sha256": "79294baa01d55789878b76a5980f4c6de8003392f12b66bd5c78e87c65dfded3"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-hiw-mobile-v2/hiw-mobile390x844.json",
+        "sha256": "544962889ac1f535fcfa6f3723d31820154211a148c3105e7ba6cf62f46bbcb9"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-hcs-desktop/hcs-desktop1440x900.json",
+        "sha256": "e6e2ee56fd027068a8b1cd0a43bb679c83bdb4ed2a4ba0c5709e74c8ff2b68f6"
+      },
+      {
+        "path": "remaining-listening-four-20260908/run-hcs-mobile/hcs-mobile390x844.json",
+        "sha256": "8aa844a0388d072d80cbd5547ce1bc810f5d5c78a34cb5bd5d4cd2b50f619e06"
+      },
+      {
+        "path": "combined-ui27-toast-check/f04-result.json",
+        "sha256": "66f517f3dbd9933ca0aeab5a38d0ecfcdcfbb26496228fa8c973b5a6d01d37db"
+      }
+    ],
+    "latestRootReviews": [
+      {
+        "path": "root-practice-receipt-review-20260908.json",
+        "sha256": "29bb7da9084d4b919accb6235c36bb7a8671141f0a386b38dfd57c4b9a783df5"
+      },
+      {
+        "path": "remaining-listening-four-20260908/root-result.json",
+        "sha256": "df28bbb9bea61810bccbba2f1c56c2cce37269f3956ab019981de1338e03d6ca"
+      },
+      {
+        "path": "remaining-listening-sst-20260908/root-result.json",
+        "sha256": "96e9979d0c2f2d2ac183f8886957f951a7f08668855141cd1310a94f07406222"
+      },
+      {
+        "path": "final-bounded-remediation/package-summary.json",
+        "sha256": "f2c369b7ba09d09d0e967120875fc33d4e01795e08aae2c5d001ad498f644c84"
+      },
+      {
+        "path": "final-bounded-remediation/structure-final.json",
+        "sha256": "28678b6d42ebcd12170c0e00caf4c081cd7b8f2ba516e416fd51bb6829b4a5ff"
+      }
+    ]
+  },
+  "separateUI23": {
+    "manifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\student-errors-fix\\package-run-20260908T132715Z\\ui23-manifest.json",
+    "manifestSha256": "8fade3ee661fdbb58f6dde3a21a1ad1888b956c0d70970423afac305dbe41db6",
+    "baseSha": "b507b582dc1fc9eb4f77b051b4cd949dbd0ed377",
+    "rawStructureStatus": 1,
+    "qualification": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\student-errors-fix\\structure-qualification.json",
+    "inPrimarySourceChain": false
+  },
+  "ui27CombinedClosure": {
+    "commit": "d4b5441a731ce83a48a2d8967a0dcb96855034ad",
+    "testBase": "d34accb14d6758d8531423caa5b828948a5af71f",
+    "cssSha256": "08983239722eedac79861db525078e1fcf0c226bba3c5393b8f3a027bd97d3c7",
+    "receipt": "combined-ui27-toast-check/f04-result.json",
+    "receiptSha256": "66f517f3dbd9933ca0aeab5a38d0ecfcdcfbb26496228fa8c973b5a6d01d37db",
+    "cases": 4,
+    "status": "pass",
+    "executor": "integration coordinator",
+    "review": "UI root inspected actual receipt and verified tested CSS hash and normalized committed CSS content; no browser rerun",
+    "fixedFinding": "F-04",
+    "unsupportedClaimRemoved": "Persistent individual field association not established by original form-wide validation repro",
+    "sourceChainNote": "Prior UI26 application chain preserved; UI27 applied directly to combined candidate"
+  },
+  "ui28FixAll": {
+    "status": "external-tested; integration pending",
+    "baseSha": "813015aea8826e15f0548a3102938694e4002b08",
+    "externalManifest": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\integration-package\\manifest.json",
+    "externalManifestSha256": "f159597823a4c1249d1375754aa007f48201d633fc2af594d762161ef4cd7b8b",
+    "patchSha256": "8a461192a39d76d16a413887fdfac610ebc23515831f32bc79949ebcf3773d09",
+    "coverageRows": 256,
+    "coverageCounts": {
+      "pass": 201,
+      "finding": 49,
+      "not-applicable": 1,
+      "blocked": 5
+    },
+    "evidence": [
+      {
+        "finding": "F-03",
+        "family": "Typography",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\font-run3\\font-result.json",
+        "sha256": "aa001b97524dff70af275751562534244f86d0390ba7f83e4d67deddc6f65595",
+        "conclusion": "PASS; baseline fallback reproduced; exact custom PostScript face and unchanged NFD text at390/1440"
+      },
+      {
+        "finding": "F-01",
+        "family": "Course/Classroom",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\modal-candidate2\\run-result.json",
+        "sha256": "752937c7781113891d8cde7681101ca34a27ad78fc8ae92983864fb984b978c9",
+        "conclusion": "PASS;360/390/768/1440 actual openers/tabs/drafts/Cancel; bounded Review Board keyboard scroll"
+      },
+      {
+        "finding": "READING",
+        "family": "Reading",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\reading-candidate1\\reading-content-mobile-result.json",
+        "sha256": "225a9f8b18051e9fd27534983bbcf9680085aa1a697738a5b9a9b3d8e9ef658f",
+        "conclusion": "PASS; four families390/768; predates additive top scroll padding"
+      },
+      {
+        "finding": "READING",
+        "family": "Reading desktop",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\reading-candidate2\\reading-content-mobile-result.json",
+        "sha256": "43b74488d5354db85e7e7839c01ea29e2e33a9e996b5f4602ebdce0041eba532",
+        "conclusion": "Desktop four families pass; original360DD header failure RETAINED; superseded at360 by candidate3"
+      },
+      {
+        "finding": "READING",
+        "family": "Reading360",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\reading-candidate3\\reading-content-mobile-result.json",
+        "sha256": "bbf0abedee519dffad82c9761d9c9510add2951313d6ab36b5dcb380adea4331",
+        "conclusion": "PASS; final HTML four families360"
+      },
+      {
+        "finding": "F-16",
+        "family": "SST390",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\sst-candidate2.log",
+        "sha256": "434f1bf81af31d8c333e859594c221ab54ccbfe0ac0d4511963730271b7d353d",
+        "conclusion": "PASS; four strict Retry owns:true; real MP3 Range; synthetic scoring; predates top padding"
+      },
+      {
+        "finding": "F-16",
+        "family": "SST360",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\sst-candidate360.log",
+        "sha256": "d123e101cf92f7ad1696f1a11eb96969edfb107f82aeb4583b59c66d5c6729ff",
+        "conclusion": "PASS; final HTML four strict Retry owns:true"
+      },
+      {
+        "finding": "F-13",
+        "family": "Agents390",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\agents-candidate1\\open204-shared-controls.json",
+        "sha256": "53755c67fe8a576f1e5e9dd6dd5877f54e4235adca6893e0ed9a3c89e41a80ff",
+        "conclusion": "PASS; actual center click adds0to1"
+      },
+      {
+        "finding": "F-13",
+        "family": "Agents360/1440",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\agents-candidate2\\open204-shared-controls.json",
+        "sha256": "d979ea17c680c3604605fd716cd8dfa0f39dd51669240487a970d44f57dbdd8b",
+        "conclusion": "Targeted PASS; both actual centers own and add0to1; raw aggregate pass-with-findings: generic sample y800.59 outside800pxviewport returns null"
+      },
+      {
+        "finding": "ENTRANCE",
+        "family": "Entrance",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\entrance-candidate1\\run-20260908T222105Z\\entrance-result-audit.json",
+        "sha256": "dcb7dd5690bccdc3e32fdf54fa898f941fc89af3530117e31099a6efca8cd9a9",
+        "conclusion": "PASS;12cases populated/empty/error at360/390/768/1440; initial Back visible"
+      },
+      {
+        "finding": "F-12",
+        "family": "Teaching",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\teaching-candidate1\\teaching-result.json",
+        "sha256": "25fe32fcb62c08ffe7f0a4760438fa10f24cae122298347d0427413199e7100b",
+        "conclusion": "PASS; native audio and actual four tab navigation at360/390/768/844/1440; synthetic session entry"
+      },
+      {
+        "finding": "F-10",
+        "family": "Identity",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\identity-candidate1\\f04-result.json",
+        "sha256": "39948562f6b83293220734ecdc9edda630394373e5b17f2d57468eab3843d109",
+        "conclusion": "PASS; six empty/error/retry cases at390/1440; mocked auth/storage"
+      },
+      {
+        "finding": "TEST-STALE-04",
+        "family": "Books fixture",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\stale-test-proposal\\validation\\run1\\books\\execution-receipt.json",
+        "sha256": "0c70637814b011259a56b99cc0438d91e3a99e7a12bd15e040b5f20b9e12d9d6",
+        "conclusion": "PASS; repaired stale expectation, OCR-v2 retained"
+      },
+      {
+        "finding": "TEST-STALE-06",
+        "family": "Courses fixture",
+        "path": "C:\\Users\\Admin\\.codex\\ui-audit-20260908-4287\\reopen-all-20260909\\stale-test-proposal\\validation\\student-courses-run2\\execution-receipt.json",
+        "sha256": "d01ef8594cf05aa90a679b76c7a3dbd8514b8369b5f39b4bce8b62255b4b881d",
+        "conclusion": "PASS; repaired canonical push-forward mock; original assertions retained"
+      }
+    ],
+    "limitations": [
+      "Chrome152 fixture checks are not native provider, physical device or production persistence proof",
+      "Reading390/768/1440 and SST390 predate final additive header padding; final360 reading/SST exercised final HTML",
+      "Agents raw generic inventory finding retained; sampled center outsideviewport; actual strict AddCourse passes",
+      "Failed UTF8/font-family/serving/CRLF adapters and original360DD failure retained",
+      "Scheduler focused Node suite passed earlier this turn; no preserved standalone raw stdout receipt; no new scheduler source patch"
+    ]
+  }
+}

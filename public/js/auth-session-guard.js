@@ -6,6 +6,16 @@
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
   }
 
+  function parseLocalEmulatorEndpoint(endpoint, label) {
+    const host = String(endpoint?.host || '').trim().toLowerCase();
+    const port = Number(endpoint?.port);
+    if (!['localhost', '127.0.0.1', '::1'].includes(host)
+      || !Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new Error(`${label} must be a valid loopback emulator endpoint.`);
+    }
+    return { host, port };
+  }
+
   function safeGetCurrentUser(getCurrentUser) {
     if (typeof getCurrentUser !== 'function') return null;
     try {
@@ -165,8 +175,27 @@
           || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)
           || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h);
         if (isLocal) {
-          try { firebaseRef.firestore().useEmulator('localhost', 8080); } catch (e) { /* already connected */ }
-          try { firebaseRef.auth().useEmulator('http://localhost:9099', { disableWarnings: true }); } catch (e) { /* */ }
+          // The local server publishes its owned emulator endpoints. Use those
+          // ports so a phase harness (or another isolated session) cannot
+          // silently attach the browser to a different emulator instance.
+          const emulatorConfig = result.emulators || {};
+          const hasEndpointOverride = Object.prototype.hasOwnProperty.call(emulatorConfig, 'auth')
+            || Object.prototype.hasOwnProperty.call(emulatorConfig, 'firestore');
+          let firestoreEndpoint = { host: 'localhost', port: 8080 };
+          let authEndpoint = { host: 'localhost', port: 9099 };
+          if (hasEndpointOverride) {
+            if (result.config.projectId !== 'demo-crm-projects') {
+              throw new Error('Emulator endpoint overrides require the dedicated demo project.');
+            }
+            authEndpoint = parseLocalEmulatorEndpoint(emulatorConfig.auth, 'Auth emulator');
+            firestoreEndpoint = parseLocalEmulatorEndpoint(emulatorConfig.firestore, 'Firestore emulator');
+          }
+          const firestoreHost = firestoreEndpoint.host;
+          const firestorePort = firestoreEndpoint.port;
+          const authHost = authEndpoint.host;
+          const authPort = authEndpoint.port;
+          try { firebaseRef.firestore().useEmulator(firestoreHost, firestorePort); } catch (e) { /* already connected */ }
+          try { firebaseRef.auth().useEmulator(`http://${authHost}:${authPort}`, { disableWarnings: true }); } catch (e) { /* */ }
           try { if (firebaseRef.storage) firebaseRef.storage().useEmulator('localhost', 9199); } catch (e) { /* */ }
           try { if (firebaseRef.functions) firebaseRef.functions().useEmulator('localhost', 5001); } catch (e) { /* */ }
           console.warn('🔧 [AuthGuard] Compat emulators connected.');

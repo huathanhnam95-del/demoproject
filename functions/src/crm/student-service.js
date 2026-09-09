@@ -292,6 +292,8 @@ function mapStudentRecord(data, studentId) {
 
     return {
         studentId: id,
+        paymentFollowupRequired: source.paymentFollowupRequired?.version === 1 && source.paymentFollowupRequired.source === 'lead_conversion'
+            ? { version: 1, source: 'lead_conversion' } : null,
         name: source.name || null,
         label: source.label || null,
         phone: source.phone || null,

@@ -95,6 +95,8 @@ window.CrmStudentModal = (function () {
         }
 
         function resetStudentModal() {
+            if (elements.studentPaymentFollowupNote) { elements.studentPaymentFollowupNote.hidden = true; elements.studentPaymentFollowupNote.replaceChildren(); }
+            if (elements.studentPaymentEvidence) { elements.studentPaymentEvidence.hidden = true; elements.studentPaymentEvidence.replaceChildren(); }
             modalState.studentSessionKey = Number(modalState.studentSessionKey || 0) + 1;
             modalState.studentId = null;
             modalState.studentProfile = null;

@@ -1877,6 +1877,20 @@ h1 {
   transition: var(--transition-base);
 }
 
+/* Launcher symbols share one stroke family and remain legible without hover
+   or a downloaded icon font. Text labels carry their accessible names. */
+.skill-card-icon > .practice-launcher-icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+
+.card-visual .practice-launcher-icon {
+  width: 56px;
+  height: 56px;
+  filter: none;
+}
+
 /* ===== TYPE MODE: waveform → caret → typing bars ===== */
 .wave-tick {
   transform-origin: center;
@@ -3257,9 +3271,9 @@ h1 {
 
 @keyframes stageFadeBlurIn {
   0% {
-    opacity: 0;
-    filter: blur(3px);
-    transform: translateY(6px);
+    opacity: 0.94;
+    filter: none;
+    transform: none;
   }
   100% {
     opacity: 1;
@@ -9759,9 +9773,8 @@ body.spc-focus .main-header h1 {
    --------------------------------------------
    Decoupled from .vocab-list-modal / .vocab-list-content-modal /
    .vocab-list-header so the Vocab Book redesign cannot restyle this
-   modal by accident. These are the cascade-winning computed values
-   captured before the split — note z-index 1002 wins over the later
-   `z-index: 2000` because the earlier rules carry !important.
+   modal by accident. The modal sits above the fixed site header while
+   remaining below the dedicated attempt-review overlay.
    ============================================ */
 
 .progress-modal {
@@ -9774,7 +9787,7 @@ body.spc-focus .main-header h1 {
   height: 100%;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(6px);
-  z-index: 1002;
+  z-index: 1200;
   display: none;
   align-items: center;
   justify-content: center;
@@ -23372,4 +23385,11 @@ h1, h2, h3, .panel-title, .dashboard-title {
   background: #f5f3ff;
   color: #5b21b6;
   border: 1px solid #ddd6fe;
+}
+
+/* Keep Describe Image actions scrollable above the fixed phone toolbar and assistant. */
+@media (max-width: 640px) {
+  #mode-describe-image {
+    padding-bottom: 220px;
+  }
 }

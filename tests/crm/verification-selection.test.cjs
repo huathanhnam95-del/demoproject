@@ -20,10 +20,22 @@ const CRM_ROOTS = [
   'functions/src/crm'
 ];
 const EXPECTED_LEGACY_CHECK_COUNT = 66;
+// Added in 58b1a2c19e39ed3b48cd48fd2fb252bec63aec7f after the frozen baseline.
+const EXPECTED_EXISTING_ADDITIONAL_CHECKS = [
+  ['node', ['tests/crm/enrollment-1on1-scheduling.test.js']],
+  ['node', ['tests/crm/student-route-deep-link.test.js']],
+  ['node', ['tests/crm/scheduling-service.test.js']]
+];
+const EXPECTED_CURRENT_CHECK_COUNT = EXPECTED_LEGACY_CHECK_COUNT + EXPECTED_EXISTING_ADDITIONAL_CHECKS.length;
+const APPROVED_ADDITIONAL_LINT_GLOBS = [
+  'functions/src/routes/crm/**/*.{js,cjs,mjs}',
+  'services/crm-voice-relay/**/*.{js,cjs,mjs}'
+];
 const EXPECTED_RECURSIVE_LINT_GLOBS = [
   'public/js/crm/**/*.{js,cjs,mjs}',
   'functions/src/routes/admin/**/*.{js,cjs,mjs}',
-  'functions/src/crm/**/*.{js,cjs,mjs}'
+  'functions/src/crm/**/*.{js,cjs,mjs}',
+  ...APPROVED_ADDITIONAL_LINT_GLOBS
 ];
 const EXPECTED_COMPOSED_LEGACY_SHA256 = '035be88a01e6f3b2e4ceb6b59730b52a199de7bd50ff4ae26944905fd26bc394';
 
@@ -267,23 +279,31 @@ test('selector does not scan tests outside registered test roots', () => {
   assert.deepEqual(listed.unitTests, []);
 });
 
-test('runner list uses the actual composed checks and preserves the frozen legacy check set', () => {
+test('runner list preserves the frozen baseline, existing scheduling additions and approved lint roots', () => {
   const base = fixture({ feature: false });
   const result = runRunner(['--list', '--root', base.root, '--registry', base.registryPath]);
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   const listed = jsonOutput(result);
   assert.ok(Array.isArray(listed.checks));
   assert.deepEqual(listed.unitTests, []);
-  assert.equal(listed.checks.length, EXPECTED_LEGACY_CHECK_COUNT);
+  assert.equal(listed.checks.length, EXPECTED_CURRENT_CHECK_COUNT);
   const checks = normalizeChecks(listed.checks);
   assert.equal(checks.at(-1)[0], 'eslint');
-  assert.deepEqual(checks.at(-1)[1].slice(0, 6), [
+  assert.deepEqual(checks.at(-1)[1], [
     'public/crm-admin.js',
     'public/js/classroom-api.js',
     ...EXPECTED_RECURSIVE_LINT_GLOBS,
-    'src/routes/admin.js'
+    'src/routes/admin.js',
+    '--quiet'
   ]);
-  assert.equal(checksHash(listed.checks), EXPECTED_COMPOSED_LEGACY_SHA256);
+  assert.deepEqual(checks.slice(10, 13), EXPECTED_EXISTING_ADDITIONAL_CHECKS);
+  assert.equal(checks.filter(([command]) => command !== 'eslint').length, 68);
+  // Remove only the exact existing scheduling slice and approved lint additions
+  // before comparing the original frozen hash, including all 65 original nonlint checks.
+  const legacyChecks = [...checks.slice(0, 10), ...checks.slice(13)].map(([command, args]) => [command, command === 'eslint'
+    ? args.filter(arg => !APPROVED_ADDITIONAL_LINT_GLOBS.includes(arg))
+    : args]);
+  assert.equal(checksHash(legacyChecks), EXPECTED_COMPOSED_LEGACY_SHA256);
 });
 
 test('runner list inserts registered unit tests by feature and path before legacy checks', () => {
@@ -296,7 +316,7 @@ test('runner list inserts registered unit tests by feature and path before legac
   assert.equal(listed.checks[0].command, 'node');
   assert.deepEqual(listed.checks[0].args, [base.unitPath]);
   assert.equal(listed.checks.filter((check) => check.command === 'node' && check.args?.join(' ') === base.unitPath).length, 1);
-  assert.equal(listed.checks.length, EXPECTED_LEGACY_CHECK_COUNT + 1);
+  assert.equal(listed.checks.length, EXPECTED_CURRENT_CHECK_COUNT + 1);
 });
 
 test('runner lint list is exactly the selection gate plus one ESLint check', () => {
@@ -308,11 +328,12 @@ test('runner lint list is exactly the selection gate plus one ESLint check', () 
   assert.equal(listed.checks.length, 1);
   assert.equal(listed.checks[0].kind, 'eslint');
   assert.equal(listed.checks[0].command, 'eslint');
-  assert.deepEqual(listed.checks[0].args.slice(0, 6), [
+  assert.deepEqual(listed.checks[0].args, [
     'public/crm-admin.js',
     'public/js/classroom-api.js',
     ...EXPECTED_RECURSIVE_LINT_GLOBS,
-    'src/routes/admin.js'
+    'src/routes/admin.js',
+    '--quiet'
   ]);
 });
 
@@ -403,7 +424,15 @@ test('external ESLint sees nested js/cjs/mjs CRM files while honoring ignored fi
     'functions/src/crm/nested/feature.js',
     'functions/src/crm/nested/feature.cjs',
     'functions/src/crm/nested/feature.mjs',
-    'public/js/crm/nested/ignored.js'
+    'functions/src/routes/crm/nested/feature.js',
+    'functions/src/routes/crm/nested/feature.cjs',
+    'functions/src/routes/crm/nested/feature.mjs',
+    'services/crm-voice-relay/nested/feature.js',
+    'services/crm-voice-relay/nested/feature.cjs',
+    'services/crm-voice-relay/nested/feature.mjs',
+    'public/js/crm/nested/ignored.js',
+    'functions/src/routes/crm/nested/ignored.js',
+    'services/crm-voice-relay/nested/ignored.js'
   ];
   for (const relative of ['public/js/crm/orders.js', 'functions/src/routes/admin/orders.cjs', 'functions/src/crm/orders.mjs']) {
     fs.rmSync(path.join(base.root, relative));

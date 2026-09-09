@@ -110,7 +110,7 @@ function buildLegacyChecks() {
         ['node', ['scripts/crm/smoke-communications.js']],
         ['node', ['scripts/crm/smoke-dashboard.js']],
         ['node', ['scripts/crm/backfill-schedules.js']],
-        ['eslint', ['public/crm-admin.js', 'public/js/classroom-api.js', 'public/js/crm/**/*.{js,cjs,mjs}', 'functions/src/routes/admin/**/*.{js,cjs,mjs}', 'functions/src/crm/**/*.{js,cjs,mjs}', 'src/routes/admin.js', '--quiet']]
+        ['eslint', ['public/crm-admin.js', 'public/js/classroom-api.js', 'public/js/crm/**/*.{js,cjs,mjs}', 'functions/src/routes/admin/**/*.{js,cjs,mjs}', 'functions/src/crm/**/*.{js,cjs,mjs}', 'functions/src/routes/crm/**/*.{js,cjs,mjs}', 'services/crm-voice-relay/**/*.{js,cjs,mjs}', 'src/routes/admin.js', '--quiet']]
     ];
 
 }

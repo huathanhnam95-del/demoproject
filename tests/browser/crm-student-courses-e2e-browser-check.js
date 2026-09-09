@@ -509,6 +509,8 @@ const { chromium } = require('playwright');
                 sess.contractCountState = 'does_not_count';
                 sess.sessionOutcome = 'absent_makeup';
                 sess.attendanceState = 'finalized';
+                sess.attendanceStatus = 'rescheduled';
+                sess.isPushedForward = true;
             }
             // Append trailing makeup session
             enr.sessions.push({

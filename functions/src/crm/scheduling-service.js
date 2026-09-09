@@ -3,12 +3,22 @@ function cleanOptionalString(value, fallback = null) {
     return normalized || fallback;
 }
 
-function toPositiveInteger(value, label) {
+function toPositiveInteger(value, fallbackOrLabel = null) {
     const numeric = Number(value);
-    if (!Number.isInteger(numeric) || numeric <= 0) {
-        throw new Error(`${label} must be a positive integer.`);
+    if (Number.isInteger(numeric) && numeric > 0) {
+        return numeric;
     }
-    return numeric;
+    if (typeof fallbackOrLabel === 'number' && Number.isInteger(fallbackOrLabel) && fallbackOrLabel > 0) {
+        return fallbackOrLabel;
+    }
+    if (typeof fallbackOrLabel === 'string') {
+        const fallbackNum = Number(fallbackOrLabel);
+        if (Number.isInteger(fallbackNum) && fallbackNum > 0 && /^\d+$/.test(fallbackOrLabel.trim())) {
+            return fallbackNum;
+        }
+        throw new Error(`${fallbackOrLabel} must be a positive integer.`);
+    }
+    return null;
 }
 
 function pad(value) {
@@ -1431,9 +1441,446 @@ function syncSessionLockStateFromAttendance(currentSession, nextAttendanceState)
     };
 }
 
+function toUtcDayMs(dateStr) {
+    const [year, month, day] = String(dateStr || '').split('-').map((part) => Number(part));
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+        throw new Error(`Invalid date string: ${dateStr}`);
+    }
+    return Date.UTC(year, month - 1, day);
+}
+
+function addCalendarDays(dateStr, days) {
+    const ms = toUtcDayMs(dateStr) + (Number(days || 0) * 86400000);
+    const d = new Date(ms);
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+function calendarWeekday(dateStr) {
+    return new Date(toUtcDayMs(dateStr)).getUTCDay();
+}
+
+function calendarDayDiff(startLocalDate, endLocalDate) {
+    return Math.round((toUtcDayMs(endLocalDate) - toUtcDayMs(startLocalDate)) / 86400000);
+}
+
+function sessionsOverlapUtc(left, right) {
+    const leftStartMs = new Date(left?.scheduledStartAtUtc).getTime();
+    const leftEndMs = new Date(left?.scheduledEndAtUtc).getTime();
+    const rightStartMs = new Date(right?.scheduledStartAtUtc).getTime();
+    const rightEndMs = new Date(right?.scheduledEndAtUtc).getTime();
+    if (!Number.isFinite(leftStartMs) || !Number.isFinite(leftEndMs) || !Number.isFinite(rightStartMs) || !Number.isFinite(rightEndMs)) {
+        return false;
+    }
+    return rightStartMs < leftEndMs && rightEndMs > leftStartMs;
+}
+
+function findTeacherConflict(existingSessions, candidateSession, ignoreSessionIds = []) {
+    const ignored = new Set((Array.isArray(ignoreSessionIds) ? ignoreSessionIds : []).map((id) => String(id || '').trim()));
+    const candidateTeacher = String(candidateSession?.teacherUid || '').trim();
+    if (!candidateTeacher || candidateTeacher === 'all') return null;
+
+    const normalizedCandidate = normalizeScheduledSession(candidateSession);
+
+    return (Array.isArray(existingSessions) ? existingSessions : []).find((session) => {
+        const sid = String(session?.sessionId || '').trim();
+        if (sid && ignored.has(sid)) return false;
+        const teacherUid = String(session?.teacherUid || '').trim();
+        if (!teacherUid || teacherUid === 'all' || teacherUid !== candidateTeacher) return false;
+        const status = String(session?.status || 'scheduled').toLowerCase();
+        if (status === 'cancelled') return false;
+        return sessionsOverlapUtc(session, normalizedCandidate);
+    }) || null;
+}
+
+const findTeacherConflictInList = findTeacherConflict;
+
+function isSessionLockedOrCancelled(session) {
+    if (String(session?.status || 'scheduled') === 'cancelled') {
+        return { isBlocked: true, reason: 'cancelled', message: 'Session is cancelled.' };
+    }
+    if (String(session?.lockState || 'unlocked') === 'hard_locked'
+        || String(session?.attendanceState || 'none') === 'in_progress'
+        || String(session?.attendanceState || 'none') === 'finalized') {
+        return { isBlocked: true, reason: 'locked', message: 'Session is locked.' };
+    }
+    return { isBlocked: false, reason: null, message: null };
+}
+
+function buildSeriesShiftPlan({
+    sessions = [],
+    anchorSession,
+    targetIntent,
+    outsideSessions = [],
+    allowPartial = false,
+    operationId = null,
+    dryRun = false
+}) {
+    if (!anchorSession || !anchorSession.sessionId) {
+        throw new Error('anchorSession is required.');
+    }
+    if (!targetIntent?.targetLocalDate || !targetIntent?.targetLocalTime) {
+        throw new Error('targetIntent.targetLocalDate and targetLocalTime are required.');
+    }
+
+    const anchorNormalized = normalizeScheduledSession(anchorSession);
+    const anchorClassId = String(anchorNormalized.classId || '').trim();
+    const anchorLocalDate = String(anchorNormalized.scheduledLocalDate || '');
+    const anchorLocalTime = String(anchorNormalized.scheduledLocalTime || '').slice(0, 5);
+    const anchorWeekday = calendarWeekday(anchorLocalDate);
+    const anchorTeacherUid = String(targetIntent.teacherUid || anchorNormalized.teacherUid || '').trim();
+
+    const opId = operationId || `op_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+    const candidates = (Array.isArray(sessions) ? sessions : [])
+        .filter((session) => {
+            if (String(session?.classId || '').trim() !== anchorClassId) return false;
+            const sessionDate = String(session?.scheduledLocalDate || '');
+            if (!sessionDate || sessionDate < anchorLocalDate) return false;
+            const dayDiff = calendarDayDiff(anchorLocalDate, sessionDate);
+            if (dayDiff < 0 || dayDiff % 7 !== 0) return false;
+            const sessionTime = String(session?.scheduledLocalTime || '').slice(0, 5);
+            return sessionTime === anchorLocalTime;
+        })
+        .sort((a, b) => String(a.scheduledLocalDate || '').localeCompare(String(b.scheduledLocalDate || '')));
+
+    if (candidates.length > 400) {
+        const err = new Error('Cannot move more than 400 sessions in a single operation.');
+        err.code = 'TOO_MANY_MOVES';
+        throw err;
+    }
+
+    const moved = [];
+    const skipped = [];
+    const conflicts = [];
+    const projection = [];
+
+    const candidateIds = new Set(candidates.map((c) => String(c.sessionId || '').trim()));
+    const effectiveOutside = (Array.isArray(outsideSessions) ? outsideSessions : [])
+        .filter((s) => !candidateIds.has(String(s?.sessionId || '').trim()));
+
+    for (const session of candidates) {
+        const sessionId = String(session.sessionId || '').trim();
+        const sessionClassId = String(session.classId || '').trim();
+        const dayDiff = calendarDayDiff(anchorLocalDate, session.scheduledLocalDate);
+        const weekOffset = Math.round(dayDiff / 7);
+
+        const memberTargetDate = addCalendarDays(targetIntent.targetLocalDate, 7 * weekOffset);
+        const memberTargetTime = targetIntent.targetLocalTime;
+        const memberDuration = toPositiveInteger(targetIntent.durationMinutes, Number(session.durationMinutes || 0) || 60);
+        const memberTimezone = cleanOptionalString(targetIntent.timezone, cleanOptionalString(session.timezone, 'UTC'));
+
+        const atInfo = {
+            targetLocalDate: memberTargetDate,
+            targetLocalTime: memberTargetTime,
+            durationMinutes: memberDuration,
+            timezone: memberTimezone
+        };
+
+        const from = {
+            targetLocalDate: session.scheduledLocalDate,
+            targetLocalTime: session.scheduledLocalTime,
+            durationMinutes: Number(session.durationMinutes || 0) || memberDuration,
+            timezone: session.timezone || memberTimezone
+        };
+
+        const to = {
+            targetLocalDate: memberTargetDate,
+            targetLocalTime: memberTargetTime,
+            durationMinutes: memberDuration,
+            timezone: memberTimezone
+        };
+
+        const lockCheck = isSessionLockedOrCancelled(session);
+        if (lockCheck.isBlocked) {
+            skipped.push({
+                sessionId,
+                classId: sessionClassId,
+                reason: lockCheck.reason,
+                message: lockCheck.message,
+                at: atInfo
+            });
+            continue;
+        }
+
+        let nextWindow;
+        try {
+            nextWindow = buildScheduledSessionWriteData({}, {
+                targetLocalDate: memberTargetDate,
+                targetLocalTime: memberTargetTime,
+                durationMinutes: memberDuration,
+                timezone: memberTimezone
+            });
+        } catch (err) {
+            skipped.push({
+                sessionId,
+                classId: sessionClassId,
+                reason: 'invalid_local_time',
+                message: err?.message || 'Invalid local time for timezone.',
+                at: atInfo
+            });
+            continue;
+        }
+
+        if (session.scheduledLocalDate === memberTargetDate && String(session.scheduledLocalTime || '').slice(0, 5) === String(memberTargetTime).slice(0, 5)) {
+            skipped.push({
+                sessionId,
+                classId: sessionClassId,
+                reason: 'same_slot',
+                message: 'Target slot is identical to current slot.',
+                at: atInfo
+            });
+            continue;
+        }
+
+        const proposed = {
+            ...session,
+            ...nextWindow,
+            teacherUid: anchorTeacherUid || session.teacherUid,
+            durationMinutes: memberDuration,
+            timezone: memberTimezone
+        };
+
+        const conflict = findTeacherConflictInList(effectiveOutside.concat(projection), proposed, [sessionId]);
+        if (conflict) {
+            conflicts.push({
+                sessionId,
+                attempted: to,
+                conflictSessionId: conflict.sessionId || null,
+                conflictClassId: conflict.classId || null,
+                conflictAt: {
+                    scheduledLocalDate: conflict.scheduledLocalDate || null,
+                    scheduledLocalTime: conflict.scheduledLocalTime || null
+                }
+            });
+
+            if (allowPartial) {
+                skipped.push({
+                    sessionId,
+                    classId: sessionClassId,
+                    reason: 'teacher_conflict',
+                    message: 'Teacher has a conflicting session at this time.',
+                    at: atInfo
+                });
+                continue;
+            }
+        }
+
+        if (!conflict || allowPartial) {
+            projection.push(proposed);
+            moved.push({
+                sessionId,
+                classId: sessionClassId,
+                weekOffset,
+                from,
+                to,
+                patch: {
+                    scheduledLocalDate: nextWindow.scheduledLocalDate,
+                    scheduledLocalTime: nextWindow.scheduledLocalTime,
+                    scheduledStartAt: nextWindow.scheduledStartAt,
+                    scheduledEndAt: nextWindow.scheduledEndAt,
+                    scheduledStartAtUtc: nextWindow.scheduledStartAtUtc,
+                    scheduledEndAtUtc: nextWindow.scheduledEndAtUtc,
+                    durationMinutes: memberDuration,
+                    timezone: memberTimezone
+                }
+            });
+        }
+    }
+
+    const canCommit = allowPartial ? (moved.length > 0) : (conflicts.length === 0 && moved.length > 0);
+
+    return {
+        operation: 'reschedule_series',
+        operationId: opId,
+        dryRun: Boolean(dryRun),
+        canCommit,
+        classId: anchorClassId,
+        anchorSessionId: anchorNormalized.sessionId,
+        anchorWeekday,
+        anchorLocalTime,
+        moved,
+        skipped,
+        conflicts
+    };
+}
+
+function buildBulkRescheduleProjection({
+    moves = [],
+    existingSessionsMap = new Map(),
+    classroomAccessMap = new Map(),
+    outsideSessions = [],
+    callerUid = null,
+    operationId = null,
+    dryRun = false,
+    undoOf = null
+}) {
+    const opId = operationId || `op_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const moved = [];
+    const skipped = [];
+    const conflicts = [];
+    const projection = [];
+
+    const movingIds = new Set((Array.isArray(moves) ? moves : []).map((m) => String(m?.sessionId || '').trim()));
+    const effectiveOutside = (Array.isArray(outsideSessions) ? outsideSessions : [])
+        .filter((s) => !movingIds.has(String(s?.sessionId || '').trim()));
+
+    for (const move of (Array.isArray(moves) ? moves : [])) {
+        const sessionId = String(move?.sessionId || '').trim();
+        const targetLocalDate = String(move?.targetLocalDate || '').trim();
+        const targetLocalTime = String(move?.targetLocalTime || '').trim();
+        const durationMinutes = Number(move?.durationMinutes || 0) || null;
+        const timezone = cleanOptionalString(move?.timezone, null);
+
+        const atInfo = {
+            targetLocalDate,
+            targetLocalTime,
+            durationMinutes,
+            timezone
+        };
+
+        const existing = existingSessionsMap.get(sessionId) || null;
+        if (!existing) {
+            skipped.push({
+                sessionId,
+                classId: null,
+                reason: 'not_found',
+                message: 'Session not found.',
+                at: atInfo
+            });
+            continue;
+        }
+
+        const classId = String(existing.classId || '').trim();
+        if (classroomAccessMap && classroomAccessMap.has(classId) && !classroomAccessMap.get(classId)) {
+            skipped.push({
+                sessionId,
+                classId,
+                reason: 'forbidden',
+                message: 'Access denied for classroom.',
+                at: atInfo
+            });
+            continue;
+        }
+
+        const lockCheck = isSessionLockedOrCancelled(existing);
+        if (lockCheck.isBlocked) {
+            skipped.push({
+                sessionId,
+                classId,
+                reason: lockCheck.reason,
+                message: lockCheck.message,
+                at: atInfo
+            });
+            continue;
+        }
+
+        const effectiveDuration = durationMinutes || Number(existing.durationMinutes || 0) || 60;
+        const effectiveTimezone = timezone || existing.timezone || 'UTC';
+
+        let nextWindow;
+        try {
+            nextWindow = buildScheduledSessionWriteData({}, {
+                targetLocalDate,
+                targetLocalTime,
+                durationMinutes: effectiveDuration,
+                timezone: effectiveTimezone
+            });
+        } catch (err) {
+            skipped.push({
+                sessionId,
+                classId,
+                reason: 'invalid_local_time',
+                message: err?.message || 'Invalid local time for timezone.',
+                at: atInfo
+            });
+            continue;
+        }
+
+        const from = {
+            targetLocalDate: existing.scheduledLocalDate,
+            targetLocalTime: existing.scheduledLocalTime,
+            durationMinutes: Number(existing.durationMinutes || 0) || effectiveDuration,
+            timezone: existing.timezone || effectiveTimezone
+        };
+
+        const to = {
+            targetLocalDate,
+            targetLocalTime,
+            durationMinutes: effectiveDuration,
+                timezone: effectiveTimezone
+        };
+
+        const proposed = {
+            ...existing,
+            ...nextWindow,
+            teacherUid: existing.teacherUid || callerUid,
+            durationMinutes: effectiveDuration,
+            timezone: effectiveTimezone
+        };
+
+        const conflict = findTeacherConflictInList(effectiveOutside.concat(projection), proposed, [sessionId]);
+        if (conflict) {
+            conflicts.push({
+                sessionId,
+                attempted: to,
+                conflictSessionId: conflict.sessionId || null,
+                conflictClassId: conflict.classId || null,
+                conflictAt: {
+                    scheduledLocalDate: conflict.scheduledLocalDate || null,
+                    scheduledLocalTime: conflict.scheduledLocalTime || null
+                }
+            });
+            skipped.push({
+                sessionId,
+                classId,
+                reason: 'teacher_conflict',
+                message: 'Teacher has a conflicting session at this time.',
+                at: atInfo
+            });
+            continue;
+        }
+
+        projection.push(proposed);
+        moved.push({
+            sessionId,
+            classId,
+            weekOffset: 0,
+            from,
+            to,
+            patch: {
+                scheduledLocalDate: nextWindow.scheduledLocalDate,
+                scheduledLocalTime: nextWindow.scheduledLocalTime,
+                scheduledStartAt: nextWindow.scheduledStartAt,
+                scheduledEndAt: nextWindow.scheduledEndAt,
+                scheduledStartAtUtc: nextWindow.scheduledStartAtUtc,
+                scheduledEndAtUtc: nextWindow.scheduledEndAtUtc,
+                durationMinutes: effectiveDuration,
+                timezone: effectiveTimezone
+            }
+        });
+    }
+
+    return {
+        operation: 'bulk_reschedule',
+        operationId: opId,
+        dryRun: Boolean(dryRun),
+        canCommit: moved.length > 0,
+        classId: moved[0]?.classId || null,
+        anchorSessionId: null,
+        anchorWeekday: null,
+        anchorLocalTime: null,
+        moved,
+        skipped,
+        conflicts,
+        undoOf: undoOf || null
+    };
+}
+
 module.exports = {
+    addCalendarDays,
     addMinutesToLocalDateTime,
     buildAddSessionPreview,
+    buildBulkRescheduleProjection,
     buildCanonicalScheduledWindow,
     buildRegenerationCommitPlan,
     buildRegenerationPreview,
@@ -1444,13 +1891,20 @@ module.exports = {
     buildReplaceSessionPreview,
     buildScheduleSummary,
     buildSeedSessions,
+    buildSeriesShiftPlan,
+    calendarDayDiff,
+    calendarWeekday,
     computeContractedTargetCount,
     deriveContractCountState,
+    findTeacherConflict,
     formatLocalDateTime,
     localDateTimeToUtcIso,
     normalizeScheduledSession,
     parseLocalDateTime,
+    sessionsOverlapUtc,
     syncSessionLockStateFromAttendance,
+    toPositiveInteger,
+    toUtcDayMs,
     utcIsoToLocalFields,
     validateRemainingDurationChange
 };

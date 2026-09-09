@@ -205,13 +205,35 @@ window.TeacherSchedulerWorkspace = (function () {
 
         function currentRange() {
             const from = state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : startOfWeek(new Date());
-            const to = state.toDate ? new Date(`${state.toDate}T23:59:59`) : addDays(from, 6);
+            let to = state.toDate ? new Date(`${state.toDate}T23:59:59`) : addDays(from, 6);
+            const diffDays = Math.round((to.getTime() - from.getTime()) / 86400000);
+            if (diffDays > 14) {
+                to = addDays(from, 13);
+                to.setHours(23, 59, 59, 999);
+                state.toDate = toLocalDateInput(to);
+                if (elements.inputTeacherSchedulerToDate) {
+                    elements.inputTeacherSchedulerToDate.value = state.toDate;
+                }
+                showToast?.('Date range clamped to 14 days maximum.', 'info');
+            }
             return { from, to };
         }
 
         function describeTeacherSchedulerError(error, targetDate = '', targetTime = '', durationMinutes = 0, excludeSessionId = '', targetClassId = '', targetTeacherUid = '') {
             const code = String(error?.code || '');
             const status = Number(error?.status || 0) || 0;
+            const conflicts = error?.details?.conflicts;
+            if (code === 'SERIES_CONFLICT' || (Array.isArray(conflicts) && conflicts.length > 0)) {
+                const first = Array.isArray(conflicts) && conflicts[0] ? conflicts[0] : null;
+                if (first) {
+                    const conflictClass = first.conflictClassId ? getClassroomById(first.conflictClassId) : null;
+                    const className = conflictClass?.name || first.conflictClassId || 'another class';
+                    const atDate = first.attempted?.targetLocalDate || '';
+                    const atTime = first.attempted?.targetLocalTime || '';
+                    return `Series conflict: ${atDate} ${atTime} collides with ${className}`.trim();
+                }
+                return 'Series conflict: one or more sessions conflict with existing schedule.';
+            }
             if (code === 'TEACHER_CONFLICT' || status === 409) {
                 const overlap = hasClientConflict(targetDate, targetTime, durationMinutes, excludeSessionId, targetClassId, targetTeacherUid) || null;
                 const overlapClass = overlap ? getClassroomById(overlap.classId) : null;
@@ -357,7 +379,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const days = getRenderDays();
             const slots = hourSlots(7, 21);
             const slotErrors = state.slotErrors;
-            let html = '<div class="scheduler-calendar-grid">';
+            let html = `<div class="scheduler-calendar-grid" style="--scheduler-day-count: ${days.length};">`;
             html += '<div class="scheduler-calendar-head"></div>';
             days.forEach((day) => {
                 html += `<div class="scheduler-calendar-head">${DAY_LABELS[day.getDay()]} ${pad(day.getDate())}</div>`;
@@ -448,6 +470,8 @@ window.TeacherSchedulerWorkspace = (function () {
                         const duration = Number(session.durationMinutes || 0) || 60;
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
                         const heightPx = Math.max((duration / 30) * SLOT_HEIGHT_PX - 2, 18);
+                        const isCompact = heightPx < 46;
+                        const compactClass = isCompact ? 'is-compact' : '';
                         const locked = isLockedSession(session);
                         const teacherName = session.teacherName || state.teacherMap.get(session.teacherUid) || classroom?.primaryTeacherName || state.teacherMap.get(classroom?.primaryTeacherUid) || '';
                         const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
@@ -465,10 +489,11 @@ window.TeacherSchedulerWorkspace = (function () {
                         } else {
                             layoutStyle += 'left:2px;right:2px;';
                         }
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
-                            + `<span class="pill-title">${escapeHtml(title)}${completedBadge}</span>`
-                            + teacherPill
-                            + `<span class="pill-time">${escapeHtml(timeRange)}</span>`
+                        const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
+                            + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${completedBadge}</div>`
+                            + (isCompact ? '' : teacherPill)
+                            + (isCompact ? '' : `<span class="pill-time">${escapeHtml(timeRange)}</span>`)
                             + (locked ? '' : '<div class="scheduler-session-resize-handle" data-resize="1"></div>')
                             + '</button>';
                     }).join('');
@@ -498,12 +523,39 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
 
+        function positionFixedPopover(popoverEl, anchor, defaultTopOffset = 6) {
+            const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
+            const viewportHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement?.clientHeight || 768) : 768;
+            const popoverWidth = popoverEl.offsetWidth || 340;
+            const popoverHeight = Math.min(popoverEl.offsetHeight || 280, Math.max(100, viewportHeight - 32));
+
+            const desiredLeft = Number(anchor?.left || 0);
+            const maxLeft = viewportWidth - popoverWidth - 16;
+            const clampedLeft = Math.max(16, Math.min(desiredLeft, maxLeft));
+
+            const anchorBottom = Number(anchor?.bottom || anchor?.top || 0);
+            const anchorTop = anchor?.top !== undefined ? Number(anchor.top) : anchorBottom;
+            let top = anchorBottom + defaultTopOffset;
+            if (top + popoverHeight > viewportHeight - 16) {
+                if (anchor?.top !== undefined && anchorTop - popoverHeight - defaultTopOffset >= 16) {
+                    top = anchorTop - popoverHeight - defaultTopOffset;
+                } else {
+                    top = Math.max(16, viewportHeight - popoverHeight - 16);
+                }
+            }
+            top = Math.max(16, Math.min(top, Math.max(16, viewportHeight - popoverHeight - 16)));
+
+            popoverEl.style.left = `${clampedLeft}px`;
+            popoverEl.style.top = `${top}px`;
+        }
+
         function closeQuickAdd() {
             state.quickAdd = null;
             renderQuickAdd();
         }
 
         function openQuickAdd(targetDate, targetTime, anchorRect, classId = '') {
+            closeSessionBubble();
             const preferredClassId = classId && getClassroomById(classId)
                 ? classId
                 : (state.patternClassId && getClassroomById(state.patternClassId)
@@ -515,6 +567,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 targetDate,
                 targetTime,
                 durationMinutes: Number(classroom?.scheduleConfig?.sessionMinutes || 0) || 120,
+                anchorRect: anchorRect || null,
                 anchorLeft: Number(anchorRect?.left || 0),
                 anchorTop: Number(anchorRect?.bottom || 0),
                 error: '',
@@ -532,23 +585,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
-            const scrollX = typeof window !== 'undefined' ? (window.scrollX || window.pageXOffset || 0) : 0;
-            const scrollY = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
-            const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
-            const viewportHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement?.clientHeight || 768) : 768;
-            const popoverWidth = elements.teacherSchedulerQuickAdd.offsetWidth || 340;
-            const popoverHeight = elements.teacherSchedulerQuickAdd.offsetHeight || 280;
-            const desiredLeft = (draft.anchorLeft || 0) + scrollX;
-            const maxLeft = scrollX + viewportWidth - popoverWidth - 16;
-            const clampedLeft = Math.max(scrollX + 16, Math.min(desiredLeft, maxLeft));
-            const desiredTop = (draft.anchorTop || 0) + scrollY;
-            const maxTop = scrollY + viewportHeight - popoverHeight - 16;
-            const clampedTop = desiredTop > maxTop ? Math.max(scrollY + 16, maxTop) : Math.max(16, desiredTop);
-
             elements.teacherSchedulerQuickAdd.style.display = 'block';
             elements.teacherSchedulerQuickAdd.setAttribute('aria-hidden', 'false');
-            elements.teacherSchedulerQuickAdd.style.left = `${clampedLeft}px`;
-            elements.teacherSchedulerQuickAdd.style.top = `${clampedTop}px`;
+
             if (elements.inputTeacherSchedulerQuickClass) {
                 elements.inputTeacherSchedulerQuickClass.innerHTML = state.classrooms.map((classroom) => {
                     const classId = String(classroom.classroomId || '');
@@ -565,7 +604,17 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.inputTeacherSchedulerQuickTime.value = draft.targetTime;
             }
             if (elements.inputTeacherSchedulerQuickDuration) {
-                elements.inputTeacherSchedulerQuickDuration.value = `${Number(draft.durationMinutes || 0)} minutes`;
+                const standardOptions = [30, 45, 60, 90, 120];
+                const currentDur = Number(draft.durationMinutes || 0) || 60;
+                if (!standardOptions.includes(currentDur)) {
+                    standardOptions.push(currentDur);
+                    standardOptions.sort((a, b) => a - b);
+                }
+                elements.inputTeacherSchedulerQuickDuration.innerHTML = standardOptions.map((mins) => {
+                    const sel = mins === currentDur ? ' selected' : '';
+                    return `<option value="${mins}"${sel}>${mins} minutes</option>`;
+                }).join('');
+                elements.inputTeacherSchedulerQuickDuration.value = String(currentDur);
             }
             if (elements.teacherSchedulerQuickError) {
                 elements.teacherSchedulerQuickError.textContent = draft.error || '';
@@ -577,6 +626,13 @@ window.TeacherSchedulerWorkspace = (function () {
                     ? `<div class="crm-muted">Suggested open times: ${list.map((item) => `${item.date} ${item.time}`).join(' • ')}</div>`
                     : '';
             }
+
+            const anchor = draft.anchorRect || {
+                left: draft.anchorLeft,
+                bottom: draft.anchorTop,
+                top: draft.anchorTop
+            };
+            positionFixedPopover(elements.teacherSchedulerQuickAdd, anchor, 6);
         }
 
         function markSlotError(targetDate, targetTime, message) {
@@ -587,6 +643,11 @@ window.TeacherSchedulerWorkspace = (function () {
                 state.slotErrors.delete(key);
                 renderCalendarGrid();
             }, 4000);
+        }
+
+        function clearSlotError(targetDate, targetTime) {
+            const key = `${targetDate}|${targetTime}`;
+            state.slotErrors.delete(key);
         }
 
         function computeSuggestions(classId, durationMinutes, excludeSessionId = '') {
@@ -641,7 +702,7 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!classroom || !window.ClassroomAPI?.teacherAddClassroomSession) {
                 throw new Error('Teacher scheduler API unavailable.');
             }
-            const durationMinutes = Number(classroom.scheduleConfig?.sessionMinutes || 0) || 120;
+            const durationMinutes = Number(options?.durationMinutes || classroom.scheduleConfig?.sessionMinutes || 0) || 120;
             const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
             const teacherUid = selectedTeacher || classroom.primaryTeacherUid || undefined;
             const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, null, classId, teacherUid);
@@ -679,8 +740,23 @@ window.TeacherSchedulerWorkspace = (function () {
         async function commitQuickAdd() {
             const draft = state.quickAdd;
             if (!draft) return;
+            draft.error = '';
+            draft.suggestions = [];
+            renderQuickAdd();
+            if (elements.inputTeacherSchedulerQuickDate?.value) {
+                draft.targetDate = String(elements.inputTeacherSchedulerQuickDate.value).trim();
+            }
+            if (elements.inputTeacherSchedulerQuickTime?.value) {
+                draft.targetTime = String(elements.inputTeacherSchedulerQuickTime.value).trim();
+            }
+            if (elements.inputTeacherSchedulerQuickDuration?.value) {
+                draft.durationMinutes = Number(elements.inputTeacherSchedulerQuickDuration.value) || draft.durationMinutes;
+            }
             try {
-                await placeClassroomSession(draft.classId, draft.targetDate, draft.targetTime, { silentToast: true });
+                await placeClassroomSession(draft.classId, draft.targetDate, draft.targetTime, {
+                    silentToast: true,
+                    durationMinutes: draft.durationMinutes
+                });
                 showToast?.('Session added.', 'success');
                 closeQuickAdd();
             } catch (error) {
@@ -702,8 +778,10 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function openSessionBubble(sessionId, anchorRect) {
+            closeQuickAdd();
             state.sessionBubble = {
                 sessionId: String(sessionId || ''),
+                anchorRect: anchorRect || null,
                 anchorLeft: Number(anchorRect?.left || 0),
                 anchorTop: Number(anchorRect?.bottom || 0)
             };
@@ -725,23 +803,10 @@ window.TeacherSchedulerWorkspace = (function () {
             const label = session.unitType === 'overflow'
                 ? `Overflow ${session.overflowSequence || ''}`.trim()
                 : `Unit ${session.contractUnitIndex || ''}`.trim();
-            const scrollX = typeof window !== 'undefined' ? (window.scrollX || window.pageXOffset || 0) : 0;
-            const scrollY = typeof window !== 'undefined' ? (window.scrollY || window.pageYOffset || 0) : 0;
-            const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
-            const viewportHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement?.clientHeight || 768) : 768;
-            const popoverWidth = elements.teacherSchedulerSessionBubble.offsetWidth || 380;
-            const popoverHeight = elements.teacherSchedulerSessionBubble.offsetHeight || 320;
-            const desiredLeft = (bubble.anchorLeft || 0) + scrollX;
-            const maxLeft = scrollX + viewportWidth - popoverWidth - 16;
-            const clampedLeft = Math.max(scrollX + 16, Math.min(desiredLeft, maxLeft));
-            const desiredTop = (bubble.anchorTop || 0) + scrollY;
-            const maxTop = scrollY + viewportHeight - popoverHeight - 16;
-            const clampedTop = desiredTop > maxTop ? Math.max(scrollY + 16, maxTop) : Math.max(16, desiredTop);
 
             elements.teacherSchedulerSessionBubble.style.display = 'block';
             elements.teacherSchedulerSessionBubble.setAttribute('aria-hidden', 'false');
-            elements.teacherSchedulerSessionBubble.style.left = `${clampedLeft}px`;
-            elements.teacherSchedulerSessionBubble.style.top = `${clampedTop}px`;
+
             if (elements.teacherSchedulerSessionBubbleTitle) {
                 elements.teacherSchedulerSessionBubbleTitle.textContent = classroom?.name || session.classId || 'Class';
             }
@@ -779,6 +844,13 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.btnTeacherSchedulerOpenAttendance) {
                 elements.btnTeacherSchedulerOpenAttendance.dataset.sessionId = String(session.sessionId || '');
             }
+
+            const anchor = bubble.anchorRect || {
+                left: bubble.anchorLeft,
+                bottom: bubble.anchorTop,
+                top: bubble.anchorTop
+            };
+            positionFixedPopover(elements.teacherSchedulerSessionBubble, anchor, 6);
         }
 
         async function cancelSession(sessionId) {
@@ -912,34 +984,131 @@ window.TeacherSchedulerWorkspace = (function () {
 
         function beginPointerDrag(kind, id, sourceEl, evt) {
             if (evt.button !== 0 || !id || !sourceEl) return;
+            const rect = typeof sourceEl.getBoundingClientRect === 'function' ? sourceEl.getBoundingClientRect() : { left: 0, top: 0, width: 120, height: 40 };
+            const session = state.sessions.find((s) => String(s.sessionId || '') === String(id || ''));
+            const durationMinutes = Number(session?.durationMinutes || 0) || 60;
             state.pointerDrag = {
                 kind,
                 id: String(id || '').trim(),
                 sourceEl,
                 startX: evt.clientX,
                 startY: evt.clientY,
+                offsetX: (evt.clientX - (rect.left || 0)) || 20,
+                offsetY: (evt.clientY - (rect.top || 0)) || 10,
+                rect,
+                durationMinutes,
                 active: false,
-                activeSlot: null
+                activeSlot: null,
+                highlightedSlots: [],
+                ghostEl: null
             };
         }
 
         function updateDropTarget(slot) {
-            const current = state.pointerDrag?.activeSlot || null;
+            if (!state.pointerDrag) return;
+            const drag = state.pointerDrag;
+            const current = drag.activeSlot || null;
             if (current === slot) return;
-            if (current) current.classList.remove('is-drop-target');
-            if (state.pointerDrag) state.pointerDrag.activeSlot = slot || null;
-            if (slot) slot.classList.add('is-drop-target');
+
+            // Clear old highlighted slots
+            if (Array.isArray(drag.highlightedSlots)) {
+                drag.highlightedSlots.forEach((s) => s?.classList?.remove?.('is-drop-target'));
+            }
+            drag.highlightedSlots = [];
+            drag.activeSlot = slot || null;
+
+            if (!slot) return;
+
+            // Highlight full target span down the column: duration / 30 slots
+            const span = Math.max(1, Math.ceil(Number(drag.durationMinutes || 60) / 30));
+            const targetDate = String(slot.dataset?.date || '').trim();
+            const targetTime = String(slot.dataset?.time || '').trim();
+            const startMins = parseTimeToMinutes(targetTime);
+
+            if (elements.teacherSchedulerCalendar && Number.isFinite(startMins) && targetDate) {
+                for (let i = 0; i < span; i++) {
+                    const mins = startMins + (i * 30);
+                    const hh = Math.floor(mins / 60) % 24;
+                    const mm = mins % 60;
+                    const timeStr = `${pad(hh)}:${pad(mm)}`;
+                    const spanSlot = elements.teacherSchedulerCalendar.querySelector(
+                        `.teacher-scheduler-slot[data-date="${targetDate}"][data-time="${timeStr}"]`
+                    );
+                    if (spanSlot) {
+                        spanSlot.classList.add('is-drop-target');
+                        drag.highlightedSlots.push(spanSlot);
+                    }
+                }
+            } else {
+                slot.classList?.add?.('is-drop-target');
+                drag.highlightedSlots.push(slot);
+            }
+
+            // Update live time chip on ghost
+            if (drag.ghostEl) {
+                const chip = drag.ghostEl.querySelector?.('.drag-ghost-chip');
+                if (chip && targetTime) {
+                    let dayPrefix = '';
+                    if (targetDate) {
+                        const d = new Date(`${targetDate}T00:00:00`);
+                        if (Number.isFinite(d.getTime())) {
+                            dayPrefix = `${DAY_LABELS[d.getDay()]} ${pad(d.getDate())} · `;
+                        }
+                    }
+                    chip.textContent = `${dayPrefix}${formatTimeRange(targetTime, drag.durationMinutes)}`;
+                }
+            }
         }
 
         function findSlotFromPoint(clientX, clientY) {
+            if (typeof document.elementFromPoint !== 'function') return null;
             const el = document.elementFromPoint(clientX, clientY);
-            return el?.closest('.teacher-scheduler-slot') || null;
+            return el?.closest?.('.teacher-scheduler-slot') || null;
+        }
+
+        function findSlotForGhost(clientX, clientY, ghostTop) {
+            if (typeof document.elementFromPoint !== 'function' || !elements.teacherSchedulerCalendar) {
+                return findSlotFromPoint(clientX, clientY);
+            }
+            const baseEl = document.elementFromPoint(clientX, clientY);
+            const baseSlot = baseEl?.closest?.('.teacher-scheduler-slot') || null;
+            const targetDate = baseSlot?.dataset?.date;
+            if (!targetDate || !Number.isFinite(ghostTop)) {
+                return baseSlot;
+            }
+
+            const columnSlots = elements.teacherSchedulerCalendar.querySelectorAll(`.teacher-scheduler-slot[data-date="${targetDate}"]`);
+            if (!columnSlots || columnSlots.length === 0) return baseSlot;
+
+            let nearestSlot = null;
+            let minDistance = Infinity;
+            for (let i = 0; i < columnSlots.length; i++) {
+                const slot = columnSlots[i];
+                const rect = typeof slot.getBoundingClientRect === 'function' ? slot.getBoundingClientRect() : null;
+                if (!rect) continue;
+                const slotMidpoint = (rect.top + rect.bottom) / 2;
+                const dist = Math.abs(slotMidpoint - ghostTop);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestSlot = slot;
+                }
+            }
+            return nearestSlot || baseSlot;
         }
 
         function clearPointerDrag() {
             const drag = state.pointerDrag;
-            if (drag?.activeSlot) drag.activeSlot.classList.remove('is-drop-target');
-            if (drag?.sourceEl) drag.sourceEl.classList.remove('is-dragging');
+            if (drag) {
+                if (Array.isArray(drag.highlightedSlots)) {
+                    drag.highlightedSlots.forEach((s) => s?.classList?.remove?.('is-drop-target'));
+                }
+                if (drag.activeSlot) drag.activeSlot.classList?.remove?.('is-drop-target');
+                if (drag.sourceEl) drag.sourceEl.classList?.remove?.('is-dragging');
+                if (drag.ghostEl && drag.ghostEl.parentNode) {
+                    drag.ghostEl.parentNode.removeChild(drag.ghostEl);
+                }
+                elements.teacherSchedulerWorkspace?.classList?.remove?.('is-pointer-dragging');
+            }
             state.pointerDrag = null;
         }
 
@@ -1039,14 +1208,191 @@ window.TeacherSchedulerWorkspace = (function () {
             }
         }
 
-        async function handleSessionDrop(sessionId, targetDate, targetTime) {
-            const session = state.sessions.find((row) => String(row.sessionId || '') === String(sessionId || ''));
+        function trapFocus(containerEl, evt) {
+            if (evt.key !== 'Tab' || !containerEl?.querySelectorAll) return;
+            const focusables = Array.from(containerEl.querySelectorAll(
+                'button:not([disabled]):not([style*="display: none"]):not([style*="display:none"]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            ));
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (evt.shiftKey) {
+                if (document.activeElement === first) {
+                    last.focus?.();
+                    evt.preventDefault();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    first.focus?.();
+                    evt.preventDefault();
+                }
+            }
+        }
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(`${dateStr}T00:00:00`);
+            if (!Number.isFinite(d.getTime())) return dateStr;
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${pad(d.getDate())} ${months[d.getMonth()]}`;
+        }
+
+        function openScopeModal({ session, targetDate, targetTime, dryRunResult }) {
+            return new Promise((resolve) => {
+                if (!elements.teacherSchedulerScopeModal) {
+                    resolve({ cancelled: false, choice: 'single' });
+                    return;
+                }
+
+                const classroom = getClassroomById(session.classId);
+                const previousDate = getSessionLocalDate(session);
+                const previousTime = getSessionLocalTime(session);
+                const duration = Number(session.durationMinutes || 0) || 60;
+                const seriesMoved = dryRunResult?.moved || dryRunResult?.data?.moved || [];
+                const seriesCount = seriesMoved.length || 1;
+                const conflicts = dryRunResult?.conflicts || dryRunResult?.data?.conflicts || [];
+                const skipped = dryRunResult?.skipped || dryRunResult?.data?.skipped || [];
+                const movableCount = seriesMoved.length;
+                const skippedCount = skipped.length + conflicts.length;
+
+                if (elements.teacherSchedulerScopeTitle) {
+                    elements.teacherSchedulerScopeTitle.textContent = `Move "${classroom?.name || session.classId || 'Class'}"`;
+                }
+                if (elements.teacherSchedulerScopeShiftFrom) {
+                    const fromDay = new Date(`${previousDate}T00:00:00`);
+                    const fromDayStr = Number.isFinite(fromDay.getTime()) ? `${DAY_LABELS[fromDay.getDay()]} ${formatDateShort(previousDate)}` : previousDate;
+                    elements.teacherSchedulerScopeShiftFrom.textContent = `${fromDayStr}, ${formatTimeRange(previousTime, duration)}`;
+                }
+                if (elements.teacherSchedulerScopeShiftTo) {
+                    const toDay = new Date(`${targetDate}T00:00:00`);
+                    const toDayStr = Number.isFinite(toDay.getTime()) ? `${DAY_LABELS[toDay.getDay()]} ${formatDateShort(targetDate)}` : targetDate;
+                    elements.teacherSchedulerScopeShiftTo.textContent = `${toDayStr}, ${formatTimeRange(targetTime, duration)}`;
+                }
+                if (elements.teacherSchedulerScopeSeriesTitle) {
+                    elements.teacherSchedulerScopeSeriesTitle.textContent = `This and all following (${seriesCount} session${seriesCount !== 1 ? 's' : ''})`;
+                }
+                if (elements.teacherSchedulerScopeSeriesDesc) {
+                    const lastMoved = seriesMoved[seriesMoved.length - 1];
+                    const throughDate = lastMoved?.to?.targetLocalDate ? ` · through ${formatDateShort(lastMoved.to.targetLocalDate)}` : '';
+                    elements.teacherSchedulerScopeSeriesDesc.textContent = `${seriesCount} session${seriesCount !== 1 ? 's' : ''}${throughDate}`;
+                }
+                if (elements.teacherSchedulerScopeWarnings) {
+                    const warningLines = [];
+                    if (skipped.length > 0) {
+                        skipped.forEach((s) => {
+                            const reasonDesc = s.message || (s.reason === 'locked' ? 'attendance finalized' : s.reason);
+                            const atStr = s.at?.targetLocalDate ? `${formatDateShort(s.at.targetLocalDate)}: ` : '';
+                            warningLines.push(`⚠ ${atStr}1 session skipped (${reasonDesc})`);
+                        });
+                    }
+                    if (conflicts.length > 0) {
+                        conflicts.forEach((c) => {
+                            const conflictDate = c.conflictAt?.scheduledLocalDate || c.attempted?.targetLocalDate ? formatDateShort(c.conflictAt?.scheduledLocalDate || c.attempted?.targetLocalDate) : '';
+                            const conflictClass = getClassroomById(c.conflictClassId);
+                            const className = conflictClass?.name || c.conflictClassId || 'another class';
+                            const time = c.conflictAt?.scheduledLocalTime || c.attempted?.targetLocalTime || '';
+                            warningLines.push(`⚠ ${conflictDate ? conflictDate + ' ' : ''}collides with ${className} ${time}`.trim());
+                        });
+                    }
+                    if (warningLines.length > 0) {
+                        elements.teacherSchedulerScopeWarnings.innerHTML = warningLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('');
+                        elements.teacherSchedulerScopeWarnings.style.display = 'block';
+                    } else {
+                        elements.teacherSchedulerScopeWarnings.innerHTML = '';
+                        elements.teacherSchedulerScopeWarnings.style.display = 'none';
+                    }
+                }
+
+                if (elements.scopeChoiceSeries) elements.scopeChoiceSeries.checked = true;
+                if (elements.scopeChoiceSingle) elements.scopeChoiceSingle.checked = false;
+
+                const updateButtonState = () => {
+                    const isSingle = elements.scopeChoiceSingle && elements.scopeChoiceSingle.checked;
+                    if (isSingle) {
+                        if (elements.btnTeacherSchedulerScopeConfirm) {
+                            elements.btnTeacherSchedulerScopeConfirm.textContent = 'Move this session';
+                            elements.btnTeacherSchedulerScopeConfirm.disabled = false;
+                        }
+                    } else {
+                        if (elements.btnTeacherSchedulerScopeConfirm) {
+                            if (movableCount === 0) {
+                                elements.btnTeacherSchedulerScopeConfirm.textContent = 'No sessions movable';
+                                elements.btnTeacherSchedulerScopeConfirm.disabled = true;
+                            } else if (skippedCount > 0) {
+                                elements.btnTeacherSchedulerScopeConfirm.textContent = `Move ${movableCount}, skip ${skippedCount}`;
+                                elements.btnTeacherSchedulerScopeConfirm.disabled = false;
+                            } else {
+                                elements.btnTeacherSchedulerScopeConfirm.textContent = `Move ${movableCount} session${movableCount !== 1 ? 's' : ''}`;
+                                elements.btnTeacherSchedulerScopeConfirm.disabled = false;
+                            }
+                        }
+                    }
+                };
+
+                const modal = elements.teacherSchedulerScopeModal;
+                modal.style.display = 'flex';
+                modal.setAttribute('aria-hidden', 'false');
+
+                const cleanup = () => {
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                    elements.btnTeacherSchedulerScopeConfirm?.removeEventListener?.('click', onConfirm);
+                    elements.btnTeacherSchedulerScopeCancel?.removeEventListener?.('click', onCancel);
+                    elements.scopeChoiceSingle?.removeEventListener?.('change', updateButtonState);
+                    elements.scopeChoiceSeries?.removeEventListener?.('change', updateButtonState);
+                    modal?.removeEventListener?.('keydown', onKey);
+                    state._closeScopeModal = null;
+                };
+
+                const onConfirm = () => {
+                    const choice = (elements.scopeChoiceSingle && elements.scopeChoiceSingle.checked) ? 'single' : 'series';
+                    cleanup();
+                    resolve({
+                        cancelled: false,
+                        choice,
+                        seriesCount: movableCount,
+                        allowPartial: skippedCount > 0
+                    });
+                };
+
+                const onCancel = () => {
+                    cleanup();
+                    resolve({ cancelled: true });
+                };
+
+                state._closeScopeModal = onCancel;
+
+                const onKey = (evt) => {
+                    if (evt.key === 'Escape') {
+                        onCancel();
+                    } else {
+                        trapFocus(modal, evt);
+                    }
+                };
+
+                if (elements.btnTeacherSchedulerScopeConfirm) {
+                    elements.btnTeacherSchedulerScopeConfirm.addEventListener('click', onConfirm);
+                }
+                if (elements.btnTeacherSchedulerScopeCancel) {
+                    elements.btnTeacherSchedulerScopeCancel.addEventListener('click', onCancel);
+                }
+                elements.scopeChoiceSingle?.addEventListener?.('change', updateButtonState);
+                elements.scopeChoiceSeries?.addEventListener?.('change', updateButtonState);
+                modal.addEventListener('keydown', onKey);
+                updateButtonState();
+
+                elements.btnTeacherSchedulerScopeConfirm?.focus?.();
+            });
+        }
+
+        async function handleSessionDrop(sessionId, targetDate, targetTime) { 
+            const session = state.sessions.find((s) => String(s.sessionId || '') === String(sessionId || ''));
             if (!session) return;
             const previousDate = getSessionLocalDate(session);
             const previousTime = getSessionLocalTime(session);
+            const durationMinutes = Number(session.durationMinutes || 0) || 60;
             if (previousDate === targetDate && previousTime === targetTime) return;
 
-            const durationMinutes = Number(session.durationMinutes || 0) || 60;
             const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
             if (conflict) {
                 const conflictClass = getClassroomById(conflict.classId);
@@ -1056,28 +1402,211 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
+            // Optimistic move
             session.scheduledLocalDate = targetDate;
             session.scheduledLocalTime = targetTime;
-            state.pendingSessionIds.add(String(sessionId || ''));
+            clearSlotError(targetDate, targetTime);
             renderCalendarGrid();
+
+            const revertOptimistic = () => {
+                session.scheduledLocalDate = previousDate;
+                session.scheduledLocalTime = previousTime;
+                renderCalendarGrid();
+            };
+
+            state.pendingSessionIds.add(String(sessionId || ''));
+
+            let chosenScope = 'single';
+            let seriesMoved = [];
+            let allowPartial = false;
+            const classroom = getClassroomById(session.classId);
+            const expectedScheduleVersion = classroom?.scheduleConfig?.scheduleVersion ?? null;
+
             try {
-                await window.ClassroomAPI.teacherRescheduleScheduledSession(sessionId, {
+                const dryRun = await window.ClassroomAPI.teacherRescheduleSessionSeries(sessionId, {
                     targetLocalDate: targetDate,
                     targetLocalTime: targetTime,
                     durationMinutes,
-                    timezone: session.timezone || 'UTC'
+                    dryRun: true,
+                    timezone: session.timezone || 'UTC',
+                    expectedScheduleVersion
                 });
-                showToast?.('Session rescheduled.', 'success');
-                await refresh();
-            } catch (error) {
-                session.scheduledLocalDate = previousDate;
-                session.scheduledLocalTime = previousTime;
-                const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
-                showToast?.(message, 'error');
-                markSlotError(targetDate, targetTime, message);
-                renderCalendarGrid();
-            } finally {
-                state.pendingSessionIds.delete(String(sessionId || ''));
+                const dryRunData = dryRun?.data || dryRun;
+                seriesMoved = dryRunData?.moved || [];
+                const seriesConflicts = dryRunData?.conflicts || [];
+                const isSeries = (seriesMoved.length + seriesConflicts.length) > 1;
+
+                if (isSeries) {
+                    const modalResult = await openScopeModal({
+                        session,
+                        targetDate,
+                        targetTime,
+                        dryRunResult: dryRunData
+                    });
+                    if (modalResult.cancelled) {
+                        revertOptimistic();
+                        return;
+                    }
+                    chosenScope = modalResult.choice;
+                    allowPartial = Boolean(modalResult.allowPartial);
+                }
+            } catch (dryRunError) {
+                // If dryRun fails due to series conflicts, still show scope modal if available
+                if (dryRunError?.code === 'SERIES_CONFLICT' && dryRunError?.details) {
+                    const modalResult = await openScopeModal({
+                        session,
+                        targetDate,
+                        targetTime,
+                        dryRunResult: dryRunError.details
+                    });
+                    if (modalResult.cancelled) {
+                        revertOptimistic();
+                        return;
+                    }
+                    chosenScope = modalResult.choice;
+                    allowPartial = Boolean(modalResult.allowPartial);
+                } else {
+                    revertOptimistic();
+                    const message = dryRunError?.message || 'Failed to check recurring schedule series.';
+                    showToast?.(message, 'error');
+                    return;
+                }
+            }
+
+            if (chosenScope === 'series') {
+                try {
+                    const res = await window.ClassroomAPI.teacherRescheduleSessionSeries(sessionId, {
+                        targetLocalDate: targetDate,
+                        targetLocalTime: targetTime,
+                        durationMinutes,
+                        allowPartial,
+                        timezone: session.timezone || 'UTC',
+                        expectedScheduleVersion
+                    });
+                    const resData = res?.data || res;
+                    const movedList = resData?.moved || seriesMoved;
+                    const opId = resData?.operationId || null;
+                    await refresh();
+
+                    const undoMoves = movedList.map((m) => ({
+                        sessionId: m.sessionId,
+                        targetLocalDate: m.from?.targetLocalDate || m.from?.date,
+                        targetLocalTime: m.from?.targetLocalTime || m.from?.time,
+                        durationMinutes: m.from?.durationMinutes || durationMinutes,
+                        timezone: m.from?.timezone || session.timezone || 'UTC'
+                    }));
+                    const undoToken = {};
+                    state.lastMoveUndo = {
+                        token: undoToken,
+                        operationId: opId,
+                        moves: undoMoves,
+                        timezone: session.timezone || 'UTC',
+                        label: `Moved ${movedList.length} session${movedList.length !== 1 ? 's' : ''}.`
+                    };
+
+                    state.activeToastHandle = showToast?.(state.lastMoveUndo.label, 'success', {
+                        actionLabel: 'Undo',
+                        durationMs: 8000,
+                        onAction: async () => {
+                            if (!state.lastMoveUndo || state.lastMoveUndo.token !== undoToken) {
+                                return;
+                            }
+                            state.lastMoveUndo = null;
+                            try {
+                                const undoRes = await window.ClassroomAPI.teacherBulkRescheduleSessions({
+                                    moves: undoMoves,
+                                    undoOf: opId,
+                                    timezone: session.timezone || 'UTC'
+                                });
+                                const undoData = undoRes?.data || undoRes;
+                                const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : undoMoves.length;
+                                const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
+                                await refresh();
+                                if (skipped.length > 0) {
+                                    const total = restoredCount + skipped.length;
+                                    const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
+                                    showToast?.(`Restored ${restoredCount} of ${total} — ${skipped.length} session${skipped.length !== 1 ? 's' : ''} now ${reason}.`, 'info');
+                                } else {
+                                    showToast?.('Reschedule undone.', 'success');
+                                }
+                            } catch (undoErr) {
+                                showToast?.(undoErr?.message || 'Failed to undo reschedule.', 'error');
+                            }
+                        }
+                    });
+                } catch (error) {
+                    revertOptimistic();
+                    const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
+                    showToast?.(message, 'error');
+                    markSlotError(targetDate, targetTime, message);
+                    await refresh();
+                } finally {
+                    state.pendingSessionIds.delete(String(sessionId || ''));
+                }
+            } else {
+                try {
+                    await window.ClassroomAPI.teacherRescheduleScheduledSession(sessionId, {
+                        targetLocalDate: targetDate,
+                        targetLocalTime: targetTime,
+                        durationMinutes,
+                        timezone: session.timezone || 'UTC',
+                        expectedScheduleVersion
+                    });
+                    await refresh();
+
+                    const undoMoves = [{
+                        sessionId,
+                        targetLocalDate: previousDate,
+                        targetLocalTime: previousTime,
+                        durationMinutes,
+                        timezone: session.timezone || 'UTC'
+                    }];
+                    const undoToken = {};
+                    state.lastMoveUndo = {
+                        token: undoToken,
+                        operationId: null,
+                        moves: undoMoves,
+                        timezone: session.timezone || 'UTC',
+                        label: 'Session rescheduled.'
+                    };
+
+                    state.activeToastHandle = showToast?.('Session rescheduled.', 'success', {
+                        actionLabel: 'Undo',
+                        durationMs: 8000,
+                        onAction: async () => {
+                            if (!state.lastMoveUndo || state.lastMoveUndo.token !== undoToken) {
+                                return;
+                            }
+                            state.lastMoveUndo = null;
+                            try {
+                                const undoRes = await window.ClassroomAPI.teacherBulkRescheduleSessions({
+                                    moves: undoMoves,
+                                    timezone: session.timezone || 'UTC'
+                                });
+                                const undoData = undoRes?.data || undoRes;
+                                const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : 1;
+                                const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
+                                await refresh();
+                                if (skipped.length > 0) {
+                                    const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
+                                    showToast?.(`Could not restore — session is now ${reason}.`, 'info');
+                                } else {
+                                    showToast?.('Reschedule undone.', 'success');
+                                }
+                            } catch (undoErr) {
+                                showToast?.(undoErr?.message || 'Failed to undo reschedule.', 'error');
+                            }
+                        }
+                    });
+                } catch (error) {
+                    revertOptimistic();
+                    const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
+                    showToast?.(message, 'error');
+                    markSlotError(targetDate, targetTime, message);
+                    renderCalendarGrid();
+                } finally {
+                    state.pendingSessionIds.delete(String(sessionId || ''));
+                }
             }
         }
 
@@ -1135,7 +1664,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     openQuickAdd(targetDate, targetTime, slot.getBoundingClientRect());
                 });
 
-                elements.teacherSchedulerCalendar.addEventListener('mousedown', (evt) => {
+                const handleDragStart = (evt) => {
                     /* Resize handle takes priority */
                     const resizeHandle = closestTarget(evt, '.scheduler-session-resize-handle[data-resize]');
                     if (resizeHandle) {
@@ -1154,10 +1683,16 @@ window.TeacherSchedulerWorkspace = (function () {
                         return;
                     }
                     beginPointerDrag('session', sessionId, pill, evt);
+                };
+
+                elements.teacherSchedulerCalendar.addEventListener('pointerdown', handleDragStart, true);
+                elements.teacherSchedulerCalendar.addEventListener('mousedown', (evt) => {
+                    if (typeof window !== 'undefined' && window.PointerEvent && evt.pointerType !== undefined) return;
+                    handleDragStart(evt);
                 }, true);
             }
 
-            document.addEventListener('mousemove', (evt) => {
+            const handleDragMove = (evt) => {
                 if (state.resizeDrag) {
                     handleResizeMove(evt);
                     return;
@@ -1169,12 +1704,46 @@ window.TeacherSchedulerWorkspace = (function () {
                 if (!state.pointerDrag.active && distance < 6) return;
                 if (!state.pointerDrag.active) {
                     state.pointerDrag.active = true;
-                    state.pointerDrag.sourceEl?.classList.add('is-dragging');
+                    state.pointerDrag.sourceEl?.classList?.add?.('is-dragging');
+                    elements.teacherSchedulerWorkspace?.classList?.add?.('is-pointer-dragging');
+
+                    if (typeof document.createElement === 'function' && document.body) {
+                        const ghost = document.createElement('div');
+                        ghost.className = 'teacher-scheduler-drag-ghost';
+                        const rect = state.pointerDrag.rect || {};
+                        if (rect.width) ghost.style.width = `${rect.width}px`;
+                        if (rect.height) ghost.style.height = `${rect.height}px`;
+                        ghost.style.left = `${evt.clientX - state.pointerDrag.offsetX}px`;
+                        ghost.style.top = `${evt.clientY - state.pointerDrag.offsetY}px`;
+
+                        const session = state.sessions.find((s) => String(s.sessionId || '') === state.pointerDrag.id);
+                        const classroom = session ? getClassroomById(session.classId) : null;
+                        const title = classroom?.name || session?.classId || 'Class';
+                        const timeRange = session ? formatTimeRange(getSessionLocalTime(session), state.pointerDrag.durationMinutes) : '';
+
+                        ghost.innerHTML = `<div style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
+                            + `<div class="drag-ghost-chip">${escapeHtml(timeRange)}</div>`;
+
+                        document.body.appendChild(ghost);
+                        state.pointerDrag.ghostEl = ghost;
+                    }
                 }
-                updateDropTarget(findSlotFromPoint(evt.clientX, evt.clientY));
+
+                if (state.pointerDrag.ghostEl) {
+                    state.pointerDrag.ghostEl.style.left = `${evt.clientX - state.pointerDrag.offsetX}px`;
+                    state.pointerDrag.ghostEl.style.top = `${evt.clientY - state.pointerDrag.offsetY}px`;
+                }
+                const ghostTop = evt.clientY - (state.pointerDrag.offsetY || 0);
+                updateDropTarget(findSlotFromPoint(evt.clientX, evt.clientY) || closestTarget(evt, '.teacher-scheduler-slot') || findSlotForGhost(evt.clientX, evt.clientY, ghostTop));
+            };
+
+            document.addEventListener('pointermove', handleDragMove, true);
+            document.addEventListener('mousemove', (evt) => {
+                if (typeof window !== 'undefined' && window.PointerEvent && evt.pointerType !== undefined) return;
+                handleDragMove(evt);
             }, true);
 
-            document.addEventListener('mouseup', (evt) => {
+            const handleDragEnd = (evt) => {
                 if (state.resizeDrag) {
                     const suppressId = state.resizeDrag.sessionId;
                     state.suppressedSessionClickId = suppressId;
@@ -1190,7 +1759,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 }
                 if (!state.pointerDrag) return;
                 const drag = state.pointerDrag;
-                const slot = drag.active ? (findSlotFromPoint(evt.clientX, evt.clientY) || drag.activeSlot) : null;
+                const ghostTop = evt.clientY - (drag.offsetY || 0);
+                const slot = drag.active ? (findSlotFromPoint(evt.clientX, evt.clientY) || closestTarget(evt, '.teacher-scheduler-slot') || drag.activeSlot || findSlotForGhost(evt.clientX, evt.clientY, ghostTop)) : null;
                 const shouldSuppressClick = drag.active && drag.kind === 'session';
                 clearPointerDrag();
                 if (shouldSuppressClick) {
@@ -1208,14 +1778,45 @@ window.TeacherSchedulerWorkspace = (function () {
                 handleSessionDrop(drag.id, targetDate, targetTime).catch((error) => {
                     showToast?.(error?.message || 'Failed to reschedule.', 'error');
                 });
+            };
+
+            document.addEventListener('pointerup', handleDragEnd, true);
+            document.addEventListener('mouseup', (evt) => {
+                if (typeof window !== 'undefined' && window.PointerEvent && evt.pointerType !== undefined) return;
+                handleDragEnd(evt);
+            }, true);
+
+            document.addEventListener('pointercancel', () => {
+                cancelResizeDrag();
+                clearPointerDrag();
             }, true);
 
             document.addEventListener('keydown', (evt) => {
-                if (evt.key !== 'Escape') return;
+                if (evt.key !== 'Escape') {
+                    if (elements.teacherSchedulerSessionBubble?.style.display === 'block') {
+                        trapFocus(elements.teacherSchedulerSessionBubble, evt);
+                    }
+                    return;
+                }
+                if (elements.teacherSchedulerScopeModal && (elements.teacherSchedulerScopeModal.style.display === 'flex' || elements.teacherSchedulerScopeModal.style.display === 'block')) {
+                    if (typeof state._closeScopeModal === 'function') {
+                        state._closeScopeModal();
+                    } else {
+                        elements.teacherSchedulerScopeModal.style.display = 'none';
+                        elements.teacherSchedulerScopeModal.setAttribute('aria-hidden', 'true');
+                    }
+                    return;
+                }
                 cancelResizeDrag();
                 clearPlacementMode();
-                closeQuickAdd();
-                closeSessionBubble();
+                if (elements.teacherSchedulerSessionBubble?.style.display === 'block') {
+                    closeSessionBubble();
+                    return;
+                }
+                if (elements.teacherSchedulerQuickAdd?.style.display === 'block') {
+                    closeQuickAdd();
+                    return;
+                }
             });
 
             if (elements.btnTeacherSchedulerQuickCancel) {
@@ -1237,16 +1838,28 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
             }
             if (elements.inputTeacherSchedulerQuickDate) {
-                elements.inputTeacherSchedulerQuickDate.addEventListener('change', () => {
+                const onQuickDateChange = () => {
                     if (!state.quickAdd) return;
                     state.quickAdd.targetDate = String(elements.inputTeacherSchedulerQuickDate.value || '').trim();
-                });
+                };
+                elements.inputTeacherSchedulerQuickDate.addEventListener('change', onQuickDateChange);
+                elements.inputTeacherSchedulerQuickDate.addEventListener('input', onQuickDateChange);
             }
             if (elements.inputTeacherSchedulerQuickTime) {
-                elements.inputTeacherSchedulerQuickTime.addEventListener('change', () => {
+                const onQuickTimeChange = () => {
                     if (!state.quickAdd) return;
                     state.quickAdd.targetTime = String(elements.inputTeacherSchedulerQuickTime.value || '').trim();
-                });
+                };
+                elements.inputTeacherSchedulerQuickTime.addEventListener('change', onQuickTimeChange);
+                elements.inputTeacherSchedulerQuickTime.addEventListener('input', onQuickTimeChange);
+            }
+            if (elements.inputTeacherSchedulerQuickDuration) {
+                const onQuickDurChange = () => {
+                    if (!state.quickAdd) return;
+                    state.quickAdd.durationMinutes = Number(elements.inputTeacherSchedulerQuickDuration.value || 60);
+                };
+                elements.inputTeacherSchedulerQuickDuration.addEventListener('change', onQuickDurChange);
+                elements.inputTeacherSchedulerQuickDuration.addEventListener('input', onQuickDurChange);
             }
 
             if (elements.inputTeacherSchedulerPatternClass) {
@@ -1483,14 +2096,16 @@ window.TeacherSchedulerWorkspace = (function () {
                 }
             }
 
-            document.addEventListener('click', (evt) => {
+            const handleOutsideDismiss = (evt) => {
                 if (elements.teacherSchedulerQuickAdd?.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-quick-add, .teacher-scheduler-slot')) {
                     closeQuickAdd();
                 }
                 if (elements.teacherSchedulerSessionBubble?.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-session-bubble, .teacher-scheduler-session-pill')) {
                     closeSessionBubble();
                 }
-            });
+            };
+            document.addEventListener('mousedown', handleOutsideDismiss);
+            document.addEventListener('click', handleOutsideDismiss);
         }
 
         function initPatternDayChips() {
@@ -1516,10 +2131,31 @@ window.TeacherSchedulerWorkspace = (function () {
             });
         }
 
+        function deactivate() {
+            closeQuickAdd();
+            closeSessionBubble();
+            if (typeof state._closeScopeModal === 'function') {
+                state._closeScopeModal();
+            }
+            cancelResizeDrag();
+            clearPointerDrag();
+            clearPlacementMode();
+            state.lastMoveUndo = null;
+            if (state.activeToastHandle && typeof state.activeToastHandle.dismiss === 'function') {
+                state.activeToastHandle.dismiss();
+            }
+            state.activeToastHandle = null;
+            if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+                document.querySelectorAll('.crm-toast').forEach((toast) => toast?.remove?.());
+            }
+        }
+
         return {
             init,
             refresh,
-            load: refresh
+            load: refresh,
+            deactivate,
+            getState: () => state
         };
     }
 

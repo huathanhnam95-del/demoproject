@@ -32,8 +32,16 @@ function shouldShowPreloader() {
 document.addEventListener('DOMContentLoaded', () => {
     const preloader = document.getElementById('app-preloader');
     const fillWrapper = document.getElementById('preloader-text-fill-wrapper');
+    const progressFill = document.getElementById('preloader-progress-fill');
 
     if (!preloader || !fillWrapper) return;
+
+    // The stylesheet handles prefers-reduced-motion on its own, but the class is what
+    // tests/browser/preloader-browser-check.js asserts on — and nothing was setting it
+    // once the 3D preloader stopped being loaded here.
+    const prefersReducedMotion = typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) preloader.classList.add('reduced-motion');
 
     // ── Skip path: hide preloader instantly ──
     if (!shouldShowPreloader()) {
@@ -60,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ease-out curve for the fill width (fast start, slowing down)
         const easedProgress = 1 - Math.pow(1 - progress, 3);
         fillWrapper.style.width = `${easedProgress * 100}%`;
+        if (progressFill) progressFill.style.width = `${easedProgress * 100}%`;
 
         if (elapsed >= PRELOADER_MIN_DURATION_MS && appReady) {
             finishPreloader();
@@ -71,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function finishPreloader() {
         cancelAnimationFrame(rafId);
         fillWrapper.style.width = '100%'; // Ensure full fill
+        if (progressFill) progressFill.style.width = '100%';
+        preloader.classList.add('is-complete');
 
         // Mark that the app has loaded in this session
         try { sessionStorage.setItem('bel_app_loaded', '1'); } catch (e) { /* quota */ }
@@ -78,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Smooth transition out
         preloader.style.transition = 'opacity 600ms ease-out, transform 600ms ease-in';
         preloader.style.opacity = '0';
-        preloader.style.transform = 'scale(1.05)';
+        if (!prefersReducedMotion) preloader.style.transform = 'scale(1.05)';
         preloader.style.pointerEvents = 'none';
 
         setTimeout(() => {

@@ -153,6 +153,12 @@ function normalizeStudentCore(input, fallback = {}) {
         ownerUid: Object.prototype.hasOwnProperty.call(source, 'ownerUid')
             ? cleanOptionalString(source.ownerUid)
             : (base.ownerUid ?? null),
+        assignedTeacherUid: Object.prototype.hasOwnProperty.call(source, 'assignedTeacherUid')
+            ? cleanOptionalString(source.assignedTeacherUid)
+            : (base.assignedTeacherUid ?? null),
+        assignedTeacherName: Object.prototype.hasOwnProperty.call(source, 'assignedTeacherName')
+            ? cleanOptionalString(source.assignedTeacherName)
+            : (base.assignedTeacherName ?? null),
         notes: Object.prototype.hasOwnProperty.call(source, 'notes')
             ? cleanOptionalString(source.notes)
             : (base.notes ?? null),
@@ -213,6 +219,8 @@ function hasRecognizedPatch(input) {
         'agentSourceId',
         'leadId',
         'ownerUid',
+        'assignedTeacherUid',
+        'assignedTeacherName',
         'notes',
         'learningProfile',
         'targets',
@@ -300,6 +308,8 @@ function mapStudentRecord(data, studentId) {
         agentSourceId: source.agentSourceId || null,
         leadId: source.leadId || null,
         ownerUid: source.ownerUid || null,
+        assignedTeacherUid: source.assignedTeacherUid || null,
+        assignedTeacherName: source.assignedTeacherName || null,
         notes: source.notes || null,
         learningProfile: normalizeLearningProfile(source.learningProfile),
         targets: normalizeTargets(source.targets),

@@ -68,10 +68,24 @@ async function runTest() {
     assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), '', 'Source Account should be blank by default');
     assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.required), true, 'Source Account should be required');
 
+    // Check default Social Media Account Link is hidden
+    const initialLinkGroupDisplay = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display);
+    assert.strictEqual(initialLinkGroupDisplay, 'none', 'Social Media Account Link group should be hidden by default');
+
     // Select source and owner
     await page.selectOption('#lead-source', 'Facebook - Personal');
     await page.selectOption('#lead-facebook-personal-owner', 'Quỳnh');
     assert.strictEqual(await page.$eval('#lead-facebook-personal-owner', (el) => el.value), 'Quỳnh', 'Selected owner should be Quỳnh');
+
+    // Verify Social Media Account Link is visible after choosing Facebook
+    const linkGroupDisplayAfterFb = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display);
+    assert.strictEqual(linkGroupDisplayAfterFb, '', 'Social Media Account Link group must be visible after choosing Facebook - Personal');
+    const linkLabel = await page.$eval('label[for="lead-facebook-profile-url"]', (el) => el.textContent.trim());
+    assert.strictEqual(linkLabel, 'Social Media Account Link', 'Label must be Social Media Account Link');
+
+    // Type a profile link
+    await page.fill('#lead-facebook-profile-url', 'https://facebook.com/tran.khac.huy');
+    assert.strictEqual(await page.$eval('#lead-facebook-profile-url', (el) => el.value), 'https://facebook.com/tran.khac.huy');
 
     // Check salutation radios are present
     await page.check('#lead-salutation-mr');
@@ -82,31 +96,42 @@ async function runTest() {
     const isMsChecked = await page.$eval('#lead-salutation-ms', (el) => el.checked);
     assert.strictEqual(isMsChecked, true, 'Ms radio should be checked when clicked');
 
-    // Verify Agent selection toggles Agent Source and hides Source Account
+    // Verify Agent selection toggles Agent Source, hides Source Account, and hides/clears Social Media Account Link
     await page.selectOption('#lead-source', 'Agent');
     const ownerGroupDisplayAfterAgent = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display);
     const ownerRequiredAfterAgent = await page.$eval('#lead-facebook-personal-owner', (el) => el.required);
     const agentGroupDisplayAfterAgent = await page.$eval('#lead-agent-source-group', (el) => el.style.display);
     const agentRequiredAfterAgent = await page.$eval('#lead-agent-source', (el) => el.required);
+    const linkGroupDisplayAfterAgent = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display);
+    const linkValueAfterAgent = await page.$eval('#lead-facebook-profile-url', (el) => el.value);
 
     assert.strictEqual(ownerGroupDisplayAfterAgent, 'none', 'Source Account group must be hidden when source is Agent');
     assert.strictEqual(ownerRequiredAfterAgent, false, 'Source Account must not be required when hidden');
     assert.strictEqual(agentGroupDisplayAfterAgent, '', 'Agent Source group must be visible when source is Agent');
     assert.strictEqual(agentRequiredAfterAgent, true, 'Agent Source must be required when source is Agent');
+    assert.strictEqual(linkGroupDisplayAfterAgent, 'none', 'Social Media Account Link group must be hidden when source is Agent');
+    assert.strictEqual(linkValueAfterAgent, '', 'Social Media Account Link value must be cleared when switching away from Facebook');
 
-    // Verify switching back to non-Agent restores Source Account
+    // Verify Facebook - Page also shows Social Media Account Link
+    await page.selectOption('#lead-source', 'Facebook - Page');
+    const linkGroupDisplayAfterFbPage = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display);
+    assert.strictEqual(linkGroupDisplayAfterFbPage, '', 'Social Media Account Link group must be visible when source is Facebook - Page');
+
+    // Verify switching back to non-Agent, non-Facebook restores Source Account and hides Social Media Account Link
     await page.selectOption('#lead-source', 'Zalo - Personal');
     const ownerGroupDisplayAfterZalo = await page.$eval('#lead-facebook-personal-owner-group', (el) => el.style.display);
     const ownerRequiredAfterZalo = await page.$eval('#lead-facebook-personal-owner', (el) => el.required);
     const agentGroupDisplayAfterZalo = await page.$eval('#lead-agent-source-group', (el) => el.style.display);
     const agentRequiredAfterZalo = await page.$eval('#lead-agent-source', (el) => el.required);
+    const linkGroupDisplayAfterZalo = await page.$eval('#lead-facebook-profile-url-group', (el) => el.style.display);
 
     assert.strictEqual(ownerGroupDisplayAfterZalo, '', 'Source Account group must be visible when source is Zalo - Personal');
     assert.strictEqual(ownerRequiredAfterZalo, true, 'Source Account must be required when source is Zalo - Personal');
     assert.strictEqual(agentGroupDisplayAfterZalo, 'none', 'Agent Source group must be hidden when source is Zalo - Personal');
     assert.strictEqual(agentRequiredAfterZalo, false, 'Agent Source must not be required when hidden');
+    assert.strictEqual(linkGroupDisplayAfterZalo, 'none', 'Social Media Account Link group must be hidden when source is Zalo - Personal');
 
-    console.log('✓ Lead source, Source Account dropdown, Agent Source toggling, and Mr/Ms salutation browser check PASSED');
+    console.log('✓ Lead source, Social Media Account Link, Source Account dropdown, Agent Source toggling, and Mr/Ms salutation browser check PASSED');
   } finally {
     await browser.close();
     server.close();

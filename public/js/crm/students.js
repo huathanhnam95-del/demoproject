@@ -42,6 +42,10 @@ window.CrmStudents = (function () {
             facebookPersonalOwner: getValue(elements.inputStudentFacebookPersonalOwner),
             acquisitionSource: getValue(elements.inputStudentAcquisitionSource),
             agentSourceId: getValue(elements.inputStudentAgentSource),
+            assignedTeacherUid: getValue(elements.inputStudentAssignedTeacher) || null,
+            assignedTeacherName: (elements.inputStudentAssignedTeacher?.selectedOptions?.[0]?.textContent?.trim() && !elements.inputStudentAssignedTeacher.selectedOptions[0].textContent.trim().startsWith('--'))
+                ? elements.inputStudentAssignedTeacher.selectedOptions[0].textContent.trim()
+                : (getValue(elements.inputStudentAssignedTeacherName) || null),
             learningProfile: {
                 overall: getNumberValue(elements.inputScoreOverall),
                 listening: getNumberValue(elements.inputScoreListening),
@@ -98,6 +102,9 @@ window.CrmStudents = (function () {
         if (elements.inputStudentAcquisitionSource) elements.inputStudentAcquisitionSource.value = String(student?.acquisitionSource || 'Facebook - Personal');
         if (elements.inputStudentFacebookPersonalOwner) elements.inputStudentFacebookPersonalOwner.value = String(student?.facebookPersonalOwner || '');
         if (elements.inputStudentAgentSource) elements.inputStudentAgentSource.value = String(student?.agentSourceId || '');
+        if (elements.inputStudentAssignedTeacher) {
+            elements.inputStudentAssignedTeacher.value = String(student?.assignedTeacherUid || '');
+        }
         if (window.updateStudentSourceVisibility) window.updateStudentSourceVisibility();
         if (elements.inputScoreOverall) elements.inputScoreOverall.value = learning.overall ?? '';
         if (elements.inputScoreListening) elements.inputScoreListening.value = learning.listening ?? '';

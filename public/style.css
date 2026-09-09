@@ -171,14 +171,18 @@ h6 {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* Ground.
+   The splash used to be a pink/lilac/blue pastel wash with #1a1a1a slogan text on
+   top -- a gradient that shares no colour with the app it introduces. It now opens
+   on brand navy (#0B1120/#121826) lit by two slow aurora blobs in the brand
+   accents, so the first frame of the product already reads as BEL. */
 .app-preloader {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--bg-main);
-  /* Match background precisely */
+  background-color: #0b1120;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -189,11 +193,31 @@ h6 {
 }
 
 .app-preloader.preloader-2d {
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a1c4fd 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  flex-direction: column;
+  background:
+    radial-gradient(120% 88% at 50% -10%, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0) 58%),
+    radial-gradient(90% 70% at 50% 112%, rgba(139, 92, 246, 0.16) 0%, rgba(139, 92, 246, 0) 62%),
+    linear-gradient(180deg, #0b1120 0%, #121826 52%, #0b1120 100%);
+  /* Keeps the blurred blobs from painting over anything stacked above. */
+  isolation: isolate;
+}
+
+/* Stops the app scrolling underneath the overlay. */
+body.loading-active {
+  overflow: hidden;
+}
+
+/* `html { scrollbar-gutter: stable }` reserves ~15px beside the page that no element
+   can paint into — the canvas shows through instead, which is the light --bg-main.
+   Invisible beside the old pastel wash; a white stripe beside a navy one.
+   The colour has to go on <html> rather than on <body>: a background here paints the
+   canvas (gutter included) while <body> keeps painting its own light background over
+   the content area, so the app does not turn black for the 600ms the splash spends
+   fading out. Both rules revert with the class, which preloader-2d.js applies and
+   removes; scrollbar-color covers the case where a real scrollbar is drawn there. */
+html:has(> body.loading-active) {
+  background-color: #0b1120;
+  scrollbar-color: rgba(148, 163, 184, 0.35) #0b1120;
 }
 
 .app-preloader.fade-out {
@@ -202,110 +226,308 @@ h6 {
   pointer-events: none;
 }
 
+/* Aurora.
+   Blurred blobs drifting on transform only (never on width or filter), so the
+   background costs one compositor layer per blob. The third is dropped below
+   640px: stacking three 72px blurs on a phone GPU is the one thing here that can
+   cost frames during first paint. */
+.preloader-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.preloader-aurora__blob {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(72px);
+  will-change: transform;
+}
+
+.preloader-aurora__blob--1 {
+  width: 44vmax;
+  height: 44vmax;
+  top: -16vmax;
+  left: -10vmax;
+  background: rgba(59, 130, 246, 0.42);
+  animation: auroraDrift 24s ease-in-out infinite alternate;
+}
+
+.preloader-aurora__blob--2 {
+  width: 38vmax;
+  height: 38vmax;
+  right: -12vmax;
+  bottom: -14vmax;
+  background: rgba(139, 92, 246, 0.38);
+  animation: auroraDrift 30s ease-in-out -8s infinite alternate-reverse;
+}
+
+.preloader-aurora__blob--3 {
+  width: 26vmax;
+  height: 26vmax;
+  right: 8vmax;
+  top: -8vmax;
+  background: rgba(96, 165, 250, 0.28);
+  animation: auroraDrift 20s ease-in-out -14s infinite alternate;
+}
+
+@keyframes auroraDrift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(6vmax, 4vmax, 0) scale(1.14);
+  }
+}
+
+/* Stage.
+   One column on the 8pt grid -- wordmark, slogan, progress hairline, status --
+   flowing on the background rather than sitting in a panel. The slogan used to be
+   `position: absolute; bottom: 38%`, which floated it independently of the
+   wordmark and broke their alignment at every viewport in between. */
+.preloader-stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px;
+  text-align: center;
+}
+
 .preloader-text-container {
   position: relative;
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  /* Extra bold */
-  font-size: clamp(2rem, 5vw, 4rem);
+  /* Was 800 -- the Outfit link only requests 300-700, so that weight was being
+     synthesised by the browser. 700 is the heaviest cut actually loaded. */
+  font-weight: 700;
+  font-size: clamp(1.35rem, 6.2vw, 3.75rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   text-align: center;
   white-space: nowrap;
+  animation: preloaderWordmarkIn 900ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 
 /* Base stroked text (empty) */
 .preloader-text-stroke {
   color: transparent;
-  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.6);
+  -webkit-text-stroke: 1.5px rgba(248, 250, 252, 0.22);
 }
 
 /* Wrapper that dictates how much of the filled text is visible */
 .preloader-text-fill-wrapper {
   position: absolute;
-  top: 0;
-  left: 0;
+  /* The wipe is an overflow clip, so the box has to be bigger than the letterforms
+     on three sides or it slices the drop-shadow into a visible rectangle. Padding
+     buys that headroom while keeping the content box's right edge — the wipe front,
+     where a hard edge is exactly the point — at the JS-driven percentage, and the
+     matching offsets put the text back where the stroke copy sits. */
+  box-sizing: content-box;
+  top: -0.7em;
+  left: -0.8em;
+  padding: 0.7em 0 0.7em 0.8em;
   width: 0%;
-  /* JS will animate this to 100% */
+  /* JS animates this to 100% */
   height: 100%;
   overflow: hidden;
-  /* Add subtle right-edge glow to the fill tip */
-  border-right: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: inset -4px 0 8px rgba(255, 255, 255, 0.4);
 }
 
 /* Solid filled text */
 .preloader-text-fill {
-  color: #ffffff;
-  -webkit-text-stroke: 0px transparent;
-  text-shadow: 0 4px 16px rgba(255, 255, 255, 0.5);
+  /* Near-white with a cool tail rather than a saturated blue gradient: the
+     wordmark has to stay legible against navy, so the colour comes from the glow
+     underneath it instead of from the letterforms themselves. */
+  background: linear-gradient(100deg, #ffffff 0%, #e8f0ff 46%, #c7d2fe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 0;
+  /* Blur radius in em, not px: the padding above that keeps this glow off the clip
+     edge scales with the wordmark, so the glow has to as well or it gets sliced into
+     a rectangle at phone type sizes. */
+  filter: drop-shadow(0 0 0.32em rgba(59, 130, 246, 0.6));
   /* The fill needs to be exact width of container to prevent wrapping issues */
   width: max-content;
 }
 
-/* ── Slogan Fade Animation ── */
-.preloader-slogan {
+/* The wipe edge. Was a hard 2px border plus an inset shadow, which read as a text
+   cursor. It is now a soft leading light built entirely from gradients — no
+   box-shadow — because anything that spills outside this wrapper gets squared off
+   by the overflow clip and reappears as a glowing rectangle around the wordmark. */
+.preloader-text-fill-wrapper::after {
+  content: '';
   position: absolute;
-  bottom: 38%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.2rem, 2.8vw, 1.8rem);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: #1a1a1a;
+  /* Inset from the wrapper's padding so the light stays roughly the height of the
+     letterforms instead of the taller clip box. */
+  top: 0.45em;
+  bottom: 0.45em;
+  right: 0;
+  width: 0.55em;
+  background: linear-gradient(90deg,
+      rgba(147, 197, 253, 0) 0%,
+      rgba(147, 197, 253, 0.28) 62%,
+      rgba(219, 234, 254, 0.92) 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  transition: opacity 240ms ease-out;
 }
 
-.preloader-slogan__line {
-  display: inline;
+/* Once the fill reaches the end of the word there is nothing left to wipe, so the
+   edge retires rather than parking at the final G. */
+.app-preloader.is-complete .preloader-text-fill-wrapper::after {
   opacity: 0;
 }
 
-/* "Not the best." — fades in at 1.2s and stays */
+/* Slogan.
+   "Not the best." lands muted; "But better." arrives brighter and heavier -- the
+   turn is what the line is about, so the type carries it. Both reveals now finish
+   inside the 2200ms minimum splash duration. The previous timing put
+   "But better." at 4s, roughly two seconds after the splash had already dismissed
+   itself, so nobody ever saw the second half of the message. */
+.preloader-slogan {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.4em;
+  margin: 24px 0 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1rem, 2.6vw, 1.5rem);
+  letter-spacing: 0.01em;
+}
+
+.preloader-slogan__line {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(8px);
+  animation: sloganReveal 700ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+}
+
 .preloader-slogan__line--1 {
-  animation: sloganFadeIn 2s ease-in-out 1.2s forwards;
+  font-weight: 400;
+  color: rgba(148, 163, 184, 0.95);
+  animation-delay: 550ms;
 }
 
-/* "Just better." — fades in at 4s and stays */
 .preloader-slogan__line--2 {
-  animation: sloganFadeIn 2s ease-in-out 4s forwards;
+  font-weight: 600;
+  color: #f8fafc;
+  animation-delay: 1050ms;
 }
 
-@keyframes sloganFadeInOut {
-  0% {
+/* Progress.
+   A 2px hairline rather than a spinner: the wait has a known duration, so report
+   it. Width comes from the same rAF loop that drives the wordmark fill. */
+.preloader-progress {
+  position: relative;
+  width: min(280px, 56vw);
+  height: 2px;
+  margin-top: 40px;
+  border-radius: var(--radius-pill);
+  background: rgba(248, 250, 252, 0.12);
+  overflow: hidden;
+}
+
+.preloader-progress__fill {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.85);
+  transition: width 200ms linear;
+}
+
+/* Status line, empty by default -- the 9s failsafe in index.html writes the
+   retry/continue escape hatch into it. That failsafe has been dead code since the
+   2D splash landed, because it looks up #preloader-text and the element no longer
+   existed; this restores its target. */
+.preloader-status {
+  max-width: min(440px, 84vw);
+  min-height: 1.4em;
+  margin: 16px 0 0;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+@keyframes preloaderWordmarkIn {
+  from {
     opacity: 0;
+    filter: blur(14px);
+    transform: translateY(14px) scale(0.985);
   }
 
-  20% {
+  to {
     opacity: 1;
-  }
-
-  60% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes sloganFadeIn {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
+@keyframes sloganReveal {
+  to {
     opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
   }
 }
 
+/* Reduced motion: the composition still reads, it just arrives already arranged.
+   Both the media query and the .reduced-motion class set by preloader-2d.js are
+   honoured, since the class is what the browser check asserts on. */
+@media (prefers-reduced-motion: reduce) {
+  .preloader-aurora__blob {
+    animation: none;
+  }
 
-.app-preloader.reduced-motion .preloader-wordmark {
-  opacity: 0.88;
+  .preloader-text-container,
+  .preloader-slogan__line {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .preloader-progress__fill {
+    transition: none;
+  }
+}
+
+.app-preloader.reduced-motion .preloader-aurora__blob {
+  animation: none;
+}
+
+.app-preloader.reduced-motion .preloader-text-container,
+.app-preloader.reduced-motion .preloader-slogan__line {
+  animation: none;
+  opacity: 1;
+  filter: none;
   transform: none;
 }
 
-.app-preloader.reduced-motion .preloader-text {
-  letter-spacing: 0.1em;
+.app-preloader.reduced-motion .preloader-progress__fill {
+  transition: none;
+}
+
+@media (max-width: 640px) {
+  .preloader-aurora__blob--3 {
+    display: none;
+  }
+
+  .preloader-slogan {
+    margin-top: 20px;
+  }
+
+  .preloader-progress {
+    margin-top: 32px;
+  }
 }
 
 @keyframes spin {
@@ -315,22 +537,6 @@ h6 {
 
   100% {
     transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 640px) {
-  .preloader-overlay {
-    justify-content: center;
-    gap: 14px;
-  }
-
-  .preloader-wordmark {
-    letter-spacing: 0.1em;
-    text-indent: 0.1em;
-  }
-
-  .preloader-text {
-    letter-spacing: 0.1em;
   }
 }
 

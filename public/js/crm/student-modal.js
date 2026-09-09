@@ -25,7 +25,6 @@ window.CrmStudentModal = (function () {
         const VALID_STUDENT_TABS = new Set([
             'info',
             'learning',
-            'overview',
             'courses',
             'finance',
             'identity',
@@ -34,7 +33,7 @@ window.CrmStudentModal = (function () {
 
         function normalizeStudentTabId(tabId) {
             const raw = String(tabId || '').trim();
-            if (raw === 'student-360') return 'overview';
+            if (raw === 'student-360' || raw === 'overview') return 'info';
             return VALID_STUDENT_TABS.has(raw) ? raw : 'info';
         }
 
@@ -90,7 +89,7 @@ window.CrmStudentModal = (function () {
                 }
                 return;
             }
-            if (normalizedTab === 'info' || normalizedTab === 'overview') {
+            if (normalizedTab === 'info') {
                 renderStudentSchedulePrompt();
             }
         }

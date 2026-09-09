@@ -15,6 +15,236 @@ window.CrmStudentDirectoryWorkspace = (function () {
             refreshDashboard
         } = deps;
         const selectedStudentIds = new Set();
+        let currentSearchQuery = '';
+        let currentTeacherFilter = 'all';
+        const studentTeacherMap = new Map();
+        let isToolbarBound = false;
+
+        function foldVietnamese(str) {
+            return String(str || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D')
+                .toLowerCase()
+                .trim();
+        }
+
+        function resolveStudentTeacher(student) {
+            const directUid = String(student?.assignedTeacherUid || '').trim();
+            const directName = String(student?.assignedTeacherName || '').trim();
+            if (directUid || directName) {
+                let name = directName;
+                if (!name) {
+                    if (directUid === 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83') name = 'Shawn';
+                    else if (directUid === 'JP0UmCufWpdDkKkZazh7Ajo4PfX2') name = 'Hứa Thanh Nam';
+                    else name = 'Teacher';
+                }
+                return { uid: directUid, name };
+            }
+
+            const studentId = String(student?.studentId || '').trim();
+            if (studentId && studentTeacherMap.has(studentId)) {
+                return studentTeacherMap.get(studentId);
+            }
+
+            return { uid: null, name: null };
+        }
+
+        function isTeacherMatch(teacherInfo, filter) {
+            if (!filter || filter === 'all') return true;
+            const uid = String(teacherInfo?.uid || '').trim();
+            const name = String(teacherInfo?.name || '').trim().toLowerCase();
+
+            if (filter === 'unassigned') {
+                return !uid && !name;
+            }
+
+            if (filter === 'Shawn') {
+                return uid === 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83' || name.includes('shawn');
+            }
+
+            if (filter === 'Hứa Thanh Nam') {
+                return uid === 'JP0UmCufWpdDkKkZazh7Ajo4PfX2' || name.includes('nam');
+            }
+
+            return uid === filter || name === filter.toLowerCase();
+        }
+
+        function applyFilters(students) {
+            const rawList = Array.isArray(students) ? students : [];
+            const foldedQuery = foldVietnamese(currentSearchQuery);
+
+            return rawList.filter((student) => {
+                if (foldedQuery) {
+                    const rawName = String(student?.name || '');
+                    const foldedName = foldVietnamese(rawName);
+                    const rawContact = String(student?.email || '') + ' ' + String(student?.phone || '');
+                    const rawCrmId = String(student?.crmId || '');
+                    if (!foldedName.includes(foldedQuery) && !rawContact.toLowerCase().includes(foldedQuery) && !rawCrmId.toLowerCase().includes(foldedQuery)) {
+                        return false;
+                    }
+                }
+
+                if (currentTeacherFilter !== 'all') {
+                    const teacherInfo = resolveStudentTeacher(student);
+                    if (!isTeacherMatch(teacherInfo, currentTeacherFilter)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+
+        function updateFilterCounts(students) {
+            const allList = Array.isArray(students) ? students : [];
+            let unassignedCount = 0;
+            let shawnCount = 0;
+            let namCount = 0;
+
+            allList.forEach((s) => {
+                const t = resolveStudentTeacher(s);
+                if (!t.uid && !t.name) {
+                    unassignedCount += 1;
+                } else if (isTeacherMatch(t, 'Shawn')) {
+                    shawnCount += 1;
+                } else if (isTeacherMatch(t, 'Hứa Thanh Nam')) {
+                    namCount += 1;
+                }
+            });
+
+            const counts = {
+                all: allList.length,
+                unassigned: unassignedCount,
+                Shawn: shawnCount,
+                'Hứa Thanh Nam': namCount
+            };
+
+            document.querySelectorAll('.crm-filter-pill-count[data-count]').forEach((el) => {
+                const key = el.dataset.count;
+                if (counts[key] !== undefined) {
+                    el.textContent = counts[key];
+                }
+            });
+        }
+
+        function updateResultsMeta(filteredCount, totalCount) {
+            const metaEl = document.getElementById('crm-student-results-count');
+            if (!metaEl) return;
+            if (currentSearchQuery || currentTeacherFilter !== 'all') {
+                metaEl.textContent = `Showing ${filteredCount} of ${totalCount} students`;
+            } else {
+                metaEl.textContent = `${totalCount} students`;
+            }
+        }
+
+        function bindToolbarEvents() {
+            if (isToolbarBound) return;
+            const searchInput = document.getElementById('crm-student-search-input');
+            const clearBtn = document.getElementById('crm-student-search-clear');
+            const filterContainer = document.getElementById('crm-student-teacher-filters');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    currentSearchQuery = e.target.value.trim();
+                    if (clearBtn) {
+                        clearBtn.style.display = currentSearchQuery ? 'inline-flex' : 'none';
+                    }
+                    renderFilteredView();
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (searchInput) {
+                        searchInput.value = '';
+                        searchInput.focus();
+                    }
+                    currentSearchQuery = '';
+                    clearBtn.style.display = 'none';
+                    renderFilteredView();
+                });
+            }
+
+            if (filterContainer) {
+                filterContainer.addEventListener('click', (e) => {
+                    const pill = e.target.closest('button.crm-filter-pill[data-teacher-filter]');
+                    if (!pill) return;
+                    const filterValue = pill.dataset.teacherFilter;
+                    if (currentTeacherFilter === filterValue) return;
+
+                    filterContainer.querySelectorAll('.crm-filter-pill').forEach((p) => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    currentTeacherFilter = filterValue;
+                    renderFilteredView();
+                });
+            }
+
+            isToolbarBound = true;
+        }
+
+        async function loadStudentEnrollmentTeachers() {
+            try {
+                if (window.firebase?.firestore) {
+                    const [enrollmentsSnap, classroomsSnap] = await Promise.all([
+                        window.firebase.firestore().collection('crmEnrollments').get().catch(() => null),
+                        window.firebase.firestore().collection('crmClassrooms').get().catch(() => null)
+                    ]);
+                    if (!enrollmentsSnap || !classroomsSnap) return;
+
+                    const classroomTeacherMap = new Map();
+                    classroomsSnap.forEach((doc) => {
+                        const data = doc.data() || {};
+                        const teacherUid = String(data.primaryTeacherUid || '').trim();
+                        const teacherName = String(data.primaryTeacherName || '').trim();
+                        if (teacherUid) {
+                            let displayName = teacherName;
+                            if (!displayName) {
+                                if (teacherUid === 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83') displayName = 'Shawn';
+                                else if (teacherUid === 'JP0UmCufWpdDkKkZazh7Ajo4PfX2') displayName = 'Hứa Thanh Nam';
+                            }
+                            classroomTeacherMap.set(doc.id, {
+                                uid: teacherUid,
+                                name: displayName || 'Teacher'
+                            });
+                        }
+                    });
+
+                    enrollmentsSnap.forEach((doc) => {
+                        const data = doc.data() || {};
+                        const studentId = String(data.studentId || '').trim();
+                        const classId = String(data.classId || '').trim();
+                        if (studentId && classId && classroomTeacherMap.has(classId)) {
+                            studentTeacherMap.set(studentId, classroomTeacherMap.get(classId));
+                        }
+                    });
+
+                    renderFilteredView();
+                }
+            } catch (err) {
+                console.warn('[CRM Student Directory] Could not load enrollment teacher mappings:', err);
+            }
+        }
+
+        function renderFilteredView() {
+            bindToolbarEvents();
+            const allStudents = Array.isArray(dataCache.students) ? dataCache.students : [];
+            updateFilterCounts(allStudents);
+            const filtered = applyFilters(allStudents);
+            updateResultsMeta(filtered.length, allStudents.length);
+
+            const targetContainer = elements.studentsContainer
+                || elements.studentDataContainer
+                || elements.potentialStudentsContainer;
+
+            if (targetContainer) {
+                const emptyMsg = (currentSearchQuery || currentTeacherFilter !== 'all')
+                    ? 'No students match your search and filter criteria.'
+                    : 'No students in database yet.';
+                renderStudentsTable(targetContainer, filtered, emptyMsg);
+            }
+        }
 
         function studentDisplayName(student) {
             const name = String(student?.name || '').trim();
@@ -203,7 +433,17 @@ window.CrmStudentDirectoryWorkspace = (function () {
             if (list.length === 0) {
                 container.classList.add('crm-placeholder-card');
                 container.classList.remove('crm-table-host');
-                container.innerHTML = `<div class="crm-muted">${escapeHtml(emptyMessage || 'No students yet.')}</div>`;
+                const isFiltered = Boolean(currentSearchQuery || currentTeacherFilter !== 'all');
+                container.innerHTML = `
+                    <div class="crm-muted" style="text-align: center; padding: 24px;">
+                        <div>${escapeHtml(emptyMessage || 'No students yet.')}</div>
+                        ${isFiltered ? `
+                            <div style="margin-top: 10px;">
+                                <button type="button" class="crm-btn-secondary" data-action="reset-student-filters" style="font-size: 13px; padding: 4px 14px;">Reset Filters</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
                 return;
             }
 
@@ -226,6 +466,12 @@ window.CrmStudentDirectoryWorkspace = (function () {
                 const contact = studentContact(student);
                 const crmId = String(student.crmId || '').trim();
                 const checked = selectedStudentIds.has(studentId);
+                const teacherInfo = resolveStudentTeacher(student);
+                const teacherName = teacherInfo.name;
+                const isShawn = isTeacherMatch(teacherInfo, 'Shawn');
+                const isNam = isTeacherMatch(teacherInfo, 'Hứa Thanh Nam');
+                const badgeClass = isShawn ? 'teacher-shawn' : (isNam ? 'teacher-nam' : 'teacher-other');
+
                 return `
         <tr>
           <td style="width: 56px; text-align: center; padding-left: 14px; padding-right: 14px;">
@@ -240,6 +486,13 @@ window.CrmStudentDirectoryWorkspace = (function () {
           </td>
           <td>${escapeHtml(label)}</td>
           <td>${escapeHtml(contact)}</td>
+          <td>
+            ${teacherName ? `
+              <span class="crm-teacher-badge ${badgeClass}">${escapeHtml(teacherName)}</span>
+            ` : `
+              <span class="crm-teacher-unassigned">—</span>
+            `}
+          </td>
           <td>${escapeHtml(formatDateTime(student.createdAt))}</td>
           <td><code>${escapeHtml(crmId || '—')}</code></td>
         </tr>
@@ -257,6 +510,7 @@ window.CrmStudentDirectoryWorkspace = (function () {
               <th>Name</th>
               <th>Label</th>
               <th>Contact</th>
+              <th>Assigned Teacher</th>
               <th>Created</th>
               <th>CRM ID</th>
             </tr>
@@ -303,6 +557,25 @@ window.CrmStudentDirectoryWorkspace = (function () {
                         showToast(error?.message || 'Failed to archive students.', 'error');
                     });
                 });
+                container.addEventListener('click', (event) => {
+                    const resetBtn = event.target && typeof event.target.closest === 'function'
+                        ? event.target.closest('button[data-action="reset-student-filters"]')
+                        : null;
+                    if (!resetBtn || !container.contains(resetBtn)) return;
+                    currentSearchQuery = '';
+                    currentTeacherFilter = 'all';
+                    const searchInput = document.getElementById('crm-student-search-input');
+                    if (searchInput) searchInput.value = '';
+                    const clearBtn = document.getElementById('crm-student-search-clear');
+                    if (clearBtn) clearBtn.style.display = 'none';
+                    const filterContainer = document.getElementById('crm-student-teacher-filters');
+                    if (filterContainer) {
+                        filterContainer.querySelectorAll('.crm-filter-pill').forEach((p) => {
+                            p.classList.toggle('active', p.dataset.teacherFilter === 'all');
+                        });
+                    }
+                    renderFilteredView();
+                });
                 container.__crmStudentBulkDeleteBound = true;
             }
         }
@@ -339,13 +612,14 @@ window.CrmStudentDirectoryWorkspace = (function () {
             dataCache.students = students;
             pruneSelection(students.map((student) => student.studentId));
 
+            // Load enrollment-based teacher mappings in background
+            loadStudentEnrollmentTeachers().catch(() => {});
+
+            renderFilteredView();
+
             const targetContainer = elements.studentsContainer
                 || elements.studentDataContainer
                 || elements.potentialStudentsContainer;
-
-            if (targetContainer) {
-                renderStudentsTable(targetContainer, students, 'No students in database yet.');
-            }
 
             if (elements.potentialStudentsContainer && elements.potentialStudentsContainer !== targetContainer) {
                 const buckets = window.CrmStudents && typeof window.CrmStudents.splitStudents === 'function'
@@ -361,7 +635,10 @@ window.CrmStudentDirectoryWorkspace = (function () {
         return {
             fetchStudentsFromFirestore,
             renderStudentsTable,
-            refreshStudentLists
+            refreshStudentLists,
+            renderFilteredView,
+            applyFilters,
+            resolveStudentTeacher
         };
     }
 

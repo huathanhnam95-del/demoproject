@@ -144,15 +144,29 @@
 <body data-site-section="practice" data-site-locale="en">
   <!-- App Preloader/Loading Screen -->
   <div id="app-preloader" class="app-preloader preloader-2d">
-    <div class="preloader-text-container">
-      <div class="preloader-text-stroke">Better English Learning</div>
-      <div class="preloader-text-fill-wrapper" id="preloader-text-fill-wrapper">
-        <div class="preloader-text-fill">Better English Learning</div>
-      </div>
+    <div class="preloader-aurora" aria-hidden="true">
+      <span class="preloader-aurora__blob preloader-aurora__blob--1"></span>
+      <span class="preloader-aurora__blob preloader-aurora__blob--2"></span>
+      <span class="preloader-aurora__blob preloader-aurora__blob--3"></span>
     </div>
-    <div class="preloader-slogan">
-      <span class="preloader-slogan__line preloader-slogan__line--1">Not the best.</span>
-      <span class="preloader-slogan__line preloader-slogan__line--2">But better.</span>
+    <div class="preloader-stage">
+      <div class="preloader-text-container">
+        <!-- The stroke copy is the outline; the fill copy is wiped in from the left as
+             loading progresses. Only one of the two is exposed to assistive tech. -->
+        <div class="preloader-text-stroke" aria-hidden="true">Better English Learning</div>
+        <div class="preloader-text-fill-wrapper" id="preloader-text-fill-wrapper">
+          <div class="preloader-text-fill">Better English Learning</div>
+        </div>
+      </div>
+      <p class="preloader-slogan">
+        <span class="preloader-slogan__line preloader-slogan__line--1">Not the best.</span>
+        <span class="preloader-slogan__line preloader-slogan__line--2">But better.</span>
+      </p>
+      <div class="preloader-progress" aria-hidden="true">
+        <span class="preloader-progress__fill" id="preloader-progress-fill"></span>
+      </div>
+      <!-- Written to by the 9s failsafe below (retry / continue). -->
+      <p class="preloader-status" id="preloader-text" role="status" aria-live="polite"></p>
     </div>
   </div>
   <script src="js/preloader-2d.js"></script>

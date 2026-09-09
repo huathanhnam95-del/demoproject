@@ -10,9 +10,16 @@ const {
     buildSeedSessions,
     buildReplacementPlan,
     buildReplaceSessionPreview,
+    buildSeriesShiftPlan,
+    buildBulkRescheduleProjection,
+    addCalendarDays,
+    calendarDayDiff,
+    calendarWeekday,
+    toUtcDayMs,
     normalizeScheduledSession,
     validateRemainingDurationChange,
-    syncSessionLockStateFromAttendance
+    syncSessionLockStateFromAttendance,
+    toPositiveInteger
 } = require('../../functions/src/crm/scheduling-service');
 const {
     buildClassroomScheduleBackfill,
@@ -725,5 +732,288 @@ const unpaddedSlotsTest = buildSeedSessions({
 });
 assert.strictEqual(unpaddedSlotsTest[0].scheduledLocalTime, '09:00');
 assert.strictEqual(unpaddedSlotsTest[1].scheduledLocalTime, '13:30');
+
+// =========================================================================
+// Tests for buildSeriesShiftPlan
+// =========================================================================
+
+// 1. Weekday + time filtering: moving Wed 18:00 ignores Wed 19:00 and Fri 18:00
+{
+    const sessions = [
+        { sessionId: 's-wed-18-1', classId: 'c1', teacherUid: 't1', scheduledLocalDate: '2026-09-09', scheduledLocalTime: '18:00', durationMinutes: 60 },
+        { sessionId: 's-wed-18-2', classId: 'c1', teacherUid: 't1', scheduledLocalDate: '2026-09-16', scheduledLocalTime: '18:00', durationMinutes: 60 },
+        { sessionId: 's-wed-19-1', classId: 'c1', teacherUid: 't1', scheduledLocalDate: '2026-09-09', scheduledLocalTime: '19:00', durationMinutes: 60 },
+        { sessionId: 's-fri-18-1', classId: 'c1', teacherUid: 't1', scheduledLocalDate: '2026-09-11', scheduledLocalTime: '18:00', durationMinutes: 60 }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-09-10', // Thursday
+            targetLocalTime: '19:00',
+            durationMinutes: 60,
+            timezone: 'Asia/Ho_Chi_Minh'
+        }
+    });
+    assert.strictEqual(plan.moved.length, 2, 'Only the two Wed 18:00 sessions should move');
+    assert.deepStrictEqual(plan.moved.map(m => m.sessionId), ['s-wed-18-1', 's-wed-18-2']);
+    assert.strictEqual(plan.moved[0].to.targetLocalDate, '2026-09-10');
+    assert.strictEqual(plan.moved[0].to.targetLocalTime, '19:00');
+    assert.strictEqual(plan.moved[1].to.targetLocalDate, '2026-09-17');
+    assert.strictEqual(plan.moved[1].to.targetLocalTime, '19:00');
+}
+
+// 2. DST week-offset preservation across America/New_York fallback (Nov 1, 2026)
+// Anchor: 2026-10-28 19:00 (EDT, UTC-4), moving 4 members to 2026-11-04 19:00
+{
+    const nyTz = 'America/New_York';
+    const sessions = [
+        { sessionId: 'ny-0', classId: 'c-ny', teacherUid: 't-ny', scheduledLocalDate: '2026-10-28', scheduledLocalTime: '19:00', durationMinutes: 60, timezone: nyTz },
+        { sessionId: 'ny-1', classId: 'c-ny', teacherUid: 't-ny', scheduledLocalDate: '2026-11-04', scheduledLocalTime: '19:00', durationMinutes: 60, timezone: nyTz },
+        { sessionId: 'ny-2', classId: 'c-ny', teacherUid: 't-ny', scheduledLocalDate: '2026-11-11', scheduledLocalTime: '19:00', durationMinutes: 60, timezone: nyTz },
+        { sessionId: 'ny-3', classId: 'c-ny', teacherUid: 't-ny', scheduledLocalDate: '2026-11-18', scheduledLocalTime: '19:00', durationMinutes: 60, timezone: nyTz }
+    ];
+
+    // Verify raw sessions cross DST boundary:
+    // ny-0 (2026-10-28T19:00 EDT) -> 23:00 UTC
+    // ny-1 (2026-11-04T19:00 EST) -> 00:00 UTC next day (Nov 5)
+    // Delta between ny-0 and ny-1 is 7 days + 1 hr = 169 hours
+    const utc0 = new Date(buildCanonicalScheduledWindow({ targetLocalDate: '2026-10-28', targetLocalTime: '19:00', timezone: nyTz, durationMinutes: 60 }).scheduledStartAtUtc).getTime();
+    const utc1 = new Date(buildCanonicalScheduledWindow({ targetLocalDate: '2026-11-04', targetLocalTime: '19:00', timezone: nyTz, durationMinutes: 60 }).scheduledStartAtUtc).getTime();
+    const utc2 = new Date(buildCanonicalScheduledWindow({ targetLocalDate: '2026-11-11', targetLocalTime: '19:00', timezone: nyTz, durationMinutes: 60 }).scheduledStartAtUtc).getTime();
+    assert.strictEqual((utc1 - utc0) / 3600000, 169, 'UTC delta across fallback must be 169 hours');
+    assert.strictEqual((utc2 - utc1) / 3600000, 168, 'UTC delta after fallback must be 168 hours');
+
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-11-04',
+            targetLocalTime: '19:00',
+            durationMinutes: 60,
+            timezone: nyTz
+        }
+    });
+
+    assert.strictEqual(plan.moved.length, 4, 'All 4 members should move');
+    plan.moved.forEach((m, idx) => {
+        assert.strictEqual(m.to.targetLocalTime, '19:00', `Member ${idx} local time must be preserved as 19:00`);
+    });
+    assert.strictEqual(plan.moved[0].to.targetLocalDate, '2026-11-04');
+    assert.strictEqual(plan.moved[1].to.targetLocalDate, '2026-11-11');
+    assert.strictEqual(plan.moved[2].to.targetLocalDate, '2026-11-18');
+    assert.strictEqual(plan.moved[3].to.targetLocalDate, '2026-11-25');
+}
+
+// 3. Spring-forward gap -> invalid_local_time skip
+// In America/New_York on 2026-03-08, 02:30 does not exist (clocks jump 02:00 -> 03:00)
+{
+    const nyTz = 'America/New_York';
+    const sessions = [
+        { sessionId: 'gap-0', classId: 'c-gap', teacherUid: 't-gap', scheduledLocalDate: '2026-03-01', scheduledLocalTime: '02:30', durationMinutes: 60, timezone: nyTz },
+        { sessionId: 'gap-1', classId: 'c-gap', teacherUid: 't-gap', scheduledLocalDate: '2026-03-08', scheduledLocalTime: '02:30', durationMinutes: 60, timezone: nyTz }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-03-01',
+            targetLocalTime: '02:30',
+            durationMinutes: 60,
+            timezone: nyTz
+        }
+    });
+    // Session gap-0 is same_slot (2026-03-01 02:30 to 2026-03-01 02:30).
+    // Session gap-1 tries to place on 2026-03-08 02:30, which is an invalid DST gap.
+    const gapSkip = plan.skipped.find(s => s.sessionId === 'gap-1');
+    assert(gapSkip, 'Candidate on spring-forward gap should be skipped');
+    assert.strictEqual(gapSkip.reason, 'invalid_local_time');
+}
+
+// 4. Gapped series (offsets 0, 1, 3 -> T, T+7, T+21)
+{
+    const sessions = [
+        { sessionId: 'gap-s0', classId: 'c-gapped', teacherUid: 't1', scheduledLocalDate: '2026-09-02', scheduledLocalTime: '10:00', durationMinutes: 60 },
+        { sessionId: 'gap-s1', classId: 'c-gapped', teacherUid: 't1', scheduledLocalDate: '2026-09-09', scheduledLocalTime: '10:00', durationMinutes: 60 },
+        { sessionId: 'gap-s3', classId: 'c-gapped', teacherUid: 't1', scheduledLocalDate: '2026-09-23', scheduledLocalTime: '10:00', durationMinutes: 60 }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-09-04', // Friday (+2 days)
+            targetLocalTime: '14:00',
+            durationMinutes: 60,
+            timezone: 'UTC'
+        }
+    });
+    assert.strictEqual(plan.moved.length, 3);
+    assert.strictEqual(plan.moved[0].weekOffset, 0);
+    assert.strictEqual(plan.moved[0].to.targetLocalDate, '2026-09-04');
+    assert.strictEqual(plan.moved[1].weekOffset, 1);
+    assert.strictEqual(plan.moved[1].to.targetLocalDate, '2026-09-11');
+    assert.strictEqual(plan.moved[2].weekOffset, 3);
+    assert.strictEqual(plan.moved[2].to.targetLocalDate, '2026-09-25');
+}
+
+// 5. Locked and cancelled skips
+{
+    const sessions = [
+        { sessionId: 's-active', classId: 'c-mix', teacherUid: 't1', scheduledLocalDate: '2026-09-02', scheduledLocalTime: '10:00', durationMinutes: 60, status: 'scheduled' },
+        { sessionId: 's-locked', classId: 'c-mix', teacherUid: 't1', scheduledLocalDate: '2026-09-09', scheduledLocalTime: '10:00', durationMinutes: 60, lockState: 'hard_locked' },
+        { sessionId: 's-finalized', classId: 'c-mix', teacherUid: 't1', scheduledLocalDate: '2026-09-16', scheduledLocalTime: '10:00', durationMinutes: 60, attendanceState: 'finalized' },
+        { sessionId: 's-cancelled', classId: 'c-mix', teacherUid: 't1', scheduledLocalDate: '2026-09-23', scheduledLocalTime: '10:00', durationMinutes: 60, status: 'cancelled' }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-09-03',
+            targetLocalTime: '11:00',
+            durationMinutes: 60,
+            timezone: 'UTC'
+        }
+    });
+    assert.strictEqual(plan.moved.length, 1);
+    assert.strictEqual(plan.moved[0].sessionId, 's-active');
+    assert.strictEqual(plan.skipped.length, 3);
+    assert(plan.skipped.some(s => s.sessionId === 's-locked' && s.reason === 'locked'));
+    assert(plan.skipped.some(s => s.sessionId === 's-finalized' && s.reason === 'locked'));
+    assert(plan.skipped.some(s => s.sessionId === 's-cancelled' && s.reason === 'cancelled'));
+}
+
+// 6. Anchor maps exactly onto target
+{
+    const sessions = [
+        { sessionId: 'anchor-only', classId: 'c-single', teacherUid: 't1', scheduledLocalDate: '2026-09-09', scheduledLocalTime: '18:00', durationMinutes: 90, timezone: 'Asia/Bangkok' }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-09-10',
+            targetLocalTime: '19:30',
+            durationMinutes: 90,
+            timezone: 'Asia/Bangkok'
+        }
+    });
+    assert.strictEqual(plan.moved.length, 1);
+    assert.strictEqual(plan.moved[0].weekOffset, 0);
+    assert.strictEqual(plan.moved[0].to.targetLocalDate, '2026-09-10');
+    assert.strictEqual(plan.moved[0].to.targetLocalTime, '19:30');
+    assert.strictEqual(plan.moved[0].to.durationMinutes, 90);
+    assert.strictEqual(plan.canCommit, true);
+}
+
+// 7. toPositiveInteger supports numeric fallback without throwing
+{
+    assert.strictEqual(toPositiveInteger(undefined, 60), 60);
+    assert.strictEqual(toPositiveInteger(null, 60), 60);
+    assert.strictEqual(toPositiveInteger(undefined, '60'), 60);
+    assert.strictEqual(toPositiveInteger(90, 60), 90);
+    assert.strictEqual(toPositiveInteger('45', 60), 45);
+    assert.strictEqual(toPositiveInteger(null, -5), null);
+    assert.strictEqual(toPositiveInteger(null, null), null);
+    assert.throws(() => toPositiveInteger(-5, 'Value'), /must be a positive integer/);
+    assert.throws(() => toPositiveInteger('not_a_num', 'durationMinutes'), /durationMinutes must be a positive integer/);
+}
+
+// 8. buildSeriesShiftPlan candidate cap > 400 throws TOO_MANY_MOVES
+{
+    const manySessions = [];
+    for (let i = 0; i < 405; i += 1) {
+        manySessions.push({
+            sessionId: `s-${i}`,
+            classId: 'c-large',
+            teacherUid: 't1',
+            scheduledLocalDate: '2026-09-09',
+            scheduledLocalTime: '18:00',
+            durationMinutes: 60,
+            timezone: 'UTC'
+        });
+    }
+    assert.throws(
+        () => buildSeriesShiftPlan({
+            sessions: manySessions,
+            anchorSession: manySessions[0],
+            targetIntent: {
+                targetLocalDate: '2026-09-10',
+                targetLocalTime: '19:00',
+                durationMinutes: 60,
+                timezone: 'UTC'
+            }
+        }),
+        (err) => err.code === 'TOO_MANY_MOVES'
+    );
+}
+
+// 9. Sanitized moved[].patch contains only scheduled window fields
+{
+    const sessions = [
+        {
+            sessionId: 's-sanitize',
+            classId: 'c-san',
+            teacherUid: 't1',
+            scheduledLocalDate: '2026-09-09',
+            scheduledLocalTime: '18:00',
+            durationMinutes: 60,
+            timezone: 'UTC',
+            someRawInternalField: 'should-not-leak'
+        }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-09-10',
+            targetLocalTime: '19:00',
+            durationMinutes: 60,
+            timezone: 'UTC'
+        }
+    });
+    assert.strictEqual(plan.moved.length, 1);
+    const patch = plan.moved[0].patch;
+    assert.strictEqual(patch.sessionId, undefined, 'patch must not leak sessionId');
+    assert.strictEqual(patch.someRawInternalField, undefined, 'patch must not leak internal session doc fields');
+    assert.strictEqual(patch.scheduledLocalDate, '2026-09-10');
+    assert.strictEqual(patch.scheduledLocalTime, '19:00');
+    assert.strictEqual(patch.durationMinutes, 60);
+}
+
+// 10. conflictAt is formatted as { scheduledLocalDate, scheduledLocalTime }
+{
+    const sessions = [
+        { sessionId: 's-target', classId: 'c-1', teacherUid: 't1', scheduledLocalDate: '2026-09-09', scheduledLocalTime: '18:00', durationMinutes: 60, timezone: 'UTC' }
+    ];
+    const otherTeacherSessions = [
+        {
+            sessionId: 's-other',
+            classId: 'c-2',
+            teacherUid: 't1',
+            scheduledLocalDate: '2026-09-10',
+            scheduledLocalTime: '18:00',
+            durationMinutes: 60,
+            timezone: 'UTC',
+            scheduledStartAtUtc: '2026-09-10T18:00:00.000Z',
+            scheduledEndAtUtc: '2026-09-10T19:00:00.000Z'
+        }
+    ];
+    const plan = buildSeriesShiftPlan({
+        sessions,
+        anchorSession: sessions[0],
+        targetIntent: {
+            targetLocalDate: '2026-09-10',
+            targetLocalTime: '18:00',
+            durationMinutes: 60,
+            timezone: 'UTC'
+        },
+        outsideSessions: otherTeacherSessions
+    });
+    assert.strictEqual(plan.conflicts.length, 1);
+    assert.deepStrictEqual(plan.conflicts[0].conflictAt, {
+        scheduledLocalDate: '2026-09-10',
+        scheduledLocalTime: '18:00'
+    });
+}
 
 console.log('scheduling service passed');

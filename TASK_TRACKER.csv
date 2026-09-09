@@ -2033,3 +2033,8 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1038,2026-09-09,Entrance Test UI review lab - 3 skins (A/B/C) on E+F flow plus CRM rating tab with 5 criteria per page and font voting - deployed to production,Done,2026-09-09
 1039,2026-09-09,Restore missing Social Media Account Link field for Facebook sources in CRM student and lead modal,Done,2026-09-09
 1040,2026-09-09,Entrance Test UI - add step-by-step guidance, make rating and font choice mandatory, move font picker inline above the live preview with 2 picks per language - deployed,Done,2026-09-09
+1041,2026-09-09,Teacher Schedule UI/UX fixes plus drag-and-drop session editing with this-vs-following scope, confirmation and undo,Done,2026-09-09
+1042,2026-09-09,Add student name search and assigned teacher filters to student management page,Done,2026-09-09
+1043,2026-09-09,Remove Student 360 tab from CRM student management modal,Done,2026-09-09
+1044,2026-09-09,Check entrance test UI review ratings completion count in Firestore,Done,2026-09-09
+1045,2026-09-09,Deploy new CRM Projects tab UI to production,In Progress,

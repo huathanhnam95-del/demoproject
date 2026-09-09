@@ -504,6 +504,26 @@ window.ClassroomAPI = (function () {
         return parseJsonResponse(res);
     }
 
+    async function teacherRescheduleSessionSeries(sessionId, data = {}) {
+        const headers = await getHeaders();
+        const res = await fetch(`/api/teacher/sessions/${sessionId}/reschedule-series`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
+    }
+
+    async function teacherBulkRescheduleSessions(data = {}) {
+        const headers = await getHeaders();
+        const res = await fetch('/api/teacher/scheduler/sessions/bulk-reschedule', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data)
+        });
+        return parseJsonResponse(res);
+    }
+
     async function cancelScheduledSession(sessionId) {
         const headers = await getHeaders();
         const res = await fetch(`/api/admin/sessions/${sessionId}/cancel`, {
@@ -688,6 +708,8 @@ window.ClassroomAPI = (function () {
         previewClassroomSessionReplace,
         rescheduleScheduledSession,
         teacherRescheduleScheduledSession,
+        teacherRescheduleSessionSeries,
+        teacherBulkRescheduleSessions,
         cancelScheduledSession,
         teacherCancelScheduledSession,
         teacherSetScheduledSessionOutcome,

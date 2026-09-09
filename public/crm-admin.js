@@ -404,6 +404,7 @@
     elements.studentFacebookPersonalOwnerGroup = document.getElementById('student-facebook-personal-owner-group') || document.getElementById('lead-facebook-personal-owner-group');
     elements.inputStudentAcquisitionSource = document.getElementById('student-acquisition-source') || document.getElementById('lead-source');
     elements.inputStudentAgentSource = document.getElementById('student-agent-source') || document.getElementById('lead-agent-source');
+    elements.inputStudentAssignedTeacher = document.getElementById('student-assigned-teacher');
     elements.inputStudentStage = document.getElementById('student-stage') || document.getElementById('lead-stage');
     elements.inputStudentProbability = document.getElementById('student-probability') || document.getElementById('lead-probability');
     elements.inputScoreOverall = document.getElementById('score-overall');
@@ -666,6 +667,17 @@
     elements.btnTeacherSchedulerCancelSession = document.getElementById('btn-teacher-scheduler-cancel-session');
     elements.btnTeacherSchedulerDuplicateSession = document.getElementById('btn-teacher-scheduler-duplicate-session');
     elements.btnTeacherSchedulerCloseBubble = document.getElementById('btn-teacher-scheduler-close-bubble');
+    elements.teacherSchedulerScopeModal = document.getElementById('teacher-scheduler-scope-modal');
+    elements.teacherSchedulerScopeTitle = document.getElementById('teacher-scheduler-scope-title');
+    elements.teacherSchedulerScopeShiftFrom = document.getElementById('teacher-scheduler-scope-shift-from');
+    elements.teacherSchedulerScopeShiftTo = document.getElementById('teacher-scheduler-scope-shift-to');
+    elements.teacherSchedulerScopeSeriesTitle = document.getElementById('teacher-scheduler-scope-series-title');
+    elements.teacherSchedulerScopeSeriesDesc = document.getElementById('teacher-scheduler-scope-series-desc');
+    elements.teacherSchedulerScopeWarnings = document.getElementById('teacher-scheduler-scope-warnings');
+    elements.scopeChoiceSingle = document.getElementById('scope-choice-single');
+    elements.scopeChoiceSeries = document.getElementById('scope-choice-series');
+    elements.btnTeacherSchedulerScopeCancel = document.getElementById('btn-teacher-scheduler-scope-cancel');
+    elements.btnTeacherSchedulerScopeConfirm = document.getElementById('btn-teacher-scheduler-scope-confirm');
 
     elements.btnStaffRefresh = document.getElementById('btn-staff-refresh');
     elements.staffTeacherEmail = document.getElementById('staff-teacher-email');
@@ -1210,6 +1222,7 @@
 
       // Initialize teacher searchable dropdown
       initTeacherSearchDropdown();
+      populateStudentModalTeacherOptions().catch(() => {});
       initWeekdaySelector();
     }
 
@@ -1351,6 +1364,7 @@
         isAdmin: () => state.accessMode === 'admin'
       })
       : null;
+    window.teacherSchedulerController = teacherSchedulerController;
     studentFinanceController = window.CrmStudentFinance && typeof window.CrmStudentFinance.createController === 'function'
       ? window.CrmStudentFinance.createController({
         apiFetchJson,
@@ -2136,6 +2150,7 @@
       elements.inputStudentFacebookPersonalOwner,
       elements.inputStudentAcquisitionSource,
       elements.inputStudentAgentSource,
+      elements.inputStudentAssignedTeacher,
       elements.inputScoreOverall,
       elements.inputScoreListening,
       elements.inputScoreReading,
@@ -2308,10 +2323,10 @@
 
   function updateStudentSourceVisibility() {
     const inputStudentSource = elements.inputStudentAcquisitionSource || document.getElementById('student-acquisition-source') || document.getElementById('lead-source');
-    const groupUrl = elements.studentFacebookProfileUrlGroup || document.getElementById('student-facebook-profile-url-group');
-    const inputUrl = elements.inputStudentFacebookProfileUrl || document.getElementById('student-facebook-profile-url');
-    const groupOwner = elements.studentFacebookPersonalOwnerGroup || document.getElementById('student-facebook-personal-owner-group');
-    const inputOwner = elements.inputStudentFacebookPersonalOwner || document.getElementById('student-facebook-personal-owner');
+    const groupUrl = elements.studentFacebookProfileUrlGroup || document.getElementById('student-facebook-profile-url-group') || document.getElementById('lead-facebook-profile-url-group');
+    const inputUrl = elements.inputStudentFacebookProfileUrl || document.getElementById('student-facebook-profile-url') || document.getElementById('lead-facebook-profile-url');
+    const groupOwner = elements.studentFacebookPersonalOwnerGroup || document.getElementById('student-facebook-personal-owner-group') || document.getElementById('lead-facebook-personal-owner-group');
+    const inputOwner = elements.inputStudentFacebookPersonalOwner || document.getElementById('student-facebook-personal-owner') || document.getElementById('lead-facebook-personal-owner');
     const groupAgent = elements.studentAgentSourceGroup || elements.leadAgentSourceGroup || document.getElementById('lead-agent-source-group');
     const inputAgent = elements.inputStudentAgentSource || elements.inputLeadAgentSource || document.getElementById('lead-agent-source');
 
@@ -2351,6 +2366,7 @@
   window.hideStudentModalSurface = hideStudentModalSurface;
   window.openLeadModal = openLeadModal;
   window.switchStudentTab = switchStudentTab;
+  window.setupStudentModal = setupStudentModal;
 
   function resetLeadComposer() {
     const inputs = [
@@ -4819,7 +4835,6 @@
   const VALID_STUDENT_TABS = new Set([
     'info',
     'learning',
-    'overview',
     'courses',
     'finance',
     'identity',
@@ -4828,7 +4843,7 @@
 
   function normalizeStudentTabId(tabId) {
     const raw = String(tabId || '').trim();
-    if (raw === 'student-360') return 'overview';
+    if (raw === 'student-360' || raw === 'overview') return 'info';
     return VALID_STUDENT_TABS.has(raw) ? raw : 'info';
   }
 
@@ -4876,7 +4891,7 @@
       }
       return;
     }
-    if (normalizedTab === 'info' || normalizedTab === 'overview') {
+    if (normalizedTab === 'info') {
       renderStudentSchedulePrompt();
     }
   }
@@ -5138,6 +5153,9 @@
       refreshDashboard().catch((error) => {
         console.error('[CRM Admin] Dashboard refresh failed:', error);
       });
+    }
+    if (lastRenderedPanel === 'courses/teacher-schedule' && activePanel !== 'courses/teacher-schedule') {
+      teacherSchedulerController?.deactivate?.();
     }
     lastRenderedPanel = activePanel;
 
@@ -7168,6 +7186,27 @@
     }
   }
 
+  async function populateStudentModalTeacherOptions() {
+    const select = elements.inputStudentAssignedTeacher;
+    if (!select) return;
+    const teachers = await fetchTeacherList();
+    if (!Array.isArray(teachers) || !teachers.length) return;
+    const currentVal = select.value;
+    const existingUids = new Set(Array.from(select.options).map((o) => o.value));
+    teachers.forEach((t) => {
+      const uid = String(t.uid || t.id || '').trim();
+      const name = t.displayName || t.name || t.email || uid;
+      if (uid && !existingUids.has(uid)) {
+        existingUids.add(uid);
+        const opt = document.createElement('option');
+        opt.value = uid;
+        opt.textContent = name;
+        select.appendChild(opt);
+      }
+    });
+    if (currentVal) select.value = currentVal;
+  }
+
   function initTeacherSearchDropdown() {
     const search = elements.classroomTeacherSearch;
     const dropdown = elements.classroomTeacherDropdown;
@@ -7347,20 +7386,60 @@
 
   window.CrmAdminDialogs.showBulkDeleteWarning = showBulkDeleteWarningModal;
 
-  function showToast(message, type = 'info') {
+  function showToast(message, type = 'info', options = {}) {
     const toast = document.createElement('div');
     toast.className = `crm-toast ${type}`;
-    toast.textContent = String(message || '');
+
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'crm-toast-message';
+    msgSpan.textContent = String(message || '');
+    toast.appendChild(msgSpan);
+
+    let dismissTimer = null;
+    const duration = Number(options?.durationMs) || (options?.actionLabel ? 8000 : 2600);
+
+    const scheduleDismiss = () => {
+      clearTimeout(dismissTimer);
+      dismissTimer = setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 220);
+      }, duration);
+    };
+
+    if (options?.actionLabel && typeof options?.onAction === 'function') {
+      const actionBtn = document.createElement('button');
+      actionBtn.type = 'button';
+      actionBtn.className = 'crm-toast-action';
+      actionBtn.textContent = String(options.actionLabel);
+      actionBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearTimeout(dismissTimer);
+        toast.remove();
+        try {
+          options.onAction();
+        } catch (err) {
+          console.error('[showToast] action error:', err);
+        }
+      });
+      toast.appendChild(actionBtn);
+
+      toast.addEventListener('mouseenter', () => clearTimeout(dismissTimer));
+      toast.addEventListener('mouseleave', () => scheduleDismiss());
+    }
+
     document.body.appendChild(toast);
 
     requestAnimationFrame(() => {
       toast.classList.add('show');
     });
 
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 220);
-    }, 2600);
+    scheduleDismiss();
+    return {
+      dismiss() {
+        clearTimeout(dismissTimer);
+        toast.remove();
+      }
+    };
   }
 
   // Handle advanced scheduling toggle

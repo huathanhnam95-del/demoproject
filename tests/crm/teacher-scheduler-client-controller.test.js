@@ -38,6 +38,11 @@ class MockElement {
         if (!this.listeners[evt]) this.listeners[evt] = [];
         this.listeners[evt].push(fn);
     }
+    removeEventListener(evt, fn) {
+        if (this.listeners[evt]) {
+            this.listeners[evt] = this.listeners[evt].filter(f => f !== fn);
+        }
+    }
     dispatchEvent(evt) {
         (this.listeners[evt.type] || []).forEach(fn => fn(evt));
     }
@@ -61,14 +66,26 @@ class MockElement {
 
 function createMockDocument() {
     const elements = {};
+    const docListeners = {};
     function createElement(tag) {
         return new MockElement(tag);
     }
 
     const doc = {
         createElement,
-        addEventListener() {},
-        removeEventListener() {},
+        addEventListener(evt, fn) {
+            if (!docListeners[evt]) docListeners[evt] = [];
+            docListeners[evt].push(fn);
+        },
+        removeEventListener(evt, fn) {
+            if (docListeners[evt]) {
+                docListeners[evt] = docListeners[evt].filter(f => f !== fn);
+            }
+        },
+        dispatchEvent(evt) {
+            (docListeners[evt.type] || []).forEach(fn => fn(evt));
+        },
+        listeners: docListeners,
         getElementById(id) {
             if (!elements[id]) {
                 elements[id] = createElement('div');
@@ -100,6 +117,9 @@ async function runTests() {
     let outcomeCalls = [];
     let multiCalls = [];
     let recurrenceCalls = [];
+    let singleRescheduleCalls = [];
+    let seriesRescheduleCalls = [];
+    let bulkRescheduleCalls = [];
 
     const mockClassroomAPI = {
         fetchTeachers: async () => mockTeachers,
@@ -132,6 +152,28 @@ async function runTests() {
         teacherActivateRecurrences: async (data) => {
             recurrenceCalls.push(data);
             return { success: true, successCount: 1, blockedCount: 0, errorCount: 0, details: [] };
+        },
+        teacherRescheduleScheduledSession: async (sessionId, data) => {
+            singleRescheduleCalls.push({ sessionId, data });
+            return { success: true, sessionId };
+        },
+        teacherRescheduleSessionSeries: async (sessionId, data) => {
+            seriesRescheduleCalls.push({ sessionId, data });
+            return {
+                success: true,
+                moved: [
+                    { sessionId, from: { date: '2026-09-08', time: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { date: data.targetLocalDate, time: data.targetLocalTime, durationMinutes: 60, timezone: 'UTC' } },
+                    { sessionId: 's2', from: { date: '2026-09-15', time: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { date: '2026-09-16', time: '08:00', durationMinutes: 60, timezone: 'UTC' } }
+                ],
+                conflicts: [],
+                skippedLocked: [],
+                canCommit: true,
+                operationId: 'op_test_123'
+            };
+        },
+        teacherBulkRescheduleSessions: async (data) => {
+            bulkRescheduleCalls.push(data);
+            return { success: true, moved: data.moves || [] };
         }
     };
 
@@ -733,6 +775,8 @@ async function runTests() {
             inputTeacherSchedulerFromDate: testDoc.createElement('input'),
             inputTeacherSchedulerToDate: testDoc.createElement('input')
         };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-08-31';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-06';
         const testClassroom = {
             classroomId: 'class-hanh',
             name: 'Trần Văn Hạnh - PTE Academic 1-1 24h',
@@ -817,6 +861,798 @@ async function runTests() {
         assert(bubbleTop >= 16, 'Bubble top must be at least 16px');
 
         console.log('✓ Completed session pill rendering and vertical popover clamping verified');
+    }
+
+    // TEST 13: Popover mutual exclusivity, close button, outside click, and Escape dismissal
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerQuickAdd: doc.createElement('div'),
+            btnTeacherSchedulerCloseBubble: doc.createElement('button'),
+            btnTeacherSchedulerQuickCancel: doc.createElement('button'),
+            teacherSchedulerSessionBubble: doc.createElement('div'),
+            teacherSchedulerSessionBubbleTitle: doc.createElement('div'),
+            teacherSchedulerSessionBubbleMeta: doc.createElement('div'),
+            teacherSchedulerSessionBubbleLock: doc.createElement('div')
+        };
+        testElements.teacherSchedulerQuickAdd.offsetWidth = 340;
+        testElements.teacherSchedulerSessionBubble.offsetWidth = 380;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const slotMock = new MockElement('div');
+        slotMock.dataset.date = '2026-09-08';
+        slotMock.dataset.time = '10:00';
+        slotMock.getBoundingClientRect = () => ({ left: 200, top: 200, bottom: 240, right: 300 });
+        slotMock.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotMock : null);
+
+        const pillMock = new MockElement('div');
+        pillMock.dataset.sessionId = 's1';
+        pillMock.getBoundingClientRect = () => ({ left: 200, top: 200, bottom: 250, right: 300 });
+        pillMock.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillMock : null);
+
+        // 13a: Open QuickAdd
+        testElements.teacherSchedulerCalendar.dispatchEvent({ type: 'click', target: slotMock });
+        assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display, 'block');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'none');
+
+        // 13b: Open Session Bubble -> QuickAdd closes automatically (mutual exclusivity)
+        testElements.teacherSchedulerCalendar.dispatchEvent({ type: 'click', target: pillMock });
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'block');
+        assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display, 'none', 'QuickAdd must close when Session Bubble opens');
+
+        // 13c: Header × button closes session bubble
+        testElements.btnTeacherSchedulerCloseBubble.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'none');
+
+        // 13d: Re-open QuickAdd and dismiss with Escape
+        testElements.teacherSchedulerCalendar.dispatchEvent({ type: 'click', target: slotMock });
+        assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display, 'block');
+        doc.dispatchEvent({ type: 'keydown', key: 'Escape' });
+        assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display, 'none', 'Escape must dismiss QuickAdd');
+
+        // 13e: Outside click dismisses popover
+        testElements.teacherSchedulerCalendar.dispatchEvent({ type: 'click', target: pillMock });
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'block');
+        const outsideTarget = new MockElement('div');
+        doc.dispatchEvent({ type: 'mousedown', target: outsideTarget });
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'none', 'Outside mousedown must dismiss Session Bubble');
+
+        console.log('✓ Popover mutual exclusivity, close button, outside click, and Escape dismissal verified');
+    }
+
+    // TEST 14: Dynamic --scheduler-day-count and compact pill layout (<46px)
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-11'; // 5 days
+
+        // Mock 30-minute session (height 38px < 46px -> compact)
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-short',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-07',
+                        scheduledLocalTime: '09:00',
+                        durationMinutes: 30,
+                        status: 'completed'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-11'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('--scheduler-day-count: 5'), 'Grid must specify --scheduler-day-count: 5');
+        assert(calHtml.includes('is-compact'), '30-minute session pill must render with is-compact class');
+        assert(calHtml.includes('pill-header'), 'Compact pill must contain pill-header');
+        assert(calHtml.includes('✓ Completed'), 'Completed badge must be present');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Dynamic --scheduler-day-count and compact pill layout (<46px) verified');
+    }
+
+    // TEST 15: Drag and drop single session move with Undo toast invocation
+    {
+        let toastRecord = null;
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        singleRescheduleCalls = [];
+        bulkRescheduleCalls = [];
+        seriesRescheduleCalls = [];
+
+        // Mock single session dry-run (returns moved array with length 1)
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-single',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 60,
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async (sessionId, data) => {
+                seriesRescheduleCalls.push({ sessionId, data });
+                return {
+                    success: true,
+                    moved: [
+                        { sessionId, from: { date: '2026-09-08', time: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { date: data.targetLocalDate, time: data.targetLocalTime, durationMinutes: 60, timezone: 'UTC' } }
+                    ],
+                    conflicts: [],
+                    skippedLocked: [],
+                    canCommit: true
+                };
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: (msg, type, opts) => {
+                toastRecord = { msg, type, opts };
+            },
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        // Simulate pointer drag drop to 2026-09-09 10:00
+        const pillEl = new MockElement('div');
+        pillEl.dataset.sessionId = 's-single';
+        pillEl.getBoundingClientRect = () => ({ left: 200, top: 100, width: 120, height: 40 });
+        pillEl.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillEl : null);
+
+        const slotEl = new MockElement('div');
+        slotEl.dataset.date = '2026-09-09';
+        slotEl.dataset.time = '10:00';
+        slotEl.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotEl : null);
+
+        // Start drag on calendar
+        testElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'mousedown',
+            button: 0,
+            clientX: 210,
+            clientY: 110,
+            target: pillEl
+        });
+
+        // Move > 6px
+        doc.dispatchEvent({
+            type: 'mousemove',
+            clientX: 250,
+            clientY: 200
+        });
+
+        // Mouseup on destination slot
+        doc.dispatchEvent({
+            type: 'mouseup',
+            clientX: 250,
+            clientY: 200,
+            target: slotEl
+        });
+
+        // Allow async drop handler to execute
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.strictEqual(singleRescheduleCalls.length, 1, 'Single session move should call teacherRescheduleScheduledSession');
+        assert.strictEqual(singleRescheduleCalls[0].sessionId, 's-single');
+        assert.strictEqual(singleRescheduleCalls[0].data.targetLocalDate, '2026-09-09');
+        assert.strictEqual(singleRescheduleCalls[0].data.targetLocalTime, '10:00');
+
+        assert(toastRecord, 'Toast should be displayed after reschedule');
+        assert.strictEqual(toastRecord.opts?.actionLabel, 'Undo', 'Toast must offer Undo action');
+        assert.strictEqual(typeof toastRecord.opts?.onAction, 'function', 'Toast must have onAction function');
+
+        // Execute Undo action
+        await toastRecord.opts.onAction();
+        assert.strictEqual(bulkRescheduleCalls.length, 1, 'Undo must call teacherBulkRescheduleSessions');
+        assert.strictEqual(bulkRescheduleCalls[0].moves.length, 1);
+        assert.strictEqual(bulkRescheduleCalls[0].moves[0].sessionId, 's-single');
+        assert.strictEqual(bulkRescheduleCalls[0].moves[0].targetLocalDate, '2026-09-08', 'Undo must restore original date');
+        assert.strictEqual(bulkRescheduleCalls[0].moves[0].targetLocalTime, '08:00', 'Undo must restore original time');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Drag and drop single session move with Undo toast invocation verified');
+    }
+
+    // TEST 16: Drag and drop series move with Scope Choice Modal and Undo toast
+    {
+        let toastRecord = null;
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerScopeModal: doc.createElement('div'),
+            teacherSchedulerScopeTitle: doc.createElement('div'),
+            teacherSchedulerScopeShiftFrom: doc.createElement('div'),
+            teacherSchedulerScopeShiftTo: doc.createElement('div'),
+            teacherSchedulerScopeSeriesTitle: doc.createElement('div'),
+            teacherSchedulerScopeSeriesDesc: doc.createElement('div'),
+            teacherSchedulerScopeWarnings: doc.createElement('div'),
+            scopeChoiceSingle: doc.createElement('input'),
+            scopeChoiceSeries: doc.createElement('input'),
+            btnTeacherSchedulerScopeCancel: doc.createElement('button'),
+            btnTeacherSchedulerScopeConfirm: doc.createElement('button')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        seriesRescheduleCalls = [];
+        bulkRescheduleCalls = [];
+
+        // Mock multi-session series dry-run (returns 3 moved sessions)
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-series-1',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 60,
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async (sessionId, data) => {
+                seriesRescheduleCalls.push({ sessionId, data });
+                return {
+                    success: true,
+                    moved: [
+                        { sessionId: 's-series-1', from: { targetLocalDate: '2026-09-08', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { targetLocalDate: data.targetLocalDate, targetLocalTime: data.targetLocalTime, durationMinutes: 60, timezone: 'UTC' } },
+                        { sessionId: 's-series-2', from: { targetLocalDate: '2026-09-15', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { targetLocalDate: '2026-09-16', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' } },
+                        { sessionId: 's-series-3', from: { targetLocalDate: '2026-09-22', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { targetLocalDate: '2026-09-23', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' } }
+                    ],
+                    conflicts: [],
+                    skippedLocked: [],
+                    canCommit: true,
+                    operationId: 'op_series_999'
+                };
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: (msg, type, opts) => {
+                toastRecord = { msg, type, opts };
+            },
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const pillEl = new MockElement('div');
+        pillEl.dataset.sessionId = 's-series-1';
+        pillEl.getBoundingClientRect = () => ({ left: 200, top: 100, width: 120, height: 40 });
+        pillEl.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillEl : null);
+
+        const slotEl = new MockElement('div');
+        slotEl.dataset.date = '2026-09-09';
+        slotEl.dataset.time = '09:00';
+        slotEl.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotEl : null);
+
+        testElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'mousedown',
+            button: 0,
+            clientX: 210,
+            clientY: 110,
+            target: pillEl
+        });
+
+        doc.dispatchEvent({
+            type: 'mousemove',
+            clientX: 250,
+            clientY: 200
+        });
+
+        doc.dispatchEvent({
+            type: 'mouseup',
+            clientX: 250,
+            clientY: 200,
+            target: slotEl
+        });
+
+        // Allow dry-run call to resolve and modal to display
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.strictEqual(testElements.teacherSchedulerScopeModal.style.display, 'flex', 'Scope modal should be displayed for multi-session series');
+        assert(testElements.teacherSchedulerScopeSeriesTitle.textContent.includes('3 sessions'), 'Scope modal series title should indicate session count');
+
+        // Confirm "This and following sessions"
+        testElements.scopeChoiceSeries.checked = true;
+        testElements.btnTeacherSchedulerScopeConfirm.dispatchEvent({ type: 'click' });
+
+        // Allow series reschedule commit to execute
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.strictEqual(seriesRescheduleCalls.length, 2, 'Dry run + Commit series reschedule should be executed');
+        assert.strictEqual(seriesRescheduleCalls[1].data.allowPartial, false, 'Commit should set allowPartial: false when no conflicts/skips exist');
+        assert.strictEqual(seriesRescheduleCalls[1].data.targetLocalDate, '2026-09-09');
+
+        assert(toastRecord, 'Toast should be displayed after series move');
+        assert.strictEqual(toastRecord.opts?.actionLabel, 'Undo', 'Toast must offer Undo action');
+
+        // Verify controller lastMoveUndo state
+        const undoState = controller.getState().lastMoveUndo;
+        assert(undoState, 'state.lastMoveUndo should be populated');
+        assert.strictEqual(undoState.moves.length, 3, 'state.lastMoveUndo must have 3 moves');
+        assert.strictEqual(undoState.operationId, 'op_series_999');
+
+        // Execute Undo for series move
+        await toastRecord.opts.onAction();
+        assert.strictEqual(bulkRescheduleCalls.length, 1, 'Undo must call teacherBulkRescheduleSessions');
+        assert.strictEqual(bulkRescheduleCalls[0].moves.length, 3, 'Undo must invert all 3 moved sessions in series');
+        assert.strictEqual(bulkRescheduleCalls[0].undoOf, 'op_series_999', 'Undo must pass operationId');
+        assert.strictEqual(bulkRescheduleCalls[0].moves[0].targetLocalDate, '2026-09-08');
+        assert.strictEqual(bulkRescheduleCalls[0].moves[1].targetLocalDate, '2026-09-15');
+        assert.strictEqual(bulkRescheduleCalls[0].moves[2].targetLocalDate, '2026-09-22');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Drag and drop series move with Scope Choice Modal and Undo toast verified');
+    }
+
+    // TEST 16b: Scope choice with conflicts renders warnings, "Move 2, skip 1", and sets allowPartial: true
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerScopeModal: doc.createElement('div'),
+            teacherSchedulerScopeTitle: doc.createElement('div'),
+            teacherSchedulerScopeShiftFrom: doc.createElement('div'),
+            teacherSchedulerScopeShiftTo: doc.createElement('div'),
+            teacherSchedulerScopeSeriesTitle: doc.createElement('div'),
+            teacherSchedulerScopeSeriesDesc: doc.createElement('div'),
+            teacherSchedulerScopeWarnings: doc.createElement('div'),
+            scopeChoiceSingle: doc.createElement('input'),
+            scopeChoiceSeries: doc.createElement('input'),
+            btnTeacherSchedulerScopeCancel: doc.createElement('button'),
+            btnTeacherSchedulerScopeConfirm: doc.createElement('button')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const seriesRescheduleCalls = [];
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [
+                    { classroomId: 'c1', name: 'Class Alpha', scheduleConfig: { scheduleVersion: 4 } },
+                    { classroomId: 'c2', name: 'Class Beta', scheduleConfig: { scheduleVersion: 1 } }
+                ],
+                sessions: [
+                    { sessionId: 's-conf-1', classId: 'c1', teacherUid: 'teacher-1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async (sessionId, data) => {
+                seriesRescheduleCalls.push({ sessionId, data });
+                if (data.dryRun) {
+                    return {
+                        success: true,
+                        moved: [
+                            { sessionId: 's-conf-1', from: { targetLocalDate: '2026-09-08', targetLocalTime: '08:00' }, to: { targetLocalDate: data.targetLocalDate, targetLocalTime: data.targetLocalTime } },
+                            { sessionId: 's-conf-2', from: { targetLocalDate: '2026-09-15', targetLocalTime: '08:00' }, to: { targetLocalDate: '2026-09-16', targetLocalTime: '08:00' } }
+                        ],
+                        conflicts: [
+                            {
+                                sessionId: 's-conf-3',
+                                conflictClassId: 'c2',
+                                conflictAt: { scheduledLocalDate: '2026-09-23', scheduledLocalTime: '08:00' }
+                            }
+                        ],
+                        skipped: [],
+                        canCommit: true,
+                        operationId: 'op_series_conf'
+                    };
+                }
+                return {
+                    success: true,
+                    moved: [
+                        { sessionId: 's-conf-1', from: { targetLocalDate: '2026-09-08', targetLocalTime: '08:00' }, to: { targetLocalDate: data.targetLocalDate, targetLocalTime: data.targetLocalTime } }
+                    ],
+                    operationId: 'op_series_conf'
+                };
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const pillEl = new MockElement('div');
+        pillEl.dataset.sessionId = 's-conf-1';
+        pillEl.getBoundingClientRect = () => ({ left: 200, top: 100, width: 120, height: 40 });
+        pillEl.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillEl : null);
+
+        const slotEl = new MockElement('div');
+        slotEl.dataset.date = '2026-09-09';
+        slotEl.dataset.time = '09:00';
+        slotEl.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotEl : null);
+
+        testElements.teacherSchedulerCalendar.dispatchEvent({ type: 'mousedown', button: 0, clientX: 210, clientY: 110, target: pillEl });
+        doc.dispatchEvent({ type: 'mousemove', clientX: 250, clientY: 200 });
+        doc.dispatchEvent({ type: 'mouseup', clientX: 250, clientY: 200, target: slotEl });
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.strictEqual(testElements.teacherSchedulerScopeModal.style.display, 'flex');
+        assert.strictEqual(testElements.btnTeacherSchedulerScopeConfirm.textContent, 'Move 2, skip 1', 'Button text should reflect skipped conflict count');
+        assert(testElements.teacherSchedulerScopeWarnings.innerHTML.includes('Class Beta 08:00'), 'Warning text should name colliding class and time');
+
+        // Confirm
+        testElements.scopeChoiceSeries.checked = true;
+        testElements.btnTeacherSchedulerScopeConfirm.dispatchEvent({ type: 'click' });
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.strictEqual(seriesRescheduleCalls.length, 2);
+        assert.strictEqual(seriesRescheduleCalls[1].data.allowPartial, true, 'Commit should set allowPartial: true when user consents to skips');
+        assert.strictEqual(seriesRescheduleCalls[1].data.expectedScheduleVersion, 4, 'Commit should send expectedScheduleVersion from classroom');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Conflict warnings, "Move 2, skip 1" label, and dynamic allowPartial: true verified');
+    }
+
+    // TEST 17: Escape dismissal in Scope Choice Modal reverts optimistic move
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerScopeModal: doc.createElement('div'),
+            teacherSchedulerScopeTitle: doc.createElement('div'),
+            teacherSchedulerScopeShiftFrom: doc.createElement('div'),
+            teacherSchedulerScopeShiftTo: doc.createElement('div'),
+            teacherSchedulerScopeSeriesTitle: doc.createElement('div'),
+            teacherSchedulerScopeSeriesDesc: doc.createElement('div'),
+            teacherSchedulerScopeWarnings: doc.createElement('div'),
+            scopeChoiceSingle: doc.createElement('input'),
+            scopeChoiceSeries: doc.createElement('input'),
+            btnTeacherSchedulerScopeCancel: doc.createElement('button'),
+            btnTeacherSchedulerScopeConfirm: doc.createElement('button')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-escape-1',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 60,
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async (sessionId, data) => ({
+                success: true,
+                moved: [
+                    { sessionId: 's-escape-1', from: { targetLocalDate: '2026-09-08', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { targetLocalDate: data.targetLocalDate, targetLocalTime: data.targetLocalTime, durationMinutes: 60, timezone: 'UTC' } },
+                    { sessionId: 's-escape-2', from: { targetLocalDate: '2026-09-15', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }, to: { targetLocalDate: '2026-09-16', targetLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' } }
+                ],
+                conflicts: [],
+                skippedLocked: [],
+                canCommit: true
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const pillEl = new MockElement('div');
+        pillEl.dataset.sessionId = 's-escape-1';
+        pillEl.getBoundingClientRect = () => ({ left: 200, top: 100, width: 120, height: 40 });
+        pillEl.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillEl : null);
+
+        const slotEl = new MockElement('div');
+        slotEl.dataset.date = '2026-09-09';
+        slotEl.dataset.time = '09:00';
+        slotEl.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotEl : null);
+
+        testElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'mousedown',
+            button: 0,
+            clientX: 210,
+            clientY: 110,
+            target: pillEl
+        });
+        doc.dispatchEvent({ type: 'mousemove', clientX: 250, clientY: 200 });
+        doc.dispatchEvent({ type: 'mouseup', clientX: 250, clientY: 200, target: slotEl });
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        assert.strictEqual(testElements.teacherSchedulerScopeModal.style.display, 'flex');
+
+        // Dismiss with Escape key
+        doc.dispatchEvent({ type: 'keydown', key: 'Escape' });
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert.strictEqual(testElements.teacherSchedulerScopeModal.style.display, 'none');
+        const session = controller.getState().sessions.find((s) => s.sessionId === 's-escape-1');
+        assert.strictEqual(session.scheduledLocalDate, '2026-09-08', 'Optimistic move should revert on Escape');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Scope choice Escape cancellation and optimistic rollback verified');
+    }
+
+    // TEST 18: Controller deactivate clears lastMoveUndo, disarms undo, dismisses toast, and closes modals
+    {
+        let toastOptions = null;
+        let toastDismissed = false;
+        let bulkCalls = [];
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerQuickAdd: doc.createElement('div'),
+            teacherSchedulerSessionBubble: doc.createElement('div')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-deact-1',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 60,
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async () => ({
+                success: true,
+                moved: [
+                    { sessionId: 's-deact-1', from: { targetLocalDate: '2026-09-08', targetLocalTime: '08:00', durationMinutes: 60 }, to: { targetLocalDate: '2026-09-09', targetLocalTime: '09:00', durationMinutes: 60 } }
+                ],
+                conflicts: []
+            }),
+            teacherRescheduleScheduledSession: async () => ({
+                success: true
+            }),
+            teacherBulkRescheduleSessions: async (payload) => {
+                bulkCalls.push(payload);
+                return { success: true, moved: [] };
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: (msg, type, opts) => {
+                toastOptions = opts;
+                return {
+                    dismiss: () => {
+                        toastDismissed = true;
+                    }
+                };
+            },
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const pillEl = new MockElement('div');
+        pillEl.dataset.sessionId = 's-deact-1';
+        pillEl.getBoundingClientRect = () => ({ left: 200, top: 100, width: 120, height: 40 });
+        pillEl.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillEl : null);
+
+        const slotEl = new MockElement('div');
+        slotEl.dataset.date = '2026-09-09';
+        slotEl.dataset.time = '09:00';
+        slotEl.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotEl : null);
+
+        testElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'mousedown',
+            button: 0,
+            clientX: 210,
+            clientY: 110,
+            target: pillEl
+        });
+        doc.dispatchEvent({ type: 'mousemove', clientX: 250, clientY: 200 });
+        doc.dispatchEvent({ type: 'mouseup', clientX: 250, clientY: 200, target: slotEl });
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        assert(controller.getState().lastMoveUndo, 'lastMoveUndo must be armed after drag drop');
+        assert(toastOptions && typeof toastOptions.onAction === 'function', 'Toast with onAction must be registered');
+
+        testElements.teacherSchedulerQuickAdd.style.display = 'block';
+
+        controller.deactivate();
+
+        assert.strictEqual(controller.getState().lastMoveUndo, null, 'deactivate must clear lastMoveUndo');
+        assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display, 'none', 'deactivate must close quick add');
+        assert.strictEqual(toastDismissed, true, 'deactivate must dismiss active toast handle');
+
+        // Invoke the captured onAction callback to verify it is disarmed
+        await toastOptions.onAction();
+        assert.strictEqual(bulkCalls.length, 0, 'Disarmed undo callback must NOT invoke teacherBulkRescheduleSessions');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Controller deactivate method, undo disarm, and toast dismissal verified');
+    }
+
+    // TEST 19: Dry-run non-conflict error triggers optimistic rollback and error toast
+    {
+        let toastErrors = [];
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerScopeModal: doc.createElement('div'),
+            teacherSchedulerQuickAdd: doc.createElement('div'),
+            teacherSchedulerSessionBubble: doc.createElement('div')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-err-1',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 60,
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async () => {
+                throw new Error('Database dry-run network failure');
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: (msg, type) => {
+                if (type === 'error') {
+                    toastErrors.push(msg);
+                }
+            },
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const pillEl = new MockElement('div');
+        pillEl.dataset.sessionId = 's-err-1';
+        pillEl.getBoundingClientRect = () => ({ left: 200, top: 100, width: 120, height: 40 });
+        pillEl.closest = (sel) => (sel.includes('teacher-scheduler-session-pill') ? pillEl : null);
+
+        const slotEl = new MockElement('div');
+        slotEl.dataset.date = '2026-09-09';
+        slotEl.dataset.time = '09:00';
+        slotEl.closest = (sel) => (sel.includes('teacher-scheduler-slot') ? slotEl : null);
+
+        testElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'mousedown',
+            button: 0,
+            clientX: 210,
+            clientY: 110,
+            target: pillEl
+        });
+        doc.dispatchEvent({ type: 'mousemove', clientX: 250, clientY: 200 });
+        doc.dispatchEvent({ type: 'mouseup', clientX: 250, clientY: 200, target: slotEl });
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Assert optimistic move was reverted
+        const session = controller.getState().sessions.find((s) => s.sessionId === 's-err-1');
+        assert.strictEqual(session.scheduledLocalDate, '2026-09-08', 'Session date must revert on dry-run failure');
+        assert.strictEqual(session.scheduledLocalTime, '08:00', 'Session time must revert on dry-run failure');
+
+        // Assert error toast was shown
+        assert(toastErrors.some((m) => m.includes('Database dry-run network failure')), 'Error toast must be displayed with failure message');
+
+        // Assert scope modal was NOT displayed
+        assert.notStrictEqual(testElements.teacherSchedulerScopeModal.style.display, 'flex', 'Scope modal must not open on dry-run error');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Dry-run failure abort, rollback, and error toast verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');

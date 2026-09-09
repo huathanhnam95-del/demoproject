@@ -44,6 +44,24 @@ async function waitForPredicate(predicate, timeoutMs, intervalMs = 50) {
   return false;
 }
 
+/* The scheduler re-renders asynchronously after a place/refresh, so a locator can resolve and
+   then be detached before the action runs. Retry rather than fail on that race. */
+async function scrollIntoView(page, selector, attempts = 5) {
+  let lastError = null;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      await page.waitForSelector(selector, { state: 'attached', timeout: 5000 });
+      await page.locator(selector).first().scrollIntoViewIfNeeded({ timeout: 5000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!/not attached|detached|Element is not attached/i.test(String(error && error.message))) throw error;
+      await page.waitForTimeout(150);
+    }
+  }
+  throw lastError;
+}
+
 async function dragBetween(page, sourceSelector, targetSelector) {
   const activated = await page.evaluate(({ sourceSelector: sourceQuery, targetSelector: targetQuery }) => {
     const source = document.querySelector(sourceQuery);
@@ -1213,8 +1231,8 @@ function startHarnessServer() {
     assert.strictEqual(seedRequest.body.teacherUid, 'teacher-2');
     await page.waitForSelector(`${seedTargetSelector} .scheduler-session-pill`);
 
-    await page.locator(adminClassCardSelector).scrollIntoViewIfNeeded();
-    await page.locator(adminAddTargetSelector).scrollIntoViewIfNeeded();
+    await scrollIntoView(page, adminClassCardSelector);
+    await scrollIntoView(page, adminAddTargetSelector);
     await dragElementBetween(page, adminClassCardSelector, adminAddTargetSelector);
     await page.waitForSelector('#scheduler-action-modal[aria-hidden="false"]');
     assert.ok(
@@ -1239,8 +1257,8 @@ function startHarnessServer() {
 
     await page.waitForSelector('#scheduler-action-modal[aria-hidden="true"]', { state: 'attached' });
     await page.waitForSelector(adminClassCardSelector);
-    await page.locator(adminClassCardSelector).scrollIntoViewIfNeeded();
-    await page.locator(adminReplaceTargetSelector).scrollIntoViewIfNeeded();
+    await scrollIntoView(page, adminClassCardSelector);
+    await scrollIntoView(page, adminReplaceTargetSelector);
     await dragElementBetween(page, adminClassCardSelector, adminReplaceTargetSelector);
     await page.waitForSelector('#scheduler-action-modal[aria-hidden="false"]', { state: 'visible' });
     await page.click('#scheduler-action-replace-button');
@@ -1295,9 +1313,9 @@ function startHarnessServer() {
       !!document.querySelector(cardSelector) && !!document.querySelector(pillSelector)
     ), { classCardSelector, sessionPillSelector });
     await page.waitForTimeout(100);
-    await page.locator(classCardSelector).scrollIntoViewIfNeeded();
-    await page.locator(originalSlotSelector).scrollIntoViewIfNeeded();
-    await page.locator(conflictTargetSelector).scrollIntoViewIfNeeded();
+    await scrollIntoView(page, classCardSelector);
+    await scrollIntoView(page, originalSlotSelector);
+    await scrollIntoView(page, conflictTargetSelector);
 
     // Sanity check: placement mode wiring must be active before drag assertions.
     await page.click(classCardSelector);
@@ -1331,7 +1349,7 @@ function startHarnessServer() {
       const el = document.querySelector(selector);
       return !!el && el.classList.contains('is-armed');
     }, classCardSelector);
-    await page.locator(placeTargetSelector).scrollIntoViewIfNeeded();
+    await scrollIntoView(page, placeTargetSelector);
     await page.click(placeTargetSelector);
     await page.waitForFunction((selector) => {
       const el = document.querySelector(selector);
@@ -1343,7 +1361,7 @@ function startHarnessServer() {
     const initialTeacherRescheduleCount = requestLog.filter(
       (entry) => entry.path === '/api/teacher/sessions/session-1/reschedule'
     ).length;
-    await page.locator(sessionPillSelector).scrollIntoViewIfNeeded();
+    await scrollIntoView(page, sessionPillSelector);
     await dragBetween(page, sessionPillSelector, conflictTargetSelector);
     await page.waitForTimeout(300);
     assert.strictEqual(
@@ -1359,7 +1377,7 @@ function startHarnessServer() {
     );
 
     // Reschedule session-1 to a safe slot (drag + API + refresh)
-    await page.locator(rescheduleTargetSelector).scrollIntoViewIfNeeded();
+    await scrollIntoView(page, rescheduleTargetSelector);
     await dragBetween(page, sessionPillSelector, rescheduleTargetSelector);
     assert.ok(
       await waitForPredicate(

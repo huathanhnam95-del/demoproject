@@ -6,6 +6,14 @@ const { convertLead, createEnrollment } = require('../../../functions/src/crm/wo
 
 const { fixture } = require('./transaction-fixture.cjs');
 
+/* transaction-workspace.js resolves firebase-admin from functions/node_modules, while this test
+   file would resolve it from the repo root. Those are two distinct copies, so a Timestamp built
+   here would fail the implementation's `instanceof Timestamp` check. Resolve from the
+   implementation's own directory so both sides share one class. */
+const { Timestamp } = require(require.resolve('firebase-admin/firestore', {
+    paths: [require('node:path').dirname(require.resolve('../../../functions/src/crm/data-input/transaction-workspace'))]
+}));
+
 test('review before values are the original record and isolated from caller mutation', async () => {
     const f = fixture({ 'items/a': { name: 'Lan', nested: { score: 65 } } });
     await f.workspace.db.runTransaction(tx => {
@@ -24,7 +32,6 @@ test('review before values are the original record and isolated from caller muta
 });
 
 test('native timestamp input and returned preview mutations cannot change staged writes', async () => {
-    const { Timestamp } = require('firebase-admin/firestore');
     const timestamp = new Timestamp(123, 456789123), f = fixture();
     let written;
     f.transaction.set = (_reference, data) => { written = data; };
@@ -42,7 +49,6 @@ test('native timestamp input and returned preview mutations cannot change staged
 });
 
 test('mutating a native timestamp returned from a staged read cannot change later reads', async () => {
-    const { Timestamp } = require('firebase-admin/firestore');
     const f = fixture();
     f.transaction.get = async reference => ({ id: reference.id, exists: true, data: () => ({ occurredAt: new Timestamp(123, 456) }), updateTime: { seconds: 1, nanoseconds: 2 } });
     await f.workspace.db.runTransaction(async tx => {

@@ -455,8 +455,9 @@ const {
         console.log(' - Scenario 1 passed: popover exclusivity, outside click, and Escape dismissal verified.');
         stepsCompleted++;
 
-        // SCENARIO 3: Compact Pill Layout (<46px / 30m)
-        console.log('Scenario 3: Checking compact pill layout (<46px / 30m)...');
+        // SCENARIO 3: Compact Pill Layout. At 24px/30min a 30-minute pill is 22px tall, which
+        // is below the 40px needed for a title AND a separate time line, so it collapses to one.
+        console.log('Scenario 3: Checking compact pill layout (30m pill < 40px two-line threshold)...');
         const openSlotCompact = page.locator('.teacher-scheduler-slot').filter({
             hasNot: page.locator('.teacher-scheduler-session-pill')
         }).first();
@@ -495,7 +496,8 @@ const {
         const compactPills = page.locator('.teacher-scheduler-session-pill.is-compact');
         assert((await compactPills.count()) > 0, 'Should find at least one compact pill with .is-compact');
         const compactHeight = await compactPills.first().evaluate((el) => el.getBoundingClientRect().height);
-        assert(compactHeight < 46, `Compact pill height (${compactHeight}px) must be < 46px`);
+        assert(compactHeight < 40, `Compact pill height (${compactHeight}px) must be below the 40px two-line threshold`);
+        assert(compactHeight > 12, `Compact pill height (${compactHeight}px) must still be tall enough to read`);
         const compactTitle = await compactPills.first().locator('.pill-title').textContent();
         assert(compactTitle.includes('·') || compactTitle.includes(':'), 'Compact pill title should embed time range');
         console.log(' - Scenario 3 passed: compact pill styling and integrated time range verified.');

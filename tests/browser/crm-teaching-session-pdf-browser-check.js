@@ -111,6 +111,12 @@ async function run() {
                 rect() {}
                 roundedRect() {}
                 circle() {}
+                getTextWidth(text) {
+                    /* Real jsPDF measures glyphs; the header logic only needs a monotonic
+                       approximation in mm to decide whether to compact the title. */
+                    const size = this.currentFontSize || 12;
+                    return String(text == null ? '' : text).length * size * 0.35;
+                }
                 splitTextToSize(text) {
                     return String(text || '').split(/\r?\n/);
                 }

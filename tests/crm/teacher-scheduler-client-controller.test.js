@@ -933,7 +933,7 @@ async function runTests() {
         console.log('✓ Popover mutual exclusivity, close button, outside click, and Escape dismissal verified');
     }
 
-    // TEST 14: Dynamic --scheduler-day-count and compact pill layout (<46px)
+    // TEST 14: Dynamic --scheduler-day-count and compact pill layout (below 40px two-line threshold)
     {
         const testElements = {
             teacherSchedulerWorkspace: doc.createElement('div'),
@@ -944,7 +944,7 @@ async function runTests() {
         testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
         testElements.inputTeacherSchedulerToDate.value = '2026-09-11'; // 5 days
 
-        // Mock 30-minute session (height 38px < 46px -> compact)
+        // Mock 30-minute session: at 24px/30min the pill is 22px, under the 40px two-line threshold -> compact
         const customAPI = {
             ...mockClassroomAPI,
             fetchTeacherSchedulerWorkspace: async () => ({
@@ -983,7 +983,7 @@ async function runTests() {
         assert(calHtml.includes('✓ Completed'), 'Completed badge must be present');
 
         windowMock.ClassroomAPI = origAPI;
-        console.log('✓ Dynamic --scheduler-day-count and compact pill layout (<46px) verified');
+        console.log('✓ Dynamic --scheduler-day-count and compact pill layout (<40px two-line threshold) verified');
     }
 
     // TEST 15: Drag and drop single session move with Undo toast invocation

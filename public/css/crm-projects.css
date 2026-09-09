@@ -349,7 +349,7 @@
   --pj-ink: var(--crm-text-main, #121826);
   --pj-ink-2: #42506a;
   --pj-muted: var(--crm-text-muted, #748095);
-  --pj-faint: #95a0b2;
+  --pj-faint: #66707e;
   --pj-accent: var(--blue-600, #3b82f6);
   --pj-accent-soft: #e8f0ff;
   --pj-accent-ink: #1d55c4;
@@ -386,6 +386,17 @@
   --pj-inverse-raised: #334155;
   --pj-inverse-line: #475569;
   --pj-inverse-fg: #ffffff;
+
+  /* Saturated fills for the Monday-style full-cell status blocks. Each clears
+     4.5:1 against its own white text -- monday's own #FFCC00 on white is ~1.5:1
+     and is a long-standing accessibility complaint, so amber goes deeper. */
+  /* direction to push a group hue for legible text, per theme */
+  --pj-hue-toward: #0b1020;
+  --pj-hue-amount: 50%;
+  --st-ns-solid: #c3c9d4;  --st-ns-on: #333b4a;
+  --st-ip-solid: #fdab3d;  --st-ip-on: #4a2e00;
+  --st-bl-solid: #d8324f;  --st-bl-on: #ffffff;
+  --st-dn-solid: #00c875;  --st-dn-on: #00351f;
 
   /* Legacy aliases for backward compatibility */
   --projects-ink: var(--pj-ink);
@@ -444,7 +455,7 @@
 #projects-workspace-projects button[aria-current="page"],
 #projects-workspace-projects button[aria-selected="true"],
 #projects-workspace-projects button.is-selected { color: var(--pj-accent-ink); background: var(--pj-accent-soft); font-weight: 650; }
-#projects-workspace-rail #btn-projects-board-create-project { margin: 4px 8px; background: transparent; border: 1px solid var(--pj-line); color: var(--pj-accent-ink); box-shadow: none; }
+#projects-workspace-rail #btn-projects-board-create-project { margin: 4px 8px; background: transparent; border: 1px dashed var(--pj-line-strong); color: var(--pj-accent-ink); box-shadow: none; }
 .crm-projects-workspace-rail-footer { margin-top: auto; padding: 24px 8px 0; }
 #projects-workspace-main { min-width: 0; padding: 24px 28px 36px; }
 .crm-projects-workspace-breadcrumb { display: flex; align-items: center; gap: 10px; color: var(--pj-faint); font-size: 11px; margin-bottom: 17px; }
@@ -577,29 +588,65 @@
 .crm-projects-board-section-row input:hover { border-color: var(--pj-line-strong); }
 .crm-projects-board-section-row .crm-muted { color: var(--pj-faint); font-size: 10px; font-weight: 400; }
 
-.crm-projects-board-row .crm-board-status-cell { display: flex; align-items: center; position: relative; }
+/* Monday's signature: the status cell IS the colour. Edge-to-edge fill, white
+   bold text, chevron only on hover. The <select> is untouched in the DOM -- it
+   is simply styled into the block, so every pinned selector still resolves. */
+.crm-projects-board-row .crm-board-status-cell { display: flex; align-items: stretch; position: relative; padding: 0; }
 .crm-projects-board-row .crm-board-status-cell select,
 .crm-projects-board-row select.crm-board-field[data-status] {
   appearance: none;
   -webkit-appearance: none;
-  border-radius: 99px;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  border: 1px solid transparent;
-  cursor: pointer;
-  width: auto;
+  width: 100%;
   max-width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  padding: 0 18px 0 10px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  text-align: center;
+  text-align-last: center;
+  cursor: pointer;
+  transition: filter var(--pj-motion-fast) var(--pj-ease);
 }
+.crm-projects-board-row .crm-board-status-cell select:hover { filter: brightness(1.07); }
+.crm-projects-board-row .crm-board-status-cell::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -5px;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-projects-board-row:hover .crm-board-status-cell::after,
+.crm-board-status-cell:focus-within::after { opacity: .75; }
+.crm-board-status-cell[data-status="not_started"] { color: var(--st-ns-on); }
+.crm-board-status-cell[data-status="in_progress"] { color: var(--st-ip-on); }
+.crm-board-status-cell[data-status="blocked"] { color: var(--st-bl-on); }
+.crm-board-status-cell[data-status="done"] { color: var(--st-dn-on); }
 .crm-board-status-cell[data-status="not_started"] select,
-select.crm-board-field[data-status="not_started"] { background: var(--st-ns-bg); color: var(--st-ns-fg); }
+select.crm-board-field[data-status="not_started"] { background: var(--st-ns-solid); color: var(--st-ns-on); }
 .crm-board-status-cell[data-status="in_progress"] select,
-select.crm-board-field[data-status="in_progress"] { background: var(--st-ip-bg); color: var(--st-ip-fg); }
+select.crm-board-field[data-status="in_progress"] { background: var(--st-ip-solid); color: var(--st-ip-on); }
 .crm-board-status-cell[data-status="blocked"] select,
-select.crm-board-field[data-status="blocked"] { background: var(--st-bl-bg); color: var(--st-bl-fg); }
+select.crm-board-field[data-status="blocked"] { background: var(--st-bl-solid); color: var(--st-bl-on); }
 .crm-board-status-cell[data-status="done"] select,
-select.crm-board-field[data-status="done"] { background: var(--st-dn-bg); color: var(--st-dn-fg); }
+select.crm-board-field[data-status="done"] { background: var(--st-dn-solid); color: var(--st-dn-on); }
+/* Native option lists inherit the fill otherwise, which is unreadable. */
+.crm-projects-board-row .crm-board-status-cell select option { background: var(--pj-surface); color: var(--pj-ink); }
+/* The rollup battery has to read on top of a saturated fill. */
+.crm-board-status-cell[data-status] .crm-board-status-battery {
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent);
+}
 
 select.crm-board-field[data-value="urgent"] { background: var(--sig-over-bg); color: var(--sig-over-fg); border-radius: 6px; font-weight: 600; font-size: 11px; appearance: none; -webkit-appearance: none; }
 select.crm-board-field[data-value="high"] { background: var(--sig-soon-bg); color: var(--sig-soon-fg); border-radius: 6px; font-weight: 600; font-size: 11px; appearance: none; -webkit-appearance: none; }
@@ -725,8 +772,8 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   --pj-line-strong: #33404f;
   --pj-ink: #e7ecf4;
   --pj-ink-2: #b3c0d2;
-  --pj-muted: #8794a7;
-  --pj-faint: #6a778a;
+  --pj-muted: #9dabc0;
+  --pj-faint: #8e9bb0;
   --pj-accent: #5b9bff;
   --pj-accent-soft: #16233b;
   --pj-accent-ink: #9cc2ff;
@@ -758,6 +805,12 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   --pj-inverse-raised: #cfd8e6;
   --pj-inverse-line: #aebbcd;
   --pj-inverse-fg: #0d1117;
+  --pj-hue-toward: #ffffff;
+  --pj-hue-amount: 42%;
+  --st-ns-solid: #59637a;  --st-ns-on: #eef2f8;
+  --st-ip-solid: #f0a53c;  --st-ip-on: #3d2400;
+  --st-bl-solid: #e2445f;  --st-bl-on: #ffffff;
+  --st-dn-solid: #12b06a;  --st-dn-on: #00301b;
 
   /* Rules in style.css and crm-admin.css reach into this panel, one of them
      with !important. Remap the tokens they read so they resolve to this
@@ -1304,7 +1357,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 /* The section summary footer reads as data, not as another row of controls. */
 .crm-board-summary-row > div { justify-content: flex-end; }
 .crm-board-summary-row > div:first-child { justify-content: flex-start; }
-.crm-board-summary-stat { font-variant-numeric: tabular-nums; color: var(--pj-faint); }
+.crm-board-summary-stat { font-variant-numeric: tabular-nums; color: var(--pj-muted); }
 .crm-board-summary-row:hover .crm-board-summary-stat { color: var(--pj-ink-2); }
 
 
@@ -1317,6 +1370,275 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 }
 [data-panel="projects"] :is(input, select, textarea).crm-input::placeholder { color: var(--pj-faint); }
 [data-panel="projects"] .crm-input option { background: var(--pj-surface); color: var(--pj-ink); }
+
+
+/* ==========================================================================
+   Icons. Emoji replaced with 16x16 stroke SVG matching the utility-rail set.
+   ========================================================================== */
+.crm-pj-icon { width: 14px; height: 14px; flex: 0 0 auto; display: block; }
+.crm-chip-icon,
+.crm-copy-icon,
+.crm-tech-icon,
+.crm-field-icon,
+.crm-btn-icon,
+.crm-hint-icon,
+.crm-progress-icon,
+.crm-dep-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--pj-muted);
+}
+.crm-hint-icon { color: var(--pj-accent); align-self: flex-start; margin-top: 1px; }
+.crm-btn-icon { color: inherit; }
+.crm-progress-icon { color: var(--crm-project-group-color, var(--pj-accent)); }
+.crm-prio-flag { display: inline-flex; align-items: center; }
+.crm-prio-flag .crm-pj-icon { width: 11px; height: 11px; }
+.crm-detail-copy-id .crm-pj-icon { width: 12px; height: 12px; }
+.crm-projects-gantt-legend i.crm-projects-gantt-key-today {
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--sig-over-fg);
+}
+.crm-auto-warning.is-competing {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: var(--pj-radius-md);
+  background: var(--st-ip-bg);
+  border: 1px solid var(--st-ip-fg);
+  border-left-width: 3px;
+  color: var(--st-ip-fg);
+}
+.crm-auto-warning.is-competing strong { display: inline-flex; align-items: center; gap: 7px; }
+
+/* ==========================================================================
+   Group colour identity. groupColor() already hashes each section onto
+   GROUP_COLORS and pushes it onto every row as --crm-project-group-color;
+   until now it drove a single 3px shadow. This spends it.
+   ========================================================================== */
+.crm-projects-board-section-row {
+  background: color-mix(in srgb, var(--crm-project-group-color) 9%, var(--pj-surface));
+  border-left: 4px solid var(--crm-project-group-color);
+  border-bottom-color: color-mix(in srgb, var(--crm-project-group-color) 22%, var(--pj-line));
+}
+.crm-projects-board-section-row:hover {
+  background: color-mix(in srgb, var(--crm-project-group-color) 14%, var(--pj-surface));
+}
+/* The raw group hue on its own tint is only ~3.5:1 at 14px; deepen the title
+   toward ink so it clears AA while still reading as the group colour. */
+.crm-board-group-title,
+.crm-board-group-expander { color: color-mix(in srgb, var(--crm-project-group-color) var(--pj-hue-amount), var(--pj-hue-toward)); }
+.crm-projects-board-section-row .crm-muted {
+  padding: 2px 8px;
+  border-radius: var(--pj-radius-pill);
+  background: color-mix(in srgb, var(--crm-project-group-color) 16%, var(--pj-surface));
+  color: color-mix(in srgb, var(--crm-project-group-color) var(--pj-hue-amount), var(--pj-hue-toward));
+  font-size: 10px;
+  font-weight: 650;
+}
+.crm-projects-board-section-row input:hover {
+  border-color: color-mix(in srgb, var(--crm-project-group-color) 45%, transparent);
+}
+
+/* Task rows carry a softened version of their group's hue on the left edge. */
+.crm-projects-board-row {
+  box-shadow: inset 3px 0 color-mix(in srgb, var(--crm-project-group-color) 58%, transparent);
+}
+.crm-projects-board-row.is-selected {
+  box-shadow: inset 3px 0 var(--crm-project-group-color);
+}
+
+/* Rollups and progress read in the group's hue rather than a generic green. */
+.crm-board-progress-ring {
+  background: conic-gradient(var(--crm-project-group-color) var(--pj-pct, 0%), var(--pj-line) var(--pj-pct, 0%) 100%);
+}
+.crm-board-summary-row {
+  background: color-mix(in srgb, var(--crm-project-group-color) 5%, var(--pj-raised));
+  border-top: 1px dashed color-mix(in srgb, var(--crm-project-group-color) 30%, var(--pj-line));
+  border-bottom: 2px solid color-mix(in srgb, var(--crm-project-group-color) 24%, var(--pj-line));
+}
+.crm-board-summary-row:hover {
+  background: color-mix(in srgb, var(--crm-project-group-color) 8%, var(--pj-raised));
+}
+.crm-board-summary-tag {
+  background: color-mix(in srgb, var(--crm-project-group-color) 18%, var(--pj-surface));
+  color: color-mix(in srgb, var(--crm-project-group-color) var(--pj-hue-amount), var(--pj-hue-toward));
+}
+
+
+/* ==========================================================================
+   Controls. The native elements all stay -- every one of them is driven by a
+   pinned unit test or Playwright check -- they are just styled out of their
+   OS defaults.
+   ========================================================================== */
+
+/* Board date fields. No added glyph and no height change: the browser check
+   asserts elementFromPoint at the cell's top-left +10px resolves to the
+   startDate input, and that the cell is no taller than the row. */
+.crm-board-date-cell input[type="date"] {
+  border-radius: var(--pj-radius-sm);
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease),
+              border-color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-board-date-cell input[type="date"]:hover { background: var(--pj-sunken); }
+.crm-board-date-cell input[type="date"]:focus { background: var(--pj-surface); border-color: var(--pj-accent); }
+
+/* Drawer date fields can afford the icon. */
+.crm-detail-field-label { display: inline-flex; align-items: center; gap: 6px; }
+#projects-task-schedule input[type="date"],
+#projects-task-planning input[type="date"] {
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--pj-radius-md);
+  border: 1px solid var(--pj-line);
+  background: var(--pj-surface);
+  padding: 7px 9px;
+  color: var(--pj-ink);
+}
+#projects-task-schedule input[type="date"]:focus,
+#projects-task-planning input[type="date"]:focus { border-color: var(--pj-accent); }
+#projects-task-schedule input[type="date"]::-webkit-calendar-picker-indicator,
+#projects-task-planning input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: .5;
+  cursor: pointer;
+  transition: opacity var(--pj-motion-fast) var(--pj-ease);
+}
+#projects-task-schedule input[type="date"]:hover::-webkit-calendar-picker-indicator { opacity: .9; }
+
+/* File input: ::file-selector-button turns "Choose File | No file chosen" into a
+   real control without touching the DOM, so setInputFiles() keeps working. */
+[data-panel="projects"] input[type="file"] {
+  font-size: 11.5px;
+  color: var(--pj-muted);
+  max-width: 100%;
+}
+[data-panel="projects"] input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 6px 12px;
+  border: 1px solid var(--pj-line-strong);
+  border-radius: var(--pj-radius-md);
+  background: var(--pj-surface);
+  color: var(--pj-ink-2);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease),
+              border-color var(--pj-motion-fast) var(--pj-ease);
+}
+[data-panel="projects"] input[type="file"]::file-selector-button:hover {
+  background: var(--pj-accent-soft);
+  border-color: var(--pj-accent);
+  color: var(--pj-accent-ink);
+}
+
+/* Mention members: still a native <select multiple> because the discussion
+   browser check drives it with selectOption() and counts option:checked --
+   but it no longer has to look like an OS listbox. */
+#projects-board-discussion-mention {
+  width: 100%;
+  min-height: 84px;
+  padding: 4px;
+  border: 1px solid var(--pj-line);
+  border-radius: var(--pj-radius-md);
+  background: var(--pj-surface);
+  color: var(--pj-ink);
+  font-size: 12px;
+  scrollbar-width: thin;
+}
+#projects-board-discussion-mention:focus { border-color: var(--pj-accent); }
+#projects-board-discussion-mention option {
+  padding: 6px 9px;
+  border-radius: var(--pj-radius-sm);
+  color: var(--pj-ink);
+}
+#projects-board-discussion-mention option:checked {
+  background: var(--pj-accent-soft) linear-gradient(0deg, var(--pj-accent-soft), var(--pj-accent-soft));
+  color: var(--pj-accent-ink);
+  font-weight: 600;
+}
+
+/* Every remaining select in the panel loses its OS chrome for a drawn chevron. */
+[data-panel="projects"] select.crm-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 15px) calc(50% + 1px), calc(100% - 10px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Detail drawer. Sections gain an icon slot, real surfaces and colour.
+   ========================================================================== */
+.crm-detail-section-head h5 { display: inline-flex; align-items: center; gap: 8px; }
+.crm-detail-section + .crm-detail-section { padding-top: 20px; }
+
+.crm-detail-progress-card {
+  background: color-mix(in srgb, var(--crm-project-group-color, var(--pj-accent)) 6%, var(--pj-surface));
+  border-color: color-mix(in srgb, var(--crm-project-group-color, var(--pj-accent)) 22%, var(--pj-line));
+  border-radius: var(--pj-radius-md);
+}
+.crm-detail-progress-label { display: inline-flex; align-items: center; gap: 7px; }
+
+/* The old lightbulb callout was an untinted grey band; make it read as help. */
+.crm-detail-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--pj-accent-line);
+  border-left-width: 3px;
+  border-radius: var(--pj-radius-md);
+  background: var(--pj-accent-soft);
+  color: var(--pj-accent-ink);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.crm-detail-tech-drawer { border-radius: var(--pj-radius-md); overflow: hidden; }
+.crm-detail-tech-summary { display: flex; align-items: center; gap: 8px; }
+.crm-detail-tech-summary::-webkit-details-marker { display: none; }
+
+.crm-detail-path-chip { display: inline-flex; align-items: center; gap: 7px; }
+.crm-detail-copy-id { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Discussion reads as a conversation rather than a stack of rules. */
+.crm-projects-discussion-message {
+  padding: 10px 0 10px 13px;
+  border-left: 3px solid var(--pj-accent-line);
+  border-radius: 0 var(--pj-radius-sm) var(--pj-radius-sm) 0;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-projects-discussion-message:hover { background: var(--pj-raised); }
+.crm-projects-board-discussion-form textarea {
+  border-radius: var(--pj-radius-md);
+  border: 1px solid var(--pj-line);
+  background: var(--pj-surface);
+  padding: 10px 11px;
+  transition: border-color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-projects-board-discussion-form textarea:focus { border-color: var(--pj-accent); }
+
+/* #ucollapse shipped with prototype class names and an inline style block. */
+.crm-projects-utility-collapse {
+  margin-top: auto;
+  border: 0;
+  background: transparent;
+  color: var(--pj-muted);
+  padding: 8px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: var(--pj-radius-md);
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease), color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-projects-utility-collapse:hover { background: var(--pj-sunken); color: var(--pj-ink); }
 
 @media (prefers-reduced-motion: reduce) {
   [data-panel="projects"] *,

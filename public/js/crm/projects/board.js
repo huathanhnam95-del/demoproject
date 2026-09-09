@@ -7,7 +7,15 @@
     const PRIORITY_LABELS = { none: 'None', low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
     let ROW_HEIGHT = 46;
     const OVERSCAN = 8;
-    const GROUP_COLORS = ['#7c5cdb', '#16815d', '#3978cf', '#bd641d', '#bc4778'];
+    // Five hues, same count and same hash, so every section keeps the colour it
+    // already has in production -- only the tone changes.
+    const GROUP_COLORS = ['#4f52d9', '#0d8478', '#2470c9', '#a86a12', '#b83a6e'];
+    const PJ_ICON = {
+        flag: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.7 14.2V2.1"/><path d="M3.7 2.9h8.5l-1.8 2.7 1.8 2.7H3.7"/></svg>',
+        folder: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.9 4.2a1.1 1.1 0 0 1 1.1-1.1h2.8l1.5 1.8h5.8a1.1 1.1 0 0 1 1.1 1.1v5.9a1.1 1.1 0 0 1-1.1 1.1H3a1.1 1.1 0 0 1-1.1-1.1z"/></svg>',
+        copy: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8.3" height="8.3" rx="1.4"/><path d="M10.5 3.3A1.4 1.4 0 0 0 9.1 2H3.6a1.4 1.4 0 0 0-1.4 1.4V9a1.4 1.4 0 0 0 1.4 1.4"/></svg>',
+        cog: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8 3.5 3.5"/></svg>'
+    };
     function groupColor(id) {
         let hash = 0;
         for (const character of String(id || '')) hash = ((hash * 31) + character.codePointAt(0)) >>> 0;
@@ -739,22 +747,22 @@
         function activeGroups() {
             if (currentGroupBy === 'status') {
                 return [
-                    { id: 'not_started', title: 'Not Started', color: '#94a3b8' },
-                    { id: 'in_progress', title: 'In Progress', color: '#3b82f6' },
-                    { id: 'blocked', title: 'Blocked', color: '#f59e0b' },
-                    { id: 'done', title: 'Done', color: '#10b981' }
+                    { id: 'not_started', title: 'Not Started', color: 'var(--st-ns-solid)' },
+                    { id: 'in_progress', title: 'In Progress', color: 'var(--st-ip-solid)' },
+                    { id: 'blocked', title: 'Blocked', color: 'var(--st-bl-solid)' },
+                    { id: 'done', title: 'Done', color: 'var(--st-dn-solid)' }
                 ];
             }
             if (currentGroupBy === 'ownerUid') {
-                return members.map((m) => ({ id: m.uid, title: m.displayName || m.email || m.uid, color: '#6366f1' })).concat([{ id: '__unassigned__', title: 'Unassigned', color: '#94a3b8' }]);
+                return members.map((m) => ({ id: m.uid, title: m.displayName || m.email || m.uid, color: groupColor(m.uid) })).concat([{ id: '__unassigned__', title: 'Unassigned', color: '#94a3b8' }]);
             }
             if (currentGroupBy === 'priority') {
                 return [
-                    { id: 'urgent', title: 'Urgent', color: '#ef4444' },
-                    { id: 'high', title: 'High', color: '#f97316' },
-                    { id: 'medium', title: 'Medium', color: '#3b82f6' },
-                    { id: 'low', title: 'Low', color: '#64748b' },
-                    { id: 'none', title: 'None', color: '#94a3b8' }
+                    { id: 'urgent', title: 'Urgent', color: 'var(--sig-over-fg)' },
+                    { id: 'high', title: 'High', color: 'var(--st-ip-fg)' },
+                    { id: 'medium', title: 'Medium', color: 'var(--pj-accent)' },
+                    { id: 'low', title: 'Low', color: 'var(--pj-muted)' },
+                    { id: 'none', title: 'None', color: 'var(--pj-faint)' }
                 ];
             }
             return sections.map((s) => ({ ...s, color: groupColor(s.id) }));
@@ -1267,13 +1275,13 @@
             const ownerName = owner?.displayName || owner?.name || (ownerUid ? 'Assigned' : '');
             const priorityVal = task.values?.priority || task.priority || '';
             const priorityMarkup = priorityVal && priorityVal !== 'none'
-                ? `<span class="crm-detail-pill crm-pill-priority crm-prio-${escape(priorityVal)}" title="Priority: ${escape(priorityVal)}"><span class="crm-prio-flag">⚑</span> <span>${escape(priorityVal.toUpperCase())}</span></span>`
+                ? `<span class="crm-detail-pill crm-pill-priority crm-prio-${escape(priorityVal)}" title="Priority: ${escape(priorityVal)}"><span class="crm-prio-flag">${PJ_ICON.flag}</span> <span>${escape(priorityVal.toUpperCase())}</span></span>`
                 : '';
             const ownerMarkup = ownerUid
                 ? `<span class="crm-detail-pill crm-pill-owner" title="Owner: ${escape(ownerName)}"><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span> <span>${escape(ownerName)}</span></span>`
                 : '';
             if (elements.projectsBoardDetailBody) {
-                elements.projectsBoardDetailBody.innerHTML = `<div class="crm-detail-property-bar"><div class="crm-detail-path-chip" title="Location: ${escape(path)}"><span class="crm-chip-icon">📂</span> <span class="crm-chip-text">${escape(path)}</span></div><div class="crm-detail-meta-pills"><span class="crm-detail-pill crm-pill-status" data-status="${escape(statusKey)}"><span class="crm-status-dot"></span> <span>${escape(statusLabel)}</span></span>${ownerMarkup}${priorityMarkup}<span class="crm-detail-pill crm-pill-lifecycle crm-lifecycle-${escape(lifecycle)}">${escape(lifecycle)}</span><button type="button" class="crm-detail-copy-id" data-copy-id="${escape(task.id)}" title="Click to copy Task ID" aria-label="Copy Task ID"><span class="crm-copy-icon">📋</span> <span class="crm-id-code">${escape(task.id)}</span> <span class="crm-copy-feedback" aria-live="polite">Copy ID</span></button></div></div><details class="crm-detail-tech-drawer"><summary class="crm-detail-tech-summary"><span class="crm-tech-icon">⚙️</span> <span>Developer &amp; Technical Info</span> <span class="crm-tech-rev">rev ${escape(task.revision || 0)}</span></summary><div class="crm-detail-tech-content"><dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(lifecycle)}</dd></dl></div></details>`;
+                elements.projectsBoardDetailBody.innerHTML = `<div class="crm-detail-property-bar"><div class="crm-detail-path-chip" title="Location: ${escape(path)}"><span class="crm-chip-icon">${PJ_ICON.folder}</span> <span class="crm-chip-text">${escape(path)}</span></div><div class="crm-detail-meta-pills"><span class="crm-detail-pill crm-pill-status" data-status="${escape(statusKey)}"><span class="crm-status-dot"></span> <span>${escape(statusLabel)}</span></span>${ownerMarkup}${priorityMarkup}<span class="crm-detail-pill crm-pill-lifecycle crm-lifecycle-${escape(lifecycle)}">${escape(lifecycle)}</span><button type="button" class="crm-detail-copy-id" data-copy-id="${escape(task.id)}" title="Click to copy Task ID" aria-label="Copy Task ID"><span class="crm-copy-icon">${PJ_ICON.copy}</span> <span class="crm-id-code">${escape(task.id)}</span> <span class="crm-copy-feedback" aria-live="polite">Copy ID</span></button></div></div><details class="crm-detail-tech-drawer"><summary class="crm-detail-tech-summary"><span class="crm-tech-icon">${PJ_ICON.cog}</span> <span>Developer &amp; Technical Info</span> <span class="crm-tech-rev">rev ${escape(task.revision || 0)}</span></summary><div class="crm-detail-tech-content"><dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(lifecycle)}</dd></dl></div></details>`;
             }
             const discussion = globalScope.CrmProjectsDiscussion;
             if (discussion && typeof discussion.setSelection === 'function') discussion.setSelection({

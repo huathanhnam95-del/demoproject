@@ -1,7 +1,7 @@
 (function (globalScope) {
     'use strict';
     const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-    const palette = ['#3b82f6', '#8b5cf6', '#16815d', '#d97706'];
+    const palette = ['#4f52d9', '#0d8478', '#2470c9', '#a86a12', '#b83a6e'];
 
     function createController(deps = {}) {
         const document = deps.document || globalScope.document;

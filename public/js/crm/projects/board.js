@@ -676,6 +676,50 @@
             const parts = asText(person?.displayName || person?.email || uid).trim().split(/\s+/).filter(Boolean);
             return parts.length ? Array.from(parts[0])[0].toLocaleUpperCase() + (parts.length > 1 ? Array.from(parts[parts.length - 1])[0].toLocaleUpperCase() : '') : '—';
         }
+        function derivedRing(task) {
+            if (!task?.derived || !(Number(task.derived.activeLeafCount) > 0)) return '';
+            const total = Number(task.derived.activeLeafCount) || 0;
+            const done = Number(task.derived.completedLeafCount) || 0;
+            const pct = Math.max(0, Math.min(100, Math.round(Number(task.derived.completionPercent ?? (total > 0 ? (done / total * 100) : 0))) || 0));
+            return `<span class="crm-board-progress-ring" style="--pj-pct:${pct}%" title="${escape(done)}/${escape(total)} complete (${pct}%)" aria-label="${pct}% complete"></span>`;
+        }
+        function peopleStack(uids) {
+            const list = asArray(uids).map(String).filter(Boolean);
+            if (!list.length) return '';
+            const shown = list.slice(0, 3);
+            const overflow = list.length - shown.length;
+            const avatars = shown.map((uid) => {
+                const person = members.find((entry) => String(entry.uid) === String(uid));
+                const name = person?.displayName || person?.email || uid;
+                return `<span class="crm-board-avatar" title="${escape(name)}">${escape(ownerInitials(uid))}</span>`;
+            }).join('');
+            const more = overflow > 0 ? `<span class="crm-board-avatar crm-board-avatar-more">+${overflow}</span>` : '';
+            return `<span class="crm-board-people-stack" aria-hidden="true">${avatars}${more}</span>`;
+        }
+        function relativeDue(dueDate) {
+            if (!dueDate) return '';
+            const due = new Date(dueDate + 'T00:00:00');
+            if (Number.isNaN(due.getTime())) return '';
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return `${Math.abs(diffDays)}d late`;
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Tomorrow';
+            if (diffDays <= 7) return `${diffDays}d`;
+            return '';
+        }
+        function dueState(task) {
+            if (!task?.dueDate || task.status === 'done') return 'none';
+            const due = new Date(task.dueDate + 'T00:00:00');
+            if (Number.isNaN(due.getTime())) return 'none';
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return 'overdue';
+            if (diffDays <= 2) return 'soon';
+            return 'normal';
+        }
         function taskGroupColor(task) {
             const root = asArray(task.pathIds).map((id) => taskFor(id)).find((entry) => entry && !entry.parentTaskId);
             return groupColor(task.effectiveSectionId || task.sectionId || root?.effectiveSectionId || root?.sectionId);
@@ -688,8 +732,8 @@
             const label = escape(column.label || column.id);
             const unavailable = column.type === 'dropdown' && value && !asArray(column.options).some(option => option.key === value);
             if (!canRenderTaskEditor()) return `<span class="crm-board-null">${escape(unavailable ? `${value} (unavailable)` : value === null || value === undefined || value === '' ? '—' : (Array.isArray(value) ? value.join(', ') : value))}</span>`;
-            if (column.type === 'status') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${statusOptions(value, column.statusLabels || {})}</select>`;
-            if (column.type === 'priority') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${priorityOptions(value || 'none')}</select>`;
+            if (column.type === 'status') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" data-status="${escape(value || 'not_started')}" aria-label="${label}"${disabled}>${statusOptions(value, column.statusLabels || {})}</select>`;
+            if (column.type === 'priority') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" data-value="${escape(value || 'none')}" aria-label="${label}"${disabled}>${priorityOptions(value || 'none')}</select>`;
             if (column.type === 'dropdown') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}><option value="">Clear</option>${unavailable ? `<option value="${escape(value)}" selected disabled>${escape(value)} (unavailable)</option>` : ''}${asArray(column.options).map((option) => `<option value="${escape(option.key)}"${value === option.key ? ' selected' : ''}>${escape(option.label || option.key)}</option>`).join('')}</select>`;
             if (column.type === 'people') return `<select multiple class="crm-board-field crm-board-people-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}>${memberOptions(value, true)}</select>`;
             const inputType = column.type === 'number' ? 'number' : (column.type === 'date' ? 'date' : 'text');
@@ -721,12 +765,15 @@
             const titleCell = canRenderTaskEditor()
                 ? `<input class="crm-board-title-input crm-board-field" data-field-kind="title" type="text" value="${escape(title)}" aria-label="Task title"${inputState}>`
                 : `<span class="crm-board-title-text">${escape(title)}</span>`;
+            const dState = dueState(task);
+            const relDue = relativeDue(dueDate);
+            const dueBadge = relDue && dState !== 'none' && dState !== 'normal' ? `<span class="crm-board-due-badge crm-board-due-${dState}">${escape(relDue)}</span>` : '';
             return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
-              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
+              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
               <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}"><select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
               <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
-              <div class="crm-projects-board-cell" role="cell"><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
-              <div class="crm-projects-board-cell crm-board-date-cell" role="cell"><input class="crm-board-field" data-field-kind="startDate" type="date" value="${escape(startDate)}" aria-label="Start date"${disabled}><input class="crm-board-field" data-field-kind="dueDate" type="date" value="${escape(dueDate)}" aria-label="Due date"${disabled}></div>
+              <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell">${peopleStack(assignees)}<select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
+              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-due-state="${dState}">${dueBadge}<input class="crm-board-field" data-field-kind="startDate" type="date" value="${escape(startDate)}" aria-label="Start date"${disabled}><input class="crm-board-field" data-field-kind="dueDate" type="date" value="${escape(dueDate)}" aria-label="Due date"${disabled}></div>
               ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell">${customCell(task, column)}</div>`).join('')}
             </div>`;
         }

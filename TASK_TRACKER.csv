@@ -2025,4 +2025,9 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1030,2026-09-08,Deploy Release V2.0.1 and verify live entrance test acoustic scores and PDF,Done,2026-09-08
 1031,2026-09-08,Check and correct all IPA transcriptions in student_handout_ou_au_diphthongs.docx per Oxford rules,Done,2026-09-08
 1032,2026-09-08,Regenerate all audio tracks for closing diphthongs lesson at 0.8x neural slow speech,Done,2026-09-08
-
+1033,2026-09-08,Build deterministic Playwright+ffmpeg demo video pipeline and render 5s Audio DSP showcase shot,Done,2026-09-08
+1034,2026-09-08,Re-audit Documents Codex disk state and identify MAX_PATH deletion hazard,Done,2026-09-08
+1035,2026-09-08,Render 5s BEL v2.0.0 intro shot from shipped preloader for tech demo showcase,Done,2026-09-08
+1036,2026-09-08,Redesign app loading screen (preloader) with modern brand-navy aesthetic while keeping "Not the best. But better." message,Done,2026-09-08
+1037,2026-09-09,Redesign entrance test student UI-UX - design canvas (3 UX models + 3 visual directions) and interactive prototype at public/entrance-test-prototype.html,Done,2026-09-09
+1038,2026-09-09,Entrance Test UI review lab - 3 skins (A/B/C) on E+F flow plus CRM rating tab with 5 criteria per page and font voting,In Progress,

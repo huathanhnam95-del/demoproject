@@ -340,5 +340,23 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    // ============================================
+    // ENTRANCE TEST UI REVIEW (internal design vote)
+    // ============================================
+    // Staff evaluate the three candidate entrance-test skins from the CRM.
+    // They share one CRM login, so the rater is the name they type, not the
+    // uid — which is why any signed-in admin may write any rater's document.
+    // Nothing here touches student data or scoring; it is design feedback.
+    match /entranceTestUiRatings/{raterId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin()
+                            && request.resource.data.keys().hasOnly(
+                                 ['name', 'ratings', 'fonts', 'createdAt', 'updatedAt'])
+                            && request.resource.data.name is string
+                            && request.resource.data.name.size() > 0
+                            && request.resource.data.name.size() <= 80;
+      allow delete: if isAdmin();
+    }
   }
 }

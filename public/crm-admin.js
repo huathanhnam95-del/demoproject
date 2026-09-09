@@ -39,7 +39,8 @@
     chatbot: { label: 'Chatbot Management', subTabs: [] },
     devtools: { label: 'Dev Tools', subTabs: [], localOnly: true },
     "pronunciation-samples": { label: 'Pronunciation Samples', subTabs: [] },
-    "voice-cloning": { label: 'Voice Cloning Studio', subTabs: [] }
+    "voice-cloning": { label: 'Voice Cloning Studio', subTabs: [] },
+    "entrance-test-ui": { label: 'Entrance Test UI', subTabs: [] }
   };
 
   const devToolsAccess = window.CrmDevToolsAccess || {
@@ -5096,6 +5097,11 @@
     }
     if (lastRenderedPanel === 'voice-cloning' && activePanel !== 'voice-cloning') {
       voiceCloningController?.dispose?.();
+    }
+    // The UI-review panel embeds a prototype in an iframe; boot it only once the
+    // tab is actually opened so it costs nothing on every other page.
+    if (activePanel === 'entrance-test-ui') {
+      window.CrmEntranceTestUiLab?.boot?.();
     }
     let hasMatchedPanel = false;
     elements.panels.forEach((panel) => {

@@ -15604,3 +15604,248 @@ body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
     --crm-assistant-footer-clearance: 80px;
   }
 }
+
+/* ============================================================
+   ENTRANCE TEST UI — internal design review panel.
+   Hosts the three candidate skins and collects star ratings.
+   ============================================================ */
+
+.et-ui { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Name gate ─────────────────────────────────────────────── */
+
+.et-gate { display: flex; justify-content: center; padding: 48px 16px; }
+
+.et-gate-card {
+  width: 100%;
+  max-width: 560px;
+  padding: 32px 34px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.et-gate-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-muted, #64748b);
+}
+
+.et-gate-title { margin: 12px 0 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+.et-gate-lead { margin: 10px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--text-muted, #64748b); }
+.et-gate-row { display: flex; gap: 10px; margin-top: 22px; }
+.et-gate-row .crm-input { flex: 1; }
+.et-gate-error { margin-top: 10px; min-height: 18px; font-size: 13px; color: #b91c1c; }
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+
+.et-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.et-tabs, .et-skins { display: flex; gap: 6px; }
+
+.et-tab, .et-skin {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13.5px;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+}
+
+.et-tab:hover, .et-skin:hover { background: var(--hover-color, #f1f5f9); }
+.et-tab.is-on, .et-skin.is-on { border-color: #0f172a; background: #0f172a; color: #fff; font-weight: 500; }
+
+.et-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+}
+
+.et-who-name { font-weight: 600; color: var(--text-primary, #0f172a); }
+
+.et-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── Page chips ────────────────────────────────────────────── */
+
+.et-pagebar { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.et-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+}
+
+.et-chip:hover { background: var(--hover-color, #f1f5f9); }
+.et-chip.is-on { border-color: #0f172a; background: #0f172a; color: #fff; }
+.et-chip-done { color: #16a34a; font-weight: 700; }
+.et-chip.is-on .et-chip-done { color: #4ade80; }
+
+/* ── Stage: preview beside the rating column ───────────────── */
+
+.et-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  margin-top: 14px;
+  align-items: start;
+}
+
+.et-frame-wrap {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+#et-ui-frame { display: block; width: 100%; height: 760px; border: 0; }
+
+.et-rating-col {
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 18px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.et-rate-head { padding-bottom: 14px; border-bottom: 1px solid var(--border-color); }
+
+.et-rate-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-muted, #64748b);
+}
+
+.et-rate-page { margin-top: 6px; font-size: 18px; font-weight: 600; }
+.et-rate-sub { margin-top: 4px; font-size: 12.5px; color: var(--text-muted, #64748b); }
+
+.et-crit { padding: 13px 0; border-bottom: 1px solid var(--hover-color, #f1f5f9); }
+.et-crit:last-of-type { border-bottom: none; }
+.et-crit-head { display: flex; align-items: baseline; justify-content: space-between; }
+.et-crit-label { font-size: 14px; font-weight: 600; }
+.et-crit-value { font-size: 12px; color: var(--text-muted, #64748b); }
+.et-crit-hint { margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--text-muted, #64748b); }
+
+.et-stars { display: flex; gap: 2px; margin-top: 7px; }
+
+.et-star {
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  background: none;
+  color: #d4d4d8;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.et-star svg { fill: currentColor; }
+.et-star:hover { color: #fbbf24; }
+.et-star.is-on { color: #f59e0b; }
+
+.et-rate-foot {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+}
+
+/* ── Fonts tab ─────────────────────────────────────────────── */
+
+.et-fonts-lead { margin: 4px 0 18px; font-size: 14px; color: var(--text-secondary, #475569); }
+.et-fonts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; }
+.et-fonts-title { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+.et-fonts-title span { font-weight: 400; color: var(--text-muted, #64748b); }
+
+.et-font {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.et-font:hover { border-color: #94a3b8; }
+.et-font.is-on { border-color: #0f172a; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.12); }
+.et-font-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.et-font-name { font-size: 14px; font-weight: 600; }
+.et-font-note { font-size: 12px; color: var(--text-muted, #64748b); }
+.et-font-sample { margin-top: 8px; font-size: 17px; line-height: 1.5; color: #0f172a; }
+
+/* ── Results tab ───────────────────────────────────────────── */
+
+.et-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+
+.et-total {
+  padding: 16px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.et-total.is-best { border-color: #16a34a; background: #f0fdf4; }
+.et-total-label { font-size: 13px; font-weight: 600; color: var(--text-secondary, #475569); }
+.et-total-sum { margin-top: 6px; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; }
+.et-total-sum span { margin-left: 6px; font-size: 13px; font-weight: 400; color: var(--text-muted, #64748b); }
+.et-total-avg { margin-top: 4px; font-size: 12.5px; color: var(--text-muted, #64748b); }
+
+.et-results-title { margin: 26px 0 10px; font-size: 15px; font-weight: 600; }
+
+.et-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.et-table th, .et-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-color); text-align: left; }
+.et-table thead th { font-size: 12px; color: var(--text-muted, #64748b); font-weight: 600; }
+.et-table td { font-variant-numeric: tabular-nums; }
+.et-table tbody th { font-weight: 500; }
+
+.et-fontvotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.et-fontvotes h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary, #475569); }
+.et-fontvotes ul { margin: 0; padding: 0; list-style: none; }
+.et-fontvotes li { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--hover-color, #f1f5f9); font-size: 14px; }
+.et-fontvotes li.is-top { font-weight: 600; }
+.et-fontvotes li b { font-variant-numeric: tabular-nums; }
+
+.et-results-who { margin-top: 22px; font-size: 13px; color: var(--text-muted, #64748b); }
+
+@media (max-width: 1200px) {
+  .et-stage { grid-template-columns: minmax(0, 1fr); }
+  .et-rating-col { position: static; }
+  #et-ui-frame { height: 620px; }
+}

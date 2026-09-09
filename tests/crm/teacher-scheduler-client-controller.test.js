@@ -1912,6 +1912,318 @@ async function runTests() {
         console.log('✓ Fast optimistic session cancellation with rollback on failure verified');
     }
 
+    // TEST 25: Pill meta-row layout and unclipped title
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        // 120-minute session (normal, non-compact)
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Trần Khắc Huy - PTE Academic 1-1' }],
+                sessions: [
+                    {
+                        sessionId: 's-meta-test',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '09:00',
+                        durationMinutes: 120,
+                        status: 'completed'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(!calHtml.includes('is-compact'), '120-minute pill must not be compact');
+        assert(calHtml.includes('pill-meta-row'), 'Standard pill must render pill-meta-row');
+        assert(calHtml.includes('<div class="pill-meta-row"><span class="pill-time">9:00–11:00</span><span class="pill-badge-completed">✓ Completed</span></div>'), 'pill-meta-row must contain time and completed badge');
+        assert(calHtml.includes('<div class="pill-header"><span class="pill-title">Trần Khắc Huy - PTE Academic 1-1</span></div>'), 'pill-header must give 100% width to pill-title without inline badge');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Pill meta-row layout and unclipped title verified');
+    }
+
+    // TEST 26: Inline reschedule toggle and application via handleSessionDrop
+    {
+        let rescheduleCall = null;
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerSessionBubble: doc.createElement('div'),
+            teacherSchedulerSessionBubbleTitle: doc.createElement('div'),
+            teacherSchedulerSessionBubbleMeta: doc.createElement('div'),
+            teacherSchedulerSessionBubbleLock: doc.createElement('div'),
+            inputTeacherSchedulerSessionOutcome: doc.createElement('select'),
+            inputTeacherSchedulerSessionNote: doc.createElement('textarea'),
+            btnTeacherSchedulerSaveOutcome: doc.createElement('button'),
+            btnTeacherSchedulerCancelSession: doc.createElement('button'),
+            btnTeacherSchedulerDuplicateSession: doc.createElement('button'),
+            btnTeacherSchedulerOpenAttendance: doc.createElement('button'),
+            teacherSchedulerInlineReschedule: doc.createElement('div'),
+            inputTeacherSchedulerRescheduleDate: doc.createElement('input'),
+            inputTeacherSchedulerRescheduleTime: doc.createElement('input'),
+            btnTeacherSchedulerToggleReschedule: doc.createElement('button'),
+            btnTeacherSchedulerRescheduleClose: doc.createElement('button'),
+            btnTeacherSchedulerRescheduleCancel: doc.createElement('button'),
+            btnTeacherSchedulerRescheduleApply: doc.createElement('button')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Trần Khắc Huy - PTE Academic 1-1' }],
+                sessions: [
+                    {
+                        sessionId: 's-resched-target',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '09:00',
+                        durationMinutes: 120,
+                        status: 'scheduled',
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async (sessionId, data) => {
+                rescheduleCall = { sessionId, data };
+                return {
+                    data: {
+                        operation: 'reschedule-series',
+                        canCommit: true,
+                        moved: [
+                            {
+                                sessionId,
+                                classId: 'c1',
+                                from: { targetLocalDate: '2026-09-08', targetLocalTime: '09:00', durationMinutes: 120, timezone: 'UTC' },
+                                to: { targetLocalDate: '2026-09-10', targetLocalTime: '14:00', durationMinutes: 120, timezone: 'UTC' }
+                            }
+                        ],
+                        skipped: [],
+                        conflicts: []
+                    }
+                };
+            },
+            teacherRescheduleScheduledSession: async (sessionId, data) => {
+                rescheduleCall = { sessionId, data, single: true };
+                return { sessionId, success: true };
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        // Open session bubble for target session
+        controller.openSessionBubble('s-resched-target', { left: 100, top: 200, bottom: 250 });
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'block');
+        assert.strictEqual(testElements.teacherSchedulerInlineReschedule.style.display, 'none', 'Inline reschedule panel must be initially hidden');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubbleLock.textContent, 'Attendance editable', 'Must display Attendance editable instead of Outcome editable');
+
+        // Click toggle reschedule button
+        testElements.btnTeacherSchedulerToggleReschedule.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerInlineReschedule.style.display, 'block', 'Inline reschedule panel must be visible after toggle');
+        assert.strictEqual(testElements.inputTeacherSchedulerRescheduleDate.value, '2026-09-08', 'Date input must prefill with session date');
+        assert.strictEqual(testElements.inputTeacherSchedulerRescheduleTime.value, '09:00', 'Time input must prefill with session time');
+
+        // Close via Cancel button
+        testElements.btnTeacherSchedulerRescheduleCancel.dispatchEvent({ type: 'click' });
+        assert.strictEqual(testElements.teacherSchedulerInlineReschedule.style.display, 'none', 'Inline reschedule panel must close on cancel');
+
+        // Re-open and apply new date/time
+        testElements.btnTeacherSchedulerToggleReschedule.dispatchEvent({ type: 'click' });
+        testElements.inputTeacherSchedulerRescheduleDate.value = '2026-09-10';
+        testElements.inputTeacherSchedulerRescheduleTime.value = '14:00';
+        testElements.btnTeacherSchedulerRescheduleApply.dispatchEvent({ type: 'click' });
+
+        // Session bubble must be closed immediately
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'none', 'Session bubble must close when applying reschedule');
+
+        // Let async reschedule finish
+        await new Promise((r) => setTimeout(r, 10));
+        assert(rescheduleCall, 'Reschedule API must be invoked');
+        assert.strictEqual(rescheduleCall.sessionId, 's-resched-target');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Inline reschedule toggle and application via handleSessionDrop verified');
+    }
+
+    // TEST 27: Bidirectional upper and lower edge drag resizing
+    {
+        let rescheduleCall = null;
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Trần Khắc Huy - PTE Academic 1-1' }],
+                sessions: [
+                    {
+                        sessionId: 's-resize-target',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '09:00',
+                        durationMinutes: 120,
+                        status: 'scheduled',
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleScheduledSession: async (sessionId, data) => {
+                rescheduleCall = { sessionId, data };
+                return { sessionId, success: true };
+            }
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        // 1. Verify markup contains both upper and lower resize handles
+        assert(calHtml.includes('class="scheduler-session-resize-handle is-top" data-resize="top"'), 'Pill markup must render is-top resize handle');
+        assert(calHtml.includes('class="scheduler-session-resize-handle is-bottom" data-resize="bottom"'), 'Pill markup must render is-bottom resize handle');
+
+        // Create mock pill element
+        const pillEl = new MockElement('BUTTON');
+        pillEl.classList.add('scheduler-session-pill', 'teacher-scheduler-session-pill');
+        pillEl.style.height = '94px';
+        pillEl.style.top = '0px';
+        const timeEl = new MockElement('SPAN');
+        timeEl.classList.add('pill-time');
+        timeEl.textContent = '9:00–11:00';
+        pillEl.querySelector = (sel) => sel === '.pill-time' ? timeEl : null;
+
+        // 2. Test dragging upper edge UPWARD (earlier start time, extended duration)
+        controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'top');
+        const state = controller.getState();
+        assert.strictEqual(state.resizeDrag.edge, 'top');
+        assert.strictEqual(state.resizeDrag.originalStartTime, '09:00');
+        assert.strictEqual(state.resizeDrag.originalDuration, 120);
+
+        // Move up by 24px (1 slot = 30 mins) -> 08:30 start, 150 min duration
+        controller.handleResizeMove({ clientY: 76 });
+        assert.strictEqual(state.resizeDrag.currentStartTime, '08:30');
+        assert.strictEqual(state.resizeDrag.currentDuration, 150);
+        assert.strictEqual(pillEl.style.top, '-24px', 'Pill top offset must shift upward by 24px');
+        assert.strictEqual(pillEl.style.height, '118px', 'Pill height must expand by 24px');
+        assert.strictEqual(timeEl.textContent, '8:30–11:00', 'Live time text must update to 8:30–11:00');
+
+        await controller.commitResize();
+        assert(rescheduleCall, 'Reschedule API must be called');
+        assert.strictEqual(rescheduleCall.data.targetLocalTime, '08:30');
+        assert.strictEqual(rescheduleCall.data.durationMinutes, 150);
+
+        // 3. Test dragging upper edge DOWNWARD (later start time, shortened duration)
+        rescheduleCall = null;
+        controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'top');
+        // Move down by 24px (1 slot = 30 mins) -> 09:30 start (from 09:00), duration 90 mins
+        controller.handleResizeMove({ clientY: 124 });
+        assert.strictEqual(state.resizeDrag.currentStartTime, '09:30');
+        assert.strictEqual(state.resizeDrag.currentDuration, 90);
+        assert.strictEqual(pillEl.style.top, '24px');
+        assert.strictEqual(pillEl.style.height, '70px');
+        assert.strictEqual(timeEl.textContent, '9:30–11:00');
+
+        await controller.commitResize();
+        assert(rescheduleCall, 'Reschedule API must be called');
+        assert.strictEqual(rescheduleCall.data.targetLocalTime, '09:30');
+        assert.strictEqual(rescheduleCall.data.durationMinutes, 90);
+
+        // 4. Test dragging lower edge DOWNWARD (fixed start time, extended duration)
+        rescheduleCall = null;
+        controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'bottom');
+        assert.strictEqual(state.resizeDrag.edge, 'bottom');
+        // Move down by 24px -> duration 150 mins
+        controller.handleResizeMove({ clientY: 124 });
+        assert.strictEqual(state.resizeDrag.currentDuration, 150);
+        assert.strictEqual(pillEl.style.height, '118px');
+        assert.strictEqual(timeEl.textContent, '9:00–11:30');
+
+        await controller.commitResize();
+        assert(rescheduleCall, 'Reschedule API must be called');
+        assert.strictEqual(rescheduleCall.data.targetLocalTime, '09:00', 'Start time must remain unchanged for bottom edge drag');
+        assert.strictEqual(rescheduleCall.data.durationMinutes, 150);
+
+        // 5. Test conflict detection on upper edge drag
+        rescheduleCall = null;
+        // Add an overlapping session at 08:00–09:00
+        controller.getState().sessions.push({
+            sessionId: 's-conflict-overlap',
+            classId: 'c1',
+            teacherUid: 'teacher-1',
+            scheduledLocalDate: '2026-09-08',
+            scheduledLocalTime: '08:00',
+            durationMinutes: 60,
+            status: 'scheduled',
+            timezone: 'UTC'
+        });
+
+        controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'top');
+        // Drag top up to 08:30 (collides with 08:00–09:00)
+        controller.handleResizeMove({ clientY: 76 });
+        assert.strictEqual(state.resizeDrag.currentStartTime, '08:30');
+
+        await controller.commitResize();
+        assert.strictEqual(rescheduleCall, null, 'API must not be called when conflict is detected');
+        assert.strictEqual(pillEl.style.top, '0px', 'Styles must be restored on conflict');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Bidirectional upper and lower edge drag resizing verified');
+    }
+
     console.log('All teacher scheduler client controller tests passed successfully!');
 }
 

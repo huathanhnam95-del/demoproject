@@ -6,22 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>CRM Admin - Student & Course Management</title>
-  <link rel="stylesheet" href="/design-tokens.css?v=20260910-v2.0.5">
+  <link rel="stylesheet" href="/design-tokens.css?v=20260910-v2.0.6">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="fonts/be-vietnam-pro.css?v=20260910-v2.0.5">
+  <link rel="stylesheet" href="fonts/be-vietnam-pro.css?v=20260910-v2.0.6">
 
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; media-src 'self' blob: https://firebasestorage.googleapis.com https://storage.googleapis.com data:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' http://localhost:11434 https://localhost:8443 http://localhost:8081 http://127.0.0.1:8081 https://localhost:8081 https://127.0.0.1:8081 https://www.gstatic.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com wss://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseapp.com https://praat-api-1071929245506.us-central1.run.app; frame-src 'self' blob: https://*.firebaseapp.com https://storage.googleapis.com;">
 
   <!-- Reuse main app design tokens -->
-  <link rel="stylesheet" href="style.css?v=20260910-v2.0.5&bgm=v2" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260910-v2.0.5&bgm=v2" />
-  <link rel="stylesheet" href="/css/ui-continuity.css?v=20260910-v2.0.5">
-  <script src="/js/ui-continuity.js?v=20260910-v2.0.5" defer></script>
-  <link rel="stylesheet" href="css/crm-projects.css?v=20260910-v2.0.5&phase=9" />
-  <link rel="stylesheet" href="css/crm-data-input.css?v=20260910-v2.0.5&input=20260908-2" />
+  <link rel="stylesheet" href="style.css?v=20260910-v2.0.6&bgm=v2" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260910-v2.0.6&bgm=v2" />
+  <link rel="stylesheet" href="/css/ui-continuity.css?v=20260910-v2.0.6">
+  <script src="/js/ui-continuity.js?v=20260910-v2.0.6" defer></script>
+  <link rel="stylesheet" href="css/crm-projects.css?v=20260910-v2.0.6&phase=9" />
+  <link rel="stylesheet" href="css/crm-data-input.css?v=20260910-v2.0.6&input=20260908-2" />
 </head>
 
 <body>
@@ -718,7 +718,7 @@
               style="display: none; margin-top: 4px;"></small>
           </div>
           <div class="crm-form-group" style="margin-top:10px;">
-            <label for="teacher-scheduler-session-outcome">Outcome</label>
+            <label for="teacher-scheduler-session-outcome">Attendance</label>
             <select id="teacher-scheduler-session-outcome" class="crm-input">
               <option value="">No outcome</option>
               <option value="completed">Completed</option>
@@ -726,16 +726,38 @@
               <option value="absent_makeup">Absent (make-up)</option>
             </select>
           </div>
+
+          <div id="teacher-scheduler-inline-reschedule" class="teacher-scheduler-inline-reschedule" style="display:none;">
+            <div class="inline-reschedule-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-weight:600;font-size:0.8rem;color:var(--crm-text-main,#1e293b);">⤺ Reschedule Session</span>
+              <button id="btn-teacher-scheduler-reschedule-close" type="button" class="teacher-scheduler-popover-close" style="font-size:16px;line-height:1;border:none;background:transparent;cursor:pointer;" aria-label="Close reschedule">&times;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+              <div>
+                <label for="teacher-scheduler-reschedule-date" style="font-size:0.75rem;margin-bottom:2px;display:block;">New Date</label>
+                <input type="date" id="teacher-scheduler-reschedule-date" class="crm-input" style="padding:4px 8px;font-size:0.8rem;">
+              </div>
+              <div>
+                <label for="teacher-scheduler-reschedule-time" style="font-size:0.75rem;margin-bottom:2px;display:block;">Start Time</label>
+                <input type="time" id="teacher-scheduler-reschedule-time" class="crm-input" step="1800" style="padding:4px 8px;font-size:0.8rem;">
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;justify-content:flex-end;">
+              <button id="btn-teacher-scheduler-reschedule-cancel" type="button" class="crm-btn-secondary" style="padding:3px 10px;font-size:0.75rem;">Cancel</button>
+              <button id="btn-teacher-scheduler-reschedule-apply" type="button" class="crm-btn-primary" style="padding:3px 10px;font-size:0.75rem;">Apply Reschedule</button>
+            </div>
+          </div>
+
           <div class="teacher-scheduler-bubble-actions">
             <div class="bubble-secondary-row">
-              <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button">Open attendance</button>
-              <button id="btn-teacher-scheduler-duplicate-session" class="crm-btn-secondary" type="button">Duplicate</button>
+              <button id="btn-teacher-scheduler-toggle-reschedule" class="crm-btn-secondary" type="button" title="Reschedule date and time">⤺ Reschedule</button>
+              <button id="btn-teacher-scheduler-duplicate-session" class="crm-btn-secondary" type="button" title="Duplicate session">⧉ Duplicate</button>
+              <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button" title="Open full class roster">📋 Full Roster</button>
               <button id="btn-teacher-scheduler-undo-ai" class="crm-btn-secondary" type="button"
                 style="display:none;padding:2px 8px;font-size:12px;">Undo AI</button>
-              <button id="btn-teacher-scheduler-cancel-session" class="crm-btn-secondary" type="button"
-                style="color:var(--crm-danger,#dc2626);border-color:rgba(220,38,38,0.3);margin-left:auto;">Cancel session</button>
             </div>
             <div class="bubble-primary-row">
+              <button id="btn-teacher-scheduler-cancel-session" class="crm-btn-secondary crm-btn-danger-outline" type="button">Cancel session</button>
               <button id="btn-teacher-scheduler-save-outcome" class="crm-btn-primary" type="button">Save</button>
             </div>
           </div>
@@ -1167,7 +1189,7 @@
               <button type="button" role="tab" id="projects-utab-notifications" data-u="notifications" aria-controls="projects-upane-notifications" aria-selected="false" tabindex="-1" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.6a4 4 0 1 1 8 0c0 3 1 4.2 1 4.2H3s1-1.2 1-4.2z"/><path d="M6.6 13.2a1.6 1.6 0 0 0 2.8 0"/></svg><span class="badge" id="projects-notifications-badge" hidden>0</span></button>
               <button type="button" role="tab" id="projects-utab-automations" data-u="automations" aria-controls="projects-upane-automations" aria-selected="false" tabindex="-1" title="Automations" aria-label="Automations"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.8 1.8 3.5 9h3.4l-.7 5.2L12.5 7H9.1z"/></svg></button>
               <button type="button" role="tab" id="projects-utab-recovery" data-u="recovery" aria-controls="projects-upane-recovery" aria-selected="false" tabindex="-1" title="Archive &amp; trash" aria-label="Archive and trash"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.4 4.6h11.2v2.2H2.4z"/><path d="M3.4 6.8V13a1 1 0 0 0 1 1h7.2a1 1 0 0 0 1-1V6.8M6.5 9v2.4M9.5 9v2.4"/></svg></button>
-              <button type="button" class="btn icon" id="ucollapse" aria-expanded="true" style="margin-top:auto;border:0;background:transparent;color:var(--pj-faint);padding:8px" title="Collapse utilities" aria-label="Collapse utilities">&raquo;</button>
+              <button type="button" class="crm-projects-utility-collapse" id="ucollapse" aria-expanded="true" title="Collapse utilities" aria-label="Collapse utilities">&raquo;</button>
             </div>
             <div class="crm-projects-utility-panes">
               <div class="crm-projects-utility-pane on" id="projects-upane-assistant" data-p="assistant" role="tabpanel" aria-labelledby="projects-utab-assistant" tabindex="0">
@@ -2881,87 +2903,87 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <script src="js/auth-session-guard.js?v=20260910-v2.0.5"></script>
-  <script src="js/classroom-api.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/lifecycle-stages.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/utils.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/state.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/dom.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/courses.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/schedule-availability.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/students.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/student-360.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/student-courses.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/classrooms.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/leads.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/activities.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/enrollments.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/attendance.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/finance-workflow.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/finance.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/communications.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/scheduler-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/staff-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/ai-assistance/budget.js?v=20260910-v2.0.5&budget=monitored"></script>
-  <script src="js/crm/ai-assistance/voice-transport.js?v=20260910-v2.0.5&voice=retirement"></script>
-  <script src="js/crm/projects/assistant.js?v=20260910-v2.0.5&cb=mute-response"></script>
-  <script src="js/crm/projects/access.js?v=20260910-v2.0.5&phase=5"></script>
-  <script src="js/crm/projects/state.js?v=20260910-v2.0.5&phase=9"></script>
-  <script src="js/crm/projects/discussion.js?v=20260910-v2.0.5&phase=6"></script>
-  <script src="js/crm/projects/recovery.js?v=20260910-v2.0.5&phase=4"></script>
-  <script src="js/crm/projects/views.js?v=20260910-v2.0.5&phase=5"></script>
-  <script src="js/crm/projects/notifications.js?v=20260910-v2.0.5&phase=6"></script>
-  <script src="js/crm/projects/automation-definition-editor.js?v=20260910-v2.0.5&phase=7"></script>
-  <script src="js/crm/projects/automations-renderer.js?v=20260910-v2.0.5&phase=7"></script>
-  <script src="js/crm/projects/automations.js?v=20260910-v2.0.5&phase=9"></script>
-  <script src="js/crm/projects/remote-observer.js?v=20260910-v2.0.5&observer=remote"></script>
-  <script src="js/crm/projects/board.js?v=20260910-v2.0.5&phase=10"></script>
-  <script src="js/crm/student-finance.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/live-delivery.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/classroom-modal.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/student-modal.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/course-modal.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/lead-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/classroom-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/task-activity-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/communications-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/dashboard-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/student-directory-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/agent-sources-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/books-word-segmenter.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/books-workspace.js?v=20260910-v2.0.5&bgm=v2"></script>
-  <script src="js/crm/activity-surfaces.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/dashboard.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/governance.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/index.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/entrance-test-link-state.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/devtools-access.js?v=20260910-v2.0.5&cb=pronunciation-samples-nav"></script>
-  <script src="js/crm/data-input/client.js?v=20260910-v2.0.5&input=20260908-resume"></script>
-  <script src="js/crm/data-input/attachments.js?v=20260910-v2.0.5&input=20260908-2"></script>
-  <script src="js/crm/data-input/voice.js?v=20260910-v2.0.5&input=20260908-7"></script>
-  <script src="js/crm/data-input/voice-panel.js?v=20260910-v2.0.5&input=20260908-7"></script>
-  <script src="js/crm/data-input/profile-editor.js?v=20260910-v2.0.5&input=20260908-2"></script>
-  <script src="js/crm/data-input/workspace.js?v=20260910-v2.0.5&input=20260908-clarification"></script>
-  <script src="js/crm/bel-assistant.js?v=20260910-v2.0.5&input=20260908-3"></script>
-  <script src="arpabet-ipa-map.js?v=20260910-v2.0.5"></script>
-  <script src="phonetics.js?v=20260910-v2.0.5"></script>
+  <script src="js/auth-session-guard.js?v=20260910-v2.0.6"></script>
+  <script src="js/classroom-api.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/lifecycle-stages.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/utils.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/state.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/dom.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/courses.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/schedule-availability.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/students.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/student-360.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/student-courses.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/classrooms.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/leads.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/activities.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/enrollments.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/attendance.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/finance-workflow.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/finance.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/communications.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/scheduler-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/staff-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/ai-assistance/budget.js?v=20260910-v2.0.6&budget=monitored"></script>
+  <script src="js/crm/ai-assistance/voice-transport.js?v=20260910-v2.0.6&voice=retirement"></script>
+  <script src="js/crm/projects/assistant.js?v=20260910-v2.0.6&cb=mute-response"></script>
+  <script src="js/crm/projects/access.js?v=20260910-v2.0.6&phase=5"></script>
+  <script src="js/crm/projects/state.js?v=20260910-v2.0.6&phase=9"></script>
+  <script src="js/crm/projects/discussion.js?v=20260910-v2.0.6&phase=6"></script>
+  <script src="js/crm/projects/recovery.js?v=20260910-v2.0.6&phase=4"></script>
+  <script src="js/crm/projects/views.js?v=20260910-v2.0.6&phase=5"></script>
+  <script src="js/crm/projects/notifications.js?v=20260910-v2.0.6&phase=6"></script>
+  <script src="js/crm/projects/automation-definition-editor.js?v=20260910-v2.0.6&phase=7"></script>
+  <script src="js/crm/projects/automations-renderer.js?v=20260910-v2.0.6&phase=7"></script>
+  <script src="js/crm/projects/automations.js?v=20260910-v2.0.6&phase=9"></script>
+  <script src="js/crm/projects/remote-observer.js?v=20260910-v2.0.6&observer=remote"></script>
+  <script src="js/crm/projects/board.js?v=20260910-v2.0.6&phase=10"></script>
+  <script src="js/crm/student-finance.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/live-delivery.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/classroom-modal.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/student-modal.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/course-modal.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/lead-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/classroom-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/task-activity-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/communications-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/dashboard-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/student-directory-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/agent-sources-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/books-word-segmenter.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/books-workspace.js?v=20260910-v2.0.6&bgm=v2"></script>
+  <script src="js/crm/activity-surfaces.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/dashboard.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/governance.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/index.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/entrance-test-link-state.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/devtools-access.js?v=20260910-v2.0.6&cb=pronunciation-samples-nav"></script>
+  <script src="js/crm/data-input/client.js?v=20260910-v2.0.6&input=20260908-resume"></script>
+  <script src="js/crm/data-input/attachments.js?v=20260910-v2.0.6&input=20260908-2"></script>
+  <script src="js/crm/data-input/voice.js?v=20260910-v2.0.6&input=20260908-7"></script>
+  <script src="js/crm/data-input/voice-panel.js?v=20260910-v2.0.6&input=20260908-7"></script>
+  <script src="js/crm/data-input/profile-editor.js?v=20260910-v2.0.6&input=20260908-2"></script>
+  <script src="js/crm/data-input/workspace.js?v=20260910-v2.0.6&input=20260908-clarification"></script>
+  <script src="js/crm/bel-assistant.js?v=20260910-v2.0.6&input=20260908-3"></script>
+  <script src="arpabet-ipa-map.js?v=20260910-v2.0.6"></script>
+  <script src="phonetics.js?v=20260910-v2.0.6"></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
   <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
-  <script src="js/crm/teaching-session-mindmap.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/teaching-session-pdf.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/teaching-sessions.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/voice-cloning-workspace.js?v=20260910-v2.0.5"></script>
-  <script src="js/audio-dsp-pipeline.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/pronunciation-dual-arena.js?v=20260910-v2.0.5"></script>
-  <script src="js/entrance-test-ui-fonts.js?v=20260910-v2.0.5&etui=20260909-etui2"></script>
-  <script src="js/crm/entrance-test-ui-lab.js?v=20260910-v2.0.5&etui=20260909-etui2"></script>
-  <script src="js/crm/projects/workspace.js?v=20260910-v2.0.5"></script>
-  <script src="crm-admin.js?v=20260910-v2.0.5"></script>
-  <script src="js/crm/segmentation-study.js?v=20260910-v2.0.5" defer></script>
+  <script src="js/crm/teaching-session-mindmap.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/teaching-session-pdf.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/teaching-sessions.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/voice-cloning-workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/audio-dsp-pipeline.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/pronunciation-dual-arena.js?v=20260910-v2.0.6"></script>
+  <script src="js/entrance-test-ui-fonts.js?v=20260910-v2.0.6&etui=20260909-etui2"></script>
+  <script src="js/crm/entrance-test-ui-lab.js?v=20260910-v2.0.6&etui=20260909-etui2"></script>
+  <script src="js/crm/projects/workspace.js?v=20260910-v2.0.6"></script>
+  <script src="crm-admin.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/segmentation-study.js?v=20260910-v2.0.6" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">

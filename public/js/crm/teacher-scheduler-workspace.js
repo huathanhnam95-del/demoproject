@@ -11,6 +11,12 @@ window.TeacherSchedulerWorkspace = (function () {
         return String(value).padStart(2, '0');
     }
 
+    function formatMinutesToTime(mins) {
+        const hh = Math.floor(mins / 60) % 24;
+        const mm = mins % 60;
+        return `${pad(hh)}:${pad(mm)}`;
+    }
+
     function toLocalDateInput(date) {
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     }
@@ -655,6 +661,7 @@ window.TeacherSchedulerWorkspace = (function () {
                             || String(session.attendanceState || 'none') === 'finalized';
                         const completedClass = isCompleted ? 'is-completed' : '';
                         const completedBadge = isCompleted ? '<span class="pill-badge-completed">✓ Completed</span>' : '';
+                        const compactBadge = isCompleted ? '<span class="pill-badge-compact" title="Completed">✓</span>' : '';
                         const duration = Number(session.durationMinutes || 0) || 60;
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
                         const heightPx = Math.max((duration / 30) * SLOT_HEIGHT_PX - 2, 18);
@@ -679,10 +686,10 @@ window.TeacherSchedulerWorkspace = (function () {
                         }
                         const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
                         return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
-                            + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${completedBadge}</div>`
+                            + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? completedBadge : ''}</div>`
                             + (isCompact ? '' : teacherPill)
-                            + (isCompact ? '' : `<span class="pill-time">${escapeHtml(timeRange)}</span>`)
-                            + (locked ? '' : '<div class="scheduler-session-resize-handle" data-resize="1"></div>')
+                            + (isCompact ? '' : `<div class="pill-meta-row"><span class="pill-time">${escapeHtml(timeRange)}</span>${completedBadge}</div>`)
+                            + (locked ? '' : '<div class="scheduler-session-resize-handle is-top" data-resize="top" title="Drag to adjust start time"></div><div class="scheduler-session-resize-handle is-bottom" data-resize="bottom" title="Drag to adjust duration"></div>')
                             + '</button>';
                     }).join('');
 
@@ -1040,6 +1047,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 try { state._voiceDraftAbort.abort(); } catch (_) { /* */ }
                 state._voiceDraftAbort = null;
             }
+            if (elements.teacherSchedulerInlineReschedule) {
+                elements.teacherSchedulerInlineReschedule.style.display = 'none';
+            }
             state.sessionBubble = null;
             renderSessionBubble();
         }
@@ -1066,7 +1076,7 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             const classroom = getClassroomById(session.classId);
             const outcomeLocked = isOutcomeLocked(session);
-            const lockStatus = outcomeLocked ? 'Outcome locked' : 'Outcome editable';
+            const lockStatus = outcomeLocked ? 'Attendance finalized' : 'Attendance editable';
             const label = session.unitType === 'overflow'
                 ? `Overflow ${session.overflowSequence || ''}`.trim()
                 : `Unit ${session.contractUnitIndex || ''}`.trim();
@@ -1110,6 +1120,13 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             if (elements.btnTeacherSchedulerOpenAttendance) {
                 elements.btnTeacherSchedulerOpenAttendance.dataset.sessionId = String(session.sessionId || '');
+            }
+            if (elements.teacherSchedulerInlineReschedule) {
+                elements.teacherSchedulerInlineReschedule.style.display = 'none';
+            }
+            if (elements.btnTeacherSchedulerToggleReschedule) {
+                elements.btnTeacherSchedulerToggleReschedule.disabled = isLockedSession(session);
+                elements.btnTeacherSchedulerToggleReschedule.dataset.sessionId = String(session.sessionId || '');
             }
 
             const anchor = bubble.anchorRect || {
@@ -1428,8 +1445,18 @@ window.TeacherSchedulerWorkspace = (function () {
         /* --- Edge-resize logic --- */
         function restoreResizeStyles(rd) {
             if (!rd?.pillEl) return;
-            rd.pillEl.style.zIndex = rd.originalZIndex || '';
-            rd.pillEl.style.height = rd.originalHeight || '';
+            if (rd.pillEl.style) {
+                rd.pillEl.style.zIndex = rd.originalZIndex || '';
+                rd.pillEl.style.height = rd.originalHeight || '';
+                rd.pillEl.style.top = rd.originalTop || '';
+            }
+            if (rd.timeEl && rd.originalTimeText !== undefined) {
+                rd.timeEl.textContent = rd.originalTimeText;
+            }
+            if (rd.titleEl && rd.originalTitleText !== undefined) {
+                rd.titleEl.textContent = rd.originalTitleText;
+            }
+            rd.pillEl.classList?.remove?.('is-resizing');
         }
 
         function cancelResizeDrag() {
@@ -1438,10 +1465,10 @@ window.TeacherSchedulerWorkspace = (function () {
             state.resizeDrag = null;
         }
 
-        function beginResizeDrag(sessionId, pillEl, evt) {
-            if (evt.button !== 0) return;
-            evt.preventDefault();
-            evt.stopPropagation();
+        function beginResizeDrag(sessionId, pillEl, evt, edge = 'bottom') {
+            if (evt.button !== 0 && evt.button !== undefined) return;
+            evt.preventDefault?.();
+            evt.stopPropagation?.();
             clearPointerDrag();
             const session = state.sessions.find((s) => String(s.sessionId || '') === String(sessionId || ''));
             if (!session) return;
@@ -1449,16 +1476,38 @@ window.TeacherSchedulerWorkspace = (function () {
                 showToast?.('This session is locked and cannot be resized.', 'info');
                 return;
             }
+            const origStartTime = getSessionLocalTime(session);
+            const origStartMins = parseTimeToMinutes(origStartTime) ?? (9 * 60);
+            const origDuration = Number(session.durationMinutes || 0) || 60;
+            const origEndMins = origStartMins + origDuration;
+            const timeEl = pillEl.querySelector ? pillEl.querySelector('.pill-time') : null;
+            const titleEl = pillEl.querySelector ? pillEl.querySelector('.pill-title') : null;
+
             state.resizeDrag = {
                 sessionId: String(sessionId || ''),
                 pillEl,
+                edge: edge === 'top' ? 'top' : 'bottom',
                 startY: evt.clientY,
-                originalDuration: Number(session.durationMinutes || 0) || 60,
-                currentDuration: Number(session.durationMinutes || 0) || 60,
-                originalHeight: pillEl.style.height || '',
-                originalZIndex: pillEl.style.zIndex || ''
+                originalStartTime: origStartTime,
+                originalStartMinutes: origStartMins,
+                originalDuration: origDuration,
+                originalEndMinutes: origEndMins,
+                currentStartTime: origStartTime,
+                currentStartMinutes: origStartMins,
+                currentDuration: origDuration,
+                originalHeight: pillEl.style?.height || '',
+                originalTop: pillEl.style?.top || '',
+                originalZIndex: pillEl.style?.zIndex || '',
+                timeEl,
+                titleEl,
+                originalTimeText: timeEl ? timeEl.textContent : '',
+                originalTitleText: titleEl ? titleEl.textContent : '',
+                isCompact: Boolean(pillEl.classList?.contains?.('is-compact'))
             };
-            pillEl.style.zIndex = '10';
+            if (pillEl.style) {
+                pillEl.style.zIndex = '10';
+            }
+            pillEl.classList?.add?.('is-resizing');
         }
 
         function handleResizeMove(evt) {
@@ -1466,10 +1515,62 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!rd) return;
             const deltaY = evt.clientY - rd.startY;
             const deltaSlots = Math.round(deltaY / SLOT_HEIGHT_PX);
-            const newDuration = Math.max(rd.originalDuration + (deltaSlots * 30), 30);
-            rd.currentDuration = newDuration;
-            const heightPx = Math.max((newDuration / 30) * SLOT_HEIGHT_PX - 2, 18);
-            if (rd.pillEl) rd.pillEl.style.height = `${heightPx}px`;
+
+            if (rd.edge === 'top') {
+                // Dragging upper edge:
+                // deltaY < 0 (moving up) -> proposed start is earlier -> duration increases
+                // deltaY > 0 (moving down) -> proposed start is later -> duration decreases
+                const proposedStart = rd.originalStartMinutes + (deltaSlots * 30);
+                const minStart = 7 * 60; // 7:00 AM (calendar start)
+                const maxStart = rd.originalEndMinutes - 30; // minimum 30 min duration
+                const clampedStart = Math.min(Math.max(proposedStart, minStart), maxStart);
+                const newDuration = rd.originalEndMinutes - clampedStart;
+                const newStartTime = formatMinutesToTime(clampedStart);
+
+                rd.currentStartMinutes = clampedStart;
+                rd.currentStartTime = newStartTime;
+                rd.currentDuration = newDuration;
+
+                const topOffsetPx = ((clampedStart - rd.originalStartMinutes) / 30) * SLOT_HEIGHT_PX;
+                const heightPx = Math.max((newDuration / 30) * SLOT_HEIGHT_PX - 2, 18);
+
+                if (rd.pillEl?.style) {
+                    rd.pillEl.style.top = `${topOffsetPx}px`;
+                    rd.pillEl.style.height = `${heightPx}px`;
+                }
+
+                const newTimeRange = formatTimeRange(newStartTime, newDuration);
+                if (rd.timeEl) {
+                    rd.timeEl.textContent = newTimeRange;
+                }
+                if (rd.titleEl && rd.isCompact) {
+                    const baseTitle = rd.originalTitleText.split(' · ')[0] || rd.originalTitleText;
+                    rd.titleEl.textContent = `${baseTitle} · ${newTimeRange}`;
+                }
+            } else {
+                // Dragging lower edge (bottom):
+                // deltaY > 0 (moving down) -> duration increases
+                // deltaY < 0 (moving up) -> duration decreases
+                const proposedDuration = rd.originalDuration + (deltaSlots * 30);
+                const maxAllowedDuration = (22 * 60) - rd.originalStartMinutes; // cannot exceed 22:00
+                const newDuration = Math.min(Math.max(proposedDuration, 30), Math.max(maxAllowedDuration, 30));
+
+                rd.currentDuration = newDuration;
+                const heightPx = Math.max((newDuration / 30) * SLOT_HEIGHT_PX - 2, 18);
+
+                if (rd.pillEl?.style) {
+                    rd.pillEl.style.height = `${heightPx}px`;
+                }
+
+                const newTimeRange = formatTimeRange(rd.originalStartTime, newDuration);
+                if (rd.timeEl) {
+                    rd.timeEl.textContent = newTimeRange;
+                }
+                if (rd.titleEl && rd.isCompact) {
+                    const baseTitle = rd.originalTitleText.split(' · ')[0] || rd.originalTitleText;
+                    rd.titleEl.textContent = `${baseTitle} · ${newTimeRange}`;
+                }
+            }
         }
 
         async function commitResize() {
@@ -1477,7 +1578,10 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!rd) return;
             state.resizeDrag = null;
             const restore = () => restoreResizeStyles(rd);
-            if (rd.currentDuration === rd.originalDuration) {
+            const unchanged = rd.edge === 'top'
+                ? (rd.currentStartTime === rd.originalStartTime && rd.currentDuration === rd.originalDuration)
+                : (rd.currentDuration === rd.originalDuration);
+            if (unchanged) {
                 restore();
                 return;
             }
@@ -1485,35 +1589,44 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!session) return;
 
             const startDate = getSessionLocalDate(session);
-            const startTime = getSessionLocalTime(session);
-            const conflict = hasClientConflict(startDate, startTime, rd.currentDuration, rd.sessionId, session.classId, session.teacherUid);
+            const targetStartTime = rd.edge === 'top' ? rd.currentStartTime : getSessionLocalTime(session);
+            const targetDuration = rd.currentDuration;
+
+            const conflict = hasClientConflict(startDate, targetStartTime, targetDuration, rd.sessionId, session.classId, session.teacherUid);
             if (conflict) {
                 const conflictClass = getClassroomById(conflict.classId);
                 const msg = `Conflict: overlaps with ${conflictClass?.name || 'another session'} at ${getSessionLocalTime(conflict)}`;
-                markSlotError(startDate, startTime, msg);
+                markSlotError(startDate, targetStartTime, msg);
                 showToast?.(msg, 'error');
                 restore();
                 return;
             }
 
+            const previousStartTime = session.scheduledLocalTime;
             const previousDuration = session.durationMinutes;
-            session.durationMinutes = rd.currentDuration;
+            session.scheduledLocalTime = targetStartTime;
+            session.durationMinutes = targetDuration;
             state.pendingSessionIds.add(rd.sessionId);
             renderCalendarGrid();
+
             try {
                 await window.ClassroomAPI.teacherRescheduleScheduledSession(rd.sessionId, {
                     targetLocalDate: startDate,
-                    targetLocalTime: startTime,
-                    durationMinutes: rd.currentDuration,
+                    targetLocalTime: targetStartTime,
+                    durationMinutes: targetDuration,
                     timezone: session.timezone || 'UTC'
                 });
-                showToast?.(`Duration updated to ${rd.currentDuration} min.`, 'success');
+                const toastMsg = rd.edge === 'top'
+                    ? `Rescheduled to ${targetStartTime} (${targetDuration} min).`
+                    : `Duration updated to ${targetDuration} min.`;
+                showToast?.(toastMsg, 'success');
                 await refresh();
             } catch (error) {
+                session.scheduledLocalTime = previousStartTime;
                 session.durationMinutes = previousDuration;
-                const msg = describeTeacherSchedulerError(error, startDate, startTime, rd.currentDuration, rd.sessionId, session.classId, session.teacherUid);
+                const msg = describeTeacherSchedulerError(error, startDate, targetStartTime, targetDuration, rd.sessionId, session.classId, session.teacherUid);
                 showToast?.(msg, 'error');
-                markSlotError(startDate, startTime, msg);
+                markSlotError(startDate, targetStartTime, msg);
                 renderCalendarGrid();
             } finally {
                 state.pendingSessionIds.delete(rd.sessionId);
@@ -2098,7 +2211,8 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (resizeHandle) {
                         const pill = resizeHandle.closest('.teacher-scheduler-session-pill[data-session-id]');
                         if (pill) {
-                            beginResizeDrag(pill.dataset.sessionId, pill, evt);
+                            const edge = resizeHandle.dataset.resize === 'top' || resizeHandle.classList.contains('is-top') ? 'top' : 'bottom';
+                            beginResizeDrag(pill.dataset.sessionId, pill, evt, edge);
                             return;
                         }
                     }
@@ -2426,6 +2540,67 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
             }
 
+            if (elements.btnTeacherSchedulerToggleReschedule) {
+                elements.btnTeacherSchedulerToggleReschedule.addEventListener('click', () => {
+                    if (!elements.teacherSchedulerInlineReschedule) return;
+                    const isHidden = elements.teacherSchedulerInlineReschedule.style.display === 'none' || !elements.teacherSchedulerInlineReschedule.style.display;
+                    if (isHidden) {
+                        const sessionId = String(elements.btnTeacherSchedulerToggleReschedule.dataset.sessionId || elements.btnTeacherSchedulerSaveOutcome?.dataset.sessionId || '').trim();
+                        const session = state.sessions.find((s) => String(s.sessionId || '') === sessionId);
+                        if (session) {
+                            if (elements.inputTeacherSchedulerRescheduleDate) {
+                                elements.inputTeacherSchedulerRescheduleDate.value = getSessionLocalDate(session);
+                            }
+                            if (elements.inputTeacherSchedulerRescheduleTime) {
+                                elements.inputTeacherSchedulerRescheduleTime.value = getSessionLocalTime(session);
+                            }
+                        }
+                        elements.teacherSchedulerInlineReschedule.style.display = 'block';
+                    } else {
+                        elements.teacherSchedulerInlineReschedule.style.display = 'none';
+                    }
+                });
+            }
+
+            if (elements.btnTeacherSchedulerRescheduleClose) {
+                elements.btnTeacherSchedulerRescheduleClose.addEventListener('click', () => {
+                    if (elements.teacherSchedulerInlineReschedule) {
+                        elements.teacherSchedulerInlineReschedule.style.display = 'none';
+                    }
+                });
+            }
+
+            if (elements.btnTeacherSchedulerRescheduleCancel) {
+                elements.btnTeacherSchedulerRescheduleCancel.addEventListener('click', () => {
+                    if (elements.teacherSchedulerInlineReschedule) {
+                        elements.teacherSchedulerInlineReschedule.style.display = 'none';
+                    }
+                });
+            }
+
+            if (elements.btnTeacherSchedulerRescheduleApply) {
+                elements.btnTeacherSchedulerRescheduleApply.addEventListener('click', () => {
+                    const sessionId = String(elements.btnTeacherSchedulerToggleReschedule?.dataset.sessionId || elements.btnTeacherSchedulerSaveOutcome?.dataset.sessionId || '').trim();
+                    if (!sessionId) return;
+                    const session = state.sessions.find((s) => String(s.sessionId || '') === sessionId);
+                    if (!session) return;
+                    const newDate = String(elements.inputTeacherSchedulerRescheduleDate?.value || '').trim();
+                    const newTime = String(elements.inputTeacherSchedulerRescheduleTime?.value || '').trim();
+                    if (!newDate || !newTime) {
+                        showToast?.('Please choose both date and time.', 'error');
+                        return;
+                    }
+                    if (getSessionLocalDate(session) === newDate && getSessionLocalTime(session) === newTime) {
+                        showToast?.('Session is already at this date and time.', 'info');
+                        return;
+                    }
+                    closeSessionBubble();
+                    handleSessionDrop(sessionId, newDate, newTime).catch((err) => {
+                        console.error('[TeacherScheduler] inline reschedule error:', err);
+                    });
+                });
+            }
+
             if (elements.btnTeacherSchedulerVoiceNote) {
                 const voiceReady = elements.teacherSchedulerVoiceStatus
                     && elements.inputTeacherSchedulerSessionNote;
@@ -2649,6 +2824,14 @@ window.TeacherSchedulerWorkspace = (function () {
             cancelSession,
             renderMiniCalendar,
             clampDateRange,
+            handleSessionDrop,
+            renderSessionBubble,
+            openSessionBubble,
+            closeSessionBubble,
+            beginResizeDrag,
+            handleResizeMove,
+            commitResize,
+            cancelResizeDrag,
             getState: () => state
         };
     }

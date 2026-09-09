@@ -678,6 +678,13 @@
     elements.btnTeacherSchedulerCancelSession = document.getElementById('btn-teacher-scheduler-cancel-session');
     elements.btnTeacherSchedulerDuplicateSession = document.getElementById('btn-teacher-scheduler-duplicate-session');
     elements.btnTeacherSchedulerCloseBubble = document.getElementById('btn-teacher-scheduler-close-bubble');
+    elements.teacherSchedulerInlineReschedule = document.getElementById('teacher-scheduler-inline-reschedule');
+    elements.inputTeacherSchedulerRescheduleDate = document.getElementById('teacher-scheduler-reschedule-date');
+    elements.inputTeacherSchedulerRescheduleTime = document.getElementById('teacher-scheduler-reschedule-time');
+    elements.btnTeacherSchedulerToggleReschedule = document.getElementById('btn-teacher-scheduler-toggle-reschedule');
+    elements.btnTeacherSchedulerRescheduleClose = document.getElementById('btn-teacher-scheduler-reschedule-close');
+    elements.btnTeacherSchedulerRescheduleCancel = document.getElementById('btn-teacher-scheduler-reschedule-cancel');
+    elements.btnTeacherSchedulerRescheduleApply = document.getElementById('btn-teacher-scheduler-reschedule-apply');
     elements.teacherSchedulerScopeModal = document.getElementById('teacher-scheduler-scope-modal');
     elements.teacherSchedulerScopeTitle = document.getElementById('teacher-scheduler-scope-title');
     elements.teacherSchedulerScopeShiftFrom = document.getElementById('teacher-scheduler-scope-shift-from');

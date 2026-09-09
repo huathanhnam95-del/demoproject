@@ -2202,11 +2202,26 @@ body {
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-title {
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
+  word-break: break-word;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 2px;
+  overflow: hidden;
+  width: 100%;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-time {
@@ -2215,6 +2230,7 @@ body {
   text-overflow: ellipsis;
   color: #3c5a7a;
   font-size: 0.68rem;
+  flex-shrink: 0;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-compact {
@@ -2224,28 +2240,45 @@ body {
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-compact .pill-header {
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-compact .pill-title {
   font-size: 0.7rem;
+  white-space: nowrap;
+  display: block;
 }
 
-/* --- Resize handle at bottom of teacher session pill (centered 24px grip) --- */
+/* --- Resize handles at top and bottom of teacher session pill (centered 28px grip) --- */
 .teacher-scheduler-workspace .scheduler-session-resize-handle {
   position: absolute;
-  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 24px;
+  width: 28px;
   height: 6px;
   cursor: ns-resize;
-  border-radius: 3px 3px 0 0;
   background: transparent;
+  z-index: 5;
+  transition: background 0.15s ease;
+}
+
+.teacher-scheduler-workspace .scheduler-session-resize-handle.is-bottom,
+.teacher-scheduler-workspace .scheduler-session-resize-handle:not(.is-top) {
+  bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+
+.teacher-scheduler-workspace .scheduler-session-resize-handle.is-top {
+  top: 0;
+  border-radius: 0 0 3px 3px;
 }
 
 .teacher-scheduler-workspace .scheduler-session-resize-handle:hover,
 .teacher-scheduler-workspace .scheduler-session-resize-handle.is-resizing {
-  background: rgba(26, 115, 232, 0.45);
+  background: rgba(26, 115, 232, 0.5);
 }
 
 .teacher-scheduler-workspace.is-pointer-dragging {
@@ -3472,6 +3505,24 @@ body {
   border-radius: 3px;
   margin-left: 4px;
   vertical-align: middle;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill .pill-badge-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffffff;
+  background: #137333;
+  border-radius: 50%;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-left: 2px;
 }
 
 .teacher-scheduler-slot {
@@ -3522,25 +3573,51 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .teacher-scheduler-bubble-actions .bubble-secondary-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  flex-wrap: wrap;
 }
 
 .teacher-scheduler-bubble-actions .bubble-secondary-row button {
   white-space: nowrap;
+  font-size: 0.76rem;
+  padding: 5px 4px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .teacher-scheduler-bubble-actions .bubble-primary-row {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--crm-border, #e2e8f0);
+}
+
+.crm-btn-danger-outline {
+  color: var(--crm-danger, #dc2626) !important;
+  border-color: rgba(220, 38, 38, 0.35) !important;
+  background: transparent !important;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.crm-btn-danger-outline:hover {
+  background: rgba(220, 38, 38, 0.08) !important;
+  border-color: var(--crm-danger, #dc2626) !important;
+}
+
+.teacher-scheduler-inline-reschedule {
+  background: var(--crm-bg-subtle, #f8fafc);
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
 }
 
 .teacher-scheduler-popover-close {

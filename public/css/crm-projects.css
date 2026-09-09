@@ -796,3 +796,40 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 .crm-board-date-chip.is-overdue { color: var(--sig-over-fg); font-weight: 600; }
 .crm-board-date-chip.is-soon { color: var(--sig-soon-fg); font-weight: 600; }
 
+/* ---------- GANTT EXTRAS ---------- */
+.crm-projects-gantt-tools { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.crm-projects-gantt-tools .seg { display: inline-flex; border: 1px solid var(--pj-line-strong); border-radius: 6px; overflow: hidden; background: var(--pj-raised); }
+.crm-projects-gantt-tools .seg button { border: none; border-radius: 0; padding: 4px 10px; font-size: 11px; background: transparent; color: var(--pj-muted); cursor: pointer; }
+.crm-projects-gantt-tools .seg button + button { border-left: 1px solid var(--pj-line); }
+.crm-projects-gantt-tools .seg button.is-active,
+.crm-projects-gantt-tools .seg button[aria-pressed="true"] { background: var(--pj-accent-soft); color: var(--pj-accent-ink); font-weight: 600; }
+.gwk { position: absolute; top: 0; bottom: 0; background: var(--pj-sunken); opacity: 0.5; pointer-events: none; }
+.today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--sig-over-fg); z-index: 2; pointer-events: none; }
+.today::after { content: "Today"; position: absolute; top: 2px; left: 4px; font-size: 9px; font-weight: 700; color: var(--sig-over-fg); letter-spacing: .04em; white-space: nowrap; }
+.gms { position: absolute; top: 9px; width: 14px; height: 14px; transform: rotate(45deg) translateX(-7px); border-radius: 3px; background: var(--pj-accent); box-shadow: 0 0 0 2px var(--pj-surface); z-index: 3; }
+.glegend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 14px 2px 0; font-size: 10.5px; color: var(--pj-faint); }
+.glegend span { display: inline-flex; align-items: center; gap: 6px; }
+.glegend i { display: block; width: 16px; height: 8px; border-radius: 3px; background: var(--pj-accent); }
+.glegend i.gi-ghost { background: transparent; border: 1.5px dashed var(--pj-line-strong); }
+.glegend i.gi-dep { height: 0; border-top: 1.5px dashed var(--pj-faint); border-radius: 0; }
+.glegend i.gi-ms { width: 9px; height: 9px; border-radius: 2px; transform: rotate(45deg); background: var(--pj-accent); }
+
+/* ---------- CHARTS ---------- */
+.crm-projects-charts-grid { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; margin-top: 18px; }
+@media (max-width: 820px) { .crm-projects-charts-grid { grid-template-columns: minmax(0, 1fr); } }
+.donutwrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.donutwrap p { margin: 0; font-size: 10.5px; color: var(--pj-faint); text-align: center; letter-spacing: .05em; text-transform: uppercase; }
+.barset h4 { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--pj-faint); margin-bottom: 12px; font-weight: 600; }
+.barset + .barset { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--pj-line); }
+.brow { display: grid; grid-template-columns: 150px minmax(0, 1fr) 44px; gap: 12px; align-items: center; margin-bottom: 9px; }
+.brow span { font-size: 11.5px; color: var(--pj-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brow .bt { height: 9px; border-radius: 99px; background: var(--pj-sunken); overflow: hidden; position: relative; }
+.brow .bt i { display: block; height: 100%; border-radius: 99px; transition: width .5s var(--ease, ease); }
+.brow b { font-size: 11.5px; font-variant-numeric: tabular-nums; text-align: right; color: var(--pj-ink); }
+
+/* ---------- CALENDAR EXTRAS ---------- */
+.calbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.crm-projects-calendar-day.off { background: var(--pj-raised); }
+.crm-projects-calendar-day.today h5 { color: var(--pj-accent); font-weight: 700; }
+
+

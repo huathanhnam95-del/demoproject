@@ -15,7 +15,7 @@
         let projectLinks = [], projectLinkAccess = false, projectLinkSequence = 0, projectLookupSequence = 0, projectLinkBusy = false;
         let taskLinkSequence = 0;
         let projectLinkLayoutKey = '';
-        let taskKey = '', datesVersion = 0, calendarMonth = new Date().toISOString().slice(0, 7);
+        let taskKey = '', datesVersion = 0, calendarMonth = new Date().toISOString().slice(0, 7), ganttZoom = 'weeks';
         const uid = () => String(deps.getCurrentUser?.()?.uid || '');
         const scope = () => ({ uid: uid(), projectId, generation });
         const current = (s) => s.uid === uid() && s.uid === actorUid && s.projectId === projectId && s.generation === generation;
@@ -179,8 +179,24 @@
                 el('projects-view-content').innerHTML = timelineMarkup(dated) + `<h4>Undated tasks</h4>${rows.filter((t) => !hasInterval(t)).map((t) => taskRow(t)).join('')}`;
             } else if (view === 'calendar') renderCalendar(rows);
             else if (view === 'charts') {
-                const chart = (title, values) => `<section class="crm-projects-chart"><h4>${title}</h4>${Object.entries(values || {}).map(([key, count]) => `<div><span>${escape(STATUSES[key] || (key === 'unassigned' || key === '__unassigned__' ? 'Unassigned' : memberName(key)))}</span><meter min="0" max="${Math.max(1, Number(a?.activeLeafTaskCount || 0))}" value="${Number(count) || 0}">${Number(count) || 0}</meter><strong>${Number(count) || 0}</strong></div>`).join('')}</section>`;
-                el('projects-view-content').innerHTML = `<p>Complete server snapshot · matching active leaf tasks. Only matching tasks that are leaves in the full active project contribute. Parent rows and page size do not change this denominator.</p><p><strong>${escape(a?.completionPercent ?? 0)}% complete</strong> — ${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)} active leaf tasks</p>${chart('Active leaves by status', a?.byStatus)}${chart('Active leaves by accountable owner', a?.byOwnerUid)}`;
+                const totalActive = Math.max(1, Number(a?.activeLeafTaskCount || 0));
+                const pctComplete = Math.max(0, Math.min(100, Number(a?.completionPercent || 0)));
+                const R = 52, C = 2 * Math.PI * R;
+                const strokeDash = (C * pctComplete / 100).toFixed(1);
+                const donut = `<div class="donutwrap"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-accent)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${strokeDash} ${C.toFixed(1)}" transform="rotate(-90 70 70)"/><text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Active leaf completion</p></div>`;
+                const colorOf = { not_started: 'var(--st-ns-fg)', in_progress: 'var(--g4, #f5a742)', blocked: 'var(--sig-over-fg)', done: 'var(--st-dn-fg)' };
+                const chart = (title, values, isStatus = false) => {
+                    const entries = Object.entries(values || {});
+                    const maxVal = Math.max(1, ...entries.map(([, count]) => Number(count) || 0));
+                    return `<section class="crm-projects-chart barset"><h4>${title}</h4>${entries.map(([key, count]) => {
+                        const n = Number(count) || 0;
+                        const barPct = Math.min(100, Math.round((n / maxVal) * 100));
+                        const label = escape(STATUSES[key] || (key === 'unassigned' || key === '__unassigned__' ? 'Unassigned' : memberName(key)));
+                        const bg = isStatus ? (colorOf[key] || 'var(--pj-accent)') : 'var(--pj-accent)';
+                        return `<div class="brow"><span>${label}</span><span class="bt"><meter min="0" max="${totalActive}" value="${n}" style="display:none;">${n}</meter><i style="width:${barPct}%;background:${bg}"></i></span><b>${n}</b></div>`;
+                    }).join('')}</section>`;
+                };
+                el('projects-view-content').innerHTML = `<p class="crm-muted">Complete server snapshot · matching active leaf tasks. Only matching tasks that are leaves in the full active project contribute. Parent rows and page size do not change this denominator.</p><p><strong>${escape(a?.completionPercent ?? 0)}% complete</strong> — ${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)} active leaf tasks</p><div class="crm-projects-charts-grid">${donut}<div>${chart('Active leaves by status', a?.byStatus, true)}${chart('Active leaves by accountable owner', a?.byOwnerUid, false)}</div></div>`;
             }
         }
         function hasDerivedTimelineSpan(t, rows) {
@@ -200,7 +216,40 @@
                 const label = `${derivedBar ? 'Derived descendant span' : 'Stored interval'}: ${from || to} through ${to || from}`;
                 return `<span class="crm-projects-gantt-bar${derivedBar ? ' is-derived' : ''}" role="img" aria-label="${escape(label)}" style="left:${left}%;width:${Math.min(100 - left, width)}%" title="${escape(label)}"></span>`;
             };
-            return `<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt"><div class="crm-projects-gantt-axis"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived.startDate, t.derived.dueDate, true) : ''}</div></div>`).join('')}</div>`;
+            const zoomBar = `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ''}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ''}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ''}>Months</button></div></div>`;
+            const zoomWidths = { days: '2200px', weeks: '1200px', months: '850px' };
+            const minW = zoomWidths[ganttZoom] || '1200px';
+
+            let weekendBands = '';
+            if (span <= 120) {
+                for (let d = start; d <= end; d++) {
+                    const dow = new Date(d * 86400000).getUTCDay();
+                    if (dow === 6) {
+                        const bLeft = Math.max(0, ((d - start) / span) * 100);
+                        const bWidth = Math.min(100 - bLeft, (2 / span) * 100);
+                        weekendBands += `<span class="gwk" style="left:${bLeft}%;width:${bWidth}%;"></span>`;
+                    }
+                }
+            }
+
+            const todayDay = Math.floor(Date.now() / 86400000);
+            let todayMarker = '';
+            if (todayDay >= start && todayDay <= end) {
+                const tLeft = ((todayDay - start) / span) * 100;
+                todayMarker = `<span class="today" style="left:${tLeft}%;"></span>`;
+            }
+
+            const milestone = (t) => {
+                if (t.startDate && t.startDate === t.dueDate) {
+                    const mLeft = Math.max(0, ((day(t.startDate) - start) / span) * 100);
+                    return `<span class="gms" style="left:${mLeft}%;" title="Milestone: ${escape(t.startDate)}"></span>`;
+                }
+                return '';
+            };
+
+            const legend = `<div class="glegend"><span><i style="background:var(--pj-accent)"></i>Stored interval</span><span><i class="gi-ghost"></i>Derived descendant span</span><span><i class="gi-dep"></i>Dependency</span><span><i class="gi-ms"></i>Milestone</span><span style="color:var(--sig-over-fg)">▏Today</span></div>`;
+
+            return `${zoomBar}<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived.startDate, t.derived.dueDate, true) : ''}</div></div>`).join('')}</div>${legend}`;
         }
         function memberName(id) {
             const m = array(board?.getState()?.members).find((m) => (m.uid || m.id) === id);
@@ -209,10 +258,15 @@
         function renderCalendar(rows) {
             const [year, month] = calendarMonth.split('-').map(Number);
             const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
-            el('projects-view-content').innerHTML = `<label>Visible calendar month <input id="projects-view-month" type="month" class="crm-input" value="${escape(calendarMonth)}"></label><p id="projects-calendar-view-provenance" class="crm-muted"></p><div id="projects-calendar-availability"></div><div class="crm-projects-calendar-grid">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((name) => `<strong>${name}</strong>`).join('')}${'<span aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthTitle = `${monthNames[month - 1] || ''} ${year}`;
+            el('projects-view-content').innerHTML = `<div class="calbar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><button type="button" class="crm-btn-secondary" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary" data-cal-nav="1" aria-label="Next month">›</button><h3 style="margin:0;font-size:16px;">${escape(monthTitle)}</h3><button type="button" class="crm-btn-secondary" data-cal-nav="today">Today</button><label style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;">Visible calendar month <input id="projects-view-month" type="month" class="crm-input" value="${escape(calendarMonth)}"></label></div><p id="projects-calendar-view-provenance" class="crm-muted"></p><div id="projects-calendar-availability"></div><div class="crm-projects-calendar-grid">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((name) => `<strong>${name}</strong>`).join('')}${'<span aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
                 const date = `${calendarMonth}-${String(i + 1).padStart(2, '0')}`;
+                const cur = new Date(Date.UTC(year, month - 1, i + 1));
+                const dow = cur.getUTCDay();
+                const isWeekend = dow === 0 || dow === 6;
                 const matches = rows.filter((t) => (t.startDate || t.dueDate) && (t.startDate || t.dueDate) <= date && (t.dueDate || t.startDate) >= date);
-                return `<section class="crm-projects-calendar-day"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
+                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
             }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}`;
             if (response) loadCalendar(`${calendarMonth}-01`, `${calendarMonth}-${days}`);
         }
@@ -523,7 +577,34 @@
             el('projects-view-previous')?.addEventListener('click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
             el('projects-view-retry')?.addEventListener('click', () => refresh());
             el('btn-projects-board-refresh')?.addEventListener('click', () => refresh());
-            el('projects-view-content')?.addEventListener('click', (event) => { const button = event.target.closest('[data-task-open]'); const found = array(response?.tasks).find((t) => t.id === button?.dataset.taskOpen); if (found) board?.selectTask(found); });
+            el('projects-view-content')?.addEventListener('click', (event) => {
+                const zoomBtn = event.target.closest('[data-gantt-zoom]');
+                if (zoomBtn) {
+                    ganttZoom = zoomBtn.dataset.ganttZoom;
+                    render();
+                    return;
+                }
+                const calNavBtn = event.target.closest('[data-cal-nav]');
+                if (calNavBtn) {
+                    const nav = calNavBtn.dataset.calNav;
+                    const [y, m] = calendarMonth.split('-').map(Number);
+                    let targetDate;
+                    if (nav === 'today') {
+                        targetDate = new Date();
+                    } else {
+                        targetDate = new Date(Date.UTC(y, m - 1 + Number(nav), 1));
+                    }
+                    const nextMonth = `${targetDate.getUTCFullYear()}-${String(targetDate.getUTCMonth() + 1).padStart(2, '0')}`;
+                    if (nextMonth !== calendarMonth) {
+                        calendarMonth = nextMonth;
+                        resetViewPage();
+                    }
+                    return;
+                }
+                const button = event.target.closest('[data-task-open]');
+                const found = array(response?.tasks).find((t) => t.id === button?.dataset.taskOpen);
+                if (found) board?.selectTask(found);
+            });
             let dragTaskId = null;
             el('projects-view-content')?.addEventListener('dragstart', (e) => {
                 const card = e.target.closest ? e.target.closest('[data-kanban-task], [data-card]') : null;

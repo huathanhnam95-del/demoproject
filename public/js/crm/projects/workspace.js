@@ -130,11 +130,54 @@
                 filters.querySelectorAll('details').forEach(details => { details.open = false; });
             });
             listen(filters, 'reset', () => { clearTimeout(timer); });
+            const utilityRail = byId('projects-utility-rail');
+            if (utilityRail) {
+                listen(utilityRail, 'click', event => {
+                    const tab = event.target.closest?.('[data-u]');
+                    if (tab) {
+                        utilityRail.classList.remove('collapsed');
+                        const ucollapse = byId('ucollapse');
+                        if (ucollapse) { ucollapse.textContent = '»'; ucollapse.setAttribute('aria-label', 'Collapse utilities'); }
+                        utilityRail.querySelectorAll?.('[data-u]')?.forEach?.(b => b.setAttribute('aria-selected', String(b === tab)));
+                        utilityRail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === tab.dataset.u));
+                        return;
+                    }
+                    const collapseBtn = event.target.closest?.('#ucollapse');
+                    if (collapseBtn) {
+                        const collapsed = utilityRail.classList.toggle('collapsed');
+                        collapseBtn.textContent = collapsed ? '«' : '»';
+                        collapseBtn.setAttribute('aria-label', collapsed ? 'Expand utilities' : 'Collapse utilities');
+                    }
+                });
+            }
+            listen(byId('btn-projects-automate'), 'click', () => {
+                const rail = byId('projects-utility-rail');
+                if (!rail) return;
+                rail.classList.remove('collapsed');
+                const ucollapse = byId('ucollapse');
+                if (ucollapse) { ucollapse.textContent = '»'; ucollapse.setAttribute('aria-label', 'Collapse utilities'); }
+                rail.querySelectorAll?.('[data-u]')?.forEach?.(b => b.setAttribute('aria-selected', String(b.dataset.u === 'automations')));
+                rail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === 'automations'));
+            });
             for (const id of ['projects-automations']) {
                 const target = byId(id);
                 if (target && globalScope.MutationObserver) {
-                    const observer = new globalScope.MutationObserver(() => { if (!target.hidden) { const utility = target.closest('details'); if (utility) utility.open = true; } });
-                    observer.observe(target, { attributes: true, attributeFilter: ['hidden'] }); observers.push(observer);
+                    const observer = new globalScope.MutationObserver(() => {
+                        if (!target.hidden) {
+                            const utility = target.closest('details');
+                            if (utility) utility.open = true;
+                            const rail = byId('projects-utility-rail');
+                            if (rail) {
+                                rail.classList.remove('collapsed');
+                                const ucollapse = byId('ucollapse');
+                                if (ucollapse) { ucollapse.textContent = '»'; ucollapse.setAttribute('aria-label', 'Collapse utilities'); }
+                                rail.querySelectorAll?.('[data-u]')?.forEach?.(b => b.setAttribute('aria-selected', String(b.dataset.u === 'automations')));
+                                rail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === 'automations'));
+                            }
+                        }
+                    });
+                    observer.observe(target, { attributes: true, attributeFilter: ['hidden'] });
+                    observers.push(observer);
                 }
             }
             render();

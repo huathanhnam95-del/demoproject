@@ -2030,4 +2030,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1035,2026-09-08,Render 5s BEL v2.0.0 intro shot from shipped preloader for tech demo showcase,Done,2026-09-08
 1036,2026-09-08,Redesign app loading screen (preloader) with modern brand-navy aesthetic while keeping "Not the best. But better." message,Done,2026-09-08
 1037,2026-09-09,Redesign entrance test student UI-UX - design canvas (3 UX models + 3 visual directions) and interactive prototype at public/entrance-test-prototype.html,Done,2026-09-09
-1038,2026-09-09,Entrance Test UI review lab - 3 skins (A/B/C) on E+F flow plus CRM rating tab with 5 criteria per page and font voting,In Progress,
+1038,2026-09-09,Entrance Test UI review lab - 3 skins (A/B/C) on E+F flow plus CRM rating tab with 5 criteria per page and font voting - deployed to production,Done,2026-09-09
+1039,2026-09-09,Restore missing Social Media Account Link field for Facebook sources in CRM student and lead modal,Done,2026-09-09
+1040,2026-09-09,Entrance Test UI - add step-by-step guidance, make rating and font choice mandatory, move font picker inline above the live preview with 2 picks per language - deployed,Done,2026-09-09

@@ -147,22 +147,46 @@
             const found = array(response?.tasks).find((t) => t.id === id);
             if (!found || found.status === nextStatus || !canWrite() || mutation) return;
             const prevStatus = found.status;
-            board?.selectTask(found);
-            setTask(found);
+            const s = scope();
+            mutation = true;
+            syncTaskPermissions();
             found.status = nextStatus;
             render();
+            const body = JSON.stringify({ operationId: operationId(), expectedRevision: found.revision, status: nextStatus });
             try {
-                const ok = await mutate(`${base()}/tasks/${encodeURIComponent(id)}`, { expectedRevision: found.revision, status: nextStatus });
-                if (!ok && found.status === nextStatus) {
+                const request = () => api(`${base()}/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+                let result;
+                try {
+                    result = await request();
+                } catch (error) {
+                    if (error.status || !current(s)) throw error;
+                    result = await request();
+                }
+                if (!current(s)) return;
+                const minimal = result.task || result.result?.task || result.result || result;
+                if (minimal?.revision !== undefined) {
+                    found.revision = minimal.revision;
+                }
+                if (task && task.id === id) {
+                    task = { ...task, status: nextStatus, ...(minimal?.revision !== undefined ? { revision: minimal.revision } : {}) };
+                }
+                await board?.refresh();
+                if (current(s)) await refresh();
+            } catch (err) {
+                if (current(s)) {
                     found.status = prevStatus;
+                    const msg = err?.message || 'Could not update task status';
+                    status(msg);
+                    taskStatus(msg);
                     render();
                     refresh();
                 }
-            } catch (err) {
-                found.status = prevStatus;
-                status(err?.message || 'Could not update task status');
-                render();
-                refresh();
+            } finally {
+                if (current(s)) {
+                    mutation = false;
+                    syncTaskPermissions();
+                    render();
+                }
             }
         }
         function render() {
@@ -191,15 +215,21 @@
                 const pctComplete = Math.max(0, Math.min(100, Number(a?.completionPercent || 0)));
                 const R = 52, C = 2 * Math.PI * R;
                 const strokeDash = (C * pctComplete / 100).toFixed(1);
-                const donut = `<div class="donutwrap"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-accent)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${strokeDash} ${C.toFixed(1)}" transform="rotate(-90 70 70)"/><text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Active leaf completion</p></div>`;
+                const donutCircle = pctComplete > 0
+                    ? `<circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-accent)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${strokeDash} ${C.toFixed(1)}" transform="rotate(-90 70 70)"/>`
+                    : '';
+                const donut = `<div class="donutwrap"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/>${donutCircle}<text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Active leaf completion</p></div>`;
                 const colorOf = { not_started: 'var(--st-ns-fg)', in_progress: 'var(--g4, #f5a742)', blocked: 'var(--sig-over-fg)', done: 'var(--st-dn-fg)' };
                 const chart = (title, values, isStatus = false) => {
                     const entries = Object.entries(values || {});
+                    if (!entries.length) {
+                        return `<section class="crm-projects-chart barset"><h4>${title}</h4><p class="crm-muted">No active leaf tasks.</p></section>`;
+                    }
                     const maxVal = Math.max(1, ...entries.map(([, count]) => Number(count) || 0));
                     return `<section class="crm-projects-chart barset"><h4>${title}</h4>${entries.map(([key, count]) => {
                         const n = Number(count) || 0;
                         const barPct = Math.min(100, Math.round((n / maxVal) * 100));
-                        const label = escape(STATUSES[key] || (key === 'unassigned' || key === '__unassigned__' ? 'Unassigned' : memberName(key)));
+                        const label = escape(isStatus ? (response?.project?.statusLabels?.[key] || STATUSES[key] || key) : (key === 'unassigned' || key === '__unassigned__' ? 'Unassigned' : memberName(key)));
                         const bg = isStatus ? (colorOf[key] || 'var(--pj-accent)') : 'var(--pj-accent)';
                         return `<div class="brow"><span>${label}</span><span class="bt"><meter min="0" max="${totalActive}" value="${n}" style="display:none;">${n}</meter><i style="width:${barPct}%;background:${bg}"></i></span><b>${n}</b></div>`;
                     }).join('')}</section>`;
@@ -213,18 +243,27 @@
         function timelineMarkup(rows) {
             const hasDerivedSpan = (t) => hasDerivedTimelineSpan(t, rows);
             const day = (value) => Date.parse(`${value}T00:00:00Z`) / 86400000;
-            const dates = rows.flatMap((t) => [t.startDate, t.dueDate, ...(hasDerivedSpan(t) ? [t.derived.startDate, t.derived.dueDate] : [])]).filter(Boolean).map(day).filter(Number.isFinite);
+            const safeDay = (value) => {
+                if (!value) return null;
+                const n = day(value);
+                return Number.isFinite(n) ? n : null;
+            };
+            const dates = rows.flatMap((t) => [t.startDate, t.dueDate, ...(hasDerivedSpan(t) ? [t.derived.startDate, t.derived.dueDate] : [])]).map(safeDay).filter((v) => v !== null);
             if (!rows.length || !dates.length) return '<p>No dated tasks on this page.</p>';
             const start = Math.min(...dates), end = Math.max(...dates), span = Math.max(1, end - start + 1);
             const dateLabel = (offset) => new Date((start + offset) * 86400000).toISOString().slice(0, 10);
             const bar = (from, to, derivedBar) => {
-                if (!from && !to) return '';
-                const left = Math.max(0, ((day(from || to) - start) / span) * 100);
-                const width = Math.max(0.5, ((day(to || from) - day(from || to) + 1) / span) * 100);
+                const d1 = safeDay(from || to);
+                const d2 = safeDay(to || from);
+                if (d1 === null && d2 === null) return '';
+                const fromDay = Math.min(d1 ?? d2, d2 ?? d1);
+                const toDay = Math.max(d1 ?? d2, d2 ?? d1);
+                const left = Math.max(0, ((fromDay - start) / span) * 100);
+                const width = Math.max(0.5, ((toDay - fromDay + 1) / span) * 100);
                 const label = `${derivedBar ? 'Derived descendant span' : 'Stored interval'}: ${from || to} through ${to || from}`;
-                return `<span class="crm-projects-gantt-bar${derivedBar ? ' is-derived' : ''}" role="img" aria-label="${escape(label)}" style="left:${left}%;width:${Math.min(100 - left, width)}%" title="${escape(label)}"></span>`;
+                return `<span class="crm-projects-gantt-bar${derivedBar ? ' is-derived' : ''}" role="img" aria-label="${escape(label)}" style="left:${left.toFixed(2)}%;width:${Math.min(100 - left, width).toFixed(2)}%" title="${escape(label)}"></span>`;
             };
-            const zoomBar = `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ''}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ''}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ''}>Months</button></div></div>`;
+            const zoomBar = `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Months</button></div></div>`;
             const zoomWidths = { days: '2200px', weeks: '1200px', months: '850px' };
             const minW = zoomWidths[ganttZoom] || '1200px';
 
@@ -232,10 +271,14 @@
             if (span <= 120) {
                 for (let d = start; d <= end; d++) {
                     const dow = new Date(d * 86400000).getUTCDay();
-                    if (dow === 6) {
+                    if (d === start && dow === 0) {
+                        const bWidth = Math.min(100, (1 / span) * 100);
+                        weekendBands += `<span class="gwk" style="left:0%;width:${bWidth.toFixed(2)}%;"></span>`;
+                    } else if (dow === 6) {
                         const bLeft = Math.max(0, ((d - start) / span) * 100);
-                        const bWidth = Math.min(100 - bLeft, (2 / span) * 100);
-                        weekendBands += `<span class="gwk" style="left:${bLeft}%;width:${bWidth}%;"></span>`;
+                        const daysCovered = (d === end) ? 1 : 2;
+                        const bWidth = Math.min(100 - bLeft, (daysCovered / span) * 100);
+                        weekendBands += `<span class="gwk" style="left:${bLeft.toFixed(2)}%;width:${bWidth.toFixed(2)}%;"></span>`;
                     }
                 }
             }
@@ -244,13 +287,15 @@
             let todayMarker = '';
             if (todayDay >= start && todayDay <= end) {
                 const tLeft = ((todayDay - start) / span) * 100;
-                todayMarker = `<span class="today" style="left:${tLeft}%;"></span>`;
+                todayMarker = `<span class="today" style="left:${tLeft.toFixed(2)}%;"></span>`;
             }
 
             const milestone = (t) => {
                 if (t.startDate && t.startDate === t.dueDate) {
-                    const mLeft = Math.max(0, ((day(t.startDate) - start) / span) * 100);
-                    return `<span class="gms" style="left:${mLeft}%;" title="Milestone: ${escape(t.startDate)}"></span>`;
+                    const d = safeDay(t.startDate);
+                    if (d === null) return '';
+                    const mLeft = Math.max(0, ((d - start) / span) * 100);
+                    return `<span class="gms" style="left:${mLeft.toFixed(2)}%;" title="Milestone: ${escape(t.startDate)}"></span>`;
                 }
                 return '';
             };
@@ -268,13 +313,20 @@
             const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             const monthTitle = `${monthNames[month - 1] || ''} ${year}`;
+            const todayIso = new Date().toISOString().slice(0, 10);
             el('projects-view-content').innerHTML = `<div class="calbar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><button type="button" class="crm-btn-secondary" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary" data-cal-nav="1" aria-label="Next month">›</button><h3 style="margin:0;font-size:16px;">${escape(monthTitle)}</h3><button type="button" class="crm-btn-secondary" data-cal-nav="today">Today</button><label style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;">Visible calendar month <input id="projects-view-month" type="month" class="crm-input" value="${escape(calendarMonth)}"></label></div><p id="projects-calendar-view-provenance" class="crm-muted"></p><div id="projects-calendar-availability"></div><div class="crm-projects-calendar-grid">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((name) => `<strong>${name}</strong>`).join('')}${'<span aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
                 const date = `${calendarMonth}-${String(i + 1).padStart(2, '0')}`;
                 const cur = new Date(Date.UTC(year, month - 1, i + 1));
                 const dow = cur.getUTCDay();
                 const isWeekend = dow === 0 || dow === 6;
-                const matches = rows.filter((t) => (t.startDate || t.dueDate) && (t.startDate || t.dueDate) <= date && (t.dueDate || t.startDate) >= date);
-                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
+                const isToday = date === todayIso;
+                const matches = rows.filter((t) => {
+                    if (!t.startDate && !t.dueDate) return false;
+                    const startVal = t.startDate && t.dueDate ? (t.startDate <= t.dueDate ? t.startDate : t.dueDate) : (t.startDate || t.dueDate);
+                    const dueVal = t.startDate && t.dueDate ? (t.startDate <= t.dueDate ? t.dueDate : t.startDate) : (t.dueDate || t.startDate);
+                    return startVal <= date && dueVal >= date;
+                });
+                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}${isToday ? ' today' : ''}"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
             }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}`;
             if (response) loadCalendar(`${calendarMonth}-01`, `${calendarMonth}-${days}`);
         }
@@ -616,13 +668,17 @@
             });
             let dragTaskId = null;
             el('projects-view-content')?.addEventListener('dragstart', (e) => {
-                const card = e.target.closest ? e.target.closest('[data-kanban-task], [data-card]') : null;
-                if (!card || !canWrite() || mutation) {
+                const card = e.target?.closest ? e.target.closest('[data-kanban-task], [data-card]') : null;
+                const isInteractive = Boolean(
+                    (e.target?.tagName && ['SELECT', 'INPUT', 'TEXTAREA', 'OPTION'].includes(e.target.tagName)) ||
+                    (typeof e.target?.matches === 'function' && e.target.matches('select, input, textarea, option'))
+                );
+                if (!card || !canWrite() || mutation || isInteractive) {
                     e.preventDefault?.();
                     return;
                 }
-                dragTaskId = card.dataset.kanbanTask || card.dataset.card;
-                card.classList.add('drag');
+                dragTaskId = card.dataset?.kanbanTask || card.dataset?.card;
+                card.classList?.add?.('drag');
                 if (e.dataTransfer) {
                     e.dataTransfer.effectAllowed = 'move';
                     try { e.dataTransfer.setData('text/plain', dragTaskId); } catch (_) { /* legacy browser fallback */ }

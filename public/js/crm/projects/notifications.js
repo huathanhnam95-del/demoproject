@@ -14,9 +14,18 @@
     const current = (s) => !!s.actor && s.actor === actor && s.actor === uid() && s.epoch === epoch;
     const el = (name) => root?.querySelector(`[data-notifications-${name}]`);
     const options = (all) => `${all ? '<option value="">All projects</option>' : '<option value="">Choose project</option>'}${projects.map((p) => `<option value="${esc(p.id)}">${esc(p.name || p.title || 'Project')}</option>`).join('')}`;
+    function syncBadge() {
+      const doc = root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+      const badge = doc?.getElementById?.('projects-notifications-badge');
+      if (!badge) return;
+      const unreadCount = items.filter((item) => !item.read).length;
+      badge.textContent = String(unreadCount);
+      badge.hidden = unreadCount === 0;
+    }
     function render() {
       if (!root) return;
       root.hidden = !actor;
+      syncBadge();
       if (el('status')) el('status').textContent = status;
       if (el('list')) el('list').innerHTML = items.map((item) => `<li class="crm-projects-notification-row${item.read ? '' : ' is-unread'}"><div><span class="crm-muted">${esc(item.category)} · ${esc(item.createdAt)}</span><p>${item.available ? esc(item.message || 'Project update') : 'This update is no longer available.'}</p>${item.available && item.taskLabel ? `<strong>${esc(item.taskLabel)}</strong>` : ''}</div><div class="crm-inline-fields">${item.available ? `<button type="button" class="crm-btn-secondary" data-notification-open="${esc(item.notificationId)}">Open</button>` : ''}<button type="button" class="crm-btn-secondary" data-notification-read="${esc(item.notificationId)}"${reading.has(item.notificationId) ? ' disabled' : ''}>Mark ${item.read ? 'unread' : 'read'}</button></div></li>`).join('') || `<li>${loading ? 'Loading updates…' : cursor ? 'No accessible matches on this page. Load more to continue.' : 'No updates in this view.'}</li>`;
       if (el('more')) { el('more').hidden = !cursor; el('more').disabled = loading; }
@@ -29,7 +38,9 @@
     }
     function clear(message = '') {
       epoch++; feedSequence++; prefsSequence++; openSequence++;
-      items = []; cursor = null; loading = false; reading.clear(); revision = null; muted = []; draft = []; dirty = false; conflict = false; prefsLoading = false; prefsSaving = false; status = message; prefsStatus = ''; render();
+      items = []; cursor = null; loading = false; reading.clear(); revision = null; muted = []; draft = []; dirty = false; conflict = false; prefsLoading = false; prefsSaving = false; status = message; prefsStatus = '';
+      syncBadge();
+      render();
     }
     function setAccount(next) {
       const value = String(next || '');

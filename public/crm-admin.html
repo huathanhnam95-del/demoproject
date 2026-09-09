@@ -1121,26 +1121,26 @@
             </dialog>
           </main>
           <aside id="projects-utility-rail" class="urail" aria-label="Project utilities">
-            <div class="utabs" role="tablist" aria-label="Workspace utilities">
-              <button type="button" role="tab" data-u="assistant" aria-selected="true" title="Assistant" aria-label="Assistant"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.6 9.5 5.6 13.5 7 9.5 8.4 8 12.4 6.5 8.4 2.5 7l4-1.4z"/><path d="M12.4 11.2l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z"/></svg></button>
-              <button type="button" role="tab" data-u="notifications" aria-selected="false" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.6a4 4 0 1 1 8 0c0 3 1 4.2 1 4.2H3s1-1.2 1-4.2z"/><path d="M6.6 13.2a1.6 1.6 0 0 0 2.8 0"/></svg><span class="badge" id="projects-notifications-badge" hidden>0</span></button>
-              <button type="button" role="tab" data-u="automations" aria-selected="false" title="Automations" aria-label="Automations"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.8 1.8 3.5 9h3.4l-.7 5.2L12.5 7H9.1z"/></svg></button>
-              <button type="button" role="tab" data-u="recovery" aria-selected="false" title="Archive &amp; trash" aria-label="Archive and trash"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.4 4.6h11.2v2.2H2.4z"/><path d="M3.4 6.8V13a1 1 0 0 0 1 1h7.2a1 1 0 0 0 1-1V6.8M6.5 9v2.4M9.5 9v2.4"/></svg></button>
-              <button type="button" class="btn icon" id="ucollapse" style="margin-top:auto;border:0;background:transparent;color:var(--pj-faint);padding:8px" title="Collapse utilities" aria-label="Collapse utilities">&raquo;</button>
+            <div class="utabs" role="tablist" aria-label="Workspace utilities" aria-orientation="vertical">
+              <button type="button" role="tab" id="projects-utab-assistant" data-u="assistant" aria-controls="projects-upane-assistant" aria-selected="true" tabindex="0" title="Assistant" aria-label="Assistant"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.6 9.5 5.6 13.5 7 9.5 8.4 8 12.4 6.5 8.4 2.5 7l4-1.4z"/><path d="M12.4 11.2l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z"/></svg></button>
+              <button type="button" role="tab" id="projects-utab-notifications" data-u="notifications" aria-controls="projects-upane-notifications" aria-selected="false" tabindex="-1" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.6a4 4 0 1 1 8 0c0 3 1 4.2 1 4.2H3s1-1.2 1-4.2z"/><path d="M6.6 13.2a1.6 1.6 0 0 0 2.8 0"/></svg><span class="badge" id="projects-notifications-badge" hidden>0</span></button>
+              <button type="button" role="tab" id="projects-utab-automations" data-u="automations" aria-controls="projects-upane-automations" aria-selected="false" tabindex="-1" title="Automations" aria-label="Automations"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8.8 1.8 3.5 9h3.4l-.7 5.2L12.5 7H9.1z"/></svg></button>
+              <button type="button" role="tab" id="projects-utab-recovery" data-u="recovery" aria-controls="projects-upane-recovery" aria-selected="false" tabindex="-1" title="Archive &amp; trash" aria-label="Archive and trash"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.4 4.6h11.2v2.2H2.4z"/><path d="M3.4 6.8V13a1 1 0 0 0 1 1h7.2a1 1 0 0 0 1-1V6.8M6.5 9v2.4M9.5 9v2.4"/></svg></button>
+              <button type="button" class="btn icon" id="ucollapse" aria-expanded="true" style="margin-top:auto;border:0;background:transparent;color:var(--pj-faint);padding:8px" title="Collapse utilities" aria-label="Collapse utilities">&raquo;</button>
             </div>
             <div class="upanes">
-              <div class="upane on" data-p="assistant">
+              <div class="upane on" id="projects-upane-assistant" data-p="assistant" role="tabpanel" aria-labelledby="projects-utab-assistant" tabindex="0">
                 <section id="projects-assistant" class="crm-projects-assistant" aria-label="Project assistance"></section>
               </div>
-              <div class="upane" data-p="notifications">
+              <div class="upane" id="projects-upane-notifications" data-p="notifications" role="tabpanel" aria-labelledby="projects-utab-notifications" tabindex="0">
                 <section id="projects-notifications" class="crm-projects-notifications" aria-label="Project notifications" hidden></section>
               </div>
-              <div class="upane" data-p="automations">
+              <div class="upane" id="projects-upane-automations" data-p="automations" role="tabpanel" aria-labelledby="projects-utab-automations" tabindex="0">
                 <details class="crm-projects-workspace-utility" open><summary>Automations</summary>
                   <section id="projects-automations" class="crm-projects-automations" aria-label="Project automations" hidden></section>
                 </details>
               </div>
-              <div class="upane" data-p="recovery">
+              <div class="upane" id="projects-upane-recovery" data-p="recovery" role="tabpanel" aria-labelledby="projects-utab-recovery" tabindex="0">
                 <section id="projects-board-recovery" class="crm-projects-board-recovery" aria-label="Project recovery controls" hidden></section>
               </div>
             </div>

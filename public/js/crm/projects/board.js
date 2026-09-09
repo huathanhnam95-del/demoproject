@@ -20,6 +20,12 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function cssEscape(val) {
+        return (globalScope.CSS && typeof globalScope.CSS.escape === 'function')
+            ? globalScope.CSS.escape(val)
+            : String(val ?? '').replace(/["\\]/g, '\\$&');
+    }
+
     function operationId(prefix) {
         const token = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
             ? crypto.randomUUID()
@@ -278,20 +284,23 @@
 
         function restoreView(view) {
             if (!view) return;
+            const safeCss = (val) => (typeof CSS !== 'undefined' && typeof CSS.escape === 'function')
+                ? CSS.escape(val)
+                : (typeof cssEscape === 'function' ? cssEscape(val) : String(val ?? '').replace(/["\\]/g, '\\$&'));
             if (elements.projectsBoardScroll) elements.projectsBoardScroll.scrollTop = view.scrollTop || 0;
             if (elements.projectsBoardScroll) elements.projectsBoardScroll.scrollLeft = view.scrollLeft || 0;
             if (view.externalFocus) return;
             let target = view.controlId ? document.getElementById(view.controlId) : null;
             if (!target && view.taskId && view.selectionControl) {
-                target = elements.projectsBoardRows?.querySelector(`[data-task-id="${CSS.escape(view.taskId)}"] [data-action="select-task"]`) || null;
+                target = elements.projectsBoardRows?.querySelector(`[data-task-id="${safeCss(view.taskId)}"] [data-action="select-task"]`) || null;
             }
             if (!target && view.taskId && view.fieldKind) {
-                const row = elements.projectsBoardRows?.querySelector(`[data-task-id="${CSS.escape(view.taskId)}"]`);
-                target = row?.querySelector(`[data-field-kind="${CSS.escape(view.fieldKind)}"]${view.columnId ? `[data-column-id="${CSS.escape(view.columnId)}"]` : ''}`) || null;
+                const row = elements.projectsBoardRows?.querySelector(`[data-task-id="${safeCss(view.taskId)}"]`);
+                target = row?.querySelector(`[data-field-kind="${safeCss(view.fieldKind)}"]${view.columnId ? `[data-column-id="${safeCss(view.columnId)}"]` : ''}`) || null;
             }
             if (!target && view.sectionId && view.fieldKind) {
-                const row = elements.projectsBoardRows?.querySelector(`[data-section-id="${CSS.escape(view.sectionId)}"]`);
-                target = row?.querySelector(`[data-field-kind="${CSS.escape(view.fieldKind)}"]`) || null;
+                const row = elements.projectsBoardRows?.querySelector(`[data-section-id="${safeCss(view.sectionId)}"]`);
+                target = row?.querySelector(`[data-field-kind="${safeCss(view.fieldKind)}"]`) || null;
             }
             if (target) {
                 target.focus?.();
@@ -300,7 +309,7 @@
                 }
                 return;
             }
-            if (view.activeId) elements.projectsBoardRows?.querySelector(`[data-row-id="${CSS.escape(view.activeId)}"]`)?.focus?.();
+            if (view.activeId) elements.projectsBoardRows?.querySelector(`[data-row-id="${safeCss(view.activeId)}"]`)?.focus?.();
         }
 
         function invalidateAccess(deniedProjectId, notifyViews = true) {
@@ -1285,7 +1294,7 @@
                     selectedTaskId = String(created.id);
                 }
                 renderBoard();
-                elements.projectsBoardRows?.querySelector(`[data-task-id="${CSS.escape(selectedTaskId)}"]`)?.focus?.();
+                elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(selectedTaskId)}"]`)?.focus?.();
             } catch (error) { if (scopeIsCurrent(scope)) showToast(error?.message || 'Task could not be created.', 'error'); }
         }
 

@@ -101,10 +101,26 @@
             });
             listen(byId('projects-workspace-manage-access'), 'click', () => { if (current() && selection.accessSummary?.canManagePeople) deps.onManageAccess?.(); });
             listen(panel, 'click', event => {
+                const rail = byId('projects-workspace-rail');
+                const toggle = byId('projects-workspace-rail-toggle');
+                if (rail?.classList.contains('is-open') && !rail.contains(event.target) && !toggle?.contains(event.target)) {
+                    rail.classList.remove('is-open');
+                    toggle?.setAttribute('aria-expanded', 'false');
+                }
                 const opener = event.target.closest?.('[data-projects-open]');
                 if (!opener || !current()) return;
                 const dialog = byId(opener.dataset.projectsOpen);
                 if (dialog?.matches('[data-projects-dialog]')) { activateSettings(opener.dataset.projectsSettingsTab || 'project'); dialog.hidden = false; if (!dialog.open) dialog.showModal(); }
+            });
+            listen(panel, 'keydown', event => {
+                if (event.key === 'Escape') {
+                    const rail = byId('projects-workspace-rail');
+                    if (rail?.classList.contains('is-open')) {
+                        rail.classList.remove('is-open');
+                        byId('projects-workspace-rail-toggle')?.setAttribute('aria-expanded', 'false');
+                        byId('projects-workspace-rail-toggle')?.focus?.();
+                    }
+                }
             });
             listen(byId('projects-workspace-settings'), 'click', event => {
                 const tab = event.target.closest?.('[data-projects-settings-tab]');
@@ -131,15 +147,27 @@
             });
             listen(filters, 'reset', () => { clearTimeout(timer); });
             const utilityRail = byId('projects-utility-rail');
+            function selectUtilityTab(tabName) {
+                if (!utilityRail) return;
+                utilityRail.classList.remove('collapsed');
+                const ucollapse = byId('ucollapse');
+                if (ucollapse) {
+                    ucollapse.textContent = '»';
+                    ucollapse.setAttribute('aria-label', 'Collapse utilities');
+                    ucollapse.setAttribute('aria-expanded', 'true');
+                }
+                utilityRail.querySelectorAll?.('[data-u]')?.forEach?.(b => {
+                    const isSelected = b.dataset.u === tabName;
+                    b.setAttribute('aria-selected', String(isSelected));
+                    b.setAttribute('tabindex', isSelected ? '0' : '-1');
+                });
+                utilityRail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === tabName));
+            }
             if (utilityRail) {
                 listen(utilityRail, 'click', event => {
                     const tab = event.target.closest?.('[data-u]');
                     if (tab) {
-                        utilityRail.classList.remove('collapsed');
-                        const ucollapse = byId('ucollapse');
-                        if (ucollapse) { ucollapse.textContent = '»'; ucollapse.setAttribute('aria-label', 'Collapse utilities'); }
-                        utilityRail.querySelectorAll?.('[data-u]')?.forEach?.(b => b.setAttribute('aria-selected', String(b === tab)));
-                        utilityRail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === tab.dataset.u));
+                        selectUtilityTab(tab.dataset.u);
                         return;
                     }
                     const collapseBtn = event.target.closest?.('#ucollapse');
@@ -147,17 +175,25 @@
                         const collapsed = utilityRail.classList.toggle('collapsed');
                         collapseBtn.textContent = collapsed ? '«' : '»';
                         collapseBtn.setAttribute('aria-label', collapsed ? 'Expand utilities' : 'Collapse utilities');
+                        collapseBtn.setAttribute('aria-expanded', String(!collapsed));
                     }
+                });
+                listen(utilityRail, 'keydown', event => {
+                    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                    const tab = event.target.closest?.('[data-u]');
+                    if (!tab) return;
+                    const tabs = Array.from(utilityRail.querySelectorAll('[data-u]'));
+                    const index = tabs.indexOf(tab);
+                    if (index < 0) return;
+                    const isForward = event.key === 'ArrowDown' || event.key === 'ArrowRight';
+                    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (isForward ? 1 : -1) + tabs.length) % tabs.length;
+                    event.preventDefault();
+                    tabs[next].focus();
+                    selectUtilityTab(tabs[next].dataset.u);
                 });
             }
             listen(byId('btn-projects-automate'), 'click', () => {
-                const rail = byId('projects-utility-rail');
-                if (!rail) return;
-                rail.classList.remove('collapsed');
-                const ucollapse = byId('ucollapse');
-                if (ucollapse) { ucollapse.textContent = '»'; ucollapse.setAttribute('aria-label', 'Collapse utilities'); }
-                rail.querySelectorAll?.('[data-u]')?.forEach?.(b => b.setAttribute('aria-selected', String(b.dataset.u === 'automations')));
-                rail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === 'automations'));
+                selectUtilityTab('automations');
             });
             for (const id of ['projects-automations']) {
                 const target = byId(id);
@@ -166,14 +202,7 @@
                         if (!target.hidden) {
                             const utility = target.closest('details');
                             if (utility) utility.open = true;
-                            const rail = byId('projects-utility-rail');
-                            if (rail) {
-                                rail.classList.remove('collapsed');
-                                const ucollapse = byId('ucollapse');
-                                if (ucollapse) { ucollapse.textContent = '»'; ucollapse.setAttribute('aria-label', 'Collapse utilities'); }
-                                rail.querySelectorAll?.('[data-u]')?.forEach?.(b => b.setAttribute('aria-selected', String(b.dataset.u === 'automations')));
-                                rail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === 'automations'));
-                            }
+                            selectUtilityTab('automations');
                         }
                     });
                     observer.observe(target, { attributes: true, attributeFilter: ['hidden'] });

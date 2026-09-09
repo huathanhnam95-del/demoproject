@@ -211,10 +211,10 @@ const {
                         sessionMinutes: 60,
                         timezone: 'Asia/Bangkok',
                         durationStepMinutes: 30,
-                        totalInstructionMinutes: 600,
-                        targetSessionCount: 10,
+                        totalInstructionMinutes: 720,
+                        targetSessionCount: 12,
                         seedStartTime: '18:00',
-                        seedWeekdays: [1, 3]
+                        seedWeekdays: [1, 3, 5]
                     }
                 })
             });
@@ -225,9 +225,9 @@ const {
                     method: 'POST',
                     body: JSON.stringify({
                         startDate: '2026-09-07',
-                        endDate: '2026-09-13',
+                        endDate: '2026-09-30',
                         startTime: '18:00',
-                        weekdayNumbers: [1, 3]
+                        weekdayNumbers: [1, 3, 5]
                     })
                 });
             }
@@ -312,6 +312,8 @@ const {
             return grid ? getComputedStyle(grid).getPropertyValue('--scheduler-day-count').trim() : '';
         });
         assert.strictEqual(clampedDays, '14', 'Grid --scheduler-day-count should clamp to maximum 14 days');
+        const clampedToDateValue = await page.locator('#teacher-scheduler-to-date').inputValue();
+        assert.strictEqual(clampedToDateValue, '2026-09-14', 'To-date input should be auto-clamped to 14 days from from-date');
 
         // Restore to 7-day range
         await page.fill('#teacher-scheduler-from-date', '2026-09-07');
@@ -319,6 +321,42 @@ const {
         await page.locator('#teacher-scheduler-to-date').dispatchEvent('change');
         await page.waitForTimeout(600);
         console.log(' - Scenario 2 passed: dynamic --scheduler-day-count and 14-day clamping verified.');
+        stepsCompleted++;
+
+        // SCENARIO 2B: Mini Calendar Navigation & Grid
+        console.log('Scenario 2B: Checking mini calendar layout and navigation...');
+        const miniCal = page.locator('#teacher-scheduler-mini-calendar');
+        assert(await isVisible(miniCal), 'Mini calendar must be visible on the left rail');
+        const miniHeader = miniCal.locator('.mini-cal-header');
+        assert(await isVisible(miniHeader), 'Mini calendar header must be visible');
+        const initialMonthTitle = await miniCal.locator('.mini-cal-month-title').textContent();
+        assert(initialMonthTitle && initialMonthTitle.includes('2026'), 'Mini calendar title should display year 2026');
+
+        // Test month navigation: next then previous
+        await miniCal.locator('[data-action="next-month"]').click();
+        await page.waitForTimeout(300);
+        const nextMonthTitle = await miniCal.locator('.mini-cal-month-title').textContent();
+        assert.notStrictEqual(initialMonthTitle, nextMonthTitle, 'Mini calendar title must change on next month click');
+
+        await miniCal.locator('[data-action="prev-month"]').click();
+        await page.waitForTimeout(300);
+        const restoredMonthTitle = await miniCal.locator('.mini-cal-month-title').textContent();
+        assert.strictEqual(restoredMonthTitle, initialMonthTitle, 'Mini calendar title must restore on prev month click');
+
+        // Check weekday headers (S M T W T F S)
+        const weekdayHeaders = await miniCal.locator('.mini-cal-weekdays span').allTextContents();
+        assert.strictEqual(weekdayHeaders.length, 7, 'Mini calendar should have 7 weekday headers');
+        assert.deepStrictEqual(weekdayHeaders, ['S', 'M', 'T', 'W', 'T', 'F', 'S'], 'Mini calendar weekdays should be S M T W T F S');
+
+        // Check 42 day cells
+        const dayCells = await miniCal.locator('.mini-cal-day-cell').count();
+        assert.strictEqual(dayCells, 42, 'Mini calendar should render exactly 42 day cells');
+
+        // Check active range highlight exists
+        const inRangeCells = await miniCal.locator('.mini-cal-day-cell.is-in-range').count();
+        assert(inRangeCells > 0, 'Mini calendar should highlight days in active range');
+        await page.screenshot({ path: 'teacher_scheduler_mini_calendar.png' });
+        console.log(' - Scenario 2B passed: mini calendar layout and navigation verified.');
         stepsCompleted++;
 
         // Phase 4.2 Quick Add
@@ -546,7 +584,7 @@ const {
                 }
                 const time = String(session?.scheduledLocalTime || '').slice(0, 5);
                 const date = String(session?.scheduledLocalDate || '');
-                if (date === '2026-09-09' && time === '18:00') return false;
+                if (time === '18:00') return false; // reserve 18:00 recurring series for Scenario 5
                 return true;
             });
             return unlocked?.sessionId || null;
@@ -619,15 +657,26 @@ const {
 
         const unlockedSeriesSessionId = await page.evaluate(() => {
             const s = window.teacherSchedulerController?.getState?.();
-            // Find the recurring Wednesday 18:00 session from the seeded classroom (future, unlocked)
+            const now = new Date();
+            // Find the recurring Friday 18:00 session from the seeded classroom (future, unlocked, has future occurrences)
             const target = (s?.sessions || []).find((sess) => {
+                const hardLocked = String(sess?.lockState || 'unlocked') === 'hard_locked'
+                    || String(sess?.attendanceState || 'none') === 'in_progress'
+                    || String(sess?.attendanceState || 'none') === 'finalized'
+                    || String(sess?.status || 'scheduled') === 'completed'
+                    || String(sess?.status || 'cancelled') === 'cancelled';
+                if (hardLocked) return false;
+                if (sess?.scheduledStartAtUtc) {
+                    const start = new Date(sess.scheduledStartAtUtc);
+                    if (Number.isFinite(start.getTime()) && start <= now) return false;
+                }
                 const time = String(sess?.scheduledLocalTime || '').slice(0, 5);
                 const date = String(sess?.scheduledLocalDate || '');
-                return time === '18:00' && date === '2026-09-09';
+                return time === '18:00' && date === '2026-09-11';
             });
             return target?.sessionId || null;
         });
-        assert(unlockedSeriesSessionId, 'Must find the Wednesday 18:00 recurring series session in calendar');
+        assert(unlockedSeriesSessionId, 'Must find the Friday 18:00 recurring series session in calendar');
 
         const seriesSourcePill = page.locator(`.teacher-scheduler-session-pill[data-session-id="${unlockedSeriesSessionId}"]`);
         await seriesSourcePill.scrollIntoViewIfNeeded();

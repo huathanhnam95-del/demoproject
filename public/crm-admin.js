@@ -642,6 +642,7 @@
     elements.teacherSchedulerAdminFilterGroup = document.getElementById('teacher-scheduler-admin-filter-group');
     elements.teacherSchedulerRailTitle = document.getElementById('teacher-scheduler-rail-title');
     elements.teacherSchedulerRailDesc = document.getElementById('teacher-scheduler-rail-desc');
+    elements.teacherSchedulerMiniCalendar = document.getElementById('teacher-scheduler-mini-calendar');
     elements.btnTeacherSchedulerRefresh = document.getElementById('btn-teacher-scheduler-refresh');
     elements.inputTeacherSchedulerFromDate = document.getElementById('teacher-scheduler-from-date');
     elements.inputTeacherSchedulerToDate = document.getElementById('teacher-scheduler-to-date');

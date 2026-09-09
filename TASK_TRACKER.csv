@@ -2040,3 +2040,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1045,2026-09-09,Deploy new CRM Projects tab UI to production,Done,2026-09-09
 1046,2026-09-09,Projects workspace UI-UX overhaul: design tokens board row chips kanban gantt and utility rail,Done,2026-09-09
 1047,2026-09-09,Audit debug and refactor CRM Projects workspace: fix kanban modal pop safe CSS calendar today and utility rail a11y,Done,2026-09-09
+1048,2026-09-09,Teacher Schedule mini calendar navigation auto 14-day date clamping and fast optimistic create-cancel,Done,2026-09-09
+1049,2026-09-09,Enable CRM Projects feature flag in production and configure extensionless clean URLs,In Progress,

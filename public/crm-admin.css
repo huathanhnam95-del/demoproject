@@ -2147,15 +2147,15 @@ body {
 
 .teacher-scheduler-workspace .scheduler-calendar-time {
   padding: 0 6px;
-  height: 40px;
-  line-height: 40px;
+  height: var(--scheduler-slot-height, 24px);
+  line-height: var(--scheduler-slot-height, 24px);
   font-size: 0.75rem;
 }
 
 .teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot {
   padding: 0;
   min-height: 0;
-  height: 40px;
+  height: var(--scheduler-slot-height, 24px);
   cursor: pointer;
 }
 
@@ -2261,6 +2261,10 @@ body {
 .teacher-scheduler-drag-ghost {
   position: fixed;
   pointer-events: none;
+  /* Positioned via translate3d so pointer moves stay on the compositor and never trigger layout. */
+  top: 0;
+  left: 0;
+  will-change: transform;
   z-index: 9999;
   box-sizing: border-box;
   border-radius: 6px;
@@ -3014,6 +3018,139 @@ body {
   line-height: 1.3;
 }
 
+/* --- Google-Calendar-style Mini Month Calendar --- */
+.teacher-scheduler-mini-calendar {
+  margin: 8px 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--crm-border, #e5e7eb);
+  user-select: none;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 6px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-month-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--crm-text, #3c4043);
+  letter-spacing: -0.01em;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-nav-btn {
+  background: transparent;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--crm-text-muted, #5f6368);
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-nav-btn:hover {
+  background: rgba(60, 64, 67, 0.08);
+  color: var(--crm-text, #202124);
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-weekdays span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--crm-text-muted, #70757a);
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px 0;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  position: relative;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-in-range {
+  background: rgba(26, 115, 232, 0.1);
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-range-start {
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-range-end {
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--crm-text, #3c4043);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-btn:hover {
+  background: rgba(60, 64, 67, 0.12);
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-outside .mini-cal-day-btn {
+  color: var(--crm-text-muted, #9aa0a6);
+  opacity: 0.5;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-today .mini-cal-day-btn {
+  background: #1a73e8 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-selected:not(.is-today) .mini-cal-day-btn {
+  background: #d2e3fc;
+  color: #174ea6;
+  font-weight: 600;
+}
+
 .teacher-scheduler-workspace .scheduler-class-list {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -3276,11 +3413,11 @@ body {
   border-radius: 10px;
   border: 1px solid var(--crm-border-light, #e2e8f0);
   background: #ffffff;
-  scroll-behavior: smooth;
 }
 
 .teacher-scheduler-workspace .scheduler-calendar-grid {
   grid-template-columns: 56px repeat(var(--scheduler-day-count, 7), minmax(100px, 1fr));
+  contain: layout paint;
   min-width: 680px;
 }
 
@@ -3299,8 +3436,8 @@ body {
 
 .teacher-scheduler-workspace .scheduler-calendar-time {
   padding: 0 4px;
-  height: 40px;
-  line-height: 40px;
+  height: var(--scheduler-slot-height, 24px);
+  line-height: var(--scheduler-slot-height, 24px);
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--crm-text-muted, #64748b);
@@ -16842,3 +16979,179 @@ body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
   font-size: 12px;
 }
 
+
+/* ============================================
+   Teacher Scheduler — Google-Calendar-grade grid
+   (scoped to .teacher-scheduler-workspace so the admin scheduler is untouched)
+   ============================================ */
+
+/* V1 — retire the heavy 1px lattice: light day separators, hour rules stronger than half-hours. */
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot {
+  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-hour-end {
+  border-bottom-color: #e8edf3;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-today-col {
+  background: rgba(37, 99, 235, 0.028);
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot:hover {
+  background: rgba(37, 99, 235, 0.055);
+}
+
+/* V4 — time gutter: right-aligned, sitting on the hour rule rather than boxed. */
+.teacher-scheduler-workspace .scheduler-calendar-time {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  border-right: 1px solid #eef2f7;
+  border-bottom: 0;
+  background: #ffffff;
+  text-align: right;
+  padding: 0 8px 0 4px;
+  overflow: visible;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-time > span {
+  position: relative;
+  top: -0.55em;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #70757a;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  background: #ffffff;
+  padding-left: 2px;
+}
+
+/* V3 — weekday over date, today in a filled circle. */
+.teacher-scheduler-workspace .scheduler-calendar-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 6px 4px 7px;
+  background: #ffffff;
+  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #e8edf3;
+  box-shadow: none;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-head-gutter {
+  border-right: 1px solid #eef2f7;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-head .cal-head-dow {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #70757a;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-head .cal-head-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--crm-text-dark, #202124);
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-head.is-today .cal-head-dow {
+  color: #1a73e8;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-head.is-today .cal-head-date {
+  background: #1a73e8;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* V2 — current-time indicator. */
+.teacher-scheduler-workspace .scheduler-now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #ea4335;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.teacher-scheduler-workspace .scheduler-now-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ea4335;
+}
+
+/* V5 — solid-fill pills, no left rail, compositor-friendly hover. */
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
+  border-radius: 7px;
+  border: none;
+  border-left: none;
+  padding: 3px 7px;
+  background: #1a73e8;
+  color: #ffffff;
+  font-size: 0.72rem;
+  box-shadow: none;
+  transition: box-shadow 0.14s ease, transform 0.14s ease;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-title {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-time,
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-teacher {
+  color: rgba(255, 255, 255, 0.86);
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px rgba(60, 64, 67, 0.15);
+  transform: translateY(-1px);
+  z-index: 5;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed {
+  background: #188038;
+  border-left: none;
+  color: #ffffff;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-title,
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-time {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill .pill-badge-completed {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-compact .pill-header {
+  line-height: 1.15;
+}
+
+/* Drop target reads as a translucent placeholder, not a filled cell. */
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-drop-target {
+  background: rgba(26, 115, 232, 0.16);
+}

@@ -122,7 +122,8 @@ window.TeacherSchedulerWorkspace = (function () {
             pointerDrag: null,
             suppressedSessionClickId: null,
             resizeDrag: null,
-            _hasScrolledToHour: false
+            _hasScrolledToHour: false,
+            miniCalendar: null
         };
 
         function updateRailLabels() {
@@ -203,20 +204,130 @@ window.TeacherSchedulerWorkspace = (function () {
             }
         }
 
-        function currentRange() {
-            const from = state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : startOfWeek(new Date());
-            let to = state.toDate ? new Date(`${state.toDate}T23:59:59`) : addDays(from, 6);
+        function clampDateRange(triggerSource = 'to') {
+            const fromEl = elements.inputTeacherSchedulerFromDate;
+            const toEl = elements.inputTeacherSchedulerToDate;
+            const fromVal = fromEl?.value || state.fromDate;
+            const toVal = toEl?.value || state.toDate;
+            if (!fromVal && !toVal) return;
+
+            let from = fromVal ? new Date(`${fromVal}T00:00:00`) : startOfWeek(new Date());
+            let to = toVal ? new Date(`${toVal}T23:59:59`) : addDays(from, 6);
+
+            if (from.getTime() > to.getTime()) {
+                if (triggerSource === 'from') {
+                    to = addDays(from, 6);
+                    to.setHours(23, 59, 59, 999);
+                    if (toEl) toEl.value = toLocalDateInput(to);
+                    state.toDate = toLocalDateInput(to);
+                    showToast?.('Adjusted end date to match start date.', 'info');
+                } else {
+                    from = addDays(to, -6);
+                    from.setHours(0, 0, 0, 0);
+                    if (fromEl) fromEl.value = toLocalDateInput(from);
+                    state.fromDate = toLocalDateInput(from);
+                    showToast?.('Adjusted start date to match end date.', 'info');
+                }
+            }
+
             const diffDays = Math.round((to.getTime() - from.getTime()) / 86400000);
             if (diffDays > 14) {
                 to = addDays(from, 13);
                 to.setHours(23, 59, 59, 999);
                 state.toDate = toLocalDateInput(to);
-                if (elements.inputTeacherSchedulerToDate) {
-                    elements.inputTeacherSchedulerToDate.value = state.toDate;
+                if (toEl) {
+                    toEl.value = state.toDate;
                 }
-                showToast?.('Date range clamped to 14 days maximum.', 'info');
+                showToast?.('Date range automatically adjusted to 14 days maximum.', 'info');
+            } else {
+                state.toDate = toLocalDateInput(to);
             }
+            state.fromDate = toLocalDateInput(from);
+        }
+
+        function currentRange() {
+            clampDateRange('to');
+            const from = state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : startOfWeek(new Date());
+            const to = state.toDate ? new Date(`${state.toDate}T23:59:59`) : addDays(from, 6);
             return { from, to };
+        }
+
+        const MONTH_NAMES = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        function getMiniCalendarDate() {
+            if (state.miniCalendar && Number.isFinite(state.miniCalendar.year) && Number.isFinite(state.miniCalendar.month)) {
+                return state.miniCalendar;
+            }
+            const baseDate = state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : new Date();
+            state.miniCalendar = {
+                year: baseDate.getFullYear(),
+                month: baseDate.getMonth()
+            };
+            return state.miniCalendar;
+        }
+
+        function renderMiniCalendar() {
+            if (!elements.teacherSchedulerMiniCalendar) return;
+            const mc = getMiniCalendarDate();
+            const year = mc.year;
+            const month = mc.month;
+            const monthTitle = `${MONTH_NAMES[month]} ${year}`;
+
+            const today = new Date();
+            const todayStr = toLocalDateInput(today);
+            const from = state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : startOfWeek(new Date());
+            const to = state.toDate ? new Date(`${state.toDate}T23:59:59`) : addDays(from, 6);
+            const fromStr = toLocalDateInput(from);
+            const toStr = toLocalDateInput(to);
+
+            const firstOfMonth = new Date(year, month, 1);
+            const startDay = firstOfMonth.getDay(); // 0 is Sunday
+            const startDate = addDays(firstOfMonth, -startDay);
+
+            let daysHtml = '';
+            for (let i = 0; i < 42; i++) {
+                const cellDate = addDays(startDate, i);
+                const cellDateStr = toLocalDateInput(cellDate);
+                const isOutside = cellDate.getMonth() !== month;
+                const isToday = cellDateStr === todayStr;
+                const isInRange = cellDateStr >= fromStr && cellDateStr <= toStr;
+                const isRangeStart = cellDateStr === fromStr;
+                const isRangeEnd = cellDateStr === toStr;
+
+                const cellClasses = ['mini-cal-day-cell'];
+                if (isOutside) cellClasses.push('is-outside');
+                if (isToday) cellClasses.push('is-today');
+                if (isInRange) cellClasses.push('is-in-range');
+                if (isRangeStart) cellClasses.push('is-range-start');
+                if (isRangeEnd) cellClasses.push('is-range-end');
+
+                daysHtml += `
+                    <div class="${cellClasses.join(' ')}" data-mini-date="${cellDateStr}">
+                        <button type="button" class="mini-cal-day-btn" data-mini-date="${cellDateStr}" aria-label="${cellDateStr}">
+                            ${cellDate.getDate()}
+                        </button>
+                    </div>
+                `;
+            }
+
+            elements.teacherSchedulerMiniCalendar.innerHTML = `
+                <div class="mini-cal-header">
+                    <span class="mini-cal-month-title">${escapeHtml(monthTitle)}</span>
+                    <div class="mini-cal-nav">
+                        <button type="button" class="mini-cal-nav-btn mini-cal-nav-prev" data-action="prev-month" aria-label="Previous month">&#x2039;</button>
+                        <button type="button" class="mini-cal-nav-btn mini-cal-nav-next" data-action="next-month" aria-label="Next month">&#x203A;</button>
+                    </div>
+                </div>
+                <div class="mini-cal-weekdays">
+                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                </div>
+                <div class="mini-cal-days">
+                    ${daysHtml}
+                </div>
+            `;
         }
 
         function describeTeacherSchedulerError(error, targetDate = '', targetTime = '', durationMinutes = 0, excludeSessionId = '', targetClassId = '', targetTeacherUid = '') {
@@ -372,30 +483,23 @@ window.TeacherSchedulerWorkspace = (function () {
             `;
         }
 
-        const SLOT_HEIGHT_PX = 40;
+        /* Google Calendar runs ~48px/hour. Single source of truth: this value is also written
+           onto the grid as --scheduler-slot-height so the CSS row heights can never drift. */
+        const SLOT_HEIGHT_PX = 24;
+        /* Below this height a pill cannot fit a title AND a time line, so it collapses to one. */
+        const PILL_TWO_LINE_MIN_PX = 40;
 
-        function renderCalendarGrid() {
-            if (!elements.teacherSchedulerCalendar) return;
-            const days = getRenderDays();
-            const slots = hourSlots(7, 21);
-            const slotErrors = state.slotErrors;
-            let html = `<div class="scheduler-calendar-grid" style="--scheduler-day-count: ${days.length};">`;
-            html += '<div class="scheduler-calendar-head"></div>';
-            days.forEach((day) => {
-                html += `<div class="scheduler-calendar-head">${DAY_LABELS[day.getDay()]} ${pad(day.getDate())}</div>`;
-            });
-
-            // Precompute layout columns for concurrent and overlapping sessions per day
+        /* Interval-clustering + greedy column packing, per day. Extracted from renderCalendarGrid
+           so a single-pill update can recompute only the day columns it touches. */
+        function computeSessionLayout(dateStrings) {
             const sessionLayoutMap = new Map();
-            days.forEach((day) => {
-                const dateStr = toLocalDateInput(day);
+            (Array.isArray(dateStrings) ? dateStrings : []).forEach((dateStr) => {
                 const daySessions = state.sessions
                     .filter((s) => getSessionLocalDate(s) === dateStr)
                     .map((s) => {
                         const start = parseTimeToMinutes(getSessionLocalTime(s)) ?? 0;
                         const duration = Number(s.durationMinutes || 0) || 60;
-                        const end = start + duration;
-                        return { session: s, start, end };
+                        return { session: s, start, end: start + duration };
                     })
                     .sort((a, b) => a.start - b.start || (b.end - a.end));
 
@@ -412,9 +516,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         clusterEnd = item.end;
                     }
                 }
-                if (currentCluster.length > 0) {
-                    clusters.push(currentCluster);
-                }
+                if (currentCluster.length > 0) clusters.push(currentCluster);
 
                 for (const cluster of clusters) {
                     if (cluster.length === 1) {
@@ -443,9 +545,95 @@ window.TeacherSchedulerWorkspace = (function () {
                     }
                 }
             });
+            return sessionLayoutMap;
+        }
+
+        function pillLayoutStyle(durationMinutes, layout) {
+            const heightPx = Math.max((durationMinutes / 30) * SLOT_HEIGHT_PX - 2, 18);
+            const totalCols = Number(layout?.totalCols || 1) || 1;
+            const col = Number(layout?.col || 0) || 0;
+            if (totalCols > 1) {
+                const colWidth = (100 / totalCols).toFixed(2);
+                const colLeft = (col * (100 / totalCols)).toFixed(2);
+                return { heightPx, left: `calc(${colLeft}% + 1px)`, width: `calc(${colWidth}% - 2px)`, right: 'auto' };
+            }
+            return { heightPx, left: '2px', width: '', right: '2px' };
+        }
+
+        /* Repaint only the given day columns in place. Returns false if the DOM isn't in a state
+           we can patch, so callers can fall back to a full renderCalendarGrid(). */
+        function repaintDayColumns(dateStrings) {
+            const calendar = elements.teacherSchedulerCalendar;
+            if (!calendar?.querySelector) return false;
+            const dates = Array.from(new Set((dateStrings || []).filter(Boolean)));
+            if (!dates.length) return false;
+
+            const layoutMap = computeSessionLayout(dates);
+            for (const dateStr of dates) {
+                const daySessions = state.sessions.filter((s) => getSessionLocalDate(s) === dateStr);
+                for (const session of daySessions) {
+                    const sessionId = String(session.sessionId || '');
+                    const pill = calendar.querySelector(`.teacher-scheduler-session-pill[data-session-id="${sessionId}"]`);
+                    if (!pill) return false;
+
+                    const timeStr = getSessionLocalTime(session);
+                    const targetCell = calendar.querySelector(
+                        `.teacher-scheduler-slot[data-date="${dateStr}"][data-time="${timeStr}"]`);
+                    if (!targetCell) return false;
+                    if (pill.parentNode !== targetCell && typeof targetCell.appendChild === 'function') {
+                        targetCell.appendChild(pill);
+                    }
+
+                    const duration = Number(session.durationMinutes || 0) || 60;
+                    const geo = pillLayoutStyle(duration, layoutMap.get(sessionId));
+                    if (pill.style) {
+                        pill.style.top = '0';
+                        pill.style.height = `${geo.heightPx}px`;
+                        pill.style.left = geo.left;
+                        pill.style.width = geo.width;
+                        pill.style.right = geo.right;
+                    }
+                    pill.classList?.toggle?.('is-saving', state.pendingSessionIds.has(sessionId));
+                }
+            }
+            return true;
+        }
+
+        /* Move/refresh a single session's pill without rebuilding the whole grid.
+           Falls back to a full render when the in-place patch can't be applied. */
+        function updateSessionPill(sessionId, previousDate) {
+            const session = state.sessions.find((s) => String(s.sessionId || '') === String(sessionId || ''));
+            if (!session) return renderCalendarGrid();
+            const dates = [getSessionLocalDate(session)];
+            if (previousDate && previousDate !== dates[0]) dates.push(previousDate);
+            if (!repaintDayColumns(dates)) renderCalendarGrid();
+        }
+
+        function renderCalendarGrid() {
+            if (!elements.teacherSchedulerCalendar) return;
+            const days = getRenderDays();
+            const slots = hourSlots(7, 21);
+            const slotErrors = state.slotErrors;
+            let html = `<div class="scheduler-calendar-grid" style="--scheduler-day-count: ${days.length}; --scheduler-slot-height: ${SLOT_HEIGHT_PX}px;">`;
+            const todayStr = toLocalDateInput(new Date());
+            html += '<div class="scheduler-calendar-head scheduler-calendar-head-gutter"></div>';
+            days.forEach((day) => {
+                const isToday = toLocalDateInput(day) === todayStr;
+                html += `<div class="scheduler-calendar-head${isToday ? ' is-today' : ''}">`
+                    + `<span class="cal-head-dow">${DAY_LABELS[day.getDay()]}</span>`
+                    + `<span class="cal-head-date">${pad(day.getDate())}</span>`
+                    + '</div>';
+            });
+
+            const sessionLayoutMap = computeSessionLayout(days.map((day) => toLocalDateInput(day)));
+            const nowDate = new Date();
+            const nowMinutes = (nowDate.getHours() * 60) + nowDate.getMinutes();
 
             slots.forEach((slotTime) => {
-                html += `<div class="scheduler-calendar-time">${slotTime}</div>`;
+                const isHourStart = slotTime.endsWith(':00');
+                html += `<div class="scheduler-calendar-time${isHourStart ? '' : ' is-half'}">`
+                    + (isHourStart ? `<span>${slotTime}</span>` : '')
+                    + '</div>';
                 days.forEach((day) => {
                     const dateStr = toLocalDateInput(day);
                     const key = `${dateStr}|${slotTime}`;
@@ -470,7 +658,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         const duration = Number(session.durationMinutes || 0) || 60;
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
                         const heightPx = Math.max((duration / 30) * SLOT_HEIGHT_PX - 2, 18);
-                        const isCompact = heightPx < 46;
+                        const isCompact = heightPx < PILL_TWO_LINE_MIN_PX;
                         const compactClass = isCompact ? 'is-compact' : '';
                         const locked = isLockedSession(session);
                         const teacherName = session.teacherName || state.teacherMap.get(session.teacherUid) || classroom?.primaryTeacherName || state.teacherMap.get(classroom?.primaryTeacherUid) || '';
@@ -498,7 +686,20 @@ window.TeacherSchedulerWorkspace = (function () {
                             + '</button>';
                     }).join('');
 
-                    html += `<div class="scheduler-calendar-cell teacher-scheduler-slot" data-date="${dateStr}" data-time="${slotTime}">`
+                    const cellClasses = ['scheduler-calendar-cell', 'teacher-scheduler-slot'];
+                    if (slotTime.endsWith(':30')) cellClasses.push('is-hour-end');
+                    if (dateStr === todayStr) cellClasses.push('is-today-col');
+                    const slotStartMins = parseTimeToMinutes(slotTime);
+                    const showNowLine = dateStr === todayStr
+                        && Number.isFinite(nowMinutes)
+                        && Number.isFinite(slotStartMins)
+                        && nowMinutes >= slotStartMins
+                        && nowMinutes < slotStartMins + 30;
+                    const nowLineHtml = showNowLine
+                        ? `<div class="scheduler-now-line" style="top:${(((nowMinutes - slotStartMins) / 30) * 100).toFixed(2)}%;"></div>`
+                        : '';
+                    html += `<div class="${cellClasses.join(' ')}" data-date="${dateStr}" data-time="${slotTime}">`
+                        + nowLineHtml
                         + pillsHtml
                         + (errorText ? `<div class="teacher-scheduler-slot-error">${escapeHtml(errorText)}</div>` : '')
                         + '</div>';
@@ -520,6 +721,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 const targetPx = Math.max(0, Math.floor(((targetMinutes - 7 * 60) / 30) * SLOT_HEIGHT_PX));
                 elements.teacherSchedulerCalendar.scrollTop = targetPx;
             }
+            renderMiniCalendar();
         }
 
 
@@ -712,19 +914,48 @@ window.TeacherSchedulerWorkspace = (function () {
                 markSlotError(targetDate, targetTime, msg);
                 throw new Error(msg);
             }
+
+            // --- OPTIMISTIC PLACEMENT: render pill immediately (<16ms) ---
+            const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            const teacherName = (teacherUid && state.teacherMap.get(teacherUid)) || classroom.primaryTeacherName || '';
+            const tempSession = {
+                sessionId: tempId,
+                classId,
+                classroomName: classroom.name || 'Classroom',
+                teacherUid: teacherUid || null,
+                teacherName,
+                scheduledLocalDate: targetDate,
+                scheduledLocalTime: targetTime,
+                durationMinutes,
+                status: 'scheduled',
+                timezone: classroom.scheduleConfig?.timezone || 'UTC',
+                isOptimistic: true
+            };
+            state.sessions.push(tempSession);
+            renderCalendarGrid();
+
+            if (!options.silentToast) {
+                showToast?.('Session added.', 'success');
+            }
+
             try {
-                await window.ClassroomAPI.teacherAddClassroomSession(classId, {
+                const res = await window.ClassroomAPI.teacherAddClassroomSession(classId, {
                     targetLocalDate: targetDate,
                     targetLocalTime: targetTime,
                     durationMinutes,
                     timezone: classroom.scheduleConfig?.timezone || 'UTC',
                     ...(teacherUid ? { teacherUid } : {})
                 });
-                if (!options.silentToast) {
-                    showToast?.('Session added.', 'success');
+                const realSessionId = res?.sessionId || res?.session?.sessionId;
+                if (realSessionId) {
+                    tempSession.sessionId = realSessionId;
+                    delete tempSession.isOptimistic;
                 }
-                await refresh();
+                refresh().catch(() => {});
+                return res;
             } catch (error) {
+                state.sessions = state.sessions.filter((s) => s.sessionId !== tempId);
+                renderCalendarGrid();
                 const code = error?.code || '';
                 let message = error?.message || 'Failed to add session.';
                 if (code === 'TEACHER_CONFLICT') {
@@ -733,6 +964,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     message = 'Slot unavailable: class limit reached or duplicate.';
                 }
                 markSlotError(targetDate, targetTime, message);
+                showToast?.(message, 'error');
                 throw error;
             }
         }
@@ -742,7 +974,6 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!draft) return;
             draft.error = '';
             draft.suggestions = [];
-            renderQuickAdd();
             if (elements.inputTeacherSchedulerQuickDate?.value) {
                 draft.targetDate = String(elements.inputTeacherSchedulerQuickDate.value).trim();
             }
@@ -752,18 +983,32 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.inputTeacherSchedulerQuickDuration?.value) {
                 draft.durationMinutes = Number(elements.inputTeacherSchedulerQuickDuration.value) || draft.durationMinutes;
             }
-            try {
-                await placeClassroomSession(draft.classId, draft.targetDate, draft.targetTime, {
-                    silentToast: true,
-                    durationMinutes: draft.durationMinutes
-                });
-                showToast?.('Session added.', 'success');
-                closeQuickAdd();
-            } catch (error) {
-                draft.error = error?.message || 'Failed to add session.';
+
+            const classroom = getClassroomById(draft.classId);
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const teacherUid = selectedTeacher || classroom?.primaryTeacherUid || undefined;
+            const conflict = hasClientConflict(draft.targetDate, draft.targetTime, draft.durationMinutes, null, draft.classId, teacherUid);
+            if (conflict) {
+                const conflictClass = getClassroomById(conflict.classId);
+                draft.error = `Conflict: overlaps with ${conflictClass?.name || 'another session'} at ${getSessionLocalTime(conflict)}`;
                 draft.suggestions = computeSuggestions(draft.classId, draft.durationMinutes);
                 renderQuickAdd();
+                return;
             }
+
+            // Immediately close quick add popover (0ms delay)
+            const targetClassId = draft.classId;
+            const targetDate = draft.targetDate;
+            const targetTime = draft.targetTime;
+            const duration = draft.durationMinutes;
+            closeQuickAdd();
+
+            placeClassroomSession(targetClassId, targetDate, targetTime, {
+                silentToast: false,
+                durationMinutes: duration
+            }).catch((err) => {
+                console.warn('[TeacherScheduler] QuickAdd placeClassroomSession error:', err);
+            });
         }
 
         function closeSessionBubble() {
@@ -857,10 +1102,32 @@ window.TeacherSchedulerWorkspace = (function () {
             if (!window.ClassroomAPI?.teacherCancelScheduledSession) {
                 throw new Error('Cancel session API unavailable.');
             }
-            await window.ClassroomAPI.teacherCancelScheduledSession(sessionId);
-            showToast?.('Session cancelled.', 'success');
+            // Close session bubble immediately (0ms delay)
             closeSessionBubble();
-            await refresh();
+
+            const idx = state.sessions.findIndex((s) => String(s.sessionId || '') === String(sessionId || ''));
+            if (idx === -1) {
+                await window.ClassroomAPI.teacherCancelScheduledSession(sessionId);
+                showToast?.('Session cancelled.', 'success');
+                await refresh();
+                return;
+            }
+
+            // Optimistically remove session from grid
+            const backup = state.sessions[idx];
+            state.sessions.splice(idx, 1);
+            renderCalendarGrid();
+            showToast?.('Session cancelled.', 'success');
+
+            try {
+                await window.ClassroomAPI.teacherCancelScheduledSession(sessionId);
+                refresh().catch(() => {});
+            } catch (error) {
+                state.sessions.splice(idx, 0, backup);
+                renderCalendarGrid();
+                showToast?.(error?.message || 'Failed to cancel session. Restored.', 'error');
+                throw error;
+            }
         }
 
         async function saveSessionOutcome(sessionId, outcomeValue) {
@@ -949,8 +1216,9 @@ window.TeacherSchedulerWorkspace = (function () {
 
         async function refresh() {
             if (!window.ClassroomAPI?.fetchTeacherSchedulerWorkspace) return;
-            const from = String(elements.inputTeacherSchedulerFromDate?.value || '').trim();
-            const to = String(elements.inputTeacherSchedulerToDate?.value || '').trim();
+            clampDateRange('to');
+            const from = String(elements.inputTeacherSchedulerFromDate?.value || state.fromDate || '').trim();
+            const to = String(elements.inputTeacherSchedulerToDate?.value || state.toDate || '').trim();
             const teacherUid = isAdminMode() ? state.selectedTeacherUid : undefined;
             const payload = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace({
                 from,
@@ -978,6 +1246,7 @@ window.TeacherSchedulerWorkspace = (function () {
             renderClassRail();
             renderActivationSummary();
             renderCalendarGrid();
+            renderMiniCalendar();
             renderQuickAdd();
             renderSessionBubble();
         }
@@ -1066,39 +1335,61 @@ window.TeacherSchedulerWorkspace = (function () {
             return el?.closest?.('.teacher-scheduler-slot') || null;
         }
 
-        function findSlotForGhost(clientX, clientY, ghostTop) {
-            if (typeof document.elementFromPoint !== 'function' || !elements.teacherSchedulerCalendar) {
-                return findSlotFromPoint(clientX, clientY);
-            }
-            const baseEl = document.elementFromPoint(clientX, clientY);
-            const baseSlot = baseEl?.closest?.('.teacher-scheduler-slot') || null;
-            const targetDate = baseSlot?.dataset?.date;
-            if (!targetDate || !Number.isFinite(ghostTop)) {
-                return baseSlot;
-            }
+        /* Static grid measurements, captured once per drag. The only per-frame layout read is
+           the grid's own rect (see readDragGeometry), so a pointer move costs no hit-testing. */
+        function captureGridMetrics() {
+            const calendar = elements.teacherSchedulerCalendar;
+            const grid = calendar?.querySelector?.('.scheduler-calendar-grid') || null;
+            if (!grid || typeof grid.getBoundingClientRect !== 'function') return null;
 
-            const columnSlots = elements.teacherSchedulerCalendar.querySelectorAll(`.teacher-scheduler-slot[data-date="${targetDate}"]`);
-            if (!columnSlots || columnSlots.length === 0) return baseSlot;
+            const headEl = grid.querySelector?.('.scheduler-calendar-head') || null;
+            const timeEl = grid.querySelector?.('.scheduler-calendar-time') || null;
+            const headHeight = Number(headEl?.getBoundingClientRect?.().height) || 0;
+            const gutterWidth = Number(timeEl?.getBoundingClientRect?.().width) || 0;
+            const days = getRenderDays().map((day) => toLocalDateInput(day));
+            if (!days.length || !headHeight || !gutterWidth) return null;
 
-            let nearestSlot = null;
-            let minDistance = Infinity;
-            for (let i = 0; i < columnSlots.length; i++) {
-                const slot = columnSlots[i];
-                const rect = typeof slot.getBoundingClientRect === 'function' ? slot.getBoundingClientRect() : null;
-                if (!rect) continue;
-                const slotMidpoint = (rect.top + rect.bottom) / 2;
-                const dist = Math.abs(slotMidpoint - ghostTop);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearestSlot = slot;
-                }
-            }
-            return nearestSlot || baseSlot;
+            return { grid, headHeight, gutterWidth, days, slots: hourSlots(7, 21) };
+        }
+
+        /* Resolve (date, time) arithmetically from cursor position. One rect read, no hit-test. */
+        function resolveSlotCoords(metrics, clientX, clientY) {
+            if (!metrics?.grid || typeof metrics.grid.getBoundingClientRect !== 'function') return null;
+            const rect = metrics.grid.getBoundingClientRect();
+            const contentWidth = Number(rect.width) || 0;
+            const columnWidth = (contentWidth - metrics.gutterWidth) / metrics.days.length;
+            if (!(columnWidth > 0)) return null;
+
+            const columnIndex = Math.floor((clientX - rect.left - metrics.gutterWidth) / columnWidth);
+            if (columnIndex < 0 || columnIndex >= metrics.days.length) return null;
+
+            const rowIndex = Math.floor((clientY - rect.top - metrics.headHeight) / SLOT_HEIGHT_PX);
+            if (rowIndex < 0 || rowIndex >= metrics.slots.length) return null;
+
+            return { date: metrics.days[columnIndex], time: metrics.slots[rowIndex] };
+        }
+
+        /* Only touches the DOM when the target cell actually changes. */
+        function updateDropTargetByCoords(coords) {
+            const drag = state.pointerDrag;
+            if (!drag) return;
+            const key = coords ? `${coords.date}|${coords.time}` : '';
+            if (drag.activeKey === key) return;
+            drag.activeKey = key;
+            const slot = (coords && elements.teacherSchedulerCalendar?.querySelector)
+                ? elements.teacherSchedulerCalendar.querySelector(
+                    `.teacher-scheduler-slot[data-date="${coords.date}"][data-time="${coords.time}"]`)
+                : null;
+            updateDropTarget(slot);
         }
 
         function clearPointerDrag() {
             const drag = state.pointerDrag;
             if (drag) {
+                if (drag.rafId && typeof cancelAnimationFrame === 'function') {
+                    cancelAnimationFrame(drag.rafId);
+                }
+                drag.rafId = 0;
                 if (Array.isArray(drag.highlightedSlots)) {
                     drag.highlightedSlots.forEach((s) => s?.classList?.remove?.('is-drop-target'));
                 }
@@ -1402,19 +1693,21 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
-            // Optimistic move
+            // Optimistic move -- patch just the affected day columns, never the whole grid.
             session.scheduledLocalDate = targetDate;
             session.scheduledLocalTime = targetTime;
             clearSlotError(targetDate, targetTime);
-            renderCalendarGrid();
+            updateSessionPill(sessionId, previousDate);
 
             const revertOptimistic = () => {
+                const revertFrom = getSessionLocalDate(session);
                 session.scheduledLocalDate = previousDate;
                 session.scheduledLocalTime = previousTime;
-                renderCalendarGrid();
+                updateSessionPill(sessionId, revertFrom);
             };
 
             state.pendingSessionIds.add(String(sessionId || ''));
+            updateSessionPill(sessionId);
 
             let chosenScope = 'single';
             let seriesMoved = [];
@@ -1622,11 +1915,80 @@ window.TeacherSchedulerWorkspace = (function () {
                     refresh().catch((error) => showToast?.(error?.message || 'Failed to refresh teacher scheduler.', 'error'));
                 });
             }
+            if (elements.teacherSchedulerMiniCalendar) {
+                elements.teacherSchedulerMiniCalendar.addEventListener('click', (evt) => {
+                    const prevBtn = closestTarget(evt, '.mini-cal-nav-prev, [data-action="prev-month"]');
+                    if (prevBtn) {
+                        const mc = getMiniCalendarDate();
+                        mc.month -= 1;
+                        if (mc.month < 0) {
+                            mc.month = 11;
+                            mc.year -= 1;
+                        }
+                        renderMiniCalendar();
+                        return;
+                    }
+                    const nextBtn = closestTarget(evt, '.mini-cal-nav-next, [data-action="next-month"]');
+                    if (nextBtn) {
+                        const mc = getMiniCalendarDate();
+                        mc.month += 1;
+                        if (mc.month > 11) {
+                            mc.month = 0;
+                            mc.year += 1;
+                        }
+                        renderMiniCalendar();
+                        return;
+                    }
+                    const dayCell = closestTarget(evt, '[data-mini-date]');
+                    if (dayCell) {
+                        const dateStr = dayCell.dataset.miniDate;
+                        if (!dateStr) return;
+                        const clicked = new Date(`${dateStr}T00:00:00`);
+                        if (!Number.isFinite(clicked.getTime())) return;
+                        const startOfWeekDate = addDays(clicked, -clicked.getDay());
+                        const endOfWeekDate = addDays(startOfWeekDate, 6);
+                        if (elements.inputTeacherSchedulerFromDate) {
+                            elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(startOfWeekDate);
+                        }
+                        if (elements.inputTeacherSchedulerToDate) {
+                            elements.inputTeacherSchedulerToDate.value = toLocalDateInput(endOfWeekDate);
+                        }
+                        clampDateRange('to');
+                        renderMiniCalendar();
+                        refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                    }
+                });
+            }
             if (elements.inputTeacherSchedulerFromDate) {
-                elements.inputTeacherSchedulerFromDate.addEventListener('change', () => refresh().catch(() => { }));
+                const handleFromChange = () => {
+                    clampDateRange('from');
+                    if (state.miniCalendar && elements.inputTeacherSchedulerFromDate.value) {
+                        const d = new Date(`${elements.inputTeacherSchedulerFromDate.value}T00:00:00`);
+                        if (Number.isFinite(d.getTime())) {
+                            state.miniCalendar.year = d.getFullYear();
+                            state.miniCalendar.month = d.getMonth();
+                        }
+                    }
+                    renderMiniCalendar();
+                    refresh().catch(() => { });
+                };
+                elements.inputTeacherSchedulerFromDate.addEventListener('change', handleFromChange);
+                elements.inputTeacherSchedulerFromDate.addEventListener('input', () => {
+                    clampDateRange('from');
+                    renderMiniCalendar();
+                });
             }
             if (elements.inputTeacherSchedulerToDate) {
-                elements.inputTeacherSchedulerToDate.addEventListener('change', () => refresh().catch(() => { }));
+                const handleToChange = () => {
+                    clampDateRange('to');
+                    renderMiniCalendar();
+                    refresh().catch(() => { });
+                };
+                elements.inputTeacherSchedulerToDate.addEventListener('change', handleToChange);
+                elements.inputTeacherSchedulerToDate.addEventListener('input', () => {
+                    clampDateRange('to');
+                    renderMiniCalendar();
+                });
             }
             if (elements.teacherSchedulerClassList) {
                 elements.teacherSchedulerClassList.addEventListener('click', (evt) => {
@@ -1642,6 +2004,10 @@ window.TeacherSchedulerWorkspace = (function () {
                     const pill = closestTarget(evt, '.teacher-scheduler-session-pill[data-session-id]');
                     if (pill) {
                         const sessionId = String(pill.dataset.sessionId || '').trim();
+                        if (sessionId.startsWith('temp-')) {
+                            showToast?.('Saving session, please wait...', 'info');
+                            return;
+                        }
                         if (state.suppressedSessionClickId === sessionId) {
                             state.suppressedSessionClickId = null;
                             return;
@@ -1677,6 +2043,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     const pill = closestTarget(evt, '.teacher-scheduler-session-pill[data-session-id]');
                     if (!pill) return;
                     const sessionId = String(pill.dataset.sessionId || '').trim();
+                    if (sessionId.startsWith('temp-')) return;
                     const session = state.sessions.find((s) => String(s.sessionId || '') === sessionId) || null;
                     if (session && isLockedSession(session)) {
                         showToast?.('This session is locked and cannot be moved.', 'info');
@@ -1692,49 +2059,101 @@ window.TeacherSchedulerWorkspace = (function () {
                 }, true);
             }
 
+            /* Consumer: runs at most once per animation frame. All layout reads happen up front,
+               then all writes -- never interleaved, so the browser never has to flush layout
+               synchronously mid-move. */
+            const flushDragFrame = () => {
+                const drag = state.pointerDrag;
+                if (!drag) return;
+                drag.rafId = 0;
+                if (!drag.active) return;
+
+                const clientX = drag.lastX;
+                const clientY = drag.lastY;
+
+                /* READ */
+                let coords = drag.metrics ? resolveSlotCoords(drag.metrics, clientX, clientY) : null;
+                let fallbackSlot = null;
+                if (!coords) {
+                    fallbackSlot = findSlotFromPoint(clientX, clientY) || drag.lastEventSlot || null;
+                }
+
+                /* WRITE */
+                if (drag.ghostEl) {
+                    drag.ghostEl.style.transform =
+                        `translate3d(${clientX - drag.offsetX}px, ${clientY - drag.offsetY}px, 0)`;
+                }
+                if (coords) {
+                    updateDropTargetByCoords(coords);
+                } else if (fallbackSlot !== drag.activeSlot) {
+                    drag.activeKey = null;
+                    updateDropTarget(fallbackSlot);
+                }
+            };
+
+            const scheduleDragFrame = () => {
+                const drag = state.pointerDrag;
+                if (!drag) return;
+                if (typeof requestAnimationFrame !== 'function') {
+                    flushDragFrame();
+                    return;
+                }
+                if (drag.rafId) return;
+                drag.rafId = requestAnimationFrame(flushDragFrame);
+            };
+
+            /* Producer: fires at pointer frequency (can exceed 1000Hz). Records coordinates and
+               nothing else -- no layout reads, no style writes. */
             const handleDragMove = (evt) => {
                 if (state.resizeDrag) {
                     handleResizeMove(evt);
                     return;
                 }
-                if (!state.pointerDrag) return;
-                const deltaX = evt.clientX - state.pointerDrag.startX;
-                const deltaY = evt.clientY - state.pointerDrag.startY;
-                const distance = Math.sqrt((deltaX ** 2) + (deltaY ** 2));
-                if (!state.pointerDrag.active && distance < 6) return;
-                if (!state.pointerDrag.active) {
-                    state.pointerDrag.active = true;
-                    state.pointerDrag.sourceEl?.classList?.add?.('is-dragging');
-                    elements.teacherSchedulerWorkspace?.classList?.add?.('is-pointer-dragging');
+                const drag = state.pointerDrag;
+                if (!drag) return;
 
-                    if (typeof document.createElement === 'function' && document.body) {
-                        const ghost = document.createElement('div');
-                        ghost.className = 'teacher-scheduler-drag-ghost';
-                        const rect = state.pointerDrag.rect || {};
-                        if (rect.width) ghost.style.width = `${rect.width}px`;
-                        if (rect.height) ghost.style.height = `${rect.height}px`;
-                        ghost.style.left = `${evt.clientX - state.pointerDrag.offsetX}px`;
-                        ghost.style.top = `${evt.clientY - state.pointerDrag.offsetY}px`;
+                drag.lastX = evt.clientX;
+                drag.lastY = evt.clientY;
+                drag.lastEventSlot = closestTarget(evt, '.teacher-scheduler-slot') || drag.lastEventSlot || null;
 
-                        const session = state.sessions.find((s) => String(s.sessionId || '') === state.pointerDrag.id);
-                        const classroom = session ? getClassroomById(session.classId) : null;
-                        const title = classroom?.name || session?.classId || 'Class';
-                        const timeRange = session ? formatTimeRange(getSessionLocalTime(session), state.pointerDrag.durationMinutes) : '';
-
-                        ghost.innerHTML = `<div style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
-                            + `<div class="drag-ghost-chip">${escapeHtml(timeRange)}</div>`;
-
-                        document.body.appendChild(ghost);
-                        state.pointerDrag.ghostEl = ghost;
-                    }
+                if (!drag.active) {
+                    const deltaX = evt.clientX - drag.startX;
+                    const deltaY = evt.clientY - drag.startY;
+                    if (Math.sqrt((deltaX ** 2) + (deltaY ** 2)) < 6) return;
+                    activateDrag(drag, evt.clientX, evt.clientY);
                 }
+                scheduleDragFrame();
+            };
 
-                if (state.pointerDrag.ghostEl) {
-                    state.pointerDrag.ghostEl.style.left = `${evt.clientX - state.pointerDrag.offsetX}px`;
-                    state.pointerDrag.ghostEl.style.top = `${evt.clientY - state.pointerDrag.offsetY}px`;
-                }
-                const ghostTop = evt.clientY - (state.pointerDrag.offsetY || 0);
-                updateDropTarget(findSlotFromPoint(evt.clientX, evt.clientY) || closestTarget(evt, '.teacher-scheduler-slot') || findSlotForGhost(evt.clientX, evt.clientY, ghostTop));
+            /* One-off setup when the 6px threshold is crossed: measure the grid once and build
+               the floating ghost. */
+            const activateDrag = (drag, clientX, clientY) => {
+                drag.active = true;
+                drag.sourceEl?.classList?.add?.('is-dragging');
+                elements.teacherSchedulerWorkspace?.classList?.add?.('is-pointer-dragging');
+                drag.metrics = captureGridMetrics();
+
+                if (typeof document.createElement !== 'function' || !document.body) return;
+
+                const ghost = document.createElement('div');
+                ghost.className = 'teacher-scheduler-drag-ghost';
+                const rect = drag.rect || {};
+                if (rect.width) ghost.style.width = `${rect.width}px`;
+                if (rect.height) ghost.style.height = `${rect.height}px`;
+                ghost.style.left = '0px';
+                ghost.style.top = '0px';
+                ghost.style.transform = `translate3d(${clientX - drag.offsetX}px, ${clientY - drag.offsetY}px, 0)`;
+
+                const session = state.sessions.find((s) => String(s.sessionId || '') === drag.id);
+                const classroom = session ? getClassroomById(session.classId) : null;
+                const title = classroom?.name || session?.classId || 'Class';
+                const timeRange = session ? formatTimeRange(getSessionLocalTime(session), drag.durationMinutes) : '';
+
+                ghost.innerHTML = `<div style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
+                    + `<div class="drag-ghost-chip">${escapeHtml(timeRange)}</div>`;
+
+                document.body.appendChild(ghost);
+                drag.ghostEl = ghost;
             };
 
             document.addEventListener('pointermove', handleDragMove, true);
@@ -1759,8 +2178,16 @@ window.TeacherSchedulerWorkspace = (function () {
                 }
                 if (!state.pointerDrag) return;
                 const drag = state.pointerDrag;
-                const ghostTop = evt.clientY - (drag.offsetY || 0);
-                const slot = drag.active ? (findSlotFromPoint(evt.clientX, evt.clientY) || closestTarget(evt, '.teacher-scheduler-slot') || drag.activeSlot || findSlotForGhost(evt.clientX, evt.clientY, ghostTop)) : null;
+                const coords = (drag.active && drag.metrics)
+                    ? resolveSlotCoords(drag.metrics, evt.clientX, evt.clientY)
+                    : null;
+                const geometrySlot = (coords && elements.teacherSchedulerCalendar?.querySelector)
+                    ? elements.teacherSchedulerCalendar.querySelector(
+                        `.teacher-scheduler-slot[data-date="${coords.date}"][data-time="${coords.time}"]`)
+                    : null;
+                const slot = drag.active
+                    ? (geometrySlot || findSlotFromPoint(evt.clientX, evt.clientY) || closestTarget(evt, '.teacher-scheduler-slot') || drag.activeSlot)
+                    : null;
                 const shouldSuppressClick = drag.active && drag.kind === 'session';
                 clearPointerDrag();
                 if (shouldSuppressClick) {
@@ -2155,6 +2582,11 @@ window.TeacherSchedulerWorkspace = (function () {
             refresh,
             load: refresh,
             deactivate,
+            placeClassroomSession,
+            commitQuickAdd,
+            cancelSession,
+            renderMiniCalendar,
+            clampDateRange,
             getState: () => state
         };
     }

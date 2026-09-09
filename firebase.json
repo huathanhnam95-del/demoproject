@@ -41,6 +41,7 @@
     },
     "hosting": {
         "public": "public",
+        "cleanUrls": true,
         "predeploy": [
             "node scripts/release/firebase-release.cjs hook --product hosting"
         ],
@@ -52,6 +53,10 @@
         "headers": [
             {
                 "source": "/index.html",
+                "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
+            },
+            {
+                "source": "/crm-admin",
                 "headers": [{"key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate"}]
             },
             {
@@ -98,6 +103,10 @@
                     "functionId": "api",
                     "region": "us-central1"
                 }
+            },
+            {
+                "source": "/crm-admin",
+                "destination": "/crm-admin.html"
             },
             {
                 "source": "**",

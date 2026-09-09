@@ -1660,6 +1660,258 @@ async function runTests() {
         console.log('✓ Dry-run failure abort, rollback, and error toast verified');
     }
 
+    // Test 21: Mini Calendar rendering, navigation, and day-click week selection
+    {
+        const { doc: testDoc, elements: testElements } = createMockDocument();
+        testElements.teacherSchedulerMiniCalendar = testDoc.createElement('div');
+        testElements.inputTeacherSchedulerFromDate = testDoc.createElement('input');
+        testElements.inputTeacherSchedulerToDate = testDoc.createElement('input');
+        testElements.teacherSchedulerCalendar = testDoc.createElement('div');
+
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-06';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-12';
+
+        const customAPI = {
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [],
+                from: '2026-09-06',
+                to: '2026-09-12'
+            })
+        };
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        // Check mini calendar rendered month header and weekdays
+        const miniCalHtml = testElements.teacherSchedulerMiniCalendar.innerHTML;
+        assert(miniCalHtml.includes('September 2026'), 'Mini calendar must display current month and year');
+        assert(miniCalHtml.includes('<span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>'), 'Mini calendar must render Sunday-to-Saturday weekday headers');
+        assert(miniCalHtml.includes('data-mini-date="2026-09-06"'), 'Mini calendar must render date cells');
+        assert(miniCalHtml.includes('is-in-range'), 'Active week range must have is-in-range styling');
+
+        // Test month navigation: click Next (›)
+        const nextBtn = new MockElement('button');
+        nextBtn.closest = (sel) => (sel.includes('mini-cal-nav-next') ? nextBtn : null);
+        testElements.teacherSchedulerMiniCalendar.dispatchEvent({ type: 'click', target: nextBtn });
+        assert(testElements.teacherSchedulerMiniCalendar.innerHTML.includes('October 2026'), 'Clicking next must advance mini calendar to October 2026');
+
+        // Test month navigation: click Prev (‹)
+        const prevBtn = new MockElement('button');
+        prevBtn.closest = (sel) => (sel.includes('mini-cal-nav-prev') ? prevBtn : null);
+        testElements.teacherSchedulerMiniCalendar.dispatchEvent({ type: 'click', target: prevBtn });
+        assert(testElements.teacherSchedulerMiniCalendar.innerHTML.includes('September 2026'), 'Clicking prev must return mini calendar to September 2026');
+
+        // Test day click: click Sep 16, 2026 (Wednesday)
+        const dayCell = new MockElement('div');
+        dayCell.dataset.miniDate = '2026-09-16';
+        dayCell.closest = (sel) => (sel.includes('[data-mini-date]') ? dayCell : null);
+        testElements.teacherSchedulerMiniCalendar.dispatchEvent({ type: 'click', target: dayCell });
+
+        // Week containing Sep 16, 2026 starts Sunday Sep 13 and ends Saturday Sep 19
+        assert.strictEqual(testElements.inputTeacherSchedulerFromDate.value, '2026-09-13', 'Day click must set fromDate to Sunday of that week');
+        assert.strictEqual(testElements.inputTeacherSchedulerToDate.value, '2026-09-19', 'Day click must set toDate to Saturday of that week');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Mini Calendar rendering, month navigation, and day click week jump verified');
+    }
+
+    // Test 22: Automatic 14-day date clamping on input change
+    {
+        const { doc: testDoc, elements: testElements } = createMockDocument();
+        testElements.inputTeacherSchedulerFromDate = testDoc.createElement('input');
+        testElements.inputTeacherSchedulerToDate = testDoc.createElement('input');
+        testElements.teacherSchedulerCalendar = testDoc.createElement('div');
+
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-01';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-07';
+
+        const toastMessages = [];
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: (msg, type) => { toastMessages.push({ msg, type }); },
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        // User chooses a date 30 days away: 2026-09-30
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-30';
+        testElements.inputTeacherSchedulerToDate.dispatchEvent({ type: 'change' });
+
+        // Must auto-clamp to exactly 14 days (2026-09-01 + 13 days = 2026-09-14)
+        assert.strictEqual(testElements.inputTeacherSchedulerToDate.value, '2026-09-14', 'Date range must auto-clamp to exactly 14 days from start date');
+        assert(toastMessages.some((t) => t.msg.includes('Date range automatically adjusted to 14 days maximum')), 'Informational toast must be shown on clamp');
+
+        console.log('✓ Automatic 14-day date clamping on input change verified');
+    }
+
+    // Test 23: Fast optimistic session placement with instant DOM rendering and server reconciliation
+    {
+        const { doc: testDoc, elements: testElements } = createMockDocument();
+        testElements.inputTeacherSchedulerFromDate = testDoc.createElement('input');
+        testElements.inputTeacherSchedulerToDate = testDoc.createElement('input');
+        testElements.teacherSchedulerCalendar = testDoc.createElement('div');
+        testElements.teacherSchedulerClassList = testDoc.createElement('div');
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        let resolveAddPromise;
+        let rejectAddPromise;
+        const customAPI = {
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha', scheduleConfig: { sessionMinutes: 60 } }],
+                sessions: [],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherAddClassroomSession: () => new Promise((resolve, reject) => {
+                resolveAddPromise = resolve;
+                rejectAddPromise = reject;
+            })
+        };
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        // Fire placeClassroomSession
+        const placePromise = controller.placeClassroomSession('c1', '2026-09-09', '10:00', { durationMinutes: 60 });
+
+        // Synchronous check: session must immediately be in state.sessions with temp ID before API resolves
+        const optimisticSession = controller.getState().sessions.find((s) => s.scheduledLocalDate === '2026-09-09');
+        assert(optimisticSession, 'Session must be immediately added to state.sessions before API resolves');
+        assert(optimisticSession.sessionId.startsWith('temp-'), 'Optimistic session must have temporary ID');
+        assert.strictEqual(optimisticSession.isOptimistic, true, 'Optimistic flag must be set');
+        assert(testElements.teacherSchedulerCalendar.innerHTML.includes('Class Alpha'), 'Calendar grid must immediately render optimistic pill');
+
+        // Resolve API with real session ID
+        resolveAddPromise({ sessionId: 'server-real-session-456' });
+        await placePromise;
+
+        // Session ID must now be updated to real ID
+        assert.strictEqual(optimisticSession.sessionId, 'server-real-session-456', 'Session ID must reconcile with server ID');
+        assert.strictEqual(optimisticSession.isOptimistic, undefined, 'isOptimistic must be cleared after resolution');
+
+        // Now test rollback on failure
+        let resolveAddFail;
+        let rejectAddFail;
+        customAPI.teacherAddClassroomSession = () => new Promise((resolve, reject) => {
+            resolveAddFail = resolve;
+            rejectAddFail = reject;
+        });
+
+        const failPromise = controller.placeClassroomSession('c1', '2026-09-10', '14:00', { durationMinutes: 60 }).catch(() => {});
+        assert(controller.getState().sessions.some((s) => s.scheduledLocalDate === '2026-09-10'), 'Session must be placed optimistically');
+
+        rejectAddFail(new Error('Server room conflict'));
+        await failPromise;
+
+        // Session must be removed from state.sessions after failure
+        assert(!controller.getState().sessions.some((s) => s.scheduledLocalDate === '2026-09-10'), 'Failed optimistic session must be rolled back');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Fast optimistic session placement with instant DOM rendering and server reconciliation verified');
+    }
+
+    // Test 24: Fast optimistic session cancellation with rollback on failure
+    {
+        const { doc: testDoc, elements: testElements } = createMockDocument();
+        testElements.inputTeacherSchedulerFromDate = testDoc.createElement('input');
+        testElements.inputTeacherSchedulerToDate = testDoc.createElement('input');
+        testElements.teacherSchedulerCalendar = testDoc.createElement('div');
+        testElements.teacherSchedulerSessionBubble = testDoc.createElement('div');
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        let resolveCancelPromise;
+        let rejectCancelPromise;
+        const customAPI = {
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-cancel-target',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '09:00',
+                        durationMinutes: 60,
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherCancelScheduledSession: () => new Promise((resolve, reject) => {
+                resolveCancelPromise = resolve;
+                rejectCancelPromise = reject;
+            })
+        };
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        assert(controller.getState().sessions.some((s) => s.sessionId === 's-cancel-target'), 'Target session must exist initially');
+
+        // Cancel session
+        const cancelPromise = controller.cancelSession('s-cancel-target');
+
+        // Synchronously: session must immediately be removed from state.sessions
+        assert(!controller.getState().sessions.some((s) => s.sessionId === 's-cancel-target'), 'Session must be immediately removed from state before API resolves');
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'none', 'Session bubble must be closed immediately');
+
+        resolveCancelPromise({ ok: true });
+        await cancelPromise;
+
+        // Test rollback on cancel error
+        controller.getState().sessions.push({
+            sessionId: 's-cancel-fail',
+            classId: 'c1',
+            teacherUid: 'teacher-1',
+            scheduledLocalDate: '2026-09-09',
+            scheduledLocalTime: '11:00',
+            durationMinutes: 60,
+            timezone: 'UTC'
+        });
+
+        customAPI.teacherCancelScheduledSession = () => new Promise((resolve, reject) => {
+            rejectCancelPromise = reject;
+        });
+
+        const cancelFailPromise = controller.cancelSession('s-cancel-fail').catch(() => {});
+        assert(!controller.getState().sessions.some((s) => s.sessionId === 's-cancel-fail'), 'Session must be removed optimistically');
+
+        rejectCancelPromise(new Error('Server error cancelling session'));
+        await cancelFailPromise;
+
+        // Session must be restored
+        assert(controller.getState().sessions.some((s) => s.sessionId === 's-cancel-fail'), 'Session must be restored on cancel failure');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Fast optimistic session cancellation with rollback on failure verified');
+    }
+
     console.log('All teacher scheduler client controller tests passed successfully!');
 }
 

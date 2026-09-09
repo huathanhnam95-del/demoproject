@@ -1,3 +1,20 @@
+## [V2.0.4] - 2026-09-09
+
+### Added & Enhanced
+- **CRM Projects Production Activation & URL Modernization**:
+  - Activated CRM Projects and Automations feature flags (`CRM_PROJECTS_ENABLED=true`, `CRM_PROJECTS_AUTOMATIONS_ENABLED=true`) in Cloud Functions environment.
+  - Enabled Firebase Hosting extensionless clean URLs (`cleanUrls: true`), stripping `.html` and serving `/crm-admin` cleanly with automatic 301 redirects.
+  - Added dedicated `/crm-admin` rewrite rule and cache-control headers in `firebase.json`.
+  - Updated in-app entry points in `public/index.html` and `public/classroom.html` to link to `/crm-admin`.
+- **CRM Projects UX & Refactoring Fixes**:
+  - Fixed Kanban drag-and-drop card interaction preventing accidental task detail modal popups.
+  - Added `.today` active date highlighting in Projects Calendar view.
+  - Added safe Sunday start-column positioning and `NaN%` inline style guards in Gantt timeline.
+  - Implemented full keyboard navigation (`ArrowUp`/`Down`/`Left`/`Right`/`Home`/`End`) and roving `tabindex` on utility rail tabs.
+  - Added comprehensive test suite `tests/crm/projects/views-overhaul-ux.test.js`.
+- **Teacher Schedule Enhancements**:
+  - Added mini-calendar sidebar navigation, 14-day date clamping, and optimistic session creation/cancellation.
+
 ## [V2.0.3] - 2026-09-09
 
 ### Added & Enhanced

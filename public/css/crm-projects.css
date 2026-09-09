@@ -733,3 +733,66 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   margin-left: 4px;
   line-height: 1;
 }
+
+/* ---------- KANBAN ---------- */
+.crm-projects-kanban.kb,
+.kb { display: grid; grid-template-columns: repeat(4, minmax(232px, 1fr)); gap: 14px; overflow-x: auto; padding-bottom: 8px; }
+.crm-projects-kanban-col.kcol,
+.kcol { display: flex; flex-direction: column; gap: 9px; min-height: 330px; border-radius: 9px; padding: 10px; background: var(--pj-raised); border: 1px solid transparent; transition: background .16s var(--ease, ease), border-color .16s var(--ease, ease); }
+.crm-projects-kanban-col.kcol.over,
+.kcol.over { background: var(--pj-accent-soft); border-color: var(--pj-accent); border-style: dashed; }
+.crm-projects-kanban-col.kcol > header,
+.kcol > header { display: flex; align-items: center; gap: 8px; padding: 2px 4px 8px; border-bottom: 1px solid var(--pj-line); }
+.crm-projects-kanban-col.kcol > header .pill,
+.kcol > header .pill { padding: 2px 8px; }
+.crm-projects-kanban-col.kcol > header b,
+.kcol > header b { margin-left: auto; font-size: 10.5px; color: var(--pj-faint); font-variant-numeric: tabular-nums; }
+.crm-projects-kanban-cards { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.crm-projects-kanban-card.kcard,
+.kcard { border: 1px solid var(--pj-line); border-radius: 8px; background: var(--pj-surface); padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; cursor: grab; box-shadow: var(--pj-shadow-rail, 0 1px 2px rgba(0,0,0,0.05)); transition: box-shadow .16s var(--ease, ease), transform .16s var(--ease, ease), opacity .16s var(--ease, ease); }
+.crm-projects-kanban-card.kcard:hover,
+.kcard:hover { box-shadow: var(--pj-shadow-pop, 0 14px 30px -10px rgba(0,0,0,0.15)); transform: translateY(-1px); }
+.crm-projects-kanban-card.kcard.drag,
+.kcard.drag { opacity: .4; }
+.crm-projects-kanban-card .kt,
+.kcard .kt { font-size: 12.5px; line-height: 1.4; font-weight: 500; }
+.crm-projects-kanban-card .crm-projects-task-open,
+.kcard .crm-projects-task-open { background: none; border: none; padding: 0; font: inherit; font-size: 12.5px; line-height: 1.4; font-weight: 500; color: var(--pj-ink); text-align: left; cursor: pointer; width: 100%; }
+.crm-projects-kanban-card .crm-projects-task-open:hover,
+.kcard .crm-projects-task-open:hover { color: var(--pj-accent); text-decoration: underline; }
+.crm-projects-kanban-card .sec,
+.kcard .sec { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--pj-accent-ink); font-weight: 600; }
+.crm-projects-kanban-card .prog,
+.kcard .prog { display: flex; align-items: center; gap: 7px; width: 100%; }
+.crm-projects-kanban-card .prog .track,
+.kcard .prog .track { flex: 1; height: 4px; border-radius: 99px; background: var(--pj-sunken); overflow: hidden; }
+.crm-projects-kanban-card .prog .track i,
+.kcard .prog .track i { display: block; height: 100%; background: var(--pj-accent); border-radius: 99px; transition: width .4s var(--ease, ease); }
+.crm-projects-kanban-card .prog b,
+.kcard .prog b { font-size: 10.5px; font-weight: 600; color: var(--pj-faint); font-variant-numeric: tabular-nums; }
+.crm-projects-kanban-card .kfoot,
+.kcard .kfoot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.crm-projects-kanban-card .kfoot .crm-board-date-chip,
+.kcard .kfoot .crm-board-date-chip { margin-left: auto; }
+.kempty { border: 1px dashed var(--pj-line); border-radius: 8px; padding: 16px; text-align: center; font-size: 11.5px; color: var(--pj-faint); }
+
+.crm-projects-status-pill.pill,
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+.crm-projects-status-pill.pill::before,
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
+.s-not_started { background: var(--st-ns-bg); color: var(--st-ns-fg); }
+.s-in_progress { background: var(--st-ip-bg); color: var(--st-ip-fg); }
+.s-blocked { background: var(--st-bl-bg); color: var(--st-bl-fg); }
+.s-done { background: var(--st-dn-bg); color: var(--st-dn-fg); }
+
+.crm-board-prio-chip.prio,
+.prio { border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+.crm-prio-urgent, .p-urgent { background: var(--sig-over-bg); color: var(--sig-over-fg); }
+.crm-prio-high, .p-high { background: var(--sig-soon-bg); color: var(--sig-soon-fg); }
+.crm-prio-medium, .p-medium { background: var(--pj-accent-soft); color: var(--pj-accent-ink); }
+.crm-prio-low, .p-low { background: var(--pj-sunken); color: var(--pj-muted); }
+
+.crm-board-date-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.crm-board-date-chip.is-overdue { color: var(--sig-over-fg); font-weight: 600; }
+.crm-board-date-chip.is-soon { color: var(--sig-soon-fg); font-weight: 600; }
+

@@ -80,6 +80,83 @@
         function taskRow(t, statusEditor = false) {
             return `<article class="crm-projects-view-row" data-view-task="${escape(t.id)}">${taskButton(t)}<span>${escape(array(t.ancestorTitles).join(' → '))}</span>${statusEditor ? `<label>Status <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>` : `<span>${escape(STATUSES[t.status] || t.status)}</span>`}<span>Stored dates: ${escape(t.startDate || 'undated')} → ${escape(t.dueDate || 'undated')}</span>${derived(t)}${warningList(t.dependencyWarnings)}${warningList(t.calendarWarnings)}</article>`;
         }
+        function initials(uid) {
+            const name = memberName(uid);
+            const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            return parts.length ? Array.from(parts[0])[0].toLocaleUpperCase() + (parts.length > 1 ? Array.from(parts[parts.length - 1])[0].toLocaleUpperCase() : '') : '—';
+        }
+        function kanbanAvatarStack(ownerUid, assigneeUids) {
+            const list = [ownerUid, ...array(assigneeUids)].map(String).filter(Boolean);
+            if (!list.length) return '';
+            const shown = list.slice(0, 3);
+            const overflow = list.length - shown.length;
+            const avatars = shown.map((u, i) => `<span class="crm-board-avatar${i === 0 ? ' is-owner' : ''}" title="${escape(memberName(u))}">${escape(initials(u))}</span>`).join('');
+            const more = overflow > 0 ? `<span class="crm-board-avatar crm-board-avatar-more">+${overflow}</span>` : '';
+            return `<span class="crm-board-people-stack">${avatars}${more}</span>`;
+        }
+        function kanbanDateChip(t) {
+            if (!t.startDate && !t.dueDate) return '';
+            const due = t.dueDate ? new Date(t.dueDate + 'T00:00:00') : null;
+            let cls = 'crm-board-date-chip', flag = '';
+            if (due && t.status !== 'done') {
+                const today = new Date();
+                const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const diff = Math.round((due - now) / 86400000);
+                if (diff < 0) { cls += ' is-overdue'; flag = `<span class="crm-board-due-badge crm-board-due-overdue">${Math.abs(diff)}d late</span>`; }
+                else if (diff === 0) { cls += ' is-soon'; flag = '<span class="crm-board-due-badge crm-board-due-soon">Today</span>'; }
+                else if (diff <= 2) { cls += ' is-soon'; flag = `<span class="crm-board-due-badge crm-board-due-soon">${diff}d</span>`; }
+            }
+            const label = t.dueDate || t.startDate;
+            return `<span class="${cls}"><span class="crm-muted">${escape(label)}</span>${flag}</span>`;
+        }
+        function kanbanPriorityPill(priority) {
+            if (!priority || priority === 'none') return '';
+            const labels = { urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low' };
+            return `<span class="crm-board-prio-chip crm-prio-${escape(priority)}">${escape(labels[priority] || priority)}</span>`;
+        }
+        function kanbanCard(t) {
+            const ancestors = array(t.ancestorTitles);
+            const sec = ancestors.length ? ancestors.join(' → ') : '';
+            const der = t.derived;
+            const hasProgress = der && Number(der.activeLeafCount) > 0;
+            const pct = hasProgress ? Math.max(0, Math.min(100, Math.round(Number(der.completionPercent ?? (der.completedLeafCount / der.activeLeafCount * 100)) || 0))) : 0;
+            const priority = t.values?.priority || 'none';
+            const statusEditor = `<label class="sr-only">Status <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>`;
+            return `<article class="crm-projects-kanban-card kcard" draggable="${canWrite() && !mutation ? 'true' : 'false'}" data-kanban-task="${escape(t.id)}" data-card="${escape(t.id)}">
+                ${sec ? `<span class="crm-projects-kanban-sec sec">${escape(sec)}</span>` : ''}
+                <div class="crm-projects-kanban-title kt">${taskButton(t)}</div>
+                ${hasProgress ? `<div class="crm-projects-kanban-progress prog"><span class="track"><i style="width:${pct}%"></i></span><b>${escape(der.completedLeafCount)}/${escape(der.activeLeafCount)}</b></div>` : ''}
+                <div class="crm-projects-kanban-foot kfoot">
+                    ${kanbanAvatarStack(t.ownerUid, t.assigneeUids)}
+                    ${kanbanPriorityPill(priority)}
+                    ${kanbanDateChip(t)}
+                    ${statusEditor}
+                </div>
+            </article>`;
+        }
+        function kanbanColumn(key, label, tasks) {
+            const colTasks = tasks.filter((t) => t.status === key);
+            return `<section class="crm-projects-kanban-col kcol" data-status-column="${key}" data-col="${key}" aria-label="${escape(label)}">
+                <header><span class="crm-projects-status-pill pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count">${colTasks.length}</b></header>
+                <div class="crm-projects-kanban-cards">
+                    ${colTasks.map(kanbanCard).join('') || '<p class="crm-muted kempty">No tasks on this page.</p>'}
+                </div>
+            </section>`;
+        }
+        async function applyStatus(id, nextStatus) {
+            const found = array(response?.tasks).find((t) => t.id === id);
+            if (!found || found.status === nextStatus || !canWrite() || mutation) return;
+            board?.selectTask(found);
+            setTask(found);
+            found.status = nextStatus;
+            render();
+            try {
+                await mutate(`${base()}/tasks/${encodeURIComponent(id)}`, { expectedRevision: found.revision, status: nextStatus });
+            } catch (err) {
+                status(err?.message || 'Could not update task status');
+                refresh();
+            }
+        }
         function render() {
             if (!el('projects-view-content')) return;
             fillFilters();
@@ -95,7 +172,7 @@
             if (!response && view === 'calendar') { renderCalendar([]); return; }
             if (!response) { el('projects-view-content').innerHTML = '<p class="crm-muted">Choose a project or refresh the view.</p>'; return; }
             if (view === 'kanban') {
-                el('projects-view-content').innerHTML = `<div class="crm-projects-kanban">${Object.entries(STATUSES).map(([key, label]) => `<section aria-label="${escape(label)}"><h4>${escape(response.project?.statusLabels?.[key] || label)}</h4>${rows.filter((t) => t.status === key).map((t) => taskRow(t, true)).join('') || '<p class="crm-muted">No tasks on this page.</p>'}</section>`).join('')}</div>`;
+                el('projects-view-content').innerHTML = `<div class="crm-projects-kanban kb">${Object.entries(STATUSES).map(([key, label]) => kanbanColumn(key, response.project?.statusLabels?.[key] || label, rows)).join('')}</div>`;
             } else if (view === 'timeline') {
                 const hasInterval = (t) => t.startDate || t.dueDate || (hasDerivedTimelineSpan(t, rows) && (t.derived.startDate || t.derived.dueDate));
                 const dated = rows.filter(hasInterval).sort((a, b) => String(a.startDate || a.dueDate || a.derived?.startDate || a.derived?.dueDate).localeCompare(String(b.startDate || b.dueDate || b.derived?.startDate || b.derived?.dueDate)));
@@ -447,10 +524,52 @@
             el('projects-view-retry')?.addEventListener('click', () => refresh());
             el('btn-projects-board-refresh')?.addEventListener('click', () => refresh());
             el('projects-view-content')?.addEventListener('click', (event) => { const button = event.target.closest('[data-task-open]'); const found = array(response?.tasks).find((t) => t.id === button?.dataset.taskOpen); if (found) board?.selectTask(found); });
+            let dragTaskId = null;
+            el('projects-view-content')?.addEventListener('dragstart', (e) => {
+                const card = e.target.closest ? e.target.closest('[data-kanban-task], [data-card]') : null;
+                if (!card || !canWrite() || mutation) return;
+                dragTaskId = card.dataset.kanbanTask || card.dataset.card;
+                card.classList.add('drag');
+                if (e.dataTransfer) {
+                    e.dataTransfer.effectAllowed = 'move';
+                    try { e.dataTransfer.setData('text/plain', dragTaskId); } catch (_) { /* legacy browser fallback */ }
+                }
+            });
+            el('projects-view-content')?.addEventListener('dragend', () => {
+                dragTaskId = null;
+                (el('projects-view-content')?.querySelectorAll?.('.kcard.drag') || []).forEach((c) => c.classList.remove('drag'));
+                (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => c.classList.remove('over'));
+            });
+            el('projects-view-content')?.addEventListener('dragover', (e) => {
+                const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
+                if (!col || !dragTaskId || !canWrite() || mutation) return;
+                e.preventDefault();
+                (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => { if (c !== col) c.classList.remove('over'); });
+                col.classList.add('over');
+            });
+            el('projects-view-content')?.addEventListener('dragleave', (e) => {
+                const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
+                if (col && (!e.relatedTarget || !col.contains(e.relatedTarget))) {
+                    col.classList.remove('over');
+                }
+            });
+            el('projects-view-content')?.addEventListener('drop', async (e) => {
+                const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
+                const id = dragTaskId;
+                dragTaskId = null;
+                (el('projects-view-content')?.querySelectorAll?.('.kcard.drag') || []).forEach((c) => c.classList.remove('drag'));
+                (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => c.classList.remove('over'));
+                if (!col || !id || !canWrite() || mutation) return;
+                e.preventDefault();
+                const nextStatus = col.dataset.statusColumn || col.dataset.col;
+                await applyStatus(id, nextStatus);
+            });
             el('projects-view-content')?.addEventListener('change', async (event) => {
                 if (event.target.id === 'projects-view-month') { const next = event.target.value; if (view === 'calendar' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(next) && next !== calendarMonth) { calendarMonth = next; resetViewPage(); } return; }
                 const id = event.target.dataset.taskStatus;
-                if (id) { const found = array(response?.tasks).find((t) => t.id === id); if (!found) return; event.target.disabled = true; board?.selectTask(found); await mutate(`${base()}/tasks/${encodeURIComponent(id)}`, { expectedRevision: found.revision, status: event.target.value }); }
+                if (id) {
+                    await applyStatus(id, event.target.value);
+                }
             });
             el('projects-task-planning')?.addEventListener('submit', (event) => {
                 event.preventDefault();

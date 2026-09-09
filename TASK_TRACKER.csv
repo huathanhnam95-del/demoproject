@@ -2048,5 +2048,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1053,2026-09-09,Execute CRM Projects Option B multi-tier board evolution: 5-level hierarchy rollups summary footers batch dock and duration combo,Done,2026-09-09
 1054,2026-09-09,CRM Projects Task Details modal overhaul: replace text walls with property bar interactive chips subtasks battery and modern preview cards,Done,2026-09-09
 1055,2026-09-09,CRM Projects UI/UX modernization: fix global class collisions and depth specificity unify tokens and namespace complete dark mode single breakpoint ladder and silky motion,Done,2026-09-09
-1056,2026-09-10,Release V2.0.5: Production deployment of Teacher Schedule UI and Project Management UI,In Progress,
-
+1056,2026-09-10,Release V2.0.6: Production deployment of Teacher Schedule UI and Project Management UI,Done,2026-09-10
+1057,2026-09-10,Teacher Schedule pill unclipped title inline rescheduling and session bubble button restructuring,Done,2026-09-10
+1058,2026-09-10,Teacher Schedule bidirectional upper and lower edge pill resize with live slot snapping and conflict guards,Done,2026-09-10
+1059,2026-09-10,CRM Projects visual modernization: emoji replaced with SVG icons Monday-style full-fill status cells per-group colour identity themed control styling and drawer restyle,Done,2026-09-10

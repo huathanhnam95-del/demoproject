@@ -1,3 +1,18 @@
+## [V2.0.6] - 2026-09-10
+
+### Added & Enhanced
+- **Teacher Schedule Bidirectional Edge Drag-Resizing & Visual Layout Overhaul (`public/crm-admin.css`, `public/crm-admin.html`, `public/crm-admin.js`, `public/js/crm/teacher-scheduler-workspace.js`, `tests/crm/teacher-scheduler-client-controller.test.js`)**:
+  - Google-Calendar-grade bidirectional edge drag-resizing: upper edge (`is-top`, `data-resize="top"`) shifts start time earlier or later while anchoring the end boundary; lower edge (`is-bottom`, `data-resize="bottom"`) extends or shortens session duration downwards with live 15/30-minute slot snapping and instantaneous conflict rollback guards.
+  - Unclipped pill layout: 2-line title clamp (`-webkit-line-clamp: 2`) with a dedicated `.pill-meta-row` housing the session time range and `✓ Completed` badge, ensuring text never clips across column widths.
+  - Modernized session bubble: 2-tier button architecture separating primary action flow from utility grid, dangerous destructive styling for `Cancel session`, and standardized attendance terminology ("Outcome" $\rightarrow$ "Attendance", "Outcome locked" $\rightarrow$ "Attendance finalized", "Open attendance" $\rightarrow$ "📋 Full Roster").
+  - Seamless inline rescheduling: collapsible `#teacher-scheduler-inline-reschedule` container within the session popover with quick datetime inputs, conflict detection, and optimistic updates.
+- **CRM Projects Visual Modernization & Design Polish (`public/css/crm-projects.css`, `public/js/crm/projects/board.js`, `public/js/crm/projects/views.js`, `public/js/crm/projects/automations.js`, `public/js/crm/projects/workspace.js`)**:
+  - Replaced emojis with crisp SVG icons (`PJ_ICON`: flags, folders, copy, gears, bolts, calendars, links, info).
+  - Monday-style status pill full fills with enhanced contrast, status color definitions (`--st-ns-solid`, `--st-ip-solid`, `--st-bl-solid`, `--st-dn-solid`), and smooth transitions.
+  - Per-group color identity with `--crm-project-group-color` across board rows, progress rings, and summary tags.
+  - Styled native controls: date pickers, multiple select, and file selector buttons with custom theme borders, hover/focus states, and drawn chevrons.
+  - Modernized task details drawer and technical info drawer with improved accessibility, themed chips, and clean layout hierarchy.
+
 ## [V2.0.5] - 2026-09-10
 
 ### Added & Enhanced

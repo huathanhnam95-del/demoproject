@@ -837,13 +837,35 @@ window.TeacherSchedulerWorkspace = (function () {
             positionFixedPopover(elements.teacherSchedulerQuickAdd, anchor, 6);
         }
 
+        /* Patch the error node into its own cell rather than rebuilding the grid twice
+           (once to show, once when the 4s timer clears it). */
+        function paintSlotError(targetDate, targetTime, message) {
+            const calendar = elements.teacherSchedulerCalendar;
+            if (!calendar?.querySelector) return false;
+            const cell = calendar.querySelector(
+                `.teacher-scheduler-slot[data-date="${targetDate}"][data-time="${targetTime}"]`);
+            if (!cell) return false;
+
+            const existing = cell.querySelector?.('.teacher-scheduler-slot-error') || null;
+            if (message) {
+                const node = existing || document.createElement('div');
+                node.className = 'teacher-scheduler-slot-error';
+                node.textContent = String(message);
+                if (!existing && typeof cell.appendChild === 'function') cell.appendChild(node);
+            } else if (existing?.parentNode) {
+                existing.parentNode.removeChild(existing);
+            }
+            return true;
+        }
+
         function markSlotError(targetDate, targetTime, message) {
             const key = `${targetDate}|${targetTime}`;
-            state.slotErrors.set(key, String(message || 'Unavailable slot'));
-            renderCalendarGrid();
+            const text = String(message || 'Unavailable slot');
+            state.slotErrors.set(key, text);
+            if (!paintSlotError(targetDate, targetTime, text)) renderCalendarGrid();
             window.setTimeout(() => {
                 state.slotErrors.delete(key);
-                renderCalendarGrid();
+                if (!paintSlotError(targetDate, targetTime, '')) renderCalendarGrid();
             }, 4000);
         }
 
@@ -1913,6 +1935,46 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.btnTeacherSchedulerRefresh) {
                 elements.btnTeacherSchedulerRefresh.addEventListener('click', () => {
                     refresh().catch((error) => showToast?.(error?.message || 'Failed to refresh teacher scheduler.', 'error'));
+                });
+            }
+
+            /* Week navigation: shift the visible window while preserving its length. */
+            function shiftRange(days) {
+                const fromEl = elements.inputTeacherSchedulerFromDate;
+                const toEl = elements.inputTeacherSchedulerToDate;
+                const { from, to } = currentRange();
+                const nextFrom = addDays(from, days);
+                const nextTo = addDays(to, days);
+                if (fromEl) fromEl.value = toLocalDateInput(nextFrom);
+                if (toEl) toEl.value = toLocalDateInput(nextTo);
+                state.fromDate = toLocalDateInput(nextFrom);
+                state.toDate = toLocalDateInput(nextTo);
+                state._hasScrolledToHour = false;
+                refresh().catch((error) => showToast?.(error?.message || 'Failed to change week.', 'error'));
+            }
+
+            function rangeSpanDays() {
+                const { from, to } = currentRange();
+                const span = Math.round((to.getTime() - from.getTime()) / 86400000);
+                return Math.max(1, span || 7);
+            }
+
+            if (elements.btnTeacherSchedulerPrevWeek) {
+                elements.btnTeacherSchedulerPrevWeek.addEventListener('click', () => shiftRange(-rangeSpanDays()));
+            }
+            if (elements.btnTeacherSchedulerNextWeek) {
+                elements.btnTeacherSchedulerNextWeek.addEventListener('click', () => shiftRange(rangeSpanDays()));
+            }
+            if (elements.btnTeacherSchedulerToday) {
+                elements.btnTeacherSchedulerToday.addEventListener('click', () => {
+                    const span = rangeSpanDays();
+                    const start = startOfWeek(new Date());
+                    if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(start);
+                    if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = toLocalDateInput(addDays(start, span));
+                    state.fromDate = toLocalDateInput(start);
+                    state.toDate = toLocalDateInput(addDays(start, span));
+                    state._hasScrolledToHour = false;
+                    refresh().catch((error) => showToast?.(error?.message || 'Failed to jump to today.', 'error'));
                 });
             }
             if (elements.teacherSchedulerMiniCalendar) {

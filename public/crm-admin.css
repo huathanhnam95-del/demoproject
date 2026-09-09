@@ -17155,3 +17155,139 @@ body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
 .teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-drop-target {
   background: rgba(26, 115, 232, 0.16);
 }
+
+/* --- Teacher scheduler: single consolidated toolbar (replaces the stacked step banner
+       + always-open weekly-pattern strip). --- */
+.teacher-scheduler-workspace .scheduler-toolbar {
+  gap: 4px;
+}
+
+.teacher-scheduler-workspace .ts-nav-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--crm-text-main, #334155);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.teacher-scheduler-workspace .ts-today-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--crm-text-main, #334155);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.teacher-scheduler-workspace .ts-nav-btn:hover,
+.teacher-scheduler-workspace .ts-today-btn:hover {
+  background: var(--crm-surface-dim, #f8f9fa);
+  border-color: #cbd5e1;
+}
+
+.teacher-scheduler-workspace .ts-nav-btn:focus-visible,
+.teacher-scheduler-workspace .ts-today-btn:focus-visible {
+  outline: var(--crm-focus-ring, 2px solid #1d4ed8);
+  outline-offset: 1px;
+}
+
+.teacher-scheduler-workspace .ts-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--crm-border, #e2e8f0);
+}
+
+.teacher-scheduler-workspace .ts-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* The weekly-pattern form becomes a popover anchored to its summary button. */
+.teacher-scheduler-workspace .teacher-scheduler-pattern-card {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  margin: 0;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-card[open] {
+  padding: 0;
+  background: transparent;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-card > summary {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--crm-border, #e2e8f0);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-card > summary:hover {
+  background: var(--crm-surface-dim, #f8f9fa);
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-card[open] > summary {
+  background: var(--crm-primary-light, #f0fdf4);
+  border-color: var(--crm-primary, #177a44);
+  margin-bottom: 0;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 10px;
+  font-size: 0.74rem;
+  color: var(--crm-text-muted, #64748b);
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-panel .teacher-scheduler-pattern-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-panel .pattern-group-days {
+  grid-column: 1 / -1;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-pattern-panel .pattern-group-class,
+.teacher-scheduler-workspace .teacher-scheduler-pattern-panel .pattern-group-time,
+.teacher-scheduler-workspace .teacher-scheduler-pattern-panel .pattern-group-btn {
+  flex: none;
+}

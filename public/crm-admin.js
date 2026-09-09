@@ -644,6 +644,9 @@
     elements.teacherSchedulerRailDesc = document.getElementById('teacher-scheduler-rail-desc');
     elements.teacherSchedulerMiniCalendar = document.getElementById('teacher-scheduler-mini-calendar');
     elements.btnTeacherSchedulerRefresh = document.getElementById('btn-teacher-scheduler-refresh');
+    elements.btnTeacherSchedulerPrevWeek = document.getElementById('btn-teacher-scheduler-prev-week');
+    elements.btnTeacherSchedulerNextWeek = document.getElementById('btn-teacher-scheduler-next-week');
+    elements.btnTeacherSchedulerToday = document.getElementById('btn-teacher-scheduler-today');
     elements.inputTeacherSchedulerFromDate = document.getElementById('teacher-scheduler-from-date');
     elements.inputTeacherSchedulerToDate = document.getElementById('teacher-scheduler-to-date');
     elements.teacherSchedulerPatternSummary = document.getElementById('teacher-scheduler-pattern-summary');

@@ -157,9 +157,24 @@
             });
             listen(filters, 'reset', () => { clearTimeout(timer); });
             const utilityRail = byId('projects-utility-rail');
+            // Below 1700px the rail overlays the board instead of sharing the grid,
+            // so it must start as the 49px icon strip or it covers the right-hand columns.
+            const RAIL_INLINE_MIN_WIDTH = 1700;
+            function syncRailDefault() {
+                if (!utilityRail || utilityRail.dataset.userToggled === 'true') return;
+                const overlays = (globalScope.innerWidth || 0) < RAIL_INLINE_MIN_WIDTH;
+                utilityRail.classList.toggle('collapsed', overlays);
+                const button = byId('ucollapse');
+                if (button) {
+                    button.textContent = overlays ? '«' : '»';
+                    button.setAttribute('aria-label', overlays ? 'Expand utilities' : 'Collapse utilities');
+                    button.setAttribute('aria-expanded', String(!overlays));
+                }
+            }
             function selectUtilityTab(tabName) {
                 if (!utilityRail) return;
                 utilityRail.classList.remove('collapsed');
+                utilityRail.dataset.userToggled = 'true';
                 const ucollapse = byId('ucollapse');
                 if (ucollapse) {
                     ucollapse.textContent = '»';
@@ -171,8 +186,10 @@
                     b.setAttribute('aria-selected', String(isSelected));
                     b.setAttribute('tabindex', isSelected ? '0' : '-1');
                 });
-                utilityRail.querySelectorAll?.('.upane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === tabName));
+                utilityRail.querySelectorAll?.('.crm-projects-utility-pane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === tabName));
             }
+            syncRailDefault();
+            if (typeof globalScope.addEventListener === 'function') listen(globalScope, 'resize', syncRailDefault);
             if (utilityRail) {
                 listen(utilityRail, 'click', event => {
                     const tab = event.target.closest?.('[data-u]');
@@ -183,6 +200,7 @@
                     const collapseBtn = event.target.closest?.('#ucollapse');
                     if (collapseBtn) {
                         const collapsed = utilityRail.classList.toggle('collapsed');
+                        utilityRail.dataset.userToggled = 'true';
                         collapseBtn.textContent = collapsed ? '«' : '»';
                         collapseBtn.setAttribute('aria-label', collapsed ? 'Expand utilities' : 'Collapse utilities');
                         collapseBtn.setAttribute('aria-expanded', String(!collapsed));

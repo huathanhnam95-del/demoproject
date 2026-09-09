@@ -282,7 +282,7 @@ test('gantt timeline handles zoom toggles, milestone markers, and safe empty dat
     assert.match(content, /data-gantt-zoom="days"/);
     assert.match(content, /data-gantt-zoom="weeks"/);
     assert.match(content, /data-gantt-zoom="months"/);
-    assert.match(content, /class="gms"/, 'Milestone marker should render for same start/due date');
+    assert.match(content, /class="crm-projects-gantt-milestone"/, 'Milestone marker should render for same start/due date');
 
     h.el('projects-view-content').listeners.click({
         target: { closest: (sel) => sel.includes('data-gantt-zoom') ? { dataset: { ganttZoom: 'days' } } : null }
@@ -461,7 +461,7 @@ test('gantt timeline shades starting Sunday in weekend bands and avoids NaN attr
 
     const content = h.el('projects-view-content').innerHTML;
     assert.equal(content.includes('NaN'), false, 'Gantt timeline markup must never contain NaN% style attributes');
-    assert.match(content, /class="gwk"/, 'Weekend band should be present');
+    assert.match(content, /class="crm-projects-gantt-weekend"/, 'Weekend band should be present');
     assert.match(content, /style="left:0%;width:/, 'Sunday at timeline start should be shaded starting at 0%');
 });
 

@@ -1662,7 +1662,7 @@
         showToast,
          apiFetchJson,
          escapeHtml,
-         getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
          onAccountsRendered: () => projectsAccessController?.renderPeople?.()
        })
       : null;
@@ -1678,12 +1678,13 @@
         escapeHtml,
         showToast,
         adminMode: state.accessMode === 'admin',
-        getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         onContextChanged: (snapshot) => { projectsWorkspaceController?.setContext?.(snapshot); window.projectsAutomationsController?.setContext?.(snapshot); syncProjectsAssistantContext(snapshot); },
         onTaskSelection: (task) => { window.projectsViewsController?.setTask?.(task); window.projectsViewsController?.syncBoard?.(); },
-        onTaskMutation: () => window.projectsViewsController?.refresh?.(),
-        onProjectAccessDenied: (projectId) => { if (window.projectsNotificationsController) window.projectsNotificationsController.deny(projectId); else projectsAccessController?.handleProjectContentDenied?.(projectId); },
-        getProjectSelection: () => projectsAccessController?.getSelection?.() || null,
+        onProjectAccessDenied: (projectId) => {
+          window.projectsNotificationsController?.deny?.(projectId);
+          projectsAccessController?.handleProjectContentDenied?.(projectId);
+        },
         selectProject: (projectId) => projectsAccessController?.selectProject?.(projectId),
         refreshProjects: () => projectsAccessController?.refresh?.()
       })
@@ -1715,7 +1716,7 @@
         apiFetchJson,
         escapeHtml,
         showToast,
-        getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         getBoardState: () => projectsBoardController?.getState?.() || null
       });
       window.projectsDiscussionController.init();
@@ -1723,7 +1724,7 @@
     window.projectsRemoteObserver?.dispose?.();
     window.projectsRemoteObserver = window.CrmProjectsRemoteObserver?.createController({
       apiFetchJson,
-      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
       onDenied: projectId => projectsBoardController?.invalidateAccess?.(projectId),
       apply: async change => {
         if (await projectsBoardController?.applyRemote?.(change) === false) return false;
@@ -1742,24 +1743,24 @@
         elements,
         apiFetchJson,
         showToast,
-        getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+        getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
         refreshBoard: () => projectsBoardController?.refresh?.()
       });
       window.projectsRecoveryController.init();
     }
     window.projectsViewsController = window.CrmProjectsViews?.createController({ apiFetchJson, board: projectsBoardController, openStudentLink: async (recordId, isCurrent) => {
-      const linkedUserUid = window.firebase?.auth?.().currentUser?.uid;
+      const linkedUserUid = window.firebase?.auth?.().currentUser?.uid || user.uid;
       if (state.accessMode !== 'admin' || !isCurrent()) return;
       const result = await apiFetchJson(`/api/admin/students/${encodeURIComponent(recordId)}`);
-      if (!isCurrent() || window.firebase?.auth?.().currentUser?.uid !== linkedUserUid) return;
+      if (!isCurrent() || (window.firebase?.auth?.().currentUser?.uid || user.uid) !== linkedUserUid) return;
       if (!result?.student) throw new Error('This student is no longer available.');
       await openStudentProfile(recordId, result.student, { refreshProfile: false, returnRoute: { main: 'projects', sub: '' } });
-    }, getCurrentUser: () => window.firebase?.auth?.().currentUser || null });
+    }, getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null });
     window.projectsViewsController?.init();
     window.projectsAutomationsController = window.CrmAutomations?.createController({
       root: document.getElementById('projects-automations'),
       button: document.getElementById('btn-projects-automate'), apiFetchJson,
-      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
       refreshBoard: () => projectsBoardController?.refresh?.(),
       onContentDenied: (projectId) => projectsAccessController?.handleProjectContentDenied?.(projectId),
       onAccountDenied: () => { window.projectsAutomationsController?.setAccount(''); projectsAccessController?.refresh?.(); }
@@ -1768,7 +1769,7 @@
     window.projectsAutomationsController?.setAccount(user.uid);
     window.projectsBudgetController = window.CrmAiBudget?.createController({
       root: document.getElementById('projects-ai-budget'), endpoint: '/api/projects/budget', apiFetchJson,
-      getCurrentUser: () => window.firebase?.auth?.().currentUser || null
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null
     });
     window.projectsBudgetController?.init();
     window.projectsBudgetController?.setAccount(user.uid);
@@ -1805,7 +1806,7 @@
     window.projectsAssistantController?.dispose?.();
     window.projectsAssistantController = window.CrmProjectsAssistant?.createController({
       root: document.getElementById('projects-assistant'), apiFetchJson,
-      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
       getContext: projectsAssistantHints,
       isProjectReady: projectsAssistantReady,
       onApplied: async result => { if (result?.project?.id && result.project.id !== projectsAssistantHints().projectId) { await projectsAccessController?.refresh?.(); await projectsAccessController?.selectProject?.(result.project.id); } await projectsBoardController?.refresh?.(); if (result?.task) projectsBoardController?.selectTask?.(result.task); await window.projectsViewsController?.refresh?.(); },
@@ -1816,10 +1817,10 @@
     const projectsAssistantTimer = setInterval(() => syncProjectsAssistantContext(), 1000);
     window.addEventListener('pagehide', () => { clearInterval(projectsAssistantTimer); window.projectsAssistantController?.dispose?.(); }, { once: true });
     const projectsAccessApiFetchJson = async (path, options) => {
-      const actorUid = window.firebase?.auth?.().currentUser?.uid;
+      const actorUid = window.firebase?.auth?.().currentUser?.uid || user.uid;
       try { return await apiFetchJson(path, options); }
       catch (error) {
-        if (actorUid === window.firebase?.auth?.().currentUser?.uid && path === '/api/projects/access' && [401, 403].includes(error?.status)) window.projectsBudgetController?.setEligible(false);
+        if (actorUid === (window.firebase?.auth?.().currentUser?.uid || user.uid) && path === '/api/projects/access' && [401, 403].includes(error?.status)) window.projectsBudgetController?.setEligible(false);
         throw error;
       }
     };
@@ -1828,7 +1829,7 @@
       root: document.getElementById('projects-notifications'), apiFetchJson,
       getNavigationGeneration: () => projectsNotificationNavigation,
       onAccessDenied: (projectId) => projectsAccessController?.handleProjectContentDenied?.(projectId || projectsAccessController?.getSelection?.()?.selectedProjectId),
-      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
       openTarget: async (target, isCurrent) => {
         if (!isCurrent()) return;
         const expectedNavigation = projectsNotificationNavigation + (projectsNotificationSelection === target.projectId ? 0 : 1);
@@ -1857,11 +1858,11 @@
         showToast,
          apiFetchJson: projectsAccessApiFetchJson,
          escapeHtml,
-         getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+         getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
          adminMode: state.accessMode === 'admin',
         accessSummary: state.projectsAccessSummary,
         onProjectsRendered: (selection) => {
-          if (projectsAccountInvalidated || window.firebase?.auth?.().currentUser?.uid !== user.uid) return;
+          if (projectsAccountInvalidated || (window.firebase?.auth?.().currentUser?.uid || user.uid) !== user.uid) return;
           const deniedIds = new Set(selection.contentDeniedProjectIds || []);
           const budgetIdentity = selection.accessSummary?.identity;
           const budgetEligible = budgetIdentity?.uid === user.uid && budgetIdentity?.accountStatus === 'active'
@@ -1869,7 +1870,20 @@
             && (selection.accessSummary?.projects || []).some(project => !deniedIds.has(project.id));
           window.projectsBudgetController?.setEligible(budgetEligible);
           const selectedContentDenied = deniedIds.has(selection.selectedProjectId);
-          const contentSelection = { ...selection, projects: (selection.projects || []).filter((project) => !deniedIds.has(project.id)), selectedProjectId: selectedContentDenied ? '' : selection.selectedProjectId, selectedProject: selectedContentDenied ? null : selection.selectedProject };
+          const eligibleProjects = (selection.projects || []).filter((project) => !deniedIds.has(project.id) && (project.lifecycle || 'active') === 'active');
+          let nextContentProjectId = selectedContentDenied ? '' : (selection.selectedProjectId || '');
+          if (!nextContentProjectId && eligibleProjects.length > 0) {
+            const memberProjectIds = new Set((selection.accessSummary?.projects || []).map(p => p.id));
+            const candidate = eligibleProjects.find(p => memberProjectIds.has(p.id)) || eligibleProjects[0];
+            nextContentProjectId = candidate ? candidate.id : '';
+          }
+          const nextSelectedProject = eligibleProjects.find(p => p.id === nextContentProjectId) || null;
+          const contentSelection = {
+            ...selection,
+            projects: eligibleProjects,
+            selectedProjectId: nextContentProjectId,
+            selectedProject: nextSelectedProject
+          };
           if (projectsNotificationSelection !== contentSelection.selectedProjectId) { projectsNotificationSelection = contentSelection.selectedProjectId; projectsNotificationNavigation++; }
           window.projectsNotificationsController?.setProjects?.(contentSelection.projects, [...deniedIds]);
           window.projectsAutomationsController?.setSelection?.(contentSelection.selectedProjectId || '');
@@ -1885,7 +1899,7 @@
     }
     projectsWorkspaceController?.dispose?.();
     projectsWorkspaceController = window.CrmProjectsWorkspace?.createController({
-      getCurrentUser: () => window.firebase?.auth?.().currentUser || null,
+      getCurrentUser: () => window.firebase?.auth?.().currentUser || user || null,
       selectProject: projectId => projectsAccessController?.selectProject?.(projectId),
       onManageAccess: () => { window.location.hash = '#staff'; }
     });

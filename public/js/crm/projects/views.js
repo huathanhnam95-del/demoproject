@@ -71,16 +71,39 @@
         function warningList(warnings) {
             return array(warnings).length ? `<ul class="crm-projects-warnings">${warnings.map((w) => `<li>${escape(warningText(w))}</li>`).join('')}</ul>` : '';
         }
-        function derived(t) {
+        function derived(t, isDetail = false) {
             if (!t.derived) return '';
             const d = t.derived;
             const total = Number(d.activeLeafCount) || 0;
             const done = Number(d.completedLeafCount) || 0;
-            if (total === 0) return '';
-            const pct = Math.max(0, Math.min(100, Math.round(Number(d.completionPercent ?? (total > 0 ? (done / total * 100) : 0))) || 0));
             const hasDates = Boolean(d.startDate || d.dueDate);
             const spanText = hasDates ? `${escape(d.startDate || 'undated')} → ${escape(d.dueDate || 'undated')}` : 'undated';
-            return `<div class="crm-projects-derived crm-detail-progress-card"><div class="crm-detail-progress-head"><span class="crm-detail-progress-label"><span class="crm-progress-icon">↳</span> Subtasks rollup</span><span class="crm-detail-progress-stat ${done === total ? 'is-complete' : ''}"><b>${escape(done)}/${escape(total)}</b> complete (${pct}%)</span></div><div class="crm-detail-progress-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Subtask completion"><div class="crm-detail-progress-fill" style="width:${pct}%"></div></div><div class="crm-detail-progress-foot"><span class="crm-detail-span-badge"><span class="crm-chip-icon">📅</span> Descendant span: ${spanText}</span></div></div>`;
+            if (total === 0 && !hasDates) return '';
+            const pct = Math.max(0, Math.min(100, Math.round(Number(d.completionPercent ?? (total > 0 ? (done / total * 100) : 0))) || 0));
+            if (!isDetail) {
+                if (total === 0) return `<small class="crm-projects-derived">Descendant span: ${spanText}</small>`;
+                return `<small class="crm-projects-derived">↳ ${escape(done)}/${escape(total)} complete (${pct}%) · ${spanText}</small>`;
+            }
+            const battery = d.statusBattery;
+            const hasBattery = battery && Number(battery.total) > 0;
+            let trackMarkup = '';
+            if (hasBattery) {
+                const bTotal = Number(battery.total) || 1;
+                const donePct = Math.round((Number(battery.done || 0) / bTotal) * 100);
+                const inProgPct = Math.round((Number(battery.in_progress || 0) / bTotal) * 100);
+                const blockedPct = Math.round((Number(battery.blocked || 0) / bTotal) * 100);
+                const notStartedPct = Math.max(0, 100 - donePct - inProgPct - blockedPct);
+                trackMarkup = `<div class="crm-detail-progress-track crm-battery-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Subtask completion">` +
+                    (donePct > 0 ? `<span class="crm-battery-segment is-done" style="width:${donePct}%" title="${battery.done} Done"></span>` : '') +
+                    (inProgPct > 0 ? `<span class="crm-battery-segment is-in-progress" style="width:${inProgPct}%" title="${battery.in_progress} In Progress"></span>` : '') +
+                    (blockedPct > 0 ? `<span class="crm-battery-segment is-blocked" style="width:${blockedPct}%" title="${battery.blocked} Blocked"></span>` : '') +
+                    (notStartedPct > 0 ? `<span class="crm-battery-segment is-not-started" style="width:${notStartedPct}%" title="${battery.not_started} Not Started"></span>` : '') +
+                    `</div>`;
+            } else {
+                trackMarkup = `<div class="crm-detail-progress-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Subtask completion"><div class="crm-detail-progress-fill" style="width:${pct}%"></div></div>`;
+            }
+            const statMarkup = total > 0 ? `<span class="crm-detail-progress-stat ${done === total ? 'is-complete' : ''}"><b>${escape(done)}/${escape(total)}</b> complete (${pct}%)</span>` : '';
+            return `<div class="crm-projects-derived crm-detail-progress-card"><div class="crm-detail-progress-head"><span class="crm-detail-progress-label"><span class="crm-progress-icon">↳</span> Subtasks rollup</span>${statMarkup}</div>${total > 0 ? trackMarkup : ''}<div class="crm-detail-progress-foot"><span class="crm-detail-span-badge"><span class="crm-chip-icon">📅</span> Descendant span: ${spanText}</span></div></div>`;
         }
         function taskButton(t) { return `<button type="button" class="crm-projects-task-open" data-task-open="${escape(t.id)}">${escape(t.title || 'Untitled task')}</button>`; }
         function taskRow(t, statusEditor = false) {
@@ -128,11 +151,11 @@
             const pct = hasProgress ? Math.max(0, Math.min(100, Math.round(Number(der.completionPercent ?? (der.completedLeafCount / der.activeLeafCount * 100)) || 0))) : 0;
             const priority = t.values?.priority || 'none';
             const statusEditor = `<label class="sr-only">Status <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>`;
-            return `<article class="crm-projects-kanban-card kcard" draggable="${canWrite() && !mutation ? 'true' : 'false'}" data-kanban-task="${escape(t.id)}" data-card="${escape(t.id)}">
-                ${sec ? `<span class="crm-projects-kanban-sec sec">${escape(sec)}</span>` : ''}
-                <div class="crm-projects-kanban-title kt">${taskButton(t)}</div>
-                ${hasProgress ? `<div class="crm-projects-kanban-progress prog"><span class="track"><i style="width:${pct}%"></i></span><b>${escape(der.completedLeafCount)}/${escape(der.activeLeafCount)}</b></div>` : ''}
-                <div class="crm-projects-kanban-foot kfoot">
+            return `<article class="crm-projects-kanban-card" draggable="${canWrite() && !mutation ? 'true' : 'false'}" data-kanban-task="${escape(t.id)}" data-card="${escape(t.id)}">
+                ${sec ? `<span class="crm-projects-kanban-sec">${escape(sec)}</span>` : ''}
+                <div class="crm-projects-kanban-title">${taskButton(t)}</div>
+                ${hasProgress ? `<div class="crm-projects-kanban-progress"><span class="track"><i style="width:${pct}%"></i></span><b>${escape(der.completedLeafCount)}/${escape(der.activeLeafCount)}</b></div>` : ''}
+                <div class="crm-projects-kanban-foot">
                     ${kanbanAvatarStack(t.ownerUid, t.assigneeUids)}
                     ${kanbanPriorityPill(priority)}
                     ${kanbanDateChip(t)}
@@ -142,10 +165,10 @@
         }
         function kanbanColumn(key, label, tasks) {
             const colTasks = tasks.filter((t) => t.status === key);
-            return `<section class="crm-projects-kanban-col kcol" data-status-column="${key}" data-col="${key}" aria-label="${escape(label)}">
-                <header><span class="crm-projects-status-pill pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count">${colTasks.length}</b></header>
+            return `<section class="crm-projects-kanban-col" data-status-column="${key}" data-col="${key}" aria-label="${escape(label)}">
+                <header><span class="crm-projects-status-pill s-${key}">${escape(label)}</span><b class="crm-projects-kanban-count">${colTasks.length}</b></header>
                 <div class="crm-projects-kanban-cards">
-                    ${colTasks.map(kanbanCard).join('') || '<p class="crm-muted kempty">No tasks on this page.</p>'}
+                    ${colTasks.map(kanbanCard).join('') || '<p class="crm-muted crm-projects-kanban-empty">No tasks on this page.</p>'}
                 </div>
             </section>`;
         }
@@ -195,8 +218,21 @@
                 }
             }
         }
+        // Switching views used to be a hard cut. Fade the outgoing surface out and
+        // the incoming one in on the shared motion curve; reduced-motion zeroes it.
+        let lastRenderedView = null;
+        function animateViewSwap() {
+            if (lastRenderedView === view) return;
+            lastRenderedView = view;
+            const surfaces = [el('projects-view-content'), el('projects-board-table-wrap')].filter(Boolean);
+            surfaces.forEach((node) => node.classList?.add?.('is-view-entering'));
+            const settle = () => surfaces.forEach((node) => node.classList?.remove?.('is-view-entering'));
+            if (typeof globalScope.requestAnimationFrame === 'function') globalScope.requestAnimationFrame(() => globalScope.requestAnimationFrame(settle));
+            else settle();
+        }
         function render() {
             if (!el('projects-view-content')) return;
+            animateViewSwap();
             fillFilters();
             document.querySelectorAll('#projects-view-tabs [data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
             el('projects-board-table-wrap').hidden = view !== 'board';
@@ -210,7 +246,7 @@
             if (!response && view === 'calendar') { renderCalendar([]); return; }
             if (!response) { el('projects-view-content').innerHTML = '<p class="crm-muted">Choose a project or refresh the view.</p>'; return; }
             if (view === 'kanban') {
-                el('projects-view-content').innerHTML = `<div class="crm-projects-kanban kb">${Object.entries(STATUSES).map(([key, label]) => kanbanColumn(key, response.project?.statusLabels?.[key] || label, rows)).join('')}</div>`;
+                el('projects-view-content').innerHTML = `<div class="crm-projects-kanban">${Object.entries(STATUSES).map(([key, label]) => kanbanColumn(key, response.project?.statusLabels?.[key] || label, rows)).join('')}</div>`;
             } else if (view === 'timeline') {
                 const hasInterval = (t) => t.startDate || t.dueDate || (hasDerivedTimelineSpan(t, rows) && (t.derived.startDate || t.derived.dueDate));
                 const dated = rows.filter(hasInterval).sort((a, b) => String(a.startDate || a.dueDate || a.derived?.startDate || a.derived?.dueDate).localeCompare(String(b.startDate || b.dueDate || b.derived?.startDate || b.derived?.dueDate)));
@@ -224,20 +260,20 @@
                 const donutCircle = pctComplete > 0
                     ? `<circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-accent)" stroke-width="15" stroke-linecap="round" stroke-dasharray="${strokeDash} ${C.toFixed(1)}" transform="rotate(-90 70 70)"/>`
                     : '';
-                const donut = `<div class="donutwrap"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/>${donutCircle}<text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Active leaf completion</p></div>`;
+                const donut = `<div class="crm-projects-chart-donut"><svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="${escape(pctComplete)} percent of active leaf tasks complete"><circle cx="70" cy="70" r="${R}" fill="none" stroke="var(--pj-sunken)" stroke-width="15"/>${donutCircle}<text x="70" y="70" text-anchor="middle" dominant-baseline="central" fill="var(--pj-ink)" font-size="26" font-weight="700">${escape(pctComplete)}%</text><text x="70" y="93" text-anchor="middle" fill="var(--pj-muted)" font-size="10.5">${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)}</text></svg><p>Active leaf completion</p></div>`;
                 const colorOf = { not_started: 'var(--st-ns-fg)', in_progress: 'var(--g4, #f5a742)', blocked: 'var(--sig-over-fg)', done: 'var(--st-dn-fg)' };
                 const chart = (title, values, isStatus = false) => {
                     const entries = Object.entries(values || {});
                     if (!entries.length) {
-                        return `<section class="crm-projects-chart barset"><h4>${title}</h4><p class="crm-muted">No active leaf tasks.</p></section>`;
+                        return `<section class="crm-projects-chart crm-projects-chart-set"><h4>${title}</h4><p class="crm-muted">No active leaf tasks.</p></section>`;
                     }
                     const maxVal = Math.max(1, ...entries.map(([, count]) => Number(count) || 0));
-                    return `<section class="crm-projects-chart barset"><h4>${title}</h4>${entries.map(([key, count]) => {
+                    return `<section class="crm-projects-chart crm-projects-chart-set"><h4>${title}</h4>${entries.map(([key, count]) => {
                         const n = Number(count) || 0;
                         const barPct = Math.min(100, Math.round((n / maxVal) * 100));
                         const label = escape(isStatus ? (response?.project?.statusLabels?.[key] || STATUSES[key] || key) : (key === 'unassigned' || key === '__unassigned__' ? 'Unassigned' : memberName(key)));
                         const bg = isStatus ? (colorOf[key] || 'var(--pj-accent)') : 'var(--pj-accent)';
-                        return `<div class="brow"><span>${label}</span><span class="bt"><meter min="0" max="${totalActive}" value="${n}" style="display:none;">${n}</meter><i style="width:${barPct}%;background:${bg}"></i></span><b>${n}</b></div>`;
+                        return `<div class="crm-projects-chart-row"><span>${label}</span><span class="crm-projects-chart-track"><meter min="0" max="${totalActive}" value="${n}" style="display:none;">${n}</meter><i style="width:${barPct}%;background:${bg}"></i></span><b>${n}</b></div>`;
                     }).join('')}</section>`;
                 };
                 el('projects-view-content').innerHTML = `<p class="crm-muted">Complete server snapshot · matching active leaf tasks. Only matching tasks that are leaves in the full active project contribute. Parent rows and page size do not change this denominator.</p><p><strong>${escape(a?.completionPercent ?? 0)}% complete</strong> — ${escape(a?.completedLeafTaskCount ?? 0)} of ${escape(a?.activeLeafTaskCount ?? 0)} active leaf tasks</p><div class="crm-projects-charts-grid">${donut}<div>${chart('Active leaves by status', a?.byStatus, true)}${chart('Active leaves by accountable owner', a?.byOwnerUid, false)}</div></div>`;
@@ -279,12 +315,12 @@
                     const dow = new Date(d * 86400000).getUTCDay();
                     if (d === start && dow === 0) {
                         const bWidth = Math.min(100, (1 / span) * 100);
-                        weekendBands += `<span class="gwk" style="left:0%;width:${bWidth.toFixed(2)}%;"></span>`;
+                        weekendBands += `<span class="crm-projects-gantt-weekend" style="left:0%;width:${bWidth.toFixed(2)}%;"></span>`;
                     } else if (dow === 6) {
                         const bLeft = Math.max(0, ((d - start) / span) * 100);
                         const daysCovered = (d === end) ? 1 : 2;
                         const bWidth = Math.min(100 - bLeft, (daysCovered / span) * 100);
-                        weekendBands += `<span class="gwk" style="left:${bLeft.toFixed(2)}%;width:${bWidth.toFixed(2)}%;"></span>`;
+                        weekendBands += `<span class="crm-projects-gantt-weekend" style="left:${bLeft.toFixed(2)}%;width:${bWidth.toFixed(2)}%;"></span>`;
                     }
                 }
             }
@@ -293,7 +329,7 @@
             let todayMarker = '';
             if (todayDay >= start && todayDay <= end) {
                 const tLeft = ((todayDay - start) / span) * 100;
-                todayMarker = `<span class="today" style="left:${tLeft.toFixed(2)}%;"></span>`;
+                todayMarker = `<span class="crm-projects-gantt-today" style="left:${tLeft.toFixed(2)}%;"></span>`;
             }
 
             const milestone = (t) => {
@@ -301,14 +337,14 @@
                     const d = safeDay(t.startDate);
                     if (d === null) return '';
                     const mLeft = Math.max(0, ((d - start) / span) * 100);
-                    return `<span class="gms" style="left:${mLeft.toFixed(2)}%;" title="Milestone: ${escape(t.startDate)}"></span>`;
+                    return `<span class="crm-projects-gantt-milestone" style="left:${mLeft.toFixed(2)}%;" title="Milestone: ${escape(t.startDate)}"></span>`;
                 }
                 return '';
             };
 
-            const legend = `<div class="glegend"><span><i style="background:var(--pj-accent)"></i>Stored interval</span><span><i class="gi-ghost"></i>Derived descendant span</span><span><i class="gi-dep"></i>Dependency</span><span><i class="gi-ms"></i>Milestone</span><span style="color:var(--sig-over-fg)">▏Today</span></div>`;
+            const legend = `<div class="crm-projects-gantt-legend"><span><i style="background:var(--pj-accent)"></i>Stored interval</span><span><i class="crm-projects-gantt-key-derived"></i>Derived descendant span</span><span><i class="crm-projects-gantt-key-dep"></i>Dependency</span><span><i class="crm-projects-gantt-key-milestone"></i>Milestone</span><span style="color:var(--sig-over-fg)">▏Today</span></div>`;
 
-            return `${zoomBar}<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived.startDate, t.derived.dueDate, true) : ''}</div></div>`).join('')}</div>${legend}`;
+            return `${zoomBar}<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}${todayMarker}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived.startDate, t.derived.dueDate, true) : ''}</div></div>`).join('')}</div>${legend}`;
         }
         function memberName(id) {
             const m = array(board?.getState()?.members).find((m) => (m.uid || m.id) === id);
@@ -320,7 +356,7 @@
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             const monthTitle = `${monthNames[month - 1] || ''} ${year}`;
             const todayIso = new Date().toISOString().slice(0, 10);
-            el('projects-view-content').innerHTML = `<div class="calbar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><button type="button" class="crm-btn-secondary" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary" data-cal-nav="1" aria-label="Next month">›</button><h3 style="margin:0;font-size:16px;">${escape(monthTitle)}</h3><button type="button" class="crm-btn-secondary" data-cal-nav="today">Today</button><label style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;">Visible calendar month <input id="projects-view-month" type="month" class="crm-input" value="${escape(calendarMonth)}"></label></div><p id="projects-calendar-view-provenance" class="crm-muted"></p><div id="projects-calendar-availability"></div><div class="crm-projects-calendar-grid">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((name) => `<strong>${name}</strong>`).join('')}${'<span aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
+            el('projects-view-content').innerHTML = `<div class="crm-projects-calendar-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><button type="button" class="crm-btn-secondary" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary" data-cal-nav="1" aria-label="Next month">›</button><h3 style="margin:0;font-size:16px;">${escape(monthTitle)}</h3><button type="button" class="crm-btn-secondary" data-cal-nav="today">Today</button><label style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;">Visible calendar month <input id="projects-view-month" type="month" class="crm-input" value="${escape(calendarMonth)}"></label></div><p id="projects-calendar-view-provenance" class="crm-muted"></p><div id="projects-calendar-availability"></div><div class="crm-projects-calendar-grid">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((name) => `<strong>${name}</strong>`).join('')}${'<span aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
                 const date = `${calendarMonth}-${String(i + 1).padStart(2, '0')}`;
                 const cur = new Date(Date.UTC(year, month - 1, i + 1));
                 const dow = cur.getUTCDay();
@@ -332,7 +368,7 @@
                     const dueVal = t.startDate && t.dueDate ? (t.startDate <= t.dueDate ? t.dueDate : t.startDate) : (t.dueDate || t.startDate);
                     return startVal <= date && dueVal >= date;
                 });
-                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}${isToday ? ' today' : ''}"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
+                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}${isToday ? ' is-today' : ''}"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
             }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}`;
             if (response) loadCalendar(`${calendarMonth}-01`, `${calendarMonth}-${days}`);
         }
@@ -501,7 +537,7 @@
         }
         function setTask(next) {
             const nextKey = next ? `${projectId}:${next.id}` : '';
-            if (nextKey === taskKey) { task = next; if (task && el('projects-task-derived')) el('projects-task-derived').innerHTML = derived(task) + warningList(task.dependencyWarnings) + warningList(task.calendarWarnings); syncPredecessorPicker(); syncTaskPermissions(); return; }
+            if (nextKey === taskKey) { task = next; if (task && el('projects-task-derived')) el('projects-task-derived').innerHTML = derived(task, true) + warningList(task.dependencyWarnings) + warningList(task.calendarWarnings); syncPredecessorPicker(); syncTaskPermissions(); return; }
             taskGeneration++; lookupSequence++; datesVersion++; taskKey = nextKey; task = next; preview = null; links = []; canManageLinks = false;
             renderTask();
             syncTaskPermissions();
@@ -511,6 +547,7 @@
             const planning = el('projects-task-planning');
             planning?.querySelectorAll?.('#projects-task-schedule input, #projects-task-schedule button, #projects-task-dependencies textarea, #projects-task-dependencies select, #projects-task-dependencies button').forEach((control) => { control.disabled = !canWrite() || mutation; });
             planning?.querySelectorAll?.('#projects-task-links button, #projects-task-links input, #projects-task-links select').forEach((control) => { if (control.dataset?.studentLink === undefined) control.disabled = !canManageLinks || !canWrite() || mutation; });
+            planning?.querySelectorAll?.('[data-remove-predecessor]').forEach((btn) => { btn.disabled = !canWrite() || mutation; });
             if (el('projects-task-apply')) el('projects-task-apply').disabled = !canWrite() || mutation || !preview?.canApply;
         }
         function predecessorOptions() {
@@ -527,12 +564,13 @@
                 return;
             }
             const allTasks = array(response?.tasks);
+            const boardTasks = board?.getState()?.tasks;
             const writable = canWrite() && !mutation;
             container.innerHTML = currentIds.map((id) => {
-                const found = allTasks.find((t) => t.id === id);
-                const title = found?.title || id;
+                const found = allTasks.find((t) => t.id === id) || (boardTasks && typeof boardTasks.get === 'function' ? boardTasks.get(id) : (Array.isArray(boardTasks) ? boardTasks.find((t) => t.id === id) : boardTasks?.[id]));
                 const isUuid = id.startsWith('task-') || id.length > 20;
                 const displayId = isUuid ? `${id.slice(0, 8)}…` : id;
+                const title = found?.title || (isUuid ? `Task (${displayId})` : id);
                 return `<span class="crm-dep-chip" title="Predecessor ID: ${escape(id)}"><span class="crm-dep-icon">🔗</span><span class="crm-dep-title">${escape(title)}</span>${found ? `<span class="crm-dep-id">${escape(displayId)}</span>` : ''}<button type="button" class="crm-dep-remove" data-remove-predecessor="${escape(id)}" aria-label="Remove dependency on ${escape(title)}"${writable ? '' : ' disabled'}>×</button></span>`;
             }).join('');
         }
@@ -552,7 +590,7 @@
             const target = el('projects-task-planning');
             if (!target) return;
             if (!task) { target.innerHTML = ''; return; }
-            target.innerHTML = `<div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Schedule &amp; Timeline</h5></div><div id="projects-task-derived">${derived(task)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-detail-schedule-form"><div class="crm-detail-date-grid"><div class="crm-detail-field"><label for="projects-task-start" class="crm-detail-field-label"><span class="crm-field-icon">📅</span> Proposed start</label><input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></div><div class="crm-detail-field"><label for="projects-task-due" class="crm-detail-field-label"><span class="crm-field-icon">🏁</span> Proposed due</label><input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></div></div><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}><span class="crm-btn-icon">⚡</span> Preview date change</button></div></form><div id="projects-task-preview"></div></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Dependencies</h5><span class="crm-detail-section-subtitle">Finish-to-start predecessors</span></div><form id="projects-task-dependencies" class="crm-detail-dependencies-form"><div class="crm-detail-dep-picker-row"><div class="crm-detail-dep-select-wrap"><select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></div><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}>+ Add predecessor</button></div><div class="crm-detail-chips-wrapper"><div class="crm-detail-chips-label">Active Predecessors:</div><div id="projects-task-predecessor-chips" class="crm-detail-chips-list"></div></div><div class="crm-detail-hint"><span class="crm-hint-icon">💡</span><span>Predecessors must finish before this task starts. Saving dependencies will not shift existing dates.</span></div><details class="crm-detail-advanced-dep"><summary class="crm-detail-advanced-summary">Manual task ID entry</summary><div class="crm-detail-advanced-content"><label for="projects-task-predecessors" class="crm-detail-field-label">Predecessor task IDs (one per line):</label><textarea id="projects-task-predecessors" class="crm-input crm-dep-textarea" rows="2"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></div></details><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-primary crm-btn-sm"${canWrite() ? '' : ' disabled'}>Save dependencies</button></div></form><p id="projects-task-status" role="status" class="crm-task-status-banner"></p></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>CRM Links</h5></div><div id="projects-task-links"></div></div>`;
+            target.innerHTML = `<div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Schedule &amp; Timeline</h5></div><div id="projects-task-derived">${derived(task, true)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-detail-schedule-form"><div class="crm-detail-date-grid"><div class="crm-detail-field"><label for="projects-task-start" class="crm-detail-field-label"><span class="crm-field-icon">📅</span> Proposed start</label><input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></div><div class="crm-detail-field"><label for="projects-task-due" class="crm-detail-field-label"><span class="crm-field-icon">🏁</span> Proposed due</label><input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></div></div><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}><span class="crm-btn-icon">⚡</span> Preview date change</button></div></form><div id="projects-task-preview"></div></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Dependencies</h5><span class="crm-detail-section-subtitle">Finish-to-start predecessors</span></div><form id="projects-task-dependencies" class="crm-detail-dependencies-form"><div class="crm-detail-dep-picker-row"><div class="crm-detail-dep-select-wrap"><select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></div><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}>+ Add predecessor</button></div><div class="crm-detail-chips-wrapper"><div class="crm-detail-chips-label">Active Predecessors:</div><div id="projects-task-predecessor-chips" class="crm-detail-chips-list"></div></div><div class="crm-detail-hint"><span class="crm-hint-icon">💡</span><span>Predecessors must finish before this task starts. Saving dependencies will not shift existing dates.</span></div><details class="crm-detail-advanced-dep"><summary class="crm-detail-advanced-summary">Manual task ID entry</summary><div class="crm-detail-advanced-content"><label for="projects-task-predecessors" class="crm-detail-field-label">Predecessor task IDs (one per line):</label><textarea id="projects-task-predecessors" class="crm-input crm-dep-textarea" rows="2"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></div></details><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-primary crm-btn-sm"${canWrite() ? '' : ' disabled'}>Save dependencies</button></div></form><p id="projects-task-status" role="status" class="crm-task-status-banner"></p></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>CRM Links</h5></div><div id="projects-task-links"></div></div>`;
             renderPredecessorChips();
         }
         async function loadLinks() {
@@ -646,7 +684,9 @@
                 const result = await api(`${base()}/schedule-preview`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (!taskCurrent(s) || version !== datesVersion) return;
                 preview = result.preview;
-                el('projects-task-preview').innerHTML = `<p>Affected task: ${escape(task.title || 'Selected task')}. Before: ${escape(preview.before?.startDate || 'undated')} → ${escape(preview.before?.dueDate || 'undated')}. After: ${escape(preview.after?.startDate || 'undated')} → ${escape(preview.after?.dueDate || 'undated')}.</p><p>Working days: ${escape(preview.workingDayCount ?? 'unconfirmed')}. Calendar revision ${escape(preview.calendarRevision)}; feed ${escape(preview.feedVersion)}.</p>${warningList(preview.warnings)}<details><summary>Nonworking dates and reasons</summary>${warningList(preview.nonWorkingDays)}</details><button id="projects-task-apply" type="button" class="crm-btn-primary"${preview.canApply ? '' : ' disabled'}>Apply this exact preview</button><p class="crm-muted">No downstream dates move automatically. Task, dependency or calendar changes invalidate this preview.</p>`;
+                const beforeDates = `${escape(preview.before?.startDate || 'undated')} → ${escape(preview.before?.dueDate || 'undated')}`;
+                const afterDates = `${escape(preview.after?.startDate || 'undated')} → ${escape(preview.after?.dueDate || 'undated')}`;
+                el('projects-task-preview').innerHTML = `<div class="crm-detail-preview-card"><div class="crm-preview-header"><span class="crm-preview-tag">Preview Date Shift</span><span class="crm-preview-task-title">${escape(task.title || 'Selected task')}</span></div><div class="crm-preview-comparison"><div class="crm-preview-col"><span class="crm-preview-label">Before:</span> <span class="crm-preview-dates">${beforeDates}</span></div><span class="crm-preview-arrow">➔</span><div class="crm-preview-col is-after"><span class="crm-preview-label">After:</span> <span class="crm-preview-dates">${afterDates}</span></div></div><div class="crm-preview-meta"><span class="crm-preview-pill">Working days: ${escape(preview.workingDayCount ?? 'unconfirmed')}</span></div>${warningList(preview.warnings)}<details class="crm-preview-details"><summary>Nonworking dates and reasons</summary>${warningList(preview.nonWorkingDays)}</details><div class="crm-preview-actions"><button id="projects-task-apply" type="button" class="crm-btn-primary crm-btn-sm"${preview.canApply ? '' : ' disabled'}>Apply this exact preview</button></div><details class="crm-preview-tech"><summary class="crm-muted">Calendar revision ${escape(preview.calendarRevision)}; feed ${escape(preview.feedVersion)}</summary><p class="crm-muted">No downstream dates move automatically. Task, dependency or calendar changes invalidate this preview.</p></details></div>`;
             } catch (error) { if (taskCurrent(s) && version === datesVersion) el('projects-task-preview').textContent = error.message || 'Preview unavailable.'; }
         }
         function init() {
@@ -654,7 +694,7 @@
             const projectLookupChanged = (event) => { if (['projects-project-link-query', 'projects-project-link-type'].includes(event.target.id)) clearProjectLookup(); };
             el('projects-project-links')?.addEventListener('input', projectLookupChanged);
             el('projects-project-links')?.addEventListener('change', projectLookupChanged);
-            el('projects-project-links')?.addEventListener('click', (event) => { if (event.target.dataset.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
+            el('projects-project-links')?.addEventListener('click', (event) => { if (event.target.dataset?.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset?.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
             el('projects-view-tabs')?.addEventListener('click', (event) => { const button = event.target.closest('[data-view]'); if (button && button.dataset.view !== view) { const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar'; view = button.dataset.view; if (monthScopeChanged) resetViewPage(); else render(); } });
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };
             el('projects-view-filters')?.addEventListener('input', captureFilterDraft);
@@ -713,15 +753,15 @@
             });
             el('projects-view-content')?.addEventListener('dragend', () => {
                 dragTaskId = null;
-                (el('projects-view-content')?.querySelectorAll?.('.kcard.drag') || []).forEach((c) => c.classList.remove('drag'));
-                (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => c.classList.remove('over'));
+                (el('projects-view-content')?.querySelectorAll?.('[data-card].drag') || []).forEach((c) => c.classList.remove('drag'));
+                (el('projects-view-content')?.querySelectorAll?.('[data-col].over') || []).forEach((c) => c.classList.remove('over'));
             });
             el('projects-view-content')?.addEventListener('dragover', (e) => {
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
                 if (!col || !dragTaskId || !canWrite() || mutation) return;
                 e.preventDefault();
                 if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-                (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => { if (c !== col) c.classList.remove('over'); });
+                (el('projects-view-content')?.querySelectorAll?.('[data-col].over') || []).forEach((c) => { if (c !== col) c.classList.remove('over'); });
                 col.classList.add('over');
             });
             el('projects-view-content')?.addEventListener('dragleave', (e) => {
@@ -734,8 +774,8 @@
                 const col = e.target.closest ? e.target.closest('[data-status-column], [data-col]') : null;
                 const id = dragTaskId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
                 dragTaskId = null;
-                (el('projects-view-content')?.querySelectorAll?.('.kcard.drag') || []).forEach((c) => c.classList.remove('drag'));
-                (el('projects-view-content')?.querySelectorAll?.('.kcol.over') || []).forEach((c) => c.classList.remove('over'));
+                (el('projects-view-content')?.querySelectorAll?.('[data-card].drag') || []).forEach((c) => c.classList.remove('drag'));
+                (el('projects-view-content')?.querySelectorAll?.('[data-col].over') || []).forEach((c) => c.classList.remove('over'));
                 if (!col || !id || !canWrite() || mutation) return;
                 e.preventDefault();
                 const nextStatus = col.dataset.statusColumn || col.dataset.col;
@@ -761,10 +801,12 @@
             });
             el('projects-task-planning')?.addEventListener('click', async (event) => {
                 if (event.target.id === 'projects-task-predecessor-add' && canWrite()) {
-                    const id = el('projects-task-predecessor-picker').value;
+                    const picker = el('projects-task-predecessor-picker');
+                    const id = picker?.value;
                     if (id) {
                         const existing = el('projects-task-predecessors').value.split(/[\n,]/).map((value) => value.trim()).filter(Boolean);
                         el('projects-task-predecessors').value = [...new Set([...existing, id])].join('\n');
+                        if (picker) picker.value = '';
                         renderPredecessorChips();
                     }
                 }
@@ -775,9 +817,9 @@
                     if (el('projects-task-predecessors')) el('projects-task-predecessors').value = existing.filter((id) => id !== removeId).join('\n');
                     renderPredecessorChips();
                 }
-                if (event.target.dataset.studentLink !== undefined) openStudentLink(Number(event.target.dataset.studentLink), false);
+                if (event.target.dataset?.studentLink !== undefined) openStudentLink(Number(event.target.dataset.studentLink), false);
                 if (event.target.id === 'projects-task-apply' && preview?.canApply && !mutation) { const token = preview.token, version = datesVersion; if (await mutate(`${base()}/schedule-apply`, { previewToken: token }, 'POST') && version === datesVersion) el('projects-task-preview').textContent = 'Preview applied.'; }
-                if (event.target.dataset.linkRemove !== undefined && !mutation) saveLinks(links.filter((_, i) => i !== Number(event.target.dataset.linkRemove)));
+                if (event.target.dataset?.linkRemove !== undefined && !mutation) saveLinks(links.filter((_, i) => i !== Number(event.target.dataset.linkRemove)));
             });
         }
         return { init, setProject, setTask, refresh, invalidateAccess, syncBoard: fillFilters, getState: () => ({ projectId, actorUid, filters: { ...filters }, view, response, selectedTaskId: task?.id }) };

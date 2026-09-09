@@ -955,7 +955,9 @@
             const relDue = relativeDue(dueDate);
             const dueBadge = relDue && dState !== 'none' && dState !== 'normal' ? `<span class="crm-board-due-badge crm-board-due-${dState}">${escape(relDue)}</span>` : '';
             const workingDays = computeWorkingDays(startDate, dueDate);
-            const durationBadge = workingDays !== null ? `<span class="crm-board-duration-badge" title="${workingDays} working days">${workingDays}d</span>` : '';
+            // Two date inputs plus two badges do not fit a 238px cell. The due state is
+            // the actionable signal, so duration yields to it and stays available as a title.
+            const durationBadge = workingDays !== null && !dueBadge ? `<span class="crm-board-duration-badge" title="${workingDays} working days">${workingDays}d</span>` : '';
             return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" data-depth="${depth}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
               <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
               <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}">${statusBatteryBar(task)}<select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
@@ -1015,16 +1017,16 @@
             if (!elements.projectsBoardHeader) return;
             const base = ['Task', 'Status', 'Accountable owner', 'Assignees', 'Dates'];
             const gridTemplate = [
-                'minmax(300px, 2.4fr)',
-                'minmax(130px, .85fr)',
-                'minmax(150px, 1fr)',
-                'minmax(145px, .95fr)',
-                'minmax(280px, 1.35fr)',
-                ...columns.map(() => 'minmax(145px, 1fr)')
+                'minmax(238px, 2.4fr)',
+                'minmax(126px, .85fr)',
+                'minmax(146px, 1fr)',
+                'minmax(124px, .95fr)',
+                'minmax(268px, 1.35fr)',
+                ...columns.map(() => 'minmax(130px, 1fr)')
             ].join(' ');
             elements.projectsBoardTable?.style.setProperty('--crm-project-grid-template', gridTemplate);
             elements.projectsBoardTable?.style.setProperty('--crm-project-column-count', String(columns.length));
-            const minimumWidth = 300 + 130 + 150 + 145 + 280 + (columns.length * 145);
+            const minimumWidth = 238 + 126 + 146 + 124 + 268 + (columns.length * 130);
             if (elements.projectsBoardTable) elements.projectsBoardTable.style.minWidth = `${minimumWidth}px`;
             elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && canSchema() ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && canSchema() && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && canSchema() ? `<button type="button" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}</div>`).join('');
         }
@@ -1260,8 +1262,18 @@
             const lifecycle = task.effectiveLifecycle || task.lifecycle || 'active';
             const statusKey = task.status || 'not_started';
             const statusLabel = project?.statusLabels?.[statusKey] || STATUS_LABELS[statusKey] || statusKey;
+            const ownerUid = task.ownerUid;
+            const owner = asArray(members).find((m) => (m.uid || m.id) === ownerUid);
+            const ownerName = owner?.displayName || owner?.name || (ownerUid ? 'Assigned' : '');
+            const priorityVal = task.values?.priority || task.priority || '';
+            const priorityMarkup = priorityVal && priorityVal !== 'none'
+                ? `<span class="crm-detail-pill crm-pill-priority crm-prio-${escape(priorityVal)}" title="Priority: ${escape(priorityVal)}"><span class="crm-prio-flag">⚑</span> <span>${escape(priorityVal.toUpperCase())}</span></span>`
+                : '';
+            const ownerMarkup = ownerUid
+                ? `<span class="crm-detail-pill crm-pill-owner" title="Owner: ${escape(ownerName)}"><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span> <span>${escape(ownerName)}</span></span>`
+                : '';
             if (elements.projectsBoardDetailBody) {
-                elements.projectsBoardDetailBody.innerHTML = `<div class="crm-detail-property-bar"><div class="crm-detail-path-chip" title="Location: ${escape(path)}"><span class="crm-chip-icon">📂</span> <span class="crm-chip-text">${escape(path)}</span></div><div class="crm-detail-meta-pills"><span class="crm-detail-pill crm-pill-status" data-status="${escape(statusKey)}"><span class="crm-status-dot"></span> <span>${escape(statusLabel)}</span></span><span class="crm-detail-pill crm-pill-lifecycle crm-lifecycle-${escape(lifecycle)}">${escape(lifecycle)}</span><button type="button" class="crm-detail-copy-id" data-copy-id="${escape(task.id)}" title="Click to copy Task ID" aria-label="Copy Task ID"><span class="crm-copy-icon">📋</span> <span class="crm-id-code">${escape(task.id)}</span> <span class="crm-copy-feedback" aria-live="polite">Copy ID</span></button></div></div><details class="crm-detail-tech-drawer"><summary class="crm-detail-tech-summary"><span class="crm-tech-icon">⚙️</span> <span>Developer &amp; Technical Info</span> <span class="crm-tech-rev">rev ${escape(task.revision || 0)}</span></summary><div class="crm-detail-tech-content"><dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(lifecycle)}</dd></dl></div></details>`;
+                elements.projectsBoardDetailBody.innerHTML = `<div class="crm-detail-property-bar"><div class="crm-detail-path-chip" title="Location: ${escape(path)}"><span class="crm-chip-icon">📂</span> <span class="crm-chip-text">${escape(path)}</span></div><div class="crm-detail-meta-pills"><span class="crm-detail-pill crm-pill-status" data-status="${escape(statusKey)}"><span class="crm-status-dot"></span> <span>${escape(statusLabel)}</span></span>${ownerMarkup}${priorityMarkup}<span class="crm-detail-pill crm-pill-lifecycle crm-lifecycle-${escape(lifecycle)}">${escape(lifecycle)}</span><button type="button" class="crm-detail-copy-id" data-copy-id="${escape(task.id)}" title="Click to copy Task ID" aria-label="Copy Task ID"><span class="crm-copy-icon">📋</span> <span class="crm-id-code">${escape(task.id)}</span> <span class="crm-copy-feedback" aria-live="polite">Copy ID</span></button></div></div><details class="crm-detail-tech-drawer"><summary class="crm-detail-tech-summary"><span class="crm-tech-icon">⚙️</span> <span>Developer &amp; Technical Info</span> <span class="crm-tech-rev">rev ${escape(task.revision || 0)}</span></summary><div class="crm-detail-tech-content"><dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(lifecycle)}</dd></dl></div></details>`;
             }
             const discussion = globalScope.CrmProjectsDiscussion;
             if (discussion && typeof discussion.setSelection === 'function') discussion.setSelection({

@@ -1,3 +1,22 @@
+## [V2.0.5] - 2026-09-10
+
+### Added & Enhanced
+- **Teacher Schedule Performance & Google-Calendar-Grade Visual Refresh (`public/js/crm/teacher-scheduler-workspace.js`, `public/crm-admin.css`, `public/crm-admin.js`, `functions/src/crm/scheduling-service.js`, `functions/src/routes/teacher/scheduler.js`)**:
+  - Consolidated Google-Calendar-grade toolbar layout: integrated Week navigation buttons (`Prev`, `Today`, `Next`), current date window label, anchored weekly-pattern popover, and consolidated action buttons.
+  - Performance optimization: rAF-batched pointer tracking reducing layout reflows from 600 to 62 during drag operations, arithmetic slot hit-testing, and cell-targeted slot error painting instead of whole-grid repainting.
+  - Visual refinements: 24px slot density, subtle hairline grid dividers, real-time red current-time indicator line, and high-contrast solid status pills.
+  - Inline mini-calendar sidebar integration with interactive month navigation, 1-click week jumping, and automatic 14-day date clamping.
+  - Drag-and-drop series reschedule with Scope Choice Modal ("This session only" vs "This and all following"), live conflict surfacing, dynamic `allowPartial` consent, and token-validated 1-click Undo toast.
+- **CRM Projects Multi-Tier Board Evolution & UI/UX Modernization (`public/crm-admin.html`, `public/crm-admin.js`, `public/css/crm-projects.css`, `public/js/crm/projects/*`, `functions/src/crm/projects/*`)**:
+  - Option B 5-level hierarchy depth model (`Workspace` $\rightarrow$ `Folder` $\rightarrow$ `Project` $\rightarrow$ `Task` $\rightarrow$ `Subtask`) with automated rollups, summary footers, batch dock, and duration combos.
+  - Task Details modal overhaul: sleek property bar featuring owner avatar, priority pill (`P0`–`P3`), status pill, and 1-click Copy Task ID button.
+  - Interactive predecessor tags with search picker and removal chips.
+  - Rich multi-segment subtask battery visualizer with completion percentage.
+  - Schedule preview comparison card displaying before/after date pills.
+  - Collapsible developer and technical info drawer displaying task revision, lifecycle, and parent path.
+  - Responsive utility rail auto-collapsing below 1700px with roving tabindex keyboard accessibility.
+  - Unified design tokens across light and dark modes.
+
 ## [V2.0.4] - 2026-09-09
 
 ### Added & Enhanced

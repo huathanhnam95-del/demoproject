@@ -221,8 +221,17 @@
         const control = event.target.closest('button[data-auto-action]'); if (!control || control.disabled || !ready() || control.closest('[data-auto-history-definition]')) return;
         const action = control.dataset.autoAction, id = control.dataset.nodeId;
         if (action === 'close') { opened = false; render(); }
+        else if (action === 'open-manager') show();
         else if (action === 'manage') { mode = 'manage'; search = null; history.kind = ''; loadList(); }
         else if (action === 'create') newDraft();
+        else if (action === 'apply-recipe') {
+          const recipe = E.RECIPES?.find(r => r.id === control.dataset.recipeId);
+          if (recipe) {
+            clearPanels(); seq.detail++; rule = null; version = null; baseDefinition = ''; sample = null; diagnostics = []; conflict = false;
+            draft = { title: recipe.title, folder: '', actorUid, definition: recipe.create(context) };
+            generation++; dirty = true; preview = null; mode = 'edit'; opened = true; render();
+          }
+        }
         else if (action === 'open-rule') openRule(control.dataset.ruleId);
         else if (action === 'more-rules') loadList(true);
         else if (['recipe', 'blocks'].includes(action)) setRepresentation(action);
@@ -255,13 +264,31 @@
     function render() {
       if (button) { button.hidden = !owner(); button.disabled = !ready(); }
       if (!root) return;
-      root.hidden = !opened || !owner();
-      if (!opened || !owner()) { root.innerHTML = ''; return; }
+      if (!projectId || !context.project) {
+        root.hidden = false;
+        root.innerHTML = '<div class="crm-workspace-card" style="padding: 16px; margin: 12px 0;"><h4 style="margin: 0 0 8px;">Automations</h4><p class="crm-muted" style="margin: 0;">Select an active project to view and configure automation rules.</p></div>';
+        return;
+      }
+      if (!owner()) {
+        const userRole = context.membership?.role || 'Viewer';
+        root.hidden = false;
+        root.innerHTML = `<div class="crm-workspace-card" style="padding: 16px; margin: 12px 0;"><h4 style="margin: 0 0 8px;">Automations</h4><p class="crm-muted" style="margin: 0;">Automations are configured by Project Owners. You have <strong>${R.esc(userRole)}</strong> access to this project.</p></div>`;
+        return;
+      }
+      if (!opened) {
+        root.hidden = false;
+        root.innerHTML = `<div class="crm-workspace-card" style="padding: 16px; margin: 12px 0;"><h4 style="margin: 0 0 8px;">Project Automations</h4><p class="crm-muted" style="margin: 0 0 12px;">Automate task updates, status transitions, and notifications.</p><button type="button" class="crm-btn-primary crm-btn-sm" data-auto-action="open-manager"${!ready() ? ' disabled' : ''}>Configure automations</button></div>`;
+        return;
+      }
+      root.hidden = false;
       const active = root.ownerDocument?.activeElement;
       const focus = active && root.contains(active) ? { id: active.id, node: active.dataset.autoNode, path: active.dataset.autoPath, kind: active.dataset.autoKind, action: active.dataset.autoAction, nodeId: active.dataset.nodeId, ruleId: active.dataset.ruleId, taskId: active.dataset.taskId, parentId: active.dataset.parentId, branch: active.dataset.branch, historyIndex: active.dataset.historyIndex, form: active.form?.dataset.autoForm, name: active.name, start: active.selectionStart, end: active.selectionEnd } : null;
       const e = R.esc, b = R.button, ctx = { ...context, taskLabels }, locked = inFlight || !!pending || conflict;
       const actorName = id => context.members?.find(person => person.uid === id)?.displayName || id || 'Not specified';
-      const manage = `<form data-auto-form="filters" class="crm-auto-fields">${R.input('Search automations', filters.query, 'name="query"', 'search', 'maxlength="200"')}${R.select('Folder', [{ value: 'all', label: 'All folders' }, { value: 'unfiled', label: 'Unfiled' }, { value: 'named', label: 'Named folder' }], filters.folderMode, 'name="folderMode"')}${R.input('Folder name', filters.folder, 'name="folder"', 'text', 'maxlength="200"')}${R.select('State', [{ value: '', label: 'All' }, { value: 'true', label: 'Enabled' }, { value: 'false', label: 'Disabled' }], filters.enabled, 'name="enabled"')}<button class="crm-btn-primary" type="submit">Find automations</button></form><ul class="crm-auto-manage-list">${items.map(item => `<li><div><strong>${e(item.title)}</strong><p>${e(item.folder || 'Unfiled')} · ${item.enabled ? 'Enabled' : 'Disabled'} · Active actor: ${e(actorName(item.activeActorUid))} · Draft actor: ${e(actorName(item.draftActorUid))}</p><span class="crm-muted">References not checked yet</span></div>${b('open-rule', 'Open', `data-rule-id="${e(item.ruleId)}"`)}</li>`).join('') || `<li>${loading ? 'Loading automations…' : cursor ? 'No matches in this page. Load more to continue.' : 'No matching automations.'}</li>`}</ul>${cursor ? b('more-rules', 'Load more automations') : ''}`;
+      const competingWarnings = E.detectCompetingRules ? E.detectCompetingRules(items) : [];
+      const competingBanner = competingWarnings.length ? `<div class="crm-auto-warning" style="margin: 12px 0; padding: 10px; border-radius: 6px; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e;"><strong>⚠️ Competing Rules Warning:</strong><ul style="margin: 4px 0 0; padding-left: 18px;">${competingWarnings.map(w => `<li>${e(w.message)}</li>`).join('')}</ul></div>` : '';
+      const recipeGallery = E.RECIPES ? `<div class="crm-auto-recipes" style="margin: 12px 0; padding: 12px; background: var(--pj-raised); border-radius: 8px;"><h4 style="margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--pj-faint);">Recommended Recipes</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">${E.RECIPES.map(r => `<button type="button" class="crm-btn-secondary crm-btn-sm" data-auto-action="apply-recipe" data-recipe-id="${e(r.id)}" title="${e(r.description)}">+ ${e(r.title)}</button>`).join('')}</div></div>` : '';
+      const manage = `${recipeGallery}${competingBanner}<form data-auto-form="filters" class="crm-auto-fields">${R.input('Search automations', filters.query, 'name="query"', 'search', 'maxlength="200"')}${R.select('Folder', [{ value: 'all', label: 'All folders' }, { value: 'unfiled', label: 'Unfiled' }, { value: 'named', label: 'Named folder' }], filters.folderMode, 'name="folderMode"')}${R.input('Folder name', filters.folder, 'name="folder"', 'text', 'maxlength="200"')}${R.select('State', [{ value: '', label: 'All' }, { value: 'true', label: 'Enabled' }, { value: 'false', label: 'Disabled' }], filters.enabled, 'name="enabled"')}<button class="crm-btn-primary" type="submit">Find automations</button></form><ul class="crm-auto-manage-list">${items.map(item => `<li><div><strong>${e(item.title)}</strong><p>${e(item.folder || 'Unfiled')} · ${item.enabled ? 'Enabled' : 'Disabled'} · Active actor: ${e(actorName(item.activeActorUid))} · Draft actor: ${e(actorName(item.draftActorUid))}</p><span class="crm-muted">References not checked yet</span></div>${b('open-rule', 'Open', `data-rule-id="${e(item.ruleId)}"`)}</li>`).join('') || `<li>${loading ? 'Loading automations…' : cursor ? 'No matches in this page. Load more to continue.' : 'No matching automations.'}</li>`}</ul>${cursor ? b('more-rules', 'Load more automations') : ''}`;
       let editor = '';
       if (draft) {
         const errors = validation();

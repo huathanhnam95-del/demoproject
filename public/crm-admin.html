@@ -585,7 +585,7 @@
         <div class="crm-panel-header">
           <div>
             <h2>Teacher Schedule</h2>
-            <p>Schedule your assigned classrooms quickly: Place this week, then activate recurrences.</p>
+            <p>Drag sessions to reschedule. Use Weekly pattern to place a recurring week.</p>
           </div>
           <div class="crm-inline-fields">
             <button id="btn-teacher-scheduler-refresh" class="crm-btn-secondary" type="button">Refresh</button>
@@ -611,6 +611,12 @@
           <section class="scheduler-center">
             <div class="teacher-scheduler-header-strip">
               <div class="scheduler-toolbar">
+                <button id="btn-teacher-scheduler-prev-week" class="ts-nav-btn" type="button"
+                  aria-label="Previous week" title="Previous week">&lsaquo;</button>
+                <button id="btn-teacher-scheduler-today" class="ts-today-btn" type="button">Today</button>
+                <button id="btn-teacher-scheduler-next-week" class="ts-nav-btn" type="button"
+                  aria-label="Next week" title="Next week">&rsaquo;</button>
+                <span class="ts-toolbar-divider" aria-hidden="true"></span>
                 <div class="crm-form-group">
                   <label for="teacher-scheduler-from-date">From</label>
                   <input type="date" id="teacher-scheduler-from-date" class="crm-input">
@@ -620,36 +626,38 @@
                   <input type="date" id="teacher-scheduler-to-date" class="crm-input">
                 </div>
               </div>
-              <div class="teacher-scheduler-step-banner">
-                <div class="teacher-scheduler-step-label">
-                  <span class="teacher-scheduler-step-badge">1</span> Place week
-                  <span class="teacher-scheduler-step-divider">→</span>
-                  <span class="teacher-scheduler-step-badge">2</span> Recurrences
-                </div>
+              <div class="ts-toolbar-actions">
+                <details class="teacher-scheduler-pattern-card">
+                  <summary><strong>Weekly pattern</strong></summary>
+                  <div class="teacher-scheduler-pattern-panel">
+                    <p class="teacher-scheduler-pattern-steps">
+                      <span class="teacher-scheduler-step-badge">1</span> Place this week
+                      <span class="teacher-scheduler-step-divider">&rarr;</span>
+                      <span class="teacher-scheduler-step-badge">2</span> Activate recurrences
+                    </p>
+                    <div class="teacher-scheduler-pattern-row">
+                      <div class="crm-form-group pattern-group-class">
+                        <label for="teacher-scheduler-pattern-class">Classroom</label>
+                        <select id="teacher-scheduler-pattern-class" class="crm-input"></select>
+                      </div>
+                      <div class="crm-form-group pattern-group-days">
+                        <label>Days</label>
+                        <div id="teacher-scheduler-pattern-days" class="teacher-scheduler-day-chip-row"></div>
+                      </div>
+                      <div class="crm-form-group pattern-group-time">
+                        <label for="teacher-scheduler-pattern-time">Start time</label>
+                        <input id="teacher-scheduler-pattern-time" type="time" class="crm-input" value="18:00">
+                      </div>
+                      <div class="crm-form-group pattern-group-btn">
+                        <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button">Place this week</button>
+                      </div>
+                    </div>
+                    <div id="teacher-scheduler-pattern-summary" class="crm-muted"></div>
+                  </div>
+                </details>
                 <button id="btn-teacher-scheduler-activate-recurrences" class="crm-btn-secondary" type="button">Activate recurrences</button>
               </div>
             </div>
-            <details class="teacher-scheduler-pattern-card">
-              <summary><strong>Set weekly pattern</strong> <span class="pattern-hint">(auto-place recurring slots)</span></summary>
-              <div class="teacher-scheduler-pattern-row">
-                <div class="crm-form-group pattern-group-class">
-                  <label for="teacher-scheduler-pattern-class">Classroom</label>
-                  <select id="teacher-scheduler-pattern-class" class="crm-input"></select>
-                </div>
-                <div class="crm-form-group pattern-group-days">
-                  <label>Days</label>
-                  <div id="teacher-scheduler-pattern-days" class="teacher-scheduler-day-chip-row"></div>
-                </div>
-                <div class="crm-form-group pattern-group-time">
-                  <label for="teacher-scheduler-pattern-time">Start time</label>
-                  <input id="teacher-scheduler-pattern-time" type="time" class="crm-input" value="18:00">
-                </div>
-                <div class="crm-form-group pattern-group-btn">
-                  <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button">Place this week</button>
-                </div>
-              </div>
-              <div id="teacher-scheduler-pattern-summary" class="crm-muted"></div>
-            </details>
             <div id="teacher-scheduler-activation-summary" class="teacher-scheduler-activation-summary"
               style="display:none;"></div>
             <div id="teacher-scheduler-calendar" class="scheduler-calendar">
@@ -1011,6 +1019,14 @@
                     </div></details>
                     <button id="btn-projects-board-add-section" class="crm-btn-secondary" type="button">Add section</button>
                     <button id="btn-projects-board-add-column" class="crm-btn-secondary" type="button">+ Column</button>
+                    <label class="crm-projects-group-by-label"><span class="sr-only">Group by</span>
+                      <select id="projects-board-group-by" class="crm-input crm-input-sm" title="Group by">
+                        <option value="section">Group by: Section</option>
+                        <option value="status">Group by: Status</option>
+                        <option value="ownerUid">Group by: Owner</option>
+                        <option value="priority">Group by: Priority</option>
+                      </select>
+                    </label>
                   </form>
                   <p id="projects-view-summary" aria-live="polite"></p>
 <p id="projects-view-status" role="status"></p>
@@ -1031,6 +1047,31 @@
                 </div>
               </div>
               <div class="crm-projects-board-hints" aria-hidden="true"><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span><span><kbd>Space</kbd> Select</span><span><kbd>Enter</kbd> Open details</span><span><kbd>&larr;</kbd><kbd>&rarr;</kbd> Collapse / Expand</span></div>
+            </div>
+            <div id="projects-batch-dock" class="crm-projects-batch-dock" hidden aria-label="Batch task actions" role="toolbar">
+              <div class="crm-batch-dock-info">
+                <span id="projects-batch-count" class="crm-batch-count-badge">0 selected</span>
+              </div>
+              <div class="crm-batch-dock-actions">
+                <label class="crm-batch-label">
+                  <span class="sr-only">Status</span>
+                  <select id="projects-batch-status" class="crm-input crm-input-sm">
+                    <option value="">Change status…</option>
+                    <option value="not_started">Not started</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="done">Done</option>
+                  </select>
+                </label>
+                <label class="crm-batch-label">
+                  <span class="sr-only">Section</span>
+                  <select id="projects-batch-section" class="crm-input crm-input-sm">
+                    <option value="">Move to section…</option>
+                  </select>
+                </label>
+                <button id="btn-projects-batch-delete" class="crm-btn-danger crm-btn-sm" type="button">Archive</button>
+                <button id="btn-projects-batch-clear" class="crm-btn-secondary crm-btn-sm" type="button">Deselect</button>
+              </div>
             </div>
                 <details class="crm-projects-workspace-utility"><summary>Linked CRM records</summary><section id="projects-project-links" aria-label="Project CRM links"></section></details>
               </div>

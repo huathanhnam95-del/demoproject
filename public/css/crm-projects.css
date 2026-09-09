@@ -165,7 +165,7 @@
   border-top: 1px solid #dbe4f0;
   padding-top: 16px;
 }
-.crm-projects-board-detail-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
+.crm-projects-board-detail-body { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .crm-projects-board-detail-body dl { margin: 0; }
 .crm-projects-board-detail-body dt { color: #64748b; font-size: .76rem; }
 .crm-projects-board-detail-body dd { margin: 3px 0 0; overflow-wrap: anywhere; }
@@ -269,8 +269,13 @@
 
 /* Flat notification feed: shared Projects surface, visible keyboard controls. */
 .crm-projects-notifications { margin-block: 18px; padding-block: 14px; border-block: 1px solid #dbe4ef; color: #172b4d; }
-.crm-projects-notifications summary { cursor: pointer; font-weight: 650; padding-block: 8px; }
-.crm-projects-notification-filters { margin-block: 12px; align-items: end; }
+.crm-projects-notification-filters { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-block: 12px; width: 100%; }
+.crm-projects-notification-filters label { display: flex; flex-direction: column; gap: 5px; width: 100%; font-size: 0.82rem; font-weight: 600; color: #475569; }
+.crm-projects-notification-filters select,
+.crm-projects-notification-filters button { width: 100%; box-sizing: border-box; }
+.crm-projects-notifications .crm-inline-fields { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
+.crm-projects-notifications .crm-inline-fields select,
+.crm-projects-notifications .crm-inline-fields button { width: 100%; box-sizing: border-box; }
 .crm-projects-notifications label { display: grid; gap: 5px; }
 .crm-projects-notification-list { list-style: none; padding: 0; margin: 10px 0; }
 .crm-projects-notification-row { display: flex; justify-content: space-between; gap: 20px; padding: 14px 8px; border-bottom: 1px solid #e8edf4; }
@@ -490,7 +495,44 @@
 .crm-projects-board-row :is(input:not([type="checkbox"]), select):hover { border-color: var(--pj-line-strong); }
 .crm-projects-board-row :is(input:not([type="checkbox"]), select):focus { border-color: var(--pj-accent); background-color: var(--pj-surface); outline-offset: 1px; }
 .crm-projects-board-row input[type="checkbox"] { flex: 0 0 13px; width: 13px; height: 13px; accent-color: var(--pj-accent); margin: 0 2px 0 0; }
-.crm-projects-board-task-title { gap: 3px; font-size: 12px; }
+.crm-projects-board-task-title { gap: 3px; font-size: 12px; position: relative; }
+.crm-board-tree-elbow {
+  display: inline-block;
+  width: 14px;
+  height: 20px;
+  margin-right: 4px;
+  margin-left: -16px;
+  border-left: 1.5px solid #94a3b8;
+  border-bottom: 1.5px solid #94a3b8;
+  border-bottom-left-radius: 4px;
+  flex: 0 0 14px;
+  vertical-align: middle;
+  pointer-events: none;
+  opacity: 0.75;
+}
+.crm-board-depth-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #e2e8f0;
+  color: #475569;
+  margin-right: 4px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+.crm-projects-board-row[data-depth="1"] { background: #fafbfc; }
+.crm-projects-board-row[data-depth="2"] { background: #f6f8fa; }
+.crm-projects-board-row[data-depth="3"] { background: #f1f4f8; }
+.crm-projects-board-row[data-depth="4"] { background: #edf1f6; }
+.crm-projects-board-row[data-depth="2"] .crm-board-depth-chip { background: #dbeafe; color: #1e40af; }
+.crm-projects-board-row[data-depth="3"] .crm-board-depth-chip { background: #e0e7ff; color: #3730a3; }
+.crm-projects-board-row[data-depth="4"] .crm-board-depth-chip { background: #f3e8ff; color: #6b21a8; }
 .crm-board-expander { width: 18px; color: var(--pj-faint); border: 0; background: transparent; cursor: pointer; padding: 0; }
 .crm-board-expander:hover { color: var(--pj-ink); }
 .crm-board-drag-handle { width: 17px; color: var(--pj-line-strong); font-size: 13px; opacity: 0.28; cursor: grab; transition: opacity .16s ease; }
@@ -935,6 +977,162 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   .urail { width: 100%; min-width: 0; max-width: 100%; border-left: 0; border-top: 1px solid var(--pj-line); }
   .urail.collapsed { display: none; }
 }
+/* ---------- BATCH ACTIONS DOCK ---------- */
+.crm-projects-batch-dock {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  background: var(--pj-ink, #1e293b);
+  color: #fff;
+  border-radius: 30px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  animation: slideUpDock 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUpDock {
+  from { transform: translate(-50%, 20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+.crm-projects-batch-dock[hidden] {
+  display: none !important;
+}
+.crm-batch-count-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #93c5fd;
+  white-space: nowrap;
+}
+.crm-batch-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.crm-batch-dock-actions select.crm-input {
+  background: #334155;
+  color: #fff;
+  border-color: #475569;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.crm-batch-dock-actions select.crm-input option {
+  background: #1e293b;
+  color: #fff;
+}
+
+/* ---------- STATUS BATTERY & ROLLUPS ---------- */
+.crm-board-status-battery {
+  display: flex;
+  height: 4px;
+  width: calc(100% - 8px);
+  margin: 0 4px 2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+.crm-battery-segment {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+.crm-battery-segment.is-done { background: #10b981; }
+.crm-battery-segment.is-in-progress { background: #3b82f6; }
+.crm-battery-segment.is-blocked { background: #f59e0b; }
+.crm-battery-segment.is-not-started { background: #cbd5e1; }
+
+.crm-board-sum-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #334155;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.crm-board-duration-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-size: 10px;
+  font-weight: 600;
+  color: #2563eb;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+/* ---------- SUMMARY FOOTER ROW ---------- */
+.crm-board-summary-row {
+  background: #f8fafc !important;
+  border-top: 1px dashed #cbd5e1;
+  border-bottom: 2px solid #cbd5e1;
+  font-size: 11.5px;
+  color: #475569;
+  cursor: default;
+  user-select: none;
+}
+.crm-board-summary-row:hover {
+  background: #f8fafc !important;
+}
+.crm-board-summary-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-right: 6px;
+}
+.crm-board-summary-cell {
+  display: flex;
+  align-items: center;
+  font-weight: 550;
+  font-size: 11px;
+}
+.crm-board-summary-stat {
+  font-variant-numeric: tabular-nums;
+  color: #64748b;
+}
+
+/* ---------- WORKSPACE GROUP IN LEFT RAIL ---------- */
+.crm-rail-workspace-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 12px;
+}
+.crm-rail-workspace-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pj-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.crm-rail-workspace-count {
+  font-size: 9px;
+  font-weight: 600;
+  background: var(--pj-sunken);
+  padding: 1px 5px;
+  border-radius: 99px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-panel="projects"] *,
   [data-panel="projects"] *::before,
@@ -943,5 +1141,551 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ==========================================================================
+   Modern SaaS Task Details Panel Redesign (Linear / Asana Style)
+   ========================================================================== */
+
+/* Drawer Container */
+[data-panel="projects"] dialog#projects-board-detail {
+  padding: 24px 28px;
+  background: var(--pj-surface, #ffffff);
+  color: var(--pj-ink, #0f172a);
+  box-shadow: -16px 0 48px rgba(15, 23, 42, 0.12);
+  border-left: 1px solid var(--pj-line, #e2e8f0);
+}
+
+/* Header */
+[data-panel="projects"] dialog .crm-projects-board-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--pj-line, #e2e8f0);
+}
+
+[data-panel="projects"] dialog .crm-projects-board-detail-head h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--pj-ink, #0f172a);
+  margin: 3px 0 0;
+  letter-spacing: -0.015em;
+  word-break: break-word;
+}
+
+/* Detail Property Bar */
+.crm-detail-property-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+
+.crm-detail-path-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--pj-muted, #64748b);
+  background: var(--pj-sunken, #f8fafc);
+  border: 1px solid var(--pj-line, #e2e8f0);
+  border-radius: 6px;
+  padding: 4px 10px;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-detail-meta-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crm-detail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.crm-pill-status {
+  background: var(--pj-accent-soft, #eff6ff);
+  color: var(--pj-accent-ink, #1d4ed8);
+  border: 1px solid #bfdbfe;
+}
+.crm-pill-status[data-status="done"] {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+.crm-pill-status[data-status="in_progress"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.crm-pill-status[data-status="blocked"] {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.crm-pill-status[data-status="not_started"] {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.crm-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.crm-pill-lifecycle {
+  background: var(--pj-sunken, #f8fafc);
+  color: var(--pj-muted, #64748b);
+  border: 1px solid var(--pj-line, #e2e8f0);
+  text-transform: capitalize;
+}
+
+/* Copy ID button */
+.crm-detail-copy-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--pj-line, #e2e8f0);
+  border-radius: 6px;
+  background: var(--pj-sunken, #f8fafc);
+  color: var(--pj-muted, #64748b);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  transition: all 0.15s ease;
+}
+
+.crm-detail-copy-id:hover {
+  background: var(--pj-surface, #ffffff);
+  border-color: #cbd5e1;
+  color: var(--pj-ink, #0f172a);
+}
+
+.crm-id-code {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-copy-feedback {
+  font-size: 0.68rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: #2563eb;
+  padding-left: 2px;
+}
+
+.crm-detail-copy-id.is-copied {
+  background: #ecfdf5;
+  border-color: #10b981;
+  color: #047857;
+}
+
+/* Collapsible Technical Drawer */
+.crm-detail-tech-drawer {
+  margin: 6px 0 10px;
+  border: 1px solid var(--pj-line, #e2e8f0);
+  border-radius: 8px;
+  background: var(--pj-sunken, #f8fafc);
+  overflow: hidden;
+}
+
+.crm-detail-tech-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--pj-muted, #64748b);
+  cursor: pointer;
+  user-select: none;
+}
+
+.crm-detail-tech-summary:hover {
+  color: var(--pj-ink, #0f172a);
+}
+
+.crm-tech-rev {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.crm-detail-tech-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--pj-line, #e2e8f0);
+  background: var(--pj-surface, #ffffff);
+}
+
+.crm-detail-tech-content dl {
+  margin: 0;
+}
+
+.crm-detail-tech-content dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.crm-detail-tech-content dd {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--pj-ink, #1e293b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+/* Planning Sections */
+#projects-task-planning {
+  border-top: 1px solid var(--pj-line, #e2e8f0);
+  padding-top: 0;
+}
+
+.crm-detail-section {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--pj-line, #e2e8f0);
+}
+.crm-detail-section:last-child {
+  border-bottom: 0;
+}
+
+.crm-detail-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.crm-detail-section-head h5 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--pj-ink, #1e293b);
+  margin: 0;
+}
+
+.crm-detail-section-subtitle {
+  font-size: 0.74rem;
+  color: var(--pj-muted, #64748b);
+}
+
+/* Subtasks Metric Card */
+.crm-detail-progress-card {
+  background: var(--pj-surface, #ffffff);
+  border: 1px solid var(--pj-line, #e2e8f0);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.crm-detail-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.crm-detail-progress-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pj-ink, #1e293b);
+}
+
+.crm-detail-progress-stat {
+  font-size: 0.76rem;
+  color: var(--pj-muted, #64748b);
+}
+
+.crm-detail-progress-stat.is-complete {
+  color: #059669;
+  font-weight: 600;
+}
+
+.crm-detail-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--pj-sunken, #e2e8f0);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.crm-detail-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.crm-detail-progress-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.crm-detail-span-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--pj-muted, #64748b);
+}
+
+/* Date Grid */
+.crm-detail-date-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.crm-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crm-detail-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--pj-muted, #475569);
+}
+
+.crm-detail-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* Dependencies UI */
+.crm-detail-dep-picker-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.crm-detail-dep-select-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.crm-detail-chips-wrapper {
+  margin: 8px 0;
+}
+
+.crm-detail-chips-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--pj-muted, #64748b);
+  margin-bottom: 6px;
+}
+
+.crm-detail-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 0;
+}
+
+.crm-dep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: #1e40af;
+  max-width: 100%;
+}
+
+.crm-dep-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crm-dep-id {
+  font-size: 0.68rem;
+  color: #60a5fa;
+  font-family: monospace;
+}
+
+.crm-dep-remove {
+  background: none;
+  border: none;
+  color: #93c5fd;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 3px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.crm-dep-remove:hover {
+  color: #1e3a8a;
+  background: rgba(29, 78, 216, 0.1);
+}
+
+.crm-detail-no-deps {
+  font-size: 0.76rem;
+  color: var(--pj-muted, #94a3b8);
+  font-style: italic;
+}
+
+.crm-detail-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--pj-muted, #64748b);
+  line-height: 1.4;
+  margin: 8px 0;
+  padding: 6px 10px;
+  background: var(--pj-sunken, #f8fafc);
+  border-radius: 6px;
+  border: 1px solid var(--pj-line, #e2e8f0);
+}
+
+.crm-detail-advanced-dep {
+  margin: 10px 0;
+  border: 1px dashed var(--pj-line, #cbd5e1);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--pj-sunken, #f8fafc);
+}
+
+.crm-detail-advanced-summary {
+  font-size: 0.72rem;
+  color: var(--pj-muted, #64748b);
+  cursor: pointer;
+  user-select: none;
+}
+
+.crm-detail-advanced-content {
+  margin-top: 6px;
+}
+
+.crm-dep-textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  width: 100%;
+}
+
+.crm-task-status-banner {
+  font-size: 0.78rem;
+  margin: 6px 0 0;
+}
+
+/* CRM Links Modernization */
+#projects-task-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#projects-task-links li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--pj-sunken, #f8fafc);
+  border: 1px solid var(--pj-line, #e2e8f0);
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+#projects-task-links li button {
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Dark Mode Overrides */
+[data-panel="projects"].projects-dark dialog#projects-board-detail {
+  background: var(--pj-surface, #141a22);
+  color: var(--pj-ink, #f0f6fc);
+  border-left-color: var(--pj-line, #242e3b);
+  box-shadow: -16px 0 48px rgba(0, 0, 0, 0.45);
+}
+
+[data-panel="projects"].projects-dark .crm-dep-chip {
+  background: #1e293b;
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+
+[data-panel="projects"].projects-dark .crm-dep-remove {
+  color: #60a5fa;
+}
+[data-panel="projects"].projects-dark .crm-dep-remove:hover {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-panel="projects"].projects-dark .crm-detail-progress-card {
+  background: var(--pj-surface, #141a22);
+  border-color: var(--pj-line, #242e3b);
+}
+
+[data-panel="projects"].projects-dark .crm-pill-status[data-status="done"] {
+  background: #064e3b;
+  color: #6ee7b7;
+  border-color: #047857;
+}
+
+[data-panel="projects"].projects-dark .crm-pill-status[data-status="blocked"] {
+  background: #450a0a;
+  color: #fca5a5;
+  border-color: #991b1b;
+}
+
+[data-panel="projects"].projects-dark .crm-detail-tech-content {
+  background: var(--pj-surface, #141a22);
+}
+
 
 

@@ -307,7 +307,12 @@
             elements.projectsProjectSelect.innerHTML = projects.length
                 ? `${suppressAutoSelection ? '<option value="">Select a project</option>' : ''}${projects.map((project) => `<option value="${escape(project.id)}">${escape(project.name || project.title || 'Project')}</option>`).join('')}`
                 : '<option value="">No projects available</option>';
-            selectedProjectId = projects.some((project) => project.id === current) ? current : (suppressAutoSelection ? '' : (projects[0]?.id || ''));
+            const activeProjects = projects.filter((project) => (project.lifecycle || 'active') === 'active' && !contentDeniedProjectIds.has(project.id));
+            const memberProjectIds = new Set((accessSummary?.projects || []).map((project) => project.id));
+            const preferred = activeProjects.find((project) => memberProjectIds.has(project.id)) || activeProjects[0];
+            selectedProjectId = projects.some((project) => project.id === current)
+                ? current
+                : (suppressAutoSelection ? '' : (preferred?.id || projects[0]?.id || ''));
             elements.projectsProjectSelect.value = selectedProjectId;
             elements.projectsProjectSelect.disabled = pending;
             selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
@@ -386,12 +391,17 @@
                 target.innerHTML = '<p class="crm-muted">Select a project to view memberships.</p>';
                 return;
             }
+            const currentActorUid = String(getCurrentUser()?.uid || '');
+            const isSelfMember = currentActorUid && members.some((member) => member.uid === currentActorUid);
+            const selfGrantBanner = (adminMode && currentActorUid && !isSelfMember)
+                ? `<div class="crm-alert crm-alert-info" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;"><span>You are an Organization Admin, but not yet an assigned member of this project.</span><button type="button" class="crm-btn-primary crm-btn-sm crm-projects-join-self" data-uid="${escape(currentActorUid)}"${pending ? ' disabled' : ''}>Join as Owner</button></div>`
+                : '';
             if (!members.length) {
-                target.innerHTML = '<p class="crm-muted">No active members are assigned.</p>';
+                target.innerHTML = `${selfGrantBanner}<p class="crm-muted">No active members are assigned.</p>`;
                 return;
             }
             const canManage = canManageSelectedProject();
-            target.innerHTML = `<div class="crm-projects-members-list">${members.map((member) => {
+            target.innerHTML = `${selfGrantBanner}<div class="crm-projects-members-list">${members.map((member) => {
                 const person = getDirectoryPerson(member.uid);
                 const label = person?.displayName || person?.email || 'Workforce member';
                 const roleOptions = ['Owner', 'Editor', 'Viewer'].map((role) => `<option value="${role}"${member.role === role ? ' selected' : ''}>${role}</option>`).join('');
@@ -629,6 +639,9 @@
                     method, headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uid, role, expectedRevision: selectedProject?.membershipRevision })
                 });
+                if (uid === String(getCurrentUser()?.uid || '')) {
+                    contentDeniedProjectIds.delete(selectedProjectId);
+                }
                 showToast('Project membership saved.', 'success');
             } catch (error) { showToast(error?.message || 'Project membership could not be saved.', 'error'); }
             finally { await refresh({ internal: true }); setPending(false); }
@@ -711,6 +724,11 @@
             });
             elements.projectsMemberSave?.addEventListener('click', () => saveMember(elements.projectsMemberPerson?.value, elements.projectsMemberRole?.value));
             elements.projectsMembersList?.addEventListener('click', (event) => {
+                const join = event.target.closest('.crm-projects-join-self');
+                if (join) {
+                    saveMember(join.dataset.uid, 'Owner');
+                    return;
+                }
                 const update = event.target.closest('.crm-projects-member-update');
                 if (update) {
                     const role = event.target.closest('.crm-stack-item')?.querySelector('.crm-projects-member-role')?.value;

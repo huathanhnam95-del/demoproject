@@ -2042,3 +2042,7 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1047,2026-09-09,Audit debug and refactor CRM Projects workspace: fix kanban modal pop safe CSS calendar today and utility rail a11y,Done,2026-09-09
 1048,2026-09-09,Teacher Schedule mini calendar navigation auto 14-day date clamping and fast optimistic create-cancel,Done,2026-09-09
 1049,2026-09-09,Enable CRM Projects feature flag in production and configure extensionless clean URLs,Done,2026-09-09
+1050,2026-09-09,Fix CRM Projects 404 errors on tasks and changes endpoints and resolve utility rail filter clipping,Done,2026-09-09
+1052,2026-09-09,Teacher Schedule performance and Google-Calendar-grade visual refresh - rAF drag batching arithmetic slot targeting targeted pill repaints 24px density hairline grid current-time line and consolidated toolbar,In Progress,
+1051,2026-09-09,Research Monday board structure and propose structural improvements,Done,2026-09-09
+1053,2026-09-09,Execute CRM Projects Option B multi-tier board evolution: 5-level hierarchy rollups summary footers batch dock and duration combo,Done,2026-09-09

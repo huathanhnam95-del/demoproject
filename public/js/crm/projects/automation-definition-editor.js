@@ -115,7 +115,72 @@
     if (count > 64) err('Use no more than 64 steps and condition nodes.');
     return [...new Set(errors)];
   }
-  const api = { clone, types, triggers, builtins, statuses, priorities, nodeId, leaf, newNode, create, walk, find, editNode, insert, remove, reorder, duplicate, setAt, getAt, fieldType, operators, defaultValue, validate };
+  const RECIPES = [
+    {
+      id: 'status_move',
+      title: 'When Status Changes to Done, Move to Section',
+      description: 'Move completed tasks to another section automatically.',
+      create: (context) => ({
+        schemaVersion: 1,
+        trigger: { type: 'status_changed', to: 'done' },
+        steps: [newNode('move_section', context)]
+      })
+    },
+    {
+      id: 'subitem_rollup',
+      title: 'When All Subitems Complete, Mark Parent Done',
+      description: 'Automatically mark the parent task Done when all children are finished.',
+      create: (context) => ({
+        schemaVersion: 1,
+        trigger: { type: 'all_direct_children_complete' },
+        steps: [newNode('set_field', context)]
+      })
+    },
+    {
+      id: 'due_date_alert',
+      title: 'When Due Date Arrives, Notify Owner',
+      description: 'Alert the accountable owner on the morning a task is due.',
+      create: () => ({
+        schemaVersion: 1,
+        trigger: { type: 'due_date', offsetDays: 0, time: '09:00' },
+        steps: [{ nodeId: nodeId(), type: 'notify', payload: { message: 'This task is due today.', recipients: 'task_owner' } }]
+      })
+    },
+    {
+      id: 'auto_assign',
+      title: 'When Task Created, Auto-Assign',
+      description: 'Automatically assign newly created tasks.',
+      create: (context) => ({
+        schemaVersion: 1,
+        trigger: { type: 'task_created' },
+        steps: [newNode('assign', context)]
+      })
+    }
+  ];
+
+  function detectCompetingRules(rules = []) {
+    const warnings = [];
+    const active = (rules || []).filter(r => (r.lifecycle || r.status || 'active') === 'active');
+    const triggerMap = new Map();
+    active.forEach(r => {
+      const trigger = r.definition?.trigger || {};
+      const key = `${trigger.type}:${trigger.from || '*'}:${trigger.to || '*'}`;
+      if (!triggerMap.has(key)) triggerMap.set(key, []);
+      triggerMap.get(key).push(r);
+    });
+    triggerMap.forEach((matched, key) => {
+      if (matched.length > 1) {
+        warnings.push({
+          triggerKey: key,
+          ruleIds: matched.map(r => r.id || r.ruleId),
+          message: `Competing automations: "${matched.map(r => r.title || r.name || r.id).join('", "')}" listen to the same trigger. They may conflict or execute concurrently.`
+        });
+      }
+    });
+    return warnings;
+  }
+
+  const api = { clone, types, triggers, builtins, statuses, priorities, nodeId, leaf, newNode, create, walk, find, editNode, insert, remove, reorder, duplicate, setAt, getAt, fieldType, operators, defaultValue, validate, RECIPES, detectCompetingRules };
   globalScope.CrmAutomationDefinitionEditor = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

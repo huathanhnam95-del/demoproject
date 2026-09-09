@@ -228,6 +228,7 @@
             selectedTaskIds = next;
             stateModel?.setSelectedTaskIds?.(next);
             renderVirtualRows();
+            renderBatchDock();
             deps.onContextChanged?.(contextSnapshot());
             return next.slice();
         }
@@ -235,6 +236,101 @@
             if (!selectableTask(tasks.get(taskId))) return;
             if (!selectedTaskIds.includes(taskId) && selectedTaskIds.length >= 20) { setStatus('Select at most 20 tasks.', 'error'); return; }
             setSelectedTaskIds(selectedTaskIds.includes(taskId) ? selectedTaskIds.filter(id => id !== taskId) : [...selectedTaskIds, taskId]);
+        }
+        function renderBatchDock() {
+            const dock = document.getElementById('projects-batch-dock');
+            if (!dock) return;
+            const count = selectedTaskIds.length;
+            dock.hidden = count === 0;
+            const countEl = document.getElementById('projects-batch-count');
+            if (countEl) countEl.textContent = `${count} task${count === 1 ? '' : 's'} selected`;
+            const sectionSelect = document.getElementById('projects-batch-section');
+            if (sectionSelect) {
+                const currentVal = sectionSelect.value;
+                const opts = '<option value="">Move to section…</option>' +
+                    sections.map((s) => `<option value="${escape(s.id)}">${escape(s.title || 'Section')}</option>`).join('');
+                if (sectionSelect.innerHTML !== opts) {
+                    sectionSelect.innerHTML = opts;
+                    if (currentVal) sectionSelect.value = currentVal;
+                }
+            }
+        }
+        async function executeBatchStatus(newStatus) {
+            if (!newStatus || !selectedTaskIds.length || !canWrite()) return;
+            const mutationScope = captureScope();
+            const taskIdsToUpdate = [...selectedTaskIds];
+            setBusy(true);
+            try {
+                await requestMutation(`/api/projects/${encodeURIComponent(mutationScope.projectId)}/tasks/bulk`, {
+                    operationId: operationId('batch-status'),
+                    taskIds: taskIdsToUpdate,
+                    patch: { status: newStatus }
+                });
+                taskIdsToUpdate.forEach((id) => {
+                    const t = taskFor(id);
+                    if (t) tasks.set(id, { ...t, status: newStatus });
+                });
+                showToast(`Updated status for ${taskIdsToUpdate.length} task${taskIdsToUpdate.length === 1 ? '' : 's'}.`, 'success');
+                renderBoard();
+            } catch (err) {
+                showToast(err?.message || 'Batch status update failed.', 'error');
+            } finally {
+                setBusy(false);
+                const statusSelect = document.getElementById('projects-batch-status');
+                if (statusSelect) statusSelect.value = '';
+            }
+        }
+        async function executeBatchSection(targetSectionId) {
+            if (!targetSectionId || !selectedTaskIds.length || !canWrite()) return;
+            const mutationScope = captureScope();
+            const taskIdsToMove = [...selectedTaskIds];
+            setBusy(true);
+            try {
+                for (const id of taskIdsToMove) {
+                    const t = taskFor(id);
+                    if (t && (t.effectiveSectionId || t.sectionId) !== targetSectionId) {
+                        await requestMutation(`/api/projects/${encodeURIComponent(mutationScope.projectId)}/tasks/${encodeURIComponent(id)}/move`, {
+                            operationId: operationId(`batch-move-${id}`),
+                            expectedRevision: t.revision,
+                            expectedStructureRevision: structureRevision(),
+                            parentTaskId: null,
+                            sectionId: targetSectionId,
+                            index: rootsForSection(targetSectionId).length
+                        });
+                    }
+                }
+                showToast(`Moved ${taskIdsToMove.length} task${taskIdsToMove.length === 1 ? '' : 's'} to section.`, 'success');
+                await loadProject(mutationScope.projectId, { preserve: true });
+            } catch (err) {
+                showToast(err?.message || 'Batch section move failed.', 'error');
+            } finally {
+                setBusy(false);
+                const sectionSelect = document.getElementById('projects-batch-section');
+                if (sectionSelect) sectionSelect.value = '';
+            }
+        }
+        async function executeBatchDelete() {
+            if (!selectedTaskIds.length || !canWrite()) return;
+            if (!window.confirm(`Archive ${selectedTaskIds.length} selected task${selectedTaskIds.length === 1 ? '' : 's'}?`)) return;
+            const mutationScope = captureScope();
+            const taskIdsToArchive = [...selectedTaskIds];
+            setBusy(true);
+            try {
+                await requestMutation(`/api/projects/${encodeURIComponent(mutationScope.projectId)}/tasks/bulk`, {
+                    operationId: operationId('batch-archive'),
+                    taskIds: taskIdsToArchive,
+                    patch: { lifecycle: 'archived' }
+                });
+                taskIdsToArchive.forEach((id) => tasks.delete(id));
+                selectedTaskIds = [];
+                renderBatchDock();
+                showToast(`Archived ${taskIdsToArchive.length} task${taskIdsToArchive.length === 1 ? '' : 's'}.`, 'success');
+                renderBoard();
+            } catch (err) {
+                showToast(err?.message || 'Batch archive failed.', 'error');
+            } finally {
+                setBusy(false);
+            }
         }
         function contextSnapshot() {
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { if (project || tasks.size) invalidateAccess(currentProjectId()); resetColumnForm(); selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); }
@@ -638,10 +734,51 @@
                 .sort(rankCompare);
         }
 
+        let currentGroupBy = 'section';
+
+        function activeGroups() {
+            if (currentGroupBy === 'status') {
+                return [
+                    { id: 'not_started', title: 'Not Started', color: '#94a3b8' },
+                    { id: 'in_progress', title: 'In Progress', color: '#3b82f6' },
+                    { id: 'blocked', title: 'Blocked', color: '#f59e0b' },
+                    { id: 'done', title: 'Done', color: '#10b981' }
+                ];
+            }
+            if (currentGroupBy === 'ownerUid') {
+                return members.map((m) => ({ id: m.uid, title: m.displayName || m.email || m.uid, color: '#6366f1' })).concat([{ id: '__unassigned__', title: 'Unassigned', color: '#94a3b8' }]);
+            }
+            if (currentGroupBy === 'priority') {
+                return [
+                    { id: 'urgent', title: 'Urgent', color: '#ef4444' },
+                    { id: 'high', title: 'High', color: '#f97316' },
+                    { id: 'medium', title: 'Medium', color: '#3b82f6' },
+                    { id: 'low', title: 'Low', color: '#64748b' },
+                    { id: 'none', title: 'None', color: '#94a3b8' }
+                ];
+            }
+            return sections.map((s) => ({ ...s, color: groupColor(s.id) }));
+        }
+
+        function rootsForGroup(groupId) {
+            const activeTasks = Array.from(tasks.values()).filter((task) => !task.parentTaskId && (task.effectiveLifecycle || task.lifecycle || 'active') === 'active');
+            if (currentGroupBy === 'section') {
+                return activeTasks.filter((task) => (task.effectiveSectionId || task.sectionId) === groupId).sort(rankCompare);
+            }
+            if (currentGroupBy === 'status') {
+                return activeTasks.filter((task) => (task.status || 'not_started') === groupId).sort(rankCompare);
+            }
+            if (currentGroupBy === 'ownerUid') {
+                return activeTasks.filter((task) => (groupId === '__unassigned__' ? !task.ownerUid : task.ownerUid === groupId)).sort(rankCompare);
+            }
+            if (currentGroupBy === 'priority') {
+                return activeTasks.filter((task) => (task.values?.priority || task.priority || 'none') === groupId).sort(rankCompare);
+            }
+            return [];
+        }
+
         function rootsForSection(sectionId) {
-            return Array.from(tasks.values())
-                .filter((task) => !task.parentTaskId && (task.effectiveSectionId || task.sectionId) === sectionId && (task.effectiveLifecycle || task.lifecycle || 'active') === 'active')
-                .sort(rankCompare);
+            return rootsForGroup(sectionId);
         }
 
         function hasPotentialChildren(task) {
@@ -658,9 +795,13 @@
                 if (!expanded.has(String(task.id))) return;
                 childrenOf(task.id).forEach((child) => appendTask(child, depth + 1));
             };
-            sections.forEach((section) => {
-                rows.push({ kind: 'section', id: `section:${section.id}`, section, depth: 0 });
-                if (!collapsedSections.has(String(section.id))) rootsForSection(section.id).forEach((task) => appendTask(task, 0));
+            const groups = activeGroups();
+            groups.forEach((group) => {
+                rows.push({ kind: 'section', id: `section:${group.id}`, section: group, depth: 0 });
+                if (!collapsedSections.has(String(group.id))) {
+                    const groupRoots = rootsForGroup(group.id);
+                    groupRoots.forEach((task) => appendTask(task, 0));
+                }
             });
             return rows;
         }
@@ -734,6 +875,36 @@
             const root = asArray(task.pathIds).map((id) => taskFor(id)).find((entry) => entry && !entry.parentTaskId);
             return groupColor(task.effectiveSectionId || task.sectionId || root?.effectiveSectionId || root?.sectionId);
         }
+        function computeWorkingDays(startDateStr, dueDateStr) {
+            if (!startDateStr || !dueDateStr) return null;
+            const start = new Date(startDateStr + 'T00:00:00');
+            const end = new Date(dueDateStr + 'T00:00:00');
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return null;
+            let count = 0;
+            const cur = new Date(start);
+            while (cur <= end) {
+                const day = cur.getDay();
+                if (day !== 0 && day !== 6) count++;
+                cur.setDate(cur.getDate() + 1);
+            }
+            return count;
+        }
+        function statusBatteryBar(task) {
+            const battery = task?.derived?.statusBattery;
+            if (!battery || !battery.total || battery.total <= 1) return '';
+            const total = battery.total;
+            const donePct = Math.round((battery.done / total) * 100);
+            const inProgressPct = Math.round((battery.in_progress / total) * 100);
+            const blockedPct = Math.round((battery.blocked / total) * 100);
+            const notStartedPct = Math.max(0, 100 - donePct - inProgressPct - blockedPct);
+            const title = `Subitems: ${battery.done} Done, ${battery.in_progress} In Progress, ${battery.blocked} Blocked, ${battery.not_started} Not Started (${total} total)`;
+            return `<div class="crm-board-status-battery" title="${escape(title)}" aria-label="${escape(title)}">` +
+                (donePct > 0 ? `<span class="crm-battery-segment is-done" style="width:${donePct}%"></span>` : '') +
+                (inProgressPct > 0 ? `<span class="crm-battery-segment is-in-progress" style="width:${inProgressPct}%"></span>` : '') +
+                (blockedPct > 0 ? `<span class="crm-battery-segment is-blocked" style="width:${blockedPct}%"></span>` : '') +
+                (notStartedPct > 0 ? `<span class="crm-battery-segment is-not-started" style="width:${notStartedPct}%"></span>` : '') +
+                `</div>`;
+        }
         function customCell(task, column) {
             const raw = task.values?.[column.id] ?? null;
             const draftKey = draftKeyFor(task.id, `value:${column.id}`);
@@ -741,7 +912,9 @@
             const disabled = canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? '' : ' disabled';
             const label = escape(column.label || column.id);
             const unavailable = column.type === 'dropdown' && value && !asArray(column.options).some(option => option.key === value);
-            if (!canRenderTaskEditor()) return `<span class="crm-board-null">${escape(unavailable ? `${value} (unavailable)` : value === null || value === undefined || value === '' ? '—' : (Array.isArray(value) ? value.join(', ') : value))}</span>`;
+            const rollup = column.type === 'number' && task.derived?.columnSums?.[column.id] && task.derived.activeLeafCount > 1 ? task.derived.columnSums[column.id] : null;
+            const sumBadge = rollup ? `<span class="crm-board-sum-badge" title="Sum: ${rollup.sum} (Avg: ${rollup.average}, Count: ${rollup.count})">&Sigma; ${rollup.sum}</span>` : '';
+            if (!canRenderTaskEditor()) return `${sumBadge}<span class="crm-board-null">${escape(unavailable ? `${value} (unavailable)` : value === null || value === undefined || value === '' ? '—' : (Array.isArray(value) ? value.join(', ') : value))}</span>`;
             if (column.type === 'status') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" data-status="${escape(value || 'not_started')}" aria-label="${label}"${disabled}>${statusOptions(value, column.statusLabels || {})}</select>`;
             if (column.type === 'priority') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" data-value="${escape(value || 'none')}" aria-label="${label}"${disabled}>${priorityOptions(value || 'none')}</select>`;
             if (column.type === 'dropdown') return `<select class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" aria-label="${label}"${disabled}><option value="">Clear</option>${unavailable ? `<option value="${escape(value)}" selected disabled>${escape(value)} (unavailable)</option>` : ''}${asArray(column.options).map((option) => `<option value="${escape(option.key)}"${value === option.key ? ' selected' : ''}>${escape(option.label || option.key)}</option>`).join('')}</select>`;
@@ -749,7 +922,7 @@
             const inputType = column.type === 'number' ? 'number' : (column.type === 'date' ? 'date' : 'text');
             const inputValue = Array.isArray(value) ? value.join(', ') : (value ?? '');
             const inputState = (authorityPending || busy) && canRenderTaskEditor() ? ' readonly' : disabled;
-            return `<input class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" type="${inputType}" value="${escape(inputValue)}" aria-label="${label}"${inputState}>`;
+            return `${sumBadge}<input class="crm-board-field" data-field-kind="value" data-column-id="${escape(column.id)}" type="${inputType}" value="${escape(inputValue)}" aria-label="${label}"${inputState}>`;
         }
 
         function taskRowMarkup(row) {
@@ -767,7 +940,10 @@
             const dueDateKey = draftKeyFor(task.id, 'dueDate');
             const startDate = drafts.has(startDateKey) ? drafts.get(startDateKey) : (task.startDate || '');
             const dueDate = drafts.has(dueDateKey) ? drafts.get(dueDateKey) : (task.dueDate || '');
-            const indent = Math.min(24, row.depth * 22);
+            const depth = Math.min(4, Math.max(0, Number(row.depth) || 0));
+            const indent = depth * 22;
+            const treeElbow = depth > 0 ? '<span class="crm-board-tree-elbow" aria-hidden="true"></span>' : '';
+            const depthChip = depth > 0 ? `<span class="crm-board-depth-chip" title="Subtask Level ${depth}">L${depth}</span>` : '';
             const status = drafts.get(draftKeyFor(task.id, 'status')) ?? task.status ?? 'not_started';
             const expander = hasPotentialChildren(task) ? `<button type="button" class="crm-board-expander" data-action="toggle-task" aria-label="${expanded.has(String(task.id)) ? 'Collapse' : 'Expand'} ${escape(title)}" aria-expanded="${expanded.has(String(task.id)) ? 'true' : 'false'}">${expanded.has(String(task.id)) ? '▾' : '▸'}</button>` : '<span class="crm-board-expander" aria-hidden="true"></span>';
             const selectionCheckbox = selectableTask(task) ? `<input type="checkbox" data-action="select-task" aria-label="Select ${escape(title)}"${selectedTaskIds.includes(String(task.id)) ? ' checked' : ''}>` : '';
@@ -778,12 +954,14 @@
             const dState = dueState(task);
             const relDue = relativeDue(dueDate);
             const dueBadge = relDue && dState !== 'none' && dState !== 'normal' ? `<span class="crm-board-due-badge crm-board-due-${dState}">${escape(relDue)}</span>` : '';
-            return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
-              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
-              <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}"><select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
+            const workingDays = computeWorkingDays(startDate, dueDate);
+            const durationBadge = workingDays !== null ? `<span class="crm-board-duration-badge" title="${workingDays} working days">${workingDays}d</span>` : '';
+            return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" data-depth="${depth}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
+              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
+              <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}">${statusBatteryBar(task)}<select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
               <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
               <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell">${peopleStack(assignees)}<select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
-              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-due-state="${dState}">${dueBadge}<input class="crm-board-field" data-field-kind="startDate" type="date" value="${escape(startDate)}" aria-label="Start date"${disabled}><input class="crm-board-field" data-field-kind="dueDate" type="date" value="${escape(dueDate)}" aria-label="Due date"${disabled}></div>
+              <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-due-state="${dState}">${dueBadge}${durationBadge}<input class="crm-board-field" data-field-kind="startDate" type="date" value="${escape(startDate)}" aria-label="Start date"${disabled}><input class="crm-board-field" data-field-kind="dueDate" type="date" value="${escape(dueDate)}" aria-label="Due date"${disabled}></div>
               ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell">${customCell(task, column)}</div>`).join('')}
             </div>`;
         }
@@ -795,6 +973,42 @@
                 ? `<input class="crm-board-section-input crm-board-field" data-field-kind="section-title" type="text" value="${escape(title)}" aria-label="Section title">`
                 : `<span class="crm-board-group-title">${escape(title)}</span>`;
             return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell"><span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
+        }
+
+        function sectionSummaryRowMarkup(row) {
+            const groupTasks = Array.from(tasks.values()).filter((t) => {
+                if ((t.effectiveLifecycle || t.lifecycle || 'active') !== 'active') return false;
+                if (currentGroupBy === 'status') return (t.status || 'not_started') === row.sectionId;
+                if (currentGroupBy === 'ownerUid') return (row.sectionId === '__unassigned__' ? !t.ownerUid : t.ownerUid === row.sectionId);
+                if (currentGroupBy === 'priority') return (t.values?.priority || t.priority || 'none') === row.sectionId;
+                return (t.effectiveSectionId || t.sectionId) === row.sectionId;
+            });
+            const totalCount = groupTasks.length;
+            const doneCount = groupTasks.filter(t => t.status === 'done').length;
+            const owners = new Set(groupTasks.map(t => t.ownerUid).filter(Boolean));
+            const numericSums = {};
+            columns.forEach(col => {
+                if (col.type === 'number') {
+                    let sum = 0;
+                    let hasAny = false;
+                    groupTasks.forEach(t => {
+                        const val = t.values?.[col.id];
+                        if (typeof val === 'number' && !Number.isNaN(val)) {
+                            sum += val;
+                            hasAny = true;
+                        }
+                    });
+                    if (hasAny) numericSums[col.id] = Math.round(sum * 100) / 100;
+                }
+            });
+            return `<div class="crm-projects-board-row crm-board-summary-row" role="row" tabindex="-1" data-row-kind="summary" data-row-id="${escape(row.id)}" data-section-id="${escape(row.sectionId)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(row.sectionId)}">
+              <div class="crm-projects-board-cell crm-board-summary-title" role="cell"><span class="crm-board-summary-tag">SUMMARY</span> <span class="crm-muted">${totalCount} task${totalCount === 1 ? '' : 's'}</span></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"><span class="crm-board-summary-stat">${doneCount}/${totalCount} done (${totalCount ? Math.round((doneCount / totalCount) * 100) : 0}%)</span></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"><span class="crm-board-summary-stat">${owners.size} owner${owners.size === 1 ? '' : 's'}</span></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"></div>
+              <div class="crm-projects-board-cell crm-board-summary-cell" role="cell"></div>
+              ${columns.map((col) => `<div class="crm-projects-board-cell crm-board-summary-cell" role="cell">${numericSums[col.id] !== undefined ? `<span class="crm-board-sum-badge">&Sigma; ${numericSums[col.id]}</span>` : ''}</div>`).join('')}
+            </div>`;
         }
 
         function renderHeader() {
@@ -815,7 +1029,11 @@
             elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && canSchema() ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && canSchema() && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && canSchema() ? `<button type="button" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}</div>`).join('');
         }
 
-        function rowMarkup(row) { return row.kind === 'section' ? sectionRowMarkup(row) : taskRowMarkup(row); }
+        function rowMarkup(row) {
+            if (row.kind === 'section') return sectionRowMarkup(row);
+            if (row.kind === 'summary') return sectionSummaryRowMarkup(row);
+            return taskRowMarkup(row);
+        }
 
         function createRowNode(row) {
             const template = document.createElement('template');
@@ -933,7 +1151,7 @@
             const fresh = createRowNode(row);
             if (!fresh) return;
             syncRowMetadata(node, fresh);
-            node.style.setProperty('--crm-project-group-color', row.kind === 'section' ? groupColor(row.section.id) : taskGroupColor(row.task));
+            node.style.setProperty('--crm-project-group-color', row.kind === 'section' ? groupColor(row.section.id) : (row.kind === 'summary' ? groupColor(row.sectionId) : taskGroupColor(row.task)));
             // Refresh decoration without replacing a focused native editor.
             for (const selector of ['.crm-board-status-cell', '[data-field-kind="status"]']) {
                 const current = node.querySelector(selector), next = fresh.querySelector(selector);
@@ -1039,14 +1257,19 @@
             deps.onTaskSelection?.(task);
             if (elements.projectsBoardDetailTitle) elements.projectsBoardDetailTitle.textContent = asText(task.title, 'Task details');
             const path = asArray(task.pathIds).map((id) => taskFor(id)?.title || id).join(' → ') || 'Root task';
-            if (elements.projectsBoardDetailBody) elements.projectsBoardDetailBody.innerHTML = `<dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(task.effectiveLifecycle || task.lifecycle || 'active')}</dd></dl>`;
+            const lifecycle = task.effectiveLifecycle || task.lifecycle || 'active';
+            const statusKey = task.status || 'not_started';
+            const statusLabel = project?.statusLabels?.[statusKey] || STATUS_LABELS[statusKey] || statusKey;
+            if (elements.projectsBoardDetailBody) {
+                elements.projectsBoardDetailBody.innerHTML = `<div class="crm-detail-property-bar"><div class="crm-detail-path-chip" title="Location: ${escape(path)}"><span class="crm-chip-icon">📂</span> <span class="crm-chip-text">${escape(path)}</span></div><div class="crm-detail-meta-pills"><span class="crm-detail-pill crm-pill-status" data-status="${escape(statusKey)}"><span class="crm-status-dot"></span> <span>${escape(statusLabel)}</span></span><span class="crm-detail-pill crm-pill-lifecycle crm-lifecycle-${escape(lifecycle)}">${escape(lifecycle)}</span><button type="button" class="crm-detail-copy-id" data-copy-id="${escape(task.id)}" title="Click to copy Task ID" aria-label="Copy Task ID"><span class="crm-copy-icon">📋</span> <span class="crm-id-code">${escape(task.id)}</span> <span class="crm-copy-feedback" aria-live="polite">Copy ID</span></button></div></div><details class="crm-detail-tech-drawer"><summary class="crm-detail-tech-summary"><span class="crm-tech-icon">⚙️</span> <span>Developer &amp; Technical Info</span> <span class="crm-tech-rev">rev ${escape(task.revision || 0)}</span></summary><div class="crm-detail-tech-content"><dl><dt>Task ID</dt><dd>${escape(task.id)}</dd></dl><dl><dt>Parent path</dt><dd>${escape(path)}</dd></dl><dl><dt>Revision</dt><dd>${escape(task.revision || 0)}</dd></dl><dl><dt>Lifecycle</dt><dd>${escape(lifecycle)}</dd></dl></div></details>`;
+            }
             const discussion = globalScope.CrmProjectsDiscussion;
             if (discussion && typeof discussion.setSelection === 'function') discussion.setSelection({
                 projectId: currentProjectId(),
                 taskId: task.id,
                 taskRevision: Number(task.revision || 0),
                 role: role(),
-                lifecycle: task.effectiveLifecycle || task.lifecycle || 'active'
+                lifecycle: lifecycle
             });
 
         }
@@ -1080,6 +1303,7 @@
             renderDetail();
             renderSettings();
             syncSectionForm();
+            renderBatchDock();
             if (elements.projectsBoardCount) elements.projectsBoardCount.textContent = `${tasks.size} loaded · ${sections.length} section${sections.length === 1 ? '' : 's'}`;
         }
 
@@ -1235,7 +1459,7 @@
             if (!apiFetchJson || !elements.projectsBoardProjectName) return;
             const name = String(elements.projectsBoardProjectName.value || '').trim();
             if (!name) { showToast('Enter a project name.', 'error'); return; }
-            const creationScope = captureScope();
+            const creationActor = String(deps.getCurrentUser?.()?.uid || '');
             try {
                 const response = await requestMutation('/api/projects', { operationId: operationId('project-create'), name, description: String(elements.projectsBoardProjectDescription?.value || '') }, { retries: 0 });
                 const created = response?.project || response?.result?.project;
@@ -1243,7 +1467,9 @@
                 if (elements.projectsBoardProjectName) elements.projectsBoardProjectName.value = '';
                 if (elements.projectsBoardProjectDescription) elements.projectsBoardProjectDescription.value = '';
                 const refreshed = await refreshProjects();
-                if (created?.id && refreshed !== false && scopeIsCurrent(creationScope)) await selectProject(created.id);
+                if (created?.id && refreshed !== false && String(deps.getCurrentUser?.()?.uid || '') === creationActor) {
+                    await selectProject(created.id);
+                }
                 showToast('Project created.', 'success');
             } catch (error) { showToast(error?.message || 'Project could not be created.', 'error'); }
         }
@@ -1710,7 +1936,7 @@
             if (event.target.closest('[data-action="select-task"]')) { event.preventDefault(); return; }
             if (!canWrite()) { event.preventDefault(); return; }
             const row = event.target.closest('[data-row-kind]');
-            if (!row) return;
+            if (!row || row.dataset.rowKind === 'summary') return;
             clearDragInteraction();
             dragState = { kind: row.dataset.rowKind, id: row.dataset.rowKind === 'task' ? row.dataset.taskId : row.dataset.sectionId, handled: false };
             event.dataTransfer.effectAllowed = 'move';
@@ -1722,7 +1948,7 @@
             event.preventDefault();
             updateDragAutoScroll(event);
             const target = event.target.closest('[data-row-kind]');
-            if (!target) return;
+            if (!target || target.dataset.rowKind === 'summary') return;
             dragHoverTargetRowId = target.dataset.rowId || '';
             clearDropClasses();
             const asParent = target.dataset.rowKind === 'task' && (event.shiftKey || event.altKey || event.clientX > target.getBoundingClientRect().left + target.getBoundingClientRect().width * .56);
@@ -1742,6 +1968,7 @@
             if (!dragState || dragState.handled) return;
             event.preventDefault();
             const target = event.target.closest('[data-row-kind]');
+            if (!target || target.dataset.rowKind === 'summary') return;
             if (dragState.kind === 'task' && isParentDrop(event, target)) {
                 const scope = captureScope();
                 const index = await appendIndexForParent(target.dataset.taskId, scope);
@@ -1762,6 +1989,7 @@
 
         function onBoardClick(event) {
             const row = event.target.closest('[data-row-id]');
+            if (row?.dataset?.rowKind === 'summary') return;
             const action = event.target.closest('[data-action]')?.dataset?.action;
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { invalidateAccess(currentProjectId()); return; }
             if (action === 'toggle-section' && row?.dataset?.rowKind === 'section') {
@@ -1859,6 +2087,29 @@
             document.getElementById('btn-projects-board-cancel-column')?.addEventListener('click', () => { if (!columnEditor?.pending) resetColumnForm(); });
             document.getElementById('btn-projects-board-save-settings')?.addEventListener('click', saveSettings);
             document.getElementById('btn-projects-board-close-detail')?.addEventListener('click', () => { selectedTaskId = ''; renderDetail(); });
+            elements.projectsBoardDetail?.addEventListener('click', (event) => {
+                const copyBtn = event.target.closest?.('[data-copy-id]');
+                if (copyBtn?.dataset?.copyId) {
+                    const idToCopy = copyBtn.dataset.copyId;
+                    try {
+                        if (globalScope.navigator?.clipboard?.writeText) {
+                            globalScope.navigator.clipboard.writeText(idToCopy).catch(() => { /* ignore clipboard denial */ });
+                        }
+                    } catch (_) {
+                        /* ignore clipboard failure */
+                    }
+                    const feedback = copyBtn.querySelector('.crm-copy-feedback');
+                    if (feedback) {
+                        const prev = feedback.textContent;
+                        feedback.textContent = 'Copied!';
+                        copyBtn.classList.add('is-copied');
+                        setTimeout(() => {
+                            feedback.textContent = prev;
+                            copyBtn.classList.remove('is-copied');
+                        }, 1800);
+                    }
+                }
+            });
             elements.projectsBoardScroll?.addEventListener('scroll', () => renderVirtualRows({ viewportOnly: true }), { passive: true });
             elements.projectsBoardRows?.addEventListener('click', onBoardClick);
             elements.projectsBoardRows?.addEventListener('change', onBoardChange);
@@ -1879,6 +2130,22 @@
             elements.projectsBoardSettingsDescription?.addEventListener('input', (event) => settingsDrafts.set(scopedKey(currentProjectId(), 'settings:description'), event.target.value));
             const statusControls = { not_started: elements.projectsBoardStatusNotStarted, in_progress: elements.projectsBoardStatusInProgress, blocked: elements.projectsBoardStatusBlocked, done: elements.projectsBoardStatusDone };
             Object.entries(statusControls).forEach(([key, control]) => control?.addEventListener('input', (event) => settingsDrafts.set(scopedKey(currentProjectId(), `settings:status:${key}`), event.target.value)));
+
+            const groupBySelect = document.getElementById('projects-board-group-by');
+            groupBySelect?.addEventListener('change', (event) => {
+                currentGroupBy = event.target.value || 'section';
+                renderBoard();
+            });
+            document.getElementById('projects-batch-status')?.addEventListener('change', (e) => {
+                if (e.target.value) executeBatchStatus(e.target.value);
+            });
+            document.getElementById('projects-batch-section')?.addEventListener('change', (e) => {
+                if (e.target.value) executeBatchSection(e.target.value);
+            });
+            document.getElementById('btn-projects-batch-delete')?.addEventListener('click', executeBatchDelete);
+            document.getElementById('btn-projects-batch-clear')?.addEventListener('click', () => {
+                setSelectedTaskIds([]);
+            });
         }
 
         async function applyRemote(change) {

@@ -266,17 +266,51 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         for (const row of matchingLeafRows) { const owner = row.data.ownerUid || 'unassigned'; byOwnerUid[owner] = (byOwnerUid[owner] || 0) + 1; }
         const completedLeafTaskCount = byStatus.done || 0;
         const aggregates = { activeLeafTaskCount: matchingLeafRows.length, completedLeafTaskCount, completionPercent: matchingLeafRows.length ? Math.round(completedLeafTaskCount / matchingLeafRows.length * 100) : 0, byStatus, byOwnerUid };
+        const numericColumnIds = (snapshot.columns || [])
+            .filter((c) => (c.data?.lifecycle || 'active') === 'active' && c.data?.type === 'number')
+            .map((c) => c.id);
         const derivedById = new Map();
-        for (const row of snapshot.tasks) derivedById.set(row.id, { activeLeafCount: 0, completedLeafCount: 0, completionPercent: 0, startDate: null, dueDate: null });
+        for (const row of snapshot.tasks) {
+            const initialSums = Object.create(null);
+            for (const colId of numericColumnIds) {
+                initialSums[colId] = { sum: 0, count: 0, average: 0 };
+            }
+            derivedById.set(row.id, {
+                activeLeafCount: 0,
+                completedLeafCount: 0,
+                completionPercent: 0,
+                startDate: null,
+                dueDate: null,
+                statusBattery: { not_started: 0, in_progress: 0, blocked: 0, done: 0 },
+                columnSums: initialSums
+            });
+        }
         for (const row of snapshot.tasks) {
             const state = effective.get(row.id);
-            if (state.lifecycle !== 'active' || (children.get(row.id) || []).length) continue;
+            if (!state || state.lifecycle !== 'active' || (children.get(row.id) || []).length) continue;
+            const leafStatus = row.data?.status || 'not_started';
             for (const ancestorId of [row.id, ...state.ancestorIds]) {
                 const derived = derivedById.get(ancestorId);
-                derived.activeLeafCount++; if (row.data.status === 'done') derived.completedLeafCount++;
-                if (row.data.startDate && (!derived.startDate || row.data.startDate < derived.startDate)) derived.startDate = row.data.startDate;
-                if (row.data.dueDate && (!derived.dueDate || row.data.dueDate > derived.dueDate)) derived.dueDate = row.data.dueDate;
+                if (!derived) continue;
+                derived.activeLeafCount++;
+                if (row.data?.status === 'done') derived.completedLeafCount++;
+                derived.statusBattery[leafStatus] = (derived.statusBattery[leafStatus] || 0) + 1;
+                if (row.data?.startDate && (!derived.startDate || row.data.startDate < derived.startDate)) derived.startDate = row.data.startDate;
+                if (row.data?.dueDate && (!derived.dueDate || row.data.dueDate > derived.dueDate)) derived.dueDate = row.data.dueDate;
                 derived.completionPercent = Math.round(derived.completedLeafCount / derived.activeLeafCount * 100);
+                if (row.data?.values) {
+                    for (const colId of numericColumnIds) {
+                        const val = row.data.values[colId];
+                        if (typeof val === 'number' && Number.isFinite(val)) {
+                            const entry = derived.columnSums[colId];
+                            if (entry) {
+                                entry.sum += val;
+                                entry.count += 1;
+                                entry.average = entry.count ? entry.sum / entry.count : 0;
+                            }
+                        }
+                    }
+                }
             }
         }
         let nextCursor = null;

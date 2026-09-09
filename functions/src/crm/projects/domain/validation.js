@@ -95,10 +95,20 @@ function operationId(value) { return id(value, 'operationId'); }
 
 function validateProjectInput(raw = {}) {
     assertPlainObject(raw, 'INVALID_PROJECT', 'Project payload must be an object.');
-    if (Object.keys(raw).some((key) => !['name', 'title', 'description', 'crmLinks', 'links'].includes(key))) reject(400, 'INVALID_PROJECT', 'Project payload contains an unsupported field.');
+    if (Object.keys(raw).some((key) => !['name', 'title', 'description', 'crmLinks', 'links', 'workspace', 'folder'].includes(key))) reject(400, 'INVALID_PROJECT', 'Project payload contains an unsupported field.');
     const name = text(raw.name ?? raw.title, 200);
     if (!name) reject(400, 'INVALID_PROJECT', 'Project name is required.');
     const result = { name };
+    if (raw.workspace !== undefined) {
+        const workspace = text(raw.workspace, 100);
+        if (!workspace && raw.workspace !== '') reject(400, 'INVALID_PROJECT', 'Project workspace is invalid.');
+        result.workspace = workspace || 'General';
+    }
+    if (raw.folder !== undefined) {
+        const folder = text(raw.folder, 100);
+        if (!folder && raw.folder !== '') reject(400, 'INVALID_PROJECT', 'Project folder is invalid.');
+        result.folder = folder || '';
+    }
     if (raw.description !== undefined) {
         const description = text(raw.description, 20000);
         if (!description && raw.description !== '') reject(400, 'INVALID_PROJECT', 'Project description is invalid.');

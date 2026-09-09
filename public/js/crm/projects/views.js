@@ -74,7 +74,13 @@
         function derived(t) {
             if (!t.derived) return '';
             const d = t.derived;
-            return `<small class="crm-projects-derived">Derived active leaves: ${escape(d.completedLeafCount)}/${escape(d.activeLeafCount)} complete (${escape(d.completionPercent)}%). Descendant span: ${escape(d.startDate || 'undated')} → ${escape(d.dueDate || 'undated')}. Stored status/dates remain separate.</small>`;
+            const total = Number(d.activeLeafCount) || 0;
+            const done = Number(d.completedLeafCount) || 0;
+            if (total === 0) return '';
+            const pct = Math.max(0, Math.min(100, Math.round(Number(d.completionPercent ?? (total > 0 ? (done / total * 100) : 0))) || 0));
+            const hasDates = Boolean(d.startDate || d.dueDate);
+            const spanText = hasDates ? `${escape(d.startDate || 'undated')} → ${escape(d.dueDate || 'undated')}` : 'undated';
+            return `<div class="crm-projects-derived crm-detail-progress-card"><div class="crm-detail-progress-head"><span class="crm-detail-progress-label"><span class="crm-progress-icon">↳</span> Subtasks rollup</span><span class="crm-detail-progress-stat ${done === total ? 'is-complete' : ''}"><b>${escape(done)}/${escape(total)}</b> complete (${pct}%)</span></div><div class="crm-detail-progress-track" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Subtask completion"><div class="crm-detail-progress-fill" style="width:${pct}%"></div></div><div class="crm-detail-progress-foot"><span class="crm-detail-span-badge"><span class="crm-chip-icon">📅</span> Descendant span: ${spanText}</span></div></div>`;
         }
         function taskButton(t) { return `<button type="button" class="crm-projects-task-open" data-task-open="${escape(t.id)}">${escape(t.title || 'Untitled task')}</button>`; }
         function taskRow(t, statusEditor = false) {
@@ -511,6 +517,25 @@
             return response?.project?.id === projectId && uid() === actorUid
                 ? array(response.tasks).filter((entry) => entry.id !== task?.id) : [];
         }
+        function renderPredecessorChips() {
+            const container = el('projects-task-predecessor-chips');
+            const textarea = el('projects-task-predecessors');
+            if (!container || !textarea) return;
+            const currentIds = String(textarea.value || '').split(/[\n,]/).map((id) => id.trim()).filter(Boolean);
+            if (!currentIds.length) {
+                container.innerHTML = '<span class="crm-detail-no-deps">No predecessor dependencies linked.</span>';
+                return;
+            }
+            const allTasks = array(response?.tasks);
+            const writable = canWrite() && !mutation;
+            container.innerHTML = currentIds.map((id) => {
+                const found = allTasks.find((t) => t.id === id);
+                const title = found?.title || id;
+                const isUuid = id.startsWith('task-') || id.length > 20;
+                const displayId = isUuid ? `${id.slice(0, 8)}…` : id;
+                return `<span class="crm-dep-chip" title="Predecessor ID: ${escape(id)}"><span class="crm-dep-icon">🔗</span><span class="crm-dep-title">${escape(title)}</span>${found ? `<span class="crm-dep-id">${escape(displayId)}</span>` : ''}<button type="button" class="crm-dep-remove" data-remove-predecessor="${escape(id)}" aria-label="Remove dependency on ${escape(title)}"${writable ? '' : ' disabled'}>×</button></span>`;
+            }).join('');
+        }
         function syncPredecessorPicker() {
             const picker = el('projects-task-predecessor-picker');
             if (!picker || !task) return;
@@ -521,12 +546,14 @@
             // form, unsaved dates/dependencies and the exact schedule preview.
             if (picker.innerHTML !== markup) picker.innerHTML = markup;
             picker.value = options.some((entry) => String(entry.id) === selected) ? selected : '';
+            renderPredecessorChips();
         }
         function renderTask() {
             const target = el('projects-task-planning');
             if (!target) return;
             if (!task) { target.innerHTML = ''; return; }
-            target.innerHTML = `<h5>Schedule and dependencies</h5><div id="projects-task-derived">${derived(task)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-projects-view-filters"><label>Proposed start<input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></label><label>Proposed due<input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></label><button type="submit" class="crm-btn-secondary"${canWrite() ? '' : ' disabled'}>Preview date change</button></form><div id="projects-task-preview"></div><form id="projects-task-dependencies"><label>Add a predecessor from this view page<select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></label><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary">Add predecessor</button><p class="crm-muted">Picker shows the current authorized page only. You can paste another same-project task ID below.</p><label>Finish-to-start predecessors (task IDs, one per line)<textarea id="projects-task-predecessors" class="crm-input" rows="3"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></label><p class="crm-muted">Same project only. Missing or archived predecessors remain warnings. Saving dependencies never moves dates; cycles are rejected.</p><button type="submit" class="crm-btn-secondary"${canWrite() ? '' : ' disabled'}>Save dependencies</button></form><p id="projects-task-status" role="status"></p><h5>CRM links</h5><div id="projects-task-links"></div>`;
+            target.innerHTML = `<div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Schedule &amp; Timeline</h5></div><div id="projects-task-derived">${derived(task)}${warningList(task.dependencyWarnings)}${warningList(task.calendarWarnings)}</div><form id="projects-task-schedule" class="crm-detail-schedule-form"><div class="crm-detail-date-grid"><div class="crm-detail-field"><label for="projects-task-start" class="crm-detail-field-label"><span class="crm-field-icon">📅</span> Proposed start</label><input id="projects-task-start" type="date" class="crm-input" value="${escape(task.startDate || '')}"${canWrite() ? '' : ' disabled'}></div><div class="crm-detail-field"><label for="projects-task-due" class="crm-detail-field-label"><span class="crm-field-icon">🏁</span> Proposed due</label><input id="projects-task-due" type="date" class="crm-input" value="${escape(task.dueDate || '')}"${canWrite() ? '' : ' disabled'}></div></div><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}><span class="crm-btn-icon">⚡</span> Preview date change</button></div></form><div id="projects-task-preview"></div></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>Dependencies</h5><span class="crm-detail-section-subtitle">Finish-to-start predecessors</span></div><form id="projects-task-dependencies" class="crm-detail-dependencies-form"><div class="crm-detail-dep-picker-row"><div class="crm-detail-dep-select-wrap"><select id="projects-task-predecessor-picker" class="crm-input"><option value="">Choose a task</option>${predecessorOptions().map((t) => `<option value="${escape(t.id)}">${escape(t.title || 'Untitled task')}</option>`).join('')}</select></div><button id="projects-task-predecessor-add" type="button" class="crm-btn-secondary crm-btn-sm"${canWrite() ? '' : ' disabled'}>+ Add predecessor</button></div><div class="crm-detail-chips-wrapper"><div class="crm-detail-chips-label">Active Predecessors:</div><div id="projects-task-predecessor-chips" class="crm-detail-chips-list"></div></div><div class="crm-detail-hint"><span class="crm-hint-icon">💡</span><span>Predecessors must finish before this task starts. Saving dependencies will not shift existing dates.</span></div><details class="crm-detail-advanced-dep"><summary class="crm-detail-advanced-summary">Manual task ID entry</summary><div class="crm-detail-advanced-content"><label for="projects-task-predecessors" class="crm-detail-field-label">Predecessor task IDs (one per line):</label><textarea id="projects-task-predecessors" class="crm-input crm-dep-textarea" rows="2"${canWrite() ? '' : ' disabled'}>${escape(array(task.predecessorTaskIds).join('\n'))}</textarea></div></details><div class="crm-detail-form-actions"><button type="submit" class="crm-btn-primary crm-btn-sm"${canWrite() ? '' : ' disabled'}>Save dependencies</button></div></form><p id="projects-task-status" role="status" class="crm-task-status-banner"></p></div><div class="crm-detail-section"><div class="crm-detail-section-head"><h5>CRM Links</h5></div><div id="projects-task-links"></div></div>`;
+            renderPredecessorChips();
         }
         async function loadLinks() {
             const s = taskScope(), sequence = ++taskLinkSequence;
@@ -730,9 +757,24 @@
             el('projects-task-planning')?.addEventListener('input', (event) => {
                 if (['projects-task-start', 'projects-task-due'].includes(event.target.id)) { datesVersion++; preview = null; el('projects-task-preview').textContent = 'Dates changed. Generate a new preview.'; }
                 if (['projects-link-type', 'projects-link-query'].includes(event.target.id)) { lookupSequence++; el('projects-link-options').textContent = ''; }
+                if (event.target.id === 'projects-task-predecessors') renderPredecessorChips();
             });
             el('projects-task-planning')?.addEventListener('click', async (event) => {
-                if (event.target.id === 'projects-task-predecessor-add' && canWrite()) { const id = el('projects-task-predecessor-picker').value; if (id) { const existing = el('projects-task-predecessors').value.split(/[\n,]/).map((value) => value.trim()).filter(Boolean); el('projects-task-predecessors').value = [...new Set([...existing, id])].join('\n'); } }
+                if (event.target.id === 'projects-task-predecessor-add' && canWrite()) {
+                    const id = el('projects-task-predecessor-picker').value;
+                    if (id) {
+                        const existing = el('projects-task-predecessors').value.split(/[\n,]/).map((value) => value.trim()).filter(Boolean);
+                        el('projects-task-predecessors').value = [...new Set([...existing, id])].join('\n');
+                        renderPredecessorChips();
+                    }
+                }
+                const removeDepBtn = event.target.closest?.('[data-remove-predecessor]');
+                if (removeDepBtn && canWrite() && !mutation) {
+                    const removeId = removeDepBtn.dataset.removePredecessor;
+                    const existing = (el('projects-task-predecessors')?.value || '').split(/[\n,]/).map((v) => v.trim()).filter(Boolean);
+                    if (el('projects-task-predecessors')) el('projects-task-predecessors').value = existing.filter((id) => id !== removeId).join('\n');
+                    renderPredecessorChips();
+                }
                 if (event.target.dataset.studentLink !== undefined) openStudentLink(Number(event.target.dataset.studentLink), false);
                 if (event.target.id === 'projects-task-apply' && preview?.canApply && !mutation) { const token = preview.token, version = datesVersion; if (await mutate(`${base()}/schedule-apply`, { previewToken: token }, 'POST') && version === datesVersion) el('projects-task-preview').textContent = 'Preview applied.'; }
                 if (event.target.dataset.linkRemove !== undefined && !mutation) saveLinks(links.filter((_, i) => i !== Number(event.target.dataset.linkRemove)));

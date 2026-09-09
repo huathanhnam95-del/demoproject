@@ -27,7 +27,17 @@
             const needsAccess = knownIdentity && summary.identity.moduleGrants?.projects !== true;
             const rail = byId('projects-workspace-projects');
             const focusedProject = rail?.contains(document.activeElement) ? document.activeElement?.closest?.('[data-workspace-project]')?.dataset.workspaceProject : null;
-            const railMarkup = projects.length ? projects.map((project, index) => `<button type="button" data-workspace-project="${escape(project.id)}" aria-current="${String(project.id) === String(selected?.id) ? 'page' : 'false'}"><span class="crm-projects-rail-dot" style="--crm-project-group-color:${palette[index % palette.length]}" aria-hidden="true"></span><span>${escape(project.name || project.title || 'Untitled project')}</span></button>`).join('') : '<p class="crm-projects-rail-empty">Your projects will appear here.</p>';
+            const workspaceGroups = new Map();
+            projects.forEach((project, index) => {
+                const ws = project.workspace || 'Workspace';
+                if (!workspaceGroups.has(ws)) workspaceGroups.set(ws, []);
+                workspaceGroups.get(ws).push({ project, index });
+            });
+            const railMarkup = projects.length ? Array.from(workspaceGroups.entries()).map(([wsName, items]) => {
+                const itemsHtml = items.map(({ project, index }) => `<button type="button" data-workspace-project="${escape(project.id)}" aria-current="${String(project.id) === String(selected?.id) ? 'page' : 'false'}"><span class="crm-projects-rail-dot" style="--crm-project-group-color:${palette[index % palette.length]}" aria-hidden="true"></span><span>${escape(project.name || project.title || 'Untitled project')}</span></button>`).join('');
+                if (workspaceGroups.size === 1 && wsName === 'Workspace') return itemsHtml;
+                return `<div class="crm-rail-workspace-group"><div class="crm-rail-workspace-heading"><span>${escape(wsName)}</span><span class="crm-rail-workspace-count">${items.length}</span></div>${itemsHtml}</div>`;
+            }).join('') : '<p class="crm-projects-rail-empty">Your projects will appear here.</p>';
             if (rail && rail.innerHTML !== railMarkup) {
                 rail.innerHTML = railMarkup;
                 if (focusedProject) Array.from(rail.querySelectorAll('[data-workspace-project]')).find(button => button.dataset.workspaceProject === focusedProject)?.focus();

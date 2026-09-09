@@ -723,6 +723,8 @@
     elements.projectsRefresh = document.getElementById('btn-projects-access-refresh');
     elements.projectsBoardSection = document.getElementById('projects-board-section');
     elements.projectsBoardProjectSelect = document.getElementById('projects-board-project-select');
+    elements.projectsBoardDensity = document.getElementById('btn-projects-density');
+    elements.projectsBoardTheme = document.getElementById('btn-projects-theme');
     elements.projectsBoardRefresh = document.getElementById('btn-projects-board-refresh');
     elements.projectsBoardAddSection = document.getElementById('btn-projects-board-add-section');
     elements.projectsBoardAddTask = document.getElementById('btn-projects-board-add-task');
@@ -1684,6 +1686,24 @@
       : null;
     if (projectsBoardController && typeof projectsBoardController.init === 'function') {
       projectsBoardController.init();
+    }
+    if (elements.projectsBoardDensity) {
+      elements.projectsBoardDensity.addEventListener('click', () => {
+        const isCompact = elements.projectsBoardDensity.getAttribute('aria-pressed') === 'true';
+        const next = isCompact ? 'comfortable' : 'compact';
+        elements.projectsBoardDensity.setAttribute('aria-pressed', (!isCompact).toString());
+        elements.projectsBoardDensity.textContent = isCompact ? 'Density' : 'Compact';
+        projectsBoardController?.setDensity?.(next);
+      });
+    }
+    if (elements.projectsBoardTheme) {
+      elements.projectsBoardTheme.addEventListener('click', () => {
+        const panel = document.querySelector('[data-panel="projects"]');
+        const isDark = panel?.classList.contains('projects-dark');
+        panel?.classList.toggle('projects-dark', !isDark);
+        elements.projectsBoardTheme.setAttribute('aria-pressed', (!isDark).toString());
+        elements.projectsBoardTheme.textContent = isDark ? 'Theme' : 'Dark';
+      });
     }
     if (window.CrmProjectsDiscussion && typeof window.CrmProjectsDiscussion.createController === 'function') {
       window.projectsDiscussionController = window.CrmProjectsDiscussion.createController({

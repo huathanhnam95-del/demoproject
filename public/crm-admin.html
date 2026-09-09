@@ -978,7 +978,7 @@
             <div class="crm-projects-workspace-breadcrumb"><button id="projects-workspace-rail-toggle" type="button" class="crm-btn-secondary" aria-controls="projects-workspace-rail" aria-expanded="false" aria-label="Toggle Projects sidebar">☰</button><span>Workspace / Projects</span></div>
             <div class="crm-projects-workspace-heading crm-panel-header">
               <div><h2 id="projects-workspace-name">Projects</h2><p id="projects-workspace-description">A shared place to plan work and keep your team moving.</p></div>
-              <div class="crm-projects-workspace-heading-actions"><button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button><button type="button" class="crm-btn-secondary" data-projects-open="projects-workspace-settings">Settings</button><button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button></div>
+              <div class="crm-projects-workspace-heading-actions"><button id="btn-projects-density" class="crm-btn-secondary" type="button" aria-pressed="false" title="Toggle compact density">Density</button><button id="btn-projects-theme" class="crm-btn-secondary" type="button" aria-pressed="false" title="Toggle dark mode">Theme</button><button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button><button type="button" class="crm-btn-secondary" data-projects-open="projects-workspace-settings">Settings</button><button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button></div>
             </div>
             <div id="projects-workspace-onboarding" class="crm-projects-workspace-onboarding" hidden>
               <h3 id="projects-workspace-onboarding-title">Choose a project to get started</h3><p id="projects-workspace-onboarding-message">Your project tasks will appear here.</p><button id="projects-workspace-manage-access" type="button" class="crm-btn-primary">Manage access</button>
@@ -998,7 +998,7 @@
                   <form id="projects-view-filters" class="crm-projects-view-filters">
                     <button id="btn-projects-board-add-task" class="crm-btn-primary" type="button">+ New task</button>
                     <label class="crm-projects-workspace-search"><span class="sr-only">Search tasks</span><input name="title" class="crm-input" type="search" placeholder="Search this board" maxlength="200"></label>
-                    <details class="crm-projects-workspace-filter"><summary>Filter</summary><div class="crm-projects-workspace-filter-popover">
+                    <details class="crm-projects-workspace-filter"><summary>Filter <span id="projects-filter-count" class="crm-projects-filter-badge" hidden>0</span></summary><div class="crm-projects-workspace-filter-popover">
                       <label>Section<select name="sectionId" class="crm-input"><option value="">All sections</option></select></label>
 <label>Status<select name="status" class="crm-input"><option value="">All statuses</option><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label>
 <label>Accountable owner<select name="ownerUid" class="crm-input"><option value="">All owners</option></select></label>
@@ -2898,7 +2898,7 @@
   <script src="js/crm/pronunciation-dual-arena.js?v=20260909-v2.0.2"></script>
   <script src="js/entrance-test-ui-fonts.js?v=20260909-v2.0.2&etui=20260909-etui2"></script>
   <script src="js/crm/entrance-test-ui-lab.js?v=20260909-v2.0.2&etui=20260909-etui2"></script>
-  <script src="js/crm/projects/workspace.js?v=20260909-design"></script>
+  <script src="js/crm/projects/workspace.js?v=20260909-v2.0.2"></script>
   <script src="crm-admin.js?v=20260909-v2.0.2"></script>
   <script src="js/crm/segmentation-study.js?v=20260909-v2.0.2" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->

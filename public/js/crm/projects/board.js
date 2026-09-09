@@ -5,7 +5,7 @@
     const STATUS_LABELS = { not_started: 'Not started', in_progress: 'In progress', blocked: 'Blocked', done: 'Done' };
     const PRIORITY_KEYS = ['none', 'low', 'medium', 'high', 'urgent'];
     const PRIORITY_LABELS = { none: 'None', low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
-    const ROW_HEIGHT = 46;
+    let ROW_HEIGHT = 46;
     const OVERSCAN = 8;
     const GROUP_COLORS = ['#7c5cdb', '#16815d', '#3978cf', '#bd641d', '#bc4778'];
     function groupColor(id) {
@@ -245,6 +245,7 @@
             if (elements.projectsBoardAddSection) elements.projectsBoardAddSection.disabled = busy || !canSchema();
             if (elements.projectsBoardAddColumn) elements.projectsBoardAddColumn.disabled = busy || !canSchema();
             if (elements.projectsBoardSaveSettings) elements.projectsBoardSaveSettings.disabled = busy || !canSchema();
+            if (elements.projectsBoardTableWrap) elements.projectsBoardTableWrap.classList.toggle('is-loading', busy);
             syncSectionForm();
             if (columnEditor && (!scopeIsCurrent(columnEditor.scope) || (!busy && !canSchema()))) resetColumnForm();
             syncColumnForm();
@@ -1100,17 +1101,20 @@
         }
 
         function fieldValue(control) {
-            if (control.multiple) return Array.from(control.selectedOptions).map((option) => option.value).filter(Boolean);
+            if (!control || typeof control !== 'object') return control ?? null;
+            if (control.multiple) return Array.from(control.selectedOptions || []).map((option) => option.value).filter(Boolean);
             if (control.type === 'number') return control.value === '' ? null : Number(control.value);
             return control.value === '' ? null : control.value;
         }
 
         async function saveTaskField(taskId, kind, control) {
             if (refreshRequested()) return;
-            const value = fieldValue(control);
+            const ctrl = control && typeof control === 'object' && ('value' in control || control.nodeType) ? control : { value: control, dataset: {} };
+            const value = fieldValue(ctrl);
             const mutationScope = captureScope();
             const mutationProjectId = mutationScope.projectId;
-            const key = kind === 'value' ? `value:${control.dataset.columnId}` : kind;
+            const columnId = ctrl.dataset?.columnId;
+            const key = kind === 'value' && columnId ? `value:${columnId}` : kind;
             const keyForDraft = draftKeyFor(taskId, key);
             if (!draftBases.has(keyForDraft)) draftBases.set(keyForDraft, Number(taskFor(taskId)?.revision || 0));
             const baseRevision = draftBases.get(keyForDraft);
@@ -1125,7 +1129,7 @@
                 // A newer remotely observed task revision must still conflict and be reviewed.
                 const followsLocal = predecessor?.bases?.includes(baseRevision) === true;
                 const expectedRevision = followsLocal ? predecessor.revision : baseRevision;
-                const patch = kind === 'value' ? { values: { [control.dataset.columnId]: value } } : { [kind]: value };
+                const patch = kind === 'value' && columnId ? { values: { [columnId]: value } } : { [kind]: value };
                 const previous = { ...task, values: { ...(task.values || {}) } };
                 const next = { ...task, ...patch, values: { ...(task.values || {}), ...(patch.values || {}) } };
                 const opId = operationId(`edit-${taskId}`);
@@ -1906,6 +1910,12 @@
         }
         return { init, refresh, setProjects, loadProject, invalidateAccess, setSelectedTaskIds, getSnapshot: contextSnapshot,
             attachRemoteObserver(observer) { remoteObserver = observer; }, applyRemote,
+            setDensity: (mode) => {
+                ROW_HEIGHT = mode === 'compact' ? 36 : 46;
+                elements.projectsBoardTableWrap?.classList.toggle('is-compact', mode === 'compact');
+                renderBoard();
+            },
+            saveTaskField: (taskId, kind, control) => saveTaskField(taskId, kind, control),
             setFilters: (filters) => { sharedFilters = { ...filters }; filterGeneration++; if (currentProjectId()) { authorityPending = true; setBusy(true); } return refresh(); },
             selectTask: (task) => { if (!task?.id || !hasProject()) return; tasks.set(String(task.id), task); asArray(task.pathIds).filter((id) => id !== task.id).forEach((id) => expanded.add(String(id))); selectedTaskId = String(task.id); renderDetail(); renderVirtualRows(); },
             getState: contextSnapshot };

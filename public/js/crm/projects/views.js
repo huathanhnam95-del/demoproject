@@ -25,6 +25,13 @@
         const canWrite = () => !!response && !!projectId && !!actorUid && uid() === actorUid && ['Owner', 'Editor'].includes(response?.membership?.role || board?.getState()?.membership?.role) && (response?.project?.lifecycle || 'active') === 'active';
         const status = (message) => { if (el('projects-view-status')) el('projects-view-status').textContent = message; };
         const taskStatus = (message) => { if (el('projects-task-status')) el('projects-task-status').textContent = message; };
+        function syncFilterBadge() {
+            const badge = el('projects-filter-count');
+            if (!badge) return;
+            const count = Object.values(filters).filter(Boolean).length;
+            badge.textContent = String(count);
+            badge.hidden = count === 0;
+        }
         function fillFilters() {
             const state = board?.getState() || {};
             if (!state.project || state.project.id !== projectId || uid() !== actorUid || (state.actorUid !== undefined && state.actorUid !== actorUid) || state.filterOptionsReady === false) return;
@@ -40,6 +47,7 @@
             fill('sectionId', array(state.sections).map((s) => [s.id, s.title]), 'All sections');
             const members = array(state.members).map((m) => [m.uid || m.id, m.displayName || m.name || m.email || m.uid || m.id]);
             fill('ownerUid', members, 'All owners'); fill('assigneeUid', members, 'All assignees');
+            syncFilterBadge();
         }
         function choiceLabel(choice) {
             const [year, key] = String(choice).split(':');
@@ -432,8 +440,8 @@
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };
             el('projects-view-filters')?.addEventListener('input', captureFilterDraft);
             el('projects-view-filters')?.addEventListener('change', captureFilterDraft);
-            el('projects-view-filters')?.addEventListener('submit', (event) => { event.preventDefault(); filterDrafts = Object.fromEntries(new FormData(event.target)); filters = Object.fromEntries(Object.entries(filterDrafts).filter(([, value]) => value !== '')); board?.setFilters(filters); refresh(); });
-            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; if (projectId) { board?.setFilters(filters); refresh(); } });
+            el('projects-view-filters')?.addEventListener('submit', (event) => { event.preventDefault(); filterDrafts = Object.fromEntries(new FormData(event.target)); filters = Object.fromEntries(Object.entries(filterDrafts).filter(([, value]) => value !== '')); syncFilterBadge(); board?.setFilters(filters); refresh(); });
+            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; syncFilterBadge(); if (projectId) { board?.setFilters(filters); refresh(); } });
             el('projects-view-more')?.addEventListener('click', () => { if (!loading && response?.hasMore) refresh(response.nextCursor, [...previous, cursor], pageIndex + 1); });
             el('projects-view-previous')?.addEventListener('click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
             el('projects-view-retry')?.addEventListener('click', () => refresh());

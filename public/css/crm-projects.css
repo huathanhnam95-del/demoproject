@@ -646,3 +646,90 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 [data-panel="projects"] .crm-projects-rail-empty { font-size: 12px; color: var(--pj-muted); line-height: 1.6; padding: 0 10px; }
 [data-panel="projects"] .crm-board-people-field { padding-top: 0; padding-bottom: 0; }
 [data-panel="projects"] .crm-board-people-field option { min-height: 28px; }
+
+/* ---------- Theme & Density Modes ---------- */
+[data-panel="projects"].projects-dark {
+  color-scheme: dark;
+  --pj-ground: #0d1117;
+  --pj-surface: #141a22;
+  --pj-raised: #1a212b;
+  --pj-sunken: #1e2733;
+  --pj-line: #242e3b;
+  --pj-line-strong: #33404f;
+  --pj-ink: #e7ecf4;
+  --pj-ink-2: #b3c0d2;
+  --pj-muted: #8794a7;
+  --pj-faint: #6a778a;
+  --pj-accent: #5b9bff;
+  --pj-accent-soft: #16233b;
+  --pj-accent-ink: #9cc2ff;
+  --st-ns-bg: #232c39;
+  --st-ns-fg: #93a1b6;
+  --st-ip-bg: #3a2f13;
+  --st-ip-fg: #f0c264;
+  --st-bl-bg: #3d1d26;
+  --st-bl-fg: #ff9bad;
+  --st-dn-bg: #12321f;
+  --st-dn-fg: #6bd79b;
+  --sig-over-bg: #3d1d26;
+  --sig-over-fg: #ff9bad;
+  --sig-soon-bg: #3a2f13;
+  --sig-soon-fg: #f0c264;
+  --g1: #5b9bff;
+  --g2: #a78bfa;
+  --g3: #34d3a4;
+  --g4: #f5a742;
+  --pj-shadow-pop: 0 18px 46px -14px rgba(0, 0, 0, 0.7);
+  --pj-shadow-rail: 0 1px 2px rgba(0, 0, 0, 0.4);
+  background: var(--pj-ground);
+  color: var(--pj-ink);
+}
+
+.crm-projects-board-table-wrap.is-compact {
+  --pj-row-h: 36px;
+}
+.crm-projects-board-table-wrap.is-compact .crm-projects-board-row :is(input:not([type="checkbox"]), select) {
+  height: 24px;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+.crm-projects-board-table-wrap.is-compact .crm-board-owner-avatar,
+.crm-projects-board-table-wrap.is-compact .crm-board-avatar {
+  width: 20px;
+  height: 20px;
+  font-size: 8px;
+}
+
+.crm-projects-board-table-wrap.is-loading .crm-projects-board-row {
+  opacity: 0.65;
+  position: relative;
+}
+.crm-projects-board-table-wrap.is-loading .crm-projects-board-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: pj-shimmer 1.5s infinite;
+  pointer-events: none;
+}
+@keyframes pj-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.crm-projects-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: var(--pj-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+  line-height: 1;
+}

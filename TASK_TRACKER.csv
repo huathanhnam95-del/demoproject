@@ -2032,4 +2032,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1037,2026-09-09,Redesign entrance test student UI-UX - design canvas (3 UX models + 3 visual directions) and interactive prototype at public/entrance-test-prototype.html,Done,2026-09-09
 1038,2026-09-09,Entrance Test UI review lab - 3 skins (A/B/C) on E+F flow plus CRM rating tab with 5 criteria per page and font voting - deployed to production,Done,2026-09-09
 1039,2026-09-09,Restore missing Social Media Account Link field for Facebook sources in CRM student and lead modal,Done,2026-09-09
-1040,2026-09-09,Entrance Test UI - add step-by-step guidance, make rating and font choice mandatory, move font picker inline above the live preview with 2 picks per language,In Progress,
+1040,2026-09-09,Entrance Test UI - add step-by-step guidance, make rating and font choice mandatory, move font picker inline above the live preview with 2 picks per language - deployed,Done,2026-09-09

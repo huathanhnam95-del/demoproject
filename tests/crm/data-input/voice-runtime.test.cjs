@@ -230,3 +230,21 @@ test('native credit runtime requires an injected trusted usage descriptor and fo
         require.cache[runtimePath] = savedRuntime;
     }
 });
+
+
+test('actual Data Input composition retires outside identity after revocation without proof or context writes', async t => {
+    const f = await setup({ config: { nativeEnabled: true }, nativeCredentials: { apiKey: 'fixture-key' }, createVoiceProvider: () => Object.assign(() => { throw Error('Unexpected provider'); }, { native: true }) });
+    t.after(() => f.composition.close());
+    const scope = await f.composition.runAsIdentity(identity(), async () => {
+        const prepared = await f.composition.sessionService.prepare({ actorUid: 'staff1', feature: 'crm-data-input', requestId: 'retire', contextHints: {} });
+        const claimed = await f.composition.sessionService.claim({ actorUid: 'staff1', feature: 'crm-data-input', sessionId: prepared.sessionId, ticket: prepared.ticket, connectionId: 'retire-connection' });
+        return { actorUid: 'staff1', feature: 'crm-data-input', sessionId: prepared.sessionId, epoch: claimed.epoch };
+    });
+    f.state.disabled = true; f.state.validAfter = '2099-01-01T00:00:00Z';
+    await assert.rejects(f.composition.sessionService.close(scope), error => error.code === 'VOICE_FORBIDDEN');
+    const before = structuredClone([...f.rows]); const lookups = f.state.lookups.length;
+    assert.equal((await f.composition.sessionService.retireConnection(scope)).state, 'closed');
+    assert.equal((await f.composition.sessionService.retireConnection(scope)).replayed, true);
+    assert.equal(f.state.lookups.length, lookups);
+    for (const [key, value] of before) assert.deepEqual(f.rows.get(key), key === `crmAiVoiceSessions/${scope.sessionId}` ? { ...value, state: 'closed' } : value);
+});

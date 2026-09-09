@@ -227,7 +227,9 @@ function createLedgerService({ db, runTransaction, now = () => new Date(), featu
         if (!quotaEnabled) return providerAccounting;
         const result = await quota.budget(transaction, { uid: actorUid, month, money: ledger, allowance: quotaAllowance(allowance), providerAccounting, blockedReason: blockReason(guard, month) });
         if (ledger.usageQuotaMigrationVersion !== MIGRATION_VERSION) transaction.set(ledgerRef(actorUid, month), { ...quotaMoney(ledger), revision: ledger.revision + 1, updatedAt: timestamp() });
-        transaction.set(accountRef(actorUid), quotaGuard(guard)); return result;
+        // A migrated budget refresh must not become a competing account writer.
+        if (guard.usageQuotaVersion !== CALIBRATION_VERSION) transaction.set(accountRef(actorUid), quotaGuard(guard));
+        return result;
     }); }
     async function recordUsage(reservationId, evidence) {
         if (!quotaEnabled) reject('USAGE_QUOTA_DISABLED', 'Server usage metering is not enabled.', 409);

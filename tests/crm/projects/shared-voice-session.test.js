@@ -184,3 +184,32 @@ test('confirmation policy receives frozen current domain context for payment ack
     const confirmation = createVoiceConfirmationService(f.options);
     await assert.rejects(f.runTransaction(tx => confirmation.prepareConsumption(tx, { actorUid: 'staff', feature: 'projects', attestationId: result.attestationId, binding: f.binding('projects'), receiptId: 'payment' })), e => e.code === 'STALE_ATTESTATION');
 });
+
+
+test('server retirement fences ownership and epoch without resolving revoked or changed context', async () => {
+    const f = fixture(), c = await attested(f), before = structuredClone([...f.rows]);
+    f.state.allowed = false; f.state.revision++;
+    await assert.rejects(f.service.close({ ...c.identity, epoch: 1 }), e => e.code === 'VOICE_FORBIDDEN');
+    for (const patch of [{ actorUid: 'other' }, { feature: 'crm-data-input' }, { epoch: 2 }]) {
+        await assert.rejects(f.service.retireConnection({ ...c.identity, epoch: 1, ...patch }), e => ['SESSION_NOT_FOUND', 'STALE_EPOCH'].includes(e.code));
+        assert.deepEqual([...f.rows], before);
+    }
+    assert.equal((await f.service.retireConnection({ ...c.identity, epoch: 1 })).state, 'closed');
+    assert.equal((await f.service.retireConnection({ ...c.identity, epoch: 1 })).replayed, true);
+    for (const [key, value] of before) assert.deepEqual(f.rows.get(key), key === `${C.sessions}/${c.identity.sessionId}` ? { ...value, state: 'closed' } : value);
+    await assert.rejects(c.channel.finalizeUtterance(final), e => e.code === 'VOICE_FORBIDDEN');
+});
+
+test('retirement invalidates unconsumed proof but preserves consumed same-receipt replay', async () => {
+    for (const consumed of [false, true]) {
+        const f = fixture(), c = await attested(f), confirmation = createVoiceConfirmationService(f.options);
+        const input = { actorUid: 'staff', feature: 'projects', attestationId: c.proof.attestationId, binding: f.binding('projects'), receiptId: 'receipt' };
+        if (consumed) await f.runTransaction(async tx => { const stage = await confirmation.prepareConsumption(tx, input); stage.consume(); });
+        const before = structuredClone(f.rows.get(`${C.attestations}/${c.proof.attestationId}`));
+        await f.service.retireConnection({ ...c.identity, epoch: 1 });
+        if (consumed) await f.runTransaction(async tx => { const stage = await confirmation.prepareConsumption(tx, input); assert.equal(stage.replayed, true); stage.consume(); });
+        else await assert.rejects(f.runTransaction(tx => confirmation.prepareConsumption(tx, input)), e => e.code === 'STALE_ATTESTATION');
+        assert.deepEqual(f.rows.get(`${C.attestations}/${c.proof.attestationId}`), before);
+        assert.equal(before.consumedReceiptId, consumed ? 'receipt' : null);
+    }
+});

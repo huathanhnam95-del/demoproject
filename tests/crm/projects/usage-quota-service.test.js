@@ -40,6 +40,31 @@ function fixture({ quota = true } = {}) {
 }
 module.exports = { fixture };
 if (require.main === module) {
+    test('migrated shared budget reads do not contend with reservations by rewriting account guards', async () => {
+        const f = fixture(), writes = [];
+        const ledger = createLedgerService({ ...f.options, runTransaction: work => f.options.runTransaction(tx => work({ ...tx,
+            set: (ref, value) => { writes.push(ref.path); return tx.set(ref, value); },
+            create: (ref, value) => { writes.push(ref.path); return tx.create(ref, value); }
+        })) });
+        const projects = ledger.forFeature('projects'), input = ledger.forFeature('crm-data-input');
+        const first = await projects.getBudget('u');
+        assert.ok(writes.includes(f.accountPath), 'initial account cutover is persisted');
+        assert.ok(writes.includes(f.moneyPath('2026-09')), 'origin month migration is persisted');
+        writes.length = 0;
+        assert.deepEqual(await input.getBudget('u'), first);
+        assert.deepEqual(writes, [], 'already migrated reads must remain read-only');
+        const reservation = await projects.reserve('u', f.request('active'));
+        await projects.authorizeDispatch('u', reservation.reservationId);
+        writes.length = 0;
+        const active = await input.getBudget('u');
+        assert.equal(active.reservedMicrocredits, reservation.quota.reservedMicrocredits);
+        assert.equal(active.providerAccounting.pendingNano, reservation.maximumNano);
+        assert.deepEqual(writes, [], 'live holds do not make a budget refresh a writer');
+        f.state.revoked = true;
+        await assert.rejects(input.getBudget('u'), { code: 'REVOKED' });
+        assert.deepEqual(writes, [], 'fresh authority remains mandatory');
+    });
+
     test('credit balance remains available before native provider configuration', async () => {
         const f = fixture();
         const ledger = createLedgerService({ ...f.options, nativeMode: false, nativePolicy: null, providerAdapters: {} });

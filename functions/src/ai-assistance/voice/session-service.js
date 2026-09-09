@@ -51,6 +51,21 @@ function createVoiceSessionService(options = {}) {
                 const next = { ...row, ...context, contextHints: hints, contextRevision: row.contextRevision + (changed ? 1 : 0) }; tx.set(ref, next); return status(next, !changed); });
         },
         async close(input) { strict(input, ['actorUid', 'feature', 'sessionId', 'epoch']); epoch(input.epoch); return runTransaction(async tx => { const { row, ref } = await current(tx, input, false); if (row.state === 'closed') return status(row, true); const next = { ...row, state: 'closed' }; tx.set(ref, next); return status(next); }); },
+        // Server-only disconnect retirement. Authority was established when the
+        // connection was claimed; revocation or changed preview must not strand it.
+        // This does not refresh context, issue/consume proofs, or authorize effects.
+        async retireConnection(input) {
+            strict(input, ['actorUid', 'feature', 'sessionId', 'epoch']);
+            text(input.actorUid); text(input.feature); epoch(input.epoch);
+            return runTransaction(async tx => {
+                const ref = sessionRef(input.sessionId), snap = await tx.get(ref), row = snap.exists ? snap.data() : null;
+                if (!row || row.actorUid !== input.actorUid || row.feature !== input.feature) reject('SESSION_NOT_FOUND', 'Voice session not found.', 404);
+                if (row.epoch !== input.epoch) reject('STALE_EPOCH', 'Voice connection changed.', 409);
+                if (row.state === 'closed') return status(row, true);
+                if (row.state !== 'connected') reject('SESSION_EXPIRED', 'Voice connection is not active.', 409);
+                const next = { ...row, state: 'closed' }; tx.set(ref, next); return status(next);
+            });
+        },
         // Server-only capability. Never expose this method or its events as a
         // client route; only the provider driver owns user-audio provenance.
         providerChannel(identity) {

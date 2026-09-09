@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { AsyncLocalStorage } = require('node:async_hooks');
 const { once } = require('node:events');
-const { WebSocket } = require('../../../services/crm-voice-relay/node_modules/ws');
+const { WebSocket } = require('ws');
 const { createRelayServer } = require('../../../services/crm-voice-relay/server');
 function deferred() { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; }
 async function until(predicate) { for (let i = 0; i < 100; i++) { if (predicate()) return; await new Promise(done => setTimeout(done, 10)); } assert.fail('Expected operation did not run'); }
@@ -74,4 +74,49 @@ test('queued work rechecks the token at execution and revocation cannot block un
         assert.equal(f.observations.filter(row => row.kind === 'audio').length, 1);
         for (const row of f.observations) assert.deepEqual(row.identity, { uid: 'staff', auth_time: 100 });
     } finally { ws?.terminate(); await f.close(); }
+});
+
+
+async function deadlineFixture({ admissionDelay = 0, providerDelay = 0, claimDelay = 0, retirementFails = false } = {}) {
+    const diagnostics = [], diagnosticDetails = [], events = []; const origin = 'http://127.0.0.1:45555';
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const service = {
+        async claim() { await delay(claimDelay); events.push('claimed'); return { epoch: 1, contextRevision: 0 }; },
+        async readStatus() { return { epoch: 1, state: 'connected', contextRevision: 0 }; },
+        providerChannel() { return { async getContext() { return {}; } }; },
+        async close() { assert.fail('Public authorized close is not disconnect retirement'); },
+        async retireConnection(scope) { events.push('retired'); assert.deepEqual(scope, { actorUid: 'staff', feature: 'projects', sessionId: 'session', epoch: 1 }); if (retirementFails) throw Error('backend unavailable'); }
+    };
+    const providerFactory = Object.assign(async ({ signal }) => { events.push('provider'); await delay(providerDelay); events.push(signal.aborted ? 'late-aborted' : 'ready'); return { async close() { events.push('provider-closed'); } }; }, { engineeringOnly: true });
+    const relay = createRelayServer({ sessionService: service, authenticate: async () => ({ uid: 'staff' }), allowedOrigins: [origin], engineeringMode: true, providerFactory,
+        limits: { authTimeoutMs: 300, providerSetupTimeoutMs: 300 }, onDiagnostic: event => { diagnostics.push(event.code); diagnosticDetails.push(event); },
+        features: { projects: { engineeringOnly: true, model: 'engineering-model', provider: 'engineering-provider', async admission() { await delay(admissionDelay); events.push('admission'); return { model: 'engineering-model' }; } } },
+        ledger: { forFeature() { return { async reserve() { events.push('reserve'); return { reservationId: 'r' }; }, async authorizeDispatch() { events.push('dispatch'); return { sendPermit: { engineeringOnly: true, model: 'engineering-model', provider: 'engineering-provider' } }; } }; }, async markUnknown() { events.push('unknown'); } }
+    });
+    await new Promise(resolve => relay.server.listen(0, '127.0.0.1', resolve));
+    const ws = new WebSocket(`ws://127.0.0.1:${relay.server.address().port}/voice`, { origin }); await once(ws, 'open');
+    const response = once(ws, 'message'); ws.send(JSON.stringify({ type: 'authenticate', idToken: 'token', feature: 'projects', sessionId: 'session', ticket: 'ticket' }));
+    return { events, diagnostics, diagnosticDetails, ws, response, async close() { ws.terminate(); await relay.close(); } };
+}
+test('actual relay gives authenticated admission and provider setup independent bounded deadlines', async () => {
+    const f = await deadlineFixture({ admissionDelay: 200, providerDelay: 200 });
+    try { assert.equal(JSON.parse((await f.response)[0]).type, 'ready'); assert.equal(f.events.filter(x => x === 'provider').length, 1); }
+    finally { await f.close(); }
+    await until(() => f.events.includes('retired')); assert.equal(f.events.filter(x => x === 'retired').length, 1);
+});
+test('auth timeout prevents late admission and retires a late verified claim', async () => {
+    const f = await deadlineFixture({ claimDelay: 400 });
+    try { assert.equal(JSON.parse((await f.response)[0]).type, 'error'); await until(() => f.events.includes('retired')); assert.ok(f.diagnostics.includes('AUTH_TIMEOUT')); assert.ok(f.diagnosticDetails.some(e => e.code === 'AUTH_TIMEOUT' && e.phase === 'authentication' && e.elapsedMs >= 290)); assert.equal(f.events.includes('reserve'), false); assert.equal(f.events.includes('provider'), false); }
+    finally { await f.close(); }
+});
+test('provider setup timeout aborts late factory and independently diagnoses failed retirement', async () => {
+    const f = await deadlineFixture({ providerDelay: 400, retirementFails: true });
+    try { assert.equal(JSON.parse((await f.response)[0]).type, 'error'); await until(() => f.events.includes('provider-closed')); assert.ok(f.diagnostics.includes('PROVIDER_SETUP_TIMEOUT')); assert.ok(f.diagnosticDetails.some(e => e.code === 'PROVIDER_SETUP_TIMEOUT' && e.phase === 'provider_setup' && e.elapsedMs >= 290)); assert.ok(f.diagnostics.includes('SESSION_RETIREMENT_FAILED')); assert.ok(f.events.includes('late-aborted')); assert.ok(f.events.includes('unknown')); assert.equal(f.events.filter(x => x === 'retired').length, 1); }
+    finally { await f.close(); }
+});
+
+test('auth deadline covers admission and prevents a late reservation or provider dispatch', async () => {
+    const f = await deadlineFixture({ admissionDelay: 400 });
+    try { assert.equal(JSON.parse((await f.response)[0]).type, 'error'); await until(() => f.events.includes('admission')); assert.equal(f.events.includes('reserve'), false); assert.equal(f.events.includes('dispatch'), false); assert.equal(f.events.includes('provider'), false); assert.equal(f.events.filter(x => x === 'retired').length, 1); }
+    finally { await f.close(); }
 });

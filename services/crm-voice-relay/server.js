@@ -3,7 +3,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const { WebSocketServer, WebSocket } = require('ws');
 const { parseProviderMessage, pcm } = require('./provider-parser');
-const LIMITS = Object.freeze({ frameBytes: 65536, queueBytes: 262144, queueMessages: 32, authTimeoutMs: 5000, sessionMs: 120000, audioBytes: 3840000, outputBytes: 5760000, sockets: 128 });
+const LIMITS = Object.freeze({ frameBytes: 65536, queueBytes: 262144, queueMessages: 32, authTimeoutMs: 5000, providerSetupTimeoutMs: 5000, sessionMs: 120000, audioBytes: 3840000, outputBytes: 5760000, sockets: 128 });
 function fail(code = 'RELAY_REJECTED', status = 400) { throw Object.assign(new Error(code), { code, status }); }
 function object(value, keys) { if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !keys.includes(key))) fail(); }
 function identifier(value, max = 128) { if (typeof value !== 'string' || !value || value.length > max || [...value].some(character => character.charCodeAt(0) <= 32) || /[\\/]/.test(value)) fail(); return value; }
@@ -64,7 +64,7 @@ function createRelayServer({ sessionService, authenticate, runAsIdentity = (_ide
         const lifetime = new AbortController();
         sockets.add(ws); let scope, token, provider, reservation, presentedContextRevision, dispatched = false, settled = false, closed = false, authenticating = false, chain = Promise.resolve(), queued = 0, queuedBytes = 0, audioBytes = 0, outputBytes = 0, utterance, audioTail, providerTail, confirmationIssued = false, inputEnded = false;
         let capacity, responseAudioMuted = false;
-        function diagnostic(code) { try { onDiagnostic({ code, queued, queuedBytes }); } catch (_) { /* Diagnostics cannot prevent cleanup or draining. */ } }
+        function diagnostic(code, details = {}) { try { onDiagnostic({ code, queued, queuedBytes, ...details }); } catch (_) { /* Diagnostics cannot prevent cleanup or draining. */ } }
         function releaseCapacity() {
             if (!capacity || !closed && (queued > lowJobs || queuedBytes > lowBytes)) return;
             const pending = capacity; capacity = null;
@@ -79,20 +79,30 @@ function createRelayServer({ sessionService, authenticate, runAsIdentity = (_ide
             }
             return capacity?.promise;
         }
-        const authTimer = setTimeout(() => stop(), limits.authTimeoutMs); let sessionTimer;
+        const authStartedAt = performance.now();
+        const authTimer = setTimeout(() => stop({ code: 'AUTH_TIMEOUT', phase: 'authentication', elapsedMs: performance.now() - authStartedAt }), limits.authTimeoutMs);
+        let sessionTimer, providerSetupTimer, retirement;
+        function retireScope() {
+            if (!scope) return Promise.resolve();
+            // A claim can finish after cleanup already latched closed. Claim its
+            // verified scope once when available, without re-entering identity ALS.
+            return retirement ||= Promise.resolve().then(() => typeof sessionService.retireConnection === 'function'
+                ? sessionService.retireConnection(scope) : sessionService.close(scope))
+                .catch(() => { diagnostic('SESSION_RETIREMENT_FAILED'); });
+        }
         const send = value => { const bytes = JSON.stringify(value); if (Buffer.byteLength(bytes) > limits.frameBytes || ws.bufferedAmount > limits.queueBytes) fail(); if (!closed && ws.readyState === WebSocket.OPEN) ws.send(bytes); };
         async function current() { if (closed || !scope) fail(); if (await actor(token) !== scope.actorUid) fail(); const { actorUid, feature, sessionId } = scope; const value = await sessionService.readStatus({ actorUid, feature, sessionId }); if (value.epoch !== scope.epoch || value.state !== 'connected' || value.expiresAtMs !== undefined && value.expiresAtMs <= Date.now()) fail('STALE_EPOCH'); if (value.contextChanged || value.contextRevision !== presentedContextRevision) { send({ type: 'context', contextRevision: value.contextRevision, summary: value.summary }); fail('CONTEXT_CHANGED'); } return value; }
         async function cleanup() {
-            if (closed) return; closed = true; lifetime.abort(); releaseCapacity(); clearTimeout(authTimer); clearTimeout(sessionTimer); sockets.delete(ws);
+            if (closed) return; closed = true; lifetime.abort(); releaseCapacity(); clearTimeout(authTimer); clearTimeout(providerSetupTimer); clearTimeout(sessionTimer); sockets.delete(ws);
             // Provider shutdown and session fencing must not wait for an
             // unavailable accounting backend. The dispatch guard is durable.
             await Promise.allSettled([
                 Promise.resolve().then(() => provider?.close?.()),
                 Promise.resolve().then(() => dispatched && !settled ? ledger.markUnknown(reservation.reservationId) : undefined),
-                Promise.resolve().then(() => scope ? sessionService.close(scope) : undefined)
+                retireScope()
             ]);
         }
-        function stop(error) { diagnostic(error?.code || 'RELAY_STOPPED'); void cleanup(); if (ws.readyState === WebSocket.OPEN) { try { ws.send(JSON.stringify({ type: 'error', code: 'RELAY_REJECTED' })); } catch (_) { /* Closing. */ } ws.close(1008, 'Relay closed'); } const timer = setTimeout(() => ws.terminate(), 250); timer.unref(); }
+        function stop(error) { diagnostic(error?.code || 'RELAY_STOPPED', error?.phase ? { phase: error.phase, elapsedMs: error.elapsedMs } : {}); void cleanup(); if (ws.readyState === WebSocket.OPEN) { try { ws.send(JSON.stringify({ type: 'error', code: 'RELAY_REJECTED' })); } catch (_) { /* Closing. */ } ws.close(1008, 'Relay closed'); } const timer = setTimeout(() => ws.terminate(), 250); timer.unref(); }
         function queue(work, bytes, frames = null, messages = null) {
             // A new job seals both tails, preserving arrival order across controls.
             audioTail = null; providerTail = null;
@@ -184,19 +194,23 @@ function createRelayServer({ sessionService, authenticate, runAsIdentity = (_ide
                     if (closed) return;
                     identifier(input.feature); identifier(input.sessionId); identifier(input.ticket, 512); const config = configuration(input.feature);
                     const claimed = await sessionService.claim({ actorUid, feature: input.feature, sessionId: input.sessionId, ticket: input.ticket, connectionId: crypto.randomUUID() });
-                    scope = { actorUid, feature: input.feature, sessionId: input.sessionId, epoch: claimed.epoch }; presentedContextRevision = claimed.contextRevision; if (!Number.isSafeInteger(presentedContextRevision) || presentedContextRevision < 0) fail(); await current();
+                    scope = { actorUid, feature: input.feature, sessionId: input.sessionId, epoch: claimed.epoch }; if (closed) { await retireScope(); return; } presentedContextRevision = claimed.contextRevision; if (!Number.isSafeInteger(presentedContextRevision) || presentedContextRevision < 0) fail(); await current(); if (closed) return;
                     const featureLedger = ledger.forFeature(scope.feature); const admission = await config.admission({ ...scope, session: claimed });
-                    if (admission.model !== config.model) fail();
+                    if (closed) return; if (admission.model !== config.model) fail();
                     reservation = await featureLedger.reserve(actorUid, { ...admission, requestId: `voice-${scope.sessionId}-${scope.epoch}` });
+                    if (closed) return;
                     const permission = await featureLedger.authorizeDispatch(actorUid, reservation.reservationId);
                     if (!permission.sendPermit || permission.sendPermit.engineeringOnly !== config.engineeringOnly || permission.sendPermit.provider !== config.provider || permission.sendPermit.model !== config.model) fail();
                     dispatched = true; if (closed) { await ledger.markUnknown(reservation.reservationId); return; } await current();
                     const providerContext = await sessionService.providerChannel(scope).getContext();
                     if (closed) return;
+                    clearTimeout(authTimer);
+                    const providerStartedAt = performance.now();
+                    providerSetupTimer = setTimeout(() => stop({ code: 'PROVIDER_SETUP_TIMEOUT', phase: 'provider_setup', elapsedMs: performance.now() - providerStartedAt }), limits.providerSetupTimeoutMs);
                     provider = await providerFactory({ signal: lifetime.signal, scope: { ...scope }, session: claimed, context: providerContext, sendPermit: permission.sendPermit,
                         onMessage(message) { let length; try { length = Buffer.byteLength(JSON.stringify(message)); } catch (_) { stop(); return; } if (length > limits.frameBytes) { stop(); return; } return queueProvider(message, length); }, onError: stop });
                     if (closed) { await provider?.close?.(); if (!settled) await ledger.markUnknown(reservation.reservationId); return; }
-                    clearTimeout(authTimer); sessionTimer = setTimeout(stop, limits.sessionMs); send({ type: 'ready', sessionId: scope.sessionId, epoch: scope.epoch, engineeringOnly: config.engineeringOnly });
+                    clearTimeout(providerSetupTimer); sessionTimer = setTimeout(stop, limits.sessionMs); send({ type: 'ready', sessionId: scope.sessionId, epoch: scope.epoch, engineeringOnly: config.engineeringOnly });
                     });
                 }
                 if (input.type === 'audio' && (confirmationIssued || inputEnded)) return;

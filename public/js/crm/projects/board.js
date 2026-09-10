@@ -879,6 +879,12 @@
             if (diffDays <= 2) return 'soon';
             return 'normal';
         }
+        function memberName(uid) {
+            if (!uid) return '';
+            const person = members.find((entry) => String(entry.uid) === String(uid));
+            return asText(person?.displayName || person?.email || uid);
+        }
+
         function taskGroupColor(task) {
             const root = asArray(task.pathIds).map((id) => taskFor(id)).find((entry) => entry && !entry.parentTaskId);
             return groupColor(task.effectiveSectionId || task.sectionId || root?.effectiveSectionId || root?.sectionId);
@@ -967,10 +973,10 @@
             // the actionable signal, so duration yields to it and stays available as a title.
             const durationBadge = workingDays !== null && !dueBadge ? `<span class="crm-board-duration-badge" title="${workingDays} working days">${workingDays}d</span>` : '';
             return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" data-depth="${depth}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
-              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
+              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-add-subtask" data-action="add-subtask" title="Add subtask (Ctrl+N)" aria-label="Add subtask to ${escape(title)}"${disabled}>+</button><button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
               <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}">${statusBatteryBar(task)}<select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
-              <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
-              <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell">${peopleStack(assignees)}<select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
+              <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><button type="button" class="crm-people-trigger" data-action="pick-people" data-people-kind="ownerUid" aria-haspopup="listbox" aria-label="Change accountable owner for ${escape(title)}"${disabled}><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><span class="crm-people-trigger-name">${escape(memberName(ownerUid) || 'Unassigned')}</span></button><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
+              <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell"><button type="button" class="crm-people-trigger is-stack" data-action="pick-people" data-people-kind="assigneeUids" aria-haspopup="listbox" aria-label="Change assignees for ${escape(title)}"${disabled}>${peopleStack(assignees)}</button><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
               <div class="crm-projects-board-cell crm-board-date-cell" role="cell" data-due-state="${dState}">${dueBadge}${durationBadge}<input class="crm-board-field" data-field-kind="startDate" type="date" value="${escape(startDate)}" aria-label="Start date"${disabled}><input class="crm-board-field" data-field-kind="dueDate" type="date" value="${escape(dueDate)}" aria-label="Due date"${disabled}></div>
               ${columns.map((column) => `<div class="crm-projects-board-cell" role="cell">${customCell(task, column)}</div>`).join('')}
             </div>`;
@@ -1200,6 +1206,14 @@
                 else if (cell) cell.remove();
             }
             syncFocusedControl(node, row);
+        }
+
+        if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+            document.addEventListener('pointerdown', (event) => {
+                if (!peoplePopover) return;
+                if (peoplePopover.contains(event.target) || event.target.closest?.('[data-action="pick-people"]')) return;
+                closePeoplePicker();
+            }, true);
         }
 
         function renderVirtualRows({ viewportOnly = false } = {}) {
@@ -2007,6 +2021,104 @@
             else if (destination.type === 'section') await moveSection(destination.sectionId, destination.index);
         }
 
+        // Assigning someone used to mean opening a raw OS listbox showing an email
+        // address. This is a search-and-pick popover; the native <select> underneath
+        // stays the value store, so saveTaskField and every pinned selector are intact.
+        let peoplePopover = null;
+        let peopleContext = null;
+
+        function closePeoplePicker() {
+            if (!peoplePopover) return;
+            peoplePopover.remove();
+            peoplePopover = null;
+            peopleContext = null;
+        }
+
+        function peopleRowMarkup(person, chosen) {
+            const uid = String(person.uid || '');
+            const name = asText(person.displayName || person.email || uid);
+            const secondary = person.displayName && person.email ? escape(person.email) : '';
+            return `<button type="button" role="option" aria-selected="${chosen ? 'true' : 'false'}" class="crm-people-option${chosen ? ' is-chosen' : ''}" data-people-uid="${escape(uid)}">`
+                + `<span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(uid))}</span>`
+                + `<span class="crm-people-option-text"><span class="crm-people-option-name">${escape(name)}</span>`
+                + (secondary ? `<span class="crm-people-option-mail">${secondary}</span>` : '')
+                + '</span><span class="crm-people-option-tick" aria-hidden="true"></span></button>';
+        }
+
+        function renderPeopleOptions(query) {
+            if (!peoplePopover || !peopleContext) return;
+            const term = String(query || '').trim().toLowerCase();
+            const chosen = new Set(peopleContext.selected);
+            const matches = members.filter((person) => {
+                if (!term) return true;
+                const name = asText(person.displayName || '').toLowerCase();
+                const mail = asText(person.email || '').toLowerCase();
+                return name.includes(term) || mail.includes(term);
+            });
+            const list = peoplePopover.querySelector('[data-people-list]');
+            if (!list) return;
+            const none = peopleContext.multiple
+                ? ''
+                : peopleRowMarkup({ uid: '', displayName: 'Unassigned' }, !peopleContext.selected.length);
+            list.innerHTML = none + (matches.length
+                ? matches.map((person) => peopleRowMarkup(person, chosen.has(String(person.uid)))).join('')
+                : '<p class="crm-people-empty">No members match.</p>');
+        }
+
+        function commitPeople(uid) {
+            if (!peopleContext) return;
+            const control = peopleContext.control;
+            if (!control) return;
+            if (peopleContext.multiple) {
+                const next = new Set(peopleContext.selected);
+                if (next.has(uid)) next.delete(uid); else next.add(uid);
+                peopleContext.selected = Array.from(next).filter(Boolean);
+                Array.from(control.options).forEach((option) => { option.selected = peopleContext.selected.includes(option.value); });
+                renderPeopleOptions(peoplePopover?.querySelector('[data-people-search]')?.value);
+            } else {
+                peopleContext.selected = uid ? [uid] : [];
+                control.value = uid;
+                closePeoplePicker();
+            }
+            control.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function openPeoplePicker(trigger) {
+            closePeoplePicker();
+            const cell = trigger.closest('[role="cell"]');
+            const control = cell?.querySelector('.crm-board-field');
+            if (!control || control.disabled) return;
+            const multiple = trigger.dataset.peopleKind === 'assigneeUids';
+            peopleContext = {
+                control,
+                multiple,
+                selected: multiple
+                    ? Array.from(control.selectedOptions || []).map((option) => option.value).filter(Boolean)
+                    : (control.value ? [control.value] : [])
+            };
+            peoplePopover = document.createElement('div');
+            peoplePopover.className = 'crm-people-popover';
+            peoplePopover.setAttribute('role', 'dialog');
+            peoplePopover.innerHTML = '<input type="search" class="crm-people-search" data-people-search placeholder="Search people" aria-label="Search people">'
+                + '<div class="crm-people-list" role="listbox" data-people-list></div>';
+            document.body.appendChild(peoplePopover);
+            const box = trigger.getBoundingClientRect();
+            const width = 248;
+            peoplePopover.style.left = `${Math.max(8, Math.min(box.left, (globalScope.innerWidth || 1024) - width - 8))}px`;
+            peoplePopover.style.top = `${box.bottom + 4}px`;
+            peoplePopover.style.width = `${width}px`;
+            renderPeopleOptions('');
+            peoplePopover.querySelector('[data-people-search]')?.focus();
+            peoplePopover.addEventListener('input', (event) => {
+                if (event.target.matches('[data-people-search]')) renderPeopleOptions(event.target.value);
+            });
+            peoplePopover.addEventListener('click', (event) => {
+                const option = event.target.closest('[data-people-uid]');
+                if (option) { event.preventDefault(); commitPeople(option.dataset.peopleUid); }
+            });
+            peoplePopover.addEventListener('keydown', (event) => { if (event.key === 'Escape') { event.stopPropagation(); closePeoplePicker(); trigger.focus(); } });
+        }
+
         function onBoardClick(event) {
             const row = event.target.closest('[data-row-id]');
             if (row?.dataset?.rowKind === 'summary') return;
@@ -2021,6 +2133,8 @@
             }
             if (action === 'select-task' && row) { event.stopPropagation(); toggleSelection(row.dataset.taskId); event.target.checked = selectedTaskIds.includes(row.dataset.taskId); return; }
             if (action === 'toggle-task' && row) { toggleTask(row.dataset.taskId); return; }
+            if (action === 'add-subtask' && row) { event.stopPropagation(); createTask(row.dataset.taskId); return; }
+            if (action === 'pick-people') { event.stopPropagation(); openPeoplePicker(event.target.closest('[data-people-kind]')); return; }
             if (action === 'drag-handle') return;
             if (action !== 'open-detail' && event.target.closest('input, select, textarea, button, a')) return;
             if (row?.dataset?.rowKind === 'task') { selectedTaskId = row.dataset.taskId; focusedRowId = row.dataset.rowId; renderDetail(); renderVirtualRows(); }
@@ -2101,7 +2215,7 @@
             elements.projectsBoardSectionForm?.addEventListener('submit', (event) => { event.preventDefault(); createSection(); });
             elements.projectsBoardAddSection?.addEventListener('click', openSectionForm);
             elements.projectsBoardCancelSection?.addEventListener('click', closeSectionForm);
-            document.getElementById('btn-projects-board-add-task')?.addEventListener('click', () => createTask(selectedTaskId || null));
+            document.getElementById('btn-projects-board-add-task')?.addEventListener('click', () => createTask(null));
             document.getElementById('btn-projects-board-add-column')?.addEventListener('click', () => openColumnForm());
             document.getElementById('btn-projects-board-save-column')?.addEventListener('click', createColumn);
             document.getElementById('btn-projects-board-cancel-column')?.addEventListener('click', () => { if (!columnEditor?.pending) resetColumnForm(); });

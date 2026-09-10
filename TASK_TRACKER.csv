@@ -2052,3 +2052,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1057,2026-09-10,Teacher Schedule pill unclipped title inline rescheduling and session bubble button restructuring,Done,2026-09-10
 1058,2026-09-10,Teacher Schedule bidirectional upper and lower edge pill resize with live slot snapping and conflict guards,Done,2026-09-10
 1059,2026-09-10,CRM Projects visual modernization: emoji replaced with SVG icons Monday-style full-fill status cells per-group colour identity themed control styling and drawer restyle,Done,2026-09-10
+1060,2026-09-10,CRM Projects: subtask creation affordance people picker batch dock filter chips custom date picker and drawer density,In Progress,

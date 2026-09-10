@@ -2052,4 +2052,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1057,2026-09-10,Teacher Schedule pill unclipped title inline rescheduling and session bubble button restructuring,Done,2026-09-10
 1058,2026-09-10,Teacher Schedule bidirectional upper and lower edge pill resize with live slot snapping and conflict guards,Done,2026-09-10
 1059,2026-09-10,CRM Projects visual modernization: emoji replaced with SVG icons Monday-style full-fill status cells per-group colour identity themed control styling and drawer restyle,Done,2026-09-10
-1060,2026-09-10,CRM Projects: subtask creation affordance people picker batch dock filter chips custom date picker and drawer density,In Progress,
+1060,2026-09-10,CRM Projects: subtask creation affordance people picker batch dock filter chips custom date picker and drawer density,In Progress - awaiting verify-projects-phase --all,
+1061,2026-09-10,Auto-detect active Firebase emulators on dev server restart and add dev:server runner,Done,2026-09-10
+1062,2026-09-10,Design interactive visual slide deck for flat organization reflection with thought blocks flowcharts and mindmaps,Done,2026-09-10

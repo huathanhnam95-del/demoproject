@@ -488,10 +488,9 @@
 .crm-projects-workspace-filter > summary::before { content: '☷'; font-size: 15px; color: var(--pj-faint); }
 .crm-projects-workspace-filter > summary::-webkit-details-marker { display: none; }
 .crm-projects-workspace-filter[open] > summary { color: var(--pj-accent-ink); background: var(--pj-accent-soft); }
-.crm-projects-workspace-filter-popover { position: absolute; z-index: 15; top: calc(100% + 8px); right: 0; width: min(440px, calc(100vw - 64px)); padding: 18px; border: 1px solid var(--pj-line); border-radius: 9px; background: var(--pj-surface); box-shadow: var(--pj-shadow-pop); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.crm-projects-workspace-filter-popover { position: absolute; z-index: 15; top: calc(100% + 8px); right: 0; width: min(408px, calc(100vw - 64px)); padding: 14px 16px 12px; border: 1px solid var(--pj-line); border-radius: 12px; background: var(--pj-surface); box-shadow: var(--pj-shadow-pop); display: flex; flex-direction: column; gap: 13px; max-height: min(560px, calc(100dvh - 190px)); overflow-y: auto; overscroll-behavior: contain; }
 .crm-projects-workspace-filter-popover label { min-width: 0; font-size: 11px; color: var(--pj-muted); }
 .crm-projects-workspace-filter-popover .crm-input { padding: 7px 9px; min-height: 32px; font-size: 12px; }
-.crm-projects-workspace-filter-popover > :is(p, .crm-inline-fields) { grid-column: 1 / -1; }
 .crm-projects-workspace-filter-popover p { font-size: 10px; line-height: 1.55; margin: 0; }
 #btn-projects-board-add-column { margin-left: auto; }
 .crm-projects-board-controls { margin: 0; min-height: 0; justify-content: flex-end; }
@@ -1083,22 +1082,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 }
 
 /* ---------- BATCH ACTIONS DOCK ---------- */
-.crm-projects-batch-dock {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 18px;
-  background: var(--pj-inverse-bg);
-  color: var(--pj-inverse-fg);
-  border-radius: 30px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
-  animation: slideUpDock 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
+
 @keyframes slideUpDock {
   from { transform: translate(-50%, 20px); opacity: 0; }
   to { transform: translate(-50%, 0); opacity: 1; }
@@ -1106,29 +1090,10 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 .crm-projects-batch-dock[hidden] {
   display: none !important;
 }
-.crm-batch-count-badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--pj-accent-line);
-  white-space: nowrap;
-}
-.crm-batch-dock-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.crm-batch-dock-actions select.crm-input {
-  background: var(--pj-inverse-raised);
-  color: var(--pj-inverse-fg);
-  border-color: var(--pj-inverse-line);
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-.crm-batch-dock-actions select.crm-input option {
-  background: var(--pj-inverse-bg);
-  color: var(--pj-inverse-fg);
-}
+
+
+
+
 
 /* ---------- STATUS BATTERY & ROLLUPS ---------- */
 .crm-board-status-battery {
@@ -1783,6 +1748,410 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   transform: rotate(45deg);
 }
 .crm-people-empty { margin: 0; padding: 10px 8px; font-size: 11.5px; color: var(--pj-muted); }
+
+
+/* ==========================================================================
+   Selection dock. Was a dark pill of native dropdowns; now a light card with
+   icon-over-label actions. The two <select>s stay -- they are the working
+   control -- but sit invisibly over their tile, so clicking the tile opens
+   them in place. Nothing in either test suite references this dock.
+   ========================================================================== */
+.crm-projects-batch-dock {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom) + 12px);
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px 10px 18px;
+  border: 1px solid var(--pj-line);
+  border-radius: 14px;
+  background: var(--pj-surface);
+  color: var(--pj-ink);
+  box-shadow: 0 18px 44px -12px rgba(20, 30, 50, .28), 0 2px 6px rgba(20, 30, 50, .08);
+  animation: slideUpDock var(--pj-motion) var(--pj-ease);
+}
+.crm-projects-batch-dock[hidden] { display: none !important; }
+.crm-batch-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--pj-ink);
+}
+.crm-batch-badge {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--pj-accent);
+  color: var(--pj-on-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.crm-batch-dock-actions { display: flex; align-items: center; gap: 4px; }
+.crm-batch-action {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 62px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--pj-radius-md);
+  background: transparent;
+  color: var(--pj-ink-2);
+  font: inherit;
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease), color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-batch-action:hover { background: var(--pj-sunken); color: var(--pj-ink); }
+.crm-batch-action .crm-pj-icon { width: 17px; height: 17px; }
+.crm-batch-action:disabled { color: var(--pj-faint); cursor: not-allowed; }
+.crm-batch-action:disabled:hover { background: transparent; }
+/* the real control, invisible but exactly over its tile */
+.crm-batch-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.crm-batch-divider { width: 1px; height: 26px; margin: 0 4px; background: var(--pj-line); }
+.crm-batch-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--pj-radius-md);
+  background: transparent;
+  color: var(--pj-muted);
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease), color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-batch-close:hover { background: var(--pj-sunken); color: var(--pj-ink); }
+@media (max-width: 700px) {
+  .crm-projects-batch-dock { gap: 10px; padding: 8px 10px 8px 12px; }
+  .crm-batch-action { min-width: 52px; padding: 6px; }
+  .crm-batch-count-badge span:last-child { display: none; }
+}
+
+
+/* Task drawer tabs: Updates is the landing panel, details live behind them. */
+.crm-detail-tabs {
+  display: flex;
+  gap: 20px;
+  margin: 14px 0 4px;
+  border-bottom: 1px solid var(--pj-line);
+}
+.crm-detail-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--pj-muted);
+  padding: 9px 1px;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color var(--pj-motion-fast) var(--pj-ease), border-color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-detail-tabs button:hover { color: var(--pj-ink); }
+.crm-detail-tabs button[aria-selected="true"] {
+  color: var(--pj-accent-ink);
+  border-bottom-color: var(--pj-accent);
+  font-weight: 650;
+}
+[data-detail-panel][hidden] { display: none !important; }
+
+
+/* ==========================================================================
+   Filter chips. Status / owner / assignee / section are one-click chips with
+   live counts from the same aggregates the summary line reads. The native
+   <select>s stay in the form as the value store -- FormData, requestSubmit and
+   every pinned selector keep working -- but they are no longer the control.
+   ========================================================================== */
+.crm-filter-block { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.crm-filter-legend {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--pj-faint);
+}
+.crm-filter-chips { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.crm-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid var(--pj-line);
+  border-radius: 99px;
+  background: var(--pj-surface);
+  color: var(--pj-ink-2);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease),
+              border-color var(--pj-motion-fast) var(--pj-ease),
+              color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-filter-chip:hover { background: var(--pj-sunken); border-color: var(--pj-line-strong); color: var(--pj-ink); }
+.crm-filter-chip.is-on {
+  background: var(--pj-accent-soft);
+  border-color: var(--pj-accent);
+  color: var(--pj-accent-ink);
+  font-weight: 600;
+}
+.crm-filter-chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.crm-filter-chip-dot { width: 9px; height: 9px; border-radius: 99px; flex: 0 0 9px; background: var(--pj-faint); }
+.crm-filter-chip-dot[data-status="not_started"] { background: var(--st-ns-solid); }
+.crm-filter-chip-dot[data-status="in_progress"] { background: var(--st-ip-solid); }
+.crm-filter-chip-dot[data-status="blocked"]     { background: var(--st-bl-solid); }
+.crm-filter-chip-dot[data-status="done"]        { background: var(--st-dn-solid); }
+.crm-filter-chip-avatar {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border-radius: 99px;
+  background: var(--pj-sunken);
+  color: var(--pj-muted);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.crm-filter-chip.is-on .crm-filter-chip-avatar { background: var(--pj-accent); color: var(--pj-on-accent); }
+.crm-filter-chip-count {
+  min-width: 15px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: var(--pj-sunken);
+  color: var(--pj-muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.crm-filter-chip.is-on .crm-filter-chip-count { background: var(--pj-accent); color: var(--pj-on-accent); }
+
+.crm-filter-dates .crm-filter-date-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.crm-filter-dates label { display: flex; flex-direction: column; gap: 4px; font-size: 10.5px; color: var(--pj-muted); min-width: 0; }
+
+/* The value store: no ink, no pointer target, but a real box so programmatic
+   and automated value setting still resolves the control. */
+.crm-filter-natives {
+  position: relative;
+  height: 1px;
+  margin: -1px 0 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.crm-filter-natives label { position: absolute; left: 0; top: 0; width: 160px; font-size: 10px; }
+.crm-filter-natives select { width: 160px; min-height: 24px; }
+
+.crm-filter-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 11px;
+  border-top: 1px solid var(--pj-line);
+}
+.crm-filter-footer .crm-inline-fields { margin: 0 0 0 auto; display: flex; gap: 7px; }
+.crm-filter-footer .crm-btn-primary,
+.crm-filter-footer .crm-btn-secondary { padding: 6px 13px; font-size: 11.5px; }
+.crm-filter-note {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border-radius: 99px;
+  border: 1px solid var(--pj-line-strong);
+  background: var(--pj-surface);
+  color: var(--pj-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-style: italic;
+  cursor: help;
+  position: relative;
+}
+.crm-filter-note::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 4;
+  width: 250px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--pj-ink);
+  color: var(--pj-surface);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 450;
+  line-height: 1.5;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--pj-motion-fast) var(--pj-ease), visibility var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-filter-note:hover::after,
+.crm-filter-note:focus-visible::after { opacity: 1; visibility: visible; }
+
+@media (max-width: 700px) {
+  .crm-filter-dates .crm-filter-date-fields { grid-template-columns: 1fr; }
+}
+
+
+/* ==========================================================================
+   Date picker. The native <input type="date"> stays as the value store, so
+   fills, validation and every pinned selector are unchanged -- but Chrome's own
+   calendar no longer opens, and the field reads as part of the board instead of
+   part of the operating system.
+   ========================================================================== */
+[data-panel="projects"] input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+[data-panel="projects"] input[type="date"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236b7488' stroke-width='1.5' stroke-linecap='round'%3E%3Crect x='2.4' y='3.4' width='11.2' height='10.2' rx='1.6'/%3E%3Cpath d='M2.4 6.5h11.2M5.5 2.1v2.6M10.5 2.1v2.6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  background-size: 13px 13px;
+  padding-right: 24px;
+}
+.crm-projects-board-row input[type="date"] { background-position: right 4px center; padding-right: 19px; }
+
+.crm-datepick {
+  position: fixed;
+  z-index: 1300;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--pj-line);
+  border-radius: 12px;
+  background: var(--pj-surface);
+  color: var(--pj-ink);
+  box-shadow: var(--pj-shadow-pop);
+  font-size: 12px;
+}
+.crm-datepick-head { display: flex; align-items: center; gap: 5px; }
+.crm-datepick-nav {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border: 0;
+  border-radius: var(--pj-radius-md);
+  background: transparent;
+  color: var(--pj-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease), color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-datepick-nav:hover { background: var(--pj-sunken); color: var(--pj-ink); }
+.crm-datepick-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 5px;
+  border: 1px solid transparent;
+  border-radius: var(--pj-radius-sm);
+  background: transparent;
+  color: var(--pj-ink);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.crm-datepick-select:hover { background: var(--pj-sunken); }
+.crm-datepick-select:focus-visible { border-color: var(--pj-accent); outline: none; }
+.crm-datepick-select option { background: var(--pj-surface); color: var(--pj-ink); font-weight: 450; }
+
+.crm-datepick-weekdays,
+.crm-datepick-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.crm-datepick-weekdays span {
+  display: grid;
+  place-items: center;
+  height: 20px;
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: .04em;
+  color: var(--pj-faint);
+}
+.crm-datepick-blank { display: block; }
+.crm-datepick-day {
+  display: grid;
+  place-items: center;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--pj-radius-sm);
+  background: transparent;
+  color: var(--pj-ink-2);
+  font: inherit;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease), color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-datepick-day:hover:not(:disabled) { background: var(--pj-sunken); color: var(--pj-ink); }
+.crm-datepick-day.is-today { border-color: var(--pj-accent); color: var(--pj-accent-ink); font-weight: 650; }
+.crm-datepick-day.is-selected {
+  background: var(--pj-accent);
+  border-color: var(--pj-accent);
+  color: var(--pj-on-accent);
+  font-weight: 650;
+}
+.crm-datepick-day:disabled { color: var(--pj-faint); cursor: not-allowed; }
+
+.crm-datepick-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--pj-line);
+}
+.crm-datepick-text {
+  border: 0;
+  border-radius: var(--pj-radius-md);
+  background: transparent;
+  color: var(--pj-accent-ink);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background-color var(--pj-motion-fast) var(--pj-ease);
+}
+.crm-datepick-text:hover { background: var(--pj-accent-soft); }
+.crm-datepick-text[data-datepick-clear] { color: var(--pj-muted); }
+.crm-datepick-text[data-datepick-clear]:hover { background: var(--pj-sunken); color: var(--pj-ink); }
+
+
+/* Dark theme needs a lighter glyph; a data URI cannot read currentColor. */
+[data-panel="projects"].projects-dark input[type="date"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23aeb7c9' stroke-width='1.5' stroke-linecap='round'%3E%3Crect x='2.4' y='3.4' width='11.2' height='10.2' rx='1.6'/%3E%3Cpath d='M2.4 6.5h11.2M5.5 2.1v2.6M10.5 2.1v2.6'/%3E%3C/svg%3E");
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-panel="projects"] *,

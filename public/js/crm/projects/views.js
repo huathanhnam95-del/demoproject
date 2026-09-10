@@ -57,6 +57,56 @@
             fill('ownerUid', members, 'All owners'); fill('assigneeUid', members, 'All assignees');
             syncFilterBadge();
         }
+        // The popover used to be six native selects and a three-line paragraph.
+        // These chips are the control now; each one writes into the select that
+        // still carries the value, so the filter contract below is untouched.
+        function chipInitials(label) {
+            const parts = String(label || '').trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return '—';
+            return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
+        }
+        function renderFilterChips() {
+            const form = el('projects-view-filters');
+            if (!form || typeof form.querySelectorAll !== 'function') return;
+            const counts = response?.aggregates || {};
+            const countFor = { status: counts.byStatus, ownerUid: counts.byOwnerUid };
+            form.querySelectorAll('[data-filter-chips]').forEach((host) => {
+                const name = host.dataset.filterChips;
+                const control = form.elements.namedItem(name);
+                if (!control || !control.options) return;
+                const value = String(control.value || '');
+                const tally = countFor[name] || null;
+                const avatars = name === 'ownerUid' || name === 'assigneeUid';
+                host.innerHTML = Array.from(control.options).map((option) => {
+                    const id = String(option.value || '');
+                    const on = id === value;
+                    const count = id && tally ? tally[id] : null;
+                    const label = option.textContent;
+                    const mark = !id
+                        ? ''
+                        : (avatars
+                            ? `<span class="crm-filter-chip-avatar" aria-hidden="true">${escape(chipInitials(option.textContent))}</span>`
+                            : (name === 'status' ? `<span class="crm-filter-chip-dot" data-status="${escape(id)}" aria-hidden="true"></span>` : ''));
+                    return `<button type="button" class="crm-filter-chip${on ? ' is-on' : ''}" data-chip-field="${escape(name)}" data-chip-value="${escape(id)}" aria-pressed="${on ? 'true' : 'false'}">`
+                        + mark
+                        + `<span class="crm-filter-chip-label">${escape(label)}</span>`
+                        + (Number.isFinite(Number(count)) && count !== null ? `<span class="crm-filter-chip-count">${escape(count)}</span>` : '')
+                        + '</button>';
+                }).join('');
+            });
+        }
+        function applyChip(field, value) {
+            const form = el('projects-view-filters');
+            const control = form?.elements?.namedItem(field);
+            if (!control) return;
+            // Toggle off when the active chip is pressed again, matching the
+            // "Any" chip rather than leaving the filter stuck on.
+            control.value = String(control.value || '') === String(value) ? '' : String(value);
+            control.dispatchEvent(new Event('change', { bubbles: true }));
+            renderFilterChips();
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
         function choiceLabel(choice) {
             const [year, key] = String(choice).split(':');
             const labels = { tetScheme: 'Tet employer scheme', nationalDayAdjacent: 'National Day adjacent holiday', verifiedLunarDates: 'verified lunar holiday dates', verifiedAnnualSwaps: 'verified annual working swaps', cultureDayCompensation: 'Culture Day compensation guidance' };
@@ -242,6 +292,7 @@
             if (!el('projects-view-content')) return;
             animateViewSwap();
             fillFilters();
+            renderFilterChips();
             document.querySelectorAll('#projects-view-tabs [data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
             el('projects-board-table-wrap').hidden = view !== 'board';
             el('projects-view-content').hidden = view === 'board';
@@ -705,10 +756,19 @@
             el('projects-project-links')?.addEventListener('click', (event) => { if (event.target.dataset?.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset?.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
             el('projects-view-tabs')?.addEventListener('click', (event) => { const button = event.target.closest('[data-view]'); if (button && button.dataset.view !== view) { const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar'; view = button.dataset.view; if (monthScopeChanged) resetViewPage(); else render(); } });
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };
+            el('projects-view-filters')?.addEventListener('click', (event) => {
+                const chip = event.target.closest?.('[data-chip-value]');
+                // A chip toggles, so a second handler on the same click would
+                // quietly undo the first. Stamp the event and act once.
+                if (!chip || event.crmChipHandled) return;
+                event.crmChipHandled = true;
+                event.preventDefault();
+                applyChip(chip.dataset.chipField, chip.dataset.chipValue);
+            });
             el('projects-view-filters')?.addEventListener('input', captureFilterDraft);
             el('projects-view-filters')?.addEventListener('change', captureFilterDraft);
             el('projects-view-filters')?.addEventListener('submit', (event) => { event.preventDefault(); filterDrafts = Object.fromEntries(new FormData(event.target)); filters = Object.fromEntries(Object.entries(filterDrafts).filter(([, value]) => value !== '')); syncFilterBadge(); board?.setFilters(filters); refresh(); });
-            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; syncFilterBadge(); if (projectId) { board?.setFilters(filters); refresh(); } });
+            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; syncFilterBadge(); setTimeout(renderFilterChips, 0); if (projectId) { board?.setFilters(filters); refresh(); } });
             el('projects-view-more')?.addEventListener('click', () => { if (!loading && response?.hasMore) refresh(response.nextCursor, [...previous, cursor], pageIndex + 1); });
             el('projects-view-previous')?.addEventListener('click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
             el('projects-view-retry')?.addEventListener('click', () => refresh());

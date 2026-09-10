@@ -1038,14 +1038,21 @@
                     <button id="btn-projects-board-add-task" class="crm-btn-primary" type="button">+ New task</button>
                     <label class="crm-projects-workspace-search"><span class="sr-only">Search tasks</span><input name="title" class="crm-input" type="search" placeholder="Search this board" maxlength="200"></label>
                     <details class="crm-projects-workspace-filter"><summary>Filter <span id="projects-filter-count" class="crm-projects-filter-badge" hidden>0</span></summary><div class="crm-projects-workspace-filter-popover">
-                      <label>Section<select name="sectionId" class="crm-input"><option value="">All sections</option></select></label>
-<label>Status<select name="status" class="crm-input"><option value="">All statuses</option><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label>
-<label>Accountable owner<select name="ownerUid" class="crm-input"><option value="">All owners</option></select></label>
-<label>Assignee<select name="assigneeUid" class="crm-input"><option value="">All assignees</option></select></label>
-<label>From<input name="fromDate" class="crm-input" type="date"></label>
-<label>Through<input name="toDate" class="crm-input" type="date"></label>
-                      <div class="crm-inline-fields"><button type="submit" class="crm-btn-primary">Apply filters</button><button type="reset" class="crm-btn-secondary">Clear filters</button></div>
-                      <p class="crm-muted">Date filters include overlapping dated tasks. Undated tasks are excluded when a date filter is set. Filters stay shared across views in this project.</p>
+                      <div class="crm-filter-block"><p class="crm-filter-legend" id="projects-filter-legend-status">Status</p><div class="crm-filter-chips" data-filter-chips="status" role="group" aria-labelledby="projects-filter-legend-status"></div></div>
+                      <div class="crm-filter-block"><p class="crm-filter-legend" id="projects-filter-legend-owner">Accountable owner</p><div class="crm-filter-chips" data-filter-chips="ownerUid" role="group" aria-labelledby="projects-filter-legend-owner"></div></div>
+                      <div class="crm-filter-block"><p class="crm-filter-legend" id="projects-filter-legend-assignee">Assignee</p><div class="crm-filter-chips" data-filter-chips="assigneeUid" role="group" aria-labelledby="projects-filter-legend-assignee"></div></div>
+                      <div class="crm-filter-block"><p class="crm-filter-legend" id="projects-filter-legend-section">Section</p><div class="crm-filter-chips" data-filter-chips="sectionId" role="group" aria-labelledby="projects-filter-legend-section"></div></div>
+                      <div class="crm-filter-block crm-filter-dates"><p class="crm-filter-legend">Dates</p><div class="crm-filter-date-fields"><label>From<input name="fromDate" class="crm-input" type="date"></label><label>Through<input name="toDate" class="crm-input" type="date"></label></div></div>
+                      <!-- Value store for the chips above. Kept in the form so FormData,
+                           form.elements.namedItem() and every pinned selector are unchanged;
+                           removed from the tab order because the chips are the real control. -->
+                      <div class="crm-filter-natives">
+<label>Section<select name="sectionId" class="crm-input" tabindex="-1" aria-hidden="true"><option value="">All sections</option></select></label>
+<label>Status<select name="status" class="crm-input" tabindex="-1" aria-hidden="true"><option value="">All statuses</option><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></label>
+<label>Accountable owner<select name="ownerUid" class="crm-input" tabindex="-1" aria-hidden="true"><option value="">All owners</option></select></label>
+<label>Assignee<select name="assigneeUid" class="crm-input" tabindex="-1" aria-hidden="true"><option value="">All assignees</option></select></label>
+                      </div>
+                      <div class="crm-filter-footer"><span class="crm-filter-note" tabindex="0" role="note" aria-label="Date filters include overlapping dated tasks. Undated tasks are excluded when a date filter is set. Filters stay shared across views in this project." data-tip="Date filters include overlapping dated tasks. Undated tasks are excluded when a date filter is set. Filters stay shared across views in this project.">i</span><div class="crm-inline-fields"><button type="reset" class="crm-btn-secondary">Clear filters</button><button type="submit" class="crm-btn-primary">Apply filters</button></div></div>
                     </div></details>
                     <button id="btn-projects-board-add-section" class="crm-btn-secondary" type="button">Add section</button>
                     <button id="btn-projects-board-add-column" class="crm-btn-secondary" type="button">+ Column</button></form>
@@ -1070,28 +1077,29 @@
               <div class="crm-projects-board-hints" aria-hidden="true"><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span><span><kbd>Space</kbd> Select</span><span><kbd>Enter</kbd> Open details</span><span><kbd>&larr;</kbd><kbd>&rarr;</kbd> Collapse / Expand</span><span><kbd>Ctrl</kbd><kbd>N</kbd> New subtask</span></div>
             </div>
             <div id="projects-batch-dock" class="crm-projects-batch-dock" hidden aria-label="Batch task actions" role="toolbar">
-              <div class="crm-batch-dock-info">
-                <span id="projects-batch-count" class="crm-batch-count-badge">0 selected</span>
-              </div>
+              <span id="projects-batch-count" class="crm-batch-count-badge">0 selected</span>
               <div class="crm-batch-dock-actions">
-                <label class="crm-batch-label">
-                  <span class="sr-only">Status</span>
-                  <select id="projects-batch-status" class="crm-input crm-input-sm">
-                    <option value="">Change status…</option>
+                <label class="crm-batch-action">
+                  <svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.6"/><path d="M5.6 8.2 7.3 9.9l3.2-3.4"/></svg><span>Status</span>
+                  <span class="sr-only">Change status for the selected tasks</span>
+                  <select id="projects-batch-status" class="crm-batch-native">
+                    <option value="">Change status&hellip;</option>
                     <option value="not_started">Not started</option>
                     <option value="in_progress">In progress</option>
                     <option value="blocked">Blocked</option>
                     <option value="done">Done</option>
                   </select>
                 </label>
-                <label class="crm-batch-label">
-                  <span class="sr-only">Section</span>
-                  <select id="projects-batch-section" class="crm-input crm-input-sm">
-                    <option value="">Move to section…</option>
+                <label class="crm-batch-action">
+                  <svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 8h9.6M9 4.8 12.4 8 9 11.2"/></svg><span>Move to</span>
+                  <span class="sr-only">Move the selected tasks to a section</span>
+                  <select id="projects-batch-section" class="crm-batch-native">
+                    <option value="">Move to section&hellip;</option>
                   </select>
                 </label>
-                <button id="btn-projects-batch-delete" class="crm-btn-danger crm-btn-sm" type="button">Archive</button>
-                <button id="btn-projects-batch-clear" class="crm-btn-secondary crm-btn-sm" type="button">Deselect</button>
+                <button id="btn-projects-batch-delete" class="crm-batch-action" type="button"><svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.4 4.6h11.2v2.2H2.4z"/><path d="M3.4 6.8V13a1 1 0 0 0 1 1h7.2a1 1 0 0 0 1-1V6.8M6.4 9.4h3.2"/></svg><span>Archive</span></button>
+                <span class="crm-batch-divider" aria-hidden="true"></span>
+                <button id="btn-projects-batch-clear" class="crm-batch-close" type="button" aria-label="Deselect all"><svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6"/></svg></button>
               </div>
             </div>
                 <details class="crm-projects-workspace-utility"><summary>Linked CRM records</summary><section id="projects-project-links" aria-label="Project CRM links"></section></details>
@@ -1113,14 +1121,21 @@
             <dialog data-projects-dialog aria-label="Task details" id="projects-board-detail" class="crm-projects-board-detail" aria-labelledby="projects-board-detail-title" hidden>
               <div class="crm-projects-board-detail-head"><div><span class="crm-eyebrow">Selected task</span><h4 id="projects-board-detail-title">Task details</h4></div><button id="btn-projects-board-close-detail" data-projects-close class="crm-btn-secondary crm-btn-sm" type="button" aria-label="Close task details">Close</button></div>
               <div id="projects-board-detail-body" class="crm-projects-board-detail-body"></div>
+              <nav role="tablist" class="crm-detail-tabs" aria-label="Task sections">
+                <button type="button" role="tab" id="projects-detail-tab-updates" aria-controls="projects-detail-panel-updates" data-detail-tab="updates" aria-selected="true">Updates</button>
+                <button type="button" role="tab" id="projects-detail-tab-details" aria-controls="projects-detail-panel-details" data-detail-tab="details" aria-selected="false" tabindex="-1">Details</button>
+              </nav>
+              <div id="projects-detail-panel-details" role="tabpanel" aria-labelledby="projects-detail-tab-details" data-detail-panel="details" hidden>
               <section id="projects-task-planning" aria-label="Task scheduling and links"></section>
+              </div>
+              <div id="projects-detail-panel-updates" role="tabpanel" aria-labelledby="projects-detail-tab-updates" data-detail-panel="updates">
               <section id="projects-board-discussion" class="crm-projects-board-discussion" aria-labelledby="projects-board-discussion-title">
                 <div class="crm-projects-board-discussion-head"><div><span class="crm-eyebrow">Discussion</span><h5 id="projects-board-discussion-title">Task conversation</h5></div><div class="crm-inline-fields"><span id="projects-board-discussion-status" class="crm-muted" aria-live="polite"></span><button id="btn-projects-board-discussion-retry" class="crm-btn-secondary crm-btn-sm" type="button" hidden>Retry</button><button id="btn-projects-board-discussion-replace-upload" class="crm-btn-secondary crm-btn-sm" type="button" hidden>Review and retry attachment</button><button id="btn-projects-board-discussion-abandon-upload" class="crm-btn-secondary crm-btn-sm" type="button" hidden>Keep message without attachment</button></div></div>
                 <div id="projects-board-discussion-list" class="crm-projects-board-discussion-list" aria-live="polite"></div>
                 <div id="projects-board-discussion-history" class="crm-projects-board-discussion-history" hidden></div>
                 <form id="projects-board-discussion-form" class="crm-projects-board-discussion-form"><textarea id="projects-board-discussion-input" class="crm-input" rows="3" maxlength="20000" placeholder="Write an update…"></textarea><div class="crm-inline-fields"><label for="projects-board-discussion-mention">Mention members</label><select id="projects-board-discussion-mention" class="crm-input" multiple size="3" aria-label="Mention project members"></select><input id="projects-board-discussion-file" type="file" accept="application/pdf,text/plain,text/csv,image/png,image/jpeg,image/gif,image/webp,application/zip,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-label="Attach a file"><button id="btn-projects-board-discussion-send" class="crm-btn-primary" type="submit">Post update</button></div></form>
               </section>
-
+              </div>
             </dialog>
             <dialog id="projects-workspace-settings" data-projects-dialog aria-label="Project settings" hidden>
               <div class="crm-projects-workspace-dialog-heading"><h3>Project settings</h3><button type="button" class="crm-btn-secondary crm-btn-sm" data-projects-close aria-label="Close project settings">Close</button></div>
@@ -2930,6 +2945,7 @@
   <script src="js/crm/projects/assistant.js?v=20260910-v2.0.6&cb=mute-response"></script>
   <script src="js/crm/projects/access.js?v=20260910-v2.0.6&phase=5"></script>
   <script src="js/crm/projects/state.js?v=20260910-v2.0.6&phase=9"></script>
+  <script src="js/crm/projects/date-picker.js?v=20260910-v2.0.6&phase=5"></script>
   <script src="js/crm/projects/discussion.js?v=20260910-v2.0.6&phase=6"></script>
   <script src="js/crm/projects/recovery.js?v=20260910-v2.0.6&phase=4"></script>
   <script src="js/crm/projects/views.js?v=20260910-v2.0.6&phase=5"></script>

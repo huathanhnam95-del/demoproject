@@ -157,7 +157,7 @@ async function main() {
                 await page.locator('#projects-view-tabs [data-view="board"]').click();
                 const row = page.locator(`[data-row-kind="task"][data-task-id="${TASK}"]`);
                 await row.focus(); await row.press('Enter');
-                await page.locator('#projects-task-schedule').waitFor();
+                await page.locator('[data-detail-tab="details"]').click(); await page.locator('#projects-task-schedule').waitFor();
                 assert.equal(await page.locator('#projects-board-detail-body dl').filter({ has: page.locator('dt', { hasText: /^Task ID$/ }) }).locator('dd').textContent(), TASK);
                 for (const view of ['board', 'kanban', 'timeline', 'calendar', 'charts']) {
                     await record(`${actor.role}: ${view} authorized read and task control permissions`, async () => {
@@ -191,7 +191,7 @@ async function main() {
                                 assert.ok(report.network.some(event => event.actor === actor.role && event.transport === 'Chrome' && event.path === `/api/projects/${PROJECT}/calendar` && event.status === 200));
                             }
                         }
-                        await page.locator('#projects-task-schedule').waitFor();
+                        await page.locator('[data-detail-tab="details"]').click(); await page.locator('#projects-task-schedule').waitFor();
                         for (const selector of ['#projects-task-start', '#projects-task-due', '#projects-task-schedule button[type="submit"]', '#projects-task-predecessors', '#projects-task-dependencies button[type="submit"]']) {
                             assert.equal(await page.locator(selector).isEnabled(), writable, `${actor.role} ${view} ${selector}`);
                             controls[selector] = writable ? 'enabled' : 'disabled';

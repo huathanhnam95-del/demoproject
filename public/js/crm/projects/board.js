@@ -251,7 +251,7 @@
             const count = selectedTaskIds.length;
             dock.hidden = count === 0;
             const countEl = document.getElementById('projects-batch-count');
-            if (countEl) countEl.textContent = `${count} task${count === 1 ? '' : 's'} selected`;
+            if (countEl) countEl.innerHTML = `<span class="crm-batch-badge">${count}</span><span>${count === 1 ? 'Task' : 'Tasks'} selected</span>`;
             const sectionSelect = document.getElementById('projects-batch-section');
             if (sectionSelect) {
                 const currentVal = sectionSelect.value;
@@ -1267,9 +1267,28 @@
             });
         }
 
+        // The drawer used to be one long scroll that put dates, dependencies and
+        // links ahead of the conversation. Updates is now the landing panel.
+        function activateDetailTab(name) {
+            const dialog = elements.projectsBoardDetail;
+            if (!dialog || typeof dialog.querySelectorAll !== 'function') return;
+            dialog.querySelectorAll('[data-detail-tab]').forEach((tab) => {
+                const active = tab.dataset.detailTab === name;
+                tab.setAttribute('aria-selected', String(active));
+                tab.tabIndex = active ? 0 : -1;
+            });
+            dialog.querySelectorAll('[data-detail-panel]').forEach((panel) => {
+                panel.hidden = panel.dataset.detailPanel !== name;
+            });
+        }
+
         function renderDetail() {
             const detail = elements.projectsBoardDetail;
             const task = taskFor(selectedTaskId);
+            if (task && String(task.id) !== String(lastDetailTaskId)) {
+                lastDetailTaskId = String(task.id);
+                activateDetailTab('updates');
+            }
             if (!detail || !task) {
                 if (detail) detail.hidden = true;
                 deps.onTaskSelection?.(null);
@@ -2024,6 +2043,7 @@
         // Assigning someone used to mean opening a raw OS listbox showing an email
         // address. This is a search-and-pick popover; the native <select> underneath
         // stays the value store, so saveTaskField and every pinned selector are intact.
+        let lastDetailTaskId = null;
         let peoplePopover = null;
         let peopleContext = null;
 
@@ -2101,7 +2121,10 @@
             peoplePopover.setAttribute('role', 'dialog');
             peoplePopover.innerHTML = '<input type="search" class="crm-people-search" data-people-search placeholder="Search people" aria-label="Search people">'
                 + '<div class="crm-people-list" role="listbox" data-people-list></div>';
-            document.body.appendChild(peoplePopover);
+            // Parent to the panel, not <body>: the --pj-* tokens and the dark
+            // override are declared on the panel, so a popover outside it has
+            // no surface, no border and no ink.
+            (document.querySelector('[data-panel="projects"]') || document.body).appendChild(peoplePopover);
             const box = trigger.getBoundingClientRect();
             const width = 248;
             peoplePopover.style.left = `${Math.max(8, Math.min(box.left, (globalScope.innerWidth || 1024) - width - 8))}px`;
@@ -2277,6 +2300,19 @@
                 if (e.target.value) executeBatchSection(e.target.value);
             });
             document.getElementById('btn-projects-batch-delete')?.addEventListener('click', executeBatchDelete);
+            elements.projectsBoardDetail?.addEventListener?.('click', (event) => {
+                const tab = event.target.closest?.('[data-detail-tab]');
+                if (tab) activateDetailTab(tab.dataset.detailTab);
+            });
+            elements.projectsBoardDetail?.addEventListener?.('keydown', (event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || !event.target.matches?.('[data-detail-tab]')) return;
+                const tabs = Array.from(elements.projectsBoardDetail.querySelectorAll('[data-detail-tab]'));
+                const index = tabs.indexOf(event.target);
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+                event.preventDefault();
+                activateDetailTab(tabs[next].dataset.detailTab);
+                tabs[next].focus();
+            });
             document.getElementById('btn-projects-batch-clear')?.addEventListener('click', () => {
                 setSelectedTaskIds([]);
             });

@@ -1046,22 +1046,22 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 }
 [data-panel="projects"] dialog.crm-projects-utility-workspace {
   position: fixed;
-  inset: 16px;
+  inset: calc(16px / var(--crm-projects-ui-scale, 1));
   z-index: 1100;
   display: flex;
   flex-direction: column;
-  width: auto;
-  max-width: none;
-  height: auto;
-  max-height: none;
+  width: calc((100vw - 32px) / var(--crm-projects-ui-scale, 1));
+  max-width: calc((100vw - 32px) / var(--crm-projects-ui-scale, 1));
+  height: calc((100dvh - 32px) / var(--crm-projects-ui-scale, 1));
+  max-height: calc((100dvh - 32px) / var(--crm-projects-ui-scale, 1));
   margin: 0;
-  padding: 24px 28px;
+  padding: calc(24px / var(--crm-projects-ui-scale, 1)) calc(28px / var(--crm-projects-ui-scale, 1));
   border: 1px solid var(--pj-line);
-  border-radius: 10px;
+  border-radius: calc(10px / var(--crm-projects-ui-scale, 1));
   background: var(--pj-surface);
   color: var(--pj-ink);
   box-shadow: 0 24px 80px rgba(25, 43, 69, 0.2);
-  overflow: hidden;
+  overflow: auto;
 }
 [data-panel="projects"] dialog.crm-projects-utility-workspace::backdrop { background: rgba(18, 24, 38, .36); }
 .crm-projects-utility-workspace-heading { display: flex; align-items: start; justify-content: space-between; gap: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--pj-line); }
@@ -1120,7 +1120,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   min-height: 0;
   box-sizing: border-box;
 }
-.crm-projects-utility-rail.collapsed .crm-projects-utility-panes { display: none; }
+.crm-projects-utility-rail.collapsed > .crm-projects-utility-panes { display: none; }
 .crm-projects-utility-pane { display: none; flex-direction: column; gap: 12px; }
 .crm-projects-utility-pane.on { display: flex; }
 .crm-projects-utility-pane > header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }

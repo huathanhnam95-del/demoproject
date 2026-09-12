@@ -82,6 +82,25 @@
     if (trigger.type === 'due_date') when += input('Vietnam time', trigger.time || '09:00', attr('', ['trigger', 'time']), 'time') + input('Days before / after due date', trigger.offsetDays || 0, attr('', ['trigger', 'offsetDays'], 'number'), 'number', 'min="-30" max="30" step="1"');
     return `<fieldset class="crm-auto-definition"${readOnly ? ' disabled' : ''}><legend>${readOnly ? 'Saved definition' : 'Build the rule'}</legend><div class="crm-auto-when crm-auto-fields">${when}</div><h4>Only if</h4>${condition(value.condition, '', ['condition'], context, true)}${steps(value.steps, context, { mode, readOnly })}</fieldset>`;
   }
+  function isBlankDefinition(value) {
+    return !value?.condition && value?.schemaVersion === 1 && value?.trigger?.type === '' && Array.isArray(value.steps) && value.steps.length === 0;
+  }
+  function isSimpleDefinition(value) {
+    const step = value?.steps?.[0];
+    return !value?.condition && E.triggers.includes(value?.trigger?.type) && Array.isArray(value?.steps) && value.steps.length === 1 && E.types.includes(step?.type) && step.type !== 'if';
+  }
+  function isSimpleBuilderDraft(value) {
+    const step = value?.steps?.[0], triggerType = value?.trigger?.type;
+    return !value?.condition && Array.isArray(value?.steps) && value.steps.length <= 1 && (!triggerType || E.triggers.includes(triggerType)) && (!step || (E.types.includes(step.type) && step.type !== 'if'));
+  }
+  function simpleDefinitionReason(value) {
+    if (isBlankDefinition(value) || isSimpleDefinition(value)) return '';
+    if (value?.condition) return 'This rule has conditions.';
+    if (!Array.isArray(value?.steps) || value.steps.length !== 1) return 'This rule has multiple actions or no action.';
+    if (!E.triggers.includes(value?.trigger?.type)) return 'This rule has an unsupported trigger.';
+    if (value.steps[0]?.type === 'if') return 'Conditional steps require Advanced.';
+    return 'This rule has an unsupported action.';
+  }
   function simplePicker(kind, context, query = '') {
     const values = kind === 'trigger' ? E.triggers : E.types;
     const action = kind === 'trigger' ? 'simple-trigger-choice' : 'simple-action-choice';
@@ -112,5 +131,5 @@
     if (!value) return '';
     return `<h4>Preview</h4><p>No tasks have changed. Review before activation.</p>${!value.effects?.length ? '<p>The sample does not match, so this rule would make no changes.</p>' : `<ol>${value.effects.map(effect => `<li><strong>${esc(labels[effect.type] || 'Step')}</strong>${effect.target ? ` · ${esc(effect.target.label)}` : ''}${effect.provisional ? '<span class="crm-auto-warning"> Provisional after waiting</span>' : ''}${effect.changes?.length ? `<ul>${effect.changes.map(change => `<li>${esc(fieldLabel(change.field, context))}: ${esc(displayValue(change.before, change.field, context))} → ${esc(displayValue(change.after, change.field, context))}</li>`).join('')}</ul>` : ''}${effect.recipientUids?.length ? `<p>Notify: ${esc(displayValue(effect.recipientUids, 'assigneeUids', context))}</p>` : ''}${effect.section ? `<p>Section: ${esc(effect.section.label)}</p>` : ''}</li>`).join('')}</ol>`}${(value.warnings || []).map(warning => `<p class="crm-auto-warning">${esc(warning)}</p>`).join('')}`;
   }
-  globalScope.CrmAutomationsRenderer = { esc, labels, button, attr, options, select, input, members, fields, fieldLabel, definition, simpleDefinition, simplePicker, preview, displayValue };
+  globalScope.CrmAutomationsRenderer = { esc, labels, button, attr, options, select, input, members, fields, fieldLabel, definition, isBlankDefinition, isSimpleDefinition, isSimpleBuilderDraft, simpleDefinitionReason, simpleDefinition, simplePicker, preview, displayValue };
 })(typeof window !== 'undefined' ? window : globalThis);

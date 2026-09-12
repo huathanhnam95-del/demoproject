@@ -180,14 +180,6 @@
             }
             function selectUtilityTab(tabName) {
                 if (!utilityRail) return;
-                utilityRail.classList.remove('collapsed');
-                utilityRail.dataset.userToggled = 'true';
-                const ucollapse = byId('ucollapse');
-                if (ucollapse) {
-                    ucollapse.textContent = '»';
-                    ucollapse.setAttribute('aria-label', 'Collapse utilities');
-                    ucollapse.setAttribute('aria-expanded', 'true');
-                }
                 utilityRail.querySelectorAll?.('[data-u]')?.forEach?.(b => {
                     const isSelected = b.dataset.u === tabName;
                     b.setAttribute('aria-selected', String(isSelected));

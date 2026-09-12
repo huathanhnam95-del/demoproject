@@ -287,7 +287,14 @@ test('scale and portal markup keep stable accessible ownership outside the proje
     assert.match(shell, /<div[^>]+id="projects-view-options-popover"[^>]+aria-labelledby="projects-view-options-summary"/);
     assert.match(styles, /\.crm-projects-portal-host \.crm-projects-view-options-popover button:hover/);
     assert.match(styles, /\.crm-projects-portal-host \.crm-projects-view-options-popover button:focus-visible/);
-    assert.match(styles, /\[data-panel="projects"\] dialog\.crm-projects-utility-workspace/);
+    const utilityRule = styles.match(/\[data-panel="projects"\]\s+dialog\.crm-projects-utility-workspace\s*\{([^}]*)\}/)?.[1] || '';
+    assert.match(utilityRule, /inset:\s*calc\(16px \/ var\(--crm-projects-ui-scale, 1\)\)/);
+    assert.match(utilityRule, /width:\s*calc\(\(100vw - 32px\) \/ var\(--crm-projects-ui-scale, 1\)\)/);
+    assert.match(utilityRule, /height:\s*calc\(\(100dvh - 32px\) \/ var\(--crm-projects-ui-scale, 1\)\)/);
+    assert.match(utilityRule, /padding:\s*calc\(24px \/ var\(--crm-projects-ui-scale, 1\)\)\s+calc\(28px \/ var\(--crm-projects-ui-scale, 1\)\)/);
+    assert.match(utilityRule, /overflow:\s*auto/);
+    assert.doesNotMatch(utilityRule, /(?:width|height):\s*auto|(?:max-width|max-height):\s*none/);
+    assert.match(styles, /\.crm-projects-utility-rail\.collapsed\s*>\s*\.crm-projects-utility-panes/);
     assert.match(adminSource, /projectsUiScaleController\?\.dispose\?\.\(\)\s*;[\s\S]*projectsUiScaleController\s*=.*CrmProjectsUiScale/);
 });
 

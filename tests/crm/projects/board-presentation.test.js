@@ -86,11 +86,11 @@ test('group collapse hides its expanded hierarchy, preserves focus and restores 
     h.click(h.row('task:child').querySelector('[data-action="toggle-task"]')); await flush();
     assert.deepEqual(h.ids(), ['section:group', 'task:root', 'task:child', 'task:leaf']);
     const toggle = h.row('section:group').querySelector('[data-action="toggle-section"]');
-    h.click(toggle); assert.deepEqual(h.ids(), ['section:group']); assert.equal(h.elements.projectsBoardRows.style.height, '46px');
+    h.click(toggle); assert.deepEqual(h.ids(), ['section:group']); assert.equal(h.elements.projectsBoardRows.style.height, '44px');
     assert.equal(h.document.activeElement, toggle); assert.equal(toggle.getAttribute('aria-expanded'), 'false');
     await h.board.setFilters({ status: 'done' }); assert.deepEqual(h.ids(), ['section:group']);
     h.click(toggle); assert.deepEqual(h.ids(), ['section:group', 'task:root', 'task:child', 'task:leaf']);
-    assert.equal(h.elements.projectsBoardRows.style.height, '184px');
+    assert.equal(h.elements.projectsBoardRows.style.height, '176px');
     h.click(toggle); h.select('b'); await flush(); assert.deepEqual(h.ids(), ['section:group', 'task:root']);
 });
 

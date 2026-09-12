@@ -350,9 +350,9 @@
   --pj-ink-2: #42506a;
   --pj-muted: var(--crm-text-muted, #748095);
   --pj-faint: #66707e;
-  --pj-accent: var(--blue-600, #3b82f6);
-  --pj-accent-soft: #e8f0ff;
-  --pj-accent-ink: #1d55c4;
+  --pj-accent: var(--crm-primary, #177a44);
+  --pj-accent-soft: var(--crm-primary-light, #f0fdf4);
+  --pj-accent-ink: var(--green-800, #166534);
 
   --st-ns-bg: #eef1f6;  --st-ns-fg: #65728a;
   --st-ip-bg: #fff2d3;  --st-ip-fg: #8a6212;
@@ -368,7 +368,7 @@
   --pj-radius-md: 6px;
   --pj-radius-pill: 99px;
   --pj-shadow-pop: 0 14px 40px -12px rgba(20, 30, 50, 0.22);
-  --pj-row-h: 46px;
+  --pj-row-h: 44px;
   --pj-motion-fast: 120ms;
   --pj-motion: 180ms;
   --pj-motion-slow: 260ms;
@@ -376,7 +376,7 @@
   --pj-shadow-rail: 0 1px 2px rgba(20, 30, 50, 0.05);
 
   /* roles the Option B components introduced */
-  --pj-accent-line: #bfdbfe;
+  --pj-accent-line: var(--green-200, #bbf7d0);
   --pj-on-accent: #ffffff;
   --pj-depth-1: #fafbfc;
   --pj-depth-2: #f6f8fa;
@@ -393,10 +393,10 @@
   /* direction to push a group hue for legible text, per theme */
   --pj-hue-toward: #0b1020;
   --pj-hue-amount: 50%;
-  --st-ns-solid: #c3c9d4;  --st-ns-on: #333b4a;
-  --st-ip-solid: #fdab3d;  --st-ip-on: #4a2e00;
-  --st-bl-solid: #d8324f;  --st-bl-on: #ffffff;
-  --st-dn-solid: #00c875;  --st-dn-on: #00351f;
+  --st-ns-solid: #94a3b8;  --st-ns-on: #333b4a;
+  --st-ip-solid: #f59e0b;  --st-ip-on: #4a2e00;
+  --st-bl-solid: #ef4444;  --st-bl-on: #ffffff;
+  --st-dn-solid: var(--green-600, #1b8a4f);  --st-dn-on: #00351f;
 
   /* Legacy aliases for backward compatibility */
   --projects-ink: var(--pj-ink);
@@ -457,13 +457,13 @@
 #projects-workspace-projects button.is-selected { color: var(--pj-accent-ink); background: var(--pj-accent-soft); font-weight: 650; }
 #projects-workspace-rail #btn-projects-board-create-project { margin: 4px 8px; background: transparent; border: 1px dashed var(--pj-line-strong); color: var(--pj-accent-ink); box-shadow: none; }
 .crm-projects-workspace-rail-footer { margin-top: auto; padding: 24px 8px 0; }
-#projects-workspace-main { min-width: 0; padding: 24px 28px 36px; }
-.crm-projects-workspace-breadcrumb { display: flex; align-items: center; gap: 10px; color: var(--pj-faint); font-size: 11px; margin-bottom: 17px; }
+#projects-workspace-main { min-width: 0; padding: 14px 28px 36px; }
+.crm-projects-workspace-breadcrumb { display: flex; align-items: center; gap: 10px; color: var(--pj-faint); font-size: 11px; margin-bottom: 4px; }
 #projects-workspace-rail-toggle { display: none; }
-.crm-projects-workspace-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin: 0 0 6px; padding: 0; border: 0; }
+.crm-projects-workspace-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 2px; padding: 0; border: 0; }
 .crm-projects-workspace-heading > div:first-child { min-width: 0; }
-[data-panel="projects"] #projects-workspace-name { margin: 0; color: var(--pj-ink); font-size: 27px; line-height: 1.25; letter-spacing: -.8px; font-weight: 700; overflow-wrap: anywhere; }
-#projects-workspace-description { color: var(--pj-muted); font-size: 12px; line-height: 1.6; margin: 8px 0 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-panel="projects"] #projects-workspace-name { margin: 0; color: var(--pj-ink); font-size: 22px; line-height: 1.3; letter-spacing: -.5px; font-weight: 700; overflow-wrap: anywhere; }
+#projects-workspace-description { color: var(--pj-muted); font-size: 11px; line-height: 1.5; margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 36px; overflow: hidden; }
 .crm-projects-workspace-heading-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; flex: 0 0 auto; }
 [data-panel="projects"] :is(.crm-btn-primary, .crm-btn-secondary) { min-height: 32px; border-radius: var(--pj-radius-md); font-size: 12px; padding: 6px 11px; box-shadow: none; font-weight: 550; }
 [data-panel="projects"] .crm-btn-primary { background: var(--pj-accent); border-color: var(--pj-accent); color: var(--pj-on-accent); }
@@ -474,12 +474,12 @@
 [data-panel="projects"] :is(button, summary, input, select, textarea):focus-visible { outline: 2px solid var(--pj-accent); outline-offset: 3px; }
 [data-panel="projects"] .crm-projects-board-section { padding: 0; min-width: 0; }
 #projects-board-status { font-size: 11px; color: var(--pj-faint); line-height: 1.5; margin: 0 0 6px; }
-#projects-board-workspace { margin-top: 8px; min-width: 0; }
+#projects-board-workspace { margin-top: 4px; min-width: 0; }
 #projects-views { min-width: 0; }
-.crm-projects-view-tabs { display: flex; flex-wrap: nowrap; gap: 24px; padding: 0; margin: 0 0 16px; border-bottom: 1px solid var(--pj-line); min-height: 40px; overflow-x: auto; }
+.crm-projects-view-tabs { display: flex; flex-wrap: nowrap; gap: 24px; padding: 0; margin: 0 0 8px; border-bottom: 1px solid var(--pj-line); min-height: 38px; overflow-x: auto; }
 .crm-projects-view-tabs button { flex: 0 0 auto; padding: 10px 1px; font-size: 12px; border-radius: 0; color: var(--pj-muted); border-bottom: 2px solid transparent; }
 .crm-projects-view-tabs button[aria-pressed="true"] { border-bottom-color: var(--pj-accent); color: var(--pj-accent-ink); background: transparent; font-weight: 650; }
-.crm-projects-view-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.crm-projects-view-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
 .crm-projects-view-filters > .crm-projects-workspace-search { flex: 1 1 150px; min-width: 110px; max-width: 260px; }
 .crm-projects-workspace-search input.crm-input { border-color: transparent; background: transparent; padding: 7px 9px; font-size: 12px; min-height: 32px; border-radius: var(--pj-radius-md); }
 .crm-projects-workspace-search input.crm-input:hover { background: var(--pj-raised); border-color: var(--pj-line); }
@@ -494,7 +494,7 @@
 .crm-projects-workspace-filter-popover p { font-size: 10px; line-height: 1.55; margin: 0; }
 #btn-projects-board-add-column { margin-left: auto; }
 .crm-projects-board-controls { margin: 0; min-height: 0; justify-content: flex-end; }
-#projects-board-count, #projects-view-summary, #projects-view-status { font-size: 10px; color: var(--pj-faint); margin: 3px 0 6px; line-height: 1.5; }
+#projects-board-count, #projects-view-summary, #projects-view-status { font-size: 10px; color: var(--pj-faint); margin: 1px 0 3px; line-height: 1.5; }
 #projects-board-count:empty, #projects-view-summary:empty, #projects-view-status:empty { display: none; }
 .crm-projects-board-table-wrap { border: 1px solid var(--pj-line); border-radius: 6px; overflow-x: auto; overscroll-behavior-x: contain; width: 100%; max-width: 100%; }
 .crm-projects-board-header { min-height: 36px; height: 36px; font-size: 11px; font-weight: 450; text-transform: none; letter-spacing: 0; background: var(--pj-raised); color: var(--pj-muted); border-bottom-color: var(--pj-line); }
@@ -652,18 +652,28 @@
 }
 .crm-projects-board-row:hover .crm-board-status-cell::after,
 .crm-board-status-cell:focus-within::after { opacity: .75; }
-.crm-board-status-cell[data-status="not_started"] { color: var(--st-ns-on); }
-.crm-board-status-cell[data-status="in_progress"] { color: var(--st-ip-on); }
-.crm-board-status-cell[data-status="blocked"] { color: var(--st-bl-on); }
-.crm-board-status-cell[data-status="done"] { color: var(--st-dn-on); }
+.crm-board-status-cell[data-status="not_started"] { color: var(--st-ns-fg); }
+.crm-board-status-cell[data-status="in_progress"] { color: var(--st-ip-fg); }
+.crm-board-status-cell[data-status="blocked"] { color: var(--st-bl-fg); }
+.crm-board-status-cell[data-status="done"] { color: var(--st-dn-fg); }
+/* Status pills: soft background with colored indicator dot */
 .crm-board-status-cell[data-status="not_started"] select,
-select.crm-board-field[data-status="not_started"] { background: var(--st-ns-solid); color: var(--st-ns-on); }
+select.crm-board-field[data-status="not_started"] { background: var(--st-ns-bg); color: var(--st-ns-fg); border-radius: var(--pj-radius-pill); font-weight: 600; font-size: 11px; padding-left: 22px; }
 .crm-board-status-cell[data-status="in_progress"] select,
-select.crm-board-field[data-status="in_progress"] { background: var(--st-ip-solid); color: var(--st-ip-on); }
+select.crm-board-field[data-status="in_progress"] { background: var(--st-ip-bg); color: var(--st-ip-fg); border-radius: var(--pj-radius-pill); font-weight: 600; font-size: 11px; padding-left: 22px; }
 .crm-board-status-cell[data-status="blocked"] select,
-select.crm-board-field[data-status="blocked"] { background: var(--st-bl-solid); color: var(--st-bl-on); }
+select.crm-board-field[data-status="blocked"] { background: var(--st-bl-bg); color: var(--st-bl-fg); border-radius: var(--pj-radius-pill); font-weight: 600; font-size: 11px; padding-left: 22px; }
 .crm-board-status-cell[data-status="done"] select,
-select.crm-board-field[data-status="done"] { background: var(--st-dn-solid); color: var(--st-dn-on); }
+select.crm-board-field[data-status="done"] { background: var(--st-dn-bg); color: var(--st-dn-fg); border-radius: var(--pj-radius-pill); font-weight: 600; font-size: 11px; padding-left: 22px; }
+/* Colored indicator dot inside status pills */
+.crm-board-status-cell[data-status]::before {
+  content: ""; position: absolute; left: 16px; top: 50%; width: 8px; height: 8px;
+  border-radius: 50%; transform: translateY(-50%); z-index: 1; pointer-events: none;
+}
+.crm-board-status-cell[data-status="not_started"]::before { background: var(--st-ns-solid); }
+.crm-board-status-cell[data-status="in_progress"]::before { background: var(--st-ip-solid); }
+.crm-board-status-cell[data-status="blocked"]::before { background: var(--st-bl-solid); }
+.crm-board-status-cell[data-status="done"]::before { background: var(--st-dn-solid); }
 /* Native option lists inherit the fill otherwise, which is unreadable. */
 .crm-projects-board-row .crm-board-status-cell select option { background: var(--pj-surface); color: var(--pj-ink); }
 /* The rollup battery has to read on top of a saturated fill. */
@@ -798,9 +808,9 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   --pj-ink-2: #b3c0d2;
   --pj-muted: #9dabc0;
   --pj-faint: #8e9bb0;
-  --pj-accent: #5b9bff;
-  --pj-accent-soft: #16233b;
-  --pj-accent-ink: #9cc2ff;
+  --pj-accent: #4ade80;
+  --pj-accent-soft: #052e16;
+  --pj-accent-ink: #86efac;
   --st-ns-bg: #232c39;
   --st-ns-fg: #93a1b6;
   --st-ip-bg: #3a2f13;

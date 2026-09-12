@@ -6,7 +6,7 @@
   function createController(deps = {}) {
     const root = deps.root, button = deps.button, api = deps.apiFetchJson;
     let actorUid = '', projectId = '', epoch = 0, generation = 0, context = {}, contextSignature = '', blockedAuthority = null;
-    let opened = false, mode = 'manage', representation = 'recipe', status = '', rule = null, version = null, draft = null, baseDefinition = '', dirty = false, preview = null, diagnostics = [];
+    let opened = false, mode = 'manage', representation = 'recipe', picker = '', pickerQuery = '', pickerRestore = '', focusPickerSearch = false, status = '', rule = null, version = null, draft = null, baseDefinition = '', dirty = false, preview = null, diagnostics = [];
     let items = [], cursor = null, loading = false, filters = { query: '', folderMode: 'all', folder: '', enabled: '' };
     const seq = { list: 0, detail: 0, preview: 0, search: 0, history: 0, run: 0 };
     let pending = null, inFlight = false, conflict = false, sample = null, search = null, history = { kind: '', items: [], cursor: null }, taskLabels = {};
@@ -16,10 +16,10 @@
     const owner = () => !!actorUid && actorUid === uid() && !!projectId && context.actorUid === actorUid && context.project?.id === projectId && (context.project.lifecycle || 'active') === 'active' && context.membership?.role === 'Owner' && blockedAuthority === null;
     const ready = () => owner() && !!context.filterOptionsReady;
     const base = () => `/api/projects/${encodeURIComponent(projectId)}`;
-    const state = () => clone({ actorUid, projectId, epoch, generation, opened, mode, representation, status, rule, version, draft, dirty, preview, diagnostics, items, cursor, loading, filters, pending, inFlight, conflict, sample, search, history, ready: ready(), owner: owner() });
+    const state = () => clone({ actorUid, projectId, epoch, generation, opened, mode, representation, picker, pickerQuery, status, rule, version, draft, dirty, preview, diagnostics, items, cursor, loading, filters, pending, inFlight, conflict, sample, search, history, ready: ready(), owner: owner() });
     function reset(message = '') {
       epoch++; generation++; Object.keys(seq).forEach(key => seq[key]++);
-      opened = false; mode = 'manage'; rule = null; version = null; draft = null; baseDefinition = ''; dirty = false; preview = null; diagnostics = []; items = []; cursor = null; loading = false;
+      opened = false; mode = 'manage'; representation = 'recipe'; picker = ''; pickerQuery = ''; pickerRestore = ''; focusPickerSearch = false; rule = null; version = null; draft = null; baseDefinition = ''; dirty = false; preview = null; diagnostics = []; items = []; cursor = null; loading = false;
       pending = null; inFlight = false; conflict = false; sample = null; search = null; history = { kind: '', items: [], cursor: null }; taskLabels = {}; status = message; render();
     }
     function setAccount(value) { if (String(value || '') === actorUid) return; actorUid = String(value || ''); projectId = ''; context = {}; contextSignature = ''; blockedAuthority = null; reset(); }
@@ -53,7 +53,25 @@
       if (!ready()) return;
       if (pending) { status = 'Resolve the interrupted change before starting another draft.'; render(); return; }
       clearPanels(); seq.detail++; rule = null; version = null; baseDefinition = ''; sample = null; diagnostics = []; conflict = false;
-      draft = { title: 'New automation', folder: '', actorUid, definition: E.create(context) }; generation++; dirty = true; preview = null; mode = 'edit'; opened = true; render();
+      draft = { title: 'New automation', folder: '', actorUid, definition: E.createBlank(context) }; generation++; dirty = true; preview = null; picker = ''; pickerQuery = ''; representation = 'recipe'; mode = 'edit'; opened = true; render();
+    }
+    function showCreate() {
+      if (!ready()) return;
+      if (pending) { status = 'Resolve the interrupted change before starting another draft.'; render(); return; }
+      clearPanels(); seq.detail++; rule = null; version = null; baseDefinition = ''; sample = null; diagnostics = []; conflict = false; draft = null; dirty = false; preview = null; picker = ''; pickerQuery = ''; representation = 'recipe'; mode = 'create'; opened = true; render();
+    }
+    function openSimplePicker(kind) { if (['trigger', 'action'].includes(kind)) { picker = kind; pickerQuery = ''; pickerRestore = ''; focusPickerSearch = true; render(); } }
+    function closeSimplePicker() { pickerRestore = picker; picker = ''; pickerQuery = ''; render(); }
+    function chooseSimpleTrigger(type) {
+      if (!draft || !E.triggers.includes(type)) return;
+      const trigger = type === 'due_date' ? { type, time: '09:00', offsetDays: 0 } : { type };
+      pickerRestore = 'trigger'; changed({ ...draft, definition: { ...draft.definition, trigger } }); picker = ''; pickerQuery = ''; render();
+    }
+    function chooseSimpleAction(type) {
+      if (!draft || !E.types.includes(type)) return;
+      const existing = draft.definition.steps?.[0], node = E.newNode(type, context);
+      if (existing?.nodeId) node.nodeId = existing.nodeId;
+      pickerRestore = 'action'; changed({ ...draft, definition: { ...draft.definition, steps: existing ? [node, ...draft.definition.steps.slice(1)] : [node] } }); picker = ''; pickerQuery = ''; render();
     }
     async function show() { if (!ready()) return; opened = true; render(); if (mode === 'manage') await loadList(); }
     async function loadList(append = false) {
@@ -78,6 +96,7 @@
         if (!current(s) || serial !== seq.detail || draftAtStart !== generation) return;
         rule = clone(result.rule); version = clone(result.version); diagnostics = clone(result.diagnostics || []); baseDefinition = JSON.stringify(version.definition);
         if (!preserveDraft) { draft = { title: rule.title, folder: rule.folder || '', actorUid: version.actorUid, definition: clone(version.definition) }; dirty = false; generation++; }
+        representation = version.definition?.condition || (version.definition?.steps || []).length !== 1 || version.definition?.steps?.[0]?.type === 'if' ? 'blocks' : 'recipe'; picker = ''; pickerQuery = '';
         conflict = false; mode = 'edit'; opened = true; status = preserveDraft ? 'Current revision loaded. Review your retained draft, save, then preview.' : diagnostics.length ? 'Some references need repair. Replace unavailable selections below.' : 'Automation loaded.';
         render(); resolveTaskLabels(version.definition);
       } catch (error) { if (serial === seq.detail) fail(error, s); }
@@ -214,8 +233,21 @@
     }
     function init() {
       button?.addEventListener('click', show);
-      root?.addEventListener('input', event => { const control = event.target; if (control.dataset.autoMeta && ready() && draft) updateDraft({ [control.dataset.autoMeta]: control.value }); else if (control.matches('input[data-auto-path],textarea[data-auto-path]')) handleField(control); });
+      root?.addEventListener('input', event => { const control = event.target; if (control.dataset.autoPickerSearch && picker) { pickerQuery = control.value; render(); } else if (control.dataset.autoMeta && ready() && draft) updateDraft({ [control.dataset.autoMeta]: control.value }); else if (control.matches('input[data-auto-path],textarea[data-auto-path]')) handleField(control); });
       root?.addEventListener('change', event => { const control = event.target; if (control.dataset.autoMeta && control.tagName === 'SELECT' && ready() && draft) updateDraft({ [control.dataset.autoMeta]: control.value }); else if (control.matches('select[data-auto-kind]')) handleField(control); });
+      root?.addEventListener('keydown', event => {
+        if (!picker) return;
+        if (event.key === 'Escape') { event.preventDefault(); closeSimplePicker(); return; }
+        if (event.target.matches?.('[data-auto-picker-search]') && event.key === 'ArrowDown') {
+          const first = root.querySelector?.(`[data-auto-picker="${picker}"] [role="option"]`);
+          if (first) { event.preventDefault(); first.focus(); }
+          return;
+        }
+        if (!event.target.matches?.(`[data-auto-picker="${picker}"] [role="option"]`) || !['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+        const choices = Array.from(root.querySelectorAll?.(`[data-auto-picker="${picker}"] [role="option"]`) || []), index = choices.indexOf(event.target);
+        const next = choices[(index + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length];
+        if (next) { event.preventDefault(); next.focus(); }
+      });
       root?.addEventListener('submit', event => { const form = event.target; if (!form.dataset.autoForm) return; event.preventDefault(); if (!ready()) return; const data = Object.fromEntries(new FormData(form)); if (form.dataset.autoForm === 'filters') setFilters(data); else searchTasks(data.query); });
       root?.addEventListener('click', event => {
         const control = event.target.closest('button[data-auto-action]'); if (!control || control.disabled || !ready() || control.closest('[data-auto-history-definition]')) return;
@@ -223,13 +255,19 @@
         if (action === 'close') { opened = false; render(); }
         else if (action === 'open-manager') show();
         else if (action === 'manage') { mode = 'manage'; search = null; history.kind = ''; loadList(); }
-        else if (action === 'create') newDraft();
+        else if (action === 'create') showCreate();
+        else if (action === 'create-from-scratch') newDraft();
+        else if (action === 'simple-trigger') openSimplePicker('trigger');
+        else if (action === 'simple-action') openSimplePicker('action');
+        else if (action === 'simple-trigger-choice') chooseSimpleTrigger(control.dataset.autoChoice);
+        else if (action === 'simple-action-choice') chooseSimpleAction(control.dataset.autoChoice);
+        else if (action === 'close-picker') closeSimplePicker();
         else if (action === 'apply-recipe') {
           const recipe = E.RECIPES?.find(r => r.id === control.dataset.recipeId);
           if (recipe) {
             clearPanels(); seq.detail++; rule = null; version = null; baseDefinition = ''; sample = null; diagnostics = []; conflict = false;
             draft = { title: recipe.title, folder: '', actorUid, definition: recipe.create(context) };
-            generation++; dirty = true; preview = null; mode = 'edit'; opened = true; render();
+            generation++; dirty = true; preview = null; picker = ''; pickerQuery = ''; representation = 'recipe'; mode = 'edit'; opened = true; render();
           }
         }
         else if (action === 'open-rule') openRule(control.dataset.ruleId);
@@ -289,10 +327,17 @@
       const competingBanner = competingWarnings.length ? `<div class="crm-auto-warning is-competing"><strong><svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5 14.2 13H1.8z"/><path d="M8 6.6v3.1M8 11.4h.01"/></svg> Competing Rules Warning:</strong><ul style="margin: 4px 0 0; padding-left: 18px;">${competingWarnings.map(w => `<li>${e(w.message)}</li>`).join('')}</ul></div>` : '';
       const recipeGallery = E.RECIPES ? `<div class="crm-auto-recipes" style="margin: 12px 0; padding: 12px; background: var(--pj-raised); border-radius: 8px;"><h4 style="margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--pj-faint);">Recommended Recipes</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">${E.RECIPES.map(r => `<button type="button" class="crm-btn-secondary crm-btn-sm" data-auto-action="apply-recipe" data-recipe-id="${e(r.id)}" title="${e(r.description)}">+ ${e(r.title)}</button>`).join('')}</div></div>` : '';
       const manage = `${recipeGallery}${competingBanner}<form data-auto-form="filters" class="crm-auto-fields">${R.input('Search automations', filters.query, 'name="query"', 'search', 'maxlength="200"')}${R.select('Folder', [{ value: 'all', label: 'All folders' }, { value: 'unfiled', label: 'Unfiled' }, { value: 'named', label: 'Named folder' }], filters.folderMode, 'name="folderMode"')}${R.input('Folder name', filters.folder, 'name="folder"', 'text', 'maxlength="200"')}${R.select('State', [{ value: '', label: 'All' }, { value: 'true', label: 'Enabled' }, { value: 'false', label: 'Disabled' }], filters.enabled, 'name="enabled"')}<button class="crm-btn-primary" type="submit">Find automations</button></form><ul class="crm-auto-manage-list">${items.map(item => `<li><div><strong>${e(item.title)}</strong><p>${e(item.folder || 'Unfiled')} · ${item.enabled ? 'Enabled' : 'Disabled'} · Active actor: ${e(actorName(item.activeActorUid))} · Draft actor: ${e(actorName(item.draftActorUid))}</p><span class="crm-muted">References not checked yet</span></div>${b('open-rule', 'Open', `data-rule-id="${e(item.ruleId)}"`)}</li>`).join('') || `<li>${loading ? 'Loading automations…' : cursor ? 'No matches in this page. Load more to continue.' : 'No matching automations.'}</li>`}</ul>${cursor ? b('more-rules', 'Load more automations') : ''}`;
+      const manageSurface = manage.replace(recipeGallery, '');
+      const createGallery = `<section class="crm-auto-create-gallery" aria-labelledby="crm-auto-create-title"><div class="crm-auto-gallery-intro"><span class="crm-eyebrow">Create</span><h4 id="crm-auto-create-title">Start with a recipe</h4><p>Choose a supported starting point, or build a rule from scratch.</p></div><div class="crm-auto-recipe-grid">${(E.RECIPES || []).map(recipe => `<article class="crm-auto-recipe-card"><h5>${e(recipe.title)}</h5><p>${e(recipe.description)}</p>${b('apply-recipe', 'Use recipe', `data-recipe-id="${e(recipe.id)}"`)}</article>`).join('')}<article class="crm-auto-recipe-card is-blank"><h5>From scratch</h5><p>Choose the trigger and action yourself. Nothing is preselected.</p>${b('create-from-scratch', 'Build from scratch')}</article></div></section>`;
+      if (mode === 'create') {
+        root.innerHTML = `<header class="crm-auto-heading"><div><span class="crm-eyebrow">Project automation</span><h3>${e(context.project?.name || 'Project')} · Create</h3></div><div class="crm-inline-fields">${b('manage', 'Manage', 'aria-pressed="false"')}${b('close', 'Close')}</div></header><p data-auto-status role="status">${e(status)}</p><fieldset class="crm-auto-surface"><legend class="sr-only">Create automation</legend>${createGallery}</fieldset>`;
+        return;
+      }
       let editor = '';
       if (draft) {
         const errors = validation();
-        editor = `<div class="crm-auto-fields">${R.input('Automation title', draft.title, 'id="auto-title" data-auto-meta="title"', 'text', 'maxlength="200"')}${R.input('Folder', draft.folder, 'id="auto-folder" data-auto-meta="folder"', 'text', 'maxlength="200"')}<label>Run as Owner<select class="crm-input" id="auto-actor" data-auto-meta="actorUid"${!rule ? ' disabled' : ''}>${R.options((context.members || []).filter(person => person.role === 'Owner').map(person => ({ value: person.uid, label: person.displayName || person.email || person.uid })), draft.actorUid)}</select><span class="crm-muted">Changing the actor creates a new version when saved.</span></label></div><nav class="crm-auto-representations" aria-label="Editor representation">${b('recipe', 'Recipe', `aria-pressed="${representation === 'recipe'}"`)}${b('blocks', 'Connected blocks', `aria-pressed="${representation === 'blocks'}"`)}</nav>${diagnostics.map(item => `<p class="crm-auto-warning">${e(item.message || 'A saved reference needs repair.')}</p>`).join('')}${R.definition(draft.definition, ctx, representation)}${errors.length ? `<details class="crm-auto-validation"><summary>${errors.length} items to review before saving</summary><ul>${errors.map(error => `<li>${e(error)}</li>`).join('')}</ul></details>` : ''}<div class="crm-auto-actions">${b('save', rule ? 'Save new version' : 'Save automation', locked || errors.length ? 'disabled' : '')}${rule ? b('metadata', 'Save title / folder', locked ? 'disabled' : '') : ''}${b('sample-search', sample ? `Sample: ${sample.title}` : 'Choose sample task')}${b('preview', 'Preview effects', dirty || !sample || !version || search?.selecting || locked ? 'disabled' : '')}${b('activate', 'Activate this version', !preview || dirty || locked ? 'disabled' : '')}${rule ? b('disable', 'Disable automation', !rule.enabled || locked ? 'disabled' : '') + b('duplicate', 'Create disabled copy', locked ? 'disabled' : '') + b('refresh-rule', 'Refresh current revision', pending || inFlight ? 'disabled' : '') + b('versions', 'Version history') + b('runs', 'Run history') : ''}</div><section data-auto-preview aria-label="Effect preview">${R.preview(preview, ctx)}</section>`;
+        const definitionMarkup = representation === 'recipe' && R.simpleDefinition ? R.simpleDefinition(draft.definition, ctx, { picker, query: pickerQuery }) : R.definition(draft.definition, ctx, representation);
+        editor = `<details class="crm-auto-metadata"><summary>Rule details</summary><div class="crm-auto-fields">${R.input('Automation title', draft.title, 'id="auto-title" data-auto-meta="title"', 'text', 'maxlength="200"')}${R.input('Folder', draft.folder, 'id="auto-folder" data-auto-meta="folder"', 'text', 'maxlength="200"')}<label>Run as Owner<select class="crm-input" id="auto-actor" data-auto-meta="actorUid"${!rule ? ' disabled' : ''}>${R.options((context.members || []).filter(person => person.role === 'Owner').map(person => ({ value: person.uid, label: person.displayName || person.email || person.uid })), draft.actorUid)}</select><span class="crm-muted">Changing the actor creates a new version when saved.</span></label></div></details><nav class="crm-auto-representations" aria-label="Editor representation">${b('recipe', 'Builder', `aria-pressed="${representation === 'recipe'}"`)}${b('blocks', 'Advanced', `aria-pressed="${representation === 'blocks'}"`)}</nav>${diagnostics.map(item => `<p class="crm-auto-warning">${e(item.message || 'A saved reference needs repair.')}</p>`).join('')}${definitionMarkup}${errors.length ? `<details class="crm-auto-validation"><summary>${errors.length} items to review before saving</summary><ul>${errors.map(error => `<li>${e(error)}</li>`).join('')}</ul></details>` : ''}<div class="crm-auto-actions"><div class="crm-auto-primary-actions">${b('save', rule ? 'Save new version' : 'Save automation', locked || errors.length ? 'disabled' : '')}</div><details class="crm-auto-advanced-actions"><summary>Preview and lifecycle</summary><div class="crm-auto-action-grid">${rule ? b('metadata', 'Save title / folder', locked ? 'disabled' : '') : ''}${b('sample-search', sample ? `Sample: ${sample.title}` : 'Choose sample task')}${b('preview', 'Preview effects', dirty || !sample || !version || search?.selecting || locked ? 'disabled' : '')}${b('activate', 'Activate this version', !preview || dirty || locked ? 'disabled' : '')}${rule ? b('disable', 'Disable automation', !rule.enabled || locked ? 'disabled' : '') + b('duplicate', 'Create disabled copy', locked ? 'disabled' : '') + b('refresh-rule', 'Refresh current revision', pending || inFlight ? 'disabled' : '') + b('versions', 'Version history') + b('runs', 'Run history') : ''}</div></details></div><section data-auto-preview aria-label="Effect preview">${R.preview(preview, ctx)}</section>`;
       }
       const searchUi = search ? `<section class="crm-auto-task-search" aria-label="Find task"><h4>${search.destination.sample ? 'Choose a sample task' : 'Choose target task'}</h4><form data-auto-form="task-search">${R.input('Task title', search.query, 'name="query"', 'search', 'maxlength="200"')}<button class="crm-btn-primary" type="submit">Search tasks</button></form><ul>${search.items.map(task => `<li>${e(task.title)} ${b('choose-task', 'Choose', `data-task-id="${e(task.id)}"`)}</li>`).join('') || '<li>Search to find a current task.</li>'}</ul>${search.cursor ? b('more-tasks', 'Load more tasks') : ''}${b('close-search', 'Close task search')}</section>` : '';
       let historyUi = '';
@@ -302,8 +347,14 @@
         if (history.run) historyUi += `<p>Run: ${e(history.run.run.state)}${history.run.run.errorCode ? ` · ${e(history.run.run.errorCode)}` : ''}</p>${history.run.failedStep ? `<p class="crm-auto-warning">Failed step${history.run.failedStep.sequence ? ` ${history.run.failedStep.sequence}` : ''}: ${e(history.run.failedStep.label)}</p>` : ''}<ol>${history.run.actions.map(action => `<li>${e(R.labels[action.type || action.effect?.type] || 'Action')} · ${e(action.state)}${action.choice ? ` · ${e(action.choice)}` : ''}${action.resumeAt ? ` · Resume ${e(action.resumeAt)}` : ''}${action.errorCode ? ` · ${e(action.errorCode)}` : ''}</li>`).join('')}</ol>`;
         historyUi += b('close-history', 'Close history') + '</section>';
       }
-      root.innerHTML = `<header class="crm-auto-heading"><div><span class="crm-eyebrow">Project automation</span><h3>${e(context.project?.name || 'Project')} · Automate</h3><p>Clear rules. Deliberate changes.</p></div><div class="crm-inline-fields">${b('manage', 'Manage', `aria-pressed="${mode === 'manage'}"`)}${b('create', 'Create')}${b('close', 'Close')}</div></header><p data-auto-status role="status">${e(status)}</p>${pending ? `<p class="crm-auto-warning">An earlier change needs acknowledgement. Newer edits are kept.</p>${b('retry-mutation', inFlight ? 'Waiting for acknowledgement…' : 'Retry original change', inFlight ? 'disabled' : '')}` : ''}<fieldset class="crm-auto-surface"${!ready() ? ' disabled' : ''}><legend class="sr-only">Automation workspace</legend>${mode === 'manage' ? manage : editor}${searchUi}${historyUi}</fieldset>`;
-      if (focus) {
+      root.innerHTML = `<header class="crm-auto-heading"><div><span class="crm-eyebrow">Project automation</span><h3>${e(context.project?.name || 'Project')} · Automate</h3></div><div class="crm-inline-fields">${b('manage', 'Manage', `aria-pressed="${mode === 'manage'}"`)}${b('create', 'Create')}${b('close', 'Close')}</div></header><p data-auto-status role="status">${e(status)}</p>${pending ? `<p class="crm-auto-warning">An earlier change needs acknowledgement. Newer edits are kept.</p>${b('retry-mutation', inFlight ? 'Waiting for acknowledgement…' : 'Retry original change', inFlight ? 'disabled' : '')}` : ''}<fieldset class="crm-auto-surface"${!ready() ? ' disabled' : ''}><legend class="sr-only">Automation workspace</legend>${mode === 'manage' ? manageSurface : editor}${searchUi}${historyUi}</fieldset>`;
+      if (focusPickerSearch) {
+        root.querySelector?.('[data-auto-picker-search]')?.focus?.({ preventScroll: true });
+        focusPickerSearch = false;
+      } else if (pickerRestore) {
+        root.querySelector?.(`[data-auto-action="simple-${pickerRestore}"]`)?.focus?.({ preventScroll: true });
+        pickerRestore = '';
+      } else if (focus) {
         const target = Array.from(root.querySelectorAll('input,select,textarea,button')).find(control => {
           if (focus.id) return control.id === focus.id;
           if (focus.path !== undefined || focus.kind !== undefined) return control.dataset.autoNode === focus.node && control.dataset.autoPath === focus.path && control.dataset.autoKind === focus.kind;
@@ -313,7 +364,7 @@
         if (target) { target.focus({ preventScroll: true }); if (focus.start !== null && focus.start !== undefined && typeof target.setSelectionRange === 'function') { try { target.setSelectionRange(focus.start, focus.end); } catch (_) { /* Native selects have no caret. */ } } }
       }
     }
-    return { init, setAccount, setSelection, setContext, show, newDraft, loadList, setFilters, openRule, updateDraft, editDefinition, setRepresentation, mutate, retryMutation, generatePreview, beginSearch, searchTasks, selectSearchTask, loadHistory, showRun, acceptDraft, getState: state };
+    return { init, setAccount, setSelection, setContext, show, newDraft, showCreate, openSimplePicker, closeSimplePicker, chooseSimpleTrigger, chooseSimpleAction, loadList, setFilters, openRule, updateDraft, editDefinition, setRepresentation, mutate, retryMutation, generatePreview, beginSearch, searchTasks, selectSearchTask, loadHistory, showRun, acceptDraft, getState: state };
   }
   globalScope.CrmAutomations = { createController };
 })(typeof window !== 'undefined' ? window : globalThis);

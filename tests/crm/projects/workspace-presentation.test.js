@@ -217,3 +217,10 @@ test('recovery and notification startup stay collapsed; explicit automation reve
     f.recovery.hidden = false; f.flush(); assert.equal(f.utility.open, false, 'recovery visibility on board load must not open the utility');
     f.utility.open = false; f.automations.hidden = false; f.flush(); assert.equal(f.utility.open, true);
 });
+
+test('linked records is one utility-owned container and the utility shell has an accessible workspace dialog', () => {
+    assert.equal((html.match(/id="projects-project-links"/g) || []).length, 1);
+    assert.match(html, /id="projects-upane-linked-records"/);
+    assert.match(html, /id="projects-utility-workspace"[^>]+data-projects-dialog/);
+    assert.match(html, /aria-controls="projects-utility-workspace"/);
+});

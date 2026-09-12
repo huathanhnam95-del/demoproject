@@ -308,6 +308,15 @@
 .crm-auto-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; margin-bottom: 16px; }
 .crm-auto-heading h3 { margin: 4px 0 8px; font-size: 1.4rem; }
 .crm-auto-heading p { margin: 0; color: var(--pj-ink-2); }
+.crm-auto-create-gallery { padding-block: 8px 24px; }
+.crm-auto-gallery-intro { margin-bottom: 20px; }
+.crm-auto-gallery-intro h4 { margin: 4px 0 6px; font-size: 1.15rem; }
+.crm-auto-gallery-intro p, .crm-auto-recipe-card p { margin: 0; color: var(--pj-ink-2); line-height: 1.5; }
+.crm-auto-recipe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.crm-auto-recipe-card { display: flex; flex-direction: column; align-items: start; gap: 10px; padding: 16px; border: 1px solid var(--pj-line); border-radius: var(--pj-radius-md); background: var(--pj-raised); }
+.crm-auto-recipe-card h5 { margin: 0; font-size: 13px; color: var(--pj-ink); }
+.crm-auto-recipe-card button { margin-top: auto; }
+.crm-auto-recipe-card.is-blank { border-style: dashed; background: transparent; }
 .crm-auto-surface, .crm-auto-definition { border: 0; padding: 0; margin: 16px 0; min-width: 0; }
 .crm-auto-definition > legend { font-weight: 700; font-size: 1.1rem; margin-block: 16px; }
 .crm-auto-fields { display: flex; flex-wrap: wrap; align-items: start; gap: 16px; margin-block: 16px; }
@@ -317,6 +326,23 @@
 .crm-auto-manage-list > li { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--pj-line); }
 .crm-auto-manage-list p { margin: 6px 0; }
 .crm-auto-representations, .crm-auto-actions, .crm-auto-step-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.crm-auto-metadata { margin-block: 16px; border-block: 1px solid var(--pj-line); }
+.crm-auto-metadata > summary, .crm-auto-advanced-actions > summary { cursor: pointer; padding: 10px 0; color: var(--pj-ink-2); font-weight: 600; }
+.crm-auto-primary-actions { margin-block: 18px; }
+.crm-auto-action-grid { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 8px; }
+.crm-auto-simple-builder { max-width: 760px; margin: 24px auto; }
+.crm-auto-simple-choice { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px 14px; align-items: center; padding: 16px; border: 1px solid var(--pj-line); border-radius: var(--pj-radius-md); background: var(--pj-raised); }
+.crm-auto-simple-kicker { color: var(--pj-accent-ink); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.crm-auto-choice-button { justify-content: flex-start; text-align: left; min-height: 42px; font-size: 14px; }
+.crm-auto-simple-config, .crm-auto-simple-action-config { grid-column: 1 / -1; }
+.crm-auto-simple-config { display: flex; flex-wrap: wrap; gap: 12px; }
+.crm-auto-simple-config label { flex: 1 1 180px; }
+.crm-auto-flow-connector { display: grid; place-items: center; min-height: 34px; color: var(--pj-accent); font-size: 24px; }
+.crm-auto-placeholder { grid-column: 1 / -1; margin: 8px 0 0; color: var(--pj-muted); }
+.crm-auto-picker { margin-top: 12px; padding: 16px; border: 1px solid var(--pj-accent-line); border-radius: var(--pj-radius-md); background: var(--pj-surface); box-shadow: var(--pj-shadow-pop); }
+.crm-auto-picker > label { display: block; max-width: none; }
+.crm-auto-picker ul { display: grid; gap: 6px; padding: 0; margin: 12px 0; list-style: none; }
+.crm-auto-picker li button { width: 100%; justify-content: flex-start; text-align: left; }
 .crm-projects-automations [aria-pressed="true"] { background: var(--pj-accent-soft); color: var(--pj-accent-ink); border-color: var(--pj-accent); }
 .crm-auto-steps { list-style: none; padding: 0 0 0 20px; margin: 24px 0; border-left: 2px solid var(--pj-accent-line); }
 .crm-auto-step { position: relative; padding: 0 0 24px; margin-bottom: 16px; border-bottom: 1px solid var(--pj-line); }
@@ -1018,6 +1044,31 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   transition: width .22s var(--pj-motion, ease);
   min-height: 100%;
 }
+[data-panel="projects"] dialog.crm-projects-utility-workspace {
+  position: fixed;
+  inset: 16px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 24px 28px;
+  border: 1px solid var(--pj-line);
+  border-radius: 10px;
+  background: var(--pj-surface);
+  color: var(--pj-ink);
+  box-shadow: 0 24px 80px rgba(25, 43, 69, 0.2);
+  overflow: hidden;
+}
+[data-panel="projects"] dialog.crm-projects-utility-workspace::backdrop { background: rgba(18, 24, 38, .36); }
+.crm-projects-utility-workspace-heading { display: flex; align-items: start; justify-content: space-between; gap: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--pj-line); }
+.crm-projects-utility-workspace-heading h2 { margin: 4px 0 2px; font-size: 1.35rem; }
+.crm-projects-utility-workspace-heading p { margin: 0; }
+.crm-projects-utility-workspace > .crm-projects-utility-panes { display: flex; flex: 1; width: 100%; padding: 24px 0 8px; overflow: auto; }
+.crm-projects-utility-workspace > .crm-projects-utility-panes > .crm-projects-utility-pane { width: 100%; }
 .crm-projects-utility-rail.collapsed { width: 49px; }
 .crm-projects-utility-tabs {
   display: flex;
@@ -1359,6 +1410,19 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   right: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
+.crm-projects-portal-host .crm-projects-view-options-popover button {
+  min-height: 32px;
+  border-radius: var(--pj-radius-md);
+  font-size: 12px;
+  padding: 6px 11px;
+  font-weight: 550;
+  background: var(--pj-surface);
+  border: 1px solid var(--pj-line);
+  color: var(--pj-muted);
+}
+.crm-projects-portal-host .crm-projects-view-options-popover button:hover:not(:disabled) { background: var(--pj-sunken); color: var(--pj-accent-ink); }
+.crm-projects-portal-host .crm-projects-view-options-popover button:disabled { cursor: not-allowed; opacity: .55; }
+.crm-projects-portal-host .crm-projects-view-options-popover button:focus-visible { outline: 2px solid var(--pj-accent); outline-offset: 3px; }
 
 .crm-projects-view-pivot { margin-left: auto; display: flex; align-items: center; padding-bottom: 6px; }
 .crm-projects-view-pivot .crm-projects-group-by-label { display: inline-flex; }

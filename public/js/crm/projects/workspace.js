@@ -157,6 +157,13 @@
             });
             listen(filters, 'reset', () => { clearTimeout(timer); });
             const utilityRail = byId('projects-utility-rail');
+            const utilityDialog = byId('projects-utility-workspace');
+            let utilityOrigin = null;
+            listen(utilityDialog, 'close', () => {
+                const origin = utilityOrigin;
+                utilityOrigin = null;
+                origin?.focus?.();
+            });
             // Below 1700px the rail overlays the board instead of sharing the grid,
             // so it must start as the 49px icon strip or it covers the right-hand columns.
             const RAIL_INLINE_MIN_WIDTH = 1700;
@@ -187,6 +194,17 @@
                     b.setAttribute('tabindex', isSelected ? '0' : '-1');
                 });
                 utilityRail.querySelectorAll?.('.crm-projects-utility-pane')?.forEach?.(p => p.classList.toggle('on', p.dataset.p === tabName));
+                const heading = byId('projects-utility-workspace-status');
+                if (heading) heading.textContent = ({ assistant: 'Project assistance', notifications: 'Project notifications', automations: 'Project automations', recovery: 'Archive and trash', 'linked-records': 'Linked CRM records' })[tabName] || 'Workspace tools';
+            }
+            function openUtilityWorkspace(tabName, origin = null) {
+                if (!utilityRail || !current()) return;
+                selectUtilityTab(tabName);
+                utilityOrigin = origin || byId(`projects-utab-${tabName}`) || byId('btn-projects-automate');
+                if (utilityDialog) {
+                    utilityDialog.hidden = false;
+                    if (!utilityDialog.open) utilityDialog.showModal();
+                }
             }
             syncRailDefault();
             if (typeof globalScope.addEventListener === 'function') listen(globalScope, 'resize', syncRailDefault);
@@ -194,7 +212,7 @@
                 listen(utilityRail, 'click', event => {
                     const tab = event.target.closest?.('[data-u]');
                     if (tab) {
-                        selectUtilityTab(tab.dataset.u);
+                        openUtilityWorkspace(tab.dataset.u, tab);
                         return;
                     }
                     const collapseBtn = event.target.closest?.('#ucollapse');
@@ -220,8 +238,8 @@
                     selectUtilityTab(tabs[next].dataset.u);
                 });
             }
-            listen(byId('btn-projects-automate'), 'click', () => {
-                selectUtilityTab('automations');
+            listen(byId('btn-projects-automate'), 'click', event => {
+                openUtilityWorkspace('automations', event.currentTarget || byId('btn-projects-automate'));
             });
             for (const id of ['projects-automations']) {
                 const target = byId(id);
@@ -230,7 +248,7 @@
                         if (!target.hidden) {
                             const utility = target.closest('details');
                             if (utility) utility.open = true;
-                            selectUtilityTab('automations');
+                            openUtilityWorkspace('automations', byId('projects-utab-automations') || byId('btn-projects-automate'));
                         }
                     });
                     observer.observe(target, { attributes: true, attributeFilter: ['hidden'] });

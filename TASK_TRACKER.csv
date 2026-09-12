@@ -2055,3 +2055,47 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1060,2026-09-10,CRM Projects: subtask creation affordance people picker batch dock filter chips custom date picker and drawer density,In Progress - awaiting verify-projects-phase --all,
 1061,2026-09-10,Auto-detect active Firebase emulators on dev server restart and add dev:server runner,Done,2026-09-10
 1062,2026-09-10,Design interactive visual slide deck for flat organization reflection with thought blocks flowcharts and mindmaps,Done,2026-09-10
+1063,2026-09-10,Generate presentation deck images from Claude design prompts,Done,2026-09-10
+1064,2026-09-10,Decompress presentation deck into 15 focused slides eliminating slide cramping and text density,Done,2026-09-10
+1065,2026-09-10,Audit translationese placeholders and data integrity across other practice modes,Done,2026-09-10
+1066,2026-09-10,Capture authentic 4K screenshots of quoted speakers from YouTube interviews and integrate into presentation,Done,2026-09-10
+1067,2026-09-11,Redesign presentation content and script to focus on teamwork challenges and solutions in simple natural language,Done,2026-09-11
+1068,2026-09-11,Reorder presentation deck to position Valve interviews and theories immediately after Phase 1 reflection,Done,2026-09-11
+1069,2026-09-11,Add introductory slide for Valve flat structure before the veteran interviews,Done,2026-09-11
+1070,2026-09-11,Generate comprehensive presentation content script file,Done,2026-09-11
+1071,2026-09-11,Implement Phase 1 to 3 cross-mode data quality and controller fixes with handoff plan,Done,2026-09-11
+1072,2026-09-11,Audit RFIB viewing modes visual presentation transitions and pedagogical integrity,Done,2026-09-11
+1073,2026-09-11,Generate black and white documentary photos for three conflict resolution pathways,Done,2026-09-11
+1074,2026-09-11,Install ffmpeg skill into workspace and global skills repositories,Done,2026-09-11
+1075,2026-09-11,Regenerate three conflict resolution pathway images with revised style and approach,Done,2026-09-11
+1076,2026-09-11,Create narrative dynamic video for Gabe Newell slide with Kokoro TTS and FFmpeg,Done,2026-09-11
+1077,2026-09-11,Generate grounded narrative documentary photos for three conflict resolution pathways based on operational pedagogical context,Done,2026-09-11
+1078,2026-09-11,Audit three conflict resolution pathway photos and regenerate with revised prompt engineering,Done,2026-09-11
+1079,2026-09-11,Iterative audit-revise-regenerate cycle for three conflict resolution pathway photos,Done,2026-09-11
+1080,2026-09-11,Brainstorm and explore actionable visual styles for conflict resolution pathways without people,Done,2026-09-11
+1081,2026-09-12,Generate actionable background images for slides 20 21 22,Done,2026-09-12
+1082,2026-09-12,Audit video generation skills and install Remotion and Veo 3.1 B-roll generator,Done,2026-09-12
+1083,2026-09-12,Generate animated style background images capturing action and people for slides 20 21 22,Done,2026-09-12
+1084,2026-09-12,Create 10s narrative introduction video for Valve and Gabe Newell with Veo 3.1 Kokoro and FFmpeg,Done,2026-09-12
+1085,2026-09-12,Review re-prompt and regenerate distinct animated action backgrounds for slides 20 21 22,Done,2026-09-12
+1086,2026-09-12,Explore stickman pixel and minimalist 2D artistic variants for slides 20 21 22,Done,2026-09-12
+1087,2026-09-12,Produce 3-minute Valve Flatland documentary video with slower deeper voice and real employee interviews,Done,2026-09-12
+1088,2026-09-12,Revise stickman images for 3 conflict pathways using 3-model local LLM audit committee,Done,2026-09-12
+1089,2026-09-12,Produce 4 voice versions of 3-minute Valve Flatland documentary video,Done,2026-09-12
+1090,2026-09-12,Propose method for download transcription and Vietnamese voice-over of Rachel English video,Done,2026-09-12
+1091,2026-09-12,Execute Vietnamese voice-over pipeline for Rachel English video using Edge TTS,Done,2026-09-12
+1092,2026-09-12,Research free Vietnamese TTS alternatives and audio muting architecture,Done,2026-09-12
+1093,2026-09-12,Benchmark 4 Vietnamese TTS engines and implement hard audio carving for Rachel English video,Done,2026-09-12
+1094,2026-09-12,Render 4 30s 2D sketch-style mock video options for Rachel English,Done,2026-09-12
+1095,2026-09-12,Fix bilingual English loanword pronunciation and staccato prosody in Rachel voiceover,Done,2026-09-12
+1096,2026-09-12,Preserve Rachel authentic phonetic demonstrations in Vietnamese voiceover,Done,2026-09-12
+1097,2026-09-12,Preserve Rachel authentic P and B consonant intro pronunciation at seconds 4-6,Done,2026-09-12
+1098,2026-09-12,Preserve Rachel authentic R and B phonemes and bring at seconds 52-65,Done,2026-09-12
+1099,2026-09-12,Preserve Rachel authentic happen demonstrations at seconds 90-104,Done,2026-09-12
+1100,2026-09-12,CRM Projects UI Overhaul - Visual redesign and sync improvements,Done,2026-09-12
+1101,2026-09-12,Extract spoken audio quotes for 5 veteran creators by speaker name,Done,2026-09-12
+1102,2026-09-12,Replace veto and vetoes with natural teacher-friendly language in Advice Process,Done,2026-09-12
+1103,2026-09-12,Check and correct all IPA transcriptions in student_handout_centering_diphthongs.docx per Oxford rules,Done,2026-09-12
+1104,2026-09-12,Compile comprehensive Entrance Test UI ratings and feedback analysis report into docs/entrance-test-ui-analysis.md,Done,2026-09-12
+1105,2026-09-13,Investigate Google Cloud Gemini API billing cost activities,Done,2026-09-13
+1106,2026-09-13,CRM Projects font and interface size control execution,Done,2026-09-13

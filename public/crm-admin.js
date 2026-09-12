@@ -736,6 +736,8 @@
     elements.projectsBoardProjectSelect = document.getElementById('projects-board-project-select');
     elements.projectsBoardDensity = document.getElementById('btn-projects-density');
     elements.projectsBoardTheme = document.getElementById('btn-projects-theme');
+    elements.projectsUiScale = document.getElementById('projects-ui-scale');
+    elements.projectsUiScaleValue = document.getElementById('projects-ui-scale-value');
     elements.projectsBoardRefresh = document.getElementById('btn-projects-board-refresh');
     elements.projectsBoardAddSection = document.getElementById('btn-projects-board-add-section');
     elements.projectsBoardAddTask = document.getElementById('btn-projects-board-add-task');
@@ -1717,6 +1719,10 @@
         elements.projectsBoardTheme.textContent = isDark ? 'Theme' : 'Dark';
       });
     }
+    window.projectsUiScaleController = window.CrmProjectsUiScale?.init?.({
+      elements,
+      panel: document.querySelector('[data-panel="projects"]')
+    });
     if (window.CrmProjectsDiscussion && typeof window.CrmProjectsDiscussion.createController === 'function') {
       window.projectsDiscussionController = window.CrmProjectsDiscussion.createController({
         elements,

@@ -1,3 +1,32 @@
+/* Local Projects typography trial. These subsets are the real Noto Sans 500
+   files from Google Fonts, with Vietnamese, Latin-ext and Latin coverage kept
+   separate so stacked marks remain available without loading an unrelated
+   script family. */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/NotoSans-Medium-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/NotoSans-Medium-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/NotoSans-Medium-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 .crm-projects-access-layout {
   display: grid;
   gap: 18px;
@@ -339,7 +368,11 @@
 
 /* Approved Projects workspace: flat board canvas; existing controllers own state. */
 /* Approved Projects workspace: flat board canvas; existing controllers own state. */
-[data-panel="projects"] {
+:is([data-panel="projects"], .crm-projects-portal-host) {
+  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-weight: 500;
+  font-synthesis: none;
+  --crm-projects-ui-scale: 1.25;
   --pj-ground: var(--crm-bg-subtle, #f6f8fb);
   --pj-surface: var(--crm-card-bg, #ffffff);
   --pj-raised: #fbfcfe;
@@ -407,6 +440,23 @@
   color: var(--pj-ink);
   color-scheme: light;
 }
+@supports (zoom: 1) {
+  [data-panel="projects"] {
+    zoom: var(--crm-projects-ui-scale);
+  }
+}
+:is([data-panel="projects"], .crm-projects-portal-host) :is(input, select, textarea, button, summary) {
+  font-family: inherit;
+  font-synthesis: none;
+}
+[data-panel="projects"] :is(.crm-projects-board-row, .crm-projects-board-row input, .crm-projects-board-row select, .crm-projects-board-row button) {
+  font-weight: 500;
+}
+[data-panel="projects"] :is(#projects-board-settings-description, #projects-board-project-description, #projects-board-discussion-input, .crm-projects-discussion-message p, .crm-projects-discussion-history) {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.65;
+}
 .crm-projects-workspace-shell {
   display: grid;
   grid-template-columns: 216px minmax(0, 1fr) auto;
@@ -463,7 +513,7 @@
 .crm-projects-workspace-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 2px; padding: 0; border: 0; }
 .crm-projects-workspace-heading > div:first-child { min-width: 0; }
 [data-panel="projects"] #projects-workspace-name { margin: 0; color: var(--pj-ink); font-size: 22px; line-height: 1.3; letter-spacing: -.5px; font-weight: 700; overflow-wrap: anywhere; }
-#projects-workspace-description { color: var(--pj-muted); font-size: 11px; line-height: 1.5; margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 36px; overflow: hidden; }
+#projects-workspace-description { color: var(--pj-muted); font-size: 11px; line-height: 1.5; margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere;  }
 .crm-projects-workspace-heading-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; flex: 0 0 auto; }
 [data-panel="projects"] :is(.crm-btn-primary, .crm-btn-secondary) { min-height: 32px; border-radius: var(--pj-radius-md); font-size: 12px; padding: 6px 11px; box-shadow: none; font-weight: 550; }
 [data-panel="projects"] .crm-btn-primary { background: var(--pj-accent); border-color: var(--pj-accent); color: var(--pj-on-accent); }
@@ -495,13 +545,13 @@
 #btn-projects-board-add-column { margin-left: auto; }
 .crm-projects-board-controls { margin: 0; min-height: 0; justify-content: flex-end; }
 #projects-board-count, #projects-view-summary, #projects-view-status { font-size: 10px; color: var(--pj-faint); margin: 1px 0 3px; line-height: 1.5; }
-#projects-board-count:empty, #projects-view-summary:empty, #projects-view-status:empty { display: none; }
-.crm-projects-board-table-wrap { border: 1px solid var(--pj-line); border-radius: 6px; overflow-x: auto; overscroll-behavior-x: contain; width: 100%; max-width: 100%; }
+#projects-board-status:empty, #projects-board-count:empty, #projects-view-summary:empty, #projects-view-status:empty { display: none; }
+.crm-projects-board-table-wrap { position: relative; border: 1px solid var(--pj-line); border-radius: 6px; overflow-x: auto; overscroll-behavior-x: contain; width: 100%; max-width: 100%; }
 .crm-projects-board-header { min-height: 36px; height: 36px; font-size: 11px; font-weight: 450; text-transform: none; letter-spacing: 0; background: var(--pj-raised); color: var(--pj-muted); border-bottom-color: var(--pj-line); }
-.crm-projects-board-header > div { border-right: 1px solid var(--pj-line); height: 100%; padding: 8px 10px; display: flex; align-items: center; }
+.crm-projects-board-header > div { border-right: 1px solid transparent; height: 100%; padding: 8px 10px; display: flex; align-items: center; }
 .crm-projects-board-header > div button { border: 0; background: transparent; color: var(--pj-faint); font-size: 10px; padding: 2px; }
 .crm-projects-board-row { height: var(--pj-row-h); min-height: var(--pj-row-h); border-bottom-color: var(--pj-line); box-shadow: inset 3px 0 var(--crm-project-group-color, var(--pj-accent)); }
-.crm-projects-board-row > div { height: 100%; border-right: 1px solid var(--pj-line); padding: 7px 9px; }
+.crm-projects-board-row > div { height: 100%; border-right: 1px solid transparent; padding: 7px 9px; }
 .crm-projects-board-row:hover, .crm-projects-board-row:focus-within { background: var(--pj-raised); }
 .crm-projects-board-row.is-selected { background: var(--pj-accent-soft); box-shadow: inset 3px 0 var(--crm-project-group-color, var(--pj-accent)); }
 .crm-projects-board-row.is-pending { background: var(--st-ip-bg); }
@@ -550,8 +600,8 @@
    per-level hue only added noise, so every chip shares one quiet tone. */
 .crm-board-expander { width: 18px; color: var(--pj-faint); border: 0; background: transparent; cursor: pointer; padding: 0; }
 .crm-board-expander:hover { color: var(--pj-ink); }
-.crm-board-drag-handle { width: 17px; color: var(--pj-line-strong); font-size: 13px; opacity: 0.28; cursor: grab; transition: opacity .16s ease; }
-.crm-board-detail-button { flex: 0 0 24px; border: 0; background: none; color: var(--pj-faint); padding: 3px; font-size: 12px; cursor: pointer; opacity: 0.28; transition: opacity .16s ease, color .16s ease; }
+.crm-board-drag-handle { width: 17px; color: var(--pj-line-strong); font-size: 13px; opacity: 0.6; cursor: grab; transition: opacity .16s ease; }
+.crm-board-detail-button { flex: 0 0 24px; border: 0; background: none; color: var(--pj-faint); padding: 3px; font-size: 12px; cursor: pointer; opacity: 0.65; transition: opacity .16s ease, color .16s ease; }
 /* Creating a subtask used to be Ctrl+N only, with no visible control anywhere.
    This is the affordance; it follows the drag handle's reveal-on-approach idiom. */
 .crm-board-add-subtask {
@@ -604,7 +654,7 @@
   background: var(--pj-surface, #fff);
 }
 
-.crm-projects-board-section-row { min-height: var(--pj-row-h); height: var(--pj-row-h); text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 650; background: var(--pj-surface); color: var(--crm-project-group-color, var(--pj-accent)); border-left: 3px solid var(--crm-project-group-color, var(--pj-accent)); border-bottom: 1px solid var(--pj-line); }
+.crm-projects-board-section-row { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 12px; padding-right: 12px; min-height: var(--pj-row-h); height: var(--pj-row-h); text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 650; background: var(--pj-surface); color: var(--crm-project-group-color, var(--pj-accent)); border-left: 3px solid var(--crm-project-group-color, var(--pj-accent)); border-bottom: 1px solid var(--pj-line); }
 .crm-projects-board-section-row > div { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .crm-board-group-expander { flex: 0 0 22px; color: inherit; padding: 2px; border: 0; background: none; cursor: pointer; }
 .crm-board-group-title { color: inherit; font-size: 14px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -612,26 +662,13 @@
 .crm-projects-board-section-row input:hover { border-color: var(--pj-line-strong); }
 .crm-projects-board-section-row .crm-muted { color: var(--pj-faint); font-size: 10px; font-weight: 400; }
 
-/* Monday's signature: the status cell IS the colour. Edge-to-edge fill, white
-   bold text, chevron only on hover. The <select> is untouched in the DOM -- it
-   is simply styled into the block, so every pinned selector still resolves. */
-.crm-projects-board-row .crm-board-status-cell { display: flex; align-items: stretch; position: relative; padding: 0; }
-.crm-projects-board-row .crm-board-status-cell select,
+/* Compact status pills retain the native, keyboard-editable select. */
+.crm-projects-board-row .crm-board-status-cell { display: flex; align-items: center; position: relative; padding: 6px 8px; }
 .crm-projects-board-row select.crm-board-field[data-status] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  padding: 0 18px 0 10px;
-  font-size: 11.5px;
-  font-weight: 650;
-  letter-spacing: .01em;
-  text-align: center;
-  text-align-last: center;
-  cursor: pointer;
+  appearance: none; -webkit-appearance: none; width: 100%; max-width: 100%;
+  height: 28px; border: 0; border-radius: var(--pj-radius-pill);
+  padding: 0 12px 0 22px; font-size: 11px; font-weight: 600;
+  text-align: left; text-align-last: left; cursor: pointer;
   transition: filter var(--pj-motion-fast) var(--pj-ease);
 }
 .crm-projects-board-row .crm-board-status-cell select:hover { filter: brightness(1.07); }
@@ -724,7 +761,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 .crm-projects-board-empty button { margin-left: 0; }
 .crm-projects-workspace-onboarding h3 { font-size: 20px; color: var(--pj-ink); margin: 0 0 10px; }
 .crm-projects-workspace-onboarding p, .crm-projects-board-empty span { font-size: 13px; color: var(--pj-muted); line-height: 1.6; }
-[data-panel="projects"] dialog[data-projects-dialog] { box-sizing: border-box; position: fixed; inset: 0 0 0 auto; width: min(620px, 94vw); max-width: 94vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 26px; border: 0; border-left: 1px solid var(--pj-line); border-radius: 0; background: var(--pj-surface); color: var(--pj-ink); box-shadow: -15px 0 60px rgba(25, 43, 69, 0.11); overflow: auto; }
+[data-panel="projects"] dialog[data-projects-dialog] { box-sizing: border-box; position: fixed; inset: 0 0 0 auto; width: min(620px, calc(94vw / var(--crm-projects-ui-scale, 1))); max-width: calc(94vw / var(--crm-projects-ui-scale, 1)); height: calc(100dvh / var(--crm-projects-ui-scale, 1)); max-height: calc(100dvh / var(--crm-projects-ui-scale, 1)); margin: 0; padding: 26px; border: 0; border-left: 1px solid var(--pj-line); border-radius: 0; background: var(--pj-surface); color: var(--pj-ink); box-shadow: -15px 0 60px rgba(25, 43, 69, 0.11); overflow: auto; }
 [data-panel="projects"] dialog[data-projects-dialog]::backdrop { background: rgba(24, 42, 66, 0.22); }
 [data-panel="projects"] dialog[data-projects-dialog]:not([open]), [data-panel="projects"] [hidden] { display: none !important; }
 [data-panel="projects"] dialog.crm-projects-board-form[open] { display: grid; grid-template-columns: 1fr; align-content: start; align-items: start; gap: 12px; }
@@ -757,7 +794,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   .crm-projects-workspace-shell { position: relative; grid-template-columns: 216px minmax(0, 1fr); padding-right: 49px; }
   .crm-projects-utility-rail { position: absolute; top: 0; right: 0; height: 100%; width: 49px; z-index: 30; }
   .crm-projects-utility-rail:not(.collapsed) { width: 312px; box-shadow: -14px 0 34px rgba(25, 43, 69, 0.13); }
-  #projects-workspace-main { padding: 22px 22px 32px; }
+  #projects-workspace-main { padding: 14px 22px 32px; }
 }
 @media (max-width: 1100px) {
   .crm-projects-workspace-shell { grid-template-columns: minmax(0, 1fr); }
@@ -769,12 +806,13 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   .crm-projects-workspace-heading-actions { justify-content: flex-start; }
 }
 @media (max-width: 700px) {
-  .crm-projects-workspace-shell { border-radius: 6px; min-height: calc(100vh - 130px); }
+  .crm-projects-workspace-shell { margin-inline: -20px; border-radius: 0; min-height: calc(100vh - 130px); }
   .crm-projects-utility-rail:not(.collapsed) { width: min(312px, calc(100vw - 40px)); }
-  #projects-workspace-main { padding: 16px 13px 26px; }
+  #projects-workspace-main { padding: 12px 10px 26px; }
   [data-panel="projects"] #projects-workspace-name { font-size: 22px; }
   .crm-projects-workspace-heading { gap: 8px; }
-  .crm-projects-workspace-heading-actions { gap: 6px; }
+  .crm-projects-workspace-heading-actions { gap: 4px; flex: 1 1 100%; min-width: 0; max-width: 100%; }
+  .crm-projects-workspace-heading-actions .crm-btn-secondary { font-size: 11px; padding: 5px 8px; }
   #projects-workspace-description { font-size: 11px; margin-bottom: 5px; }
   .crm-projects-view-tabs { gap: 20px; }
   .crm-projects-view-filters { gap: 6px; }
@@ -782,7 +820,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   #btn-projects-board-add-section, #btn-projects-board-add-column { margin-left: 0; }
   .crm-projects-workspace-filter-popover { position: fixed; inset: 160px 16px auto; width: auto; max-height: calc(100dvh - 190px); overflow: auto; grid-template-columns: 1fr; }
   .crm-projects-workspace-filter-popover label { min-width: 0; }
-  [data-panel="projects"] dialog[data-projects-dialog] { width: 100vw; max-width: 100vw; padding: 22px 18px; }
+  [data-panel="projects"] dialog[data-projects-dialog] { width: calc(100vw / var(--crm-projects-ui-scale, 1)); max-width: calc(100vw / var(--crm-projects-ui-scale, 1)); padding: 22px 18px; }
   .crm-projects-workspace-settings-tabs { gap: 20px; }
 }
 
@@ -796,7 +834,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 [data-panel="projects"] .crm-board-people-field option { min-height: 28px; }
 
 /* ---------- Theme & Density Modes ---------- */
-[data-panel="projects"].projects-dark {
+:is([data-panel="projects"], .crm-projects-portal-host).projects-dark {
   color-scheme: dark;
   --pj-ground: #0d1117;
   --pj-surface: #141a22;
@@ -888,20 +926,6 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   font-size: 8px;
 }
 
-.crm-projects-board-table-wrap.is-loading .crm-projects-board-row {
-  opacity: 0.55;
-  position: relative;
-  pointer-events: none;
-}
-.crm-projects-board-table-wrap.is-loading .crm-projects-board-row::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: pj-shimmer 1.5s infinite;
-  pointer-events: none;
-}
 /* Subtle loading progress bar across the top of the board */
 .crm-projects-board-table-wrap.is-loading::before {
   content: '';
@@ -913,27 +937,11 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   animation: pj-shimmer 1.2s infinite;
   z-index: 10;
 }
-/* Skeleton placeholder rows when board is loading with empty rowgroup */
-.crm-projects-board-table-wrap.is-loading .crm-projects-board-rows:empty {
-  min-height: calc(var(--pj-row-h) * 6);
-  background:
-    repeating-linear-gradient(
-      180deg,
-      var(--pj-raised) 0px,
-      var(--pj-raised) calc(var(--pj-row-h) - 1px),
-      var(--pj-line) calc(var(--pj-row-h) - 1px),
-      var(--pj-line) var(--pj-row-h)
-    );
-  position: relative;
-}
-.crm-projects-board-table-wrap.is-loading .crm-projects-board-rows:empty::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: pj-shimmer 1.5s infinite;
-  pointer-events: none;
+/* Initial placeholders are outside the authorization-gated workspace. */
+.crm-projects-initial-loading:not([hidden]) { display: grid; gap: 1px; padding-top: 12px; }
+.crm-projects-initial-loading > span { height: var(--pj-row-h); border-bottom: 1px solid var(--pj-line); background: linear-gradient(90deg, var(--pj-raised), var(--pj-surface), var(--pj-raised)); background-size: 200% 100%; animation: pj-shimmer 1.5s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .crm-projects-initial-loading > span, .crm-projects-board-table-wrap.is-loading::before { animation: none !important; }
 }
 @keyframes pj-shimmer {
   0% { background-position: 200% 0; }
@@ -1297,7 +1305,7 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 }
 /* Newly created task: brief highlight-and-fade entrance */
 [data-panel="projects"] .crm-projects-board-row.is-new {
-  animation: pj-row-enter .4s var(--pj-ease) both;
+  animation: pj-row-enter .18s var(--pj-ease) both;
 }
 @keyframes pj-row-enter {
   0% { opacity: 0; transform: translateY(-4px); background: var(--pj-accent-soft); }
@@ -1356,10 +1364,54 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   box-shadow: var(--pj-shadow-pop);
 }
 .crm-projects-view-options-popover button { justify-content: flex-start; text-align: left; width: 100%; }
-[data-panel="projects"] .crm-projects-view-options-popover button[aria-pressed="true"] {
+:is([data-panel="projects"], .crm-projects-portal-host) .crm-projects-view-options-popover button[aria-pressed="true"] {
   background: var(--pj-accent-soft);
   color: var(--pj-accent-ink);
   border-color: var(--pj-accent-line);
+}
+
+.crm-projects-scale-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 10px;
+  align-items: center;
+  min-width: 220px;
+  padding-top: 6px;
+  border-top: 1px solid var(--pj-line);
+  margin-top: 2px;
+}
+.crm-projects-scale-control label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pj-ink);
+}
+.crm-projects-scale-control output {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pj-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.crm-projects-scale-control input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--crm-primary, #177a44);
+  cursor: pointer;
+}
+
+.crm-projects-portal-host {
+  position: fixed;
+  z-index: 1200;
+  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-weight: 500;
+  font-synthesis: none;
+  color: var(--pj-ink);
+}
+.crm-projects-portal-host .crm-projects-view-options-popover {
+  position: static;
+  top: auto;
+  right: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 
 .crm-projects-view-pivot { margin-left: auto; display: flex; align-items: center; padding-bottom: 6px; }
@@ -2866,3 +2918,12 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 
 
 
+
+/* Empty dates and people are visible actions, with the original field contracts. */
+.crm-board-date-control { position: relative; flex: 1 1 0; min-width: 0; }
+.crm-board-date-control > input.crm-board-field { position: absolute; width: 1px; height: 1px; opacity: 0; padding: 0; border: 0; }
+.crm-board-date-trigger { width: 100%; min-height: 28px; padding: 3px 4px; border: 0; border-radius: var(--pj-radius-sm); background: transparent; color: var(--pj-muted); font: inherit; font-size: 11px; white-space: nowrap; cursor: pointer; }
+.crm-board-date-trigger:hover { background: var(--pj-sunken); color: var(--pj-ink); }
+.crm-projects-board-row .crm-board-title-input { font-size: 13px; }
+.crm-projects-board-row .crm-board-drag-handle, .crm-projects-board-row .crm-board-detail-button { color: var(--pj-muted); }
+#projects-view-summary { font-size: 11px; color: var(--pj-muted); }

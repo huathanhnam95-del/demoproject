@@ -1009,7 +1009,7 @@
             <div class="crm-projects-workspace-breadcrumb"><button id="projects-workspace-rail-toggle" type="button" class="crm-btn-secondary" aria-controls="projects-workspace-rail" aria-expanded="false" aria-label="Toggle Projects sidebar">☰</button><span>Workspace / Projects</span></div>
             <div class="crm-projects-workspace-heading crm-panel-header">
               <div><h2 id="projects-workspace-name">Projects</h2><p id="projects-workspace-description">A shared place to plan work and keep your team moving.</p></div>
-              <div class="crm-projects-workspace-heading-actions"><button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button><details class="crm-projects-view-options"><summary class="crm-btn-secondary" title="View options" aria-label="View options"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8 3.5 3.5"/></svg><span>View</span></summary><div class="crm-projects-view-options-popover"><button id="btn-projects-density" class="crm-btn-secondary" type="button" aria-pressed="false" title="Toggle compact density">Compact rows</button><button id="btn-projects-theme" class="crm-btn-secondary" type="button" aria-pressed="false" title="Toggle dark mode">Dark theme</button></div></details><button type="button" class="crm-btn-secondary" data-projects-open="projects-workspace-settings">Settings</button><button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button></div>
+              <div class="crm-projects-workspace-heading-actions"><button id="btn-projects-automate" class="crm-btn-secondary" type="button" hidden disabled>Automate</button><details class="crm-projects-view-options"><summary class="crm-btn-secondary" title="View options" aria-label="View options"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8 3.5 3.5"/></svg><span>View</span></summary><div class="crm-projects-view-options-popover"><button id="btn-projects-density" class="crm-btn-secondary" type="button" aria-pressed="false" title="Toggle compact density">Compact rows</button><button id="btn-projects-theme" class="crm-btn-secondary" type="button" aria-pressed="false" title="Toggle dark mode">Dark theme</button><div class="crm-projects-scale-control"><label for="projects-ui-scale">Interface size</label><output id="projects-ui-scale-value" for="projects-ui-scale" aria-live="polite">125%</output><input id="projects-ui-scale" type="range" min="70" max="150" step="5" value="125" aria-valuemin="70" aria-valuemax="150" aria-valuenow="125" aria-valuetext="125%"></div></div></details><button type="button" class="crm-btn-secondary" data-projects-open="projects-workspace-settings">Settings</button><button id="btn-projects-board-refresh" class="crm-btn-secondary" type="button">Refresh board</button></div>
             </div>
             <div id="projects-workspace-onboarding" class="crm-projects-workspace-onboarding" hidden>
               <h3 id="projects-workspace-onboarding-title">Choose a project to get started</h3><p id="projects-workspace-onboarding-message">Your project tasks will appear here.</p><button id="projects-workspace-manage-access" type="button" class="crm-btn-primary">Manage access</button>
@@ -1017,6 +1017,7 @@
             <section id="projects-board-section" class="crm-projects-board-section" aria-labelledby="projects-board-title">
               <h3 id="projects-board-title" class="sr-only">Project board</h3>
               <p id="projects-board-status" class="crm-muted" aria-live="polite">Choose a project to load its tasks.</p>
+              <div id="projects-board-initial-loading" class="crm-projects-initial-loading" role="status" aria-label="Loading tasks" hidden><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></div>
               <label class="crm-projects-board-picker" for="projects-board-project-select" hidden><span class="sr-only">Project</span><select id="projects-board-project-select" class="crm-input" aria-label="Project board"></select></label>
               <div id="projects-board-empty" class="crm-projects-board-empty" hidden>
             <strong>Start with a project</strong><span>Create a project to give your team a shared place for sections and tasks.</span><button id="btn-projects-board-empty-create" class="crm-btn-primary" type="button">Create a project</button>
@@ -1061,7 +1062,7 @@
 <div id="projects-view-content" hidden></div>
 <div id="projects-view-paging" class="crm-inline-fields" hidden><button id="projects-view-previous" type="button" class="crm-btn-secondary">Previous page</button><button id="projects-view-more" type="button" class="crm-btn-secondary">Load more</button><button id="projects-view-retry" type="button" class="crm-btn-secondary">Refresh view</button></div>
                 </section>
-                <div class="crm-projects-board-controls"><div class="crm-muted" id="projects-board-count" aria-live="polite"></div></div>
+                <div class="crm-projects-board-controls"><div class="crm-muted" id="projects-board-count" hidden aria-live="polite"></div></div>
                 <form id="projects-board-section-form" class="crm-projects-board-form" hidden>
               <label for="projects-board-section-name">Section name</label>
               <input id="projects-board-section-name" class="crm-input" type="text" maxlength="200" placeholder="e.g. This quarter" autocomplete="off">
@@ -2998,6 +2999,7 @@
   <script src="js/entrance-test-ui-fonts.js?v=20260910-v2.0.6&etui=20260909-etui2"></script>
   <script src="js/crm/entrance-test-ui-lab.js?v=20260910-v2.0.6&etui=20260909-etui2"></script>
   <script src="js/crm/projects/workspace.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/projects/ui-scale.js?v=20260910-v2.0.6"></script>
   <script src="crm-admin.js?v=20260910-v2.0.6"></script>
   <script src="js/crm/segmentation-study.js?v=20260910-v2.0.6" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->

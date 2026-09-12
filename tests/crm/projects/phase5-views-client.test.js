@@ -63,6 +63,21 @@ test('shared filters survive view changes and full aggregate counts do not deriv
     assert.match(h.el('projects-view-content').innerHTML, /has-derived-span/);
     assert.equal(h.controller.getState().filters.status, 'done');
 });
+
+test('board view suppresses the redundant summary while other views retain matching counts', async () => {
+    const h = harness(); h.setProject('project-a'); await flush();
+    assert.equal(h.el('projects-view-summary').textContent, '');
+
+    h.el('projects-view-tabs').listeners.click({ target: { closest: () => ({ dataset: { view: 'charts' } }) } });
+    assert.match(h.el('projects-view-summary').textContent, /640 matching tasks/);
+
+    h.el('projects-view-tabs').listeners.click({ target: { closest: () => ({ dataset: { view: 'board' } }) } });
+    assert.equal(h.el('projects-view-summary').textContent, '');
+
+    const form = h.el('projects-view-filters'); form.fields = [['status', 'done']];
+    form.listeners.submit({ preventDefault() {}, target: form }); await flush();
+    assert.equal(h.el('projects-view-summary').textContent, '');
+});
 test('actor and project changes discard delayed view payloads', async () => {
     const h = harness(); h.setProject('project-a'); await flush(); const held = h.holdView();
     h.controller.refresh(); h.setActor('actor-b'); h.clearView(); h.setProject('project-b'); await flush();
@@ -217,7 +232,7 @@ test('calendar month interval makes records beyond 200 unrelated tasks visible a
 test('month and Calendar boundary changes reset pagination and discard pending reads', async () => {
     const h = harness(); h.setProject('project-a'); await flush(); h.controller.setTask(h.task);
     h.el('projects-view-more').listeners.click(); await flush();
-    assert.match(h.el('projects-view-summary').textContent, /Showing 201/);
+    assert.equal(h.el('projects-view-summary').textContent, '', 'Board view should not show the redundant matching-task summary');
     const old = h.holdView(); h.controller.refresh();
     h.clearView(); switchView(h, 'calendar'); await flush();
     assert.equal(h.el('projects-view-previous').disabled, true);

@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.resolve(__dirname, '../../../public/js/crm/projects/board.js'), 'utf8');
+const cssSource = fs.readFileSync(path.resolve(__dirname, '../../../public/css/crm-projects.css'), 'utf8');
+const htmlSource = fs.readFileSync(path.resolve(__dirname, '../../../public/crm-admin.html'), 'utf8');
 const flush = async () => { for (let i = 0; i < 8; i++) await new Promise(setImmediate); };
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
 
@@ -51,14 +53,14 @@ class Node {
     }
 }
 function fixture() {
-    const elements = Object.fromEntries(['projectsBoardRows', 'projectsBoardScroll', 'projectsBoardAddTask', 'projectsBoardDetail'].map(name => [name, new Node()]));
+    const elements = Object.fromEntries(['projectsBoardRows', 'projectsBoardScroll', 'projectsBoardAddTask', 'projectsBoardDetail', 'projectsBoardCount'].map(name => [name, new Node()]));
     let uid = 'actor', held = null;
     const selections = [], writes = [], reads = [];
     const document = { activeElement: null, getElementById: () => null, createElement: () => { const template = new Node(); Object.defineProperty(template, 'content', { get: () => ({ firstElementChild: template.children[0] }) }); return template; } };
     const context = { console, document, URLSearchParams, CSS: { escape: value => value }, setTimeout, clearTimeout, clearInterval };
     vm.runInNewContext(source, context);
     const branch = {
-        __root__: [{ id: 'root', sectionId: 'group', title: 'Root', ownerUid: 'actor', status: 'done', activeChildCount: 1, revision: 1 }],
+        __root__: [{ id: 'root', sectionId: 'group', title: 'Root', ownerUid: 'actor', status: 'done', activeChildCount: 1, revision: 1, derived: { activeLeafCount: 1, completedLeafCount: 1, completionPercent: 100 } }],
         root: [{ id: 'child', parentTaskId: 'root', effectiveSectionId: 'group', title: 'Child', activeChildCount: 1 }],
         child: [{ id: 'leaf', parentTaskId: 'child', effectiveSectionId: 'group', title: 'Leaf', activeChildCount: 0 }]
     };
@@ -119,4 +121,34 @@ test('collapse during pending authority remains local and actor changes clear mo
     h.actor('different'); h.click(h.row('section:group').querySelector('[data-action="toggle-section"]'));
     assert.equal(h.board.getState().project, null); assert.deepEqual(h.ids(), []);
     held.resolve(); await pending; assert.equal(h.board.getState().tasks.size, 0); assert.deepEqual(h.writes, []);
+});
+
+test('board presentation removes redundant chrome while preserving section collapse, progress data, and keyboard semantics', async () => {
+    const h = fixture(); await flush();
+    const section = h.row('section:group');
+    assert.equal(section.children.length, 1, 'Section bands should not reserve a second cell for a root-task badge');
+    const sectionToggle = section.querySelector('[data-action="toggle-section"]');
+    assert.ok(sectionToggle, 'Section collapse control must remain available');
+    assert.equal(sectionToggle.getAttribute('aria-expanded'), 'true');
+    assert.equal(h.elements.projectsBoardCount.textContent, '', 'The alternate loaded/section count must stay empty');
+
+    const task = h.row('task:root');
+    assert.equal(task.querySelector('.crm-board-progress-ring'), null, 'Read-only completion ring should not be mounted beside task titles');
+    assert.deepEqual(h.board.getState().tasks.get('root')?.derived, { activeLeafCount: 1, completedLeafCount: 1, completionPercent: 100 }, 'Underlying derived task data must remain available for progress/statistics consumers');
+    assert.match(task.getAttribute('aria-description'), /Alt\+Right indents; Alt\+Left outdents/);
+    assert.match(task.getAttribute('aria-description'), /Tab navigates controls/);
+    assert.doesNotMatch(htmlSource, /class="crm-projects-board-hints"/, 'The always-visible keyboard-help row should be removed from the shell');
+    assert.doesNotMatch(cssSource, /crm-board-progress-ring/, 'Progress-ring CSS should be removed when its only renderer is removed');
+    assert.doesNotMatch(cssSource, /crm-projects-board-row \.crm-board-status-cell::after/, 'Decorative status chevron should not be styled');
+});
+
+test('board headers expose visible column dividers and center data labels without shifting editable titles', () => {
+    assert.match(cssSource, /\.crm-projects-board-header > div \{[^}]*border-right: 1px solid var\(--pj-line-strong\)/s);
+    assert.match(cssSource, /\.crm-projects-board-row > div \{[^}]*border-right: 1px solid var\(--pj-line-strong\)/s);
+    assert.doesNotMatch(cssSource, /\.crm-projects-board-header > div \{[^}]*border-right: 1px solid transparent/s);
+    assert.doesNotMatch(cssSource, /\.crm-projects-board-row > div \{[^}]*border-right: 1px solid transparent/s);
+    assert.match(cssSource, /\.crm-projects-board-header > div:not\(:first-child\)\s*\{[^}]*justify-content:\s*center/s);
+    assert.match(cssSource, /\.crm-projects-board-column-editable\s*\{[^}]*grid-template-columns:\s*24px minmax\(0, 1fr\) 24px/s);
+    assert.match(cssSource, /\.crm-projects-board-column-edit\s*\{[^}]*width:\s*24px[^}]*height:\s*24px/s);
+    assert.match(source, /class="crm-projects-board-column-edit"[^>]*data-action="edit-column"[^>]*aria-label="Edit column/);
 });

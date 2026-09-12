@@ -14,7 +14,8 @@
         flag: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.7 14.2V2.1"/><path d="M3.7 2.9h8.5l-1.8 2.7 1.8 2.7H3.7"/></svg>',
         folder: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.9 4.2a1.1 1.1 0 0 1 1.1-1.1h2.8l1.5 1.8h5.8a1.1 1.1 0 0 1 1.1 1.1v5.9a1.1 1.1 0 0 1-1.1 1.1H3a1.1 1.1 0 0 1-1.1-1.1z"/></svg>',
         copy: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8.3" height="8.3" rx="1.4"/><path d="M10.5 3.3A1.4 1.4 0 0 0 9.1 2H3.6a1.4 1.4 0 0 0-1.4 1.4V9a1.4 1.4 0 0 0 1.4 1.4"/></svg>',
-        cog: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8 3.5 3.5"/></svg>'
+        cog: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.6v1.8M8 12.6v1.8M14.4 8h-1.8M3.4 8H1.6M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3M12.5 12.5l-1.3-1.3M4.8 4.8 3.5 3.5"/></svg>',
+        edit: '<svg class="crm-pj-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11.8-.4 1.6 1.6-.4L12.7 4.5 11.1 2.9z"/><path d="m10.3 3.7 1.6 1.6"/></svg>'
     };
     function groupColor(id) {
         let hash = 0;
@@ -835,13 +836,6 @@
             const parts = asText(person?.displayName || person?.email || uid).trim().split(/\s+/).filter(Boolean);
             return parts.length ? Array.from(parts[0])[0].toLocaleUpperCase() + (parts.length > 1 ? Array.from(parts[parts.length - 1])[0].toLocaleUpperCase() : '') : '—';
         }
-        function derivedRing(task) {
-            if (!task?.derived || !(Number(task.derived.activeLeafCount) > 0)) return '';
-            const total = Number(task.derived.activeLeafCount) || 0;
-            const done = Number(task.derived.completedLeafCount) || 0;
-            const pct = Math.max(0, Math.min(100, Math.round(Number(task.derived.completionPercent ?? (total > 0 ? (done / total * 100) : 0))) || 0));
-            return `<span class="crm-board-progress-ring" style="--pj-pct:${pct}%" title="${escape(done)}/${escape(total)} complete (${pct}%)" aria-label="${pct}% complete"></span>`;
-        }
         function peopleStack(uids) {
             const list = asArray(uids).map(String).filter(Boolean);
             if (!list.length) return '';
@@ -973,7 +967,7 @@
             // the actionable signal, so duration yields to it and stays available as a title.
             const durationBadge = workingDays !== null && !dueBadge ? `<span class="crm-board-duration-badge" title="${workingDays} working days">${workingDays}d</span>` : '';
             return `<div class="crm-projects-board-row${selected ? ' is-selected' : ''}${isPending ? ' is-pending' : ''}" role="row" tabindex="0"${canWrite() ? ' aria-keyshortcuts="Alt+ArrowRight Alt+ArrowLeft" aria-description="Alt+Right indents; Alt+Left outdents. Tab navigates controls."' : ''} draggable="${canWrite() && !busy && !movePending.has(pendingKey(task.id)) ? 'true' : 'false'}" data-row-kind="task" data-row-id="${escape(row.id)}" data-task-id="${escape(task.id)}" data-depth="${depth}" aria-selected="${selected ? 'true' : 'false'}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${taskGroupColor(task)}">
-              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${derivedRing(task)}${titleCell}<button type="button" class="crm-board-add-subtask" data-action="add-subtask" title="Add subtask (Ctrl+N)" aria-label="Add subtask to ${escape(title)}"${disabled}>+</button><button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
+              <div class="crm-projects-board-cell crm-projects-board-task-title" role="cell" style="padding-left:${10 + indent}px">${treeElbow}${depthChip}${task.contextOnly ? '<span class="crm-projects-context">Context</span>' : ''}${selectionCheckbox}${expander}<button type="button" class="crm-board-drag-handle" data-action="drag-handle" aria-label="Move ${escape(title)}">⠿</button>${titleCell}<button type="button" class="crm-board-add-subtask" data-action="add-subtask" title="Add subtask (Ctrl+N)" aria-label="Add subtask to ${escape(title)}"${disabled}>+</button><button type="button" class="crm-board-detail-button" data-action="open-detail" aria-label="Open details and discussion for ${escape(title)}">&#8599;</button></div>
               <div class="crm-projects-board-cell crm-board-status-cell" role="cell" data-status="${escape(status)}">${statusBatteryBar(task)}<select class="crm-board-field" data-field-kind="status" data-status="${escape(status)}" aria-label="Status"${disabled}>${statusOptions(status, project?.statusLabels || {})}</select></div>
               <div class="crm-projects-board-cell crm-board-owner-cell" role="cell"><button type="button" class="crm-people-trigger" data-action="pick-people" data-people-kind="ownerUid" aria-haspopup="listbox" aria-label="Change accountable owner for ${escape(title)}"${disabled}><span class="crm-board-owner-avatar" aria-hidden="true">${escape(ownerInitials(ownerUid))}</span><span class="crm-people-trigger-name">${escape(memberName(ownerUid) || 'Unassigned')}</span></button><select class="crm-board-field" data-field-kind="ownerUid" aria-label="Accountable owner"${disabled}>${memberOptions(ownerUid)}</select></div>
               <div class="crm-projects-board-cell crm-board-assignees-cell" role="cell"><button type="button" class="crm-people-trigger is-stack" data-action="pick-people" data-people-kind="assigneeUids" aria-haspopup="listbox" aria-label="Change assignees for ${escape(title)}"${disabled}>${peopleStack(assignees)}</button><select multiple class="crm-board-field crm-board-people-field" data-field-kind="assigneeUids" aria-label="Additional assignees"${disabled}>${memberOptions(assignees, true)}</select></div>
@@ -988,7 +982,7 @@
             const editable = canSchema() && !busy
                 ? `<input class="crm-board-section-input crm-board-field" data-field-kind="section-title" type="text" value="${escape(title)}" aria-label="Section title">`
                 : `<span class="crm-board-group-title">${escape(title)}</span>`;
-            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div><div role="cell"><span class="crm-muted">${rootsForSection(section.id).length} root task${rootsForSection(section.id).length === 1 ? '' : 's'}</span></div></div>`;
+            return `<div class="crm-projects-board-section-row" role="row" tabindex="0" draggable="${canSchema() && !busy ? 'true' : 'false'}" data-row-kind="section" data-row-id="${escape(row.id)}" data-section-id="${escape(section.id)}" style="top:${row.index * ROW_HEIGHT}px;height:${ROW_HEIGHT}px;--crm-project-group-color:${groupColor(section.id)}"><div role="cell"><button type="button" class="crm-board-group-expander" data-action="toggle-section" aria-expanded="${collapsedSections.has(String(section.id)) ? 'false' : 'true'}" aria-label="${collapsedSections.has(String(section.id)) ? 'Expand' : 'Collapse'} group ${escape(title)}">${collapsedSections.has(String(section.id)) ? '&#9656;' : '&#9662;'}</button><span class="crm-board-drag-handle" aria-hidden="true">⠿</span>${editable}</div></div>`;
         }
 
         function sectionSummaryRowMarkup(row) {
@@ -1042,7 +1036,7 @@
             elements.projectsBoardTable?.style.setProperty('--crm-project-column-count', String(columns.length));
             const minimumWidth = 238 + 126 + 146 + 124 + 268 + (columns.length * 130);
             if (elements.projectsBoardTable) elements.projectsBoardTable.style.minWidth = `${minimumWidth}px`;
-            elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && canSchema() ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && canSchema() && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && canSchema() ? `<button type="button" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}</div>`).join('');
+            elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && canSchema() ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && canSchema() && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && canSchema() ? `<button type="button" class="crm-projects-board-column-edit" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}" title="Edit column ${escape(label)}"${busy ? ' disabled' : ''}><span class="crm-btn-icon">${PJ_ICON.edit}</span></button>` : ''}</div>`).join('');
         }
 
         function rowMarkup(row) {
@@ -1357,7 +1351,7 @@
             renderSettings();
             syncSectionForm();
             renderBatchDock();
-            if (elements.projectsBoardCount) elements.projectsBoardCount.textContent = `${tasks.size} loaded · ${sections.length} section${sections.length === 1 ? '' : 's'}`;
+            if (elements.projectsBoardCount) elements.projectsBoardCount.textContent = '';
         }
 
         function queueRender() {

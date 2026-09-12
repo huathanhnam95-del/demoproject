@@ -1573,7 +1573,9 @@
                     selectedTaskId = String(created.id);
                 }
                 renderBoard();
-                elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(selectedTaskId)}"]`)?.focus?.();
+                const newRow = elements.projectsBoardRows?.querySelector(`[data-task-id="${cssEscape(selectedTaskId)}"]`);
+                newRow?.focus?.();
+                if (newRow) { newRow.classList.add('is-new'); newRow.addEventListener('animationend', () => newRow.classList.remove('is-new'), { once: true }); }
             } catch (error) { if (scopeIsCurrent(scope)) showToast(error?.message || 'Task could not be created.', 'error'); }
         }
 

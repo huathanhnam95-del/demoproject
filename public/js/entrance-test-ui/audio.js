@@ -3,6 +3,11 @@ function defaultDsp(blob, options) {
   return enhance ? enhance(blob, options) : Promise.resolve({ wavBlob: blob, audioBuffer: null, stats: null });
 }
 
+function defaultAudioContextFactory() {
+  const AudioContextCtor = globalThis.AudioContext || globalThis.webkitAudioContext;
+  return typeof AudioContextCtor === 'function' ? () => new AudioContextCtor() : null;
+}
+
 function formatElapsed(milliseconds) {
   const totalSeconds = Math.max(0, Math.floor(Number(milliseconds || 0) / 1000));
   return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`;
@@ -21,7 +26,10 @@ export function createAudioController({
   now = () => globalThis.performance?.now?.() ?? Date.now(),
   setIntervalFn = globalThis.setInterval,
   clearIntervalFn = globalThis.clearInterval,
-  onChange = () => {}
+  audioContextFactory = defaultAudioContextFactory(),
+  onChange = () => {},
+  onElapsed = () => {},
+  onMeter = () => {}
 } = {}) {
   let state = { status: 'idle', questionId: null, error: null, elapsedMs: 0, elapsedLabel: '0:00', testUrl: null, result: null };
   let stream = null;
@@ -29,6 +37,11 @@ export function createAudioController({
   let chunks = [];
   let startedAt = 0;
   let elapsedTimer = null;
+  let meterTimer = null;
+  let audioContext = null;
+  let analyser = null;
+  let analyserSource = null;
+  let meterData = null;
   let cancelled = false;
 
   function emit(patch = {}) {
@@ -48,11 +61,53 @@ export function createAudioController({
     elapsedTimer = null;
   }
 
+  function stopMeter() {
+    if (meterTimer !== null) clearIntervalFn(meterTimer);
+    meterTimer = null;
+    if (analyserSource?.disconnect) {
+      try { analyserSource.disconnect(); } catch (_) {}
+    }
+    if (analyser?.disconnect) {
+      try { analyser.disconnect(); } catch (_) {}
+    }
+    const context = audioContext;
+    analyserSource = null;
+    analyser = null;
+    meterData = null;
+    audioContext = null;
+    if (context?.close) {
+      try { Promise.resolve(context.close()).catch(() => {}); } catch (_) {}
+    }
+  }
+
+  function startMeter(activeStream) {
+    if (typeof audioContextFactory !== 'function' || !activeStream) return;
+    try {
+      audioContext = audioContextFactory();
+      analyserSource = audioContext?.createMediaStreamSource?.(activeStream) || null;
+      analyser = audioContext?.createAnalyser?.() || null;
+      if (!analyser || !analyserSource) { stopMeter(); return; }
+      analyser.fftSize = 128;
+      analyserSource.connect(analyser);
+      meterData = new Uint8Array(analyser.fftSize || 128);
+      meterTimer = setIntervalFn(() => {
+        if (!analyser || !meterData) return;
+        analyser.getByteTimeDomainData(meterData);
+        let peak = 0;
+        for (const sample of meterData) peak = Math.max(peak, Math.abs(sample - 128) / 128);
+        onMeter({ level: peak, samples: Array.from(meterData) });
+      }, 33);
+    } catch (_) {
+      stopMeter();
+    }
+  }
+
   function startElapsedTimer() {
     stopElapsedTimer();
     elapsedTimer = setIntervalFn(() => {
       const elapsedMs = Math.max(0, now() - startedAt);
-      emit({ elapsedMs, elapsedLabel: formatElapsed(elapsedMs) });
+      state = { ...state, elapsedMs, elapsedLabel: formatElapsed(elapsedMs) };
+      onElapsed({ ...state });
     }, 250);
   }
 
@@ -74,9 +129,11 @@ export function createAudioController({
       startedAt = now();
       recorder.start(250);
       startElapsedTimer();
+      startMeter(stream);
       emit({ status: 'recording' });
       return state;
     } catch (error) {
+      stopMeter();
       releaseStream();
       stopElapsedTimer();
       emit({ status: 'error', error: 'permission' });
@@ -88,6 +145,7 @@ export function createAudioController({
     if (state.status !== 'recording' || !recorder) return null;
     emit({ status: 'processing', error: null });
     stopElapsedTimer();
+    stopMeter();
     const activeRecorder = recorder;
     const durationMs = Math.max(0, now() - startedAt);
     releaseStream();
@@ -121,6 +179,7 @@ export function createAudioController({
   function cancel() {
     cancelled = true;
     stopElapsedTimer();
+    stopMeter();
     if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
     recorder = null;
     chunks = [];

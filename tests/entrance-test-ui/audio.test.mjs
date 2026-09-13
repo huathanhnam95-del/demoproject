@@ -16,6 +16,19 @@ class FakeMediaRecorder {
   stop() { this.state = 'inactive'; this.emit('dataavailable', { data: new Blob(['raw'], { type: this.mimeType }) }); this.emit('stop'); }
 }
 
+class FakeAnalyser {
+  constructor() { this.fftSize = 0; this.disconnected = false; }
+  getByteTimeDomainData(buffer) { buffer.fill(128); }
+  disconnect() { this.disconnected = true; }
+}
+
+class FakeAudioContext {
+  constructor() { this.analyser = new FakeAnalyser(); this.source = { disconnected: false, connect: () => {}, disconnect: () => { this.source.disconnected = true; } }; this.closed = false; }
+  createMediaStreamSource() { return this.source; }
+  createAnalyser() { return this.analyser; }
+  close() { this.closed = true; return Promise.resolve(); }
+}
+
 const urlApi = { createObjectURL: () => 'blob:demo-take', revokeObjectURL() {} };
 
 test('audio controller enhances a completed recording and exposes lifecycle states', async () => {
@@ -53,4 +66,31 @@ test('audio controller reports permission failure and can recover with a later a
   assert.equal(controller.getState().status, 'error');
   assert.equal(controller.getState().error, 'permission');
   assert.equal(calls, 1);
+});
+
+test('audio controller owns a measured line and releases analyser resources on stop', async () => {
+  const track = new FakeTrack();
+  const stream = { getTracks: () => [track] };
+  const intervals = [];
+  let context;
+  const controller = createAudioController({
+    mediaDevices: { getUserMedia: async () => stream },
+    MediaRecorderCtor: FakeMediaRecorder,
+    audioContextFactory: () => { context = new FakeAudioContext(); return context; },
+    setIntervalFn: (callback) => { intervals.push(callback); return intervals.length; },
+    clearIntervalFn: () => {},
+    dsp: async (blob) => ({ wavBlob: blob, audioBuffer: { duration: 0.25 } }),
+    urlApi,
+    onChange: () => {}
+  });
+
+  await controller.start('speaking_q1');
+  assert.ok(intervals.length >= 2, 'elapsed and analyser timers should be registered');
+  intervals.at(-1)();
+  const result = await controller.stop();
+  assert.ok(result);
+  assert.equal(context.analyser.disconnected, true);
+  assert.equal(context.source.disconnected, true);
+  assert.equal(context.closed, true);
+  assert.equal(track.stopped, true);
 });

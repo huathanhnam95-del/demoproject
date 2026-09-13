@@ -71,13 +71,18 @@ async function boot() {
     recordingUrls: new Map(),
     loadingRecordings: new Set(),
     compositions: new Set(),
+    meter: null,
     pendingFocus: null,
     submitting: false,
     candidateFonts: { en: '', vi: '' }
   };
 
   const takeGuard = createTakeGuard({ idFactory: (number) => `take-${Date.now().toString(36)}-${number}` });
-  const audio = createAudioController({ onChange: (state) => { runtime.audioState = state; render(); } });
+  const audio = createAudioController({
+    onChange: (state) => { runtime.audioState = state; render(); },
+    onElapsed: (state) => { runtime.audioState = state; updateElapsedNodes(); },
+    onMeter: (meter) => { runtime.meter = meter; drawCurrentMeter(); }
+  });
   const recordingCommit = createRecordingCommitController({
     takeGuard,
     commitRecording: (payload) => runtime.storage.commitRecording(payload)
@@ -91,8 +96,48 @@ async function boot() {
     runtime.persistenceState = status === 'dirty' ? 'saving' : status;
   }
 
+  function captureTransientState() {
+    const active = document.activeElement;
+    const listening = document.getElementById('et-listening-audio');
+    return {
+      focusId: active?.id || '',
+      selectionStart: Number.isInteger(active?.selectionStart) ? active.selectionStart : null,
+      selectionEnd: Number.isInteger(active?.selectionEnd) ? active.selectionEnd : null,
+      qaOpen: Boolean(appRoot.querySelector('[data-qa-disclosure]')?.open),
+      dialogOpen: Boolean(document.getElementById('et-overview-dialog')?.open),
+      listening: listening ? {
+        currentTime: Number(listening.currentTime) || 0,
+        rate: Number(listening.playbackRate) || 1,
+        playing: !listening.paused
+      } : null
+    };
+  }
+
+  function restoreTransientState(transient) {
+    const qa = appRoot.querySelector('[data-qa-disclosure]');
+    if (qa && transient.qaOpen) qa.open = true;
+    const dialog = document.getElementById('et-overview-dialog');
+    if (dialog && transient.dialogOpen && !dialog.open) dialog.showModal?.();
+    if (runtime.pendingFocus || transient.focusId) {
+      const target = document.getElementById(runtime.pendingFocus || transient.focusId);
+      if (target) {
+        target.focus();
+        if (typeof target.setSelectionRange === 'function') {
+          const start = Number.isInteger(transient.selectionStart) ? transient.selectionStart : target.value.length;
+          const end = Number.isInteger(transient.selectionEnd) ? transient.selectionEnd : start;
+          target.setSelectionRange(start, end);
+        }
+      }
+      runtime.pendingFocus = null;
+    }
+  }
+
   function render() {
     if (!runtime.draft) return;
+    const transient = captureTransientState();
+    const previousListeningAudio = document.getElementById('et-listening-audio');
+    const previousListeningQuestionId = runtime.draft.view === 'question' ? currentQuestion()?.questionId : null;
+    const previousListeningSrc = previousListeningAudio?.getAttribute('src') || null;
     document.documentElement.lang = runtime.draft.locale;
     document.documentElement.style.setProperty('--etu-text-scale', String(Number(runtime.draft.textScale || 100) / 100));
     if (runtime.candidateFonts.en || runtime.candidateFonts.vi) {
@@ -102,22 +147,22 @@ async function boot() {
     const copy = getCopy(runtime.draft.locale);
     const assessment = summary();
     headerRoot.innerHTML = renderHeaderTools({ draft: runtime.draft, copy, persistenceState: runtime.persistenceState });
-    appRoot.innerHTML = renderApp({ draft: runtime.draft, sections: SECTIONS, questions: QUESTIONS, summary: assessment, currentQuestion: currentQuestion(), copy, persistenceState: runtime.persistenceState, audioState: runtime.audioState, recordingUrl: runtime.recordingUrls.get(runtime.draft.activeQuestionId) || '', listeningState: runtime.listeningState, recovery: runtime.recovery, notice: runtime.notice });
-    footerRoot.innerHTML = renderFooterStatus({ persistenceState: runtime.persistenceState, copy, notice: runtime.notice });
-    wireListeningAudio();
-    if (runtime.pendingFocus) {
-      const target = document.getElementById(runtime.pendingFocus);
-      if (target) { target.focus(); if (typeof target.setSelectionRange === 'function') { const end = target.value.length; target.setSelectionRange(end, end); } }
-      runtime.pendingFocus = null;
+    appRoot.innerHTML = renderApp({ draft: runtime.draft, sections: SECTIONS, questions: QUESTIONS, summary: assessment, currentQuestion: currentQuestion(), copy, persistenceState: runtime.persistenceState, audioState: runtime.audioState, recordingUrl: runtime.recordingUrls.get(runtime.draft.activeQuestionId) || '', listeningState: runtime.listeningState, recovery: runtime.recovery, notice: runtime.notice, submitting: runtime.submitting });
+    const nextListeningAudio = document.getElementById('et-listening-audio');
+    if (previousListeningAudio && nextListeningAudio && previousListeningQuestionId === currentQuestion()?.questionId && previousListeningSrc === nextListeningAudio.getAttribute('src')) {
+      nextListeningAudio.replaceWith(previousListeningAudio);
     }
+    footerRoot.innerHTML = renderFooterStatus({ persistenceState: runtime.persistenceState, copy, notice: runtime.notice });
+    wireListeningAudio(transient);
+    restoreTransientState(transient);
     if (runtime.draft.view === 'question' && currentQuestion()?.type === 'speaking') {
       const canvas = document.getElementById('et-recorder-canvas');
-      if (canvas) drawBaseline(canvas);
+      if (canvas) drawMeter(canvas);
       loadCurrentRecording();
     }
     if (runtime.draft.view === 'miccheck') {
       const canvas = document.getElementById('et-mic-canvas');
-      if (canvas) drawBaseline(canvas);
+      if (canvas) drawMeter(canvas);
     }
     announcePage();
   }
@@ -132,7 +177,8 @@ async function boot() {
     }).catch(() => {}).finally(() => { runtime.loadingRecordings.delete(question.questionId); render(); });
   }
 
-  function drawBaseline(canvas) {
+  function drawMeter(canvas) {
+    if (!canvas) return;
     const context = canvas.getContext?.('2d');
     if (!context) return;
     const rect = canvas.getBoundingClientRect();
@@ -140,8 +186,28 @@ async function boot() {
     const height = Math.max(1, Math.round(rect.height || canvas.clientHeight || 100));
     if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
     context.clearRect(0, 0, width, height);
-    context.strokeStyle = '#94a3b8'; context.lineWidth = 1; context.beginPath();
+    context.strokeStyle = '#d4d4d4'; context.lineWidth = 1; context.beginPath();
     context.moveTo(0, height / 2); context.lineTo(width, height / 2); context.stroke();
+    const samples = runtime.meter?.samples;
+    if (!Array.isArray(samples) || samples.length < 2) return;
+    context.strokeStyle = '#ba310f'; context.lineWidth = 2; context.beginPath();
+    samples.forEach((sample, index) => {
+      const x = (index / (samples.length - 1)) * width;
+      const y = (Number(sample) / 255) * height;
+      if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    });
+    context.stroke();
+  }
+
+  function drawCurrentMeter() {
+    if (runtime.draft?.view === 'miccheck') drawMeter(document.getElementById('et-mic-canvas'));
+    if (runtime.draft?.view === 'question' && currentQuestion()?.type === 'speaking') drawMeter(document.getElementById('et-recorder-canvas'));
+  }
+
+  function updateElapsedNodes() {
+    document.querySelectorAll('[data-recording-elapsed]').forEach((node) => {
+      node.textContent = runtime.audioState.elapsedLabel || '0:00';
+    });
   }
 
   function announcePage() {
@@ -204,6 +270,7 @@ async function boot() {
   async function startNewAttempt({ resetCurrent = false } = {}) {
     if (resetCurrent && runtime.storage && runtime.draft) await runtime.storage.resetAttempt(runtime.draft.attemptId);
     runtime.audioState = {};
+    runtime.meter = null;
     audio.cancel();
     const id = makeAttemptId();
     setStoredAttemptId(id);
@@ -264,19 +331,38 @@ async function boot() {
     player.play().catch(() => {});
   }
 
-  function wireListeningAudio() {
+  function updateListeningNodes(element) {
+    const progress = document.querySelector('[data-audio-action="seek"]');
+    if (progress) progress.value = String(runtime.listeningState.progress || 0);
+    const time = document.querySelector('[data-audio-time]');
+    if (time) time.textContent = `${formatSeconds(element.currentTime)} / ${formatSeconds(element.duration)}`;
+    const toggle = document.querySelector('[data-audio-action="toggle"]');
+    if (toggle) toggle.textContent = element.paused ? getCopy(runtime.draft.locale).play : getCopy(runtime.draft.locale).pause;
+  }
+
+  function wireListeningAudio(transient = {}) {
     const element = document.getElementById('et-listening-audio');
     if (!element) return;
     element.playbackRate = Number(runtime.listeningState.rate || 1);
-    element.addEventListener('timeupdate', () => {
-      runtime.listeningState = { ...runtime.listeningState, progress: element.duration ? (element.currentTime / element.duration) * 1000 : 0, currentTime: element.currentTime, duration: element.duration || 0, playing: !element.paused };
-      const progress = document.querySelector('[data-audio-progress]');
-      if (progress) progress.value = String(runtime.listeningState.progress || 0);
-      const time = document.querySelector('[data-audio-time]');
-      if (time) time.textContent = `${formatSeconds(element.currentTime)} / ${formatSeconds(element.duration)}`;
-    });
-    element.addEventListener('ended', () => { runtime.listeningState = { ...runtime.listeningState, playing: false, progress: 1000 }; render(); });
-    element.addEventListener('error', () => { runtime.listeningState = { ...runtime.listeningState, audioUrl: false }; render(); }, { once: true });
+    const previous = transient.listening;
+    if (previous) {
+      element.playbackRate = Number(previous.rate || runtime.listeningState.rate || 1);
+      if (previous.currentTime > 0) {
+        try { element.currentTime = previous.currentTime; } catch (_) {}
+      }
+    }
+    if (element.dataset.etListeningBound !== 'true') {
+      element.dataset.etListeningBound = 'true';
+      element.addEventListener('timeupdate', () => {
+        runtime.listeningState = { ...runtime.listeningState, progress: element.duration ? (element.currentTime / element.duration) * 1000 : 0, currentTime: element.currentTime, duration: element.duration || 0, playing: !element.paused };
+        updateListeningNodes(element);
+      });
+      element.addEventListener('loadedmetadata', () => updateListeningNodes(element));
+      element.addEventListener('ended', () => { runtime.listeningState = { ...runtime.listeningState, playing: false, progress: 1000 }; updateListeningNodes(element); });
+      element.addEventListener('error', () => { runtime.listeningState = { ...runtime.listeningState, audioUrl: false }; render(); }, { once: true });
+    }
+    updateListeningNodes(element);
+    if (previous?.playing) element.play().catch(() => {});
   }
 
   async function submitDemo() {
@@ -286,6 +372,7 @@ async function boot() {
     const missingSpeaking = assessment.items.some((item) => item.type === 'speaking' && item.state !== 'complete');
     if (missingSpeaking || (missingWritten && !runtime.draft.reviewAcknowledged)) { runtime.notice = getCopy(runtime.draft.locale).submitBlocked; render(); return; }
     runtime.submitting = true;
+    render();
     try {
       if (runtime.queue) await runtime.queue.flushNow();
       const receiptId = `demo-d-${Date.now().toString(36)}`;
@@ -328,6 +415,7 @@ async function boot() {
       case 'start-demo': dispatch({ type: 'set-view', view: runtime.draft.micCheck === 'not-checked' ? 'miccheck' : 'question' }); break;
       case 'continue-demo': { const target = resolveResumeTarget(runtime.draft, QUESTIONS); dispatch({ type: 'set-active-question', questionId: target.questionId, view: target.view }); break; }
       case 'new-demo': if (window.confirm(getCopy(runtime.draft.locale).introNewConfirm)) await startNewAttempt(); break;
+      case 'nav-part': { const target = QUESTIONS.find((question) => question.sectionId === element.dataset.sectionId); if (target) await goTo(target.questionId); break; }
       case 'nav-question': case 'jump-question': await goTo(questionId); break;
       case 'jump-blank': await goTo(questionId, 'question', `answer-${element.dataset.blankId}`); break;
       case 'open-overview': document.getElementById('et-overview-dialog')?.showModal?.(); break;
@@ -340,7 +428,7 @@ async function boot() {
       case 'review-ack': dispatch({ type: 'acknowledge-blanks' }); break;
       case 'submit-demo': await submitDemo(); break;
       case 'done-again': dispatch({ type: 'set-view', view: 'done' }); break;
-      case 'mic-start': await audio.start(null); break;
+      case 'mic-start': audio.clearTestUrl(); await audio.start(null); break;
       case 'mic-stop': await audio.stop(); dispatch({ type: 'set-mic-check', micCheck: 'checked' }); break;
       case 'mic-play': playUrl(runtime.audioState.testUrl); break;
       case 'mic-continue': dispatch({ type: 'set-mic-check', micCheck: 'checked' }); dispatch({ type: 'set-active-question', questionId: 'speaking_q1', view: 'question' }); break;
@@ -348,7 +436,7 @@ async function boot() {
       case 'record-start': { const takeId = await startRecording(questionId); runtime.audioState = { ...runtime.audioState, takeId, questionId }; render(); break; }
       case 'record-stop': await stopRecording(); break;
       case 'record-play': playUrl(runtime.recordingUrls.get(questionId)); break;
-      case 'audio-toggle': { const audioElement = document.getElementById('et-listening-audio'); if (audioElement?.paused) await audioElement.play().catch(() => {}); else audioElement?.pause(); runtime.listeningState = { ...runtime.listeningState, playing: Boolean(audioElement && !audioElement.paused) }; render(); break; }
+      case 'audio-toggle': { const audioElement = document.getElementById('et-listening-audio'); if (audioElement?.paused) await audioElement.play().catch(() => {}); else audioElement?.pause(); if (audioElement) { runtime.listeningState = { ...runtime.listeningState, playing: !audioElement.paused }; updateListeningNodes(audioElement); } break; }
       case 'audio-seek': { const audioElement = document.getElementById('et-listening-audio'); if (audioElement?.duration) audioElement.currentTime = (Number(element.value) / 1000) * audioElement.duration; break; }
       case 'audio-rate': runtime.listeningState = { ...runtime.listeningState, rate: Number(element.value) }; { const audioElement = document.getElementById('et-listening-audio'); if (audioElement) audioElement.playbackRate = Number(element.value); } break;
       case 'audio-retry': runtime.listeningState = { ...runtime.listeningState, audioUrl: null }; render(); break;

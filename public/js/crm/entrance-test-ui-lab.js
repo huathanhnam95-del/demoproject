@@ -30,7 +30,7 @@
     { id: 'a', label: 'A · Editorial', hint: 'Giấy ấm, serif, kẻ mảnh' },
     { id: 'b', label: 'B · Instrument', hint: 'Chrome đen, lưới chặt, số mono' },
     { id: 'c', label: 'C · Signal', hint: 'Khối màu phẳng, viền dày' },
-    { id: 'd', label: 'D · Noto Focus', hint: 'Nền trắng, Noto Sans, đọc liền mạch' }
+    { id: 'd', label: 'D · Signal Noto', hint: 'Nền trắng, Noto Sans, đọc liền mạch' }
   ];
 
   const PAGES = [

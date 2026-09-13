@@ -8,7 +8,7 @@ test('CRM host extends the existing rater with Demo D and preserves the historic
   assert.match(source, /id: 'a'/);
   assert.match(source, /id: 'b'/);
   assert.match(source, /id: 'c'/);
-  assert.match(source, /id: 'd', label: 'D · Noto Focus'/);
+  assert.match(source, /id: 'd', label: 'D · Signal Noto'/);
   assert.match(source, /const NEED_RATINGS = SKINS\.length \* PAGES\.length \* CRITERIA\.length/);
   assert.match(source, /return '\/entrance-test-ui\/\?revisionId=academic-noto-v1'/);
   assert.match(source, /return 'entrance-test-ui-lab\.html\?' \+ p\.toString\(\)/);

@@ -864,84 +864,126 @@
 
   /* ═══════════════════════════ TASK-LOCAL LAYOUT ═══════════════════════════ */
 
-  function getLayoutStep(state) {
-    const steps = Array.isArray(state.config.steps) ? state.config.steps : [];
-    let stepIndex = 0;
-    if (typeof state.config.getStepIndex === 'function') {
-      try {
-        stepIndex = Number(state.config.getStepIndex());
-      } catch (_) { /* keep the safe first phase */ }
-    }
-    if (!Number.isFinite(stepIndex)) stepIndex = 0;
-    stepIndex = Math.max(0, Math.min(steps.length ? steps.length - 1 : 0, Math.round(stepIndex)));
-    return { stepIndex, stepName: steps[stepIndex] || '' };
+  function isValidLayoutHost(controllerState, host, slot) {
+    return !!(
+      host &&
+      host.nodeType === 1 &&
+      controllerState?.panel?.contains(host) &&
+      host !== slot &&
+      !host.contains(slot) &&
+      !slot?.contains(host) &&
+      host !== controllerState.dom.controller &&
+      !controllerState.dom.controller.contains(host) &&
+      !host.contains(controllerState.dom.controller)
+    );
   }
 
-  function isValidLayoutHost(state, host, slot) {
-    if (!host || !state.panel || typeof state.panel.contains !== 'function') return false;
-    if (!state.panel.contains(host)) return false;
-    if (host === state.dom.controller || state.dom.controller.contains(host)) return false;
-    if (host === slot || slot.contains(host)) return false;
-    if (host.contains(state.dom.controller)) return false;
-    return true;
-  }
+  function resolveLayoutHost(controllerState, hostResolver, slot, name) {
+    if (!hostResolver || !controllerState?.panel) return null;
 
-  function resolveLayoutHost(state, hostKey) {
-    const resolver = state.config.layout?.[hostKey];
-    if (typeof resolver !== 'function') return null;
-    const step = getLayoutStep(state);
     let host = null;
     try {
-      host = resolver({
-        panel: state.panel,
-        modeId: state.modeId,
-        scope: state.scope,
-        stepIndex: step.stepIndex,
-        stepName: step.stepName
-      });
+      host = typeof hostResolver === 'function'
+        ? hostResolver(controllerState)
+        : controllerState.panel.querySelector(hostResolver);
     } catch (error) {
-      console.warn(`[SPC] ${hostKey} host resolver failed for ${state.modeId}:`, error);
+      console.warn(`[SPC] layout ${name} resolver failed for ${controllerState.modeId}:`, error);
       return null;
     }
-    const slot = hostKey === 'mediaHost' ? state.dom.slotMedia : state.dom.slotAttempt;
-    if (!isValidLayoutHost(state, host, slot)) {
-      if (host) console.warn(`[SPC] Invalid ${hostKey} host for ${state.modeId}; using fallback slot`);
+
+    const isCurrentParent = host === slot?.parentNode &&
+      host?.nodeType === 1 &&
+      controllerState.panel?.contains(host) &&
+      host !== controllerState.dom.controller &&
+      !controllerState.dom.controller.contains(host) &&
+      !host.contains(controllerState.dom.controller) &&
+      !slot?.contains(host);
+    if (!isValidLayoutHost(controllerState, host, slot) && !isCurrentParent) {
+      if (host) console.warn(`[SPC] Invalid layout host for ${controllerState.modeId}:${name}`);
       return null;
     }
+
     return host;
   }
 
-  function syncLayout(state) {
-    if (!state?.config?.layout || !state.dom) return;
-    const placements = [
-      ['mediaHost', state.dom.slotMedia, state.layoutFallback?.mediaParent],
-      ['attemptHost', state.dom.slotAttempt, state.layoutFallback?.attemptParent]
-    ];
-
-    placements.forEach(([hostKey, slot, fallbackParent]) => {
-      if (!slot) return;
-      const targetParent = resolveLayoutHost(state, hostKey) || fallbackParent;
-      if (!targetParent || targetParent === slot || slot.contains(targetParent)) return;
-      const currentParent = slot.parentNode;
-      if (targetParent !== currentParent) {
-        targetParent.appendChild(slot);
-      }
+  function rememberSlotOrigin(controllerState, slot) {
+    if (!slot) return;
+    controllerState.layoutPlacement ||= { origins: new Map(), current: new Map() };
+    if (controllerState.layoutPlacement.origins.has(slot)) return;
+    controllerState.layoutPlacement.origins.set(slot, {
+      parent: slot.parentNode,
+      nextSibling: slot.nextSibling
     });
-
-    state.layoutProgressHost = resolveLayoutHost(state, 'progressHost');
   }
 
-  function restoreLayout(state) {
-    if (!state?.dom || !state.layoutFallback) return;
-    [
-      [state.dom.slotMedia, state.layoutFallback.mediaParent],
-      [state.dom.slotAttempt, state.layoutFallback.attemptParent]
-    ].forEach(([slot, fallbackParent]) => {
-      if (slot && fallbackParent && slot.parentNode !== fallbackParent) {
-        fallbackParent.appendChild(slot);
-      }
-    });
-    state.layoutProgressHost = null;
+  function moveLayoutSlot(controllerState, slot, host, name) {
+    if (!slot) return;
+    rememberSlotOrigin(controllerState, slot);
+    const placement = controllerState.layoutPlacement;
+    const origin = placement.origins.get(slot);
+    const currentHost = placement.current.get(name);
+
+    if (host && slot.parentNode !== host) {
+      host.appendChild(slot);
+      placement.current.set(name, host);
+      return;
+    }
+
+    if (!host && origin?.parent && slot.parentNode !== origin.parent) {
+      const nextSibling = origin.nextSibling?.parentNode === origin.parent
+        ? origin.nextSibling
+        : null;
+      origin.parent.insertBefore(slot, nextSibling);
+      placement.current.delete(name);
+      return;
+    }
+
+    if (host && currentHost !== host) {
+      placement.current.set(name, host);
+    }
+  }
+
+  function syncLayoutPlacement(controllerState) {
+    const layout = controllerState?.config?.layout;
+    if (!layout) return;
+
+    const mediaSlot = controllerState.dom?.slotMedia;
+    const attemptSlot = controllerState.dom?.slotAttempt;
+    const mediaHost = resolveLayoutHost(controllerState, layout.mediaHost, mediaSlot, 'media');
+    const attemptHost = resolveLayoutHost(controllerState, layout.attemptHost, attemptSlot, 'attempt');
+
+    moveLayoutSlot(controllerState, mediaSlot, mediaHost, 'media');
+    moveLayoutSlot(controllerState, attemptSlot, attemptHost, 'attempt');
+  }
+
+  function syncControlPlacement(controllerState) {
+    syncLayoutPlacement(controllerState);
+  }
+
+  function restoreLayoutPlacement(controllerState) {
+    const placement = controllerState?.layoutPlacement;
+    if (!placement) return;
+
+    for (const [slot, origin] of placement.origins || []) {
+      if (!slot || !origin?.parent || slot.parentNode === origin.parent) continue;
+      const nextSibling = origin.nextSibling?.parentNode === origin.parent
+        ? origin.nextSibling
+        : null;
+      origin.parent.insertBefore(slot, nextSibling);
+    }
+    placement.current?.clear?.();
+  }
+
+  function scheduleLayoutSync(modeId, state) {
+    const delays = [0, 250, 750, 1500];
+    state.layoutSyncTimers = delays.map((delay) => setTimeout(() => {
+      if (activeControllers.get(modeId) === state) syncController(modeId);
+    }, delay));
+  }
+
+  function cancelLayoutSync(state) {
+    (state?.layoutSyncTimers || []).forEach((timerId) => clearTimeout(timerId));
+    if (state) state.layoutSyncTimers = [];
   }
 
   /* ═══════════════════════════ DOM ADOPTION ═══════════════════════════ */
@@ -1544,7 +1586,7 @@
     updateActiveChip(state);
     syncStepPreview(state);
     syncOrderToggle(state);
-    syncLayout(state);
+    syncControlPlacement(state);
   }
 
   /* ═══════════════════════════ PUBLIC API ═══════════════════════════ */
@@ -1624,11 +1666,8 @@
       selectChangeHandler: null,
       legacyPickerContainer: null,
       legacyPickerOriginalDisplay: '',
-      layoutFallback: {
-        mediaParent: dom.slotMedia.parentNode,
-        attemptParent: dom.slotAttempt.parentNode
-      },
-      layoutProgressHost: null
+      layoutPlacement: { origins: new Map(), current: new Map() },
+      layoutSyncTimers: []
     };
 
     activeControllers.set(modeId, state);
@@ -1674,7 +1713,11 @@
     // Move controller slots into the authored task flow only after adoption has
     // recorded every source anchor. This keeps re-entry idempotent and allows
     // unmount to restore both slots and controls safely.
-    syncLayout(state);
+    syncLayoutPlacement(state);
+    // Mode-owned state machines may finish their first phase transition just
+    // after activation. Recheck on a bounded schedule; the active identity
+    // guard keeps a late callback from touching an unmounted panel.
+    scheduleLayoutSync(modeId, state);
     publishFooterHeight();
 
     // Wire toggle
@@ -1710,11 +1753,9 @@
       state.settingsSheet = null;
     }
 
-    // Restore slots before adopted controls so their anchors remain attached to
-    // the original mode-owned containers during teardown.
-    restoreLayout(state);
-
     // Restore adopted controls
+    cancelLayoutSync(state);
+    restoreLayoutPlacement(state);
     restoreControls(state);
 
     if (state.legacyPickerContainer) {

@@ -2109,6 +2109,7 @@
 
         <label class="input-label" for="answer-input">Type what you hear:</label>
         <textarea id="answer-input" rows="4" placeholder="Start typing..." disabled></textarea>
+        <div id="type-action-host" class="practice-action-host" data-practice-action-host="type"></div>
 
         <!-- Hint System Controls -->
 
@@ -3975,14 +3976,14 @@
             </div>
           </div>
         </div>
-        <div class="controls notes-compat-controls" data-practice-media-host="notes-overview" hidden aria-hidden="true">
-          <button id="play-notes-btn" class="modern-btn modern-btn--play" type="button" tabindex="-1">Play</button>
+        <div id="notes-legacy-start-controls" class="controls notes-compat-controls" hidden aria-hidden="true">
+          <button id="play-notes-btn" class="modern-btn modern-btn--play" type="button" hidden aria-hidden="true" tabindex="-1">Play</button>
         </div>
 
         <!-- Practice Area -->
         <div id="notes-practice-area">
           <!-- Step 0: Lecture Overview / Ready -->
-          <div id="notes-step-ready" class="notes-step">
+          <div id="notes-step-ready" class="notes-step" data-practice-action-host="notes-ready">
             <div class="notes-step-header">
               <span class="notes-step-badge">Overview</span>
               <h4 id="notes-ready-title">Lecture Overview</h4>
@@ -3991,10 +3992,13 @@
               <p id="notes-ready-desc" class="notes-ready-desc">Listen to the lecture audio and type your key notes as you listen.</p>
               <div class="notes-ready-tags" id="notes-ready-tags">
                 <span id="notes-ready-video-tag" class="notes-tag notes-tag--video" style="display: none;">🎥 Guiding Video Available</span>
-                <span id="notes-ready-audio-tag" class="notes-tag notes-tag--audio">🎧 Lecture Audio Ready</span>
+                <span id="notes-ready-audio-tag" class="notes-tag notes-tag--audio">🎧 Lecture Audio Not Checked</span>
               </div>
+              <p id="notes-loading-status" class="notes-loading-status" role="status" aria-live="polite" hidden></p>
             </div>
-            <div class="notes-ready-controls" data-practice-action-host="video">
+            <div class="notes-ready-controls">
+              <button id="notes-use-local-btn" class="modern-btn modern-btn--secondary" type="button" hidden>Use local questions</button>
+              <div id="notes-ready-action-host" class="practice-action-host" data-practice-action-host="notes-ready"></div>
               <button id="notes-start-btn" class="modern-btn modern-btn--play" type="button">
                 Start Lecture ▶
               </button>
@@ -4002,7 +4006,7 @@
           </div>
 
           <!-- Step 1: Guiding Video (if available) -->
-          <div id="notes-step-video" class="notes-step" style="display: none;">
+          <div id="notes-step-video" class="notes-step" data-practice-action-host="notes-video" style="display: none;">
             <div class="notes-step-header">
               <span class="notes-step-badge">Step 1</span>
               <h4>Watch the Guiding Video</h4>
@@ -4010,7 +4014,8 @@
             <div class="notes-video-wrapper">
               <div id="notes-youtube-player"></div>
             </div>
-            <div class="notes-video-controls" data-practice-action-host="video">
+            <div class="notes-video-controls">
+              <div id="notes-video-action-host" class="practice-action-host" data-practice-action-host="notes-video"></div>
               <button id="notes-skip-video-btn" class="modern-btn modern-btn--hint" type="button">
                 Proceed to Notes →
               </button>
@@ -4018,12 +4023,12 @@
           </div>
 
           <!-- Step 2: Audio + Note-taking -->
-          <div id="notes-step-audio" class="notes-step" style="display: none;">
+          <div id="notes-step-audio" class="notes-step" data-practice-action-host="notes-audio" style="display: none;">
             <div class="notes-step-header">
               <span class="notes-step-badge">Step 2</span>
               <h4>Listen and Take Notes</h4>
             </div>
-            <section class="notes-audio practice-audio-player" aria-label="Lecture audio">
+            <section id="notes-audio-host" class="notes-audio practice-audio-player" data-practice-media-host="notes" aria-label="Lecture audio">
               <button id="notes-play-btn" class="notes-play-btn" type="button" aria-label="Play lecture audio">
                 <span id="notes-play-icon" class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                 <span id="notes-play-label">Play</span>
@@ -4046,7 +4051,8 @@
               <label for="notes-user-input">Your Notes:</label>
               <textarea id="notes-user-input" rows="8" placeholder="Type your notes here as you listen..."></textarea>
             </div>
-            <div class="notes-submit-controls" data-practice-action-host="notes">
+            <div class="notes-submit-controls">
+              <div id="notes-audio-action-host" class="practice-action-host" data-practice-action-host="notes-audio"></div>
               <button id="notes-submit-btn" class="modern-btn modern-btn--check" type="button">
                 Submit Notes
               </button>
@@ -4057,7 +4063,7 @@
           </div>
 
           <!-- Step 3: Results -->
-          <div id="notes-step-results" class="notes-step" style="display: none;">
+          <div id="notes-step-results" class="notes-step" data-practice-action-host="notes-results" style="display: none;">
             <div class="notes-step-header">
               <span class="notes-step-badge">Results</span>
               <h4>Review Your Results</h4>
@@ -4079,7 +4085,8 @@
             <div class="notes-results-stats">
               <span id="notes-match-count">0</span> words matched
             </div>
-            <div class="notes-results-controls" data-practice-action-host="results">
+            <div class="notes-results-controls">
+              <div id="notes-results-action-host" class="practice-action-host" data-practice-action-host="notes-results"></div>
               <button id="notes-retry-btn" class="modern-btn modern-btn--retry" type="button">
                 Try Again
               </button>
@@ -4135,7 +4142,7 @@
             </div>
           </div>
         </div>
-        <div class="controls" data-practice-media-host="sgd">
+        <div id="sgd-start-controls" class="controls" data-practice-media-host="sgd">
           <button id="play-sgd-btn" class="modern-btn modern-btn--play" type="button">Play</button>
         </div>
 
@@ -4188,7 +4195,8 @@
               <div class="sgd-speaker-tabs" id="sgd-speaker-tabs"></div>
               <div class="sgd-note-panels" id="sgd-note-panels"></div>
             </div>
-            <div class="notes-submit-controls" data-practice-action-host="listen">
+            <div class="notes-submit-controls">
+              <div id="sgd-listen-action-host" class="practice-action-host" data-practice-action-host="sgd-listen"></div>
               <button id="sgd-next-step-btn" class="modern-btn modern-btn--check" type="button" disabled>
                 Proceed to Speaking →
               </button>
@@ -4206,7 +4214,8 @@
                 Speak for up to 2 minutes. Summarize the group discussion, covering what each speaker said.
               </div>
               <div class="sgd-timer" id="sgd-record-timer">2:00</div>
-              <div class="sgd-record-controls" data-practice-action-host="record">
+              <div class="sgd-record-controls">
+                <div id="sgd-action-host" class="practice-action-host" data-practice-action-host="sgd-record"></div>
                 <button id="sgd-back-to-notes-btn" class="modern-btn modern-btn--retry" type="button">
                   ← Back to Notes
                 </button>
@@ -4238,7 +4247,8 @@
             <div class="notes-results-stats">
               <span id="sgd-overall-accuracy">0</span>% overall accuracy
             </div>
-            <div class="notes-results-controls" data-practice-action-host="results">
+            <div class="notes-results-controls">
+              <div id="sgd-results-action-host" class="practice-action-host" data-practice-action-host="sgd-results"></div>
               <button id="sgd-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
             </div>
           </div>
@@ -4737,7 +4747,7 @@
       <div id="mode-rts" class="mode-panel" data-practice-workspace="rts" style="display: none;">
 
         <!-- Play Button -->
-        <div class="rts-start-row" data-practice-media-host="rts" style="max-width: 900px; margin: 16px auto; text-align: center;">
+        <div id="rts-start-controls" class="rts-start-row" data-practice-media-host="rts" style="max-width: 900px; margin: 16px auto; text-align: center;">
           <button id="play-rts-btn" class="modern-btn modern-btn--play" type="button">
             ▶ Start
           </button>
@@ -4775,18 +4785,20 @@
               </div>
             </div>
             <audio id="rts-audio-player" preload="auto"></audio>
+            <div id="rts-audio-action-host" class="practice-action-host" data-practice-action-host="rts-audio"></div>
           </div>
 
           <!-- Step 2: Preparation -->
           <div id="rts-step-prep" class="rts-step-card" style="display: none;">
             <div id="rts-prompt-text-prep" class="rts-prompt-card"></div>
-            <div class="rts-timer-card rts-timer-card--prep" data-practice-action-host="prep">
+            <div class="rts-timer-card rts-timer-card--prep">
               <div class="rts-timer-emoji">💭</div>
               <div class="rts-timer-label">Prepare your response</div>
               <div id="rts-prep-timer" class="rts-timer-display">00:10</div>
               <div class="rts-progress-track">
                 <div id="rts-prep-bar-fill" class="rts-progress-fill rts-progress-fill--prep" style="width: 100%;"></div>
               </div>
+              <div id="rts-prep-action-host" class="practice-action-host" data-practice-action-host="rts-prep"></div>
             </div>
           </div>
 
@@ -4802,7 +4814,8 @@
               <div class="rts-progress-track">
                 <div id="rts-record-bar-fill" class="rts-progress-fill rts-progress-fill--record" style="width: 100%;"></div>
               </div>
-              <div data-practice-action-host="record" style="text-align: center; margin-top: 16px;">
+              <div style="text-align: center; margin-top: 16px;">
+                <div id="rts-action-host" class="practice-action-host" data-practice-action-host="rts-record"></div>
                 <button id="rts-stop-btn" class="modern-btn modern-btn--retry" type="button">⏹ Stop Recording</button>
               </div>
             </div>
@@ -4832,7 +4845,8 @@
             <!-- AI Score Results Container (dynamically populated) -->
             <div id="rts-results-container" class="essay-results-container"></div>
 
-            <div class="rts-results-actions" data-practice-action-host="results">
+            <div class="rts-results-actions">
+              <div id="rts-results-action-host" class="practice-action-host" data-practice-action-host="rts-results"></div>
               <button id="rts-retry-btn" class="modern-btn modern-btn--retry" type="button">🔄 Try Again</button>
               <button id="rts-ai-score-btn" class="modern-btn modern-btn--play" type="button">🤖 Submit to AI Scoring</button>
               <button id="rts-next-question-btn" class="modern-btn modern-btn--play" type="button">Next Question →</button>
@@ -4878,7 +4892,7 @@
           </div>
         </div>
 
-        <div class="controls" data-practice-media-host="describe-image">
+        <div id="di-start-controls" class="controls" data-practice-media-host="describe-image">
           <button id="play-di-btn" class="modern-btn modern-btn--play" type="button">Start Practice</button>
         </div>
 
@@ -4892,7 +4906,7 @@
           </div>
 
           <!-- Step 1: Prepare -->
-          <div id="di-step-prepare" class="notes-step" data-practice-action-host="prepare" style="display: none;">
+          <div id="di-step-prepare" class="notes-step" style="display: none;">
             <div class="notes-step-header">
               <span class="notes-step-badge">Preparation</span>
               <span id="di-prep-timer" class="di-timer">00:00 / 00:25</span>
@@ -4902,10 +4916,11 @@
               <img id="di-image" class="di-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Describe Image" style="width:100%; border-radius:8px;" />
             </div>
             <button id="di-zoom-btn" class="modern-btn modern-btn--compact" type="button" style="margin-top:4px;">🔍 Zoom</button>
+            <div id="di-prepare-action-host" class="practice-action-host" data-practice-action-host="di-prepare"></div>
           </div>
 
           <!-- Step 2: Record -->
-          <div id="di-step-record" class="notes-step" data-practice-action-host="record" style="display: none;">
+          <div id="di-step-record" class="notes-step" style="display: none;">
             <div class="notes-step-header">
               <span class="notes-step-badge">Recording</span>
               <span id="di-record-timer" class="di-timer">00:00 / 00:40</span>
@@ -4917,6 +4932,7 @@
             <div id="di-record-status" class="di-record-status">
               <span id="di-record-status-text">Listening...</span>
             </div>
+            <div id="di-action-host" class="practice-action-host" data-practice-action-host="di-record"></div>
             <button id="di-stop-btn" class="modern-btn modern-btn--retry" type="button">⏹ Stop Recording</button>
           </div>
 
@@ -4932,6 +4948,7 @@
               <p id="di-transcript" style="font-style:italic; color:#64748b;">No transcript detected.</p>
             </div>
             <div class="notes-results-controls">
+              <div id="di-review-action-host" class="practice-action-host" data-practice-action-host="di-review"></div>
               <button id="di-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
               <button id="di-submit-btn" class="modern-btn modern-btn--check" type="button">See Results</button>
             </div>
@@ -4952,6 +4969,7 @@
               <ul id="di-key-points" style="padding-left:20px;"></ul>
             </div>
             <div class="notes-results-controls">
+              <div id="di-results-action-host" class="practice-action-host" data-practice-action-host="di-results"></div>
               <button id="di-ai-btn" class="modern-btn modern-btn--check" type="button">🤖 AI Content Assessment</button>
               <button id="di-results-retry-btn" class="modern-btn modern-btn--retry" type="button">Try Again</button>
               <button id="di-next-question-btn" class="modern-btn modern-btn--play" type="button">Next Question</button>
@@ -5080,7 +5098,7 @@
             prompt audio, then record
             your answer.</div>
 
-          <div data-practice-action-host="answer" style="display:flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
+          <div id="asq-action-host" data-practice-action-host="asq" style="display:flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
             <button id="asq-record-btn" class="modern-btn modern-btn--record" type="button"
               style="min-width: 180px;">Record answer</button>
             <button id="asq-stop-btn" class="modern-btn modern-btn--retry" type="button"
@@ -5228,6 +5246,7 @@
               </div>
 
               <div id="ra-status-message" class="ra-status-msg"></div>
+              <div id="ra-action-host" class="practice-action-host" data-practice-action-host="read-aloud" data-practice-media-host="read-aloud"></div>
             </div>
 
             <!-- Speech Coach rail. Sits beside the passage, not 400px below it. -->

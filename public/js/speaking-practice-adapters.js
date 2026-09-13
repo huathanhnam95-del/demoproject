@@ -68,22 +68,27 @@
     select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  /**
-   * Resolve task-local hosts without changing mode state. The controller owns
-   * moving its slots; adapters only describe where those slots belong in the
-   * authored mode flow.
-   */
-  function createLayout(actionSelectors = {}) {
-    return {
-      mediaHost: ({ panel }) => panel?.querySelector('[data-practice-media-host]') || null,
-      attemptHost: ({ panel, stepName }) => {
-        const key = String(stepName || '').toLowerCase();
-        const selector = actionSelectors[key];
-        return (selector ? panel?.querySelector(selector) : null) ||
-          panel?.querySelector('[data-practice-action-host]') || null;
-      },
-      progressHost: ({ panel }) => panel?.querySelector('[data-practice-progress-host]') || null
-    };
+  function panelHost(controllerState, selector) {
+    if (!selector || !controllerState?.panel) return null;
+    return controllerState.panel.querySelector(selector) || null;
+  }
+
+  function phaseHost(controllerState, selectors, fallbackSelector) {
+    const index = typeof controllerState?.config?.getStepIndex === 'function'
+      ? controllerState.config.getStepIndex()
+      : 0;
+    return panelHost(controllerState, selectors[index] || fallbackSelector);
+  }
+
+  function progressHost(controllerState) {
+    return panelHost(controllerState, '[data-practice-progress-host]');
+  }
+
+  function notesPhaseHost(controllerState) {
+    if (isShown('notes-step-results')) return panelHost(controllerState, '#notes-results-action-host');
+    if (isShown('notes-step-audio')) return panelHost(controllerState, '#notes-audio-action-host');
+    if (isShown('notes-step-video')) return panelHost(controllerState, '#notes-video-action-host');
+    return panelHost(controllerState, '#notes-ready-action-host');
   }
 
   // Wave 1: Answer Short Question. The native select remains the state source;
@@ -98,12 +103,16 @@
       if (window.ASQMode?.isRecording) return 1;
       return 0;
     },
+    layout: {
+      mediaHost: (state) => panelHost(state, '.asq-audio'),
+      attemptHost: (state) => panelHost(state, '#asq-action-host'),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'asq-question-select',
       previous: () => shiftSelectOption('asq-question-select', -1),
       next: () => shiftSelectOption('asq-question-select', 1)
     },
-    layout: createLayout({ answer: '[data-practice-action-host="answer"]', results: '[data-practice-action-host="results"]' }),
     legacyContainerSelector: '#mode-asq > .question-selector',
     // The prompt Play control now lives inside the shared .practice-audio-player box
     // in the panel body, so it is deliberately not hoisted into the toolbar.
@@ -122,6 +131,16 @@
     panelId: 'mode-rts',
     steps: ['Audio', 'Prep', 'Record', 'Results'],
     getStepIndex: () => activeBreadcrumbIndex('rts-step-progress', '.rts-step-dot'),
+    layout: {
+      mediaHost: (state) => panelHost(state, '#rts-start-controls'),
+      attemptHost: (state) => phaseHost(state, {
+        0: '#rts-audio-action-host',
+        1: '#rts-prep-action-host',
+        2: '#rts-action-host',
+        3: '#rts-results-action-host'
+      }, '#rts-audio-action-host'),
+      progressHost
+    },
     picker: {
       getItems: () => window.RTSMode?.getItems?.() ?? [],
       getCurrentId: () => window.RTSMode?.getCurrentId?.() ?? null,
@@ -148,7 +167,6 @@
       },
       legacyContainerId: 'rts-v7-picker-bar'
     },
-    layout: createLayout({ prep: '[data-practice-action-host="prep"]', record: '[data-practice-action-host="record"]', results: '[data-practice-action-host="results"]' }),
     controls: [
       { sourceId: 'play-rts-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
       { sourceId: 'rts-stop-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'stop', visibilityScopeId: 'rts-step-record' },
@@ -169,12 +187,21 @@
     // (Image / Prep / Record / Results) did not match the state machine.
     steps: ['Prepare', 'Record', 'Review'],
     getStepIndex: () => activeBreadcrumbIndex('di-step-progress', '.di-progress-step'),
+    layout: {
+      mediaHost: (state) => panelHost(state, '#di-start-controls'),
+      attemptHost: (state) => phaseHost(state, {
+        0: '#di-prepare-action-host',
+        1: '#di-action-host',
+        2: '#di-review-action-host',
+        3: '#di-results-action-host'
+      }, '#di-prepare-action-host'),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'question-select-di',
       previousButtonId: 'back-btn-di',
       nextButtonId: 'next-btn-di'
     },
-    layout: createLayout({ prepare: '[data-practice-action-host="prepare"]', record: '[data-practice-action-host="record"]', review: '[data-practice-action-host="review"]' }),
     legacyContainerSelector: '#mode-describe-image > .question-selector',
     controls: [
       { sourceId: 'play-di-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
@@ -210,17 +237,22 @@
       if (isShown('notes-step-audio')) return 1;
       return 0;
     },
+    layout: {
+      mediaHost: (state) => panelHost(state, '#notes-audio-host'),
+      attemptHost: (state) => notesPhaseHost(state),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'question-select-notes',
       previousButtonId: 'back-btn-notes',
       nextButtonId: 'next-btn-notes'
     },
-    layout: createLayout({ video: '[data-practice-action-host="video"]', notes: '[data-practice-action-host="notes"]', results: '[data-practice-action-host="results"]' }),
     legacyContainerSelector: '#mode-notes > .question-selector',
     controls: [
-      { sourceId: 'play-notes-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
-      { sourceId: 'notes-submit-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'primary', visibilityScopeId: 'notes-step-audio' },
-      { sourceId: 'notes-retry-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'retry', visibilityScopeId: 'notes-step-results' },
+      { sourceId: 'notes-start-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'primary', visibilityScopeId: 'notes-step-ready' },
+      { sourceId: 'notes-skip-video-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'secondary', visibilityScopeId: 'notes-step-video' },
+      { sourceId: 'notes-submit-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'primary', visibilityScopeId: 'notes-step-audio' },
+      { sourceId: 'notes-retry-btn', slot: 'attempt', level: 'basic', order: 4, actionRole: 'retry', visibilityScopeId: 'notes-step-results' },
       { sourceId: 'recommended-btn-notes', slot: 'advanced-action', level: 'advanced', order: 1, actionRole: 'support' },
       { sourceId: 'difficulty-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 1 },
       { sourceId: 'status-filter-container-notes', slot: 'advanced-setting', level: 'advanced', order: 2 }
@@ -252,14 +284,23 @@
     // 'Prep' step that the mode never enters.
     steps: ['Listen', 'Record', 'Results'],
     getStepIndex: () => activeBreadcrumbIndex('sgd-step-progress', '.sgd-progress-step'),
+    layout: {
+      mediaHost: (state) => panelHost(state, '#sgd-start-controls'),
+      attemptHost: (state) => phaseHost(state, {
+        0: '#sgd-listen-action-host',
+        1: '#sgd-action-host',
+        2: '#sgd-results-action-host'
+      }, '#sgd-listen-action-host'),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'question-select-sgd',
       previousButtonId: 'back-btn-sgd',
       nextButtonId: 'next-btn-sgd'
     },
-    layout: createLayout({ listen: '[data-practice-action-host="listen"]', record: '[data-practice-action-host="record"]', results: '[data-practice-action-host="results"]' }),
     controls: [
       { sourceId: 'play-sgd-btn', slot: 'media', level: 'basic', order: 1, actionRole: 'play' },
+      { sourceId: 'sgd-next-step-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'primary', visibilityScopeId: 'sgd-step-listen' },
       { sourceId: 'sgd-record-btn', slot: 'attempt', level: 'basic', order: 1, actionRole: 'record', visibilityScopeId: 'sgd-step-record' },
       { sourceId: 'sgd-stop-btn', slot: 'attempt', level: 'basic', order: 2, actionRole: 'stop', visibilityScopeId: 'sgd-step-record' },
       { sourceId: 'sgd-submit-btn', slot: 'attempt', level: 'basic', order: 3, actionRole: 'primary', visibilityScopeId: 'sgd-step-record' },
@@ -292,12 +333,16 @@
       if (recordBtn && recordBtn.textContent.trim() === 'Stop Recording') return 1;
       return 0;
     },
+    layout: {
+      mediaHost: (state) => panelHost(state, '.speak-audio'),
+      attemptHost: (state) => panelHost(state, '#speak-action-host'),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'question-select-speak',
       previousButtonId: 'back-btn-speak',
       nextButtonId: 'next-btn-speak'
     },
-    layout: createLayout({ listen: '#speak-action-host', record: '#speak-action-host', results: '#speak-action-host' }),
     // Play and the replay counter now live inside the shared .practice-audio-player
     // box in the panel body, so neither is hoisted into the toolbar.
     controls: [
@@ -353,12 +398,16 @@
       if (isShown('check-btn')) return 1;
       return 0;
     },
+    layout: {
+      mediaHost: (state) => panelHost(state, '.wfd-audio'),
+      attemptHost: (state) => panelHost(state, '#type-action-host'),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'question-select-type',
       previousButtonId: 'back-btn-type',
       nextButtonId: 'next-btn-type'
     },
-    layout: createLayout({ listen: '[data-practice-action-host="listen"]', answer: '[data-practice-action-host="answer"]', results: '[data-practice-action-host="results"]' }),
     controls: [
       { sourceId: 'play-btn', slot: 'media', level: 'basic', order: 1 },
       { sourceId: 'check-btn', slot: 'attempt', level: 'basic', order: 1 },
@@ -418,6 +467,11 @@
         default: return 0;
       }
     },
+    layout: {
+      mediaHost: (state) => panelHost(state, '#ra-action-host'),
+      attemptHost: (state) => panelHost(state, '#ra-action-host'),
+      progressHost
+    },
     picker: {
       sourceSelectId: 'ra-question-select',
       orderModes: {
@@ -427,7 +481,6 @@
       previous: () => { try { window.ReadAloudMode?.loadPreviousPrompt?.(); } catch (e) { console.error('[SPC Adapters] previous error:', e); } },
       next: () => { try { window.ReadAloudMode?.loadNextPrompt?.(); } catch (e) { console.error('[SPC Adapters] next error:', e); } }
     },
-    layout: createLayout({ prep: '[data-practice-action-host="prep"]', record: '[data-practice-action-host="record"]', results: '[data-practice-action-host="results"]' }),
     controls: [
       // Keep Read Aloud's state-machine-owned controls intact while adopting
       // their existing DOM nodes into the shared action row.

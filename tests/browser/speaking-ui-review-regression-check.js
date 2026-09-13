@@ -211,7 +211,7 @@ async function main() {
             .filter((control) => !control.matches('.spc-sheet-close, .spc-sheet-tab') && visible(control))
           : [];
         const actionRow = panel?.querySelector('.spc-row--actions');
-        const readAloudActionHost = panel?.querySelector('#ra-read-aloud-controls');
+        const readAloudActionHost = panel?.querySelector('#ra-action-host');
         const attemptStatus = panel?.querySelector('.spc-slot-media .badge-replay');
         return {
           trace,

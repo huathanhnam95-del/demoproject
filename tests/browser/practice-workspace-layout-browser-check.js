@@ -12,6 +12,16 @@ const SHARED_MODES = ['notes', 'speak', 'type', 'asq', 'rts', 'describe-image', 
 const LISTENING_MODES = ['hcs', 'hiw', 'lmcma', 'lmcsa', 'smw', 'sst'];
 const ADJACENT_MODES = ['extended', 'watch', 'pronounce', 'collo-dictate', 'rfib', 'dd', 'rmcsa', 'rmcma', 'rop', 'essay', 'swt'];
 const WIDTHS = [1440, 1024, 768, 390, 320];
+const EXPECTED_SHARED_HOSTS = {
+  asq: { media: '.asq-audio', attempt: '#asq-action-host' },
+  rts: { media: '#rts-start-controls', attempt: '#rts-audio-action-host' },
+  'describe-image': { media: '#di-start-controls', attempt: '#di-prepare-action-host' },
+  notes: { media: '#notes-audio-host', attempt: '#notes-ready-action-host' },
+  sgd: { media: '#sgd-start-controls', attempt: '#sgd-listen-action-host' },
+  speak: { media: '.speak-audio', attempt: '#speak-action-host' },
+  type: { media: '.wfd-audio', attempt: '#type-action-host' },
+  'read-aloud': { media: '#ra-action-host', attempt: '#ra-action-host' }
+};
 
 function startServer() {
   const app = express();
@@ -38,7 +48,7 @@ async function main() {
       await page.waitForFunction(() => !!window.SpeakingPracticeController, { timeout: 30000 });
 
       for (const mode of SHARED_MODES) {
-        const probe = await page.evaluate((modeId) => {
+        const probe = await page.evaluate(({ modeId, expectedHosts }) => {
           const previous = window.__practiceProbeMode;
           if (previous) window.SpeakingPracticeController.unmount(previous);
           document.querySelectorAll('.mode-panel').forEach((panel) => {
@@ -50,31 +60,44 @@ async function main() {
           panel.style.display = 'block';
           window.SpeakingPracticeController.activate(modeId, { scope: 'pte' });
           window.__practiceProbeMode = modeId;
+          const expected = expectedHosts[modeId];
           const controller = panel.querySelector('.spc-controller');
           const attempt = panel.querySelector('.spc-slot-attempt');
           const media = panel.querySelector('.spc-slot-media');
-          const actionHost = attempt?.parentElement?.closest('[data-practice-action-host]');
-          const mediaHost = media?.parentElement?.closest('[data-practice-media-host]');
+          const actionHost = attempt?.parentElement;
+          const mediaHost = media?.parentElement;
+          const expectedActionHost = expected ? panel.querySelector(expected.attempt) : null;
+          const expectedMediaHost = expected ? panel.querySelector(expected.media) : null;
           return {
             mode: modeId,
             workspace: panel.dataset.practiceWorkspace || null,
-            actionHost: actionHost?.dataset.practiceActionHost || null,
-            mediaHost: mediaHost?.dataset.practiceMediaHost || null,
+            actionHost: actionHost?.id || actionHost?.dataset.practiceActionHost || null,
+            mediaHost: mediaHost?.id || mediaHost?.dataset.practiceMediaHost || null,
             adoptedCount: (attempt?.children.length || 0) + (media?.children.length || 0),
             attemptHostInPanel: !!actionHost && panel.contains(actionHost),
             mediaHostInPanel: !!mediaHost && panel.contains(mediaHost),
+            attemptParentMatchesExpected: actionHost === expectedActionHost,
+            mediaParentMatchesExpected: mediaHost === expectedMediaHost,
+            notesStartInAttempt: modeId !== 'notes' || !!attempt?.contains(document.getElementById('notes-start-btn')),
+            notesLegacyInAttempt: modeId === 'notes' && !!attempt?.contains(document.getElementById('play-notes-btn')),
             controller: !!controller,
             panelOverflow: panel.scrollWidth - panel.clientWidth,
             documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
             controllerBorderRadius: controller ? getComputedStyle(controller).borderRadius : null,
             controllerShadow: controller ? getComputedStyle(controller).boxShadow : null
           };
-        }, mode);
+        }, { modeId: mode, expectedHosts: EXPECTED_SHARED_HOSTS });
         results.push({ width, ...probe });
         assert.equal(probe.workspace, mode, `${mode}@${width} must opt into its declared workspace`);
         assert.equal(probe.controller, true, `${mode}@${width} controller must mount`);
         assert.equal(probe.attemptHostInPanel, true, `${mode}@${width} attempt slot must stay in-panel`);
         assert.equal(probe.mediaHostInPanel, true, `${mode}@${width} media slot must stay in-panel`);
+        assert.equal(probe.attemptParentMatchesExpected, true, `${mode}@${width} attempt slot must use its explicit phase host`);
+        assert.equal(probe.mediaParentMatchesExpected, true, `${mode}@${width} media slot must use its explicit media host`);
+        if (mode === 'notes') {
+          assert.equal(probe.notesStartInAttempt, true, `notes@${width} must adopt notes-start-btn`);
+          assert.equal(probe.notesLegacyInAttempt, false, `notes@${width} must not adopt play-notes-btn`);
+        }
         assert.ok(probe.panelOverflow <= 1, `${mode}@${width} panel overflow ${probe.panelOverflow}`);
         assert.ok(probe.documentOverflow <= 1, `${mode}@${width} document overflow ${probe.documentOverflow}`);
         assert.equal(probe.controllerBorderRadius, '0px', `${mode}@${width} controller must remain flat`);

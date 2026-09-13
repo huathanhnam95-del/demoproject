@@ -991,13 +991,15 @@ async function runTest() {
             SPC.activate('notes', { scope: 'pte' });
             const notesController = notesPanel?.querySelector('.spc-controller');
             results.notesMountedInPte = !!notesController;
-            results.notesPlayAdopted = !!notesPanel?.querySelector('#play-notes-btn');
+            results.notesStartAdopted = !!notesPanel?.querySelector('.spc-slot-attempt #notes-start-btn');
+            results.notesLegacyPlayNotAdopted = !notesPanel?.querySelector('.spc-slot-media #play-notes-btn');
             results.notesActionRoles = [
-                actionRole(notesPanel, 'play-notes-btn'),
+                actionRole(notesPanel, 'notes-start-btn'),
+                actionRole(notesPanel, 'notes-skip-video-btn'),
                 actionRole(notesPanel, 'notes-submit-btn'),
                 actionRole(notesPanel, 'notes-retry-btn'),
                 actionRole(notesPanel, 'recommended-btn-notes')
-            ].join(',') === 'play,primary,retry,support';
+            ].join(',') === 'primary,secondary,primary,retry,support';
             results.notesHasAdvanced = !!notesController && !notesController.hasAttribute('data-spc-no-toggle');
             SPC.activate('notes', { scope: 'english' });
             results.notesUnmountedInEnglish = !notesPanel?.querySelector('.spc-controller');
@@ -1120,7 +1122,8 @@ async function runTest() {
         assert('Describe Image exposes Advanced view', productionAdapterResults.diHasAdvanced);
         assert('Describe Image difficulty filter is adopted', productionAdapterResults.diDifficultyAdopted);
         assert('Retell Lecture mounts in PTE', productionAdapterResults.notesMountedInPte);
-        assert('Retell Lecture Play control is adopted', productionAdapterResults.notesPlayAdopted);
+        assert('Retell Lecture canonical start control is adopted', productionAdapterResults.notesStartAdopted);
+        assert('Retell Lecture legacy Play alias is not adopted', productionAdapterResults.notesLegacyPlayNotAdopted);
         assert('Retell Lecture action roles are mapped', productionAdapterResults.notesActionRoles);
         assert('Retell Lecture exposes Advanced view', productionAdapterResults.notesHasAdvanced);
         assert('English Take Notes remains unmounted', productionAdapterResults.notesUnmountedInEnglish);

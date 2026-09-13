@@ -76,11 +76,40 @@ test('layout host markup covers every shared mode without moving adjacent modes'
   }
 });
 
-test('controller exposes idempotent layout sync and teardown hooks', () => {
+test('adapters use explicit phase-owned hosts and Notes keeps one canonical start path', () => {
+  const expectedHosts = {
+    asq: ['.asq-audio', '#asq-action-host'],
+    rts: ['#rts-start-controls', '#rts-audio-action-host', '#rts-prep-action-host', '#rts-action-host', '#rts-results-action-host'],
+    'describe-image': ['#di-start-controls', '#di-prepare-action-host', '#di-action-host', '#di-review-action-host', '#di-results-action-host'],
+    notes: ['#notes-audio-host', '#notes-ready-action-host', '#notes-video-action-host', '#notes-audio-action-host', '#notes-results-action-host'],
+    sgd: ['#sgd-start-controls', '#sgd-listen-action-host', '#sgd-action-host', '#sgd-results-action-host'],
+    speak: ['.speak-audio', '#speak-action-host'],
+    type: ['.wfd-audio', '#type-action-host'],
+    'read-aloud': ['#ra-action-host']
+  };
+
+  for (const [modeId, selectors] of Object.entries(expectedHosts)) {
+    for (const selector of selectors) {
+      assert.ok(adaptersSource.includes(selector), `${modeId} must name explicit host ${selector}`);
+      if (selector.startsWith('#') && !selector.includes('audio-host')) {
+        assert.match(html, new RegExp(`id=["']${selector.slice(1)}["'][^>]*data-practice-(?:action|media)-host=`), `${selector} must be a declared host`);
+      }
+    }
+  }
+
+  assert.match(html, /id="notes-audio-host"[^>]*data-practice-media-host="notes"/);
+  assert.match(adaptersSource, /sourceId: ['"]notes-start-btn['"]/);
+  assert.doesNotMatch(adaptersSource, /sourceId: ['"]play-notes-btn['"]/);
+  assert.match(html, /id="play-notes-btn"[^>]*hidden/);
+});
+
+test('controller exposes phase resync, slot-origin restoration, and containment guards', () => {
   assert.match(controllerSource, /function resolveLayoutHost\(/);
-  assert.match(controllerSource, /function syncLayout\(/);
-  assert.match(controllerSource, /function restoreLayout\(/);
-  assert.match(controllerSource, /syncLayout\(state\)/);
-  assert.match(controllerSource, /restoreLayout\(state\)/);
-  assert.match(controllerSource, /targetParent !== currentParent/);
+  assert.match(controllerSource, /function syncLayoutPlacement\(/);
+  assert.match(controllerSource, /function restoreLayoutPlacement\(/);
+  assert.match(controllerSource, /syncControlPlacement\(state\)/);
+  assert.match(controllerSource, /restoreLayoutPlacement\(state\)/);
+  assert.match(controllerSource, /nextSibling:\s*slot\.nextSibling/);
+  assert.match(controllerSource, /!host\.contains\(slot\)/);
+  assert.match(controllerSource, /\[0,\s*250,\s*750,\s*1500\]/);
 });

@@ -20,15 +20,31 @@ test('Notes declares bounded entry and audio recovery budgets', () => {
   assert.match(notesSource, /generation|entryGeneration|audioToken/);
 });
 
-test('Notes prerequisites run concurrently and do not wait for YouTube', () => {
+test('Notes opens before optional CDN prerequisites and does not wait for YouTube', () => {
   const notesLoader = loaderSource.slice(
     loaderSource.indexOf('async function ensureNotesModeLoaded'),
     loaderSource.indexOf('async function ensureRfibModeLoaded')
   );
-  assert.match(notesLoader, /Promise\.all/);
+  const modeScriptIndex = notesLoader.indexOf("await loadScript('take-notes-mode.js')");
+  const nlpWarmIndex = notesLoader.indexOf('void ensureCompromiseLoaded()');
+  const xlsxWarmIndex = notesLoader.indexOf('void ensureXlsxLoaded()');
+  assert.ok(modeScriptIndex >= 0, 'Notes mode script should remain the required loader dependency');
+  assert.ok(nlpWarmIndex > modeScriptIndex, 'NLP should warm after the Notes mode script loads');
+  assert.ok(xlsxWarmIndex > modeScriptIndex, 'XLSX should warm after the Notes mode script loads');
+  assert.doesNotMatch(notesLoader, /await\s+Promise\.all/);
   assert.match(notesLoader, /ensureCompromiseLoaded\(\)/);
   assert.match(notesLoader, /ensureXlsxLoaded\(\)/);
+  assert.match(notesLoader, /Optional Retell Lecture .* unavailable/);
   assert.doesNotMatch(notesLoader, /ensureYouTubePlayerLoaded\(\)/);
+});
+
+test('lazy loader retries an index preload that failed before listeners attached', () => {
+  const loadScriptSource = loaderSource.slice(
+    loaderSource.indexOf('function loadScript'),
+    loaderSource.indexOf('async function ensureCompromiseLoaded')
+  );
+  assert.match(loadScriptSource, /const isKnownLoaded/);
+  assert.match(loadScriptSource, /existingScript\.dataset\.belFailed === 'true'\s*\|\|\s*!isKnownLoaded/);
 });
 
 test('audio readiness and playback rejection remain observable to Notes', () => {

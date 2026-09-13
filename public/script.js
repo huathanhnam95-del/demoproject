@@ -2144,7 +2144,24 @@
 
     if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs' || mode === 'smw' || mode === 'hiw' || mode === 'sst') {
       const assetsReady = await ensureModeAssets(mode);
-      if (!assetsReady) return;
+      if (!assetsReady) {
+        if (!isCurrentTransition()) return false;
+        if (mode === 'notes') {
+          const failedNotesPanel = document.getElementById('mode-notes');
+          failedNotesPanel?.classList.remove('active', 'stage-fade-blur-in', 'stage-fade-blur-out');
+          if (failedNotesPanel) {
+            failedNotesPanel.style.display = 'none';
+            delete failedNotesPanel.dataset.modePreparing;
+          }
+          const dashboard = document.querySelector('.dashboard-modern-container');
+          if (dashboard) {
+            dashboard.style.display = 'block';
+            dashboard.classList.remove('stage-fade-blur-in', 'stage-fade-blur-out');
+          }
+          updateCurrentModeIndicator('');
+        }
+        return false;
+      }
     }
     if (!isCurrentTransition()) return false;
 

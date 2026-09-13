@@ -1,11 +1,12 @@
 /**
  * Entrance Test UI — internal design review.
  *
- * Hosts the three candidate skins (public/entrance-test-ui-lab.html) in an
+ * Hosts the three historical candidate skins and the fourth Demo D candidate
+ * (public/entrance-test-ui/).
  * iframe and collects staff ratings against them.
  *
  * Shape of the exercise:
- *   - Three MODES (skins A / B / C), identical behaviour, different looks.
+ *   - Four MODES (skins A / B / C / D), identical rating workflow, different looks.
  *   - Eight PAGES per mode, the distinct screens of the test.
  *   - Five CRITERIA per page, the same five everywhere so totals compare.
  *   - Up to two FONT picks per language, chosen once for the whole test and
@@ -28,7 +29,8 @@
   const SKINS = [
     { id: 'a', label: 'A · Editorial', hint: 'Giấy ấm, serif, kẻ mảnh' },
     { id: 'b', label: 'B · Instrument', hint: 'Chrome đen, lưới chặt, số mono' },
-    { id: 'c', label: 'C · Signal', hint: 'Khối màu phẳng, viền dày' }
+    { id: 'c', label: 'C · Signal', hint: 'Khối màu phẳng, viền dày' },
+    { id: 'd', label: 'D · Noto Focus', hint: 'Nền trắng, Noto Sans, đọc liền mạch' }
   ];
 
   const PAGES = [
@@ -61,7 +63,8 @@
     tab: 'rate',                 // rate | results
     ratings: {},                 // "skin:page:criterion" -> 1..5
     fonts: { vn: [], en: [] },   // up to MAX_FONT_PICKS ids each
-    preview: { vn: '', en: '' }, // what the frame is showing right now
+    preview: { vn: '', en: '' }, // historical A/B/C preview
+    previewD: { vn: '', en: '' }, // Demo D stays on its Noto defaults until explicitly previewed
     all: [],
     saveTimer: null,
     status: '',
@@ -155,6 +158,7 @@
     // Open on the rater's own pick so they see their choice, not a default.
     state.preview.vn = state.fonts.vn[0] || 'be-vietnam-pro';
     state.preview.en = state.fonts.en[0] || '';
+    state.previewD = { vn: '', en: '' };
     render();
   }
 
@@ -201,6 +205,7 @@
   function frame() { return document.getElementById('et-ui-frame'); }
 
   function frameUrl() {
+    if (state.skin === 'd') return '/entrance-test-ui/?revisionId=academic-noto-v1';
     const p = new URLSearchParams({ skin: state.skin });
     if (state.preview.vn) p.set('vn', state.preview.vn);
     if (state.preview.en) p.set('en', state.preview.en);
@@ -214,14 +219,20 @@
   }
 
   function pushPreview() {
+    if (state.skin === 'd') {
+      post({ type: 'etui:fonts', skin: 'd', revisionId: 'academic-noto-v1', vn: state.previewD.vn, en: state.previewD.en });
+      return;
+    }
     post({ type: 'etlab:fonts', vn: state.preview.vn, en: state.preview.en });
   }
 
   window.addEventListener('message', (ev) => {
     if (ev.origin !== window.location.origin) return;
     const msg = ev.data;
-    if (!msg || msg.type !== 'etlab:page') return;
+    if (!msg || !['etlab:page', 'etui:page'].includes(msg.type)) return;
+    if (msg.type === 'etui:page' && (msg.revisionId !== 'academic-noto-v1' || msg.skin !== 'd')) return;
     if (msg.skin !== state.skin) return;      // stale frame during a skin swap
+    if (!PAGES.some(p => p.id === msg.page)) return;
     if (msg.page === state.page) return;
     state.page = msg.page;
     if (state.tab === 'rate') { renderRatingColumn(); refreshChrome(); }
@@ -250,7 +261,7 @@
     const c = completion();
 
     const steps = [
-      ['1', 'Chọn mẫu thiết kế', 'A, B hoặc C. Cả ba hoạt động giống hệt nhau, chỉ khác giao diện.'],
+      ['1', 'Chọn mẫu thiết kế', 'A, B, C hoặc D. Cả bốn đều dùng cùng quy trình chấm, chỉ khác giao diện.'],
       ['2', 'Xem hết 8 trang', 'Bấm từng nút trang, hoặc thao tác thẳng trong bản mẫu.'],
       ['3', 'Chấm 5 tiêu chí', 'Ở cột bên phải. Bấm lại đúng ngôi sao đó để xoá điểm.'],
       ['4', 'Chọn font', 'Làm 1 lần cho cả bài test, tối đa 2 font mỗi ngôn ngữ.']
@@ -277,7 +288,7 @@
       '<div class="et-reqbar">' +
         '<span class="et-reqbar-label">' + (c.done
           ? 'Đã hoàn tất — cảm ơn bạn. Tab Kết quả đã mở.'
-          : 'Bắt buộc xong cả ba mục mới xem được Kết quả:') + '</span>' +
+          : 'Bắt buộc xong cả bốn mục mới xem được Kết quả:') + '</span>' +
         checks +
       '</div>' +
     '</section>';
@@ -322,7 +333,7 @@
     }).join('');
 
     return '<div class="et-row">' +
-      '<span class="et-rowlabel"><b>Bước 1 — Mẫu thiết kế</b><em>chọn 1 trong 3, chấm cả ba</em></span>' +
+      '<span class="et-rowlabel"><b>Bước 1 — Mẫu thiết kế</b><em>chọn 1 trong 4, chấm cả bốn</em></span>' +
       '<div class="et-skins">' + btns + '</div>' +
     '</div>';
   }
@@ -352,16 +363,17 @@
     list.forEach(f => cat.ensure && cat.ensure(f.google));
 
     const picked = state.fonts[kind] || [];
+    const preview = state.skin === 'd' ? state.previewD : state.preview;
 
     const defaultChip = kind === 'en'
-      ? '<span class="et-fontchip' + (!state.preview.en ? ' is-previewing' : '') + '">' +
+      ? '<span class="et-fontchip' + (!preview.en ? ' is-previewing' : '') + '">' +
           '<button class="et-fontchip-name" type="button" data-preview="en" data-font="" ' +
             'title="Dùng font mặc định của mẫu">Mặc định</button>' +
         '</span>'
       : '';
 
     const chips = list.map((f) => {
-      const isPreview = state.preview[kind] === f.id;
+      const isPreview = preview[kind] === f.id;
       const isPicked = picked.indexOf(f.id) !== -1;
       return '<span class="et-fontchip' + (isPreview ? ' is-previewing' : '') + (isPicked ? ' is-picked' : '') + '">' +
         '<button class="et-fontchip-name" type="button" data-preview="' + kind + '" data-font="' + esc(f.id) + '" ' +
@@ -649,6 +661,7 @@
       state.rater = null;
       state.ratings = {};
       state.fonts = { vn: [], en: [] };
+      state.previewD = { vn: '', en: '' };
       try { localStorage.removeItem(RATER_KEY); } catch (e) { /* ignore */ }
       render();
       return;
@@ -674,14 +687,17 @@
       // Re-rendering here would rebuild the iframe and bounce it back to the
       // intro; drive the existing frame instead and repaint just the chrome.
       state.page = t.dataset.goto;
-      post({ type: 'etlab:goto', page: state.page });
+      post(state.skin === 'd'
+        ? { type: 'etui:goto', skin: 'd', revisionId: 'academic-noto-v1', page: state.page }
+        : { type: 'etlab:goto', page: state.page });
       renderRatingColumn();
       refreshChrome();
       return;
     }
 
     if (t.hasAttribute('data-preview')) {
-      state.preview[t.dataset.preview] = t.dataset.font || '';
+      const preview = state.skin === 'd' ? state.previewD : state.preview;
+      preview[t.dataset.preview] = t.dataset.font || '';
       pushPreview();          // live restyle, no reload, current page keeps its state
       repaintFontBar();
       return;
@@ -701,7 +717,7 @@
         return;
       } else {
         list.push(id);
-        state.preview[kind] = id;   // choosing it is also a reason to show it
+        (state.skin === 'd' ? state.previewD : state.preview)[kind] = id;   // choosing it is also a reason to show it
         pushPreview();
       }
 

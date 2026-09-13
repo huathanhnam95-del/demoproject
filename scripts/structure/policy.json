@@ -78,6 +78,20 @@
       "effects": ["read-only"]
     },
     {
+      "name": "test:entrance-test-ui",
+      "program": "node",
+      "args": ["--test", "tests/entrance-test-ui/content.test.mjs", "tests/entrance-test-ui/state.test.mjs", "tests/entrance-test-ui/persistence.test.mjs", "tests/entrance-test-ui/view.test.mjs", "tests/entrance-test-ui/audio.test.mjs", "tests/entrance-test-ui/qa.test.mjs", "tests/entrance-test-ui/host.test.mjs"],
+      "target": "tests/entrance-test-ui/content.test.mjs",
+      "effects": ["read-only"]
+    },
+    {
+      "name": "test:entrance-test-ui:browser",
+      "program": "python",
+      "args": ["-X", "utf8", "tests/browser/entrance-test-ui-demo-check.py"],
+      "target": "tests/browser/entrance-test-ui-demo-check.py",
+      "effects": ["local-write", "external-temp"]
+    },
+    {
       "name": "test:release",
       "program": "node",
       "args": ["--test", "tests/release/firebase-release-cli.test.cjs"],

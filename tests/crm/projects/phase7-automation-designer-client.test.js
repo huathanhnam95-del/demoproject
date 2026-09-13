@@ -30,6 +30,15 @@ function harness({ root } = {}) {
   c.setAccount(actor); c.setSelection('p1'); c.setContext(snapshot());
   return { c, calls, denied, refreshed, snapshot, rule, version, handle: fn => { handler = fn; }, actor: value => { actor = value; c.setAccount(value); }, failRefresh: () => { refreshFailure = true; } };
 }
+function pickerEventRoot() {
+  const listeners = {};
+  return {
+    innerHTML: '', hidden: false, ownerDocument: { activeElement: null }, contains: () => false,
+    addEventListener: (type, handler) => { listeners[type] = handler; },
+    querySelector: () => null, querySelectorAll: () => [],
+    fireInput: (value, kind) => listeners.input({ target: { value, dataset: { autoPickerSearch: '', autoPickerType: kind }, matches: selector => selector === '[data-auto-picker-search]' } })
+  };
+}
 async function sample(h) { h.c.beginSearch(); await h.c.selectSearchTask('t1'); }
 function editStatus(h, status) { h.c.editDefinition(value => E.editNode(value, 'step', node => E.setAt(node, ['payload', 'patch', 'status'], status))); }
 test('Owner controls require authorized ready Board context, independent of admin metadata', () => {
@@ -56,6 +65,19 @@ test('simple picker choices map to schema-authoritative trigger and action nodes
   assert.deepEqual(definition.trigger, { type: 'due_date', time: '09:00', offsetDays: 0 });
   assert.equal(definition.steps[0].type, 'notify');
   assert.equal(h.calls.length, 0);
+});
+test('simple picker search filters trigger and action choices from an empty boolean data attribute', () => {
+  const root = pickerEventRoot(), h = harness({ root }); h.c.init(); h.c.newDraft();
+  for (const [kind, query, action, expected, unrelated] of [
+    ['trigger', 'STATUS', 'simple-trigger-choice', 'status_changed', 'task_created'],
+    ['action', 'NOTIFY', 'simple-action-choice', 'Notify people', 'Change task fields']
+  ]) {
+    h.c.openSimplePicker(kind); root.fireInput(query, kind);
+    assert.equal(h.c.getState().pickerQuery, query);
+    assert.equal((root.innerHTML.match(new RegExp(`data-auto-action="${action}"`, 'g')) || []).length, 1);
+    assert.match(root.innerHTML, new RegExp(expected));
+    assert.doesNotMatch(root.innerHTML, new RegExp(unrelated));
+  }
 });
 test('complex definitions stay in Advanced so conditions and multiple actions remain visible', async () => {
   const root = { innerHTML: '' }, h = harness({ root });

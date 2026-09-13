@@ -237,7 +237,7 @@
     }
     function init() {
       button?.addEventListener('click', show);
-      root?.addEventListener('input', event => { const control = event.target; if (control.dataset.autoPickerSearch && picker) { pickerQuery = control.value; render(); } else if (control.dataset.autoMeta && ready() && draft) updateDraft({ [control.dataset.autoMeta]: control.value }); else if (control.matches('input[data-auto-path],textarea[data-auto-path]')) handleField(control); });
+      root?.addEventListener('input', event => { const control = event.target; if (control.dataset.autoPickerSearch !== undefined && picker) { pickerQuery = control.value; render(); } else if (control.dataset.autoMeta && ready() && draft) updateDraft({ [control.dataset.autoMeta]: control.value }); else if (control.matches('input[data-auto-path],textarea[data-auto-path]')) handleField(control); });
       root?.addEventListener('change', event => { const control = event.target; if (control.dataset.autoMeta && control.tagName === 'SELECT' && ready() && draft) updateDraft({ [control.dataset.autoMeta]: control.value }); else if (control.matches('select[data-auto-kind]')) handleField(control); });
       root?.addEventListener('keydown', event => {
         if (!picker) return;

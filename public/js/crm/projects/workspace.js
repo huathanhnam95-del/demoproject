@@ -164,20 +164,6 @@
                 utilityOrigin = null;
                 origin?.focus?.();
             });
-            // Below 1700px the rail overlays the board instead of sharing the grid,
-            // so it must start as the 49px icon strip or it covers the right-hand columns.
-            const RAIL_INLINE_MIN_WIDTH = 1700;
-            function syncRailDefault() {
-                if (!utilityRail || utilityRail.dataset.userToggled === 'true') return;
-                const overlays = (globalScope.innerWidth || 0) < RAIL_INLINE_MIN_WIDTH;
-                utilityRail.classList.toggle('collapsed', overlays);
-                const button = byId('ucollapse');
-                if (button) {
-                    button.textContent = overlays ? '«' : '»';
-                    button.setAttribute('aria-label', overlays ? 'Expand utilities' : 'Collapse utilities');
-                    button.setAttribute('aria-expanded', String(!overlays));
-                }
-            }
             function selectUtilityTab(tabName) {
                 if (!utilityRail) return;
                 utilityRail.querySelectorAll?.('[data-u]')?.forEach?.(b => {
@@ -198,22 +184,12 @@
                     if (!utilityDialog.open) utilityDialog.showModal();
                 }
             }
-            syncRailDefault();
-            if (typeof globalScope.addEventListener === 'function') listen(globalScope, 'resize', syncRailDefault);
             if (utilityRail) {
                 listen(utilityRail, 'click', event => {
                     const tab = event.target.closest?.('[data-u]');
                     if (tab) {
                         openUtilityWorkspace(tab.dataset.u, tab);
                         return;
-                    }
-                    const collapseBtn = event.target.closest?.('#ucollapse');
-                    if (collapseBtn) {
-                        const collapsed = utilityRail.classList.toggle('collapsed');
-                        utilityRail.dataset.userToggled = 'true';
-                        collapseBtn.textContent = collapsed ? '«' : '»';
-                        collapseBtn.setAttribute('aria-label', collapsed ? 'Expand utilities' : 'Collapse utilities');
-                        collapseBtn.setAttribute('aria-expanded', String(!collapsed));
                     }
                 });
                 listen(utilityRail, 'keydown', event => {

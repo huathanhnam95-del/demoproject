@@ -294,7 +294,10 @@ test('scale and portal markup keep stable accessible ownership outside the proje
     assert.match(utilityRule, /padding:\s*calc\(24px \/ var\(--crm-projects-ui-scale, 1\)\)\s+calc\(28px \/ var\(--crm-projects-ui-scale, 1\)\)/);
     assert.match(utilityRule, /overflow:\s*auto/);
     assert.doesNotMatch(utilityRule, /(?:width|height):\s*auto|(?:max-width|max-height):\s*none/);
-    assert.match(styles, /\.crm-projects-utility-rail\.collapsed\s*>\s*\.crm-projects-utility-panes/);
+    assert.match(styles, /\.crm-projects-utility-rail\s*\{[^}]*width:\s*49px/);
+    assert.match(styles, /\.crm-projects-utility-rail\s*\{[^}]*flex:\s*0\s+0\s+49px/);
+    assert.doesNotMatch(styles, /\.crm-projects-utility-rail:not\(\.collapsed\)/);
+    assert.doesNotMatch(styles, /crm-projects-utility-collapse|id="ucollapse"/);
     assert.match(adminSource, /projectsUiScaleController\?\.dispose\?\.\(\)\s*;[\s\S]*projectsUiScaleController\s*=.*CrmProjectsUiScale/);
 });
 

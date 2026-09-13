@@ -87,14 +87,15 @@
   }
   function isSimpleDefinition(value) {
     const step = value?.steps?.[0];
-    return !value?.condition && E.triggers.includes(value?.trigger?.type) && Array.isArray(value?.steps) && value.steps.length === 1 && E.types.includes(step?.type) && step.type !== 'if';
+    return value?.schemaVersion === 1 && !value?.condition && E.triggers.includes(value?.trigger?.type) && Array.isArray(value?.steps) && value.steps.length === 1 && E.types.includes(step?.type) && step.type !== 'if';
   }
   function isSimpleBuilderDraft(value) {
     const step = value?.steps?.[0], triggerType = value?.trigger?.type;
-    return !value?.condition && Array.isArray(value?.steps) && value.steps.length <= 1 && (!triggerType || E.triggers.includes(triggerType)) && (!step || (E.types.includes(step.type) && step.type !== 'if'));
+    return value?.schemaVersion === 1 && !value?.condition && Array.isArray(value?.steps) && value.steps.length <= 1 && (!triggerType || E.triggers.includes(triggerType)) && (!step || (E.types.includes(step.type) && step.type !== 'if'));
   }
   function simpleDefinitionReason(value) {
     if (isBlankDefinition(value) || isSimpleDefinition(value)) return '';
+    if (value?.schemaVersion !== 1) return 'This rule uses an unsupported schema version.';
     if (value?.condition) return 'This rule has conditions.';
     if (!Array.isArray(value?.steps) || value.steps.length !== 1) return 'This rule has multiple actions or no action.';
     if (!E.triggers.includes(value?.trigger?.type)) return 'This rule has an unsupported trigger.';

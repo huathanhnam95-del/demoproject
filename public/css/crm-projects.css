@@ -780,13 +780,10 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
    >=1700  three columns, utility rail inline
    <1700   utility rail overlays the board instead of squeezing it
    <1100   project rail overlays behind the hamburger
-   <700    single column; dialogs and popovers go full width
-   Below 1700 the board reclaims ~310px, which is the difference between
-   "all base columns visible" and "horizontal scroll on a laptop". */
+   <700    single column; dialogs and popovers go full width */
 @media (max-width: 1700px) {
   .crm-projects-workspace-shell { position: relative; grid-template-columns: 216px minmax(0, 1fr); padding-right: 49px; }
   .crm-projects-utility-rail { position: absolute; top: 0; right: 0; height: 100%; width: 49px; z-index: 30; }
-  .crm-projects-utility-rail:not(.collapsed) { width: 312px; box-shadow: -14px 0 34px rgba(25, 43, 69, 0.13); }
   #projects-workspace-main { padding: 14px 22px 32px; }
 }
 @media (max-width: 1100px) {
@@ -800,7 +797,6 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 }
 @media (max-width: 700px) {
   .crm-projects-workspace-shell { margin-inline: -20px; border-radius: 0; min-height: calc(100vh - 130px); }
-  .crm-projects-utility-rail:not(.collapsed) { width: min(312px, calc(100vw - 40px)); }
   #projects-workspace-main { padding: 12px 10px 26px; }
   [data-panel="projects"] #projects-workspace-name { font-size: 22px; }
   .crm-projects-workspace-heading { gap: 8px; }
@@ -1040,8 +1036,8 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   display: flex;
   border-left: 1px solid var(--pj-line);
   background: var(--pj-raised);
-  width: 312px;
-  transition: width .22s var(--pj-motion, ease);
+  width: 49px;
+  flex: 0 0 49px;
   min-height: 100%;
 }
 [data-panel="projects"] dialog.crm-projects-utility-workspace {
@@ -1069,7 +1065,6 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 .crm-projects-utility-workspace-heading p { margin: 0; }
 .crm-projects-utility-workspace > .crm-projects-utility-panes { display: flex; flex: 1; width: 100%; padding: 24px 0 8px; overflow: auto; }
 .crm-projects-utility-workspace > .crm-projects-utility-panes > .crm-projects-utility-pane { width: 100%; }
-.crm-projects-utility-rail.collapsed { width: 49px; }
 .crm-projects-utility-tabs {
   display: flex;
   flex-direction: column;
@@ -1120,7 +1115,6 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   min-height: 0;
   box-sizing: border-box;
 }
-.crm-projects-utility-rail.collapsed > .crm-projects-utility-panes { display: none; }
 .crm-projects-utility-pane { display: none; flex-direction: column; gap: 12px; }
 .crm-projects-utility-pane.on { display: flex; }
 .crm-projects-utility-pane > header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
@@ -1316,7 +1310,6 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
 [data-panel="projects"] .crm-projects-kanban-col { transition: background-color var(--pj-motion) var(--pj-ease), border-color var(--pj-motion) var(--pj-ease); }
 
 /* Utility rail and dock. */
-.crm-projects-utility-rail { transition: width var(--pj-motion-slow) var(--pj-ease); }
 .crm-projects-batch-dock { animation: slideUpDock var(--pj-motion) var(--pj-ease); }
 
 /* Buttons and tabs pick up the same curve. */
@@ -1706,22 +1699,6 @@ select.crm-board-field[data-value="none"] { color: var(--pj-faint); }
   transition: border-color var(--pj-motion-fast) var(--pj-ease);
 }
 .crm-projects-board-discussion-form textarea:focus { border-color: var(--pj-accent); }
-
-/* #ucollapse shipped with prototype class names and an inline style block. */
-.crm-projects-utility-collapse {
-  margin-top: auto;
-  border: 0;
-  background: transparent;
-  color: var(--pj-muted);
-  padding: 8px;
-  font-size: 14px;
-  line-height: 1;
-  border-radius: var(--pj-radius-md);
-  cursor: pointer;
-  transition: background-color var(--pj-motion-fast) var(--pj-ease), color var(--pj-motion-fast) var(--pj-ease);
-}
-.crm-projects-utility-collapse:hover { background: var(--pj-sunken); color: var(--pj-ink); }
-
 
 /* ==========================================================================
    People picker. The native <select> stays in the cell as the value store --

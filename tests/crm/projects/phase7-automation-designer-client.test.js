@@ -68,6 +68,17 @@ test('complex definitions stay in Advanced so conditions and multiple actions re
   assert.match(root.innerHTML, /data-auto-node="step"/);
   assert.match(root.innerHTML, /data-auto-node="notify"/);
 });
+test('unsupported schema definitions stay in Advanced even with one supported trigger and action', async () => {
+  const root = { innerHTML: '' }, h = harness({ root });
+  const unsupported = { ...def(), schemaVersion: 2 };
+  h.handle(async () => ({ rule: h.rule, version: { ...h.version, definition: unsupported }, diagnostics: [] }));
+  await h.c.openRule('r1');
+  assert.equal(h.c.getState().representation, 'blocks');
+  assert.match(h.c.getState().status, /unsupported schema version/i);
+  assert.doesNotMatch(root.innerHTML, /data-auto-simple-builder/);
+  assert.doesNotMatch(root.innerHTML, /data-auto-action="recipe"/);
+  assert.match(root.innerHTML, /data-auto-node="step"/);
+});
 test('same-scope transient refresh keeps draft while disabling actions; schema changes invalidate preview', async () => {
   const h = harness(); await h.c.openRule('r1'); await sample(h); await h.c.generatePreview(); assert.ok(h.c.getState().preview);
   h.c.setContext(h.snapshot({ filterOptionsReady: false })); assert.equal(h.c.getState().ready, false); assert.ok(h.c.getState().draft);

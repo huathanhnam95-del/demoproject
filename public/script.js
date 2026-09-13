@@ -2119,6 +2119,29 @@
       return;
     }
 
+    // Retell Lecture should expose a truthful loading shell while its optional
+    // cloud/local dependencies resolve. The panel remains switchable and the
+    // final state is still committed only after the bounded loader completes.
+    const earlyNotesPanel = mode === 'notes' ? document.getElementById('mode-notes') : null;
+    if (earlyNotesPanel) {
+      earlyNotesPanel.classList.add('active');
+      earlyNotesPanel.style.display = 'block';
+      earlyNotesPanel.dataset.modePreparing = 'true';
+      const earlyStatus = earlyNotesPanel.querySelector('#notes-entry-status');
+      if (earlyStatus) {
+        earlyStatus.hidden = false;
+        earlyStatus.dataset.notesStatus = 'loading';
+        earlyStatus.textContent = 'Loading Retell Lecture questions…';
+      }
+      document.querySelectorAll('.mode-panel').forEach((panel) => {
+        if (panel !== earlyNotesPanel) {
+          panel.classList.remove('active');
+          panel.style.display = 'none';
+        }
+      });
+      document.querySelector('.dashboard-modern-container')?.style.setProperty('display', 'none');
+    }
+
     if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs' || mode === 'smw' || mode === 'hiw' || mode === 'sst') {
       const assetsReady = await ensureModeAssets(mode);
       if (!assetsReady) return;
@@ -2166,7 +2189,7 @@
         || (document.querySelector('.mode-panel.active') !== modePanel ? document.querySelector('.mode-panel.active') : null)
         || (document.querySelector('.dashboard-modern-container')?.style.display !== 'none' ? document.querySelector('.dashboard-modern-container') : null);
 
-      const deferSelectedPanelReveal = speakingModes.includes(mode);
+      const deferSelectedPanelReveal = speakingModes.includes(mode) && mode !== 'notes';
 
       if (deferSelectedPanelReveal) {
         modePanel.dataset.modePreparing = 'true';
@@ -5322,7 +5345,7 @@
 
       // Initialize Take Notes mode
       if (window.TakeNotesMode) {
-        window.TakeNotesMode.loadEntries();
+        await window.TakeNotesMode.onEnter?.();
       }
 
       // Start Tutorial if needed

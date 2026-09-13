@@ -2,9 +2,16 @@
 const assert = require('assert');
 const express = require('express');
 const path = require('path');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 const app = express();
+app.use((req, res, next) => {
+  if (req.method === 'HEAD' && /\/database\/Take(?:%20| )Notes\/RL\/audio\/\d+\.mp3$/.test(req.originalUrl)) {
+    res.type('audio/mpeg').status(200).end();
+    return;
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, '../../public')));
 
 async function waitForEntries(page) {
@@ -67,12 +74,15 @@ async function openNotes(page, route, entries) {
 (async () => {
   const server = app.listen(0);
   const port = server.address().port;
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   context.addInitScript(() => {
     window.localStorage.setItem('userStatus', 'guest');
     window.localStorage.setItem('hasSeenScopeTutorial', 'true');
     window.localStorage.setItem('notesModeFirstUse', 'true');
+    HTMLMediaElement.prototype.load = function loadForFixture() {
+      setTimeout(() => this.dispatchEvent(new Event('canplay')), 0);
+    };
   });
   const page = await context.newPage();
   page.__port = port;
@@ -108,19 +118,23 @@ async function openNotes(page, route, entries) {
 
     await page.evaluate(() => document.querySelector('.spc-picker-prev')?.click());
     await page.waitForFunction(() => document.getElementById('current-question-id-notes')?.textContent?.trim() === '2');
-    await page.evaluate(() => document.getElementById('play-notes-btn')?.click());
+    await page.evaluate(() => document.getElementById('notes-start-btn')?.click());
     await page.waitForFunction(() => /\/2\.mp3(?:\?|$)/.test(document.getElementById('notes-audio')?.src || ''), { timeout: 30000 });
+    await page.waitForFunction(() => document.getElementById('notes-audio-status')?.dataset.notesStatus === 'ready', { timeout: 30000 });
 
     const playback = await page.evaluate(() => ({
       url: window.location.pathname,
       questionId: document.getElementById('current-question-id-notes')?.textContent?.trim() || '',
       audioSrc: document.getElementById('notes-audio')?.src || '',
-      audioReadyState: document.getElementById('notes-audio')?.readyState || 0
+      audioReadyState: document.getElementById('notes-audio')?.readyState || 0,
+      audioStatus: document.getElementById('notes-audio-status')?.dataset?.notesStatus || '',
+      playerEnabled: !document.getElementById('notes-play-btn')?.disabled
     }));
     assert.strictEqual(playback.url, '/pte-practice/speaking/notes/2');
     assert.strictEqual(playback.questionId, '2');
     assert.match(playback.audioSrc, /\/database\/Take%20Notes\/RL\/audio\/2\.mp3(?:\?|$)/);
-    assert.ok(playback.audioReadyState >= 1);
+    assert.strictEqual(playback.audioStatus, 'ready');
+    assert.strictEqual(playback.playerEnabled, true);
 
     console.log('notes navigation and audio browser check passed');
   } finally {

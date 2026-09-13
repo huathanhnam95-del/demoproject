@@ -5,7 +5,7 @@
  * Verifies: registration, activation, picker, Basic/Advanced toggle, DOM adoption,
  * restoration, sheets, focus management, persistence, responsive layout.
  */
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
@@ -207,7 +207,7 @@ async function dismissBlockingOverlays(page) {
 
 async function runTest() {
     console.log('--- Starting Speaking Controller Browser Check (Wave 0) ---');
-    const browser = await chromium.launch({
+    const browser = await launchPracticeChrome({
       headless: true,
       args: [
         '--use-fake-device-for-media-stream',

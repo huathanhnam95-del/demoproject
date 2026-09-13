@@ -12,7 +12,7 @@ const assert = require('assert');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 const SPEAKING_MODE_IDS = [
   'read-aloud', 'rts', 'asq', 'describe-image', 'notes', 'sgd', 'speak'
@@ -105,7 +105,7 @@ async function main() {
   const server = await new Promise((resolve) => {
     const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
   });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
 
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
@@ -211,10 +211,15 @@ async function main() {
             .filter((control) => !control.matches('.spc-sheet-close, .spc-sheet-tab') && visible(control))
           : [];
         const actionRow = panel?.querySelector('.spc-row--actions');
+        const readAloudActionHost = panel?.querySelector('#ra-read-aloud-controls');
         const attemptStatus = panel?.querySelector('.spc-slot-media .badge-replay');
         return {
           trace,
-          visibleBeforeController: trace.some((entry) => entry.visible && !entry.controller),
+          // Notes deliberately keeps a small loading shell visible while its
+          // bounded entry loaders race; every other migrated mode remains
+          // hidden until its controller is ready.
+          visibleBeforeController: id !== 'notes' && trace.some((entry) => entry.visible && !entry.controller),
+          notesLoadingShellRendered: id !== 'notes' || !!panel?.querySelector('#notes-entry-status'),
           nonOutfitControllerControls: controllerButtons
             .filter((control) => !String(getComputedStyle(control).fontFamily).toLowerCase().includes('outfit'))
             .map((control) => control.id || control.className || control.tagName),
@@ -237,9 +242,9 @@ async function main() {
             visible(panel?.querySelector('.spc-picker-prev')) && visible(panel?.querySelector('.spc-picker-next'))
           ),
           readAloudActionsAdopted: id !== 'read-aloud' || (
-            !!actionRow?.querySelector('#ra-record-btn')
-            && !!actionRow?.querySelector('#ra-prep-timer-box')
-            && !!actionRow?.querySelector('#ra-record-timer-box')
+            !!readAloudActionHost?.querySelector('#ra-record-btn')
+            && !!readAloudActionHost?.querySelector('#ra-stop-btn')
+            && !!readAloudActionHost?.querySelector('#ra-check-btn')
           ),
           actionRowGap: actionRow ? parseFloat(getComputedStyle(actionRow).columnGap || '0') : 0,
           attemptStatusStyle: attemptStatus ? {
@@ -301,6 +306,9 @@ async function main() {
 
     speakingAudit.forEach((result) => {
       assertResult(`${result.modeId} never becomes visible before its controller mounts`, !result.visibleBeforeController);
+      if (result.modeId === 'notes') {
+        assertResult('notes loading shell exposes an explicit status node', result.notesLoadingShellRendered);
+      }
       assertResult(`${result.modeId} controller controls use the Outfit stack`, result.nonOutfitControllerControls.length === 0);
       assertResult(`${result.modeId} controller controls meet the 44px touch target`, result.shortControllerControls.length === 0);
       assertResult(`${result.modeId} has the shared visible step indicator`, result.stepperRendered && result.stepCount === result.expectedStepCount);

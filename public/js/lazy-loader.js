@@ -170,9 +170,10 @@
       loadedModes.add('notes');
       return;
     }
-    await ensureCompromiseLoaded();
-    await ensureXlsxLoaded();
-    await ensureYouTubePlayerLoaded();
+    await Promise.all([
+      ensureCompromiseLoaded(),
+      ensureXlsxLoaded()
+    ]);
     await loadScript('take-notes-mode.js');
     loadedModes.add('notes');
   }

@@ -9,7 +9,13 @@
 (function () {
     'use strict';
 
-    const FIRESTORE_LOAD_TIMEOUT_MS = 8000;
+    const NOTES_ENTRY_DEADLINE_MS = 12_000;
+    const NOTES_FIRESTORE_TIMEOUT_MS = 8_000;
+    const NOTES_WORKBOOK_TIMEOUT_MS = 6_000;
+    const NOTES_AUDIO_DEADLINE_MS = 10_000;
+    const NOTES_AUDIO_HEAD_TIMEOUT_MS = 2_000;
+    const NOTES_FALLBACK_OFFER_DELAY_MS = 1_500;
+    const FIRESTORE_LOAD_TIMEOUT_MS = NOTES_FIRESTORE_TIMEOUT_MS;
 
     // State
     let entries = [];
@@ -24,6 +30,10 @@
     let loadEntriesPromise = null;
     let pendingRouteQuestionId = null;
     let audioLoadToken = 0;
+    let entryGeneration = 0;
+    let entryAbortController = null;
+    let audioAbortController = null;
+    let notesEntryLoadStartedAt = 0;
     let notesRecommendationEngine = null;
     let notesRecommendationIndex = null;
     let recentRecommendedIds = [];
@@ -96,18 +106,60 @@
         }
 
         setupEventListeners();
-        loadEntries();
         isInitialized = true;
+        renderEntryStatus('idle');
     }
 
     function getAudioPlayer() {
         if (!elements.audioPlayer && window.PracticeAudioPlayer) {
             elements.audioPlayer = window.PracticeAudioPlayer.attach({
                 prefix: 'notes',
-                audioId: 'notes-audio'
+                audioId: 'notes-audio',
+                onPlaybackError: () => setAudioStatus('playback-error', 'Audio playback failed. Retry audio or choose another question.')
             });
         }
         return elements.audioPlayer;
+    }
+
+    function renderEntryStatus(status, message = '') {
+        const statusEl = elements.entryStatus;
+        if (!statusEl) return;
+        statusEl.dataset.notesStatus = status;
+        statusEl.className = `notes-entry-status is-${status}`;
+        statusEl.textContent = message;
+        statusEl.hidden = !message;
+        if (elements.retryEntriesBtn) elements.retryEntriesBtn.hidden = status !== 'error';
+    }
+
+    function setAudioStatus(status, message = '') {
+        if (!elements.audioStatus) return;
+        elements.audioStatus.dataset.notesStatus = status;
+        elements.audioStatus.className = `notes-audio-status is-${status}`;
+        elements.audioStatus.textContent = message;
+        elements.audioStatus.hidden = !message;
+        if (elements.retryAudioBtn) {
+            elements.retryAudioBtn.hidden = !['unavailable', 'playback-error'].includes(status);
+        }
+    }
+
+    function beginEntryGeneration() {
+        entryGeneration += 1;
+        if (entryAbortController) entryAbortController.abort();
+        entryAbortController = new AbortController();
+        notesEntryLoadStartedAt = Date.now();
+        return {
+            generation: entryGeneration,
+            signal: entryAbortController.signal,
+            deadline: notesEntryLoadStartedAt + NOTES_ENTRY_DEADLINE_MS
+        };
+    }
+
+    function isEntryGenerationActive(generation) {
+        return generation === entryGeneration && !entryAbortController?.signal.aborted;
+    }
+
+    function remainingBudget(deadline, cap = Number.POSITIVE_INFINITY) {
+        return Math.max(0, Math.min(cap, deadline - Date.now()));
     }
 
     /**
@@ -158,6 +210,10 @@
 
         // Stop any playing audio
         audioLoadToken += 1;
+        if (audioAbortController) {
+            audioAbortController.abort();
+            audioAbortController = null;
+        }
         if (elements.audio) {
             elements.audio.pause();
             elements.audio.removeAttribute('src');
@@ -169,9 +225,7 @@
             player.setEnabled(true);
         }
         if (elements.audioStatus) {
-            elements.audioStatus.hidden = true;
-            elements.audioStatus.textContent = '';
-            elements.audioStatus.className = 'notes-audio-status';
+            setAudioStatus('idle');
         }
         // Clear user input
         if (elements.userInput) {
@@ -193,6 +247,8 @@
         elements.nextBtn = document.getElementById('next-btn-notes');
         elements.questionSelect = document.getElementById('question-select-notes');
         elements.playBtn = document.getElementById('play-notes-btn');
+        elements.entryStatus = document.getElementById('notes-entry-status');
+        elements.retryEntriesBtn = document.getElementById('notes-retry-entries-btn');
         elements.recommendedBtn = document.getElementById('recommended-btn-notes');
         elements.recommendationSummary = document.getElementById('recommendation-summary-notes');
 
@@ -221,6 +277,7 @@
         elements.stepAudio = document.getElementById('notes-step-audio');
         elements.audio = document.getElementById('notes-audio');
         elements.audioStatus = document.getElementById('notes-audio-status');
+        elements.retryAudioBtn = document.getElementById('notes-retry-audio-btn');
         getAudioPlayer();
         elements.userInput = document.getElementById('notes-user-input');
         elements.submitBtn = document.getElementById('notes-submit-btn');
@@ -233,6 +290,12 @@
         elements.matchCount = document.getElementById('notes-match-count');
         elements.retryBtn = document.getElementById('notes-retry-btn');
         elements.inCardRetryBtn = document.getElementById('notes-in-card-retry-btn');
+        [elements.playBtn, elements.inCardSubmitBtn, elements.inCardRetryBtn].forEach((alias) => {
+            if (!alias) return;
+            alias.tabIndex = -1;
+            alias.hidden = true;
+            alias.setAttribute('aria-hidden', 'true');
+        });
     }
 
     /**
@@ -252,11 +315,11 @@
         if (elements.recommendedBtn) {
             elements.recommendedBtn.addEventListener('click', applyRecommendedEntry);
         }
+        if (elements.retryEntriesBtn) {
+            elements.retryEntriesBtn.addEventListener('click', retryEntryLoading);
+        }
 
         // Play and start buttons
-        if (elements.playBtn) {
-            elements.playBtn.addEventListener('click', startPractice);
-        }
         if (elements.startBtn) {
             elements.startBtn.addEventListener('click', startPractice);
         }
@@ -297,14 +360,13 @@
         if (elements.submitBtn) {
             elements.submitBtn.addEventListener('click', submitNotes);
         }
-        if (elements.inCardSubmitBtn) {
-            elements.inCardSubmitBtn.addEventListener('click', submitNotes);
-        }
         if (elements.retryBtn) {
             elements.retryBtn.addEventListener('click', retryPractice);
         }
-        if (elements.inCardRetryBtn) {
-            elements.inCardRetryBtn.addEventListener('click', retryPractice);
+        if (elements.retryAudioBtn) {
+            elements.retryAudioBtn.addEventListener('click', () => {
+                if (currentEntry) loadAudio(currentEntry.id);
+            });
         }
     }
 
@@ -463,143 +525,201 @@
         selectEntry(targetIndex);
     }
 
-    async function withTimeout(promise, timeoutMs, errorMessage) {
+    async function retryEntryLoading() {
+        const load = beginEntryGeneration();
+        hasLoadedEntries = false;
+        await loadEntries({ ...load, force: true });
+    }
+
+    async function withTimeout(promise, timeoutMs, errorMessage, signal) {
         let timeoutId = null;
+        let abortHandler = null;
         const timeoutPromise = new Promise((_, reject) => {
-            timeoutId = setTimeout(() => {
-                reject(new Error(errorMessage));
-            }, timeoutMs);
+            timeoutId = setTimeout(() => reject(new Error(errorMessage)), Math.max(0, timeoutMs));
+            if (signal) {
+                abortHandler = () => reject(new DOMException('Aborted', 'AbortError'));
+                if (signal.aborted) abortHandler();
+                else signal.addEventListener('abort', abortHandler, { once: true });
+            }
         });
 
         try {
             return await Promise.race([promise, timeoutPromise]);
         } finally {
-            if (timeoutId !== null) {
-                clearTimeout(timeoutId);
-            }
+            if (timeoutId !== null) clearTimeout(timeoutId);
+            if (signal && abortHandler) signal.removeEventListener('abort', abortHandler);
         }
     }
 
+    function sortEntries(items) {
+        return items.filter((entry) => entry.id.length > 0).sort((a, b) => {
+            const idA = parseInt(a.id, 10);
+            const idB = parseInt(b.id, 10);
+            return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
+        });
+    }
+
+    function normalizeFirestoreEntries(snapshot) {
+        if (!snapshot || snapshot.empty) return [];
+        return sortEntries(snapshot.docs.map((doc) => {
+            const data = doc.data() || {};
+            let parsedLevel = parseInt(data.level, 10);
+            if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+            return {
+                id: String(data.id ?? doc.id ?? '').trim(),
+                title: data.title ? String(data.title).trim() : '',
+                transcript: data.transcript ? String(data.transcript).trim() : '',
+                level: parsedLevel,
+                videoUrl: (data.videoUrl || data.youtubeUrl || data.url)
+                    ? String(data.videoUrl || data.youtubeUrl || data.url).trim() : ''
+            };
+        }));
+    }
+
+    function parseWorkbookEntries(arrayBuffer) {
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const parsed = [];
+        for (let i = 1; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row[0] === undefined || row[0] === null || String(row[0]).trim() === '') continue;
+            let parsedLevel = parseInt(row[3], 10);
+            if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
+            parsed.push({
+                id: String(row[0]).trim(),
+                title: row[1] ? String(row[1]).trim() : '',
+                transcript: row[2] ? String(row[2]).trim() : '',
+                level: parsedLevel,
+                videoUrl: row[4] ? String(row[4]).trim() : ''
+            });
+        }
+        return sortEntries(parsed);
+    }
+
+    async function loadFirestoreEntries(deadline, signal) {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return [];
+        const db = firebase.firestore();
+        const snapshot = await withTimeout(
+            db.collection('takeNotesEntries').get(),
+            remainingBudget(deadline, NOTES_FIRESTORE_TIMEOUT_MS),
+            'Firestore request timed out',
+            signal
+        );
+        return normalizeFirestoreEntries(snapshot);
+    }
+
+    async function loadWorkbookEntries(deadline, signal) {
+        const excelPath = '/database/Take%20Notes/RL/RL.xlsx';
+        const response = await withTimeout(
+            fetch(excelPath, { cache: 'no-cache', signal }),
+            remainingBudget(deadline, NOTES_WORKBOOK_TIMEOUT_MS),
+            'Workbook request timed out',
+            signal
+        );
+        if (!response.ok) throw new Error(`Excel file not found (${response.status})`);
+        const arrayBuffer = await withTimeout(
+            response.arrayBuffer(),
+            remainingBudget(deadline, NOTES_WORKBOOK_TIMEOUT_MS),
+            'Workbook request timed out',
+            signal
+        );
+        return parseWorkbookEntries(arrayBuffer);
+    }
+
+    function commitEntries(nextEntries, generation) {
+        if (!isEntryGenerationActive(generation)) return false;
+        entries = sortEntries(nextEntries);
+        hasLoadedEntries = entries.length > 0;
+        if (hasLoadedEntries) {
+            buildRecommendationIndex();
+            applyFilter('all');
+            renderEntryStatus('ready');
+        }
+        return hasLoadedEntries;
+    }
+
     /**
-     * Load entries from Firestore or Excel
+     * Load Firestore and workbook candidates concurrently within one entry
+     * deadline. Firestore wins when it returns usable rows; the local workbook
+     * is offered after a short delay and becomes the bounded fallback.
      */
-    async function loadEntries() {
-        if (!elements.questionSelect) return;
-        if (loadEntriesPromise) {
-            await loadEntriesPromise;
-            if (hasLoadedEntries && entries.length > 0) {
-                applyFilter(currentFilter);
-            }
-            return;
+    async function loadEntries(options = {}) {
+        if (!elements.questionSelect) return false;
+        const generation = options.generation ?? entryGeneration;
+        const signal = options.signal || entryAbortController?.signal;
+        const deadline = options.deadline || (Date.now() + NOTES_ENTRY_DEADLINE_MS);
+
+        if (loadEntriesPromise && loadEntriesPromise.generation === generation) {
+            return loadEntriesPromise.promise;
+        }
+        if (hasLoadedEntries && entries.length > 0 && !options.force) {
+            applyFilter(currentFilter);
+            return true;
         }
 
-        if (hasLoadedEntries && entries.length > 0) {
-            applyFilter(currentFilter);
-            return;
-        }
+        elements.questionSelect.innerHTML = '<option value="">Loading questions...</option>';
+        renderEntryStatus('loading', 'Loading Retell Lecture questions…');
 
         const pendingLoad = (async () => {
-            elements.questionSelect.innerHTML = '<option value="">Loading...</option>';
-
-            try {
-                // Try to load from Firestore first
-                if (typeof firebase !== 'undefined' && firebase.firestore) {
-                    try {
-                        const db = firebase.firestore();
-                        const snapshot = await withTimeout(
-                            db.collection('takeNotesEntries').get(),
-                            FIRESTORE_LOAD_TIMEOUT_MS,
-                            'Firestore request timed out'
-                        );
-
-                        if (!snapshot.empty) {
-                            entries = snapshot.docs.map((doc) => {
-                                const data = doc.data() || {};
-                                let parsedLevel = parseInt(data.level, 10);
-                                if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
-
-                                return {
-                                    id: String(data.id ?? doc.id ?? '').trim(),
-                                    title: data.title ? String(data.title).trim() : '',
-                                    transcript: data.transcript ? String(data.transcript).trim() : '',
-                                    level: parsedLevel,
-                                    videoUrl: (data.videoUrl || data.youtubeUrl || data.url) ? String(data.videoUrl || data.youtubeUrl || data.url).trim() : ''
-                                };
-                            }).filter((entry) => entry.id.length > 0);
-
-                            // Sort entries numerically by ID
-                            entries.sort((a, b) => {
-                                const idA = parseInt(a.id, 10);
-                                const idB = parseInt(b.id, 10);
-                                return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
-                            });
-
-                            buildRecommendationIndex();
-                            applyFilter('all');
-                            hasLoadedEntries = true;
-                            return;
-                        }
-                    } catch (firestoreError) {
-                        console.warn('[TakeNotes] Firestore error, falling back to Excel:', firestoreError.message);
+            let localResult = null;
+            let localOfferTimer = null;
+            const localPromise = loadWorkbookEntries(deadline, signal)
+                .then((items) => {
+                    localResult = { items };
+                    if (items.length > 0 && !hasLoadedEntries && isEntryGenerationActive(generation) &&
+                        Date.now() - notesEntryLoadStartedAt >= NOTES_FALLBACK_OFFER_DELAY_MS) {
+                        renderEntryStatus('local-ready', 'Local questions are ready while the cloud source is still loading.');
                     }
-                }
-
-                // Fallback: Load from Excel (absolute path for deep SPA routes)
-                const excelPath = '/database/Take%20Notes/RL/RL.xlsx';
-
-                const response = await fetch(excelPath);
-                if (!response.ok) {
-                    throw new Error(`Excel file not found (${response.status})`);
-                }
-
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                entries = [];
-                for (let i = 1; i < data.length; i++) {
-                    const row = data[i];
-                    if (row && row[0] !== undefined && row[0] !== null && String(row[0]).trim() !== '') {
-                        let parsedLevel = parseInt(row[3], 10);
-                        if (isNaN(parsedLevel) || parsedLevel < 1 || parsedLevel > 3) parsedLevel = 1;
-
-                        entries.push({
-                            id: String(row[0]).trim(),
-                            title: row[1] ? String(row[1]).trim() : '',
-                            transcript: row[2] ? String(row[2]).trim() : '',
-                            level: parsedLevel,
-                            videoUrl: row[4] ? String(row[4]).trim() : ''
-                        });
-                    }
-                }
-
-                // Sort entries numerically by ID
-                entries.sort((a, b) => {
-                    const idA = parseInt(a.id, 10);
-                    const idB = parseInt(b.id, 10);
-                    return (isNaN(idA) || isNaN(idB)) ? a.id.localeCompare(b.id) : idA - idB;
+                    return items;
+                })
+                .catch((error) => {
+                    localResult = { items: [], error };
+                    return [];
                 });
+            localOfferTimer = setTimeout(() => {
+                if (localResult?.items?.length && !hasLoadedEntries && isEntryGenerationActive(generation)) {
+                    renderEntryStatus('local-ready', 'Local questions are ready while the cloud source is still loading.');
+                }
+            }, NOTES_FALLBACK_OFFER_DELAY_MS);
 
-                buildRecommendationIndex();
-                applyFilter('all');
-                hasLoadedEntries = true;
-
+            let remoteEntries = [];
+            try {
+                remoteEntries = await loadFirestoreEntries(deadline, signal);
             } catch (error) {
-                hasLoadedEntries = false;
-                console.error('[TakeNotes] Error loading entries:', error);
-                elements.questionSelect.innerHTML = '<option value="">Error loading</option>';
-                refreshRecommendationUI();
+                console.warn('[TakeNotes] Firestore unavailable; using bounded local fallback:', error.message);
             }
+
+            if (remoteEntries.length > 0) {
+                if (localOfferTimer) clearTimeout(localOfferTimer);
+                void localPromise;
+                return commitEntries(remoteEntries, generation);
+            }
+
+            const localEntries = localResult ? localResult.items : await withTimeout(
+                localPromise,
+                remainingBudget(deadline),
+                'Retell Lecture entry loading timed out',
+                signal
+            );
+            if (localOfferTimer) clearTimeout(localOfferTimer);
+            if (localEntries.length > 0 && commitEntries(localEntries, generation)) return true;
+            throw localResult?.error || new Error('No Retell Lecture questions are available');
         })();
 
-        loadEntriesPromise = pendingLoad;
+        loadEntriesPromise = { generation, promise: pendingLoad };
         try {
-            await pendingLoad;
+            return await pendingLoad;
+        } catch (error) {
+            if (!isEntryGenerationActive(generation)) return false;
+            hasLoadedEntries = false;
+            console.error('[TakeNotes] Error loading entries:', error);
+            elements.questionSelect.innerHTML = '<option value="">Questions unavailable</option>';
+            renderEntryStatus('error', 'Questions are unavailable. Retry loading or check your connection.');
+            refreshRecommendationUI();
+            return false;
         } finally {
-            if (loadEntriesPromise === pendingLoad) {
-                loadEntriesPromise = null;
-            }
+            if (loadEntriesPromise?.promise === pendingLoad) loadEntriesPromise = null;
         }
     }
 
@@ -866,6 +986,10 @@
         const requestToken = ++audioLoadToken;
         const tryExtensions = ['mp3', 'm4a', 'wav', 'aac', 'ogg'];
         const basePath = `/database/Take%20Notes/RL/audio/${encodeURIComponent(audioId)}`;
+        const deadline = Date.now() + NOTES_AUDIO_DEADLINE_MS;
+        if (audioAbortController) audioAbortController.abort();
+        audioAbortController = new AbortController();
+        const signal = audioAbortController.signal;
 
         if (elements.audio) {
             elements.audio.pause();
@@ -877,51 +1001,80 @@
             player.reset();
             player.setEnabled(false);
         }
-        if (elements.audioStatus) {
-            elements.audioStatus.hidden = false;
-            elements.audioStatus.className = 'notes-audio-status is-loading';
-            elements.audioStatus.textContent = `Loading audio for question ${audioId}...`;
-        }
+        isPlayerReady = false;
+        setAudioStatus('loading', `Loading audio for question ${audioId}…`);
 
         for (const ext of tryExtensions) {
+            if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
             const audioPath = `${basePath}.${ext}`;
-            const exists = await checkFileExists(audioPath);
+            const exists = await checkFileExists(audioPath, remainingBudget(deadline, NOTES_AUDIO_HEAD_TIMEOUT_MS), signal);
             if (exists) {
-                if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
-                elements.audio.src = audioPath;
-                elements.audio.load();
-                const activePlayer = getAudioPlayer();
-                if (activePlayer) {
-                    activePlayer.setEnabled(true);
+                if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
+                try {
+                    elements.audio.src = audioPath;
+                    elements.audio.load();
+                    const ready = await waitForAudioReady(
+                        elements.audio,
+                        remainingBudget(deadline),
+                        signal
+                    );
+                    if (!ready) continue;
+                    if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
+                    const activePlayer = getAudioPlayer();
+                    if (activePlayer) activePlayer.setEnabled(true);
+                    isPlayerReady = true;
+                    setAudioStatus('ready');
+                    return;
+                } catch (error) {
+                    if (signal.aborted || requestToken !== audioLoadToken) return;
                 }
-                if (elements.audioStatus) {
-                    elements.audioStatus.hidden = true;
-                    elements.audioStatus.textContent = '';
-                    elements.audioStatus.className = 'notes-audio-status';
-                }
-                return;
             }
         }
 
-        if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
+        if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId) || signal.aborted) return;
         console.warn(`[TakeNotes] No audio file found for ${audioId}`);
         const inactivePlayer = getAudioPlayer();
         if (inactivePlayer) {
             inactivePlayer.setEnabled(false);
         }
-        if (elements.audioStatus) {
-            elements.audioStatus.hidden = false;
-            elements.audioStatus.className = 'notes-audio-status is-unavailable';
-            elements.audioStatus.textContent = `Audio is not available for question ${audioId}. Please choose another question.`;
-        }
+        setAudioStatus('unavailable', `Audio is not available for question ${audioId}. Retry audio or choose another question.`);
+        if (audioAbortController?.signal === signal) audioAbortController = null;
+    }
+
+    async function waitForAudioReady(audio, timeoutMs, signal) {
+        if (!audio || timeoutMs <= 0) return false;
+        if (audio.readyState >= 3) return true;
+        return new Promise((resolve) => {
+            let timer = null;
+            const cleanup = () => {
+                if (timer) clearTimeout(timer);
+                audio.removeEventListener('canplay', onReady);
+                audio.removeEventListener('error', onError);
+                audio.removeEventListener('abort', onError);
+                if (signal) signal.removeEventListener('abort', onAbort);
+            };
+            const onReady = () => { cleanup(); resolve(true); };
+            const onError = () => { cleanup(); resolve(false); };
+            const onAbort = () => { cleanup(); resolve(false); };
+            audio.addEventListener('canplay', onReady, { once: true });
+            audio.addEventListener('error', onError, { once: true });
+            audio.addEventListener('abort', onError, { once: true });
+            if (signal) signal.addEventListener('abort', onAbort, { once: true });
+            timer = setTimeout(onError, timeoutMs);
+        });
     }
 
     /**
      * Check if file exists and has valid audio content-type
      */
-    async function checkFileExists(url) {
+    async function checkFileExists(url, timeoutMs = NOTES_AUDIO_HEAD_TIMEOUT_MS, signal) {
         try {
-            const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
+            const response = await withTimeout(
+                fetch(url, { method: 'HEAD', cache: 'no-cache', signal }),
+                timeoutMs,
+                'Audio probe timed out',
+                signal
+            );
             if (!response.ok || response.status !== 200) return false;
             const contentType = response.headers.get('content-type') || '';
             return contentType.startsWith('audio/');
@@ -1114,16 +1267,26 @@
 
     async function onEnter() {
         init();
-        await loadEntries();
+        if (!isInitialized) return false;
+        const load = beginEntryGeneration();
+        const loaded = await loadEntries(load);
+        if (!isEntryGenerationActive(load.generation)) return false;
+        if (!loaded && !hasLoadedEntries) return false;
         if (window.PracticeRouter && currentEntry?.id) {
             window.PracticeRouter.replaceRoute('notes', currentEntry.id);
         }
         try {
             window.SpeakingPracticeController?.sync?.('notes');
         } catch (_) {}
+        return true;
     }
 
     function onExit() {
+        entryGeneration += 1;
+        if (entryAbortController) {
+            entryAbortController.abort();
+            entryAbortController = null;
+        }
         reset();
     }
 
@@ -1144,6 +1307,7 @@
         applyFilters: applyFilter,
         selectEntry,
         startPractice,
+        retryAudio: () => currentEntry ? loadAudio(currentEntry.id) : Promise.resolve(false),
         submitNotes,
         retryPractice,
         getCurrentEntry: () => currentEntry,

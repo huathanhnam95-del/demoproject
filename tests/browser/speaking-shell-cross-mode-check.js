@@ -2,12 +2,12 @@
  * Shared speaking shell regression.
  *
  * The Read Aloud redesign changed the shell every speaking mode uses: the step
- * indicator moved into the controller's primary row, the media/attempt slots
- * moved into a sticky footer, and the controller lost its card treatment in
- * favour of one .spc-shell-grid column. This checks the other six modes still
- * mount their controls into those slots and stay on the grid.
+ * indicator moved into the controller's primary row, task controls gained
+ * authored in-flow hosts, and the controller lost its card treatment in favour
+ * of one .spc-shell-grid column. This checks the other six modes still mount
+ * their controls into those hosts and stay on the grid.
  */
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -27,11 +27,10 @@ function ok(label, pass, detail) {
 
   const app = express();
   app.use(express.static(path.join(__dirname, '../../public')));
-  app.use((req, res) => res.sendFile(path.join(__dirname, '../../public/index.html')));
   const server = app.listen(0);
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   let failures = 0;
   const record = (label, pass, detail) => { if (!ok(label, pass, detail)) failures += 1; };
 
@@ -63,6 +62,9 @@ function ok(label, pass, detail) {
           const panel = document.getElementById(`mode-${m}`);
           if (!panel) return { missing: true };
           const controller = panel.querySelector('.spc-controller');
+          const workspace = panel.querySelector('[data-practice-workspace]');
+          const actionHosts = [...panel.querySelectorAll('[data-practice-action-host]')];
+          const mediaHosts = [...panel.querySelectorAll('[data-practice-media-host]')];
           const footer = panel.querySelector('.spc-footer');
           const steps = panel.querySelector('.spc-row--primary .spc-steps');
           const attempt = panel.querySelector('.spc-slot-attempt');
@@ -71,7 +73,8 @@ function ok(label, pass, detail) {
           return {
             missing: false,
             hasController: !!controller,
-            hasFooter: !!footer,
+            hasWorkspace: panel.matches('[data-practice-workspace]') || !!workspace,
+            taskLocalHosts: actionHosts.length + mediaHosts.length,
             stepsInPrimary: !!steps,
             adoptedControls: (attempt ? attempt.children.length : 0) + (media ? media.children.length : 0),
             footerHidden: footer ? getComputedStyle(footer).display === 'none' : null,
@@ -87,11 +90,10 @@ function ok(label, pass, detail) {
         } else {
           record(`controller mounts ${tag}`, probe.hasController === true);
           record(`steps live in the primary row ${tag}`, probe.stepsInPrimary === true);
-          // A mode with no adopted media/attempt controls should hide the
-          // footer rather than render an empty bordered band.
-          record(`footer matches adopted controls ${tag}`,
-            probe.adoptedControls > 0 ? probe.footerHidden === false : probe.footerHidden !== false,
-            `adopted=${probe.adoptedControls} footerHidden=${probe.footerHidden}`);
+          record(`task-local hosts exist ${tag}`, probe.hasWorkspace && probe.taskLocalHosts > 0,
+            `hosts=${probe.taskLocalHosts}`);
+          record(`legacy footer is collapsed ${tag}`, probe.footerHidden === true,
+            `footerHidden=${probe.footerHidden}`);
           record(`controller is flat, not a card ${tag}`, probe.controllerFlat === true);
           record(`no horizontal overflow ${tag}`,
             probe.panelOverflow <= 1 && probe.docOverflow <= 1,

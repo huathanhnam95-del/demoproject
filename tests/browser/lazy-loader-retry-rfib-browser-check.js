@@ -1,7 +1,7 @@
 const assert = require('assert');
 const net = require('net');
 const path = require('path');
-const { chromium } = require('playwright');
+const { launchPracticeChrome } = require('./helpers/launch-practice-chrome');
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -141,7 +141,7 @@ async function clickByScript(page, selector) {
     server.listen(port, '127.0.0.1', resolve);
   });
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchPracticeChrome({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
 
   await setupFirebaseMocks(context);

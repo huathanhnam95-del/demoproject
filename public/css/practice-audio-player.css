@@ -208,3 +208,52 @@
   margin: 0;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
 }
+
+/* Speaking and standalone listening tasks share the same readable left edge.
+   The player keeps its component styling but fills the authored task surface
+   instead of introducing a second, centered column inside it. Read Aloud's
+   sample player intentionally remains compact in its dedicated wrapper. */
+#mode-type .practice-audio-player,
+#mode-speak .practice-audio-player,
+#mode-notes .practice-audio-player,
+#mode-sgd .practice-audio-player,
+#mode-asq .practice-audio-player,
+#mode-hcs .practice-audio-player,
+#mode-hiw .practice-audio-player,
+#mode-lmcma .practice-audio-player,
+#mode-lmcsa .practice-audio-player,
+#mode-smw .practice-audio-player,
+#mode-sst .practice-audio-player {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  box-sizing: border-box;
+}
+
+#mode-type .practice-audio-meta,
+#mode-speak .practice-audio-meta,
+#mode-notes .practice-audio-meta,
+#mode-sgd .practice-audio-meta,
+#mode-asq .practice-audio-meta,
+#mode-hcs .practice-audio-meta,
+#mode-hiw .practice-audio-meta,
+#mode-lmcma .practice-audio-meta,
+#mode-lmcsa .practice-audio-meta,
+#mode-smw .practice-audio-meta,
+#mode-sst .practice-audio-meta {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+@media (max-width: 640px) {
+  [data-practice-workspace] .practice-audio-player {
+    min-width: 0;
+    overflow: hidden;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  [data-practice-workspace] .practice-audio-player > * {
+    min-width: 0;
+  }
+}

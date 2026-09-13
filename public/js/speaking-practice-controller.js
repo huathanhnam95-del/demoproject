@@ -811,9 +811,8 @@
     row1.appendChild(slotSteps);
     row1.appendChild(toggle);
 
-    // Row 2: Actions (media + attempt). Lives in the sticky footer below, not in
-    // the header — the primary action belongs at the end of the flow, under the
-    // content it acts on.
+    // Row 2: Actions (media + attempt). This remains the reversible compatibility
+    // rail; migrated modes can move its existing slots into authored task hosts.
     const row2 = document.createElement('div');
     row2.className = 'spc-row spc-row--actions spc-shell-grid';
 
@@ -861,6 +860,88 @@
       slotSteps, slotMedia, slotAttempt, slotAdvAction, slotAdvSetting,
       activeChip
     };
+  }
+
+  /* ═══════════════════════════ TASK-LOCAL LAYOUT ═══════════════════════════ */
+
+  function getLayoutStep(state) {
+    const steps = Array.isArray(state.config.steps) ? state.config.steps : [];
+    let stepIndex = 0;
+    if (typeof state.config.getStepIndex === 'function') {
+      try {
+        stepIndex = Number(state.config.getStepIndex());
+      } catch (_) { /* keep the safe first phase */ }
+    }
+    if (!Number.isFinite(stepIndex)) stepIndex = 0;
+    stepIndex = Math.max(0, Math.min(steps.length ? steps.length - 1 : 0, Math.round(stepIndex)));
+    return { stepIndex, stepName: steps[stepIndex] || '' };
+  }
+
+  function isValidLayoutHost(state, host, slot) {
+    if (!host || !state.panel || typeof state.panel.contains !== 'function') return false;
+    if (!state.panel.contains(host)) return false;
+    if (host === state.dom.controller || state.dom.controller.contains(host)) return false;
+    if (host === slot || slot.contains(host)) return false;
+    if (host.contains(state.dom.controller)) return false;
+    return true;
+  }
+
+  function resolveLayoutHost(state, hostKey) {
+    const resolver = state.config.layout?.[hostKey];
+    if (typeof resolver !== 'function') return null;
+    const step = getLayoutStep(state);
+    let host = null;
+    try {
+      host = resolver({
+        panel: state.panel,
+        modeId: state.modeId,
+        scope: state.scope,
+        stepIndex: step.stepIndex,
+        stepName: step.stepName
+      });
+    } catch (error) {
+      console.warn(`[SPC] ${hostKey} host resolver failed for ${state.modeId}:`, error);
+      return null;
+    }
+    const slot = hostKey === 'mediaHost' ? state.dom.slotMedia : state.dom.slotAttempt;
+    if (!isValidLayoutHost(state, host, slot)) {
+      if (host) console.warn(`[SPC] Invalid ${hostKey} host for ${state.modeId}; using fallback slot`);
+      return null;
+    }
+    return host;
+  }
+
+  function syncLayout(state) {
+    if (!state?.config?.layout || !state.dom) return;
+    const placements = [
+      ['mediaHost', state.dom.slotMedia, state.layoutFallback?.mediaParent],
+      ['attemptHost', state.dom.slotAttempt, state.layoutFallback?.attemptParent]
+    ];
+
+    placements.forEach(([hostKey, slot, fallbackParent]) => {
+      if (!slot) return;
+      const targetParent = resolveLayoutHost(state, hostKey) || fallbackParent;
+      if (!targetParent || targetParent === slot || slot.contains(targetParent)) return;
+      const currentParent = slot.parentNode;
+      if (targetParent !== currentParent) {
+        targetParent.appendChild(slot);
+      }
+    });
+
+    state.layoutProgressHost = resolveLayoutHost(state, 'progressHost');
+  }
+
+  function restoreLayout(state) {
+    if (!state?.dom || !state.layoutFallback) return;
+    [
+      [state.dom.slotMedia, state.layoutFallback.mediaParent],
+      [state.dom.slotAttempt, state.layoutFallback.attemptParent]
+    ].forEach(([slot, fallbackParent]) => {
+      if (slot && fallbackParent && slot.parentNode !== fallbackParent) {
+        fallbackParent.appendChild(slot);
+      }
+    });
+    state.layoutProgressHost = null;
   }
 
   /* ═══════════════════════════ DOM ADOPTION ═══════════════════════════ */
@@ -1463,6 +1544,7 @@
     updateActiveChip(state);
     syncStepPreview(state);
     syncOrderToggle(state);
+    syncLayout(state);
   }
 
   /* ═══════════════════════════ PUBLIC API ═══════════════════════════ */
@@ -1541,17 +1623,22 @@
       pickerSearchInput: null,
       selectChangeHandler: null,
       legacyPickerContainer: null,
-      legacyPickerOriginalDisplay: ''
+      legacyPickerOriginalDisplay: '',
+      layoutFallback: {
+        mediaParent: dom.slotMedia.parentNode,
+        attemptParent: dom.slotAttempt.parentNode
+      },
+      layoutProgressHost: null
     };
 
     activeControllers.set(modeId, state);
 
     hideLegacyPicker(config, state);
 
-    // Header at the top, action footer at the bottom, steps inside the header's
-    // primary row. The step indicator still precedes the primary action in reading
-    // order — the reader meets the phase before the button for it — but it no
-    // longer costs a row of its own.
+    // Header at the top, steps inside the header's primary row, and a reversible
+    // action rail retained for adapters without a valid task-local host. The step
+    // indicator still precedes the primary action in reading order — the reader
+    // meets the phase before the button for it — without costing a row of its own.
     panel.insertBefore(dom.controller, panel.firstChild);
     if (steps?.element) {
       dom.slotSteps.appendChild(steps.element);
@@ -1583,6 +1670,12 @@
 
     // Adopt controls
     adoptControls(config, state);
+
+    // Move controller slots into the authored task flow only after adoption has
+    // recorded every source anchor. This keeps re-entry idempotent and allows
+    // unmount to restore both slots and controls safely.
+    syncLayout(state);
+    publishFooterHeight();
 
     // Wire toggle
     wireViewToggle(state);
@@ -1616,6 +1709,10 @@
       state.settingsSheet.destroy();
       state.settingsSheet = null;
     }
+
+    // Restore slots before adopted controls so their anchors remain attached to
+    // the original mode-owned containers during teardown.
+    restoreLayout(state);
 
     // Restore adopted controls
     restoreControls(state);

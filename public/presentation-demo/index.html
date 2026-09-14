@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>BEL Presentation Demo · Online room</title>
+  <link rel="stylesheet" href="/presentation-demo/presentation-demo.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body data-presentation-demo>
+  <main class="pd-shell">
+    <header class="pd-header">
+      <div>
+        <p class="pd-eyebrow">Better English Learning</p>
+        <h1>Working as Equals</h1>
+        <p class="pd-subtitle">Online presentation room</p>
+      </div>
+      <a class="pd-back-link" href="/crm-admin.html">Back to CRM</a>
+    </header>
+
+    <section id="pd-entry" class="pd-panel" aria-labelledby="pd-entry-title">
+      <div class="pd-panel-heading">
+        <div>
+          <p class="pd-kicker">Authenticated room access</p>
+          <h2 id="pd-entry-title">Start or join a session</h2>
+        </div>
+        <span id="pd-auth-status" class="pd-status">Checking sign-in…</span>
+      </div>
+      <p id="pd-auth-message" class="pd-muted">Your CRM account controls your room membership and presenter permissions.</p>
+      <div class="pd-entry-grid">
+        <article id="pd-presenter-tools" class="pd-entry-card" hidden>
+          <p class="pd-kicker">Admin presenter</p>
+          <h3>Create or resume your room</h3>
+          <p class="pd-muted">One active room, one presenter, and three reserved participant seats.</p>
+          <button id="pd-create-room" class="pd-button pd-button-primary" type="button">Create / resume room</button>
+        </article>
+        <form id="pd-join-form" class="pd-entry-card">
+          <p class="pd-kicker">Participant</p>
+          <h3>Join with a room code</h3>
+          <label for="pd-room-code">Six-character code</label>
+          <div class="pd-code-row">
+            <input id="pd-room-code" name="code" inputmode="text" autocomplete="off" maxlength="7" pattern="[\-A-Za-z0-9 ]{6,7}" placeholder="ABCD23" required>
+            <button class="pd-button pd-button-secondary" type="submit">Join room</button>
+          </div>
+          <p id="pd-join-error" class="pd-error" role="alert" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="pd-room" class="pd-panel" aria-labelledby="pd-room-title" hidden>
+      <div class="pd-panel-heading">
+        <div>
+          <p class="pd-kicker">Room reception</p>
+          <h2 id="pd-room-title">Room <code id="pd-room-code-display">------</code></h2>
+        </div>
+        <div class="pd-actions">
+          <button id="pd-copy-code" class="pd-button pd-button-secondary" type="button">Copy code</button>
+          <button id="pd-open-game" class="pd-button pd-button-primary" type="button">Open game in new tab</button>
+        </div>
+      </div>
+      <p id="pd-room-status" class="pd-muted" aria-live="polite"></p>
+      <div id="pd-slot-list" class="pd-slot-list" aria-label="Room slots"></div>
+      <div class="pd-reception-actions">
+        <button id="pd-reception-continue" class="pd-button pd-button-primary" type="button" disabled>Continue to game</button>
+        <span id="pd-reception-hint" class="pd-muted">All three participants must join before Reception can open.</span>
+      </div>
+    </section>
+
+    <section id="pd-game" class="pd-game-layout" hidden aria-labelledby="pd-game-title">
+      <div class="pd-game-main pd-panel">
+        <div class="pd-panel-heading">
+          <div>
+            <p class="pd-kicker">Live network room</p>
+            <h2 id="pd-game-title">Working as Equals · <code id="pd-game-code">------</code></h2>
+          </div>
+          <span id="pd-connection-status" class="pd-status">Connecting…</span>
+        </div>
+        <div class="pd-canvas-wrap">
+          <canvas id="pd-world" width="1000" height="480" aria-label="Online BEL game world"></canvas>
+          <div id="pd-gate" class="pd-gate" role="status"></div>
+        </div>
+        <div class="pd-deck-wrap">
+          <div class="pd-deck-heading"><span class="pd-kicker">Authored deck</span><span id="pd-deck-status" class="pd-muted">Loading presentation…</span></div>
+          <iframe id="pd-deck" title="Working as Equals authored presentation" loading="lazy" referrerpolicy="same-origin"></iframe>
+        </div>
+        <div class="pd-game-toolbar">
+          <span>WASD to move · F for interaction</span>
+          <button id="pd-start-room" class="pd-button pd-button-primary" type="button" hidden>Start presentation</button>
+          <button id="pd-replace-connection" class="pd-button pd-button-secondary" type="button" hidden>Continue here</button>
+          <button id="pd-skip-activity" class="pd-button pd-button-secondary" type="button" hidden>Presenter skip activity</button>
+          <button id="pd-end-room" class="pd-button pd-button-danger" type="button" hidden>End room</button>
+        </div>
+        <p id="pd-game-message" class="pd-muted" aria-live="polite"></p>
+      </div>
+      <aside class="pd-game-side">
+        <section class="pd-panel pd-side-section">
+          <p class="pd-kicker">Players</p>
+          <div id="pd-game-slots" class="pd-slot-list"></div>
+        </section>
+        <section class="pd-panel pd-side-section">
+          <p class="pd-kicker">Notes</p>
+          <label for="pd-note-title">Page title</label>
+          <input id="pd-note-title" maxlength="200" placeholder="Observation">
+          <label for="pd-note-body">Private notes</label>
+          <textarea id="pd-note-body" rows="8" maxlength="50000" placeholder="Write while the presentation continues…"></textarea>
+          <button id="pd-save-note" class="pd-button pd-button-primary" type="button">Save note</button>
+          <span id="pd-note-status" class="pd-muted" role="status"></span>
+        </section>
+        <section class="pd-panel pd-side-section">
+          <p class="pd-kicker">Presentation</p>
+          <div class="pd-slide-actions">
+            <button id="pd-slide-previous" class="pd-button pd-button-secondary" type="button" hidden>Previous</button>
+            <button id="pd-slide-next" class="pd-button pd-button-secondary" type="button" hidden>Next slide</button>
+          </div>
+          <button id="pd-export-pdf" class="pd-button pd-button-secondary" type="button">Export my notes</button>
+        </section>
+      </aside>
+    </section>
+  </main>
+  <script type="module" src="/js/presentation-demo/app.mjs"></script>
+</body>
+</html>

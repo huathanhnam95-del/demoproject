@@ -32,6 +32,7 @@ const {
     runPracticeAccessReconcileJobs,
     runPracticeAccessPromotionJobs
 } = require('./practice-attempts/job-runners');
+const { createMaintenanceService } = require('./crm/presentation-demo/maintenance.cjs');
 const {
     CRM_AUTOMATION_RULES,
     CRM_AUTOMATION_QUEUE,
@@ -131,6 +132,13 @@ module.exports = {
     scoreSWT,
     scoreSST,
     scoreRTS,
+    presentationDemoMaintenanceRunner: onSchedule({ region: 'us-central1', schedule: 'every 5 minutes', timeoutSeconds: 300, memory: '256MiB', maxInstances: 1 }, async () => {
+        if (String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() !== '1') return;
+        // The online service is feature-gated until the reviewed RTDB/Cloud Run
+        // provisioning is enabled. The runner is bounded and idempotent.
+        console.info('presentationDemoMaintenanceRunner', { skipped: true, reason: 'runtime-service-owned' });
+        void createMaintenanceService;
+    }),
     api: onRequest({
         region: 'us-central1',
         memory: '1GiB',

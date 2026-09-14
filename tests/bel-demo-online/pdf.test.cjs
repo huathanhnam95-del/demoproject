@@ -1,0 +1,31 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createRoomService, createMemoryRoomStores } = require('../../functions/src/crm/presentation-demo/room-service.cjs');
+const { createNotebookService } = require('../../functions/src/crm/presentation-demo/notes-service.cjs');
+const { createArchiveService } = require('../../functions/src/crm/presentation-demo/archive-service.cjs');
+const { createPdfService } = require('../../functions/src/crm/presentation-demo/pdf-service.cjs');
+
+test('presenter export contains all participant notes and participant export is author-scoped', async () => {
+    const admin = { uid: 'admin', accountStatus: 'active', isAdmin: true };
+    const p1 = { uid: 'p1', accountStatus: 'active', isAdmin: false };
+    const p2 = { uid: 'p2', accountStatus: 'active', isAdmin: false };
+    const stores = createMemoryRoomStores();
+    const roomService = createRoomService({ stores, clock: () => 1000, idFactory: () => 'room-pdf', codeFactory: () => 'ABCD23' });
+    const room = await roomService.createOrResume(admin);
+    await roomService.join(p1, room.code);
+    await roomService.join(p2, room.code);
+    const notes = createNotebookService({ roomService, clock: () => 1000 });
+    await notes.savePage(p1, room.roomId, 'p1', { pageId: 'one', title: 'A', body: 'P1 secret', expectedVersion: 0 });
+    await notes.savePage(p2, room.roomId, 'p2', { pageId: 'one', title: 'B', body: 'P2 secret', expectedVersion: 0 });
+    await roomService.end(admin, room.roomId);
+    const archives = createArchiveService({ roomService, notesService: notes, stores, clock: () => 1000 });
+    await archives.archiveRoom(room.roomId);
+    const pdf = createPdfService({ archives });
+    const presenterPdf = (await pdf.exportPdf(admin, room.roomId)).toString('utf8');
+    const participantPdf = (await pdf.exportPdf(p1, room.roomId)).toString('utf8');
+    assert.match(presenterPdf, /P1 secret/);
+    assert.match(presenterPdf, /P2 secret/);
+    assert.match(participantPdf, /P1 secret/);
+    assert.doesNotMatch(participantPdf, /P2 secret/);
+    await assert.rejects(pdf.exportPdf({ uid: 'outsider', accountStatus: 'active', isAdmin: true }, room.roomId), error => error.code === 'EXPORT_FORBIDDEN');
+});

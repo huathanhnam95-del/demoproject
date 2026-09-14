@@ -41,6 +41,7 @@
     "pronunciation-samples": { label: 'Pronunciation Samples', subTabs: [] },
     "voice-cloning": { label: 'Voice Cloning Studio', subTabs: [] },
     "entrance-test-ui": { label: 'Entrance Test UI', subTabs: [] },
+    "presentation-demo": { label: 'Presentation Demo', subTabs: [] },
     projects: { label: 'Projects', subTabs: [] }
   };
 
@@ -2157,12 +2158,12 @@
 
     elements.navItems.forEach((btn) => {
       const main = String(btn?.dataset?.main || '').trim();
-      const allow = main === 'courses' || (main === 'projects' && state.projectsAuthorized);
+      const allow = main === 'courses' || main === 'presentation-demo' || (main === 'projects' && state.projectsAuthorized);
       btn.style.display = allow ? '' : 'none';
       btn.disabled = !allow;
       btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
       if (allow) {
-        btn.textContent = main === 'projects' ? 'Projects' : 'Teacher Schedule';
+        btn.textContent = main === 'projects' ? 'Projects' : main === 'presentation-demo' ? 'Presentation Demo' : 'Teacher Schedule';
       }
     });
 
@@ -2176,7 +2177,7 @@
 
     elements.panels.forEach((panel) => {
       const id = String(panel?.dataset?.panel || '').trim();
-      if (id !== 'courses/teacher-schedule' && !(id === 'projects' && state.projectsAuthorized)) {
+      if (id !== 'courses/teacher-schedule' && id !== 'presentation-demo' && !(id === 'projects' && state.projectsAuthorized)) {
         panel.style.display = 'none';
       }
     });
@@ -2185,7 +2186,8 @@
   function applyProjectsModeLockdown() {
     if (!elements.navItems || !elements.dropdownItems || !elements.panels) return;
     elements.navItems.forEach((btn) => {
-      const allow = String(btn?.dataset?.main || '').trim() === 'projects';
+      const main = String(btn?.dataset?.main || '').trim();
+      const allow = main === 'projects' || main === 'presentation-demo';
       btn.style.display = allow ? '' : 'none';
       btn.disabled = !allow;
       btn.setAttribute('aria-disabled', allow ? 'false' : 'true');
@@ -2196,7 +2198,7 @@
       btn.setAttribute('aria-disabled', 'true');
     });
     elements.panels.forEach((panel) => {
-      panel.style.display = panel.dataset.panel === 'projects' ? '' : 'none';
+      panel.style.display = ['projects', 'presentation-demo'].includes(panel.dataset.panel) ? '' : 'none';
     });
   }
 
@@ -2205,6 +2207,13 @@
       elements.navItems.forEach((btn) => {
       btn.addEventListener('click', () => {
         if (state.accessMode === 'teacher') {
+          if (btn.dataset.main === 'presentation-demo') {
+            state.main = 'presentation-demo';
+            state.sub = '';
+            updateHash();
+            render();
+            return;
+          }
           if (btn.dataset.main === 'projects' && state.projectsAuthorized) {
             state.main = 'projects';
             state.sub = '';
@@ -2222,7 +2231,7 @@
           clearStudentProfileState();
         }
         const nextMain = btn.dataset.main;
-        if (state.accessMode === 'projects' && nextMain !== 'projects') {
+        if (state.accessMode === 'projects' && !['projects', 'presentation-demo'].includes(nextMain)) {
           state.main = 'projects';
           state.sub = '';
           updateHash();
@@ -5555,7 +5564,7 @@
 
   function applyRouteFromHash({ initial = false } = {}) {
     const requestedMain = normalizeRouteToken((window.location.hash || '').replace(/^#/, '').split('/')[0]);
-    if (state.accessMode === 'projects' && requestedMain !== 'projects') {
+    if (state.accessMode === 'projects' && !['projects', 'presentation-demo'].includes(requestedMain)) {
       // A Projects-only workforce account must not reach legacy CRM panels by
       // typing a hash directly. Keep the URL and rendered panel canonical.
       state.main = 'projects';
@@ -5573,7 +5582,10 @@
       }
 
       const requested = normalizeRouteToken((window.location.hash || '').replace(/^#/, '').split('/')[0]);
-      if (requested === 'projects' && state.projectsEnabled && state.projectsAuthorized) {
+      if (requested === 'presentation-demo') {
+        state.main = 'presentation-demo';
+        state.sub = '';
+      } else if (requested === 'projects' && state.projectsEnabled && state.projectsAuthorized) {
         state.main = 'projects';
         state.sub = '';
       } else {
@@ -5760,7 +5772,7 @@
     // Enforce Projects capability before selecting an active panel. This keeps
     // feature-off and direct-hash navigation from briefly rendering a protected
     // panel while the redirect is being applied.
-    if (state.accessMode === 'projects' && state.main !== 'projects') {
+    if (state.accessMode === 'projects' && !['projects', 'presentation-demo'].includes(state.main)) {
       state.main = 'projects';
       state.sub = '';
       updateHash();

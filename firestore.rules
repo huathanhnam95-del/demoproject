@@ -410,5 +410,16 @@ service cloud.firestore {
     match /crmAiVoiceSessions/{document=**} { allow read, write: if false; }
     match /crmAiVoiceUtterances/{document=**} { allow read, write: if false; }
     match /crmAiVoiceAttestations/{document=**} { allow read, write: if false; }
+
+    // Online BEL presentation rooms, notebooks, receipts and archives are
+    // server-owned. The API rechecks Firebase Auth and the immutable room
+    // membership on every request; browser clients must never read live state
+    // or write inputs directly to Firestore.
+    match /crmPresentationPresenterLocks/{document=**} { allow read, write: if false; }
+    match /crmPresentationRoomCodes/{document=**} { allow read, write: if false; }
+    match /crmPresentationRooms/{document=**} { allow read, write: if false; }
+    match /crmPresentationOperations/{document=**} { allow read, write: if false; }
+    match /crmPresentationArchives/{document=**} { allow read, write: if false; }
+    match /crmPresentationEvents/{document=**} { allow read, write: if false; }
   }
 }

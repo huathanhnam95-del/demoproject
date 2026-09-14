@@ -1,0 +1,9 @@
+{
+  "name": "bel-presentation-demo-service",
+  "private": true,
+  "version": "0.0.0",
+  "main": "server.cjs",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node server.cjs" },
+  "dependencies": { "express": "^5.2.1" }
+}

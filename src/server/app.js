@@ -16,6 +16,12 @@ const {
 /* eslint-disable no-console */
 
 const CRM_PROJECTS_DEMO_PROJECT = 'demo-crm-projects';
+const { createPresentationDemoRouter } = require('../../functions/src/routes/admin/presentation-demo');
+const { createMemoryRoomStores, createRoomService } = require('../../functions/src/crm/presentation-demo/room-service.cjs');
+const { createConnectionService } = require('../../functions/src/crm/presentation-demo/connection-service.cjs');
+const { createNotebookService } = require('../../functions/src/crm/presentation-demo/notes-service.cjs');
+const { createArchiveService } = require('../../functions/src/crm/presentation-demo/archive-service.cjs');
+const { createPdfService } = require('../../functions/src/crm/presentation-demo/pdf-service.cjs');
 
 function hasFingerprint(filePath) {
   const baseName = path.basename(String(filePath || ''));
@@ -364,6 +370,43 @@ function createApp(options = {}) {
     }
     next();
   };
+
+  // The local rehearsal may use server-mapped synthetic accounts so four
+  // independent Chrome contexts exercise one network authority. This path is
+  // loopback-only and explicitly opt-in; production always uses Firebase Auth.
+  const presentationDemoAuth = async (req, res, next) => {
+    if (req.user) return next();
+    const localDev = isLocalHostname(req.hostname)
+      && String(process.env.PRESENTATION_DEMO_DEV_AUTH || '').trim() === '1';
+    const devUid = localDev ? String(req.headers['x-demo-user'] || '').trim() : '';
+    if (devUid && /^[A-Za-z0-9_-]{1,80}$/.test(devUid)) {
+      req.user = { uid: devUid, email: `${devUid}@local.invalid`, accountStatus: 'active', isAdmin: devUid === 'admin' };
+      return next();
+    }
+    return functionsAuthMiddleware(req, res, next);
+  };
+
+  const presentationDemoStores = createMemoryRoomStores();
+  const presentationDemoRoomService = createRoomService({ stores: presentationDemoStores });
+  const presentationDemoConnections = createConnectionService({ roomService: presentationDemoRoomService });
+  const presentationDemoNotes = createNotebookService({ roomService: presentationDemoRoomService });
+  const presentationDemoArchives = createArchiveService({ roomService: presentationDemoRoomService, notesService: presentationDemoNotes, stores: presentationDemoStores });
+  const presentationDemoPdf = createPdfService({ archives: presentationDemoArchives });
+  const presentationDemoRouter = createPresentationDemoRouter({
+    roomService: presentationDemoRoomService,
+    connections: presentationDemoConnections,
+    notes: presentationDemoNotes,
+    archives: presentationDemoArchives,
+    pdf: presentationDemoPdf,
+    authMiddleware: presentationDemoAuth,
+    resolveIdentity: req => req.user
+  });
+  app.use('/api/presentation-demo', (req, res, next) => {
+    if (String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() !== '1') {
+      return res.status(404).json({ success: false, error: 'FEATURE_DISABLED', message: 'Online Presentation Demo is not enabled.' });
+    }
+    return next();
+  }, presentationDemoRouter);
 
   app.use('/api/read-aloud/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);
   app.use('/api/repeat-sentence/assess', optionalAuthUserMiddleware, azureAssessmentRateLimiter);

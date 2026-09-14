@@ -24,6 +24,12 @@ const { createEchoForgeRouter } = require('./routes/echo-forge');
 const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const pronunciationComparisonRoutes = require('./routes/pronunciation-comparison');
 const createPronunciationReferenceAudioRouter = require('./routes/pronunciation-reference-audio');
+const { createPresentationDemoRouter } = require('./routes/admin/presentation-demo');
+const { createMemoryRoomStores, createRoomService } = require('./crm/presentation-demo/room-service.cjs');
+const { createConnectionService } = require('./crm/presentation-demo/connection-service.cjs');
+const { createNotebookService } = require('./crm/presentation-demo/notes-service.cjs');
+const { createArchiveService } = require('./crm/presentation-demo/archive-service.cjs');
+const { createPdfService } = require('./crm/presentation-demo/pdf-service.cjs');
 const {
     practiceAttemptsLimiterByUid,
     sharedPracticeAttemptsLimiter,
@@ -399,6 +405,35 @@ const pronunciationReferenceAudioRouter = createPronunciationReferenceAudioRoute
     getStorageBucket
 });
 
+// Presentation Demo v2 is deliberately feature-off by default. The services are
+// assembled behind the existing authenticated API boundary; clients never get
+// direct Firestore/RTDB access to live room state.
+const presentationDemoStores = createMemoryRoomStores();
+const presentationDemoRoomService = createRoomService({ stores: presentationDemoStores });
+const presentationDemoConnections = createConnectionService({ roomService: presentationDemoRoomService });
+const presentationDemoNotes = createNotebookService({ roomService: presentationDemoRoomService });
+const presentationDemoArchives = createArchiveService({ roomService: presentationDemoRoomService, notesService: presentationDemoNotes, stores: presentationDemoStores });
+const presentationDemoPdf = createPdfService({ archives: presentationDemoArchives });
+const presentationDemoRouter = createPresentationDemoRouter({
+    roomService: presentationDemoRoomService,
+    connections: presentationDemoConnections,
+    notes: presentationDemoNotes,
+    archives: presentationDemoArchives,
+    pdf: presentationDemoPdf,
+    authMiddleware,
+    resolveIdentity: async req => {
+        let profile = null;
+        try {
+            const snapshot = await db.collection('users').doc(req.user.uid).get();
+            profile = snapshot.exists ? snapshot.data() : null;
+        } catch (_) {
+            profile = null;
+        }
+        const { serverIdentityFromAuth } = require('./crm/presentation-demo/identity.cjs');
+        return serverIdentityFromAuth({ decodedToken: req.user, profile });
+    }
+});
+
 const studentClassroomsRouter = createStudentClassroomsRouter({
     db,
     authMiddleware,
@@ -412,6 +447,12 @@ app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/admin/projects', projectsRouter);
+app.use('/api/presentation-demo', (req, res, next) => {
+    if (String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() !== '1') {
+        return sendError(res, 404, 'FEATURE_DISABLED', 'Online Presentation Demo is not enabled.');
+    }
+    return next();
+}, presentationDemoRouter);
 app.use('/api/teacher', teacherSchedulerRouter);
 app.use('/api/student', studentClassroomsRouter);
 app.use('/api', studentClassroomsRouter);

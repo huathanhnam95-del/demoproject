@@ -83,6 +83,9 @@
             <li>
               <button class="crm-nav-item" data-main="entrance-test-ui" data-label="Entrance Test UI">Entrance Test UI</button>
             </li>
+            <li>
+              <button class="crm-nav-item" data-main="presentation-demo" data-label="Presentation Demo">Presentation Demo</button>
+            </li>
           </ul>
         </div>
       </div>
@@ -384,6 +387,20 @@
           <p class="crm-panel-sub">Ba phương án giao diện cho bài kiểm tra đầu vào. Mỗi người nhập tên, xem thử và chấm sao cho từng trang.</p>
         </div>
         <div id="entrance-test-ui-root" class="et-ui"></div>
+      </section>
+
+      <section class="crm-panel" data-panel="presentation-demo" style="display: none;">
+        <div class="crm-panel-header">
+          <div>
+            <h2>Presentation Demo</h2>
+            <p>Open the authenticated Working as Equals room. The CRM stays available while the game runs in a separate tab.</p>
+          </div>
+        </div>
+        <div class="crm-placeholder-card" id="crm-presentation-demo-workspace">
+          <p class="crm-muted" id="crm-presentation-demo-status">Online room access is checked by the presentation service.</p>
+          <button class="crm-btn-primary" id="crm-presentation-demo-open" type="button">Open Presentation Demo</button>
+          <a id="crm-presentation-demo-link" href="/presentation-demo/index.html" target="_blank" rel="noopener" hidden>Open in a new tab</a>
+        </div>
       </section>
 
       <section class="crm-panel" data-panel="dashboard">
@@ -3000,6 +3017,7 @@
   <script src="js/crm/entrance-test-ui-lab.js?v=20260910-v2.0.6&etui=20260909-etui2"></script>
   <script src="js/crm/projects/workspace.js?v=20260910-v2.0.6"></script>
   <script src="js/crm/projects/ui-scale.js?v=20260910-v2.0.6"></script>
+  <script src="js/crm/presentation-demo-workspace.js?v=20260910-v2.0.6"></script>
   <script src="crm-admin.js?v=20260910-v2.0.6"></script>
   <script src="js/crm/segmentation-study.js?v=20260910-v2.0.6" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->

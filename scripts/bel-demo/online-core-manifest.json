@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/bel-demo/build-online-core.cjs",
+  "sourceBaseline": "C:/Users/Admin/.codex/worktrees/bel-prod@249a8fc86b5a293f82008b0db07c64aeca4ad2bd",
+  "comparisonMode": "byte-identical",
+  "pairs": [
+    { "source": "functions/src/crm/presentation-demo/core/state/session.mjs", "output": "public/js/presentation-demo/core/state/session.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/state/progression.mjs", "output": "public/js/presentation-demo/core/state/progression.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/world/simulation.mjs", "output": "public/js/presentation-demo/core/world/simulation.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/world/scenes.mjs", "output": "public/js/presentation-demo/core/world/scenes.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/world/geometry.mjs", "output": "public/js/presentation-demo/core/world/geometry.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/activities/bridge.mjs", "output": "public/js/presentation-demo/core/activities/bridge.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/activities/reversal.mjs", "output": "public/js/presentation-demo/core/activities/reversal.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/activities/cubes.mjs", "output": "public/js/presentation-demo/core/activities/cubes.mjs" },
+    { "source": "functions/src/crm/presentation-demo/core/content/source.mjs", "output": "public/js/presentation-demo/core/content/source.mjs" }
+  ],
+  "provenancePairs": [
+    { "source": "public/prototypes/bel-working-as-equals-demo/native/deck.html", "output": "public/presentation-demo/native/deck.html", "generator": "scripts/bel-demo/package-online-deck.cjs", "comparisonMode": "generated-resource-aliases-only" },
+    { "source": "public/fonts/Roboto-Regular.ttf", "output": "functions/src/crm/presentation-demo/fonts/Roboto-Regular.ttf", "generator": "scripts/bel-demo/build-pdf-fonts.cjs", "comparisonMode": "byte-identical" },
+    { "source": "public/fonts/Roboto-Bold.ttf", "output": "functions/src/crm/presentation-demo/fonts/Roboto-Bold.ttf", "generator": "scripts/bel-demo/build-pdf-fonts.cjs", "comparisonMode": "byte-identical" }
+  ]
+}

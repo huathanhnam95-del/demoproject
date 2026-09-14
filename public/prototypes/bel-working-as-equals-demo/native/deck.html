@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Our First Month Together — Modernist</title>
+<link rel="stylesheet" href="../_ds/modernist-6011e8f4-2365-454d-a807-ad62f6c72890/styles.css">
+<script src="../_ds/modernist-6011e8f4-2365-454d-a807-ad62f6c72890/_ds_bundle.js"></script>
+<style>
+@keyframes om-rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes om-pop{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+@keyframes om-spine{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes om-panel{from{opacity:0;transform:translateX(-64px)}to{opacity:1;transform:none}}
+@keyframes om-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes om-fade{from{opacity:0}to{opacity:1}}
+@keyframes om-soft{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes om-settle{from{transform:scale(1.035)}to{transform:scale(1)}}
+@keyframes om-rule{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+[data-deck-active] img{animation:om-settle 2.4s both cubic-bezier(.2,.7,.3,1)}
+[data-deck-active] h1:not([data-anim]),[data-deck-active] h2:not([data-anim]),[data-deck-active] h3:not([data-anim]){animation:om-soft .5s both cubic-bezier(.2,.7,.3,1) .08s}
+[data-deck-active] p:not([data-anim]):not([data-phase]),[data-deck-active] li:not([data-anim]):not([data-phase]),[data-deck-active] blockquote:not([data-anim]):not([data-phase]):not([data-quote-reveal]){animation:om-fade .55s both .18s}
+[data-deck-active] [data-anim="char"]{animation:om-fade .32s both}
+[data-deck-active] [data-phase="hidden"] *{animation:none}
+[data-deck-active] [data-anim="rise"]{animation:om-rise .6s both}
+[data-deck-active] [data-anim="pop"]{animation:om-pop .45s both}
+[data-deck-active] [data-anim="spine"]{animation:om-spine 1.9s both;transform-origin:top}
+[data-deck-active] [data-anim="panel"]{animation:om-panel .65s both}
+[data-deck-active] [data-anim="grow"]{animation:om-grow .8s both;transform-origin:left}
+[data-deck-active] [data-phase]{transition:opacity .5s ease,transform .5s ease}
+[data-deck-active] [data-phase="hidden"]{transform:translateY(26px)}
+}
+[data-deck-active] [data-phase="hidden"]{opacity:0}
+@media (prefers-reduced-motion:no-preference){
+deck-stage>section:not([data-deck-active]) h1:not([data-anim]),
+deck-stage>section:not([data-deck-active]) h2:not([data-anim]),
+deck-stage>section:not([data-deck-active]) h3:not([data-anim]),
+deck-stage>section:not([data-deck-active]) p:not([data-anim]):not([data-phase]),
+deck-stage>section:not([data-deck-active]) li:not([data-anim]):not([data-phase]),
+deck-stage>section:not([data-deck-active]) blockquote:not([data-anim]):not([data-phase]):not([data-quote-reveal]),
+deck-stage>section:not([data-deck-active]) [data-anim="char"],
+deck-stage>section:not([data-deck-active]) [data-anim="rise"],
+deck-stage>section:not([data-deck-active]) [data-anim="pop"],
+deck-stage>section:not([data-deck-active]) [data-anim="panel"]{opacity:0}
+deck-stage>section:not([data-deck-active]) [data-anim="spine"]{transform:scaleY(0);transform-origin:top}
+deck-stage>section:not([data-deck-active]) [data-anim="grow"]{transform:scaleX(0);transform-origin:left}
+}
+[data-eta-banner]{opacity:0;transform:translateY(26px)}
+[data-eta-banner][data-phase="shown"]{opacity:1 !important;transform:none !important}
+</style>
+</helmet>
+
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%" data-uneditable="">
+
+<section data-label="Cover" data-screen-label="01" data-speaker-notes="Welcome, everyone. Today marks the end of our first full month working together in this new, open structure. Over the past four weeks, we did something very unusual in education: we stepped away from traditional academic departments, supervisors, and formal bosses. We trusted each other as equal peers to begin designing our new English pronunciation course. That kind of freedom is exciting, but it is also completely unfamiliar. When you remove traditional hierarchy, everyday habits feel different. Today is not a lecture, and it is definitely not a performance review. It is simply an honest coffee-table conversation to look back on what we felt, name the weird moments we all experienced, and agree on simple, healthy habits for working together in Month 2." style="display:flex;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body)" data-om-slide-id="4567e295">
+  <div style="position:relative;width:100%;height:100%;overflow:hidden">
+    <img src="images/cover.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ photoFilter }}">
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(32,30,29,0.92) 0%,rgba(32,30,29,0.82) 46%,rgba(32,30,29,0.15) 100%)"></div>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:80px 120px 72px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.65);padding-bottom:16px">
+        <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">TRANSITION PHASE #1</span>
+        <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">01 / 21</span>
+      </div>
+      <div style="max-width:1180px">
+        <h1 style="margin:0;font-size:104px;font-weight:800;line-height:0.98;letter-spacing:-0.03em;color:var(--color-bg)">Working as Equals</h1>
+        <div style="width:200px;height:6px;background:var(--color-accent);margin:44px 0 32px"></div>
+        <p style="margin:0;font-size:34px;line-height:1.4;max-width:940px;color:rgba(243,242,242,0.92)">A look back at Month 1<br>&nbsp;— freedom comes at a price</p>
+      </div>
+      <div style="display:flex;gap:48px;font-size:24px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(243,242,242,0.66)">
+        <span>Pronunciation Course Team</span>
+        <span>Month 1 Retrospective</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Where we are today" data-screen-label="02" data-speaker-notes="Let's take a quick look at where we've been and where we're going. In Month 1, our goal was simple: get to know each other, explore pronunciation concepts, and try working without a manager telling us what to do every morning. We learned a lot about our different teaching strengths, and we built some great early drafts. Now, as we enter Month 2, we want to shift our focus from just exploring to working smoothly as a close-knit team. We want to make sure everyone feels clear on how decisions get made, how to get quick feedback without feeling awkward, and how to keep our workday healthy, fun, and energizing." style="display:flex;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)" data-om-slide-id="b14f2c21">
+  <div style="width:620px;flex:none;position:relative;overflow:hidden;background:var(--color-text)">
+    <img src="images/threshold.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ photoFilter }}">
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 120px 72px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Where we are today</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">02 / 21</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-top:36px;flex:none">
+      <h2 style="margin:0;font-size:58px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:940px">TRANSITION PHASE #1: Reflecting and prepraring</h2>
+      <button type="button" onClick="{{ nextPhase }}" style="flex:none;background:var(--color-bg);color:var(--color-accent-700);border:2px solid var(--color-accent);padding:14px 22px;font-family:var(--font-body);font-size:24px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-align:left;cursor:pointer" style-hover="background:var(--color-accent-100)" style-active="background:var(--color-accent);color:var(--color-bg)">{{ phaseCta }}</button>
+    </div>
+    <div style="position:relative;margin-top:36px;padding-left:78px;flex:1;display:flex;flex-direction:column;justify-content:space-between">
+      <div data-anim="spine" style="position:absolute;left:19px;top:14px;bottom:14px;width:2px;background:var(--color-text)"></div>
+      <div data-phase="{{ phase1 }}" style="position:relative;padding-bottom:22px">
+        <div style="position:absolute;left:-78px;top:4px;width:40px;height:40px;background:var(--color-bg);border:2px solid var(--color-text);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:800">1</div>
+        <div style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-900);margin-bottom:12px">Phase 1 · Done · Building rapport and dynamic</div>
+        <h3 style="margin:0 0 10px;font-size:32px;font-weight:800;line-height:1.1">What we got</h3>
+        <ul style="margin:0;padding-left:30px;font-size:24px;line-height:1.4;color:var(--color-neutral-900)">
+          <li>Thirty days without a manager, deadlines, and reports</li>
+          <li>A picture of how you and your teammates work autonomously: perks and challenges.&nbsp;</li>
+          <li>Early pronunciation course drafts on the table</li>
+        </ul>
+      </div>
+      <div data-phase="{{ phase2 }}" style="position:relative;padding:22px 0;border-top:2px solid var(--color-text);border-bottom:2px solid var(--color-text)">
+        <div style="position:absolute;left:-78px;top:26px;width:40px;height:40px;background:var(--color-accent);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:800;color:var(--color-bg)">2</div>
+        <div style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:12px">Transitional phase · We are here</div>
+        <h3 style="margin:0 0 10px;font-size:32px;font-weight:800;line-height:1.1">What we should start</h3>
+        <ul style="margin:0;padding-left:30px;font-size:24px;line-height:1.4;color:var(--color-neutral-900)"><li>Look back at PHASE 1 honestly, then agree how we want to work before PHASE 2 starts.</li><li>Identify potential support needed: academically, technically, and collaboratively.</li></ul>
+      </div>
+      <div data-phase="{{ phase3 }}" style="position:relative;padding-top:22px">
+        <div style="position:absolute;left:-78px;top:26px;width:40px;height:40px;background:var(--color-bg);border:2px solid var(--color-text);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:800">3</div>
+        <div style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-900);margin-bottom:12px">Phase 2 · Next · Setting the path forward</div>
+        <h3 style="margin:0 0 10px;font-size:32px;font-weight:800;line-height:1.1">What we will aim for</h3>
+        <ul style="margin:0;padding-left:30px;font-size:24px;line-height:1.4;color:var(--color-neutral-900)">
+          <li>Decide on roles, how decisions actually get made, and an agreed "ketchup" schedule.</li>
+          <li>Define achievable project objectives and milestones.</li>
+          <li>Maintain a fun, healthy, and supportive collaboration environment</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Part one · Month 1 reflection" data-screen-label="03" data-speaker-notes="Before we look outward, let us be honest about the three feelings that came up for almost all of us in Month 1. None of them mean anything is wrong with us or with the team. They are simply what happens when familiar structure disappears. We will take them one at a time: waiting for permission, wondering whether we did enough, and holding back to stay polite." style="display:flex;flex-direction:column;justify-content:space-between;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="846b4cab">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)"></span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">03 / 21</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;gap:80px">
+    <div style="flex:1">
+      <h2 style="margin:0;font-size:88px;font-weight:800;line-height:1.0;letter-spacing:-0.03em;color:var(--color-bg);max-width:1180px">Three Hurdles We All Felt</h2>
+      <div style="width:200px;height:6px;background:var(--color-accent);margin-top:40px"></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid rgba(243,242,242,0.6);flex:none">
+    <div data-anim="rise" style="padding:40px 48px 0 0;animation-duration:.5s;animation-delay:.4s">
+      <div data-anim="grow" style="width:72px;height:8px;background:var(--color-accent);margin-bottom:24px;animation-duration:.4s;animation-delay:.4s"></div>
+      <div style="font-size:88px;font-weight:800;line-height:.9;letter-spacing:-0.03em;color:var(--color-accent);margin-bottom:20px">01</div>
+      <p style="margin:0;font-size:42px;line-height:1.15;font-weight:800;letter-spacing:-0.015em;color:var(--color-bg)">The habit of waiting for instruction</p>
+    </div>
+    <div data-anim="rise" style="padding:40px 48px 0;border-left:2px solid rgba(243,242,242,0.3);animation-duration:.5s;animation-delay:1.2s">
+      <div data-anim="grow" style="width:72px;height:8px;background:var(--color-accent);margin-bottom:24px;animation-duration:.4s;animation-delay:1.2s"></div>
+      <div style="font-size:88px;font-weight:800;line-height:.9;letter-spacing:-0.03em;color:var(--color-accent);margin-bottom:20px">02</div>
+      <p style="margin:0;font-size:42px;line-height:1.15;font-weight:800;letter-spacing:-0.015em;color:var(--color-bg)">Wondering if we were doing enough</p>
+    </div>
+    <div data-anim="rise" style="padding:40px 0 0 48px;border-left:2px solid rgba(243,242,242,0.3);animation-duration:.5s;animation-delay:2s">
+      <div data-anim="grow" style="width:72px;height:8px;background:var(--color-accent);margin-bottom:24px;animation-duration:.4s;animation-delay:2s"></div>
+      <div style="font-size:88px;font-weight:800;line-height:.9;letter-spacing:-0.03em;color:var(--color-accent);margin-bottom:20px">03</div>
+      <p style="margin:0;font-size:42px;line-height:1.15;font-weight:800;letter-spacing:-0.015em;color:var(--color-bg)">Holding back to stay polite</p>
+    </div>
+  </div>
+</section>
+
+<section data-label="Hurdle 1 — permission" data-screen-label="04" data-speaker-notes="Let's talk about the first feeling almost everyone has in their first month: waiting for permission. In traditional teaching jobs, a coordinator or head of department gives you your syllabus, your schedule, and your lesson plan format. You wait for instructions before you begin. When you join a flat team, that authority disappears. And at first, that silence feels confusing. You might find yourself sitting at your desk wondering: who is going to tell me what to do next? Can I just rewrite this dialogue, or do I need someone to sign off on it? The answer is simple: if you see something that will help our students learn better, you already have full permission to work on it with a colleague." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="ea6297e2">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)"></span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">04 / 21</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:48px;margin-top:36px;flex:none">
+    <h2 style="margin:0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:1300px">Hurdle 1: The Habit of Waiting for Instruction</h2>
+    <button type="button" onClick="{{ nextH4 }}" style="flex:none;background:var(--color-bg);color:var(--color-accent-700);border:2px solid var(--color-accent);padding:14px 22px;font-family:var(--font-body);font-size:24px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-align:left;cursor:pointer" style-hover="background:var(--color-accent-100)" style-active="background:var(--color-accent);color:var(--color-bg)">Reveal next</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;margin-top:52px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:40px 60px 0 0">
+      <div data-anim="rise" style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:24px;animation-duration:.45s;animation-delay:.15s">The thought</div>
+      <p data-anim="rise" style="margin:0;font-size:40px;font-weight:600;line-height:1.28;letter-spacing:-0.01em;animation-duration:.5s;animation-delay:.3s">Who is going to tell me what to do next? Can I just rewrite this dialogue, or do I need someone to sign off on it?</p>
+    </div>
+    <div style="padding:40px 0 0 60px;border-left:2px solid var(--color-divider);display:flex;flex-direction:column">
+      <div data-anim="rise" style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:24px;animation-duration:.45s;animation-delay:.6s">Why it happened</div>
+      <p data-phase="{{ h42 }}" style="margin:0;font-size:27px;line-height:1.5;color:var(--color-neutral-700)">In a traditional job the coordinator hands you the task instructions, the deadlines and the format. Here, that authority simply isn't there, and the first weeks of silence feels like a delay.</p>
+      <div data-phase="{{ h43 }}" style="margin-top:40px;border-top:6px solid var(--color-accent);background:var(--color-neutral-200);padding:32px 36px">
+        <div style="font-size:24px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:18px">The shift</div>
+        <p style="margin:0;font-size:34px;font-weight:700;line-height:1.28;letter-spacing:-0.01em;color:var(--color-text)">It isn't a delay. If you see something that will help our students learn better, you already have permission. Find a colleague and start.</p>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ showQuotes }}" hint-placeholder-val="{{ true }}">
+    <div data-phase="{{ h44 }}" style="display:flex;align-items:flex-start;gap:36px;border-top:2px solid var(--color-text);padding-top:28px;margin-top:20px">
+      <span style="flex:none;font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);padding-top:8px">Heard in week 1</span>
+      <p style="margin:0;font-size:30px;line-height:1.35;font-weight:600">"I sat down on the Monday and waited for a syllabus that was never coming."</p>
+    </div>
+  </sc-if>
+</section>
+
+<section data-label="Hurdle 2 — doing enough" data-screen-label="05" data-speaker-notes="The second big adjustment is what we call phantom guilt. In a normal workplace, your boss gives you praise, sets deadlines, or conducts annual reviews. When there's no boss checking off your hours, a strange little voice in your head asks: did I do enough today? Does anyone know how hard I worked? Sometimes teachers respond to that silence by overworking — answering messages late at night or staying logged in because they want to prove their dedication. Let's be completely clear: working late does not make you a hero. High-quality teaching materials come from clear, well-rested minds, not exhausted late-night grinding. Trust that your work speaks for itself." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="1346f40a">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)"></span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">05 / 21</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:48px;margin-top:36px;flex:none">
+    <h2 style="margin:0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:1300px">Hurdle 2: Wondering If We're Doing Enough</h2>
+    <button type="button" onClick="{{ nextH5 }}" style="flex:none;background:var(--color-bg);color:var(--color-accent-700);border:2px solid var(--color-accent);padding:14px 22px;font-family:var(--font-body);font-size:24px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-align:left;cursor:pointer" style-hover="background:var(--color-accent-100)" style-active="background:var(--color-accent);color:var(--color-bg)">Reveal next</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;margin-top:52px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:40px 60px 0 0">
+      <div data-anim="rise" style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:24px;animation-duration:.45s;animation-delay:.15s">The thought</div>
+      <p data-anim="rise" style="margin:0;font-size:40px;font-weight:600;line-height:1.28;letter-spacing:-0.01em;animation-duration:.5s;animation-delay:.3s">Did I do enough today? Does anyone know how hard I worked?</p>
+    </div>
+    <div style="padding:40px 0 0 60px;border-left:2px solid var(--color-divider);display:flex;flex-direction:column">
+      <div data-anim="rise" style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:24px;animation-duration:.45s;animation-delay:.6s">Why it happened</div>
+      <p data-phase="{{ h52 }}" style="margin:0;font-size:27px;line-height:1.5;color:var(--color-neutral-700)">Phantom guilt fills the space praise and deadlines used to occupy. Some of us answered messages at midnight to prove our dedication.</p>
+      <div data-phase="{{ h53 }}" style="margin-top:40px;border-top:6px solid var(--color-accent);background:var(--color-neutral-200);padding:32px 36px">
+        <div style="font-size:24px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:18px">The shift</div>
+        <p style="margin:0;font-size:34px;font-weight:700;line-height:1.28;letter-spacing:-0.01em;color:var(--color-text)">Working late does not make you a hero. Good pronunciation material comes from clear, well-rested minds. Trust that your work speaks for itself.</p>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ showQuotes }}" hint-placeholder-val="{{ true }}">
+    <div data-phase="{{ h54 }}" style="display:flex;align-items:flex-start;gap:36px;border-top:2px solid var(--color-text);padding-top:28px;margin-top:20px">
+      <span style="flex:none;font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);padding-top:8px">Heard in week 3</span>
+      <p style="margin:0;font-size:30px;line-height:1.35;font-weight:600">"Nobody asked me for hours, so I kept working to be safe."</p>
+    </div>
+  </sc-if>
+</section>
+
+<section data-label="Hurdle 3 — politeness" data-screen-label="06" data-speaker-notes="The third challenge is the politeness trap. Because we are all warm, caring educators who respect one another, our natural instinct is to avoid conflict. If a colleague shares a draft activity that feels confusing, we might hesitate to speak up because we don't want to hurt their feelings or sound critical. But holding back polite silence actually leaves our teammate alone with a weak lesson that will confuse students later. True kindness means giving honest, constructive feedback early, with warmth and respect for the person. We critique the draft together so that our students get the best possible experience." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="699ae696">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)"></span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">06 / 21</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:48px;margin-top:36px;flex:none">
+    <h2 style="margin:0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:1300px">Hurdle 3: Holding Back to Be Polite</h2>
+    <button type="button" onClick="{{ nextH6 }}" style="flex:none;background:var(--color-bg);color:var(--color-accent-700);border:2px solid var(--color-accent);padding:14px 22px;font-family:var(--font-body);font-size:24px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-align:left;cursor:pointer" style-hover="background:var(--color-accent-100)" style-active="background:var(--color-accent);color:var(--color-bg)">Reveal next</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;margin-top:52px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:40px 60px 0 0">
+      <div data-anim="rise" style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:24px;animation-duration:.45s;animation-delay:.15s">The thought</div>
+      <p data-anim="rise" style="margin:0;font-size:40px;font-weight:600;line-height:1.28;letter-spacing:-0.01em;animation-duration:.5s;animation-delay:.3s">Their ideas confuse me — but I don't want to hurt anyone's feelings or sound critical.</p>
+    </div>
+    <div style="padding:40px 0 0 60px;border-left:2px solid var(--color-divider);display:flex;flex-direction:column">
+      <div data-anim="rise" style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:24px;animation-duration:.45s;animation-delay:.6s">Why it happened</div>
+      <p data-phase="{{ h62 }}" style="margin:0;font-size:27px;line-height:1.5;color:var(--color-neutral-700)">Polite silence leaves a teammate alone with a weak lesson — and the confusion lands on a student weeks later.</p>
+      <div data-phase="{{ h63 }}" style="margin-top:40px;border-top:6px solid var(--color-accent);background:var(--color-neutral-200);padding:32px 36px">
+        <div style="font-size:24px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:18px">The shift</div>
+        <p style="margin:0;font-size:34px;font-weight:700;line-height:1.28;letter-spacing:-0.01em;color:var(--color-text)">Kindness is honest feedback, early: warm about the person, straight about the draft. We critique the work together so the class gets our best.</p>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ showQuotes }}" hint-placeholder-val="{{ true }}">
+    <div data-phase="{{ h64 }}" style="display:flex;align-items:flex-start;gap:36px;border-top:2px solid var(--color-text);padding-top:28px;margin-top:20px">
+      <span style="flex:none;font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);padding-top:8px">Heard in week 4</span>
+      <p style="margin:0;font-size:30px;line-height:1.35;font-weight:600">"I noticed the problem on day one. I said it on day nine."</p>
+    </div>
+  </sc-if>
+</section>
+
+<section data-label="The way forward" data-screen-label="07" data-speaker-notes="Here is the good news. Every one of those three hurdles has a simple answer, and none of them require a manager. Waiting for permission: if you see it, you own it. Wondering whether you did enough: the work speaks for you, not the hours you sat at your desk. Holding back to be polite: say it early and say it warmly. That is the whole way forward — not more control, just a few habits we agree on together. And we do not have to invent them. A software studio has been running exactly this way since 1996, with no managers at all, so let us look at how they do it." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:0;text-wrap:pretty" data-om-slide-id="0ab28207">
+  <div style="flex:none;min-height:600px;display:flex;flex-direction:column;background:var(--color-text);color:var(--color-bg);padding:72px 120px 48px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">THE WAY FORWARD</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">07 / 21</span>
+    </div>
+
+    <h2 data-anim="rise" style="margin:40px 0 0;font-size:88px;font-weight:800;line-height:1.0;letter-spacing:-0.03em;color:var(--color-bg);max-width:1560px;animation-duration:.45s">There Is a Way Through All Three</h2>
+
+    <div style="display:grid;grid-template-columns:300px repeat(3,1fr);margin-top:auto;border-top:2px solid rgba(243,242,242,0.45)">
+      <div style="padding:26px 40px 0 0;font-size:24px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(243,242,242,0.6);line-height:1.35">Month 1<br>what we felt</div>
+      <div data-anim="rise" style="padding:26px 40px 0;border-left:2px solid rgba(243,242,242,0.28);display:flex;gap:14px;align-items:baseline;animation-duration:.55s;animation-delay:.5s">
+        <span style="flex:none;font-size:24px;font-weight:800;color:rgba(243,242,242,0.55)">01</span>
+        <p style="margin:0;font-size:31px;line-height:1.2;color:rgba(243,242,242,0.78)">Waiting for instruction</p>
+      </div>
+      <div data-anim="rise" style="padding:26px 40px 0;border-left:2px solid rgba(243,242,242,0.28);display:flex;gap:14px;align-items:baseline;animation-duration:.55s;animation-delay:1.1s">
+        <span style="flex:none;font-size:24px;font-weight:800;color:rgba(243,242,242,0.55)">02</span>
+        <p style="margin:0;font-size:31px;line-height:1.2;color:rgba(243,242,242,0.78)">Wondering if it was enough</p>
+      </div>
+      <div data-anim="rise" style="padding:26px 40px 0;border-left:2px solid rgba(243,242,242,0.28);display:flex;gap:14px;align-items:baseline;animation-duration:.55s;animation-delay:1.7s">
+        <span style="flex:none;font-size:24px;font-weight:800;color:rgba(243,242,242,0.55)">03</span>
+        <p style="margin:0;font-size:31px;line-height:1.2;color:rgba(243,242,242,0.78)">Holding back to be polite</p>
+      </div>
+    </div>
+  </div><div style="flex:1;display:flex;flex-direction:column;padding:0 120px 60px;background:var(--color-bg);color:var(--color-text)">
+    <div style="display:grid;grid-template-columns:300px repeat(3,1fr);grid-template-rows:auto auto;align-content:start;flex:1">
+      <div></div>
+      <div style="padding:0 40px;border-left:2px solid var(--color-neutral-300);display:flex;flex-direction:column;align-items:flex-start">
+        <div data-anim="spine" style="width:2px;height:104px;background:var(--color-accent);margin-top:-46px;animation-duration:.45s;animation-delay:3.2s"></div>
+      </div>
+      <div style="padding:0 40px;border-left:2px solid var(--color-neutral-300);display:flex;flex-direction:column;align-items:flex-start">
+        <div data-anim="spine" style="width:2px;height:104px;background:var(--color-accent);margin-top:-46px;animation-duration:.45s;animation-delay:3.4s"></div>
+      </div>
+      <div style="padding:0 40px;border-left:2px solid var(--color-neutral-300);display:flex;flex-direction:column;align-items:flex-start">
+        <div data-anim="spine" style="width:2px;height:104px;background:var(--color-accent);margin-top:-46px;animation-duration:.45s;animation-delay:3.6s"></div>
+      </div>
+
+      <div style="padding:34px 40px 0 0;font-size:24px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);line-height:1.35">From here on<br>how we work</div>
+      <div data-anim="rise" style="padding:34px 40px 0;border-left:2px solid var(--color-neutral-300);display:flex;gap:14px;align-items:baseline;animation-duration:.55s;animation-delay:3.7s">
+        <span style="flex:none;font-size:26px;font-weight:800;color:var(--color-accent-700)">01</span>
+        <div>
+          <p style="margin:0;font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-0.01em">If you see it, you own it.</p>
+          
+        </div>
+      </div>
+      <div data-anim="rise" style="padding:34px 40px 0;border-left:2px solid var(--color-neutral-300);display:flex;gap:14px;align-items:baseline;animation-duration:.55s;animation-delay:4.4s">
+        <span style="flex:none;font-size:26px;font-weight:800;color:var(--color-accent-700)">02</span>
+        <div>
+          <p style="margin:0;font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-0.01em">The work speaks, not the hours.</p>
+          
+        </div>
+      </div>
+      <div data-anim="rise" style="padding:34px 40px 0;border-left:2px solid var(--color-neutral-300);display:flex;gap:14px;align-items:baseline;animation-duration:.55s;animation-delay:5.1s">
+        <span style="flex:none;font-size:26px;font-weight:800;color:var(--color-accent-700)">03</span>
+        <div>
+          <p style="margin:0;font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-0.01em">Say it early, say it warmly.</p>
+          
+        </div>
+      </div>
+    </div>
+
+    <div data-anim="rise" style="display:flex;align-items:baseline;gap:20px;border-top:2px solid var(--color-text);padding-top:26px;flex:none;animation-duration:.55s;animation-delay:6s">
+      <span style="flex:none;font-size:32px;font-weight:800;color:var(--color-accent-700)">Next</span>
+      <p style="margin:0;font-size:30px;line-height:1.3">None of this is theory. A studio has worked exactly this way, with no managers at all, since 1996.</p>
+    </div>
+  </div>
+
+  
+</section>
+
+<section data-label="Welcome to Flatland" data-screen-label="08" data-speaker-notes="To help us navigate this, we look to one of the most famous examples of flat teamwork in the creative world: Valve. For thirty years, Valve has built world-famous creative projects without a single manager, supervisor, or executive chain of command. They organize around three simple ideas. First, zero managers: every creator is treated like a trusted adult with direct ownership. If you spot an issue, you step up and solve it. Second, desks on wheels: literally, their office desks have wheels. When people want to team up on a project, they roll their desks together, work intensively, and roll apart when it's done. Third, the customer is the only boss: success isn't about pleasing a supervisor in an office; it's about delighting the person using what you made. We aren't building video games, but teaching requires the exact same creative trust. Freedom only works when we stay connected, share early, and support each other as partners." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="fb5d0711">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Foundational inspiration</span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">08 / 21</span>
+  </div>
+  <h2 style="margin:36px 0 0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:1450px">Welcome to Flatland: How Valve Works Without Bosses</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:48px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:36px 48px 0 0">
+      <div style="font-size:64px;font-weight:800;color:var(--color-accent);line-height:1;margin-bottom:20px">01</div>
+      <h3 style="margin:0 0 18px;font-size:36px;font-weight:800;line-height:1.12">Zero managers</h3>
+      <p style="margin:0;font-size:26px;line-height:1.5;color:var(--color-neutral-900)">Every creator is treated as a trusted adult with direct ownership. Spot an issue, step up, solve it.</p>
+    </div>
+    <div style="padding:36px 48px 0;border-left:2px solid var(--color-divider)">
+      <div style="font-size:64px;font-weight:800;color:var(--color-accent);line-height:1;margin-bottom:20px">02</div>
+      <h3 style="margin: 0 0 18px; font-size: 36px; font-weight: 800; line-height: 1.12; width: 488px; height: 42px">Teaming Up Where Needed</h3>
+      <p style="margin:0;font-size:26px;line-height:1.5;color:var(--color-neutral-900)">Nobody gives you a daily task list. We form quick small groups around real problems, build the solutions together, and move on.</p>
+    </div>
+    <div style="padding:36px 0 0 48px;border-left:2px solid var(--color-divider)">
+      <div style="font-size:64px;font-weight:800;color:var(--color-accent);line-height:1;margin-bottom:20px">03</div>
+      <h3 style="margin:0 0 18px;font-size:36px;font-weight:800;line-height:1.12">User-centered</h3>
+      <p style="margin:0;font-size:26px;line-height:1.5;color:var(--color-neutral-900)">Success is not a supervisor's approval. <br>It comes from the person using what you made — for us, the student learning to speak.</p>
+    </div>
+  </div>
+  <div style="border-top:6px solid var(--color-accent);background:var(--color-neutral-200);color:var(--color-text);padding:32px 40px;margin-top:32px">
+    <p style="margin:0;font-size:34px;font-weight:600;line-height:1.25;letter-spacing:-0.01em">We aren't building video games. Yet, teaching needs the same creative trust — and freedom only works when we share early and stay connected.</p>
+  </div>
+</section>
+
+<section data-label="Gabe Newell's ideology" data-screen-label="09" data-speaker-notes="Where does this idea come from? Valve's co-founder Gabe Newell built the company on a fairly simple economic argument. Ronald Coase explained back in 1937 why firms use pyramids at all: hierarchy was the cheapest way to coordinate repetitive factory work. But creative work is not repetitive, and there the same hierarchy mostly adds friction, delay and distortion. Newell's own line is blunt: if you hire smart, creative people and then tell them what to do, you destroy most of their value. The second half matters just as much. When there is no supervisor to impress, nobody spends energy managing up. In a school, that means our attention goes to the learner instead of to someone's opinion of us." style="display:flex;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body)" data-om-slide-id="a05266cf">
+  <div style="width:720px;flex:none;position:relative;overflow:hidden;background:var(--color-neutral-900)">
+    <img src="images/gabe.jpg" alt="Gabe Newell" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 26%;filter:{{ photoFilter }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-accent);color:var(--color-bg);padding:26px 40px">
+      <div style="font-size:26px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase">Gabe Newell</div>
+      <div style="font-size:26px;margin-top:8px">Co-founder, Valve · 1996 to present</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 120px 72px 72px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">Foundational philosophy</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">09 / 21</span>
+    </div>
+    <h2 style="margin:34px 0 0;font-size:50px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;color:var(--color-bg)">Gabe Newell's Ideology: Why Hierarchies Destroy Creative Value</h2>
+    <blockquote style="margin:30px 0 0;font-size:34px;line-height:1.32;font-weight:600;color:var(--color-bg);border-left:6px solid var(--color-accent);padding-left:28px">If you hire smart, creative people and then tell them what to do, you destroy most of their value. You want people who figure out what is valuable and just go do it.</blockquote>
+    <div style="display:flex;flex-direction:column;margin-top:auto;gap:2px">
+      <div style="display:flex;gap:40px;align-items:flex-start;border-top:2px solid rgba(243,242,242,0.3);padding:26px 0">
+        <h3 style="flex:none;width:300px;margin:0;font-size:28px;font-weight:800;line-height:1.2;color:var(--color-accent-400)">Why pyramids existed</h3>
+        <p style="margin:0;flex:1;max-width:620px;font-size:26px;line-height:1.5;color:rgba(243,242,242,0.95)">Ronald Coase, 1937: hierarchy was the cheapest way to coordinate repetitive factory work.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start;border-top:2px solid rgba(243,242,242,0.3);padding:26px 0">
+        <h3 style="flex:none;width:300px;margin:0;font-size:28px;font-weight:800;line-height:1.2;color:var(--color-accent-400)">Why it breaks creative work</h3>
+        <p style="margin:0;flex:1;max-width:620px;font-size:26px;line-height:1.5;color:rgba(243,242,242,0.95)">Lesson design is not repetitive. The same layers add friction, delay and distortion instead of order.</p>
+      </div>
+      <div style="display:flex;gap:40px;align-items:flex-start;border-top:2px solid rgba(243,242,242,0.3);padding:26px 0 0">
+        <h3 style="flex:none;width:300px;margin:0;font-size:28px;font-weight:800;line-height:1.2;color:var(--color-accent-400)">Nobody to manage up to</h3>
+        <p style="margin:0;flex:1;max-width:620px;font-size:26px;line-height:1.5;color:rgba(243,242,242,0.95)">With no supervisor to impress, the whole team's attention points outward — at the learner.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Chet Faliszek" data-screen-label="10" data-speaker-notes="Chet Faliszek wrote and led on Left 4 Dead and Portal. His point is that nobody hands you a daily to-do list: when you see something confusing or broken, act like it is your company, grab a teammate, try a fix and see if it works. For us that means action over permission. If an exercise explanation is not clicking with learners, step forward, pull in a colleague, and refine it right away." style="display:flex;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)" data-om-slide-id="685c5391">
+  <div style="width:660px;flex:none;position:relative;overflow:hidden;background:var(--color-neutral-900)">
+    <img src="images/chet.jpg" alt="Chet Faliszek" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;filter:{{ photoFilter }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-accent);color:var(--color-bg);padding:26px 40px">
+      <div style="font-size:30px;font-weight:800;letter-spacing:0.04em">Chet Faliszek</div>
+      <div style="font-size:24px;line-height:1.35;margin-top:8px">Writer &amp; Project Lead · Left 4 Dead, Portal</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 120px 72px 72px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Voices of experience · 01 of 05</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">10 / 21</span>
+    </div>
+    <div style="margin:auto 0">
+      <blockquote style="margin:0 0 0;font-size:42px;font-weight:600;line-height:1.3;letter-spacing:-0.015em;color:var(--color-text);border-left:6px solid var(--color-accent);padding-left:30px" data-quote-reveal=""><span data-anim="char" style="animation-delay: 0.146s;">N</span><span data-anim="char" style="animation-delay: 0.172s;">o</span><span data-anim="char" style="animation-delay: 0.198s;">b</span><span data-anim="char" style="animation-delay: 0.224s;">o</span><span data-anim="char" style="animation-delay: 0.25s;">d</span><span data-anim="char" style="animation-delay: 0.276s;">y</span> <span data-anim="char" style="animation-delay: 0.302s;">i</span><span data-anim="char" style="animation-delay: 0.328s;">s</span> <span data-anim="char" style="animation-delay: 0.354s;">g</span><span data-anim="char" style="animation-delay: 0.38s;">o</span><span data-anim="char" style="animation-delay: 0.406s;">i</span><span data-anim="char" style="animation-delay: 0.432s;">n</span><span data-anim="char" style="animation-delay: 0.458s;">g</span> <span data-anim="char" style="animation-delay: 0.484s;">t</span><span data-anim="char" style="animation-delay: 0.51s;">o</span> <span data-anim="char" style="animation-delay: 0.536s;">h</span><span data-anim="char" style="animation-delay: 0.562s;">a</span><span data-anim="char" style="animation-delay: 0.588s;">n</span><span data-anim="char" style="animation-delay: 0.614s;">d</span> <span data-anim="char" style="animation-delay: 0.64s;">y</span><span data-anim="char" style="animation-delay: 0.666s;">o</span><span data-anim="char" style="animation-delay: 0.692s;">u</span> <span data-anim="char" style="animation-delay: 0.718s;">a</span> <span data-anim="char" style="animation-delay: 0.744s;">d</span><span data-anim="char" style="animation-delay: 0.77s;">a</span><span data-anim="char" style="animation-delay: 0.796s;">i</span><span data-anim="char" style="animation-delay: 0.822s;">l</span><span data-anim="char" style="animation-delay: 0.848s;">y</span> <span data-anim="char" style="animation-delay: 0.874s;">t</span><span data-anim="char" style="animation-delay: 0.9s;">o</span><span data-anim="char" style="animation-delay: 0.926s;">-</span><span data-anim="char" style="animation-delay: 0.952s;">d</span><span data-anim="char" style="animation-delay: 0.978s;">o</span> <span data-anim="char" style="animation-delay: 1.004s;">l</span><span data-anim="char" style="animation-delay: 1.03s;">i</span><span data-anim="char" style="animation-delay: 1.056s;">s</span><span data-anim="char" style="animation-delay: 1.082s;">t</span><span data-anim="char" style="animation-delay: 1.108s;">.</span> <span data-anim="char" style="animation-delay: 1.134s;">W</span><span data-anim="char" style="animation-delay: 1.16s;">h</span><span data-anim="char" style="animation-delay: 1.186s;">e</span><span data-anim="char" style="animation-delay: 1.212s;">n</span> <span data-anim="char" style="animation-delay: 1.238s;">y</span><span data-anim="char" style="animation-delay: 1.264s;">o</span><span data-anim="char" style="animation-delay: 1.29s;">u</span> <span data-anim="char" style="animation-delay: 1.316s;">s</span><span data-anim="char" style="animation-delay: 1.342s;">e</span><span data-anim="char" style="animation-delay: 1.368s;">e</span> <span data-anim="char" style="animation-delay: 1.394s;">s</span><span data-anim="char" style="animation-delay: 1.42s;">o</span><span data-anim="char" style="animation-delay: 1.446s;">m</span><span data-anim="char" style="animation-delay: 1.472s;">e</span><span data-anim="char" style="animation-delay: 1.498s;">t</span><span data-anim="char" style="animation-delay: 1.524s;">h</span><span data-anim="char" style="animation-delay: 1.55s;">i</span><span data-anim="char" style="animation-delay: 1.576s;">n</span><span data-anim="char" style="animation-delay: 1.602s;">g</span> <span data-anim="char" style="animation-delay: 1.628s;">c</span><span data-anim="char" style="animation-delay: 1.654s;">o</span><span data-anim="char" style="animation-delay: 1.68s;">n</span><span data-anim="char" style="animation-delay: 1.706s;">f</span><span data-anim="char" style="animation-delay: 1.732s;">u</span><span data-anim="char" style="animation-delay: 1.758s;">s</span><span data-anim="char" style="animation-delay: 1.784s;">i</span><span data-anim="char" style="animation-delay: 1.81s;">n</span><span data-anim="char" style="animation-delay: 1.836s;">g</span> <span data-anim="char" style="animation-delay: 1.862s;">o</span><span data-anim="char" style="animation-delay: 1.888s;">r</span> <span data-anim="char" style="animation-delay: 1.914s;">b</span><span data-anim="char" style="animation-delay: 1.94s;">r</span><span data-anim="char" style="animation-delay: 1.966s;">o</span><span data-anim="char" style="animation-delay: 1.992s;">k</span><span data-anim="char" style="animation-delay: 2.018s;">e</span><span data-anim="char" style="animation-delay: 2.044s;">n</span><span data-anim="char" style="animation-delay: 2.07s;">,</span> <span data-anim="char" style="animation-delay: 2.096s;">a</span><span data-anim="char" style="animation-delay: 2.122s;">c</span><span data-anim="char" style="animation-delay: 2.148s;">t</span> <span data-anim="char" style="animation-delay: 2.174s;">l</span><span data-anim="char" style="animation-delay: 2.2s;">i</span><span data-anim="char" style="animation-delay: 2.226s;">k</span><span data-anim="char" style="animation-delay: 2.252s;">e</span> <span data-anim="char" style="animation-delay: 2.278s;">i</span><span data-anim="char" style="animation-delay: 2.304s;">t</span><span data-anim="char" style="animation-delay: 2.33s;">’</span><span data-anim="char" style="animation-delay: 2.356s;">s</span> <span data-anim="char" style="animation-delay: 2.382s;">y</span><span data-anim="char" style="animation-delay: 2.408s;">o</span><span data-anim="char" style="animation-delay: 2.434s;">u</span><span data-anim="char" style="animation-delay: 2.46s;">r</span> <span data-anim="char" style="animation-delay: 2.486s;">c</span><span data-anim="char" style="animation-delay: 2.512s;">o</span><span data-anim="char" style="animation-delay: 2.538s;">m</span><span data-anim="char" style="animation-delay: 2.564s;">p</span><span data-anim="char" style="animation-delay: 2.59s;">a</span><span data-anim="char" style="animation-delay: 2.616s;">n</span><span data-anim="char" style="animation-delay: 2.642s;">y</span><span data-anim="char" style="animation-delay: 2.668s;">.</span> <span data-anim="char" style="animation-delay: 2.694s;">D</span><span data-anim="char" style="animation-delay: 2.72s;">o</span><span data-anim="char" style="animation-delay: 2.746s;">n</span><span data-anim="char" style="animation-delay: 2.772s;">’</span><span data-anim="char" style="animation-delay: 2.798s;">t</span> <span data-anim="char" style="animation-delay: 2.824s;">w</span><span data-anim="char" style="animation-delay: 2.85s;">a</span><span data-anim="char" style="animation-delay: 2.876s;">i</span><span data-anim="char" style="animation-delay: 2.902s;">t</span> <span data-anim="char" style="animation-delay: 2.928s;">f</span><span data-anim="char" style="animation-delay: 2.954s;">o</span><span data-anim="char" style="animation-delay: 2.98s;">r</span> <span data-anim="char" style="animation-delay: 3.006s;">p</span><span data-anim="char" style="animation-delay: 3.032s;">e</span><span data-anim="char" style="animation-delay: 3.058s;">r</span><span data-anim="char" style="animation-delay: 3.084s;">m</span><span data-anim="char" style="animation-delay: 3.11s;">i</span><span data-anim="char" style="animation-delay: 3.136s;">s</span><span data-anim="char" style="animation-delay: 3.162s;">s</span><span data-anim="char" style="animation-delay: 3.188s;">i</span><span data-anim="char" style="animation-delay: 3.214s;">o</span><span data-anim="char" style="animation-delay: 3.24s;">n</span><span data-anim="char" style="animation-delay: 3.266s;">.</span> <span data-anim="char" style="animation-delay: 3.292s;">G</span><span data-anim="char" style="animation-delay: 3.318s;">r</span><span data-anim="char" style="animation-delay: 3.344s;">a</span><span data-anim="char" style="animation-delay: 3.37s;">b</span> <span data-anim="char" style="animation-delay: 3.396s;">a</span> <span data-anim="char" style="animation-delay: 3.422s;">t</span><span data-anim="char" style="animation-delay: 3.448s;">e</span><span data-anim="char" style="animation-delay: 3.474s;">a</span><span data-anim="char" style="animation-delay: 3.5s;">m</span><span data-anim="char" style="animation-delay: 3.526s;">m</span><span data-anim="char" style="animation-delay: 3.552s;">a</span><span data-anim="char" style="animation-delay: 3.578s;">t</span><span data-anim="char" style="animation-delay: 3.604s;">e</span><span data-anim="char" style="animation-delay: 3.63s;">,</span> <span data-anim="char" style="animation-delay: 3.656s;">t</span><span data-anim="char" style="animation-delay: 3.682s;">r</span><span data-anim="char" style="animation-delay: 3.708s;">y</span> <span data-anim="char" style="animation-delay: 3.734s;">a</span> <span data-anim="char" style="animation-delay: 3.76s;">f</span><span data-anim="char" style="animation-delay: 3.786s;">i</span><span data-anim="char" style="animation-delay: 3.812s;">x</span><span data-anim="char" style="animation-delay: 3.838s;">,</span> <span data-anim="char" style="animation-delay: 3.864s;">a</span><span data-anim="char" style="animation-delay: 3.89s;">n</span><span data-anim="char" style="animation-delay: 3.916s;">d</span> <span data-anim="char" style="animation-delay: 3.942s;">s</span><span data-anim="char" style="animation-delay: 3.968s;">e</span><span data-anim="char" style="animation-delay: 3.994s;">e</span> <span data-anim="char" style="animation-delay: 4.02s;">i</span><span data-anim="char" style="animation-delay: 4.046s;">f</span> <span data-anim="char" style="animation-delay: 4.072s;">i</span><span data-anim="char" style="animation-delay: 4.098s;">t</span> <span data-anim="char" style="animation-delay: 4.124s;">w</span><span data-anim="char" style="animation-delay: 4.15s;">o</span><span data-anim="char" style="animation-delay: 4.176s;">r</span><span data-anim="char" style="animation-delay: 4.202s;">k</span><span data-anim="char" style="animation-delay: 4.228s;">s</span><span data-anim="char" style="animation-delay: 4.254s;">.</span></blockquote>
+    </div>
+    <div style="border-top:2px solid var(--color-text);padding-top:26px;flex:none">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:14px">ACTION OVER PERMISSION</div>
+      <p style="margin:0;font-size:28px;line-height:1.4;color:var(--color-neutral-900)">Don’t wait to be asked. If you notice an exercise explanation isn’t clicking with learners, step forward, pull in a colleague, and refine it right away.</p>
+    </div>
+  </div>
+</section>
+
+<section data-label="Josh Weier" data-screen-label="11" data-speaker-notes="Josh Weier led Portal 2. He says that if someone is answering emails at 2 AM, nobody thinks they are a hero; the team thinks the workflow is broken. Great teams protect their rest so they stay creative. For us: four or five hours of energized, focused teamwork beats twelve hours of exhausted late-night grinding every time. High-quality pronunciation curriculum requires fresh, well-rested minds." style="display:flex;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body)" data-om-slide-id="beaf1c25">
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 72px 72px 120px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">Voices of experience · 02 of 05</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">11 / 21</span>
+    </div>
+    <div style="margin:auto 0">
+      <blockquote style="margin:0 0 0;font-size:42px;font-weight:600;line-height:1.3;letter-spacing:-0.015em;color:var(--color-bg);border-left:6px solid var(--color-accent);padding-left:30px" data-quote-reveal=""><span data-anim="char" style="animation-delay: 0.146s;">I</span><span data-anim="char" style="animation-delay: 0.172s;">f</span> <span data-anim="char" style="animation-delay: 0.198s;">s</span><span data-anim="char" style="animation-delay: 0.224s;">o</span><span data-anim="char" style="animation-delay: 0.25s;">m</span><span data-anim="char" style="animation-delay: 0.276s;">e</span><span data-anim="char" style="animation-delay: 0.302s;">o</span><span data-anim="char" style="animation-delay: 0.328s;">n</span><span data-anim="char" style="animation-delay: 0.354s;">e</span> <span data-anim="char" style="animation-delay: 0.38s;">i</span><span data-anim="char" style="animation-delay: 0.406s;">s</span> <span data-anim="char" style="animation-delay: 0.432s;">a</span><span data-anim="char" style="animation-delay: 0.458s;">n</span><span data-anim="char" style="animation-delay: 0.484s;">s</span><span data-anim="char" style="animation-delay: 0.51s;">w</span><span data-anim="char" style="animation-delay: 0.536s;">e</span><span data-anim="char" style="animation-delay: 0.562s;">r</span><span data-anim="char" style="animation-delay: 0.588s;">i</span><span data-anim="char" style="animation-delay: 0.614s;">n</span><span data-anim="char" style="animation-delay: 0.64s;">g</span> <span data-anim="char" style="animation-delay: 0.666s;">e</span><span data-anim="char" style="animation-delay: 0.692s;">m</span><span data-anim="char" style="animation-delay: 0.718s;">a</span><span data-anim="char" style="animation-delay: 0.744s;">i</span><span data-anim="char" style="animation-delay: 0.77s;">l</span><span data-anim="char" style="animation-delay: 0.796s;">s</span> <span data-anim="char" style="animation-delay: 0.822s;">a</span><span data-anim="char" style="animation-delay: 0.848s;">t</span> <span data-anim="char" style="animation-delay: 0.874s;">2</span> <span data-anim="char" style="animation-delay: 0.9s;">A</span><span data-anim="char" style="animation-delay: 0.926s;">M</span><span data-anim="char" style="animation-delay: 0.952s;">,</span> <span data-anim="char" style="animation-delay: 0.978s;">n</span><span data-anim="char" style="animation-delay: 1.004s;">o</span><span data-anim="char" style="animation-delay: 1.03s;">b</span><span data-anim="char" style="animation-delay: 1.056s;">o</span><span data-anim="char" style="animation-delay: 1.082s;">d</span><span data-anim="char" style="animation-delay: 1.108s;">y</span> <span data-anim="char" style="animation-delay: 1.134s;">t</span><span data-anim="char" style="animation-delay: 1.16s;">h</span><span data-anim="char" style="animation-delay: 1.186s;">i</span><span data-anim="char" style="animation-delay: 1.212s;">n</span><span data-anim="char" style="animation-delay: 1.238s;">k</span><span data-anim="char" style="animation-delay: 1.264s;">s</span> <span data-anim="char" style="animation-delay: 1.29s;">t</span><span data-anim="char" style="animation-delay: 1.316s;">h</span><span data-anim="char" style="animation-delay: 1.342s;">e</span><span data-anim="char" style="animation-delay: 1.368s;">y</span><span data-anim="char" style="animation-delay: 1.394s;">’</span><span data-anim="char" style="animation-delay: 1.42s;">r</span><span data-anim="char" style="animation-delay: 1.446s;">e</span> <span data-anim="char" style="animation-delay: 1.472s;">a</span> <span data-anim="char" style="animation-delay: 1.498s;">h</span><span data-anim="char" style="animation-delay: 1.524s;">e</span><span data-anim="char" style="animation-delay: 1.55s;">r</span><span data-anim="char" style="animation-delay: 1.576s;">o</span><span data-anim="char" style="animation-delay: 1.602s;">.</span> <span data-anim="char" style="animation-delay: 1.628s;">W</span><span data-anim="char" style="animation-delay: 1.654s;">e</span> <span data-anim="char" style="animation-delay: 1.68s;">t</span><span data-anim="char" style="animation-delay: 1.706s;">h</span><span data-anim="char" style="animation-delay: 1.732s;">i</span><span data-anim="char" style="animation-delay: 1.758s;">n</span><span data-anim="char" style="animation-delay: 1.784s;">k</span> <span data-anim="char" style="animation-delay: 1.81s;">t</span><span data-anim="char" style="animation-delay: 1.836s;">h</span><span data-anim="char" style="animation-delay: 1.862s;">e</span> <span data-anim="char" style="animation-delay: 1.888s;">w</span><span data-anim="char" style="animation-delay: 1.914s;">o</span><span data-anim="char" style="animation-delay: 1.94s;">r</span><span data-anim="char" style="animation-delay: 1.966s;">k</span><span data-anim="char" style="animation-delay: 1.992s;">f</span><span data-anim="char" style="animation-delay: 2.018s;">l</span><span data-anim="char" style="animation-delay: 2.044s;">o</span><span data-anim="char" style="animation-delay: 2.07s;">w</span> <span data-anim="char" style="animation-delay: 2.096s;">i</span><span data-anim="char" style="animation-delay: 2.122s;">s</span> <span data-anim="char" style="animation-delay: 2.148s;">b</span><span data-anim="char" style="animation-delay: 2.174s;">r</span><span data-anim="char" style="animation-delay: 2.2s;">o</span><span data-anim="char" style="animation-delay: 2.226s;">k</span><span data-anim="char" style="animation-delay: 2.252s;">e</span><span data-anim="char" style="animation-delay: 2.278s;">n</span><span data-anim="char" style="animation-delay: 2.304s;">.</span> <span data-anim="char" style="animation-delay: 2.33s;">G</span><span data-anim="char" style="animation-delay: 2.356s;">r</span><span data-anim="char" style="animation-delay: 2.382s;">e</span><span data-anim="char" style="animation-delay: 2.408s;">a</span><span data-anim="char" style="animation-delay: 2.434s;">t</span> <span data-anim="char" style="animation-delay: 2.46s;">t</span><span data-anim="char" style="animation-delay: 2.486s;">e</span><span data-anim="char" style="animation-delay: 2.512s;">a</span><span data-anim="char" style="animation-delay: 2.538s;">m</span><span data-anim="char" style="animation-delay: 2.564s;">s</span> <span data-anim="char" style="animation-delay: 2.59s;">p</span><span data-anim="char" style="animation-delay: 2.616s;">r</span><span data-anim="char" style="animation-delay: 2.642s;">o</span><span data-anim="char" style="animation-delay: 2.668s;">t</span><span data-anim="char" style="animation-delay: 2.694s;">e</span><span data-anim="char" style="animation-delay: 2.72s;">c</span><span data-anim="char" style="animation-delay: 2.746s;">t</span> <span data-anim="char" style="animation-delay: 2.772s;">t</span><span data-anim="char" style="animation-delay: 2.798s;">h</span><span data-anim="char" style="animation-delay: 2.824s;">e</span><span data-anim="char" style="animation-delay: 2.85s;">i</span><span data-anim="char" style="animation-delay: 2.876s;">r</span> <span data-anim="char" style="animation-delay: 2.902s;">r</span><span data-anim="char" style="animation-delay: 2.928s;">e</span><span data-anim="char" style="animation-delay: 2.954s;">s</span><span data-anim="char" style="animation-delay: 2.98s;">t</span> <span data-anim="char" style="animation-delay: 3.006s;">s</span><span data-anim="char" style="animation-delay: 3.032s;">o</span> <span data-anim="char" style="animation-delay: 3.058s;">t</span><span data-anim="char" style="animation-delay: 3.084s;">h</span><span data-anim="char" style="animation-delay: 3.11s;">e</span><span data-anim="char" style="animation-delay: 3.136s;">y</span> <span data-anim="char" style="animation-delay: 3.162s;">s</span><span data-anim="char" style="animation-delay: 3.188s;">t</span><span data-anim="char" style="animation-delay: 3.214s;">a</span><span data-anim="char" style="animation-delay: 3.24s;">y</span> <span data-anim="char" style="animation-delay: 3.266s;">c</span><span data-anim="char" style="animation-delay: 3.292s;">r</span><span data-anim="char" style="animation-delay: 3.318s;">e</span><span data-anim="char" style="animation-delay: 3.344s;">a</span><span data-anim="char" style="animation-delay: 3.37s;">t</span><span data-anim="char" style="animation-delay: 3.396s;">i</span><span data-anim="char" style="animation-delay: 3.422s;">v</span><span data-anim="char" style="animation-delay: 3.448s;">e</span><span data-anim="char" style="animation-delay: 3.474s;">.</span></blockquote>
+    </div>
+    <div style="border-top:2px solid rgba(243,242,242,0.6);padding-top:26px;flex:none">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-400);margin-bottom:14px">HEALTHY BOUNDARIES</div>
+      <p style="margin:0;font-size:28px;line-height:1.4;color:rgba(243,242,242,0.9)">Four or five hours of energized, focused teamwork beats twelve hours of exhausted, late-night grinding every time. High-quality pronunciation curriculum requires fresh, well-rested minds.</p>
+    </div>
+  </div>
+  <div style="width:660px;flex:none;position:relative;overflow:hidden;background:var(--color-neutral-900)">
+    <img src="images/josh.jpg" alt="Josh Weier" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%;filter:{{ photoFilter }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-accent);color:var(--color-bg);padding:26px 40px">
+      <div style="font-size:30px;font-weight:800;letter-spacing:0.04em">Josh Weier</div>
+      <div style="font-size:24px;line-height:1.35;margin-top:8px">Project Lead · Portal 2, Half-Life 2</div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Mike Morasky" data-screen-label="12" data-speaker-notes="Mike Morasky is Valve’s audio director and composer on Portal 2, Team Fortress 2 and Half-Life: Alyx. Collaboration, he says, is not an email thread or a boring meeting. It is sitting together, trying an idea and reacting in real time, building off each other’s energy. So let us stop emailing drafts back and forth over three weeks. Jump on a shared document or a short call for ninety minutes to co-create, test audio samples and polish the lesson together." style="display:flex;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)" data-om-slide-id="9106b618">
+  <div style="width:660px;flex:none;position:relative;overflow:hidden;background:var(--color-neutral-900)">
+    <img src="images/mike.jpg" alt="Mike Morasky" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 22%;filter:{{ photoFilter }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-accent);color:var(--color-bg);padding:26px 40px">
+      <div style="font-size:30px;font-weight:800;letter-spacing:0.04em">Mike Morasky</div>
+      <div style="font-size:24px;line-height:1.35;margin-top:8px">Audio Director &amp; Composer · Portal 2, Team Fortress 2, Half-Life: Alyx</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 120px 72px 72px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Voices of experience · 03 of 05</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">12 / 21</span>
+    </div>
+    <div style="margin:auto 0">
+      <blockquote style="margin:0 0 0;font-size:42px;font-weight:600;line-height:1.3;letter-spacing:-0.015em;color:var(--color-text);border-left:6px solid var(--color-accent);padding-left:30px" data-quote-reveal=""><span data-anim="char" style="animation-delay: 0.146s;">C</span><span data-anim="char" style="animation-delay: 0.172s;">o</span><span data-anim="char" style="animation-delay: 0.198s;">l</span><span data-anim="char" style="animation-delay: 0.224s;">l</span><span data-anim="char" style="animation-delay: 0.25s;">a</span><span data-anim="char" style="animation-delay: 0.276s;">b</span><span data-anim="char" style="animation-delay: 0.302s;">o</span><span data-anim="char" style="animation-delay: 0.328s;">r</span><span data-anim="char" style="animation-delay: 0.354s;">a</span><span data-anim="char" style="animation-delay: 0.38s;">t</span><span data-anim="char" style="animation-delay: 0.406s;">i</span><span data-anim="char" style="animation-delay: 0.432s;">o</span><span data-anim="char" style="animation-delay: 0.458s;">n</span> <span data-anim="char" style="animation-delay: 0.484s;">i</span><span data-anim="char" style="animation-delay: 0.51s;">s</span><span data-anim="char" style="animation-delay: 0.536s;">n</span><span data-anim="char" style="animation-delay: 0.562s;">’</span><span data-anim="char" style="animation-delay: 0.588s;">t</span> <span data-anim="char" style="animation-delay: 0.614s;">a</span><span data-anim="char" style="animation-delay: 0.64s;">n</span> <span data-anim="char" style="animation-delay: 0.666s;">e</span><span data-anim="char" style="animation-delay: 0.692s;">m</span><span data-anim="char" style="animation-delay: 0.718s;">a</span><span data-anim="char" style="animation-delay: 0.744s;">i</span><span data-anim="char" style="animation-delay: 0.77s;">l</span> <span data-anim="char" style="animation-delay: 0.796s;">t</span><span data-anim="char" style="animation-delay: 0.822s;">h</span><span data-anim="char" style="animation-delay: 0.848s;">r</span><span data-anim="char" style="animation-delay: 0.874s;">e</span><span data-anim="char" style="animation-delay: 0.9s;">a</span><span data-anim="char" style="animation-delay: 0.926s;">d</span> <span data-anim="char" style="animation-delay: 0.952s;">o</span><span data-anim="char" style="animation-delay: 0.978s;">r</span> <span data-anim="char" style="animation-delay: 1.004s;">a</span> <span data-anim="char" style="animation-delay: 1.03s;">b</span><span data-anim="char" style="animation-delay: 1.056s;">o</span><span data-anim="char" style="animation-delay: 1.082s;">r</span><span data-anim="char" style="animation-delay: 1.108s;">i</span><span data-anim="char" style="animation-delay: 1.134s;">n</span><span data-anim="char" style="animation-delay: 1.16s;">g</span> <span data-anim="char" style="animation-delay: 1.186s;">m</span><span data-anim="char" style="animation-delay: 1.212s;">e</span><span data-anim="char" style="animation-delay: 1.238s;">e</span><span data-anim="char" style="animation-delay: 1.264s;">t</span><span data-anim="char" style="animation-delay: 1.29s;">i</span><span data-anim="char" style="animation-delay: 1.316s;">n</span><span data-anim="char" style="animation-delay: 1.342s;">g</span><span data-anim="char" style="animation-delay: 1.368s;">.</span> <span data-anim="char" style="animation-delay: 1.394s;">I</span><span data-anim="char" style="animation-delay: 1.42s;">t</span><span data-anim="char" style="animation-delay: 1.446s;">’</span><span data-anim="char" style="animation-delay: 1.472s;">s</span> <span data-anim="char" style="animation-delay: 1.498s;">s</span><span data-anim="char" style="animation-delay: 1.524s;">i</span><span data-anim="char" style="animation-delay: 1.55s;">t</span><span data-anim="char" style="animation-delay: 1.576s;">t</span><span data-anim="char" style="animation-delay: 1.602s;">i</span><span data-anim="char" style="animation-delay: 1.628s;">n</span><span data-anim="char" style="animation-delay: 1.654s;">g</span> <span data-anim="char" style="animation-delay: 1.68s;">t</span><span data-anim="char" style="animation-delay: 1.706s;">o</span><span data-anim="char" style="animation-delay: 1.732s;">g</span><span data-anim="char" style="animation-delay: 1.758s;">e</span><span data-anim="char" style="animation-delay: 1.784s;">t</span><span data-anim="char" style="animation-delay: 1.81s;">h</span><span data-anim="char" style="animation-delay: 1.836s;">e</span><span data-anim="char" style="animation-delay: 1.862s;">r</span><span data-anim="char" style="animation-delay: 1.888s;">,</span> <span data-anim="char" style="animation-delay: 1.914s;">t</span><span data-anim="char" style="animation-delay: 1.94s;">r</span><span data-anim="char" style="animation-delay: 1.966s;">y</span><span data-anim="char" style="animation-delay: 1.992s;">i</span><span data-anim="char" style="animation-delay: 2.018s;">n</span><span data-anim="char" style="animation-delay: 2.044s;">g</span> <span data-anim="char" style="animation-delay: 2.07s;">a</span><span data-anim="char" style="animation-delay: 2.096s;">n</span> <span data-anim="char" style="animation-delay: 2.122s;">i</span><span data-anim="char" style="animation-delay: 2.148s;">d</span><span data-anim="char" style="animation-delay: 2.174s;">e</span><span data-anim="char" style="animation-delay: 2.2s;">a</span><span data-anim="char" style="animation-delay: 2.226s;">,</span> <span data-anim="char" style="animation-delay: 2.252s;">a</span><span data-anim="char" style="animation-delay: 2.278s;">n</span><span data-anim="char" style="animation-delay: 2.304s;">d</span> <span data-anim="char" style="animation-delay: 2.33s;">r</span><span data-anim="char" style="animation-delay: 2.356s;">e</span><span data-anim="char" style="animation-delay: 2.382s;">a</span><span data-anim="char" style="animation-delay: 2.408s;">c</span><span data-anim="char" style="animation-delay: 2.434s;">t</span><span data-anim="char" style="animation-delay: 2.46s;">i</span><span data-anim="char" style="animation-delay: 2.486s;">n</span><span data-anim="char" style="animation-delay: 2.512s;">g</span> <span data-anim="char" style="animation-delay: 2.538s;">i</span><span data-anim="char" style="animation-delay: 2.564s;">n</span> <span data-anim="char" style="animation-delay: 2.59s;">r</span><span data-anim="char" style="animation-delay: 2.616s;">e</span><span data-anim="char" style="animation-delay: 2.642s;">a</span><span data-anim="char" style="animation-delay: 2.668s;">l</span><span data-anim="char" style="animation-delay: 2.694s;">-</span><span data-anim="char" style="animation-delay: 2.72s;">t</span><span data-anim="char" style="animation-delay: 2.746s;">i</span><span data-anim="char" style="animation-delay: 2.772s;">m</span><span data-anim="char" style="animation-delay: 2.798s;">e</span><span data-anim="char" style="animation-delay: 2.824s;">.</span> <span data-anim="char" style="animation-delay: 2.85s;">Y</span><span data-anim="char" style="animation-delay: 2.876s;">o</span><span data-anim="char" style="animation-delay: 2.902s;">u</span> <span data-anim="char" style="animation-delay: 2.928s;">b</span><span data-anim="char" style="animation-delay: 2.954s;">u</span><span data-anim="char" style="animation-delay: 2.98s;">i</span><span data-anim="char" style="animation-delay: 3.006s;">l</span><span data-anim="char" style="animation-delay: 3.032s;">d</span> <span data-anim="char" style="animation-delay: 3.058s;">o</span><span data-anim="char" style="animation-delay: 3.084s;">f</span><span data-anim="char" style="animation-delay: 3.11s;">f</span> <span data-anim="char" style="animation-delay: 3.136s;">e</span><span data-anim="char" style="animation-delay: 3.162s;">a</span><span data-anim="char" style="animation-delay: 3.188s;">c</span><span data-anim="char" style="animation-delay: 3.214s;">h</span> <span data-anim="char" style="animation-delay: 3.24s;">o</span><span data-anim="char" style="animation-delay: 3.266s;">t</span><span data-anim="char" style="animation-delay: 3.292s;">h</span><span data-anim="char" style="animation-delay: 3.318s;">e</span><span data-anim="char" style="animation-delay: 3.344s;">r</span><span data-anim="char" style="animation-delay: 3.37s;">’</span><span data-anim="char" style="animation-delay: 3.396s;">s</span> <span data-anim="char" style="animation-delay: 3.422s;">e</span><span data-anim="char" style="animation-delay: 3.448s;">n</span><span data-anim="char" style="animation-delay: 3.474s;">e</span><span data-anim="char" style="animation-delay: 3.5s;">r</span><span data-anim="char" style="animation-delay: 3.526s;">g</span><span data-anim="char" style="animation-delay: 3.552s;">y</span><span data-anim="char" style="animation-delay: 3.578s;">.</span></blockquote>
+    </div>
+    <div style="border-top:2px solid var(--color-text);padding-top:26px;flex:none">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:14px">Teaching team takeaway — Real-Time Collaboration</div>
+      <p style="margin:0;font-size:28px;line-height:1.4;color:var(--color-neutral-900)">Stop emailing drafts back and forth over three weeks. Jump on a shared document or short call for 90 minutes to co-create, test audio samples, and polish the lesson together.</p>
+    </div>
+  </div>
+</section>
+
+<section data-label="Erik Wolpaw" data-screen-label="13" data-speaker-notes="Erik Wolpaw is the lead writer on Portal 1 and 2, Psychonauts and Half-Life: Alyx. He describes three stages of every creative project: enthusiasm, despair, and then being sad and ready to ship. When playtesters do not get your joke, it is not their fault, it is your writing. Leave your ego outside the room: if students get confused or bored, do not get defensive, laugh, adjust it and make it better together. Practically, do not fall in love with your first draft. When students struggle with a tongue-placement diagram or an audio cue, take it as friendly learning data and iterate as a team." style="display:flex;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body)" data-om-slide-id="5556da0d">
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 72px 72px 120px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">Voices of experience · 04 of 05</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">13 / 21</span>
+    </div>
+    <div style="margin:auto 0">
+      <blockquote style="margin:0 0 0;font-size:34px;font-weight:600;line-height:1.3;letter-spacing:-0.015em;color:var(--color-bg);border-left:6px solid var(--color-accent);padding-left:30px" data-quote-reveal=""><span data-anim="char" style="animation-delay: 0.146s;">E</span><span data-anim="char" style="animation-delay: 0.172s;">v</span><span data-anim="char" style="animation-delay: 0.198s;">e</span><span data-anim="char" style="animation-delay: 0.224s;">r</span><span data-anim="char" style="animation-delay: 0.25s;">y</span> <span data-anim="char" style="animation-delay: 0.276s;">c</span><span data-anim="char" style="animation-delay: 0.302s;">r</span><span data-anim="char" style="animation-delay: 0.328s;">e</span><span data-anim="char" style="animation-delay: 0.354s;">a</span><span data-anim="char" style="animation-delay: 0.38s;">t</span><span data-anim="char" style="animation-delay: 0.406s;">i</span><span data-anim="char" style="animation-delay: 0.432s;">v</span><span data-anim="char" style="animation-delay: 0.458s;">e</span> <span data-anim="char" style="animation-delay: 0.484s;">p</span><span data-anim="char" style="animation-delay: 0.51s;">r</span><span data-anim="char" style="animation-delay: 0.536s;">o</span><span data-anim="char" style="animation-delay: 0.562s;">j</span><span data-anim="char" style="animation-delay: 0.588s;">e</span><span data-anim="char" style="animation-delay: 0.614s;">c</span><span data-anim="char" style="animation-delay: 0.64s;">t</span> <span data-anim="char" style="animation-delay: 0.666s;">g</span><span data-anim="char" style="animation-delay: 0.692s;">o</span><span data-anim="char" style="animation-delay: 0.718s;">e</span><span data-anim="char" style="animation-delay: 0.744s;">s</span> <span data-anim="char" style="animation-delay: 0.77s;">t</span><span data-anim="char" style="animation-delay: 0.796s;">h</span><span data-anim="char" style="animation-delay: 0.822s;">r</span><span data-anim="char" style="animation-delay: 0.848s;">o</span><span data-anim="char" style="animation-delay: 0.874s;">u</span><span data-anim="char" style="animation-delay: 0.9s;">g</span><span data-anim="char" style="animation-delay: 0.926s;">h</span> <span data-anim="char" style="animation-delay: 0.952s;">t</span><span data-anim="char" style="animation-delay: 0.978s;">h</span><span data-anim="char" style="animation-delay: 1.004s;">r</span><span data-anim="char" style="animation-delay: 1.03s;">e</span><span data-anim="char" style="animation-delay: 1.056s;">e</span> <span data-anim="char" style="animation-delay: 1.082s;">s</span><span data-anim="char" style="animation-delay: 1.108s;">t</span><span data-anim="char" style="animation-delay: 1.134s;">a</span><span data-anim="char" style="animation-delay: 1.16s;">g</span><span data-anim="char" style="animation-delay: 1.186s;">e</span><span data-anim="char" style="animation-delay: 1.212s;">s</span><span data-anim="char" style="animation-delay: 1.238s;">:</span> <span data-anim="char" style="animation-delay: 1.264s;">e</span><span data-anim="char" style="animation-delay: 1.29s;">n</span><span data-anim="char" style="animation-delay: 1.316s;">t</span><span data-anim="char" style="animation-delay: 1.342s;">h</span><span data-anim="char" style="animation-delay: 1.368s;">u</span><span data-anim="char" style="animation-delay: 1.394s;">s</span><span data-anim="char" style="animation-delay: 1.42s;">i</span><span data-anim="char" style="animation-delay: 1.446s;">a</span><span data-anim="char" style="animation-delay: 1.472s;">s</span><span data-anim="char" style="animation-delay: 1.498s;">m</span><span data-anim="char" style="animation-delay: 1.524s;">,</span> <span data-anim="char" style="animation-delay: 1.55s;">d</span><span data-anim="char" style="animation-delay: 1.576s;">e</span><span data-anim="char" style="animation-delay: 1.602s;">s</span><span data-anim="char" style="animation-delay: 1.628s;">p</span><span data-anim="char" style="animation-delay: 1.654s;">a</span><span data-anim="char" style="animation-delay: 1.68s;">i</span><span data-anim="char" style="animation-delay: 1.706s;">r</span><span data-anim="char" style="animation-delay: 1.732s;">,</span> <span data-anim="char" style="animation-delay: 1.758s;">a</span><span data-anim="char" style="animation-delay: 1.784s;">n</span><span data-anim="char" style="animation-delay: 1.81s;">d</span> <span data-anim="char" style="animation-delay: 1.836s;">t</span><span data-anim="char" style="animation-delay: 1.862s;">h</span><span data-anim="char" style="animation-delay: 1.888s;">e</span><span data-anim="char" style="animation-delay: 1.914s;">n</span> <span data-anim="char" style="animation-delay: 1.94s;">b</span><span data-anim="char" style="animation-delay: 1.966s;">e</span><span data-anim="char" style="animation-delay: 1.992s;">i</span><span data-anim="char" style="animation-delay: 2.018s;">n</span><span data-anim="char" style="animation-delay: 2.044s;">g</span> <span data-anim="char" style="animation-delay: 2.07s;">s</span><span data-anim="char" style="animation-delay: 2.096s;">a</span><span data-anim="char" style="animation-delay: 2.122s;">d</span> <span data-anim="char" style="animation-delay: 2.148s;">a</span><span data-anim="char" style="animation-delay: 2.174s;">n</span><span data-anim="char" style="animation-delay: 2.2s;">d</span> <span data-anim="char" style="animation-delay: 2.226s;">r</span><span data-anim="char" style="animation-delay: 2.252s;">e</span><span data-anim="char" style="animation-delay: 2.278s;">a</span><span data-anim="char" style="animation-delay: 2.304s;">d</span><span data-anim="char" style="animation-delay: 2.33s;">y</span> <span data-anim="char" style="animation-delay: 2.356s;">t</span><span data-anim="char" style="animation-delay: 2.382s;">o</span> <span data-anim="char" style="animation-delay: 2.408s;">s</span><span data-anim="char" style="animation-delay: 2.434s;">h</span><span data-anim="char" style="animation-delay: 2.46s;">i</span><span data-anim="char" style="animation-delay: 2.486s;">p</span><span data-anim="char" style="animation-delay: 2.512s;">.</span> <span data-anim="char" style="animation-delay: 2.538s;">W</span><span data-anim="char" style="animation-delay: 2.564s;">h</span><span data-anim="char" style="animation-delay: 2.59s;">e</span><span data-anim="char" style="animation-delay: 2.616s;">n</span> <span data-anim="char" style="animation-delay: 2.642s;">p</span><span data-anim="char" style="animation-delay: 2.668s;">l</span><span data-anim="char" style="animation-delay: 2.694s;">a</span><span data-anim="char" style="animation-delay: 2.72s;">y</span><span data-anim="char" style="animation-delay: 2.746s;">t</span><span data-anim="char" style="animation-delay: 2.772s;">e</span><span data-anim="char" style="animation-delay: 2.798s;">s</span><span data-anim="char" style="animation-delay: 2.824s;">t</span><span data-anim="char" style="animation-delay: 2.85s;">e</span><span data-anim="char" style="animation-delay: 2.876s;">r</span><span data-anim="char" style="animation-delay: 2.902s;">s</span> <span data-anim="char" style="animation-delay: 2.928s;">d</span><span data-anim="char" style="animation-delay: 2.954s;">o</span><span data-anim="char" style="animation-delay: 2.98s;">n</span><span data-anim="char" style="animation-delay: 3.006s;">’</span><span data-anim="char" style="animation-delay: 3.032s;">t</span> <span data-anim="char" style="animation-delay: 3.058s;">g</span><span data-anim="char" style="animation-delay: 3.084s;">e</span><span data-anim="char" style="animation-delay: 3.11s;">t</span> <span data-anim="char" style="animation-delay: 3.136s;">y</span><span data-anim="char" style="animation-delay: 3.162s;">o</span><span data-anim="char" style="animation-delay: 3.188s;">u</span><span data-anim="char" style="animation-delay: 3.214s;">r</span> <span data-anim="char" style="animation-delay: 3.24s;">j</span><span data-anim="char" style="animation-delay: 3.266s;">o</span><span data-anim="char" style="animation-delay: 3.292s;">k</span><span data-anim="char" style="animation-delay: 3.318s;">e</span><span data-anim="char" style="animation-delay: 3.344s;">,</span> <span data-anim="char" style="animation-delay: 3.37s;">i</span><span data-anim="char" style="animation-delay: 3.396s;">t</span><span data-anim="char" style="animation-delay: 3.422s;">’</span><span data-anim="char" style="animation-delay: 3.448s;">s</span> <span data-anim="char" style="animation-delay: 3.474s;">n</span><span data-anim="char" style="animation-delay: 3.5s;">o</span><span data-anim="char" style="animation-delay: 3.526s;">t</span> <span data-anim="char" style="animation-delay: 3.552s;">t</span><span data-anim="char" style="animation-delay: 3.578s;">h</span><span data-anim="char" style="animation-delay: 3.604s;">e</span><span data-anim="char" style="animation-delay: 3.63s;">i</span><span data-anim="char" style="animation-delay: 3.656s;">r</span> <span data-anim="char" style="animation-delay: 3.682s;">f</span><span data-anim="char" style="animation-delay: 3.708s;">a</span><span data-anim="char" style="animation-delay: 3.734s;">u</span><span data-anim="char" style="animation-delay: 3.76s;">l</span><span data-anim="char" style="animation-delay: 3.786s;">t</span><span data-anim="char" style="animation-delay: 3.812s;">—</span><span data-anim="char" style="animation-delay: 3.838s;">i</span><span data-anim="char" style="animation-delay: 3.864s;">t</span><span data-anim="char" style="animation-delay: 3.89s;">’</span><span data-anim="char" style="animation-delay: 3.916s;">s</span> <span data-anim="char" style="animation-delay: 3.942s;">y</span><span data-anim="char" style="animation-delay: 3.968s;">o</span><span data-anim="char" style="animation-delay: 3.994s;">u</span><span data-anim="char" style="animation-delay: 4.02s;">r</span> <span data-anim="char" style="animation-delay: 4.046s;">w</span><span data-anim="char" style="animation-delay: 4.072s;">r</span><span data-anim="char" style="animation-delay: 4.098s;">i</span><span data-anim="char" style="animation-delay: 4.124s;">t</span><span data-anim="char" style="animation-delay: 4.15s;">i</span><span data-anim="char" style="animation-delay: 4.176s;">n</span><span data-anim="char" style="animation-delay: 4.202s;">g</span><span data-anim="char" style="animation-delay: 4.228s;">.</span></blockquote>
+      <blockquote style="margin:26px 0 0;font-size:34px;font-weight:600;line-height:1.3;letter-spacing:-0.015em;color:var(--color-bg);border-left:6px solid var(--color-accent);padding-left:30px" data-quote-reveal=""><span data-anim="char" style="animation-delay: 0.146s;">L</span><span data-anim="char" style="animation-delay: 0.172s;">e</span><span data-anim="char" style="animation-delay: 0.198s;">a</span><span data-anim="char" style="animation-delay: 0.224s;">v</span><span data-anim="char" style="animation-delay: 0.25s;">e</span> <span data-anim="char" style="animation-delay: 0.276s;">y</span><span data-anim="char" style="animation-delay: 0.302s;">o</span><span data-anim="char" style="animation-delay: 0.328s;">u</span><span data-anim="char" style="animation-delay: 0.354s;">r</span> <span data-anim="char" style="animation-delay: 0.38s;">e</span><span data-anim="char" style="animation-delay: 0.406s;">g</span><span data-anim="char" style="animation-delay: 0.432s;">o</span> <span data-anim="char" style="animation-delay: 0.458s;">o</span><span data-anim="char" style="animation-delay: 0.484s;">u</span><span data-anim="char" style="animation-delay: 0.51s;">t</span><span data-anim="char" style="animation-delay: 0.536s;">s</span><span data-anim="char" style="animation-delay: 0.562s;">i</span><span data-anim="char" style="animation-delay: 0.588s;">d</span><span data-anim="char" style="animation-delay: 0.614s;">e</span> <span data-anim="char" style="animation-delay: 0.64s;">t</span><span data-anim="char" style="animation-delay: 0.666s;">h</span><span data-anim="char" style="animation-delay: 0.692s;">e</span> <span data-anim="char" style="animation-delay: 0.718s;">r</span><span data-anim="char" style="animation-delay: 0.744s;">o</span><span data-anim="char" style="animation-delay: 0.77s;">o</span><span data-anim="char" style="animation-delay: 0.796s;">m</span><span data-anim="char" style="animation-delay: 0.822s;">.</span> <span data-anim="char" style="animation-delay: 0.848s;">I</span><span data-anim="char" style="animation-delay: 0.874s;">f</span> <span data-anim="char" style="animation-delay: 0.9s;">y</span><span data-anim="char" style="animation-delay: 0.926s;">o</span><span data-anim="char" style="animation-delay: 0.952s;">u</span> <span data-anim="char" style="animation-delay: 0.978s;">c</span><span data-anim="char" style="animation-delay: 1.004s;">r</span><span data-anim="char" style="animation-delay: 1.03s;">e</span><span data-anim="char" style="animation-delay: 1.056s;">a</span><span data-anim="char" style="animation-delay: 1.082s;">t</span><span data-anim="char" style="animation-delay: 1.108s;">e</span> <span data-anim="char" style="animation-delay: 1.134s;">a</span><span data-anim="char" style="animation-delay: 1.16s;">n</span> <span data-anim="char" style="animation-delay: 1.186s;">e</span><span data-anim="char" style="animation-delay: 1.212s;">x</span><span data-anim="char" style="animation-delay: 1.238s;">e</span><span data-anim="char" style="animation-delay: 1.264s;">r</span><span data-anim="char" style="animation-delay: 1.29s;">c</span><span data-anim="char" style="animation-delay: 1.316s;">i</span><span data-anim="char" style="animation-delay: 1.342s;">s</span><span data-anim="char" style="animation-delay: 1.368s;">e</span> <span data-anim="char" style="animation-delay: 1.394s;">a</span><span data-anim="char" style="animation-delay: 1.42s;">n</span><span data-anim="char" style="animation-delay: 1.446s;">d</span> <span data-anim="char" style="animation-delay: 1.472s;">s</span><span data-anim="char" style="animation-delay: 1.498s;">t</span><span data-anim="char" style="animation-delay: 1.524s;">u</span><span data-anim="char" style="animation-delay: 1.55s;">d</span><span data-anim="char" style="animation-delay: 1.576s;">e</span><span data-anim="char" style="animation-delay: 1.602s;">n</span><span data-anim="char" style="animation-delay: 1.628s;">t</span><span data-anim="char" style="animation-delay: 1.654s;">s</span> <span data-anim="char" style="animation-delay: 1.68s;">g</span><span data-anim="char" style="animation-delay: 1.706s;">e</span><span data-anim="char" style="animation-delay: 1.732s;">t</span> <span data-anim="char" style="animation-delay: 1.758s;">c</span><span data-anim="char" style="animation-delay: 1.784s;">o</span><span data-anim="char" style="animation-delay: 1.81s;">n</span><span data-anim="char" style="animation-delay: 1.836s;">f</span><span data-anim="char" style="animation-delay: 1.862s;">u</span><span data-anim="char" style="animation-delay: 1.888s;">s</span><span data-anim="char" style="animation-delay: 1.914s;">e</span><span data-anim="char" style="animation-delay: 1.94s;">d</span> <span data-anim="char" style="animation-delay: 1.966s;">o</span><span data-anim="char" style="animation-delay: 1.992s;">r</span> <span data-anim="char" style="animation-delay: 2.018s;">b</span><span data-anim="char" style="animation-delay: 2.044s;">o</span><span data-anim="char" style="animation-delay: 2.07s;">r</span><span data-anim="char" style="animation-delay: 2.096s;">e</span><span data-anim="char" style="animation-delay: 2.122s;">d</span><span data-anim="char" style="animation-delay: 2.148s;">,</span> <span data-anim="char" style="animation-delay: 2.174s;">d</span><span data-anim="char" style="animation-delay: 2.2s;">o</span><span data-anim="char" style="animation-delay: 2.226s;">n</span><span data-anim="char" style="animation-delay: 2.252s;">’</span><span data-anim="char" style="animation-delay: 2.278s;">t</span> <span data-anim="char" style="animation-delay: 2.304s;">g</span><span data-anim="char" style="animation-delay: 2.33s;">e</span><span data-anim="char" style="animation-delay: 2.356s;">t</span> <span data-anim="char" style="animation-delay: 2.382s;">d</span><span data-anim="char" style="animation-delay: 2.408s;">e</span><span data-anim="char" style="animation-delay: 2.434s;">f</span><span data-anim="char" style="animation-delay: 2.46s;">e</span><span data-anim="char" style="animation-delay: 2.486s;">n</span><span data-anim="char" style="animation-delay: 2.512s;">s</span><span data-anim="char" style="animation-delay: 2.538s;">i</span><span data-anim="char" style="animation-delay: 2.564s;">v</span><span data-anim="char" style="animation-delay: 2.59s;">e</span><span data-anim="char" style="animation-delay: 2.616s;">.</span> <span data-anim="char" style="animation-delay: 2.642s;">L</span><span data-anim="char" style="animation-delay: 2.668s;">a</span><span data-anim="char" style="animation-delay: 2.694s;">u</span><span data-anim="char" style="animation-delay: 2.72s;">g</span><span data-anim="char" style="animation-delay: 2.746s;">h</span><span data-anim="char" style="animation-delay: 2.772s;">,</span> <span data-anim="char" style="animation-delay: 2.798s;">a</span><span data-anim="char" style="animation-delay: 2.824s;">d</span><span data-anim="char" style="animation-delay: 2.85s;">j</span><span data-anim="char" style="animation-delay: 2.876s;">u</span><span data-anim="char" style="animation-delay: 2.902s;">s</span><span data-anim="char" style="animation-delay: 2.928s;">t</span> <span data-anim="char" style="animation-delay: 2.954s;">i</span><span data-anim="char" style="animation-delay: 2.98s;">t</span><span data-anim="char" style="animation-delay: 3.006s;">,</span> <span data-anim="char" style="animation-delay: 3.032s;">a</span><span data-anim="char" style="animation-delay: 3.058s;">n</span><span data-anim="char" style="animation-delay: 3.084s;">d</span> <span data-anim="char" style="animation-delay: 3.11s;">m</span><span data-anim="char" style="animation-delay: 3.136s;">a</span><span data-anim="char" style="animation-delay: 3.162s;">k</span><span data-anim="char" style="animation-delay: 3.188s;">e</span> <span data-anim="char" style="animation-delay: 3.214s;">i</span><span data-anim="char" style="animation-delay: 3.24s;">t</span> <span data-anim="char" style="animation-delay: 3.266s;">b</span><span data-anim="char" style="animation-delay: 3.292s;">e</span><span data-anim="char" style="animation-delay: 3.318s;">t</span><span data-anim="char" style="animation-delay: 3.344s;">t</span><span data-anim="char" style="animation-delay: 3.37s;">e</span><span data-anim="char" style="animation-delay: 3.396s;">r</span> <span data-anim="char" style="animation-delay: 3.422s;">t</span><span data-anim="char" style="animation-delay: 3.448s;">o</span><span data-anim="char" style="animation-delay: 3.474s;">g</span><span data-anim="char" style="animation-delay: 3.5s;">e</span><span data-anim="char" style="animation-delay: 3.526s;">t</span><span data-anim="char" style="animation-delay: 3.552s;">h</span><span data-anim="char" style="animation-delay: 3.578s;">e</span><span data-anim="char" style="animation-delay: 3.604s;">r</span><span data-anim="char" style="animation-delay: 3.63s;">.</span></blockquote>
+    </div>
+    <div style="border-top:2px solid rgba(243,242,242,0.6);padding-top:26px;flex:none">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-400);margin-bottom:14px">EGO-FREE ITERATION</div>
+      <p style="margin:0;font-size:28px;line-height:1.4;color:rgba(243,242,242,0.9)">Don’t fall in love with your first draft. When students struggle with a tongue-placement diagram or audio cue, take it as friendly learning data and iterate as a team.</p>
+    </div>
+  </div>
+  <div style="width:660px;flex:none;position:relative;overflow:hidden;background:var(--color-neutral-900)">
+    <img src="images/erik.jpg" alt="Erik Wolpaw" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%;filter:{{ photoFilter }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-accent);color:var(--color-bg);padding:26px 40px">
+      <div style="font-size:30px;font-weight:800;letter-spacing:0.04em">Erik Wolpaw</div>
+      <div style="font-size:24px;line-height:1.35;margin-top:8px">Lead Writer · Portal 1 &amp; 2, Psychonauts, Half-Life: Alyx</div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Rich Geldreich" data-screen-label="14" data-speaker-notes="Rich Geldreich was a senior engineer at Valve, and he names the shadow side of flatness. In a flat company with no formal hours, people secretly work seventy-hour weeks because they suffer from phantom guilt and fear looking unproductive to their peers. It burns people out from the inside. So we protect team evenings and weekends, and we close laptops on time with zero guilt." style="display:flex;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)" data-om-slide-id="d9c6b924">
+  <div style="width:660px;flex:none;position:relative;overflow:hidden;background:var(--color-neutral-900)">
+    <img src="images/rich.jpg" alt="Rich Geldreich" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%;filter:{{ photoFilter }}">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-accent);color:var(--color-bg);padding:26px 40px">
+      <div style="font-size:30px;font-weight:800;letter-spacing:0.04em">Rich Geldreich</div>
+      <div style="font-size:24px;line-height:1.35;margin-top:8px">Senior Software Engineer · Valve Corporation</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 120px 72px 72px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Voices of experience · 05 of 05</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">14 / 21</span>
+    </div>
+    <div style="margin:auto 0">
+      <blockquote style="margin:0 0 0;font-size:42px;font-weight:600;line-height:1.3;letter-spacing:-0.015em;color:var(--color-text);border-left:6px solid var(--color-accent);padding-left:30px" data-quote-reveal=""><span data-anim="char" style="animation-delay: 0.146s;">I</span><span data-anim="char" style="animation-delay: 0.172s;">n</span> <span data-anim="char" style="animation-delay: 0.198s;">a</span> <span data-anim="char" style="animation-delay: 0.224s;">f</span><span data-anim="char" style="animation-delay: 0.25s;">l</span><span data-anim="char" style="animation-delay: 0.276s;">a</span><span data-anim="char" style="animation-delay: 0.302s;">t</span> <span data-anim="char" style="animation-delay: 0.328s;">c</span><span data-anim="char" style="animation-delay: 0.354s;">o</span><span data-anim="char" style="animation-delay: 0.38s;">m</span><span data-anim="char" style="animation-delay: 0.406s;">p</span><span data-anim="char" style="animation-delay: 0.432s;">a</span><span data-anim="char" style="animation-delay: 0.458s;">n</span><span data-anim="char" style="animation-delay: 0.484s;">y</span> <span data-anim="char" style="animation-delay: 0.51s;">w</span><span data-anim="char" style="animation-delay: 0.536s;">h</span><span data-anim="char" style="animation-delay: 0.562s;">e</span><span data-anim="char" style="animation-delay: 0.588s;">r</span><span data-anim="char" style="animation-delay: 0.614s;">e</span> <span data-anim="char" style="animation-delay: 0.64s;">t</span><span data-anim="char" style="animation-delay: 0.666s;">h</span><span data-anim="char" style="animation-delay: 0.692s;">e</span><span data-anim="char" style="animation-delay: 0.718s;">r</span><span data-anim="char" style="animation-delay: 0.744s;">e</span> <span data-anim="char" style="animation-delay: 0.77s;">a</span><span data-anim="char" style="animation-delay: 0.796s;">r</span><span data-anim="char" style="animation-delay: 0.822s;">e</span> <span data-anim="char" style="animation-delay: 0.848s;">n</span><span data-anim="char" style="animation-delay: 0.874s;">o</span> <span data-anim="char" style="animation-delay: 0.9s;">f</span><span data-anim="char" style="animation-delay: 0.926s;">o</span><span data-anim="char" style="animation-delay: 0.952s;">r</span><span data-anim="char" style="animation-delay: 0.978s;">m</span><span data-anim="char" style="animation-delay: 1.004s;">a</span><span data-anim="char" style="animation-delay: 1.03s;">l</span> <span data-anim="char" style="animation-delay: 1.056s;">h</span><span data-anim="char" style="animation-delay: 1.082s;">o</span><span data-anim="char" style="animation-delay: 1.108s;">u</span><span data-anim="char" style="animation-delay: 1.134s;">r</span><span data-anim="char" style="animation-delay: 1.16s;">s</span><span data-anim="char" style="animation-delay: 1.186s;">,</span> <span data-anim="char" style="animation-delay: 1.212s;">p</span><span data-anim="char" style="animation-delay: 1.238s;">e</span><span data-anim="char" style="animation-delay: 1.264s;">o</span><span data-anim="char" style="animation-delay: 1.29s;">p</span><span data-anim="char" style="animation-delay: 1.316s;">l</span><span data-anim="char" style="animation-delay: 1.342s;">e</span> <span data-anim="char" style="animation-delay: 1.368s;">s</span><span data-anim="char" style="animation-delay: 1.394s;">e</span><span data-anim="char" style="animation-delay: 1.42s;">c</span><span data-anim="char" style="animation-delay: 1.446s;">r</span><span data-anim="char" style="animation-delay: 1.472s;">e</span><span data-anim="char" style="animation-delay: 1.498s;">t</span><span data-anim="char" style="animation-delay: 1.524s;">l</span><span data-anim="char" style="animation-delay: 1.55s;">y</span> <span data-anim="char" style="animation-delay: 1.576s;">w</span><span data-anim="char" style="animation-delay: 1.602s;">o</span><span data-anim="char" style="animation-delay: 1.628s;">r</span><span data-anim="char" style="animation-delay: 1.654s;">k</span> <span data-anim="char" style="animation-delay: 1.68s;">7</span><span data-anim="char" style="animation-delay: 1.706s;">0</span><span data-anim="char" style="animation-delay: 1.732s;">-</span><span data-anim="char" style="animation-delay: 1.758s;">h</span><span data-anim="char" style="animation-delay: 1.784s;">o</span><span data-anim="char" style="animation-delay: 1.81s;">u</span><span data-anim="char" style="animation-delay: 1.836s;">r</span> <span data-anim="char" style="animation-delay: 1.862s;">w</span><span data-anim="char" style="animation-delay: 1.888s;">e</span><span data-anim="char" style="animation-delay: 1.914s;">e</span><span data-anim="char" style="animation-delay: 1.94s;">k</span><span data-anim="char" style="animation-delay: 1.966s;">s</span> <span data-anim="char" style="animation-delay: 1.992s;">b</span><span data-anim="char" style="animation-delay: 2.018s;">e</span><span data-anim="char" style="animation-delay: 2.044s;">c</span><span data-anim="char" style="animation-delay: 2.07s;">a</span><span data-anim="char" style="animation-delay: 2.096s;">u</span><span data-anim="char" style="animation-delay: 2.122s;">s</span><span data-anim="char" style="animation-delay: 2.148s;">e</span> <span data-anim="char" style="animation-delay: 2.174s;">t</span><span data-anim="char" style="animation-delay: 2.2s;">h</span><span data-anim="char" style="animation-delay: 2.226s;">e</span><span data-anim="char" style="animation-delay: 2.252s;">y</span> <span data-anim="char" style="animation-delay: 2.278s;">s</span><span data-anim="char" style="animation-delay: 2.304s;">u</span><span data-anim="char" style="animation-delay: 2.33s;">f</span><span data-anim="char" style="animation-delay: 2.356s;">f</span><span data-anim="char" style="animation-delay: 2.382s;">e</span><span data-anim="char" style="animation-delay: 2.408s;">r</span> <span data-anim="char" style="animation-delay: 2.434s;">f</span><span data-anim="char" style="animation-delay: 2.46s;">r</span><span data-anim="char" style="animation-delay: 2.486s;">o</span><span data-anim="char" style="animation-delay: 2.512s;">m</span> <span data-anim="char" style="animation-delay: 2.538s;">p</span><span data-anim="char" style="animation-delay: 2.564s;">h</span><span data-anim="char" style="animation-delay: 2.59s;">a</span><span data-anim="char" style="animation-delay: 2.616s;">n</span><span data-anim="char" style="animation-delay: 2.642s;">t</span><span data-anim="char" style="animation-delay: 2.668s;">o</span><span data-anim="char" style="animation-delay: 2.694s;">m</span> <span data-anim="char" style="animation-delay: 2.72s;">g</span><span data-anim="char" style="animation-delay: 2.746s;">u</span><span data-anim="char" style="animation-delay: 2.772s;">i</span><span data-anim="char" style="animation-delay: 2.798s;">l</span><span data-anim="char" style="animation-delay: 2.824s;">t</span> <span data-anim="char" style="animation-delay: 2.85s;">a</span><span data-anim="char" style="animation-delay: 2.876s;">n</span><span data-anim="char" style="animation-delay: 2.902s;">d</span> <span data-anim="char" style="animation-delay: 2.928s;">f</span><span data-anim="char" style="animation-delay: 2.954s;">e</span><span data-anim="char" style="animation-delay: 2.98s;">a</span><span data-anim="char" style="animation-delay: 3.006s;">r</span> <span data-anim="char" style="animation-delay: 3.032s;">l</span><span data-anim="char" style="animation-delay: 3.058s;">o</span><span data-anim="char" style="animation-delay: 3.084s;">o</span><span data-anim="char" style="animation-delay: 3.11s;">k</span><span data-anim="char" style="animation-delay: 3.136s;">i</span><span data-anim="char" style="animation-delay: 3.162s;">n</span><span data-anim="char" style="animation-delay: 3.188s;">g</span> <span data-anim="char" style="animation-delay: 3.214s;">u</span><span data-anim="char" style="animation-delay: 3.24s;">n</span><span data-anim="char" style="animation-delay: 3.266s;">p</span><span data-anim="char" style="animation-delay: 3.292s;">r</span><span data-anim="char" style="animation-delay: 3.318s;">o</span><span data-anim="char" style="animation-delay: 3.344s;">d</span><span data-anim="char" style="animation-delay: 3.37s;">u</span><span data-anim="char" style="animation-delay: 3.396s;">c</span><span data-anim="char" style="animation-delay: 3.422s;">t</span><span data-anim="char" style="animation-delay: 3.448s;">i</span><span data-anim="char" style="animation-delay: 3.474s;">v</span><span data-anim="char" style="animation-delay: 3.5s;">e</span> <span data-anim="char" style="animation-delay: 3.526s;">t</span><span data-anim="char" style="animation-delay: 3.552s;">o</span> <span data-anim="char" style="animation-delay: 3.578s;">t</span><span data-anim="char" style="animation-delay: 3.604s;">h</span><span data-anim="char" style="animation-delay: 3.63s;">e</span><span data-anim="char" style="animation-delay: 3.656s;">i</span><span data-anim="char" style="animation-delay: 3.682s;">r</span> <span data-anim="char" style="animation-delay: 3.708s;">p</span><span data-anim="char" style="animation-delay: 3.734s;">e</span><span data-anim="char" style="animation-delay: 3.76s;">e</span><span data-anim="char" style="animation-delay: 3.786s;">r</span><span data-anim="char" style="animation-delay: 3.812s;">s</span><span data-anim="char" style="animation-delay: 3.838s;">.</span> <span data-anim="char" style="animation-delay: 3.864s;">I</span><span data-anim="char" style="animation-delay: 3.89s;">t</span> <span data-anim="char" style="animation-delay: 3.916s;">b</span><span data-anim="char" style="animation-delay: 3.942s;">u</span><span data-anim="char" style="animation-delay: 3.968s;">r</span><span data-anim="char" style="animation-delay: 3.994s;">n</span><span data-anim="char" style="animation-delay: 4.02s;">s</span> <span data-anim="char" style="animation-delay: 4.046s;">p</span><span data-anim="char" style="animation-delay: 4.072s;">e</span><span data-anim="char" style="animation-delay: 4.098s;">o</span><span data-anim="char" style="animation-delay: 4.124s;">p</span><span data-anim="char" style="animation-delay: 4.15s;">l</span><span data-anim="char" style="animation-delay: 4.176s;">e</span> <span data-anim="char" style="animation-delay: 4.202s;">o</span><span data-anim="char" style="animation-delay: 4.228s;">u</span><span data-anim="char" style="animation-delay: 4.254s;">t</span> <span data-anim="char" style="animation-delay: 4.28s;">f</span><span data-anim="char" style="animation-delay: 4.306s;">r</span><span data-anim="char" style="animation-delay: 4.332s;">o</span><span data-anim="char" style="animation-delay: 4.358s;">m</span> <span data-anim="char" style="animation-delay: 4.384s;">t</span><span data-anim="char" style="animation-delay: 4.41s;">h</span><span data-anim="char" style="animation-delay: 4.436s;">e</span> <span data-anim="char" style="animation-delay: 4.462s;">i</span><span data-anim="char" style="animation-delay: 4.488s;">n</span><span data-anim="char" style="animation-delay: 4.514s;">s</span><span data-anim="char" style="animation-delay: 4.54s;">i</span><span data-anim="char" style="animation-delay: 4.566s;">d</span><span data-anim="char" style="animation-delay: 4.592s;">e</span><span data-anim="char" style="animation-delay: 4.618s;">.</span></blockquote>
+    </div>
+    <div style="border-top:2px solid var(--color-text);padding-top:26px;flex:none">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:14px">GUILT-FREE REST</div>
+      <p style="margin:0;font-size:28px;line-height:1.4;color:var(--color-neutral-900)">Protect team evenings and weekends. Close laptops on time with zero guilt.</p>
+    </div>
+  </div>
+</section>
+
+<section data-label="Three habits" data-screen-label="15" data-speaker-notes="Drawing from that experience, here are three simple teamwork habits we want to make second nature in our team. First: see a need, take the lead. You don't need a committee meeting to start improving a lesson. Second: build live together. Hop on a shared doc or short call for thirty minutes rather than writing five emails over three days. Third: let student learning settle debates. When we disagree on two teaching approaches, we don't argue for hours — we test both with five students and let real results guide us." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="f3b29cc8">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Practical teamwork</span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">15 / 21</span>
+  </div>
+  <h2 style="margin:36px 0 0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:1450px">Three Great Teamwork Habits We Learn from Valve</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:52px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:44px 52px 0 0">
+      <div style="font-size:96px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:28px">01</div>
+      <h3 style="margin:0 0 20px;font-size:40px;font-weight:800;line-height:1.1">See a need, take the lead</h3>
+      <p style="margin:0 0 20px;font-size:26px;line-height:1.5;color:var(--color-neutral-900)">No committee meeting required to start improving a lesson.</p>
+      
+    </div>
+    <div style="padding:44px 52px 0;border-left:2px solid var(--color-divider)">
+      <div style="font-size:96px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:28px">02</div>
+      <h3 style="margin:0 0 20px;font-size:40px;font-weight:800;line-height:1.1">Build live together</h3>
+      <p style="margin:0 0 20px;font-size:26px;line-height:1.5;color:var(--color-neutral-900)">Thirty minutes on a shared doc beats five emails over three days.</p>
+      
+    </div>
+    <div style="padding:44px 0 0 52px;border-left:2px solid var(--color-divider)">
+      <div style="font-size:96px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:28px">03</div>
+      <h3 style="margin:0 0 20px;font-size:40px;font-weight:800;line-height:1.1">Let learning settle debates</h3>
+      <p style="margin:0 0 20px;font-size:26px;line-height:1.5;color:var(--color-neutral-900)">Two approaches, no agreement? Test both on real students.</p>
+      
+    </div>
+  </div>
+</section>
+
+
+
+
+
+<section data-label="Small working hubs" data-screen-label="16" data-speaker-notes="Here is how we work better: scheduled live hubs. Because we are all online, we book the time instead of sending a message and hoping for a reply — three teachers, one shared document, sixty minutes on the calendar. We run it across three sessions. First session is preparation: bring your questions, put your opinions and approaches on the table. Second session is action: review what came out of the discussion and define the action plan. Third session is review and revision: a progress update, questions and answers, and we revise the plan. Feedback happens inside the sessions, not across weeks." style="display:flex;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body)" data-om-slide-id="26da130c">
+  <div style="position:relative;width:100%;height:100%;overflow:hidden">
+    <img src="images/hub.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ photoFilter }}">
+    <div data-anim="panel" style="position:absolute;top:0;bottom:0;left:0;width:1020px;background:var(--color-text);display:flex;flex-direction:column;padding:72px 72px 64px 120px;text-wrap:pretty">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px;flex:none">
+        <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">Teamwork in practice</span>
+        <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">16 / 21</span>
+      </div>
+      <h2 style="margin:40px 0 0;font-size:58px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;color:var(--color-bg)">How We Work Better: Scheduled Live Hubs</h2>
+      <p style="margin:20px 0 0;font-size:26px;line-height:1.35;color:rgba(243,242,242,0.9)">We are all online, so we book the time instead of waiting for replies. Three teachers, one shared document, sixty minutes on the calendar.</p>
+
+      <span data-anim="rise" style="display:block;margin-top:48px;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400);animation-delay:1.3s">SCHEDULE YOUR <i>KETCHUPS</i></span>
+
+      <div style="margin-top:24px;flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:0">
+        <div data-anim="rise" style="display:flex;gap:36px;align-items:flex-start;border-top:2px solid var(--color-accent-500);padding:26px 0;animation-delay:1.9s">
+          <div style="flex:none;width:196px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:48px;font-weight:800;line-height:0.9;letter-spacing:-0.03em;color:var(--color-accent-500)">1st</span>
+            <span style="white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(243,242,242,0.6)">session</span>
+          </div>
+          <div style="flex:1">
+            <h3 style="margin:0 0 10px;font-size:36px;font-weight:800;line-height:1.05;color:var(--color-bg)">Preparation</h3>
+            <p style="margin:0;font-size:26px;line-height:1.45;color:rgba(243,242,242,0.85)">Prepare your questions</p>
+            <p style="margin:0;font-size:26px;line-height:1.45;color:rgba(243,242,242,0.85)">Discuss your opinions and approaches</p>
+          </div>
+        </div>
+        <div data-anim="rise" style="display:flex;gap:36px;align-items:flex-start;border-top:2px solid rgba(243,242,242,0.3);padding:26px 0;animation-delay:2.6s">
+          <div style="flex:none;width:196px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:48px;font-weight:800;line-height:0.9;letter-spacing:-0.03em;color:var(--color-accent-500)">2nd</span>
+            <span style="white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(243,242,242,0.6)">session</span>
+          </div>
+          <div style="flex:1">
+            <h3 style="margin:0 0 10px;font-size:36px;font-weight:800;line-height:1.05;color:var(--color-bg)">Action</h3>
+            <p style="margin:0;font-size:26px;line-height:1.45;color:rgba(243,242,242,0.85)">Review discussions</p>
+            <p style="margin:0;font-size:26px;line-height:1.45;color:rgba(243,242,242,0.85)">Define action plan</p>
+          </div>
+        </div>
+        <div data-anim="rise" style="display:flex;gap:36px;align-items:flex-start;border-top:2px solid rgba(243,242,242,0.3);border-bottom:2px solid rgba(243,242,242,0.3);padding:26px 0;animation-delay:3.3s">
+          <div style="flex:none;width:196px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:48px;font-weight:800;line-height:0.9;letter-spacing:-0.03em;color:var(--color-accent-500)">3rd</span>
+            <span style="white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(243,242,242,0.6)">session</span>
+          </div>
+          <div style="flex:1">
+            <h3 style="margin:0 0 10px;font-size:36px;font-weight:800;line-height:1.05;color:var(--color-bg)">Review &amp; revision</h3>
+            <p style="margin:0;font-size:26px;line-height:1.45;color:rgba(243,242,242,0.85)">Update on progress + Q&amp;A</p>
+            <p style="margin:0;font-size:26px;line-height:1.45;color:rgba(243,242,242,0.85)">Revise action plan</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<section data-label="The advice process" data-screen-label="17" data-speaker-notes="The biggest question on flat teams is: if there's no boss, who gets to decide? The answer is simple and powerful: you do, through the Advice Process. Anyone on our team can make any operational decision. You just follow two golden rules: first, talk to teammates who have helpful experience in that area. Second, talk to the teammates who will be directly affected by your decision. Listen carefully with an open mind. But you do not need unanimous votes, and nobody has a veto. You make the call, explain your reasons, and own the result." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="dc6512e7">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Making decisions as equals</span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">17 / 21</span>
+  </div>
+  <h2 style="margin:36px 0 0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em">How We Make Decisions: The Advice Process</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);margin-top:52px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:40px 40px 0 0">
+      <div style="font-size:72px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:24px">01</div>
+      <h3 style="margin:0 0 16px;font-size:34px;font-weight:800;line-height:1.12">You spot the call</h3>
+      <p style="margin:0;font-size:25px;line-height:1.45;color:var(--color-neutral-900)">Anyone can make any operational decision. Noticing it makes it yours.</p>
+    </div>
+    <div style="padding:40px 40px 0;border-left:2px solid var(--color-divider)">
+      <div style="font-size:72px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:24px">02</div>
+      <h3 style="margin:0 0 16px;font-size:34px;font-weight:800;line-height:1.12">Ask the experienced</h3>
+      <p style="margin:0;font-size:25px;line-height:1.45;color:var(--color-neutral-900)">Talk to teammates who know that area — phonetics, recording, assessment.</p>
+    </div>
+    <div style="padding:40px 40px 0;border-left:2px solid var(--color-divider)">
+      <div style="font-size:72px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:24px">03</div>
+      <h3 style="margin:0 0 16px;font-size:34px;font-weight:800;line-height:1.12">Ask the affected</h3>
+      <p style="margin:0;font-size:25px;line-height:1.45;color:var(--color-neutral-900)">Talk to whoever will teach, record or mark the thing you are changing. Listen properly.</p>
+    </div>
+    <div style="padding:40px 0 0 40px;border-left:2px solid var(--color-divider)">
+      <div style="font-size:72px;font-weight:800;color:var(--color-accent);line-height:0.9;margin-bottom:24px">04</div>
+      <h3 style="margin:0 0 16px;font-size:34px;font-weight:800;line-height:1.12">Decide and own it</h3>
+      <p style="margin:0;font-size:25px;line-height:1.45;color:var(--color-neutral-900)">Make the call, explain your reasons, carry the result.</p>
+    </div>
+  </div>
+  <div style="border-top:2px solid var(--color-text);padding-top:28px;margin-top:36px;display:flex;align-items:baseline;gap:32px">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">The one rule</span>
+    <p style="margin:0;font-size:44px;font-weight:800;line-height:1.15;letter-spacing:-0.01em">Advice is required. Agreement is not.</p>
+  </div>
+</section>
+
+<section data-label="When we disagree" data-screen-label="18" data-speaker-notes="What happens when two teammates genuinely see things differently? We don't hold long debates where people try to wear each other down. Pathway one: the person doing the work makes the final call, after hearing the people with experience and the people affected. Second, if both ideas have merit, run a quick pilot test with real learners — let student clarity decide. And if things ever feel stuck or personal, ask a trusted third peer to facilitate a friendly 15-minute coffee chat so everyone feels heard." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="97698422">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Working through differences</span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">18 / 21</span>
+  </div>
+  <h2 style="margin:36px 0 0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em;max-width:1450px">When We Disagree: <br>How We Choose the Best Way</h2>
+  <p style="margin:26px 0 0;font-size:30px;line-height:1.4;max-width:1250px;color:var(--color-neutral-900)">No long debates where people wear each other down. Three pathways, in this order.</p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:44px;border-top:2px solid var(--color-text);flex:1">
+    <div data-anim="rise" style="padding:40px 48px 0 0;animation-duration:.5s;animation-delay:.3s">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:20px">Pathway one</div>
+      <h3 style="margin:0 0 18px;font-size:38px;font-weight:800;line-height:1.12">The advice call</h3>
+      <p style="margin:0;font-size:26px;line-height:1.45;color:var(--color-neutral-900)">The person doing the work makes the final call, after hearing the people with experience and the people affected.</p>
+    </div>
+    <div data-anim="rise" style="padding:40px 48px 0;border-left:2px solid var(--color-divider);animation-duration:.5s;animation-delay:2.3s">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:20px">Pathway two</div>
+      <h3 style="margin:0 0 18px;font-size:38px;font-weight:800;line-height:1.12">The student pilot</h3>
+      <p style="margin:0;font-size:26px;line-height:1.45;color:var(--color-neutral-900)">If both ideas have merit, run both with a handful of real learners. Student clarity decides, not seniority.</p>
+    </div>
+    <div data-anim="rise" style="padding:40px 0 0 48px;border-left:2px solid var(--color-divider);animation-duration:.5s;animation-delay:4.3s">
+      <div style="font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:20px">Pathway three</div>
+      <h3 style="margin:0 0 18px;font-size:38px;font-weight:800;line-height:1.12">A friendly third peer</h3>
+      <p style="margin:0;font-size:26px;line-height:1.45;color:var(--color-neutral-900)">If it feels stuck or personal, ask a trusted colleague to sit in on a fifteen-minute coffee chat so everyone is heard.</p>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+<section data-label="Mutual commitments" data-screen-label="19" data-speaker-notes="To keep our culture safe, healthy, and high-performing, here is what we commit to each other. What you can always count on: freedom to choose how you contribute best, direct and caring feedback on your drafts, and complete respect for your rest and personal time. What we actively leave behind: no waiting for permission, no backchannel gossip or secret complaining, and no performative late-night emails. We are honest, kind, and supportive equals." style="display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="7e51c8a4">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Our everyday culture</span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">19 / 21</span>
+  </div>
+  <h2 style="margin:36px 0 0;font-size:62px;font-weight:800;line-height:1.06;letter-spacing:-0.02em">Dos and Don'ts</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;align-content:start;margin-top:52px;border-top:2px solid var(--color-text);flex:1">
+    <div style="padding:34px 64px 28px 0;font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700)">What you can count on</div>
+    <div style="padding:34px 0 28px 64px;border-left:2px solid var(--color-text);background:var(--color-surface);font-size:24px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-neutral-700)">What we don't do</div>
+
+    <div data-anim="rise" style="border-top:2px solid var(--color-divider);padding:26px 64px 26px 0;animation-duration:.5s;animation-delay:.4s">
+      <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12">Freedom to contribute your way</h3>
+      <p style="margin:0;font-size:25px;line-height:1.4;color:var(--color-neutral-900)">You choose where your teaching strength does the most good.</p>
+    </div>
+    <div data-anim="rise" style="border-top:2px solid var(--color-divider);border-left:2px solid var(--color-text);background:var(--color-surface);padding:26px 0 26px 64px;animation-duration:.5s;animation-delay:2.5s">
+      <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12;color:var(--color-neutral-700)">Wait for permission</h3>
+      <p style="margin:0;font-size:25px;line-height:1.4;color:var(--color-neutral-700)">No approval gates on work that clearly helps a student.</p>
+    </div>
+
+    <div data-anim="rise" style="border-top:2px solid var(--color-divider);padding:26px 64px 26px 0;animation-duration:.5s;animation-delay:4.3s">
+      <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12">Direct, caring feedback</h3>
+      <p style="margin:0;font-size:25px;line-height:1.4;color:var(--color-neutral-900)">Straight about the draft, warm about the person, early enough to matter.</p>
+    </div>
+    <div data-anim="rise" style="border-top:2px solid var(--color-divider);border-left:2px solid var(--color-text);background:var(--color-surface);padding:26px 0 26px 64px;animation-duration:.5s;animation-delay:6.3s">
+      <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12;color:var(--color-neutral-700)">Complain in side channels</h3>
+      <p style="margin:0;font-size:25px;line-height:1.4;color:var(--color-neutral-700)">Concerns go to the person, not around them.</p>
+    </div>
+
+    <div data-anim="rise" style="border-top:2px solid var(--color-divider);padding:26px 64px 26px 0;animation-duration:.5s;animation-delay:8.1s">
+      <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12">Respect for your rest</h3>
+      <p style="margin:0;font-size:25px;line-height:1.4;color:var(--color-neutral-900)">Evenings and weekends are yours. Nobody is counting your hours.</p>
+    </div>
+    <div data-anim="rise" style="border-top:2px solid var(--color-divider);border-left:2px solid var(--color-text);background:var(--color-surface);padding:26px 0 26px 64px;animation-duration:.5s;animation-delay:10.1s">
+      <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12;color:var(--color-neutral-700)">Perform late nights</h3>
+      <p style="margin:0;font-size:25px;line-height:1.4;color:var(--color-neutral-700)">The 11pm messages earn no credit here.</p>
+    </div>
+  </div>
+</section><section data-label="Our team creed" data-screen-label="20" data-speaker-notes="So here is our creed, and it is the one line worth taking away from today. You're not working without a boss — you are the boss of your own work. Nobody is coming to hand you the task, and nobody is coming to approve it either. That is the freedom and the responsibility, and they arrive together." style="display:flex;flex-direction:column;justify-content:space-between;background:var(--color-text);color:var(--color-bg);font-family:var(--font-body);padding:80px 120px 72px;text-wrap:pretty" data-om-slide-id="b6321569">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid rgba(243,242,242,0.6);padding-bottom:16px;flex:none">
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-400)">Our team creed</span>
+    <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:rgba(243,242,242,0.7);opacity:{{ folioOpacity }}">20 / 21</span>
+  </div>
+  <div>
+    <p style="margin:0;font-size:92px;font-weight:800;line-height:1.03;letter-spacing:-0.03em;max-width:1560px;color:var(--color-bg)">You're not working without a boss.<br>You are the boss of your own work.</p>
+    <div style="width:240px;height:8px;background:var(--color-accent);margin-top:44px"></div>
+  </div>
+  <p style="margin: 0; font-size: 12px; font-weight: 600; line-height: 1.3; max-width: 1420px; border-top: 2px solid rgba(243,242,242,0.6); padding-top: 32px; flex: none; color: rgba(243,242,242,0.92)">Probably :D I ran out of ideas here.</p>
+</section>
+
+
+
+
+
+<section data-label="Rhythm for Month 2" data-screen-label="21" data-speaker-notes="So what does Phase 2 actually ask of us? Three pieces of groundwork, and they can run in parallel. Identify learning needs — from the teachers' point of view and, wherever we can reach them, the students'. Gather stakeholders' opinions — list out who the stakeholders are and run the surveys. Conduct a literature review so our approach rests on theoretical and empirical evidence, not just instinct. Those three converge on the decision that matters: determine the teaching methodology and the teaching content — what we teach and how we teach it. [Press Reveal ETA] And here is the timeline we are working to." style="display:flex;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)" data-om-slide-id="e425248e">
+  <div style="flex:1;display:flex;flex-direction:column;padding:80px 72px 72px 120px;text-wrap:pretty">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--color-text);padding-bottom:16px;flex:none">
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-accent-700)">Looking ahead</span>
+      <span style="flex:none;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:0.12em;color:var(--color-neutral-600);opacity:{{ folioOpacity }}">21 / 21</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:32px;margin-top:36px;flex:none">
+      <h2 style="flex:none;white-space:nowrap;margin:0;font-size:54px;font-weight:800;line-height:1.06;letter-spacing:-0.02em">PHASE 2 OBJECTIVES</h2>
+      <button type="button" onClick="{{ revealEta }}" style="flex:none;background:var(--color-bg);color:var(--color-accent-700);border:2px solid var(--color-accent);padding:14px 22px;font-family:var(--font-body);font-size:24px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-align:left;cursor:pointer" style-hover="background:var(--color-accent-100)" style-active="background:var(--color-accent);color:var(--color-bg)">Reveal ETA</button>
+    </div>
+    <div style="display:flex;flex-direction:column;margin-top:40px;flex:1">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:2px solid var(--color-text);border-bottom:2px solid var(--color-divider)">
+        <div style="padding:26px 32px 30px 0;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:26px;font-weight:800;color:var(--color-accent)">INDENTIFY</span>
+          <h3 style="margin:0;font-size:30px;font-weight:800;line-height:1.12">LEARNING NEEDS</h3>
+          <p style="margin:0;font-size:24px;line-height:1.4;color:var(--color-neutral-900)">POV of teachers AND students if possible</p>
+        </div>
+        <div style="padding:26px 32px 30px;border-left:2px solid var(--color-divider);display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:26px;font-weight:800;color:var(--color-accent)">GATHER</span>
+          <h3 style="margin:0;font-size:30px;font-weight:800;line-height:1.12">STAKEHOLDERS' OPINIONS</h3>
+          <p style="margin:0;font-size:24px;line-height:1.4;color:var(--color-neutral-900)">List out possible stakeholders, conduct surveys</p>
+        </div>
+        <div style="padding:26px 0 30px 32px;border-left:2px solid var(--color-divider);display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:26px;font-weight:800;color:var(--color-accent)">CONDUCT</span>
+          <h3 style="margin:0;font-size:30px;font-weight:800;line-height:1.12">LITERATURE REVIEW</h3>
+          <p style="margin:0;font-size:24px;line-height:1.4;color:var(--color-neutral-900)">Support your approach with theoretical and empirical evidence</p>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:16px;padding:14px 0">
+        <span style="width:2px;height:26px;background:var(--color-divider)"></span>
+        <span style="width:2px;height:26px;background:var(--color-divider)"></span>
+        <span style="width:2px;height:26px;background:var(--color-divider)"></span>
+      </div>
+      <div style="display:flex;gap:36px;align-items:flex-start;border-top:2px solid var(--color-accent);border-bottom:2px solid var(--color-text);padding:26px 0">
+        <span style="flex:none;background:var(--color-accent);color:var(--color-bg);padding:8px 16px;font-size:26px;font-weight:800">DETERMINE</span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0 0 8px;font-size:34px;font-weight:800;line-height:1.12">TEACHING METHODOLY &amp; TEACHING CONTENT</h3>
+          <p style="margin:0;font-size:24px;line-height:1.4;color:var(--color-neutral-900)">Choose WHAT and HOW you want to teach</p>
+        </div>
+      </div>
+      <div data-eta-banner="" data-phase="{{ etaPhase }}" style="margin-top:auto;border-top:6px solid var(--color-accent);background:var(--color-neutral-200);color:var(--color-text);padding:26px 36px 28px">
+        <div style="font-size:26px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--color-accent-700)">Expected time of arrival</div>
+        <div style="display:flex;align-items:flex-end;gap:30px;margin-top:14px;font-variant-numeric:tabular-nums">
+          <div>
+            <div style="font-size:58px;font-weight:800;line-height:1;letter-spacing:-0.02em">{{ etaMonths }}</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:8px;color:var(--color-neutral-700)">Months</div>
+          </div>
+          <div>
+            <div style="font-size:58px;font-weight:800;line-height:1;letter-spacing:-0.02em">{{ etaDays }}</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:8px;color:var(--color-neutral-700)">Days</div>
+          </div>
+          <div>
+            <div style="font-size:58px;font-weight:800;line-height:1;letter-spacing:-0.02em">{{ etaHours }}</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:8px;color:var(--color-neutral-700)">Hours</div>
+          </div>
+          <div>
+            <div style="font-size:58px;font-weight:800;line-height:1;letter-spacing:-0.02em">{{ etaMinutes }}</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:8px;color:var(--color-neutral-700)">Minutes</div>
+          </div>
+          <div>
+            <div style="font-size:58px;font-weight:800;line-height:1;letter-spacing:-0.02em">{{ etaSeconds }}</div>
+            <div style="font-size:24px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:8px;color:var(--color-neutral-700)">Seconds</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="width:660px;flex:none;position:relative;overflow:hidden;background:var(--color-text)">
+    <img src="images/close.jpg" alt="A learner and a teacher side by side at a laptop in daylight" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ photoFilter }}">
+  </div>
+</section>
+
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;showQuotes&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Deck&quot;},
+  &quot;showFolio&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Deck&quot;},
+  &quot;photoTreatment&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Black and white&quot;, &quot;Full colour&quot;], &quot;default&quot;: &quot;Black and white&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Photography&quot;}
+}">
+class Component extends DCLogic {
+  state = { phaseStep: 1, h4: 1, h5: 1, h6: 1, etaRevealed: false, etaMs: 6 * 30 * 24 * 3600 * 1000 };
+  componentDidMount() {
+    this.splitQuotes();
+  }
+  componentWillUnmount() {
+    clearTimeout(this._etaDelay);
+    clearInterval(this._etaTick);
+  }
+  startEta() {
+    clearTimeout(this._etaDelay);
+    clearInterval(this._etaTick);
+    this.setState({ etaRevealed: true, etaMs: 6 * 30 * 24 * 3600 * 1000 });
+    this._etaDelay = setTimeout(() => {
+      this._etaTick = setInterval(() => {
+        this.setState((prev) => ({ etaMs: Math.max(0, (prev.etaMs ?? 0) - 1000) }));
+      }, 1000);
+    }, 2000);
+  }
+  componentDidUpdate() {
+    this.splitQuotes();
+  }
+  splitQuotes() {
+    document.querySelectorAll("[data-quote-reveal]:not([data-split])").forEach((el) => {
+      const text = el.textContent;
+      if (!text.trim()) return;
+      el.setAttribute("data-split", "");
+      const frag = document.createDocumentFragment();
+      let i = 0;
+      for (const ch of text) {
+        if (ch === " ") {
+          frag.appendChild(document.createTextNode(" "));
+          continue;
+        }
+        const s = document.createElement("span");
+        s.textContent = ch;
+        s.setAttribute("data-anim", "char");
+        s.style.animationDelay = (0.12 + i * 0.026).toFixed(3) + "s";
+        i++;
+        frag.appendChild(s);
+      }
+      el.textContent = "";
+      el.appendChild(frag);
+    });
+  }
+  renderVals() {
+    const colour = (this.props.photoTreatment ?? "Black and white") === "Full colour";
+    const step = this.state.phaseStep;
+    const seen = (n) => (step >= n ? "shown" : "hidden");
+    const hurdle = (key) => {
+      const s = this.state[key] ?? 1;
+      const at = (n) => (s >= n ? "shown" : "hidden");
+      return {
+        [key + "2"]: at(2),
+        [key + "3"]: at(3),
+        [key + "4"]: at(4),
+        ["next" + key.toUpperCase()]: () =>
+          this.setState((prev) => {
+            const cur = prev[key] ?? 1;
+            return { [key]: cur >= 4 ? 1 : cur + 1 };
+          }),
+      };
+    };
+    const ms = this.state.etaMs ?? 6 * 30 * 24 * 3600 * 1000;
+    const total = Math.floor(ms / 1000);
+    const pad = (n) => String(n).padStart(2, "0");
+    const monthSecs = 30 * 86400;
+    return {
+      etaPhase: this.state.etaRevealed ? "shown" : "hidden",
+      etaMonths: String(Math.floor(total / monthSecs)),
+      etaDays: String(Math.floor((total % monthSecs) / 86400)),
+      etaHours: pad(Math.floor((total % 86400) / 3600)),
+      etaMinutes: pad(Math.floor((total % 3600) / 60)),
+      etaSeconds: pad(total % 60),
+      revealEta: () => this.startEta(),
+      ...hurdle("h4"),
+      ...hurdle("h5"),
+      ...hurdle("h6"),
+      phase1: seen(1),
+      phase2: seen(2),
+      phase3: seen(3),
+      phaseCta: step >= 3 ? "Start over" : "Reveal phase " + (step + 1),
+      nextPhase: () => this.setState({ phaseStep: step >= 3 ? 1 : step + 1 }),
+      showQuotes: this.props.showQuotes ?? true,
+      folioOpacity: (this.props.showFolio ?? true) ? 1 : 0,
+      photoFilter: colour ? "contrast(1.02)" : "grayscale(1) contrast(1.08)",
+    };
+  }
+}
+</script>
+<script type="module" src="../presentation/frame.mjs"></script></body>
+</html>

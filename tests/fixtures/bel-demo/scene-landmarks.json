@@ -1,0 +1,10 @@
+{
+  "basis": "Independent landmarks transcribed from approved image geometry, in the 1000 x 480 runtime composition. Tests use real WASD to reach these points; they do not read collider lists or mutate positions.",
+  "home": {"openLowerFloor":[500,378],"scooterApproach":[380,331],"skateboardApproach":[622,331],"exitApproach":[500,399],"bookcaseFront":[635,150]},
+  "street": {"nearCurb":[500,366],"farCurb":[500,155],"belDoor":[500,146]},
+  "reception": {"entry":[500,368],"openAisle":[700,260],"studioApproach":[633,170]},
+  "A": {"monitorApproach":[631,183],"seatApproach":[400,289],"door1Approach":[130,249],"door2Approach":[748,176],"door3Approach":[869,249]},
+  "B": {"triangleApproach":[275,294],"squareApproach":[453,277],"circleApproach":[617,247],"trianglePedestal":[230,267],"squarePedestal":[486,186],"circlePedestal":[716,227],"back":[166,405],"onward":[869,188]},
+  "C": {"monitorApproach":[631,183],"onward":[748,176]},
+  "D": {"Chet":[149,283],"Josh":[294,197],"Mike":[483,197],"Erik":[669,197],"Rich":[851,283],"table":[500,350],"end":[824,195]}
+}

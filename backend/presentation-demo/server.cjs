@@ -77,6 +77,19 @@ function createServer({ services, authMiddleware, gatewayAuthenticate = null, ga
   app.use(express.static(path.resolve(__dirname, '../../public'), { etag: true, maxAge: 0 }));
   app.get('/favicon.ico', (_req, res) => res.status(204).end());
   app.get('/healthz', (_req, res) => res.json({ ok: true, service: 'bel-presentation-demo', durable: useDurable, websocket: true }));
+  const allowedOrigins = String(process.env.PRESENTATION_DEMO_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean);
+  app.use((req, res, next) => {
+    const requestOrigin = String(req.headers.origin || '').trim();
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+      res.set('Access-Control-Allow-Origin', requestOrigin);
+      res.set('Access-Control-Allow-Credentials', 'true');
+      res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+      res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+      res.set('Vary', 'Origin');
+      if (req.method === 'OPTIONS') return res.status(204).end();
+    }
+    return next();
+  });
   app.use('/api/presentation-demo', auth, createPresentationDemoRouter({ ...resolved, authMiddleware: (_req, _res, next) => next(), resolveIdentity: req => req.user }));
   const server = http.createServer(app);
   const gatewayAuth = gatewayAuthenticate || (useDurable
@@ -87,7 +100,7 @@ function createServer({ services, authMiddleware, gatewayAuthenticate = null, ga
       return /^[A-Za-z0-9_-]{1,80}$/.test(uid) ? devIdentity(uid) : null;
     });
   server.presentationDemoServices = resolved;
-  server.presentationDemoGateway = installWebSocketGateway(server, { connections: resolved.connections, authenticate: gatewayAuth, resolveIdentity: gatewayResolveIdentity });
+  server.presentationDemoGateway = installWebSocketGateway(server, { connections: resolved.connections, authenticate: gatewayAuth, resolveIdentity: gatewayResolveIdentity, origin: allowedOrigins.length ? allowedOrigins : null });
   return server;
 }
 

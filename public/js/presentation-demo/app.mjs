@@ -3,6 +3,7 @@ import { PresentationTransport } from './transport.mjs';
 import { PresentationViewModel } from './view-model.mjs';
 import { bindNotebook } from './notebook.mjs';
 import { createPresentationAdapter } from './presentation/adapter.mjs';
+import { SCENES, SHAPES } from './core/world/scenes.mjs';
 import { createRenderer as createNativeRenderer } from '../../prototypes/bel-working-as-equals-demo/world/renderer.mjs';
 
 const $ = id => document.getElementById(id);
@@ -33,13 +34,22 @@ function renderRoomHistory(rooms = []) {
   for (const value of rooms) {
     const row = document.createElement('div'); row.className = 'pd-history-row';
     const label = document.createElement('span'); label.textContent = `${value.code} · ${value.lifecycle}`;
+    const actions = document.createElement('span'); actions.className = 'pd-history-actions';
     const open = document.createElement('button'); open.type = 'button'; open.className = 'pd-button pd-button-secondary'; open.textContent = value.lifecycle === 'ended' ? 'View archive' : 'Open room';
     open.addEventListener('click', async () => {
       if (value.lifecycle === 'ended') {
         try { const archive = await transport.readArchive(value.roomId); label.textContent = `${value.code} · archived · ${Object.keys(archive.notebooks || {}).length} notebook(s)`; } catch (error) { label.textContent = errorText(error); }
       } else await loadRoomIntoLobby(value);
     });
-    row.append(label, open); els.roomHistory.append(row);
+    actions.append(open);
+    if (value.lifecycle === 'ended') {
+      const exportButton = document.createElement('button'); exportButton.type = 'button'; exportButton.className = 'pd-button pd-button-secondary'; exportButton.textContent = 'Export PDF';
+      exportButton.addEventListener('click', async () => {
+        try { const blob = await transport.exportPdf(value.roomId); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `bel-presentation-${value.roomId}.pdf`; link.click(); URL.revokeObjectURL(link.href); label.textContent = `${value.code} · archived · export downloaded`; } catch (error) { label.textContent = errorText(error); }
+      });
+      actions.append(exportButton);
+    }
+    row.append(label, actions); els.roomHistory.append(row);
   }
 }
 
@@ -94,7 +104,12 @@ function drawGame() {
       appearance: slot.customization || { hat: 'none', glasses: false, shirt: 'teal' }
     }])) };
     const active = players[Object.values(room.slots || {}).find(slot => slot.uid === identity?.uid)?.slotId || 'p0'] || players.p0;
-    if (active) nativeRenderer.draw({ players, routes: {}, unlocked: {}, bridge: {}, reversal: {}, cubes: {} }, base, active.id, Date.now(), {});
+    const gameplay = room.gameplay || {};
+    const routes = gameplay.routes || Object.fromEntries(['B1', 'B2', 'B3'].map(sceneId => [sceneId, SHAPES.map((shapeName, index) => ({ id: `shape-${index}`, shape: shapeName, index, ...SCENES[sceneId].shapeSpawns[index], owner: null, placed: false }))]));
+    const bridge = gameplay.bridge || { planks: [] };
+    const reversal = gameplay.reversal || { phase: 'gathering', index: 0, remaining: 0, results: [], debuffs: {} };
+    const cubes = gameplay.cubes || { pairs: [false, false, false], matchedAt: [], cubes: [] };
+    nativeRenderer.draw({ players, routes, unlocked: gameplay.unlocked || {}, bridge, reversal, cubes }, base, active.id, Date.now(), { objectives: gameplay.objectives || [] });
     return;
   }
   const context = els.canvas.getContext('2d');
@@ -128,7 +143,7 @@ function renderGame(currentRoom) {
   show(els.end, model?.isPresenter() && currentRoom.lifecycle !== 'ended');
   show(els.start, model?.isPresenter() && currentRoom.lifecycle === 'reception' && !!currentRoom.allParticipantsJoinedAt);
   show(els.previous, model?.isPresenter()); show(els.next, model?.isPresenter());
-  els.connection.textContent = model?.connection ? `Connected · ${model.connection.seatId}` : 'Disconnected';
+  els.connection.textContent = transport?.state === 'reconnecting' ? 'Reconnecting…' : model?.connection ? `Connected · ${model.connection.seatId}` : 'Disconnected';
   els.receptionContinue.disabled = !joined;
   drawGame();
   if (!els.deck.src) els.deck.src = '/presentation-demo/native/deck.html';
@@ -149,7 +164,8 @@ async function connectGame(replaceExisting = false) {
     notebook = bindNotebook({ transport, roomId: room.roomId, identity, elements: { title: els.title, body: els.body, save: els.saveNote, status: els.noteStatus } });
     await notebook.load();
     message('Online transport connected. Movement and presentation commands are server-authorized.');
-    heartbeatTimer = window.setInterval(() => transport.heartbeat(model.connection.connectionId).catch(() => {}), 5000);
+    window.clearInterval(heartbeatTimer);
+    heartbeatTimer = window.setInterval(() => model.connection && transport.heartbeat(model.connection.connectionId).catch(() => {}), 5000);
   } catch (error) {
     if (error.code === 'CONNECTION_EXISTS') { els.replace.hidden = false; els.connection.textContent = 'Already connected elsewhere'; message('This seat is active on another device. Choose Continue here to replace it.', 'warning'); return; }
     els.connection.textContent = 'Connection failed'; message(errorText(error), 'error');
@@ -176,7 +192,7 @@ async function createRoom() {
 }
 
 async function loadRoomHistory() {
-  if (!identity?.isAdmin && !identity?.isTeacher) return;
+  if (!identity?.isAdmin && identity?.moduleGrants?.projects !== true) return;
   try { renderRoomHistory(await transport.rooms()); } catch (_) { if (els.roomHistory) els.roomHistory.textContent = 'Room history is unavailable.'; }
 }
 
@@ -229,7 +245,10 @@ async function boot() {
   bindEvents();
   identity = await bootAuth();
   if (!identity) { els.authStatus.textContent = 'Sign-in required'; els.authMessage.innerHTML = `Sign in through the CRM before joining this room. <a href="${signInUrl()}">Go to sign in</a>`; return; }
-  transport = new PresentationTransport(identity); els.authStatus.textContent = identity.local ? `Local rehearsal · ${identity.uid}` : `Signed in · ${identity.email || identity.uid}`; els.authMessage.textContent = 'Your account identity is checked by the server for every room action.';
+  transport = new PresentationTransport(identity, { failoverOrigins: window.__BEL_PRESENTATION_FAILOVER_ORIGINS || [] });
+  transport.onState = state => { if (els.connection) els.connection.textContent = state === 'reconnecting' ? 'Reconnecting…' : state === 'connecting' ? 'Connecting…' : state === 'connected' && model?.connection ? `Connected · ${model.connection.seatId}` : 'Disconnected'; };
+  transport.onReconnect = async connection => { if (model) { model.connection = connection; model.sequence = 0; } if (room) renderGame(await transport.room(room.roomId)); message('Room connection restored.'); };
+  els.authStatus.textContent = identity.local ? `Local rehearsal · ${identity.uid}` : `Signed in · ${identity.email || identity.uid}`; els.authMessage.textContent = 'Your account identity is checked by the server for every room action.';
   try { nativeRenderer = await createNativeRenderer(els.canvas); } catch (error) { console.warn('[Presentation Demo] Native renderer unavailable:', error); }
   show(els.presenterTools, identity.isAdmin); await loadRoomHistory();
   const params = new URLSearchParams(window.location.search); const roomId = params.get('room');

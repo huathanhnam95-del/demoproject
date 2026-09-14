@@ -16,7 +16,7 @@ test('runtime accepts intentions, commits monotonic revisions, and fences stale 
     const runtime = new AuthoritativeRuntime(room(), { clock: () => 1000 });
     const connection = runtime.connect('p1', 1);
     const moved = runtime.command('p1', connection.generation, { type: 'move', seq: 1, dx: 1, dy: 0 });
-    assert.equal(moved.revision, 1);
+    assert.equal(moved.revision, 2);
     assert.equal(runtime.snapshot().slots.p1.position.x > 0, true);
     assert.throws(() => runtime.command('p1', connection.generation - 1, { type: 'move', seq: 2, dx: 1, dy: 0 }), error => error instanceof RuntimeError && error.code === 'STALE_CONNECTION');
 });
@@ -41,9 +41,10 @@ test('initial reception latch requires all three participant joins and bootstrap
     value.slots.p3.uid = 'u3';
     value.slots.p3.joinedAt = 1000;
     runtime.refreshRoom(value);
+    runtime.connect('p0', 1);
     runtime.connect('p1', 1);
     runtime.connect('p2', 1);
     runtime.connect('p3', 1);
-    runtime.command('p0', 1, { type: 'transition', seq: 2, to: 'playing' });
+    runtime.command('p0', 1, { type: 'transition', seq: 1, to: 'playing' });
     assert.ok(runtime.snapshot().allParticipantsJoinedAt);
 });

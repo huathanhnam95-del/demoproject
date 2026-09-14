@@ -4,6 +4,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
   let version = 0;
   let pageId = 'main';
   let pages = [];
+  let hasSelection = false;
   const pageSelect = document.createElement('select');
   pageSelect.id = 'pd-note-page';
   pageSelect.setAttribute('aria-label', 'Note page');
@@ -30,10 +31,15 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
       return true;
     } catch (_) { return false; }
   }
-  function persistDraft() {
-    try { localStorage.setItem(draftKey(roomId, identity.uid, pageId), JSON.stringify({ title: elements.title.value, body: elements.body.value, savedAt: Date.now() })); } catch (_) { /* storage is best effort */ }
+  function persistDraft(forPageId = pageId, values = { title: elements.title.value, body: elements.body.value }) {
+    try { localStorage.setItem(draftKey(roomId, identity.uid, forPageId), JSON.stringify({ title: values.title, body: values.body, savedAt: Date.now() })); } catch (_) { /* storage is best effort */ }
+  }
+  function flushDraft(forPageId = pageId) {
+    window.clearTimeout(draftTimer);
+    if (forPageId === pageId) persistDraft(forPageId);
   }
   function selectPage(nextId) {
+    if (hasSelection) flushDraft(pageId);
     pageId = nextId || 'main';
     const page = pages.find(value => value.id === pageId);
     version = page?.version || 0;
@@ -41,6 +47,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     elements.body.value = page?.body || '';
     restoreDraft();
     renderPageList();
+    hasSelection = true;
   }
   async function load() {
     const result = await transport.readNotes(roomId);
@@ -49,20 +56,23 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     selectPage(pageId);
   }
   async function save() {
-    const page = await transport.saveNote(roomId, { pageId, title: elements.title.value.trim() || 'Observation', body: elements.body.value, expectedVersion: version });
-    version = page.version;
+    const savedPageId = pageId;
+    const savedVersion = version;
+    const savedValues = { title: elements.title.value.trim() || 'Observation', body: elements.body.value };
+    const page = await transport.saveNote(roomId, { pageId: savedPageId, ...savedValues, expectedVersion: savedVersion });
     pages = [...pages.filter(value => value.id !== page.id), page].sort((a, b) => a.id.localeCompare(b.id));
-    localStorage.removeItem(draftKey(roomId, identity.uid, pageId));
+    localStorage.removeItem(draftKey(roomId, identity.uid, savedPageId));
+    if (pageId === savedPageId) { version = page.version; elements.title.value = page.title; elements.body.value = page.body; }
     renderPageList();
     elements.status.textContent = 'Saved';
     return page;
   }
   let draftTimer = 0;
-  const scheduleDraft = () => { window.clearTimeout(draftTimer); draftTimer = window.setTimeout(persistDraft, 200); };
+  const scheduleDraft = () => { const forPageId = pageId; const values = { title: elements.title.value, body: elements.body.value }; window.clearTimeout(draftTimer); draftTimer = window.setTimeout(() => persistDraft(forPageId, values), 200); };
   pageSelect.addEventListener('change', () => selectPage(pageSelect.value));
-  newPage.addEventListener('click', () => { pageId = `page-${Date.now()}`; pages.push({ id: pageId, title: '', body: '', version: 0 }); selectPage(pageId); });
+  newPage.addEventListener('click', () => { const nextId = `page-${Date.now()}`; pages.push({ id: nextId, title: '', body: '', version: 0 }); selectPage(nextId); });
   elements.title.addEventListener('input', scheduleDraft);
   elements.body.addEventListener('input', scheduleDraft);
   elements.save.addEventListener('click', () => save().catch(error => { elements.status.textContent = error.message; }));
-  return { load, save, persistDraft };
+  return { load, save, persistDraft, flushDraft, selectPage };
 }

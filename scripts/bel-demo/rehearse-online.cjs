@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const net = require('node:net');
-const { spawn, spawnSync } = require('node:child_process');
+const { spawn } = require('node:child_process');
 const { initializeApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore } = require('firebase-admin/firestore');
@@ -71,8 +71,8 @@ async function seedAccounts(running) {
   return accounts;
 }
 
-function backendEnvironment(running, port) {
-  return { ...running.environment, NODE_ENV: 'development', PORT: String(port), PRESENTATION_DEMO_DEV_AUTH: '0', PRESENTATION_DEMO_ONLINE_ENABLED: '1', PRESENTATION_DEMO_DURABLE_READY: '1' };
+function backendEnvironment(running, port, allowedOrigins = []) {
+  return { ...running.environment, NODE_ENV: 'development', PORT: String(port), PRESENTATION_DEMO_DEV_AUTH: '0', PRESENTATION_DEMO_ONLINE_ENABLED: '1', PRESENTATION_DEMO_DURABLE_READY: '1', PRESENTATION_DEMO_ALLOWED_ORIGINS: allowedOrigins.join(',') };
 }
 
 async function waitFor(url, timeoutMs = 30000) {
@@ -84,11 +84,11 @@ async function waitFor(url, timeoutMs = 30000) {
   throw new Error(`Backend did not become ready: ${url}`);
 }
 
-async function startBackend(running, evidenceDir, label) {
-  const port = await freePort();
+async function startBackend(running, evidenceDir, label, { port = null, allowedOrigins = [] } = {}) {
+  port ||= await freePort();
   const logPath = path.join(evidenceDir, `${label}.log`);
   const log = fs.createWriteStream(logPath, { flags: 'w' });
-  const child = spawn(process.execPath, [path.join(repo, 'backend/presentation-demo/server.cjs')], { cwd: repo, env: backendEnvironment(running, port), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+  const child = spawn(process.execPath, [path.join(repo, 'backend/presentation-demo/server.cjs')], { cwd: repo, env: backendEnvironment(running, port, allowedOrigins), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
   child.stdout.pipe(log); child.stderr.pipe(log);
   try { await waitFor(`http://127.0.0.1:${port}/healthz`); }
   catch (error) { await stopBackend({ child, log }); throw error; }
@@ -116,14 +116,38 @@ function writeAccountsFile(evidenceDir, accounts) {
   return filename;
 }
 
-function runBrowser(baseUrl, evidenceDir, accounts) {
+function runBrowser(baseUrl, evidenceDir, accounts, { failoverUrl = null, signalPath = null } = {}) {
   const accountFile = writeAccountsFile(evidenceDir, accounts);
-  try {
-    const result = spawnSync('python', [path.join(repo, 'tests/browser/bel-demo-online/rehearsal.py'), '--channel', 'chrome', '--base-url', baseUrl, '--accounts-file', accountFile, '--evidence', evidenceDir], { cwd: repo, encoding: 'utf8', env: { ...process.env, PYTHONUNBUFFERED: '1' } });
-    fs.writeFileSync(path.join(evidenceDir, 'browser-rehearsal.log'), `${result.stdout || ''}${result.stderr || ''}`);
-    if (result.status !== 0) throw new Error(`Authenticated Chrome rehearsal failed with exit ${result.status}; see ${path.join(evidenceDir, 'browser-rehearsal.log')}.`);
-    return JSON.parse(fs.readFileSync(path.join(evidenceDir, 'rehearsal.json'), 'utf8'));
-  } finally { try { fs.rmSync(accountFile, { force: true }); } catch (_) {} }
+  const logPath = path.join(evidenceDir, 'browser-rehearsal.log');
+  fs.writeFileSync(logPath, '');
+  const args = [path.join(repo, 'tests/browser/bel-demo-online/rehearsal.py'), '--channel', 'chrome', '--base-url', baseUrl, '--accounts-file', accountFile, '--evidence', evidenceDir];
+  if (failoverUrl) args.push('--failover-url', failoverUrl);
+  if (signalPath) args.push('--failover-signal', signalPath);
+  const child = spawn('python', args, { cwd: repo, encoding: 'utf8', env: { ...process.env, PYTHONUNBUFFERED: '1' }, windowsHide: true });
+  const run = new Promise((resolve, reject) => {
+    const record = chunk => { try { fs.appendFileSync(logPath, String(chunk)); } catch (_) {} };
+    child.stdout.on('data', record);
+    child.stderr.on('data', record);
+    child.once('exit', code => {
+      try { fs.rmSync(accountFile, { force: true }); } catch (_) {}
+      if (code !== 0) return reject(new Error(`Authenticated Chrome rehearsal failed with exit ${code}; see ${logPath}.`));
+      try { return resolve(JSON.parse(fs.readFileSync(path.join(evidenceDir, 'rehearsal.json'), 'utf8'))); }
+      catch (error) { return reject(error); }
+    });
+    child.once('error', error => { try { fs.rmSync(accountFile, { force: true }); } catch (_) {} reject(error); });
+  });
+  run.child = child;
+  run.stop = () => { try { child.kill(); } catch (_) {} };
+  return run;
+}
+
+async function waitForFile(filename, timeoutMs = 120000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (fs.existsSync(filename)) return;
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  throw new Error(`Browser rehearsal did not reach failover checkpoint: ${filename}`);
 }
 
 async function main() {
@@ -138,17 +162,25 @@ async function main() {
   const backends = [];
   try {
     const accounts = await seedAccounts(running);
-    backends.push(await startBackend(running, evidenceDir, 'backend-primary'));
-    backends.push(await startBackend(running, evidenceDir, 'backend-secondary'));
-    const browser = runBrowser(backends[0].baseUrl, evidenceDir, accounts);
+    const primaryPort = await freePort();
+    const secondaryPort = await freePort();
+    const allowedOrigins = [`http://127.0.0.1:${primaryPort}`, `http://127.0.0.1:${secondaryPort}`];
+    backends.push(await startBackend(running, evidenceDir, 'backend-primary', { port: primaryPort, allowedOrigins }));
+    backends.push(await startBackend(running, evidenceDir, 'backend-secondary', { port: secondaryPort, allowedOrigins }));
+    const failoverSignal = path.join(evidenceDir, 'failover-ready.signal');
+    try { fs.rmSync(failoverSignal, { force: true }); } catch (_) {}
+    const browserPromise = runBrowser(backends[0].baseUrl, evidenceDir, accounts, { failoverUrl: backends[1].baseUrl, signalPath: failoverSignal });
+    try { await waitForFile(failoverSignal); } catch (error) { browserPromise.stop(); throw error; }
+    await stopBackend(backends.shift());
+    const browser = await browserPromise;
     const adminToken = await signInToken(accounts.presenter, running);
-    const terminal = await fetch(`${backends[1].baseUrl}/api/presentation-demo/rooms/${encodeURIComponent(browser.roomId)}`, { headers: { Authorization: `Bearer ${adminToken}` } });
-    const archive = await fetch(`${backends[1].baseUrl}/api/presentation-demo/rooms/${encodeURIComponent(browser.roomId)}/archive`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const survivingBackend = backends[0];
+    const terminal = await fetch(`${survivingBackend.baseUrl}/api/presentation-demo/rooms/${encodeURIComponent(browser.roomId)}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+    const archive = await fetch(`${survivingBackend.baseUrl}/api/presentation-demo/rooms/${encodeURIComponent(browser.roomId)}/archive`, { headers: { Authorization: `Bearer ${adminToken}` } });
     if (!terminal.ok || !archive.ok) throw new Error(`Secondary backend could not read the shared terminal room (${terminal.status}/${archive.status}).`);
     const terminalBody = await terminal.json();
     const archiveBody = await archive.json();
-    await stopBackend(backends.shift());
-    const failover = await fetch(`${backends[0].baseUrl}/healthz`);
+    const failover = await fetch(`${survivingBackend.baseUrl}/healthz`);
     if (!failover.ok) throw new Error(`Secondary backend did not remain available after primary shutdown (${failover.status}).`);
     const result = { projectId: running.projectId, emulatorPorts: running.ports, backendPorts: backends.map(item => item.port), browser, failover: { secondaryHealth: await failover.json(), terminalLifecycle: terminalBody.data?.lifecycle, archiveStatus: archiveBody.data?.status, sharedArchiveChecksum: archiveBody.data?.checksum } };
     fs.writeFileSync(path.join(evidenceDir, 'online-rehearsal-summary.json'), JSON.stringify(result, null, 2));

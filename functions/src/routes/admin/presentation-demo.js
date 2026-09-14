@@ -1,6 +1,7 @@
 'use strict';
 
 const { assertActiveIdentity } = require('../../crm/presentation-demo/identity.cjs');
+const { fail } = require('../../crm/presentation-demo/contracts.cjs');
 
 function createPresentationDemoHandlers({ roomService, connections, notes, archives, pdf, resolveIdentity = req => req.user } = {}) {
     if (!roomService || !connections || !notes || !archives || !pdf) throw new TypeError('presentation demo services are required');
@@ -16,7 +17,7 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
     function ok(res, data) { return res.status(200).json({ success: true, data }); }
     function failResponse(res, error) {
         const code = error?.code || 'PRESENTATION_DEMO_ERROR';
-        const status = ['UNAUTHORIZED', 'INVALID_IDENTITY', 'ACCOUNT_DISABLED', 'ACCOUNT_INACTIVE', 'PROFILE_UNAVAILABLE', 'REVOKED_TOKEN'].includes(code) ? 401 : ['PRESENTER_ONLY', 'ACTOR_MISMATCH', 'NOTE_FORBIDDEN', 'NOTE_AUTHOR_ONLY', 'EXPORT_FORBIDDEN', 'CRM_ELIGIBILITY_REQUIRED', 'CONNECTION_EXISTS', 'STALE_CONNECTION'].includes(code) ? 403 : ['ROOM_NOT_FOUND', 'ARCHIVE_NOT_FOUND'].includes(code) ? 404 : 400;
+        const status = ['UNAUTHORIZED', 'INVALID_IDENTITY', 'ACCOUNT_DISABLED', 'ACCOUNT_INACTIVE', 'PROFILE_UNAVAILABLE', 'REVOKED_TOKEN'].includes(code) ? 401 : ['PRESENTER_ONLY', 'ACTOR_MISMATCH', 'NOTE_FORBIDDEN', 'NOTE_AUTHOR_ONLY', 'EXPORT_FORBIDDEN', 'CRM_ELIGIBILITY_REQUIRED', 'CONNECTION_EXISTS', 'STALE_CONNECTION', 'PROJECTS_ACCESS_REQUIRED'].includes(code) ? 403 : ['ROOM_NOT_FOUND', 'ARCHIVE_NOT_FOUND'].includes(code) ? 404 : 400;
         return res.status(status).json({ success: false, error: { code, message: error?.message || code } });
     }
     function handler(fn) {
@@ -30,7 +31,11 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
             const current = await identity(req);
             return ok(res, { uid: current.uid, isAdmin: current.isAdmin === true, isTeacher: current.isTeacher === true, moduleGrants: current.moduleGrants, crmEligible: current.crmEligible === true });
         }),
-        rooms: handler(async (req, res) => ok(res, await roomService.listRooms(await identity(req), { limit: req.query?.limit }))),
+        rooms: handler(async (req, res) => {
+            const current = await identity(req);
+            if (current.isAdmin !== true && current.moduleGrants?.projects !== true) fail('PROJECTS_ACCESS_REQUIRED', 'Projects access is required to view room history.');
+            return ok(res, await roomService.listRooms(current, { limit: req.query?.limit }));
+        }),
         room: handler(async (req, res) => {
             const current = await identity(req);
             const room = await roomService.getRoom(req.params.roomId);
@@ -51,23 +56,24 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
         saveNote: handler(async (req, res) => ok(res, await notes.savePage(await identity(req), req.params.roomId, req.params.uid || undefined, req.body))),
         deleteNote: handler(async (req, res) => ok(res, await notes.deletePage(await identity(req), req.params.roomId, req.params.uid || undefined, req.body))),
         end: handler(async (req, res) => {
-            const ended = await roomService.end(await identity(req), req.params.roomId, req.body?.reason || 'explicit');
+            const current = await identity(req);
+            const ended = await roomService.end(current, req.params.roomId, req.body?.reason || 'explicit');
             try {
-                await archives.archiveRoom(req.params.roomId);
+                const finalized = await archives.archiveRoom(current, req.params.roomId);
+                ended.archiveStatus = finalized?.status || 'archived';
             } catch (error) {
                 // Terminal state is still committed when archive storage is
                 // temporarily unavailable; the bounded maintenance runner
                 // can retry the pending archive later.
                 ended.archiveStatus = 'pending';
                 ended.archiveErrorClass = error.code || 'ARCHIVE_ERROR';
+                console.error('[presentation-demo] archive finalization failed', { roomId: req.params.roomId, code: ended.archiveErrorClass });
             }
             return ok(res, ended);
         }),
         archive: handler(async (req, res) => {
             const current = await identity(req);
-            const room = await roomService.getRoom(req.params.roomId);
-            if (!room || room.presenterUid !== current.uid) { const error = new Error('Presenter access required.'); error.code = 'PRESENTER_ONLY'; throw error; }
-            return ok(res, await archives.archiveRoom(req.params.roomId));
+            return ok(res, await archives.archiveRoom(current, req.params.roomId));
         }),
         readArchive: handler(async (req, res) => ok(res, await archives.readArchive(await identity(req), req.params.roomId))),
         exportPdf: handler(async (req, res) => {

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -21,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--channel", choices=["chrome"], required=True)
     parser.add_argument("--base-url", required=True)
+    parser.add_argument("--failover-url")
+    parser.add_argument("--failover-signal")
     parser.add_argument("--accounts-file", required=True)
     parser.add_argument("--evidence", required=True)
     return parser.parse_args()
@@ -40,14 +41,18 @@ def open_lobby(context, base_url: str, account: dict):
     page.set_default_timeout(10000)
     page.goto(f"{base_url}/presentation-demo/index.html", wait_until="domcontentloaded")
     page.wait_for_function("() => window.firebase && typeof window.firebase.auth === 'function'")
+    print(f"rehearsal: signing in {account['uid']}", flush=True)
     page.evaluate(
         """async ({email, password}) => {
             await window.firebase.auth().signInWithEmailAndPassword(email, password);
         }""",
         {"email": account["email"], "password": account["password"]},
     )
+    print(f"rehearsal: signed in {account['uid']}", flush=True)
     page.reload(wait_until="domcontentloaded")
-    wait_for_text(page, "#pd-auth-status", "Signed in")
+    print(f"rehearsal: reloaded {account['uid']}", flush=True)
+    print(f"rehearsal: auth status {account['uid']} = {page.locator('#pd-auth-status').inner_text()!r}", flush=True)
+    wait_for_text(page, "#pd-auth-status", "Signed in", timeout=30000)
     return page
 
 
@@ -66,6 +71,7 @@ def open_game(page, allow_existing: bool = False):
 
 def main() -> int:
     args = parse_args()
+    print("rehearsal: starting", flush=True)
     evidence = Path(args.evidence).resolve()
     evidence.mkdir(parents=True, exist_ok=True)
     accounts = json.loads(Path(args.accounts_file).read_text(encoding="utf-8"))
@@ -81,18 +87,23 @@ def main() -> int:
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel=args.channel, headless=True)
+        print("rehearsal: browser launched", flush=True)
         contexts = {}
         pages = {}
         games = {}
         try:
             for uid in [presenter, *participants, outsider]:
+                print(f"rehearsal: opening lobby {uid}", flush=True)
                 context = browser.new_context()
                 context.set_default_timeout(10000)
+                if args.failover_url:
+                    context.add_init_script(f"window.__BEL_PRESENTATION_FAILOVER_ORIGINS = [{json.dumps(args.failover_url)}];")
                 context.tracing.start(screenshots=True, snapshots=True, sources=False)
                 context.on("page", lambda new_page: new_page.on("websocket", lambda websocket: requests.append(websocket.url)))
                 contexts[uid] = context
                 page = open_lobby(context, args.base_url, accounts["presenter"] if uid == presenter else next(entry for entry in accounts["participants"] if entry["uid"] == uid) if uid in participants else accounts["outsider"])
                 pages[uid] = page
+                print(f"rehearsal: lobby ready {uid}", flush=True)
                 page.on("request", lambda request: requests.append(request.url))
                 page.on("websocket", lambda websocket: requests.append(websocket.url))
                 page.on("response", lambda response: responses.append((response.status, response.url)) if "/api/presentation-demo" in response.url else None)
@@ -117,6 +128,7 @@ def main() -> int:
 
             for uid in [presenter, *participants]:
                 games[uid] = open_game(pages[uid])
+                print(f"rehearsal: game ready {uid}", flush=True)
                 games[uid].on("request", lambda request: requests.append(request.url))
                 games[uid].on("websocket", lambda websocket: requests.append(websocket.url))
                 games[uid].on("response", lambda response: responses.append((response.status, response.url)) if "/api/presentation-demo" in response.url else None)
@@ -126,6 +138,8 @@ def main() -> int:
 
             duplicate_context = browser.new_context()
             duplicate_context.set_default_timeout(12000)
+            if args.failover_url:
+                duplicate_context.add_init_script(f"window.__BEL_PRESENTATION_FAILOVER_ORIGINS = [{json.dumps(args.failover_url)}];")
             duplicate_context.tracing.start(screenshots=True, snapshots=True, sources=False)
             duplicate_context.on("page", lambda new_page: new_page.on("websocket", lambda websocket: requests.append(websocket.url)))
             duplicate_page = open_lobby(duplicate_context, args.base_url, accounts["participants"][0])
@@ -154,12 +168,50 @@ def main() -> int:
                 game.locator("#pd-note-body").fill(f"Private {uid} evidence with Vietnamese: hợp tác.")
                 game.locator("#pd-save-note").click()
                 wait_for_text(game, "#pd-note-status", "Saved")
+            if args.failover_signal:
+                print("rehearsal: failover checkpoint", flush=True)
+                Path(args.failover_signal).write_text("ready\n", encoding="utf-8")
+                wait_for_text(games[presenter], "#pd-connection-status", "Reconnecting", timeout=20000)
+                wait_for_text(games[presenter], "#pd-connection-status", "Connected", timeout=30000)
+                result["assertions"].append("active-backend-failover-reconnected")
+            active_base_url = args.failover_url or args.base_url
             games[presenter].locator("#pd-slide-next").click()
-            wait_for_text(games[participants[1]], "#pd-gate", "Scene:")
-            time.sleep(1.2)
+            for uid in [presenter, *participants]:
+                wait_for_text(games[uid], "#pd-gate", "Scene: A", timeout=15000)
             result["observedSlideGates"] = {uid: games[uid].locator("#pd-gate").inner_text() for uid in [presenter, *participants]}
             result["slideMessage"] = games[presenter].locator("#pd-game-message").inner_text()
             result["recentApiResponses"] = responses[-25:]
+            authoritative = {}
+            for uid in [presenter, *participants]:
+                token = games[uid].evaluate("window.firebase.auth().currentUser.getIdToken()")
+                snapshot_response = games[uid].request.get(
+                    f"{active_base_url}/api/presentation-demo/rooms/{room_id}",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if snapshot_response.status != 200:
+                    raise AssertionError(f"Authoritative room snapshot returned {snapshot_response.status} for {uid}")
+                snapshot = snapshot_response.json()["data"]
+                authoritative[uid] = {
+                    "lifecycle": snapshot["lifecycle"],
+                    "deck": snapshot["deck"],
+                    "activity": snapshot.get("activity"),
+                    "scenes": {
+                        slot_id: {
+                            "scene": slot.get("scene"),
+                            "instanceId": slot.get("instanceId"),
+                            "position": slot.get("position"),
+                            "relationship": slot.get("relationship"),
+                        }
+                        for slot_id, slot in snapshot["slots"].items()
+                        if slot.get("uid")
+                    },
+                }
+            result["authoritativeSlideStates"] = authoritative
+            reference_state = authoritative[presenter]
+            if any(state != reference_state for state in authoritative.values()):
+                raise AssertionError(f"Authoritative slide state did not converge: {authoritative}")
+            if reference_state["lifecycle"] != "playing" or reference_state["deck"]["room"] != "A" or reference_state["deck"]["slide"] != 2:
+                raise AssertionError(f"Unexpected authoritative slide state: {reference_state}")
             if not all("Scene: A" in value for value in result["observedSlideGates"].values()):
                 print(json.dumps({"observedSlideGates": result["observedSlideGates"], "slideMessage": result["slideMessage"], "recentApiResponses": result["recentApiResponses"]}, indent=2))
                 raise AssertionError(f"Slide state did not converge across contexts: {result['observedSlideGates']}")
@@ -194,7 +246,7 @@ def main() -> int:
 
             participant_token = pages[participants[0]].evaluate("window.firebase.auth().currentUser.getIdToken()")
             response = pages[participants[0]].request.get(
-                f"{args.base_url}/api/presentation-demo/rooms/{room_id}/notes/{participants[1]}",
+                f"{active_base_url}/api/presentation-demo/rooms/{room_id}/notes/{participants[1]}",
                 headers={"Authorization": f"Bearer {participant_token}"},
             )
             if response.status != 403:

@@ -10,6 +10,7 @@ const config = JSON.parse(fs.readFileSync(path.join(repo, 'scripts/bel-demo/onli
 
 function safeEnvironment(source = process.env, ports = config) {
     const projectId = String(source.FIREBASE_PROJECT_ID || config.projectId).trim();
+    const databaseInstance = `${projectId}-default-rtdb`;
     if (projectId !== config.projectId) throw new Error(`Refusing emulator orchestration for non-demo project: ${projectId}`);
     if (source.GOOGLE_APPLICATION_CREDENTIALS || source.FIREBASE_SERVICE_ACCOUNT) throw new Error('Refusing emulator orchestration with production credentials.');
     return {
@@ -19,7 +20,7 @@ function safeEnvironment(source = process.env, ports = config) {
         FIREBASE_AUTH_EMULATOR_HOST: `${ports.auth.host}:${ports.auth.port}`,
         FIRESTORE_EMULATOR_HOST: `${ports.firestore.host}:${ports.firestore.port}`,
         FIREBASE_DATABASE_EMULATOR_HOST: `${ports.database.host}:${ports.database.port}`,
-        FIREBASE_DATABASE_URL: `http://${ports.database.host}:${ports.database.port}?ns=${projectId}`,
+        FIREBASE_DATABASE_URL: `http://${ports.database.host}:${ports.database.port}?ns=${databaseInstance}`,
         STORAGE_EMULATOR_HOST: `${ports.storage.host}:${ports.storage.port}`,
         PRESENTATION_DEMO_ONLINE_ENABLED: '1',
         PRESENTATION_DEMO_DURABLE_READY: '1',
@@ -58,7 +59,7 @@ async function resolvePorts() {
 function temporaryFirebaseConfig(ports) {
     const value = JSON.parse(fs.readFileSync(path.join(repo, 'firebase.json'), 'utf8'));
     value.firestore = { ...(value.firestore || {}), rules: path.join(repo, 'firestore.rules'), indexes: path.join(repo, 'firestore.indexes.json') };
-    value.database = { ...(value.database || {}), rules: path.join(repo, 'database.rules.json') };
+    value.database = { ...(value.database || {}), instance: `${config.projectId}-default-rtdb`, rules: path.join(repo, 'database.rules.json') };
     value.storage = { ...(value.storage || {}), rules: path.join(repo, 'storage.rules') };
     value.functions = (value.functions || []).map(item => ({ ...item, source: item.source || 'functions' }));
     for (const name of ['auth', 'firestore', 'database', 'functions', 'storage']) {
@@ -80,7 +81,7 @@ function ensureFunctionDependencies() {
     execFileSync(npm, ['ci', '--omit=dev'], { cwd: path.join(repo, 'functions'), stdio: 'inherit' });
 }
 
-async function waitFor(url, timeoutMs = 60000) {
+async function waitFor(url, timeoutMs = 60000, accept = status => status >= 100 && status < 600) {
     const deadline = Date.now() + timeoutMs;
     let lastError = null;
     while (Date.now() < deadline) {
@@ -89,7 +90,7 @@ async function waitFor(url, timeoutMs = 60000) {
             // A readiness probe only needs a live HTTP listener. Emulator
             // gateways legitimately return 403/501 for an un-authenticated
             // root request, so do not mistake that for a startup failure.
-            if (response.status >= 100 && response.status < 600) return response.status;
+            if (accept(response.status)) return response.status;
         } catch (error) { lastError = error; }
         await new Promise(resolve => setTimeout(resolve, 500));
     }
@@ -107,7 +108,10 @@ async function startOnlineEmulators({ evidenceDir = null } = {}) {
     const executable = process.platform === 'win32' ? 'firebase.cmd' : 'firebase';
     const child = spawn(executable, ['emulators:start', '--only', 'auth,firestore,database,functions,storage', '--project', config.projectId, '--config', process.platform === 'win32' ? `"${temporaryConfig}"` : temporaryConfig, '--non-interactive'], { cwd: repo, env: environment, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, shell: process.platform === 'win32' });
     let logClosed = false;
+    let readyResolve;
+    const readySignal = new Promise(resolve => { readyResolve = resolve; });
     const record = chunk => {
+        if (String(chunk).includes('All emulators ready')) readyResolve();
         if (log && !logClosed) {
             try { fs.writeSync(log, chunk); } catch (_) { logClosed = true; }
         } else if (!log) process.stdout.write(chunk);
@@ -135,9 +139,10 @@ async function startOnlineEmulators({ evidenceDir = null } = {}) {
         await Promise.race([Promise.all([
             waitFor(`http://${ports.auth.host}:${ports.auth.port}`),
             waitFor(`http://${ports.firestore.host}:${ports.firestore.port}`),
-            waitFor(`http://${ports.database.host}:${ports.database.port}/.settings/rules.json?ns=${config.projectId}`),
             waitFor(`http://${ports.storage.host}:${ports.storage.port}`),
-            waitFor(`http://${ports.functions.host}:${ports.functions.port}/${config.projectId}/us-central1/api/config`)
+            waitFor(`http://${ports.database.host}:${ports.database.port}`),
+            waitFor(`http://${ports.functions.host}:${ports.functions.port}/${config.projectId}/us-central1/api/config`),
+            readySignal
         ]), childFailure]);
         return { child, stop, environment, projectId: config.projectId, ports, logPath, temporaryConfig };
     } catch (error) {

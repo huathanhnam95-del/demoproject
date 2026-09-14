@@ -17,6 +17,7 @@ const { createMemoryOperationStore } = require('./operation-store.cjs');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TICKET_MS = 60 * 1000;
+const OWNER_LEASE_MS = 10000;
 
 function createMemoryRoomStores() {
     const rooms = new Map();
@@ -27,7 +28,8 @@ function createMemoryRoomStores() {
     const tickets = new Map();
     const notebooks = new Map();
     const archives = new Map();
-    return { rooms, codes, presenterLocks, runtime, operations, tickets, notebooks, archives };
+    const commandReceipts = new Map();
+    return { rooms, codes, presenterLocks, runtime, operations, tickets, notebooks, archives, commandReceipts };
 }
 
 function createMutex() {
@@ -64,6 +66,10 @@ function createRoomService({
 
     async function getRoom(roomId) {
         const room = stores.rooms.get(String(roomId));
+        if (room && ACTIVE_LIFECYCLES.has(room.lifecycle) && room.expiresAt <= clock()) {
+            room.lifecycle = 'ended'; room.endedAt = clock(); room.endReason = 'expired'; room.archiveStatus = 'pending'; room.revision += 1;
+            stores.rooms.set(room.roomId, clone(room)); stores.presenterLocks.delete(room.presenterUid); await stores.runtime.set(room.roomId, room);
+        }
         return room ? clone(room) : null;
     }
 
@@ -119,7 +125,7 @@ function createRoomService({
     async function resolveRoom(codeOrId) {
         const value = String(codeOrId || '').trim();
         const roomId = stores.rooms.has(value) ? value : (value.length === 6 ? stores.codes.get(normalizeRoomCode(value)) : value);
-        const room = roomId ? stores.rooms.get(roomId) : null;
+        const room = roomId ? await getRoom(roomId) : null;
         if (!room) fail('ROOM_NOT_FOUND', 'That room is not available.');
         return room;
     }
@@ -164,6 +170,7 @@ function createRoomService({
     async function issueTicket(input, roomId) {
         const identity = assertActiveIdentity(input);
         const room = await resolveRoom(roomId);
+        if (!ACTIVE_LIFECYCLES.has(room.lifecycle)) fail('ROOM_ENDED');
         const membership = Object.values(room.slots).find(slot => slot.uid === identity.uid);
         assertRoomActor(identity, membership && { uid: membership.uid, seatId: membership.slotId, role: membership.role });
         const ticket = ticketFactory();
@@ -198,7 +205,7 @@ function createRoomService({
             const room = stores.rooms.get(String(roomId));
             const slot = room?.slots?.[seatId];
             if (!room || !slot) fail('ROOM_NOT_FOUND');
-            if (Array.isArray(metadata.notes)) slot.notes = clone(metadata.notes);
+            if (Array.isArray(metadata.notes)) slot.notes = [];
             if (Number.isSafeInteger(metadata.notesRevision)) slot.notesRevision = metadata.notesRevision;
             // Notebook edits are stored in their own page store and must not
             // consume the live runtime revision used by movement/deck input.
@@ -224,16 +231,51 @@ function createRoomService({
         });
     }
 
-    async function syncRuntimeState(roomId, runtimeState) {
+    async function syncRuntimeState(roomId, runtimeState, { expectedRevision = null, expectedGenerations = null, expectedOwner = null } = {}) {
         return withLock(async () => {
             const current = await getRoom(roomId);
             if (!current || current.lifecycle === 'ended') fail('ROOM_ENDED');
+            if (current.expiresAt <= clock()) {
+                current.lifecycle = 'ended'; current.endedAt = clock(); current.endReason = 'expired'; current.archiveStatus = 'pending'; current.revision += 1;
+                await saveRoom(current); stores.presenterLocks.delete(current.presenterUid); fail('ROOM_EXPIRED', 'This room has expired and cannot be revived.');
+            }
             validateRoomState(runtimeState);
-            if (runtimeState.roomId !== current.roomId || runtimeState.revision < current.revision) fail('RUNTIME_REVISION_STALE');
+            if (runtimeState.roomId !== current.roomId) fail('RUNTIME_ROOM_MISMATCH');
+            if (expectedRevision !== null && current.revision !== expectedRevision) fail('RUNTIME_REVISION_CONFLICT');
+            if (runtimeState.revision <= current.revision) fail('RUNTIME_REVISION_STALE');
+            if (expectedGenerations && Object.entries(current.slots).some(([slotId, slot]) => slot.connectionGeneration !== expectedGenerations[slotId])) fail('RUNTIME_GENERATION_CONFLICT');
+            if (expectedOwner && (current.owner?.gatewayId !== expectedOwner.gatewayId || current.owner?.ownerEpoch !== expectedOwner.ownerEpoch)) fail('OWNER_FENCED');
+            runtimeState = clone(runtimeState);
+            for (const slot of Object.values(runtimeState.slots)) { slot.notes = []; slot.notesRevision = current.slots[slot.slotId].notesRevision || 0; }
             stores.rooms.set(roomId, clone(runtimeState));
             await stores.runtime.set(roomId, runtimeState);
             return clone(runtimeState);
         });
+    }
+
+    async function claimRuntimeOwner(roomId, gatewayId, now = clock(), { force = false } = {}) {
+        return withLock(async () => {
+            const room = await getRoom(roomId);
+            if (!room || !ACTIVE_LIFECYCLES.has(room.lifecycle)) fail('ROOM_ENDED');
+            const owner = room.owner || { gatewayId: null, ownerEpoch: 0, leaseUntil: 0 };
+            if (!force && owner.gatewayId && owner.gatewayId !== gatewayId && owner.leaseUntil >= now) fail('OWNER_LEASE_HELD');
+            if (owner.gatewayId !== gatewayId) owner.ownerEpoch += 1;
+            owner.gatewayId = String(gatewayId);
+            owner.leaseUntil = now + OWNER_LEASE_MS;
+            room.owner = owner;
+            room.revision += 1;
+            await saveRoom(room);
+            return { owner: clone(owner), room: clone(room) };
+        });
+    }
+
+    async function readRuntimeCommandReceipt(roomId, seatId, commandId) {
+        return clone(stores.commandReceipts.get(`${roomId}:${seatId}:${commandId}`) || null);
+    }
+
+    async function writeRuntimeCommandReceipt(roomId, seatId, commandId, result) {
+        stores.commandReceipts.set(`${roomId}:${seatId}:${commandId}`, { roomId, seatId, commandId, result: clone(result), createdAt: clock() });
+        return clone(result);
     }
 
     async function markArchiveStatus(roomId, status) {
@@ -274,7 +316,7 @@ function createRoomService({
             .map(clone));
     }
 
-    return { createOrResume, end, expireDue, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, stores, refreshRuntimeOnRead: true };
+    return { claimRuntimeOwner, createOrResume, end, expireDue, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, readRuntimeCommandReceipt, syncRuntimeState, touchPresenter, updateNotebookMetadata, writeRuntimeCommandReceipt, stores, refreshRuntimeOnRead: true };
 }
 
-module.exports = { DAY_MS, TICKET_MS, createMemoryRoomStores, createRoomService };
+module.exports = { DAY_MS, OWNER_LEASE_MS, TICKET_MS, createMemoryRoomStores, createRoomService };

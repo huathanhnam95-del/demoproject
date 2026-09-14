@@ -7,9 +7,6 @@ const { assertActiveIdentity, assertRoomActor } = require('./identity.cjs');
 const { fail } = require('./contracts.cjs');
 
 const FONT_PATH = path.join(__dirname, 'fonts', 'Roboto-Regular.ttf');
-// Identity-H text uses the font's default CID width. Keep a conservative line
-// length so exported notes remain inside the 612pt page after embedding.
-const MAX_LINE_CHARS = 76;
 const LINES_PER_PAGE = 43;
 
 function u16(buffer, offset) { return buffer.readUInt16BE(offset); }
@@ -87,18 +84,45 @@ function fontDescriptor(font) {
     return { bbox: `[${s16(font, start + 36)} ${s16(font, start + 38)} ${s16(font, start + 40)} ${s16(font, start + 42)}]` };
 }
 
+function fontMetrics(font) {
+    const tables = tableDirectory(font);
+    const head = tables.get('head'); const hhea = tables.get('hhea'); const maxp = tables.get('maxp');
+    const unitsPerEm = head ? u16(font, head.offset + 18) : 1000;
+    const numberOfHMetrics = hhea ? u16(font, hhea.offset + 34) : 1;
+    const numGlyphs = maxp ? u16(font, maxp.offset + 4) : numberOfHMetrics;
+    const hmtx = tables.get('hmtx'); const advances = [];
+    for (let index = 0; index < numberOfHMetrics; index += 1) advances.push(hmtx ? u16(font, hmtx.offset + index * 4) : unitsPerEm * 0.6);
+    const fallback = advances.at(-1) || unitsPerEm * 0.6;
+    return { unitsPerEm, advances, fallback, numGlyphs };
+}
+
+function glyphWidth(codePoint, lookup, metrics) {
+    const glyph = lookup.get(codePoint) || 0;
+    return metrics.advances[Math.min(glyph, metrics.advances.length - 1)] || metrics.fallback;
+}
+
 function hexCid(value) { return Number(value).toString(16).padStart(4, '0').toUpperCase(); }
 
-function wrapLines(lines) {
+function wrapLines(lines, { fontPath = FONT_PATH, lookup = null, metrics = null, fontSize = 11, maxWidth = 512 } = {}) {
+    const font = metrics && lookup ? null : fs.readFileSync(fontPath);
+    const cmap = lookup || cmapLookup(font);
+    const widths = metrics || fontMetrics(font);
+    const lineLimit = Math.max(1000, Math.floor(maxWidth * 1000 / fontSize));
     const output = [];
     for (const raw of lines) {
         const source = String(raw ?? '');
         for (const part of source.split(/\r?\n/)) {
             let remaining = part;
             if (!remaining) { output.push(''); continue; }
-            while (remaining.length > MAX_LINE_CHARS) {
-                let cut = remaining.lastIndexOf(' ', MAX_LINE_CHARS);
-                if (cut < 1) cut = MAX_LINE_CHARS;
+            while (Array.from(remaining).reduce((sum, char) => sum + glyphWidth(char.codePointAt(0), cmap, widths), 0) > lineLimit) {
+                let width = 0; let cut = 0; let lastSpace = -1;
+                for (const [index, char] of Array.from(remaining).entries()) {
+                    const next = width + glyphWidth(char.codePointAt(0), cmap, widths);
+                    if (next > lineLimit) break;
+                    width = next; cut = index + 1; if (char === ' ') lastSpace = cut - 1;
+                }
+                if (cut < 1) cut = 1;
+                if (lastSpace > 0) cut = lastSpace;
                 output.push(remaining.slice(0, cut));
                 remaining = remaining.slice(cut).trimStart();
             }
@@ -125,7 +149,8 @@ function makeToUnicode(codePoints) {
 function buildPdf(lines, { fontPath = FONT_PATH } = {}) {
     const font = fs.readFileSync(fontPath);
     const lookup = cmapLookup(font);
-    const wrapped = wrapLines(lines);
+    const metrics = fontMetrics(font);
+    const wrapped = wrapLines(lines, { lookup, metrics });
     const pages = [];
     for (let index = 0; index < wrapped.length; index += LINES_PER_PAGE) pages.push(wrapped.slice(index, index + LINES_PER_PAGE));
     if (!pages.length) pages.push(['']);
@@ -136,11 +161,12 @@ function buildPdf(lines, { fontPath = FONT_PATH } = {}) {
     const descriptor = fontDescriptor(font);
     const pageIds = pages.map((_, index) => 9 + index);
     const contentIds = pages.map((_, index) => 9 + pages.length + index);
+    const widthEntries = [...used].sort((a, b) => a - b).map(codePoint => `${codePoint} [${Math.max(1, Math.round(glyphWidth(codePoint, lookup, metrics) * 1000 / metrics.unitsPerEm))}]`).join(' ');
     const objects = [
         '<< /Type /Catalog /Pages 2 0 R >>',
         `<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`,
         '<< /Type /Font /Subtype /Type0 /BaseFont /Roboto /Encoding /Identity-H /DescendantFonts [4 0 R] /ToUnicode 6 0 R >>',
-        '<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Roboto /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 5 0 R /DW 600 /CIDToGIDMap 7 0 R >>',
+        `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Roboto /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 5 0 R /DW 600 /W [${widthEntries}] /CIDToGIDMap 7 0 R >>`,
         `<< /Type /FontDescriptor /FontName /Roboto /Flags 32 /FontBBox ${descriptor.bbox} /ItalicAngle 0 /Ascent 928 /Descent -244 /CapHeight 710 /StemV 80 /FontFile2 8 0 R >>`,
         stream(`<< /Length ${makeToUnicode(used).length} >>`, makeToUnicode(used)),
         stream(`<< /Length ${cidToGid.length} >>`, cidToGid),
@@ -199,7 +225,7 @@ function createPdfService({ archives, roomService = null, notesService = null } 
         assertRoomActor(viewer, { ...member, seatId: member.slotId });
         const targetUids = member.role === 'presenter' ? Object.values(current.slots).map(slot => slot.uid).filter(Boolean) : [viewer.uid];
         const notebooks = {};
-        for (const uid of targetUids) notebooks[uid] = await notesService.readNotebookByUid(roomId, uid);
+        for (const uid of targetUids) notebooks[uid] = await notesService.readNotebookByUid(viewer, roomId, uid);
         return { roomId, checksum: checksum({ roomId, revision: current.revision, notebooks }), notebooks };
     }
     async function exportPdf(identity, roomId) {

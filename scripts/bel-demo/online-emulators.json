@@ -2,7 +2,7 @@
   "projectId": "demo-bel-online",
   "auth": { "host": "127.0.0.1", "port": 9099 },
   "firestore": { "host": "127.0.0.1", "port": 8080 },
-  "database": { "host": "127.0.0.1", "port": 9000, "rules": "database.rules.json" },
+  "database": { "host": "127.0.0.1", "port": 9000, "instance": "demo-bel-online-default-rtdb", "rules": "database.rules.json" },
   "storage": { "host": "127.0.0.1", "port": 9199 },
   "functions": { "host": "127.0.0.1", "port": 5001 },
   "presentationService": { "host": "127.0.0.1", "port": 8787 },

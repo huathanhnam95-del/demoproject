@@ -8,6 +8,10 @@ function normalizeIdentity(input = {}) {
     const workforce = input.workforce && typeof input.workforce === 'object' ? input.workforce : {};
     const uid = String(input.uid ?? token.uid ?? profile.uid ?? '').trim();
     const profileResolved = input.profileResolved === true ? true : input.profileResolved === false ? false : undefined;
+    const profileStatus = String(profile.accountStatus ?? input.accountStatus ?? '').toLowerCase();
+    const workforceStatus = String(workforce.accountStatus ?? workforce.status ?? '').toLowerCase();
+    const workforceClosed = workforce.archived === true || workforce.active === false || ['archived', 'suspended', 'inactive', 'disabled'].includes(workforceStatus);
+    const accountStatus = workforceClosed ? 'inactive' : profileStatus || workforceStatus || 'unknown';
     const moduleGrants = profile.moduleGrants && typeof profile.moduleGrants === 'object'
         ? profile.moduleGrants
         : workforce.moduleGrants && typeof workforce.moduleGrants === 'object' ? workforce.moduleGrants : {};
@@ -15,12 +19,12 @@ function normalizeIdentity(input = {}) {
         uid,
         email: String(input.email ?? profile.email ?? token.email ?? '').trim().toLowerCase() || null,
         disabled: profile.disabled === true || input.disabled === true || input.authUser?.disabled === true,
-        accountStatus: String(profile.accountStatus ?? input.accountStatus ?? workforce.status ?? 'unknown').toLowerCase(),
+        accountStatus,
         isAdmin: profile.isAdmin === true || input.isAdmin === true,
         isTeacher: profile.isTeacher === true || String(profile.crmRole || '').toLowerCase() === 'teacher' || input.isTeacher === true,
         moduleGrants: structuredClone(moduleGrants),
-        crmEligible: input.crmEligible === true || profile.isAdmin === true || profile.isTeacher === true
-            || String(profile.crmRole || '').toLowerCase() === 'teacher' || moduleGrants.projects === true,
+        crmEligible: !workforceClosed && (input.crmEligible === true || profile.isAdmin === true || profile.isTeacher === true
+            || String(profile.crmRole || '').toLowerCase() === 'teacher' || moduleGrants.projects === true),
         profileResolved,
         authUserResolved: input.authUser !== undefined
     };

@@ -13,6 +13,15 @@ function rejectUpgrade(socket, status, message) {
     socket.destroy();
 }
 
+function originAllowed(request, configuredOrigin) {
+    const requestOrigin = String(request.headers.origin || '').trim();
+    if (!requestOrigin) return true;
+    const configured = Array.isArray(configuredOrigin) ? configuredOrigin.filter(Boolean) : configuredOrigin ? [configuredOrigin] : [];
+    if (configured.length) return configured.includes(requestOrigin);
+    const expected = `${request.socket.encrypted ? 'https' : 'http'}://${request.headers.host}`;
+    return requestOrigin === expected;
+}
+
 function installWebSocketGateway(server, { connections, authenticate, resolveIdentity = async identity => identity, path = '/api/presentation-demo/ws', origin = null, maxMessageBytes = 120000 } = {}) {
     if (!server || !connections || typeof authenticate !== 'function') throw new TypeError('server, connections and authenticate are required');
     const wss = new WebSocketServer({ noServer: true, maxPayload: maxMessageBytes });
@@ -20,7 +29,7 @@ function installWebSocketGateway(server, { connections, authenticate, resolveIde
         try {
             const url = new URL(request.url, 'http://presentation-demo.invalid');
             if (url.pathname !== path) return rejectUpgrade(socket, 404, 'Not Found');
-            if (origin && request.headers.origin && request.headers.origin !== origin) return rejectUpgrade(socket, 403, 'Forbidden');
+            if (!originAllowed(request, origin)) return rejectUpgrade(socket, 403, 'Forbidden');
             const token = tokenFromProtocols(request.headers['sec-websocket-protocol']);
             if (!token) return rejectUpgrade(socket, 401, 'Unauthorized');
             const identity = await authenticate(token, request);
@@ -56,7 +65,7 @@ function installWebSocketGateway(server, { connections, authenticate, resolveIde
                 }
                 if (!session) throw Object.assign(new Error('Connect the socket first.'), { code: 'NOT_CONNECTED' });
                 if (message.type === 'heartbeat') return send('heartbeat', await connections.heartbeat(session, identity), message.requestId);
-                if (message.type === 'input') return send('input', await connections.input(session, message.command, identity), message.requestId);
+                if (message.type === 'input') return send('input', await connections.input(session, message.command, identity, { commandId: message.requestId }), message.requestId);
                 if (message.type === 'disconnect') {
                     const result = await connections.close(session, identity); session = null; return send('disconnected', result, message.requestId);
                 }

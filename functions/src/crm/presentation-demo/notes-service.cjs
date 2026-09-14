@@ -87,7 +87,7 @@ function createNotebookService({ roomService, clock = () => Date.now(), maxPages
         const pages = pagesFor(roomId, target);
         const index = pages.findIndex(candidate => candidate.id === page.pageId);
         if (index < 0 || pages[index].version !== page.expectedVersion) fail('NOTE_CONFLICT');
-        pages[index] = { ...pages[index], deleted: true, deletedAt: clock(), deletedBy: identity.uid };
+        pages[index] = { ...pages[index], version: pages[index].version + 1, deleted: true, deletedAt: clock(), deletedBy: identity.uid };
         roomService.stores.notebooks.set(key(roomId, target), clone(pages));
         targetMembership.notes = clone(visiblePages(pages));
         if (identity.uid === room.presenterUid) {
@@ -97,8 +97,14 @@ function createNotebookService({ roomService, clock = () => Date.now(), maxPages
         return { deleted: true, pageId: page.pageId, pages: clone(visiblePages(pages)) };
     }
 
-    async function readNotebookByUid(roomId, uid) {
-        await membership(roomId, uid);
+    async function readNotebookByUid(inputOrRoomId, roomIdOrUid, maybeUid) {
+        const hasActor = inputOrRoomId && typeof inputOrRoomId === 'object';
+        const identity = hasActor ? assertActiveIdentity(inputOrRoomId) : null;
+        const roomId = hasActor ? roomIdOrUid : inputOrRoomId;
+        const uid = hasActor ? maybeUid : roomIdOrUid;
+        const { room, slot } = await membership(roomId, hasActor ? identity.uid : uid);
+        if (hasActor && uid !== identity.uid && (slot.role !== 'presenter' || identity.isAdmin !== true)) fail('NOTE_FORBIDDEN');
+        if (!room.slots[slot.slotId] || !Object.values(room.slots).some(value => value.uid === uid)) fail('NOTE_FORBIDDEN');
         return { roomId, uid, notebookRevision: notebookRevision(roomId, uid), pages: visiblePages(pagesFor(roomId, uid)) };
     }
 

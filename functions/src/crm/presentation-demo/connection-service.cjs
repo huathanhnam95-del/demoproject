@@ -5,7 +5,7 @@ const { AuthoritativeRuntime } = require('./runtime.cjs');
 const { assertActiveIdentity } = require('./identity.cjs');
 const { fail } = require('./contracts.cjs');
 
-function createConnectionService({ roomService, clock = () => Date.now(), runtimeFactory = room => new AuthoritativeRuntime(room, { clock }) } = {}) {
+function createConnectionService({ roomService, clock = () => Date.now(), gatewayId = `gateway-${crypto.randomUUID()}`, runtimeFactory = room => new AuthoritativeRuntime(room, { clock }) } = {}) {
     if (!roomService) throw new TypeError('roomService is required');
     const runtimes = new Map();
     const connections = new Map();
@@ -37,17 +37,35 @@ function createConnectionService({ roomService, clock = () => Date.now(), runtim
         return runtime;
     }
 
+    function writeFence(state) {
+        return {
+            expectedRevision: state.revision,
+            expectedGenerations: Object.fromEntries(Object.entries(state.slots || {}).map(([slotId, slot]) => [slotId, slot.connectionGeneration])),
+            expectedOwner: state.owner?.gatewayId ? { gatewayId: state.owner.gatewayId, ownerEpoch: state.owner.ownerEpoch } : null
+        };
+    }
+
+    async function ensureOwner(roomId, { force = false } = {}) {
+        if (typeof roomService.claimRuntimeOwner !== 'function') return null;
+        const result = await roomService.claimRuntimeOwner(roomId, gatewayId, clock(), { force });
+        const runtime = runtimes.get(roomId);
+        if (runtime && runtime.room.revision < result.room.revision) runtime.refreshRoom(result.room);
+        return result.owner;
+    }
+
     async function open(input, ticket, { replaceExisting = false } = {}) {
         const identity = assertActiveIdentity(input);
         const rawTicket = ticket.ticket || ticket;
         const admission = await roomService.consumeTicket(identity, rawTicket, { markUsed: false });
         return withRoomLock(admission.roomId, async () => {
+            if (replaceExisting) await ensureOwner(admission.roomId, { force: true });
             const runtime = await getRuntime(admission.roomId);
+            const baseState = runtime.rawState();
             const connectionId = crypto.randomUUID();
             const result = runtime.connect(admission.seatId, null, { replaceExisting, now: clock() });
             await roomService.consumeTicket(identity, rawTicket, { markUsed: true });
             runtime.markBootstrap(admission.seatId, clock());
-            await roomService.syncRuntimeState(admission.roomId, runtime.rawState());
+            await roomService.syncRuntimeState(admission.roomId, runtime.rawState(), writeFence(baseState));
             const context = { connectionId, roomId: admission.roomId, seatId: admission.seatId, uid: identity.uid, role: admission.role, generation: result.generation, runtime, authContext: { uid: identity.uid, email: identity.email, accountStatus: identity.accountStatus, isAdmin: identity.isAdmin, isTeacher: identity.isTeacher, crmEligible: true } };
             connections.set(connectionId, context);
             return { connectionId, roomId: admission.roomId, seatId: admission.seatId, uid: identity.uid, role: admission.role, generation: result.generation, snapshot: runtime.snapshot(identity.uid) };
@@ -69,21 +87,32 @@ function createConnectionService({ roomService, clock = () => Date.now(), runtim
     async function heartbeat(context, identity = null) {
         const current = await contextFor(context, identity);
         return withRoomLock(current.roomId, async () => {
+            await ensureOwner(current.roomId);
             await getRuntime(current.roomId);
-            current.runtime.requireGeneration(current.seatId, current.generation);
-            const slot = current.runtime.room.slots[current.seatId];
-            slot.lastSeenAt = clock();
-            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState());
-            return { accepted: true, generation: current.generation, snapshot: current.runtime.snapshot(current.uid) };
+            const baseState = current.runtime.rawState();
+            current.runtime.tick(clock());
+            const result = current.runtime.heartbeat(current.seatId, current.generation, clock());
+            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState(), writeFence(baseState));
+            return result;
         });
     }
 
-    async function input(context, command, identity = null) {
+    async function input(context, command, identity = null, { commandId = null } = {}) {
         const current = await contextFor(context, identity);
         return withRoomLock(current.roomId, async () => {
+            await ensureOwner(current.roomId);
             await getRuntime(current.roomId);
+            if (commandId && typeof roomService.readRuntimeCommandReceipt === 'function') {
+                const receipt = await roomService.readRuntimeCommandReceipt(current.roomId, current.seatId, commandId);
+                if (receipt) return receipt;
+                const persisted = await roomService.getRoom(current.roomId);
+                if (Number(command?.seq) <= Number(persisted?.lastCommandSeq?.[current.seatId] || 0)) return { accepted: true, type: command?.type, replayed: true, revision: persisted.revision, snapshot: current.runtime.snapshot(current.uid) };
+            }
+            const baseState = current.runtime.rawState();
+            current.runtime.tick(clock());
             const result = current.runtime.command(current.seatId, current.generation, command, clock());
-            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState());
+            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState(), writeFence(baseState));
+            if (commandId && typeof roomService.writeRuntimeCommandReceipt === 'function') await roomService.writeRuntimeCommandReceipt(current.roomId, current.seatId, commandId, result);
             return result;
         });
     }
@@ -91,9 +120,11 @@ function createConnectionService({ roomService, clock = () => Date.now(), runtim
     async function close(context, identity = null) {
         const current = await contextFor(context, identity);
         return withRoomLock(current.roomId, async () => {
+            await ensureOwner(current.roomId);
             await getRuntime(current.roomId);
+            const baseState = current.runtime.rawState();
             current.runtime.setPresence(current.seatId, false, clock(), current.generation);
-            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState());
+            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState(), writeFence(baseState));
             connections.delete(current.connectionId);
             return { accepted: true };
         });
@@ -104,9 +135,9 @@ function createConnectionService({ roomService, clock = () => Date.now(), runtim
         return heartbeat(context, identity);
     }
 
-    async function inputById(connectionId, command, identity) {
+    async function inputById(connectionId, command, identity, options = {}) {
         const context = connections.get(connectionId);
-        return input(context, command, identity);
+        return input(context, command, identity, options);
     }
 
     async function closeById(connectionId, identity) {

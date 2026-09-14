@@ -9,9 +9,15 @@ function checksum(value) { return crypto.createHash('sha256').update(JSON.string
 function createArchiveService({ roomService, notesService, stores = roomService?.stores, clock = () => Date.now() } = {}) {
     if (!roomService || !notesService || !stores) throw new TypeError('roomService, notesService and stores are required');
 
-    async function archiveRoom(roomId) {
+    async function archiveRoom(inputOrRoomId, maybeRoomId) {
+        const hasActor = inputOrRoomId && typeof inputOrRoomId === 'object';
+        const identity = hasActor ? assertActiveIdentity(inputOrRoomId) : null;
+        const roomId = hasActor ? maybeRoomId : inputOrRoomId;
         const room = await roomService.getRoom(roomId);
         if (!room || room.lifecycle !== 'ended') fail('ROOM_NOT_TERMINAL');
+        if (identity) {
+            assertRoomActor(identity, { uid: room.presenterUid, seatId: 'p0', role: 'presenter' });
+        }
         const existing = stores.archives.get(roomId);
         if (existing) return clone(existing);
         const notebooks = {};
@@ -19,7 +25,7 @@ function createArchiveService({ roomService, notesService, stores = roomService?
         for (const slot of Object.values(room.slots)) {
             if (!slot.uid) continue;
             members.push({ uid: slot.uid, seatId: slot.slotId, role: slot.role, displayName: slot.displayName, joinedAt: slot.joinedAt });
-            const notebook = await notesService.readNotebookByUid(roomId, slot.uid);
+            const notebook = await notesService.readNotebookByUid(hasActor ? identity : roomId, hasActor ? roomId : slot.uid, hasActor ? slot.uid : undefined);
             notebooks[slot.uid] = { notebookRevision: notebook.notebookRevision, pages: notebook.pages };
         }
         const payload = { roomId, sourceRevision: room.revision, members, notebooks };

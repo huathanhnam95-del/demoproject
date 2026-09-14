@@ -18,6 +18,7 @@ button, input, textarea { font: inherit; }
 .pd-entry-card { border: 1px solid var(--pd-line); border-radius: 14px; padding: 18px; background: #fbfdfb; }
 .pd-room-history { display: grid; gap: 8px; margin-top: 18px; }
 .pd-history-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; border-top: 1px solid var(--pd-line); font-size: .85rem; }
+.pd-history-actions { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .pd-history-row .pd-button { padding: 7px 10px; font-size: .75rem; }
 .pd-entry-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
 .pd-entry-card label, .pd-side-section label { display: block; margin: 12px 0 6px; font-size: .8rem; font-weight: 700; }

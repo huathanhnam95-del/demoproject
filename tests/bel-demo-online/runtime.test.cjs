@@ -32,7 +32,7 @@ test('disconnect does not pause the room and disconnected players do not block a
     assert.equal(runtime.snapshot().lifecycle, 'playing');
 });
 
-test('initial reception latch requires all three participant joins exactly once', () => {
+test('initial reception latch requires all three participant joins and bootstrap sessions', () => {
     const value = room();
     value.slots.p3.uid = null;
     const runtime = new AuthoritativeRuntime(value, { clock: () => 1000 });
@@ -41,6 +41,8 @@ test('initial reception latch requires all three participant joins exactly once'
     value.slots.p3.uid = 'u3';
     value.slots.p3.joinedAt = 1000;
     runtime.refreshRoom(value);
+    runtime.connect('p1', 1);
+    runtime.connect('p2', 1);
     runtime.connect('p3', 1);
     runtime.command('p0', 1, { type: 'transition', seq: 2, to: 'playing' });
     assert.ok(runtime.snapshot().allParticipantsJoinedAt);

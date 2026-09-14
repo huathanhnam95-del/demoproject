@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { FieldValue } = require('firebase-admin/firestore');
-const { db, getAuth, getStorageBucket } = require('./utils/firebase_admin_init');
+const { db, getAuth, getDatabase, getStorageBucket } = require('./utils/firebase_admin_init');
 const {
     sendSuccess,
     sendError
@@ -30,6 +30,7 @@ const { createConnectionService } = require('./crm/presentation-demo/connection-
 const { createNotebookService } = require('./crm/presentation-demo/notes-service.cjs');
 const { createArchiveService } = require('./crm/presentation-demo/archive-service.cjs');
 const { createPdfService } = require('./crm/presentation-demo/pdf-service.cjs');
+const { createFirebasePresentationDemoServices } = require('./crm/presentation-demo/firebase-stores.cjs');
 const {
     practiceAttemptsLimiterByUid,
     sharedPracticeAttemptsLimiter,
@@ -92,7 +93,9 @@ const authMiddleware = async (req, res, next) => {
         }
 
         const idToken = authHeader.slice('Bearer '.length).trim();
-        const decodedToken = await getAuth().verifyIdToken(idToken);
+        const decodedToken = await getAuth().verifyIdToken(idToken, true);
+        req.authUser = await getAuth().getUser(decodedToken.uid);
+        if (req.authUser.disabled === true) return sendError(res, 401, 'ACCOUNT_DISABLED', 'Account is disabled.');
         req.user = decodedToken;
         return next();
     } catch (error) {
@@ -408,12 +411,20 @@ const pronunciationReferenceAudioRouter = createPronunciationReferenceAudioRoute
 // Presentation Demo v2 is deliberately feature-off by default. The services are
 // assembled behind the existing authenticated API boundary; clients never get
 // direct Firestore/RTDB access to live room state.
-const presentationDemoStores = createMemoryRoomStores();
-const presentationDemoRoomService = createRoomService({ stores: presentationDemoStores });
+const presentationDemoOnlineEnabled = String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() === '1';
+const presentationDemoDurableReady = String(process.env.PRESENTATION_DEMO_DURABLE_READY || '').trim() === '1';
+if (presentationDemoOnlineEnabled && !presentationDemoDurableReady) {
+    throw new Error('PRESENTATION_DEMO_ONLINE_ENABLED requires PRESENTATION_DEMO_DURABLE_READY=1.');
+}
+const presentationDemoBundle = presentationDemoDurableReady
+    ? createFirebasePresentationDemoServices({ db, rtdb: getDatabase() })
+    : null;
+const presentationDemoStores = presentationDemoBundle?.stores || createMemoryRoomStores();
+const presentationDemoRoomService = presentationDemoBundle?.roomService || createRoomService({ stores: presentationDemoStores });
 const presentationDemoConnections = createConnectionService({ roomService: presentationDemoRoomService });
-const presentationDemoNotes = createNotebookService({ roomService: presentationDemoRoomService });
-const presentationDemoArchives = createArchiveService({ roomService: presentationDemoRoomService, notesService: presentationDemoNotes, stores: presentationDemoStores });
-const presentationDemoPdf = createPdfService({ archives: presentationDemoArchives });
+const presentationDemoNotes = presentationDemoBundle?.notes || createNotebookService({ roomService: presentationDemoRoomService });
+const presentationDemoArchives = presentationDemoBundle?.archives || createArchiveService({ roomService: presentationDemoRoomService, notesService: presentationDemoNotes, stores: presentationDemoStores });
+const presentationDemoPdf = createPdfService({ archives: presentationDemoArchives, roomService: presentationDemoRoomService, notesService: presentationDemoNotes });
 const presentationDemoRouter = createPresentationDemoRouter({
     roomService: presentationDemoRoomService,
     connections: presentationDemoConnections,
@@ -423,14 +434,19 @@ const presentationDemoRouter = createPresentationDemoRouter({
     authMiddleware,
     resolveIdentity: async req => {
         let profile = null;
+        let workforce = null;
         try {
             const snapshot = await db.collection('users').doc(req.user.uid).get();
             profile = snapshot.exists ? snapshot.data() : null;
-        } catch (_) {
-            profile = null;
+            const workforceSnapshot = await db.collection('crmWorkforceAccounts').doc(req.user.uid).get();
+            workforce = workforceSnapshot.exists ? workforceSnapshot.data() : null;
+        } catch (error) {
+            const failure = new Error('CRM account could not be verified.');
+            failure.code = 'PROFILE_UNAVAILABLE';
+            throw failure;
         }
         const { serverIdentityFromAuth } = require('./crm/presentation-demo/identity.cjs');
-        return serverIdentityFromAuth({ decodedToken: req.user, profile });
+        return serverIdentityFromAuth({ decodedToken: req.user, profile, workforce, authUser: req.authUser });
     }
 });
 

@@ -67,6 +67,16 @@ function createRoomService({
         return room ? clone(room) : null;
     }
 
+    async function listRooms(input, { limit = 50 } = {}) {
+        const identity = assertActiveIdentity(input);
+        const maximum = Math.min(100, Math.max(1, Number(limit) || 50));
+        return Array.from(stores.rooms.values())
+            .filter(room => room.presenterUid === identity.uid || Object.values(room.slots).some(slot => slot.uid === identity.uid))
+            .sort((a, b) => Number(b.lastPresenterActivityAt || b.createdAt || 0) - Number(a.lastPresenterActivityAt || a.createdAt || 0))
+            .slice(0, maximum)
+            .map(room => publicResult(room, identity.uid));
+    }
+
     async function saveRoom(room) {
         validateRoomState(room);
         stores.rooms.set(room.roomId, clone(room));
@@ -128,6 +138,9 @@ function createRoomService({
                 slot.displayName = identity.email ? identity.email.split('@')[0].slice(0, 80) : `Participant ${slot.slotId.slice(1)}`;
                 slot.originalRole = identity.isTeacher ? 'teacher' : 'participant';
                 slot.joinedAt = clock();
+                // Membership is part of the authoritative domain revision so
+                // a runtime cached before a late join cannot overwrite it.
+                room.revision += 1;
             }
             await saveRoom(room);
             return { roomId: room.roomId, code: room.code, seatId: slot.slotId, role: slot.role, snapshot: publicResult(room, identity.uid) };
@@ -155,7 +168,7 @@ function createRoomService({
         assertRoomActor(identity, membership && { uid: membership.uid, seatId: membership.slotId, role: membership.role });
         const ticket = ticketFactory();
         const expiresAt = clock() + TICKET_MS;
-        stores.tickets.set(ticket, { roomId: room.roomId, uid: identity.uid, seatId: membership.slotId, expiresAt, used: false });
+        stores.tickets.set(ticket, { roomId: room.roomId, uid: identity.uid, seatId: membership.slotId, role: membership.role, expiresAt, used: false });
         return { ticket, roomId: room.roomId, seatId: membership.slotId, role: membership.role, expiresAt };
     }
 
@@ -253,7 +266,15 @@ function createRoomService({
         });
     }
 
-    return { createOrResume, end, expireDue, getRoom, issueTicket, join, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, stores };
+    async function listPendingArchives(limit = 100) {
+        return withLock(async () => Array.from(stores.rooms.values())
+            .filter(room => room.lifecycle === 'ended' && ['pending', 'failed'].includes(room.archiveStatus))
+            .sort((a, b) => Number(a.endedAt || 0) - Number(b.endedAt || 0))
+            .slice(0, Math.max(0, limit))
+            .map(clone));
+    }
+
+    return { createOrResume, end, expireDue, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, stores, refreshRuntimeOnRead: true };
 }
 
 module.exports = { DAY_MS, TICKET_MS, createMemoryRoomStores, createRoomService };

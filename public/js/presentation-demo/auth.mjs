@@ -16,10 +16,23 @@ export async function bootAuth() {
     const config = await configResponse.json();
     if (config?.config?.apiKey && !window.firebase.apps?.length) window.firebase.initializeApp(config.config);
     const auth = window.firebase.auth();
+    if (config?.authEmulatorUrl && !auth.__belEmulatorConnected) {
+      auth.useEmulator(config.authEmulatorUrl);
+      auth.__belEmulatorConnected = true;
+    }
     return new Promise(resolve => {
-      const unsubscribe = auth.onAuthStateChanged(user => {
+      const unsubscribe = auth.onAuthStateChanged(async user => {
         unsubscribe();
-        resolve(user ? { uid: user.uid, email: user.email || null, accountStatus: 'active', isAdmin: false, user, local: false } : null);
+        if (!user) return resolve(null);
+        const identity = { uid: user.uid, email: user.email || null, accountStatus: 'active', isAdmin: false, user, local: false };
+        try {
+          const token = await user.getIdToken();
+          const capabilityResponse = await fetch('/api/presentation-demo/capabilities', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+          const capability = await capabilityResponse.json();
+          if (!capabilityResponse.ok || capability.success === false) return resolve(null);
+          Object.assign(identity, capability.data || {});
+        } catch (_) { return resolve(null); }
+        resolve(identity);
       });
     });
   } catch (_) {
@@ -31,6 +44,11 @@ export async function authHeaders(identity) {
   if (identity?.local) return { 'X-Demo-User': identity.uid };
   if (identity?.user?.getIdToken) return { Authorization: `Bearer ${await identity.user.getIdToken()}` };
   return {};
+}
+
+export async function authToken(identity) {
+  if (identity?.local) return `dev:${identity.uid}`;
+  return identity?.user?.getIdToken ? identity.user.getIdToken() : null;
 }
 
 export function signInUrl() {

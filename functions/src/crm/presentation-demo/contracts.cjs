@@ -99,6 +99,13 @@ function createRoomState({ roomId, code, presenterUid, now = Date.now(), operati
         lastCommandSeq: Object.fromEntries(SLOT_IDS.map(slotId => [slotId, 0])),
         deck: { room: null, slide: 1, steps: {}, finalPage: 'determine', etaOrigin: null, properties: { showQuotes: true, showFolio: true, photoTreatment: 'Black and white' } },
         activity: { id: null, phase: null, state: null },
+        gameplay: {
+            version: 1,
+            bridge: { generation: 0, phase: 'gathering', remaining: 60000, placed: 0, assisted: false, planks: [] },
+            reversal: { phase: 'gathering', index: 0, remaining: 0, results: [], debuffs: { p1: 0, p2: 0, p3: 0 } },
+            cubes: { pairs: [false, false, false], matchedAt: [], cubes: [] },
+            objects: {}
+        },
         slots,
         operationId
     };
@@ -109,6 +116,7 @@ function validateRoomState(room) {
     if (!isRoomId(room.roomId) || !isUid(room.presenterUid)) fail('ROOM_INVALID');
     if (normalizeRoomCode(room.code) !== room.code || !LIFECYCLES.includes(room.lifecycle)) fail('ROOM_INVALID');
     if (!Number.isSafeInteger(room.revision) || room.revision < 0) fail('ROOM_INVALID');
+    if (room.gameplay !== undefined && !isPlainRecord(room.gameplay)) fail('ROOM_INVALID');
     if (!Number.isFinite(room.createdAt) || !Number.isFinite(room.lastPresenterActivityAt) || !Number.isFinite(room.expiresAt)) fail('ROOM_INVALID');
     if (!isPlainRecord(room.slots) || JSON.stringify(Object.keys(room.slots)) !== JSON.stringify(SLOT_IDS)) fail('ROOM_INVALID');
     for (const [index, slotId] of SLOT_IDS.entries()) {
@@ -169,6 +177,7 @@ function publicRoomSnapshot(room, actorUid = null) {
         expiresAt: room.expiresAt,
         deck: clone(room.deck),
         activity: clone(room.activity),
+        gameplay: clone(room.gameplay || null),
         slots: Object.fromEntries(SLOT_IDS.map(slotId => [slotId, publicSlotSnapshot(room.slots[slotId], actorUid)]))
     };
 }

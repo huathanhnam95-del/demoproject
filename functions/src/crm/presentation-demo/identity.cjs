@@ -5,23 +5,35 @@ const { fail, isUid } = require('./contracts.cjs');
 function normalizeIdentity(input = {}) {
     const profile = input.profile && typeof input.profile === 'object' ? input.profile : input;
     const token = input.token && typeof input.token === 'object' ? input.token : {};
+    const workforce = input.workforce && typeof input.workforce === 'object' ? input.workforce : {};
     const uid = String(input.uid ?? token.uid ?? profile.uid ?? '').trim();
+    const profileResolved = input.profileResolved === true ? true : input.profileResolved === false ? false : undefined;
+    const moduleGrants = profile.moduleGrants && typeof profile.moduleGrants === 'object'
+        ? profile.moduleGrants
+        : workforce.moduleGrants && typeof workforce.moduleGrants === 'object' ? workforce.moduleGrants : {};
     return {
         uid,
         email: String(input.email ?? profile.email ?? token.email ?? '').trim().toLowerCase() || null,
-        disabled: profile.disabled === true || input.disabled === true,
-        accountStatus: String(profile.accountStatus ?? input.accountStatus ?? 'active').toLowerCase(),
+        disabled: profile.disabled === true || input.disabled === true || input.authUser?.disabled === true,
+        accountStatus: String(profile.accountStatus ?? input.accountStatus ?? workforce.status ?? 'unknown').toLowerCase(),
         isAdmin: profile.isAdmin === true || input.isAdmin === true,
-        isTeacher: profile.isTeacher === true || input.isTeacher === true,
-        moduleGrants: profile.moduleGrants && typeof profile.moduleGrants === 'object' ? structuredClone(profile.moduleGrants) : {}
+        isTeacher: profile.isTeacher === true || String(profile.crmRole || '').toLowerCase() === 'teacher' || input.isTeacher === true,
+        moduleGrants: structuredClone(moduleGrants),
+        crmEligible: input.crmEligible === true || profile.isAdmin === true || profile.isTeacher === true
+            || String(profile.crmRole || '').toLowerCase() === 'teacher' || moduleGrants.projects === true,
+        profileResolved,
+        authUserResolved: input.authUser !== undefined
     };
 }
 
 function assertActiveIdentity(input) {
     const identity = normalizeIdentity(input);
     if (!isUid(identity.uid)) fail('INVALID_IDENTITY');
+    if (identity.profileResolved === false) fail('PROFILE_UNAVAILABLE', 'CRM account could not be verified.');
+    if (identity.authUserResolved && identity.authUser?.disabled === true) fail('ACCOUNT_DISABLED');
     if (identity.disabled) fail('ACCOUNT_DISABLED');
     if (!['active', 'enabled'].includes(identity.accountStatus)) fail('ACCOUNT_INACTIVE');
+    if (identity.profileResolved && identity.crmEligible !== true) fail('CRM_ELIGIBILITY_REQUIRED', 'An active CRM teacher or Projects account is required.');
     return identity;
 }
 
@@ -44,12 +56,15 @@ function assertRoomActor(identity, membership) {
     return current;
 }
 
-function serverIdentityFromAuth({ decodedToken, profile } = {}) {
+function serverIdentityFromAuth({ decodedToken, profile, workforce = null, authUser = undefined } = {}) {
     return normalizeIdentity({
         uid: decodedToken?.uid,
         email: decodedToken?.email,
         token: decodedToken,
-        profile
+        profile,
+        workforce,
+        authUser,
+        profileResolved: profile !== null && profile !== undefined
     });
 }
 

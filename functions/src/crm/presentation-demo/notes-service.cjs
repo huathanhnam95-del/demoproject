@@ -8,6 +8,8 @@ const MAX_TITLE = 200;
 
 function key(roomId, uid) { return `${roomId}:${uid}`; }
 
+function visiblePages(pages) { return (pages || []).filter(page => page.deleted !== true); }
+
 function createNotebookService({ roomService, clock = () => Date.now(), maxPages = MAX_PAGES } = {}) {
     if (!roomService) throw new TypeError('roomService is required');
 
@@ -24,6 +26,10 @@ function createNotebookService({ roomService, clock = () => Date.now(), maxPages
         return pages ? clone(pages) : [];
     }
 
+    function notebookRevision(roomId, uid) {
+        return pagesFor(roomId, uid).reduce((sum, page) => Math.max(sum, Number(page.version) || 0), 0);
+    }
+
     function resolveTargetUid(room, value, fallbackUid) {
         const raw = String(value || fallbackUid);
         return room.slots[raw]?.uid || raw;
@@ -36,14 +42,15 @@ function createNotebookService({ roomService, clock = () => Date.now(), maxPages
         if (target !== identity.uid && requester.role !== 'presenter') fail('NOTE_FORBIDDEN');
         await membership(roomId, target);
         assertRoomActor(identity, { uid: requester.uid, seatId: requester.slotId, role: requester.role });
-        return { roomId: room.roomId, uid: target, notebookRevision: pagesFor(roomId, target).length, pages: pagesFor(roomId, target) };
+        return { roomId: room.roomId, uid: target, notebookRevision: notebookRevision(roomId, target), pages: visiblePages(pagesFor(roomId, target)) };
     }
 
     async function savePage(input, roomId, targetUid, page) {
         const identity = assertActiveIdentity(input);
         const { room, slot: requester } = await membership(roomId, identity.uid);
         const target = resolveTargetUid(room, targetUid, identity.uid);
-        if (target !== identity.uid && requester.role !== 'presenter') fail('NOTE_FORBIDDEN');
+        if (target !== identity.uid) fail('NOTE_AUTHOR_ONLY');
+        if (room.lifecycle === 'ended') fail('ROOM_ENDED');
         const targetMembership = (await membership(roomId, target)).slot;
         assertRoomActor(identity, { uid: requester.uid, seatId: requester.slotId, role: requester.role });
         if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || typeof page.title !== 'string' || page.title.length > MAX_TITLE || typeof page.body !== 'string' || page.body.length > MAX_NOTE_BODY || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0) fail('NOTE_INVALID');
@@ -59,12 +66,12 @@ function createNotebookService({ roomService, clock = () => Date.now(), maxPages
             pages.push(saved);
         }
         roomService.stores.notebooks.set(key(roomId, target), clone(pages));
-        targetMembership.notes = clone(pages);
-        targetMembership.notesRevision = pages.reduce((sum, candidate) => sum + candidate.version, 0);
+        targetMembership.notes = clone(visiblePages(pages));
+        targetMembership.notesRevision = notebookRevision(roomId, target);
         if (identity.uid === room.presenterUid) {
             await roomService.touchPresenter(identity, roomId);
         }
-        await roomService.updateNotebookMetadata(roomId, targetMembership.slotId, { notes: pages, notesRevision: targetMembership.notesRevision });
+        await roomService.updateNotebookMetadata(roomId, targetMembership.slotId, { notes: visiblePages(pages), notesRevision: targetMembership.notesRevision });
         return clone(saved);
     }
 
@@ -72,26 +79,27 @@ function createNotebookService({ roomService, clock = () => Date.now(), maxPages
         const identity = assertActiveIdentity(input);
         const { room, slot: requester } = await membership(roomId, identity.uid);
         const target = resolveTargetUid(room, targetUid, identity.uid);
-        if (target !== identity.uid && requester.role !== 'presenter') fail('NOTE_FORBIDDEN');
+        if (target !== identity.uid) fail('NOTE_AUTHOR_ONLY');
+        if (room.lifecycle === 'ended') fail('ROOM_ENDED');
         const targetMembership = (await membership(roomId, target)).slot;
         assertRoomActor(identity, { uid: requester.uid, seatId: requester.slotId, role: requester.role });
         if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0) fail('NOTE_INVALID');
         const pages = pagesFor(roomId, target);
         const index = pages.findIndex(candidate => candidate.id === page.pageId);
         if (index < 0 || pages[index].version !== page.expectedVersion) fail('NOTE_CONFLICT');
-        pages.splice(index, 1);
+        pages[index] = { ...pages[index], deleted: true, deletedAt: clock(), deletedBy: identity.uid };
         roomService.stores.notebooks.set(key(roomId, target), clone(pages));
-        targetMembership.notes = clone(pages);
+        targetMembership.notes = clone(visiblePages(pages));
         if (identity.uid === room.presenterUid) {
             await roomService.touchPresenter(identity, roomId);
         }
-        await roomService.updateNotebookMetadata(roomId, targetMembership.slotId, { notes: pages, notesRevision: pages.reduce((sum, candidate) => sum + candidate.version, 0) });
-        return { deleted: true, pageId: page.pageId, pages: clone(pages) };
+        await roomService.updateNotebookMetadata(roomId, targetMembership.slotId, { notes: visiblePages(pages), notesRevision: notebookRevision(roomId, target) });
+        return { deleted: true, pageId: page.pageId, pages: clone(visiblePages(pages)) };
     }
 
     async function readNotebookByUid(roomId, uid) {
         await membership(roomId, uid);
-        return { roomId, uid, notebookRevision: pagesFor(roomId, uid).length, pages: pagesFor(roomId, uid) };
+        return { roomId, uid, notebookRevision: notebookRevision(roomId, uid), pages: visiblePages(pagesFor(roomId, uid)) };
     }
 
     return { deletePage, readNotebook, readNotebookByUid, savePage };

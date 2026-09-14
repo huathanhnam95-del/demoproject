@@ -16,6 +16,9 @@ button, input, textarea { font: inherit; }
 .pd-status { display: inline-flex; padding: 5px 10px; border-radius: 999px; background: var(--pd-soft); color: var(--pd-accent-dark); font-size: .78rem; font-weight: 700; white-space: nowrap; }
 .pd-entry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
 .pd-entry-card { border: 1px solid var(--pd-line); border-radius: 14px; padding: 18px; background: #fbfdfb; }
+.pd-room-history { display: grid; gap: 8px; margin-top: 18px; }
+.pd-history-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; border-top: 1px solid var(--pd-line); font-size: .85rem; }
+.pd-history-row .pd-button { padding: 7px 10px; font-size: .75rem; }
 .pd-entry-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
 .pd-entry-card label, .pd-side-section label { display: block; margin: 12px 0 6px; font-size: .8rem; font-weight: 700; }
 .pd-code-row { display: flex; gap: 8px; }

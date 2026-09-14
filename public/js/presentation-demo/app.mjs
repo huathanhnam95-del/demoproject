@@ -7,7 +7,7 @@ import { createRenderer as createNativeRenderer } from '../../prototypes/bel-wor
 
 const $ = id => document.getElementById(id);
 const els = {
-  entry: $('pd-entry'), room: $('pd-room'), game: $('pd-game'), authStatus: $('pd-auth-status'), authMessage: $('pd-auth-message'), presenterTools: $('pd-presenter-tools'), create: $('pd-create-room'), joinForm: $('pd-join-form'), codeInput: $('pd-room-code'), joinError: $('pd-join-error'), roomCode: $('pd-room-code-display'), roomStatus: $('pd-room-status'), slots: $('pd-slot-list'), copy: $('pd-copy-code'), openGame: $('pd-open-game'), receptionContinue: $('pd-reception-continue'), receptionHint: $('pd-reception-hint'), gameCode: $('pd-game-code'), connection: $('pd-connection-status'), canvas: $('pd-world'), gate: $('pd-gate'), gameSlots: $('pd-game-slots'), deck: $('pd-deck'), deckStatus: $('pd-deck-status'), start: $('pd-start-room'), replace: $('pd-replace-connection'), skip: $('pd-skip-activity'), end: $('pd-end-room'), gameMessage: $('pd-game-message'), title: $('pd-note-title'), body: $('pd-note-body'), saveNote: $('pd-save-note'), noteStatus: $('pd-note-status'), previous: $('pd-slide-previous'), next: $('pd-slide-next'), export: $('pd-export-pdf')
+  entry: $('pd-entry'), room: $('pd-room'), game: $('pd-game'), authStatus: $('pd-auth-status'), authMessage: $('pd-auth-message'), presenterTools: $('pd-presenter-tools'), roomHistory: $('pd-room-history'), create: $('pd-create-room'), joinForm: $('pd-join-form'), codeInput: $('pd-room-code'), joinError: $('pd-join-error'), roomCode: $('pd-room-code-display'), roomStatus: $('pd-room-status'), slots: $('pd-slot-list'), copy: $('pd-copy-code'), openGame: $('pd-open-game'), receptionContinue: $('pd-reception-continue'), receptionHint: $('pd-reception-hint'), gameCode: $('pd-game-code'), connection: $('pd-connection-status'), canvas: $('pd-world'), gate: $('pd-gate'), gameSlots: $('pd-game-slots'), deck: $('pd-deck'), deckStatus: $('pd-deck-status'), start: $('pd-start-room'), replace: $('pd-replace-connection'), skip: $('pd-skip-activity'), end: $('pd-end-room'), gameMessage: $('pd-game-message'), title: $('pd-note-title'), body: $('pd-note-body'), saveNote: $('pd-save-note'), noteStatus: $('pd-note-status'), previous: $('pd-slide-previous'), next: $('pd-slide-next'), export: $('pd-export-pdf')
 };
 
 let identity = null;
@@ -24,6 +24,24 @@ let nativeRenderer = null;
 function show(element, visible) { element.hidden = !visible; }
 function message(text, tone = 'info') { els.gameMessage.textContent = text; els.gameMessage.dataset.tone = tone; }
 function errorText(error) { return error?.message || 'The online room request failed.'; }
+
+function renderRoomHistory(rooms = []) {
+  if (!els.roomHistory) return;
+  els.roomHistory.replaceChildren();
+  if (!rooms.length) { els.roomHistory.textContent = 'No active or completed rooms yet.'; return; }
+  const heading = document.createElement('p'); heading.className = 'pd-kicker'; heading.textContent = 'Your rooms'; els.roomHistory.append(heading);
+  for (const value of rooms) {
+    const row = document.createElement('div'); row.className = 'pd-history-row';
+    const label = document.createElement('span'); label.textContent = `${value.code} · ${value.lifecycle}`;
+    const open = document.createElement('button'); open.type = 'button'; open.className = 'pd-button pd-button-secondary'; open.textContent = value.lifecycle === 'ended' ? 'View archive' : 'Open room';
+    open.addEventListener('click', async () => {
+      if (value.lifecycle === 'ended') {
+        try { const archive = await transport.readArchive(value.roomId); label.textContent = `${value.code} · archived · ${Object.keys(archive.notebooks || {}).length} notebook(s)`; } catch (error) { label.textContent = errorText(error); }
+      } else await loadRoomIntoLobby(value);
+    });
+    row.append(label, open); els.roomHistory.append(row);
+  }
+}
 
 function slotMarkup(slot) {
   const label = slot.uid ? (slot.uid === identity?.uid ? `${slot.displayName} (you)` : slot.displayName) : 'Open participant seat';
@@ -128,7 +146,7 @@ async function connectGame(replaceExisting = false) {
     els.replace.hidden = true;
     await transport.bootstrap(room.roomId);
     renderGame(await transport.room(room.roomId));
-    notebook = bindNotebook({ transport, roomId: room.roomId, elements: { title: els.title, body: els.body, save: els.saveNote, status: els.noteStatus } });
+    notebook = bindNotebook({ transport, roomId: room.roomId, identity, elements: { title: els.title, body: els.body, save: els.saveNote, status: els.noteStatus } });
     await notebook.load();
     message('Online transport connected. Movement and presentation commands are server-authorized.');
     heartbeatTimer = window.setInterval(() => transport.heartbeat(model.connection.connectionId).catch(() => {}), 5000);
@@ -157,6 +175,11 @@ async function createRoom() {
   try { await loadRoomIntoLobby(await transport.createRoom()); } catch (error) { els.authMessage.textContent = errorText(error); }
 }
 
+async function loadRoomHistory() {
+  if (!identity?.isAdmin && !identity?.isTeacher) return;
+  try { renderRoomHistory(await transport.rooms()); } catch (_) { if (els.roomHistory) els.roomHistory.textContent = 'Room history is unavailable.'; }
+}
+
 async function joinRoom(event) {
   event.preventDefault();
   els.joinError.hidden = true;
@@ -175,7 +198,7 @@ function bindEvents() {
   els.receptionContinue.addEventListener('click', openGame);
   els.start.addEventListener('click', () => model.command('transition', { to: 'playing' }).then(() => transport.room(room.roomId)).then(renderGame).catch(error => message(errorText(error), 'error')));
   els.replace.addEventListener('click', () => connectGame(true));
-  els.end.addEventListener('click', async () => { try { await transport.endRoom(room.roomId); message('Room ended by the presenter.'); } catch (error) { message(errorText(error), 'error'); } });
+  els.end.addEventListener('click', async () => { if (!window.confirm('End this room and finalize the retained notes?')) return; try { await transport.endRoom(room.roomId); renderGame(await transport.room(room.roomId)); message('Room ended by the presenter.'); } catch (error) { message(errorText(error), 'error'); } });
   els.skip.addEventListener('click', () => model.command('activity', { action: 'skip' }).catch(error => message(errorText(error), 'error')));
   els.previous.addEventListener('click', () => presentation.previous(room.deck.room || 'A', room.deck.slide).catch(error => message(errorText(error), 'error')));
   els.next.addEventListener('click', () => presentation.next(room.deck.room || 'A', room.deck.slide).catch(error => message(errorText(error), 'error')));
@@ -191,7 +214,13 @@ function bindEvents() {
     if (event.data.action === 'previous') presentation.previous(roomName, room.deck.slide).catch(error => message(errorText(error), 'error'));
   });
   const keys = new Set();
-  window.addEventListener('keydown', event => { if (['w', 'a', 's', 'd'].includes(event.key.toLowerCase())) { keys.add(event.key.toLowerCase()); event.preventDefault(); } if (event.key.toLowerCase() === 'f' && model?.connection) model.command('setReady', { ready: true }).catch(() => {}); });
+  window.addEventListener('keydown', event => {
+    const target = event.target;
+    const editing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
+    if (editing) return;
+    if (['w', 'a', 's', 'd'].includes(event.key.toLowerCase())) { keys.add(event.key.toLowerCase()); event.preventDefault(); }
+    if (event.key.toLowerCase() === 'f' && model?.connection) model.command('setReady', { ready: true }).catch(() => {});
+  });
   window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
   window.setInterval(() => { if (!model?.connection || !keys.size) return; const dx = Number(keys.has('d')) - Number(keys.has('a')); const dy = Number(keys.has('s')) - Number(keys.has('w')); if (dx || dy) model.command('move', { dx, dy }).catch(() => {}); }, 100);
 }
@@ -202,7 +231,7 @@ async function boot() {
   if (!identity) { els.authStatus.textContent = 'Sign-in required'; els.authMessage.innerHTML = `Sign in through the CRM before joining this room. <a href="${signInUrl()}">Go to sign in</a>`; return; }
   transport = new PresentationTransport(identity); els.authStatus.textContent = identity.local ? `Local rehearsal · ${identity.uid}` : `Signed in · ${identity.email || identity.uid}`; els.authMessage.textContent = 'Your account identity is checked by the server for every room action.';
   try { nativeRenderer = await createNativeRenderer(els.canvas); } catch (error) { console.warn('[Presentation Demo] Native renderer unavailable:', error); }
-  show(els.presenterTools, identity.isAdmin);
+  show(els.presenterTools, identity.isAdmin); await loadRoomHistory();
   const params = new URLSearchParams(window.location.search); const roomId = params.get('room');
   if (roomId) { try { room = await transport.room(roomId); if (params.get('game') === '1') await openGameView(); else await loadRoomIntoLobby(room); } catch (error) { els.authMessage.textContent = errorText(error); } }
 }

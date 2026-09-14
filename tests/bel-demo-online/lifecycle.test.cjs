@@ -16,7 +16,7 @@ test('explicit end is terminal, archive preserves history, and a later room gets
     await roomService.end(admin, room.roomId);
     const archives = createArchiveService({ roomService, notesService: notes, stores, clock: () => now });
     const maintenance = createMaintenanceService({ roomService, archiveService: archives, clock: () => now });
-    assert.equal((await maintenance.run()).archived, 0);
+    assert.equal((await maintenance.run()).archived, 1);
     assert.equal((await archives.archiveRoom(room.roomId)).status, 'archived');
     const next = await roomService.createOrResume(admin);
     assert.notEqual(next.roomId, room.roomId);

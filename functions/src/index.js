@@ -4,10 +4,14 @@
  * Exports all callable functions for server-authoritative scoring.
  */
 
-const { initializeApp } = require('firebase-admin/app');
+const { initializeApp, getApps } = require('firebase-admin/app');
 
 // Initialize Firebase Admin SDK
-initializeApp();
+if (!getApps().length) {
+    const databaseURL = String(process.env.FIREBASE_DATABASE_URL || '').trim();
+    const projectId = String(process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || '').trim();
+    initializeApp(databaseURL || projectId ? { ...(databaseURL ? { databaseURL } : {}), ...(projectId ? { projectId } : {}) } : undefined);
+}
 
 // Export callable functions
 const { submitAttempt } = require('./submitAttempt');
@@ -26,6 +30,7 @@ const { scoreRTS } = require('./scoreRTS');
 const { onRequest } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { getFirestore } = require('firebase-admin/firestore');
+const { getDatabase } = require('firebase-admin/database');
 const apiApp = require('./apiApp');
 const {
     runSpeakingAttemptCleanup,
@@ -33,6 +38,7 @@ const {
     runPracticeAccessPromotionJobs
 } = require('./practice-attempts/job-runners');
 const { createMaintenanceService } = require('./crm/presentation-demo/maintenance.cjs');
+const { createFirebasePresentationDemoServices } = require('./crm/presentation-demo/firebase-stores.cjs');
 const {
     CRM_AUTOMATION_RULES,
     CRM_AUTOMATION_QUEUE,
@@ -134,10 +140,12 @@ module.exports = {
     scoreRTS,
     presentationDemoMaintenanceRunner: onSchedule({ region: 'us-central1', schedule: 'every 5 minutes', timeoutSeconds: 300, memory: '256MiB', maxInstances: 1 }, async () => {
         if (String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() !== '1') return;
-        // The online service is feature-gated until the reviewed RTDB/Cloud Run
-        // provisioning is enabled. The runner is bounded and idempotent.
-        console.info('presentationDemoMaintenanceRunner', { skipped: true, reason: 'runtime-service-owned' });
-        void createMaintenanceService;
+        if (String(process.env.PRESENTATION_DEMO_DURABLE_READY || '').trim() !== '1') throw new Error('Presentation Demo maintenance requires durable Firebase state.');
+        const { db } = require('./utils/firebase_admin_init');
+        const bundle = createFirebasePresentationDemoServices({ db, rtdb: getDatabase() });
+        const result = await createMaintenanceService({ roomService: bundle.roomService, archiveService: bundle.archives }).run({ limit: 50 });
+        console.info('presentationDemoMaintenanceRunner', result);
+        return result;
     }),
     api: onRequest({
         region: 'us-central1',

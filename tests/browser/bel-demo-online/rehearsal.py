@@ -1,8 +1,8 @@
 """Chrome-only four-account rehearsal for the authenticated online demo.
 
-The accounts file is intentionally external to the repository. Local rehearsal
-identities use the loopback-only X-Demo-User adapter; no Firebase credential or
-production project is accepted by this script.
+The accounts file is intentionally external to the repository. Accounts are
+created in the local Firebase Auth emulator and every application request uses
+the resulting bearer token; no production credential is accepted here.
 """
 
 from __future__ import annotations
@@ -35,11 +35,19 @@ def wait_for_text(page, selector: str, text: str, timeout: int = 10000) -> None:
     )
 
 
-def open_lobby(context, base_url: str, uid: str):
+def open_lobby(context, base_url: str, account: dict):
     page = context.new_page()
     page.set_default_timeout(10000)
-    page.goto(f"{base_url}/presentation-demo/index.html?localUid={uid}", wait_until="domcontentloaded")
-    wait_for_text(page, "#pd-auth-status", "Local rehearsal")
+    page.goto(f"{base_url}/presentation-demo/index.html", wait_until="domcontentloaded")
+    page.wait_for_function("() => window.firebase && typeof window.firebase.auth === 'function'")
+    page.evaluate(
+        """async ({email, password}) => {
+            await window.firebase.auth().signInWithEmailAndPassword(email, password);
+        }""",
+        {"email": account["email"], "password": account["password"]},
+    )
+    page.reload(wait_until="domcontentloaded")
+    wait_for_text(page, "#pd-auth-status", "Signed in")
     return page
 
 
@@ -61,8 +69,8 @@ def main() -> int:
     evidence = Path(args.evidence).resolve()
     evidence.mkdir(parents=True, exist_ok=True)
     accounts = json.loads(Path(args.accounts_file).read_text(encoding="utf-8"))
-    if accounts.get("mode") != "loopback-synthetic-x-demo-user":
-        raise RuntimeError("The rehearsal requires the explicit synthetic loopback account fixture.")
+    if accounts.get("mode") != "firebase-emulator":
+        raise RuntimeError("The rehearsal requires the explicit Firebase Auth emulator account fixture.")
     presenter = accounts["presenter"]["uid"]
     participants = [entry["uid"] for entry in accounts["participants"]]
     outsider = accounts["outsider"]["uid"]
@@ -81,10 +89,12 @@ def main() -> int:
                 context = browser.new_context()
                 context.set_default_timeout(10000)
                 context.tracing.start(screenshots=True, snapshots=True, sources=False)
+                context.on("page", lambda new_page: new_page.on("websocket", lambda websocket: requests.append(websocket.url)))
                 contexts[uid] = context
-                page = open_lobby(context, args.base_url, uid)
+                page = open_lobby(context, args.base_url, accounts["presenter"] if uid == presenter else next(entry for entry in accounts["participants"] if entry["uid"] == uid) if uid in participants else accounts["outsider"])
                 pages[uid] = page
                 page.on("request", lambda request: requests.append(request.url))
+                page.on("websocket", lambda websocket: requests.append(websocket.url))
                 page.on("response", lambda response: responses.append((response.status, response.url)) if "/api/presentation-demo" in response.url else None)
                 page.on("console", lambda message, account=uid: console_errors.append(f"{account}: {message.type}: {message.text}") if message.type == "error" else None)
 
@@ -108,6 +118,7 @@ def main() -> int:
             for uid in [presenter, *participants]:
                 games[uid] = open_game(pages[uid])
                 games[uid].on("request", lambda request: requests.append(request.url))
+                games[uid].on("websocket", lambda websocket: requests.append(websocket.url))
                 games[uid].on("response", lambda response: responses.append((response.status, response.url)) if "/api/presentation-demo" in response.url else None)
             for uid, game in games.items():
                 wait_for_text(game, "#pd-game-slots", "p0")
@@ -116,7 +127,8 @@ def main() -> int:
             duplicate_context = browser.new_context()
             duplicate_context.set_default_timeout(12000)
             duplicate_context.tracing.start(screenshots=True, snapshots=True, sources=False)
-            duplicate_page = open_lobby(duplicate_context, args.base_url, participants[0])
+            duplicate_context.on("page", lambda new_page: new_page.on("websocket", lambda websocket: requests.append(websocket.url)))
+            duplicate_page = open_lobby(duplicate_context, args.base_url, accounts["participants"][0])
             duplicate_page.locator("#pd-room-code").fill(room_code)
             duplicate_page.locator("#pd-join-form").press("Enter")
             wait_for_text(duplicate_page, "#pd-room", room_code)
@@ -152,15 +164,18 @@ def main() -> int:
                 print(json.dumps({"observedSlideGates": result["observedSlideGates"], "slideMessage": result["slideMessage"], "recentApiResponses": result["recentApiResponses"]}, indent=2))
                 raise AssertionError(f"Slide state did not converge across contexts: {result['observedSlideGates']}")
             games[presenter].locator("#pd-skip-activity").click()
+            games[participants[1]].locator("#pd-world").click(position={"x": 700, "y": 300})
             games[participants[1]].keyboard.press("d")
             result["assertions"].append("movement-note-slide-and-assisted-control-used")
 
             # The takeover tab reloads the notebook from the server-owned store.
             wait_for_text(games[participants[0]], "#pd-note-body", "")
-            if "Private participant-1 evidence" not in games[participants[0]].locator("#pd-note-body").input_value():
-                raise AssertionError("Reconnected participant did not restore its saved notebook.")
+            restored_body = games[participants[0]].locator("#pd-note-body").input_value()
+            if f"Private {participants[0]} evidence" not in restored_body:
+                raise AssertionError(f"Reconnected participant did not restore its saved notebook: {restored_body!r}")
             result["assertions"].append("reconnect-restored-own-note")
 
+            games[presenter].once("dialog", lambda dialog: dialog.accept())
             games[presenter].locator("#pd-end-room").click()
             wait_for_text(games[presenter], "#pd-gate", "ended", timeout=15000)
             result["assertions"].append("explicit-end-left-terminal-room")
@@ -177,16 +192,17 @@ def main() -> int:
                 result.setdefault("pdf", {})[uid] = {"path": str(target), "bytes": len(pdf)}
             result["assertions"].append("presenter-and-participant-pdf-exports")
 
+            participant_token = pages[participants[0]].evaluate("window.firebase.auth().currentUser.getIdToken()")
             response = pages[participants[0]].request.get(
                 f"{args.base_url}/api/presentation-demo/rooms/{room_id}/notes/{participants[1]}",
-                headers={"X-Demo-User": participants[0]},
+                headers={"Authorization": f"Bearer {participant_token}"},
             )
             if response.status != 403:
                 raise AssertionError(f"Cross-user note read returned {response.status}, expected 403")
             result["assertions"].append("participant-cross-user-notes-denied")
 
-            if not any("/api/presentation-demo/input" in url for url in requests):
-                raise AssertionError("No online input request was observed")
+            if not any("/api/presentation-demo/ws" in url for url in requests):
+                raise AssertionError("No authenticated presentation WebSocket was observed")
             if any("BroadcastChannel" in url for url in requests):
                 raise AssertionError("Unexpected BroadcastChannel request observed")
             unexpected_console_errors = [entry for entry in console_errors if not entry.startswith(f"{outsider}:")]

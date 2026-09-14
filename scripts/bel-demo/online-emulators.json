@@ -1,13 +1,15 @@
 {
   "projectId": "demo-bel-online",
   "auth": { "host": "127.0.0.1", "port": 9099 },
-  "firestore": { "host": "127.0.0.1", "port": 8081 },
+  "firestore": { "host": "127.0.0.1", "port": 8080 },
   "database": { "host": "127.0.0.1", "port": 9000, "rules": "database.rules.json" },
+  "storage": { "host": "127.0.0.1", "port": 9199 },
   "functions": { "host": "127.0.0.1", "port": 5001 },
   "presentationService": { "host": "127.0.0.1", "port": 8787 },
   "requiredEnvironment": {
     "PRESENTATION_DEMO_ONLINE_ENABLED": "1",
     "PRESENTATION_DEMO_DEV_AUTH": "1",
+    "PRESENTATION_DEMO_DURABLE_READY": "1",
     "FIREBASE_PROJECT_ID": "demo-bel-online"
   },
   "liveProjectGuard": "The rehearsal must use this demo project id and must not load production credentials."

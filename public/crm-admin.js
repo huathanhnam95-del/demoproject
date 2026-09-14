@@ -1719,6 +1719,7 @@
         elements.projectsBoardTheme.textContent = isDark ? 'Theme' : 'Dark';
       });
     }
+    window.projectsUiScaleController?.dispose?.();
     window.projectsUiScaleController = window.CrmProjectsUiScale?.init?.({
       elements,
       panel: document.querySelector('[data-panel="projects"]')
@@ -5783,6 +5784,11 @@
       state.sub = DEFAULT_ROUTE.sub;
       updateHash();
       showToast('This workspace is not available yet. Showing Dashboard.', 'info');
+    }
+
+    if (lastRenderedPanel === 'entrance-test-ui' && state.main !== 'entrance-test-ui') {
+      if (window.CrmEntranceTestUiLab?.canLeave?.() === false) { state.main = 'entrance-test-ui'; state.sub = ''; updateHash(); return; }
+      window.CrmEntranceTestUiLab?.dispose?.();
     }
 
     // Nav active state

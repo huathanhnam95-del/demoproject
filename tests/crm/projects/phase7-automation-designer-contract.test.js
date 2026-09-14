@@ -6,6 +6,8 @@ const vm = require('node:vm');
 const path = require('node:path');
 require('../../../public/js/crm/projects/automation-definition-editor');
 const E = globalThis.CrmAutomationDefinitionEditor;
+const rendererSource = fs.readFileSync(path.join(__dirname, '../../../public/js/crm/projects/automations-renderer.js'), 'utf8');
+const automationSource = fs.readFileSync(path.join(__dirname, '../../../public/js/crm/projects/automations.js'), 'utf8');
 const { validateDefinition } = require('../../../functions/src/crm/projects/automation/definition');
 const context = { sections: [{ id: 's1', title: 'Work' }], members: [{ uid: 'u1', displayName: 'Owner', role: 'Owner' }], project: { statusLabels: { done: 'Finished' } }, columns: [
   { id: 'text', type: 'text', label: 'Notes' }, { id: 'number', type: 'number', label: 'Effort' }, { id: 'date', type: 'date', label: 'Review date' }, { id: 'people', type: 'people', label: 'People' }, { id: 'status', type: 'status', label: 'Stage' }, { id: 'priority', type: 'priority', label: 'Importance' }, { id: 'dropdown', type: 'dropdown', label: 'Team', options: [{ key: 'blue', label: 'Blue' }] }
@@ -34,6 +36,20 @@ test('nested immutable edits preserve unrelated branches and stable identities',
   const next = E.editNode(value, 'notify', node => E.setAt(node, ['payload', 'message'], 'Changed'));
   assert.deepEqual(value, before); assert.equal(E.find(next, 'notify').node.payload.message, 'Changed'); assert.deepEqual(E.find(next, 'branch').node.else, E.find(before, 'branch').node.else);
   const paths = []; E.walk(next, entry => paths.push(entry.path)); assert.ok(paths.includes('/branch/then/notify')); assert.ok(paths.includes('/branch/else/move'));
+});
+
+test('from-scratch definitions are explicitly unselected and remain invalid until configured', () => {
+  assert.equal(typeof E.createBlank, 'function');
+  const blank = E.createBlank(context);
+  assert.deepEqual(blank, { schemaVersion: 1, trigger: { type: '' }, steps: [] });
+  assert.ok(E.validate(blank, context).length);
+  assert.deepEqual(E.create(context).trigger, { type: 'task_created' });
+});
+
+test('automation workspace exposes the simple builder and one searchable picker contract', () => {
+  assert.match(rendererSource, /simpleDefinition/);
+  assert.match(rendererSource, /data-auto-picker/);
+  assert.match(automationSource, /simple-trigger|simple-action/);
 });
 test('branch duplication refreshes every copied step identity and reorder/remove retain others', () => {
   const value = fixture(), duplicate = E.duplicate(value, 'branch'), ids = []; E.walk(duplicate, entry => ids.push(entry.node.nodeId)); assert.equal(ids.length, new Set(ids).size);

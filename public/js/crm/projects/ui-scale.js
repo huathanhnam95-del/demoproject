@@ -28,6 +28,21 @@
         }
     }
 
+    function supportsCssZoom(doc) {
+        const css = globalScope.CSS;
+        if (css?.supports) {
+            try { return !!(css.supports('zoom', '1') || css.supports('(zoom: 1)')); } catch (_) { return false; }
+        }
+        try {
+            const probe = doc?.createElement?.('div');
+            if (!probe?.style) return true;
+            probe.style.zoom = '1';
+            return probe.style.zoom === '1';
+        } catch (_) {
+            return false;
+        }
+    }
+
     function applyProjectsScale(percent, options = {}) {
         const safe = validProjectsScale(percent) || PROJECTS_SCALE.fallback;
         const doc = options.document || (typeof document !== 'undefined' ? document : null);
@@ -65,14 +80,25 @@
         const input = elements.projectsUiScale || doc.getElementById('projects-ui-scale');
         const output = elements.projectsUiScaleValue || doc.getElementById('projects-ui-scale-value');
         const s = storage !== undefined ? storage : (typeof window !== 'undefined' ? window.localStorage : null);
+        const supported = supportsCssZoom(doc);
 
-        const initialScale = readProjectsScale(s);
+        const initialScale = supported ? readProjectsScale(s) : 100;
         applyProjectsScale(initialScale, { panel: p, input, output, storage: s, persist: false });
-
         if (input) {
-            input.addEventListener('input', (event) => {
-                applyProjectsScale(event.target.value, { panel: p, input, output, storage: s, persist: true });
-            });
+            input.disabled = !supported;
+            input.setAttribute('aria-disabled', String(!supported));
+            if (!supported) input.setAttribute('aria-label', 'Interface size (not supported in this browser)');
+        }
+        if (output && !supported) {
+            output.textContent = 'Not supported in this browser';
+            output.setAttribute?.('aria-label', 'Interface size is not supported in this browser');
+        }
+
+        const onScaleInput = event => {
+            if (supported) applyProjectsScale(event.target.value, { panel: p, input, output, storage: s, persist: true });
+        };
+        if (input) {
+            input.addEventListener('input', onScaleInput);
         }
 
         // Section 2a: Stable unscaled portal host for View popover during drag
@@ -80,12 +106,29 @@
         const summary = details?.querySelector('summary');
         const popover = details?.querySelector('.crm-projects-view-options-popover');
         let closePortalFn = () => {};
-        let disposeFn = () => {};
+        let disposeFn = () => {
+            input?.removeEventListener?.('input', onScaleInput);
+        };
+
+        const orphanHost = doc.getElementById?.('crm-projects-view-portal-host');
+        if (orphanHost?.remove) {
+            const strandedPopover = orphanHost.querySelector?.('.crm-projects-view-options-popover');
+            if (strandedPopover && details?.appendChild) details.appendChild(strandedPopover);
+            orphanHost.remove();
+        }
 
         if (details && summary && popover) {
             let portalHost = null;
             let placeholder = null;
             let isDragging = false;
+            const summaryId = summary.id || 'projects-view-options-summary';
+            const popoverId = popover.id || 'projects-view-options-popover';
+            summary.id = summaryId;
+            popover.id = popoverId;
+            summary.setAttribute('id', summaryId);
+            summary.setAttribute('aria-controls', popoverId);
+            popover.setAttribute?.('id', popoverId);
+            popover.setAttribute?.('aria-labelledby', summaryId);
             summary.setAttribute('aria-expanded', details.open ? 'true' : 'false');
 
             const openPortal = () => {
@@ -111,15 +154,17 @@
             };
 
             const closePortal = () => {
-                if (!portalHost) return;
+                const focusInside = !!portalHost?.contains?.(doc.activeElement);
                 if (placeholder && placeholder.parentNode) {
                     placeholder.parentNode.insertBefore(popover, placeholder);
                     placeholder.remove();
                 }
+                details.open = false;
                 summary.setAttribute('aria-expanded', 'false');
-                portalHost.remove();
+                portalHost?.remove?.();
                 portalHost = null;
                 placeholder = null;
+                if (focusInside) summary.focus?.();
             };
             closePortalFn = closePortal;
 
@@ -154,26 +199,27 @@
             }
 
             const themeBtn = popover.querySelector('#btn-projects-theme');
+            const onThemeButtonClick = () => {
+                setTimeout(() => {
+                    if (portalHost && p) {
+                        portalHost.classList.toggle('projects-dark', p.classList.contains('projects-dark'));
+                    }
+                }, 0);
+            };
             if (themeBtn) {
-                themeBtn.addEventListener('click', () => {
-                    setTimeout(() => {
-                        if (portalHost && p) {
-                            portalHost.classList.toggle('projects-dark', p.classList.contains('projects-dark'));
-                        }
-                    }, 0);
-                });
+                themeBtn.addEventListener('click', onThemeButtonClick);
             }
 
-            summary.addEventListener('click', (e) => {
+            const onSummaryClick = e => {
                 e.preventDefault();
                 if (details.open) {
-                    details.open = false;
                     closePortal();
                 } else {
                     details.open = true;
                     openPortal();
                 }
-            });
+            };
+            summary.addEventListener('click', onSummaryClick);
 
             const onPointerDown = (e) => {
                 if (!details.open) return;
@@ -212,7 +258,7 @@
             };
             doc.addEventListener('keydown', onKeyDown);
 
-            summary.addEventListener('keydown', (e) => {
+            const onSummaryKeyDown = e => {
                 if (e.key === 'Tab' && !e.shiftKey && details.open && portalHost) {
                     const focusables = Array.from(portalHost.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'));
                     if (focusables.length > 0) {
@@ -220,8 +266,10 @@
                         focusables[0].focus();
                     }
                 }
-            });
+            };
+            summary.addEventListener('keydown', onSummaryKeyDown);
 
+            const onPointerStart = () => { isDragging = true; };
             const endDrag = () => {
                 if (isDragging) {
                     isDragging = false;
@@ -230,7 +278,7 @@
             };
 
             if (input) {
-                input.addEventListener('pointerdown', () => { isDragging = true; });
+                input.addEventListener('pointerdown', onPointerStart);
                 window?.addEventListener?.('pointerup', endDrag);
                 window?.addEventListener?.('pointercancel', endDrag);
             }
@@ -248,6 +296,11 @@
             disposeFn = () => {
                 closePortal();
                 themeObserver?.disconnect();
+                input?.removeEventListener?.('input', onScaleInput);
+                input?.removeEventListener?.('pointerdown', onPointerStart);
+                themeBtn?.removeEventListener?.('click', onThemeButtonClick);
+                summary.removeEventListener?.('click', onSummaryClick);
+                summary.removeEventListener?.('keydown', onSummaryKeyDown);
                 doc.removeEventListener?.('pointerdown', onPointerDown, true);
                 doc.removeEventListener?.('keydown', onKeyDown);
                 window?.removeEventListener?.('hashchange', onRouteLeave);
@@ -257,6 +310,10 @@
                     window?.removeEventListener?.('pointerup', endDrag);
                     window?.removeEventListener?.('pointercancel', endDrag);
                 }
+                details.open = false;
+                summary.setAttribute('aria-expanded', 'false');
+                const host = doc.getElementById?.('crm-projects-view-portal-host');
+                host?.remove?.();
             };
         }
 
@@ -264,8 +321,10 @@
             CONFIG: PROJECTS_SCALE,
             validProjectsScale,
             readProjectsScale: () => readProjectsScale(s),
-            applyProjectsScale: (val, persist) => applyProjectsScale(val, { panel: p, input, output, storage: s, persist }),
-            getScale: () => readProjectsScale(s),
+            applyProjectsScale: (val, persist) => applyProjectsScale(supported ? val : 100, { panel: p, input, output, storage: s, persist }),
+            getScale: () => supported ? readProjectsScale(s) : 100,
+            supported,
+            isSupported: () => supported,
             closePortal: closePortalFn,
             dispose: disposeFn
         };

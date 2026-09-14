@@ -30,12 +30,76 @@ function harness({ root } = {}) {
   c.setAccount(actor); c.setSelection('p1'); c.setContext(snapshot());
   return { c, calls, denied, refreshed, snapshot, rule, version, handle: fn => { handler = fn; }, actor: value => { actor = value; c.setAccount(value); }, failRefresh: () => { refreshFailure = true; } };
 }
+function pickerEventRoot() {
+  const listeners = {};
+  return {
+    innerHTML: '', hidden: false, ownerDocument: { activeElement: null }, contains: () => false,
+    addEventListener: (type, handler) => { listeners[type] = handler; },
+    querySelector: () => null, querySelectorAll: () => [],
+    fireInput: (value, kind) => listeners.input({ target: { value, dataset: { autoPickerSearch: '', autoPickerType: kind }, matches: selector => selector === '[data-auto-picker-search]' } })
+  };
+}
 async function sample(h) { h.c.beginSearch(); await h.c.selectSearchTask('t1'); }
 function editStatus(h, status) { h.c.editDefinition(value => E.editNode(value, 'step', node => E.setAt(node, ['payload', 'patch', 'status'], status))); }
 test('Owner controls require authorized ready Board context, independent of admin metadata', () => {
   const h = harness(); assert.equal(h.c.getState().ready, true);
   h.c.setContext(h.snapshot({ membership: { role: 'Editor' } })); assert.equal(h.c.getState().owner, false); assert.equal(h.c.getState().draft, null);
   h.c.setContext(h.snapshot({ membership: null })); assert.equal(h.c.getState().owner, false);
+});
+test('new automation drafts start blank without a default trigger or action and make no request', () => {
+  const h = harness();
+  h.c.newDraft();
+  const state = h.c.getState();
+  assert.equal(state.draft.definition.trigger.type, '');
+  assert.deepEqual(state.draft.definition.steps, []);
+  assert.equal(h.calls.length, 0);
+});
+test('simple picker choices map to schema-authoritative trigger and action nodes locally', () => {
+  const h = harness();
+  h.c.newDraft();
+  h.c.chooseSimpleTrigger('due_date');
+  assert.equal(h.c.getState().representation, 'recipe');
+  h.c.chooseSimpleAction('notify');
+  const definition = h.c.getState().draft.definition;
+  assert.equal(h.c.getState().representation, 'recipe');
+  assert.deepEqual(definition.trigger, { type: 'due_date', time: '09:00', offsetDays: 0 });
+  assert.equal(definition.steps[0].type, 'notify');
+  assert.equal(h.calls.length, 0);
+});
+test('simple picker search filters trigger and action choices from an empty boolean data attribute', () => {
+  const root = pickerEventRoot(), h = harness({ root }); h.c.init(); h.c.newDraft();
+  for (const [kind, query, action, expected, unrelated] of [
+    ['trigger', 'STATUS', 'simple-trigger-choice', 'status_changed', 'task_created'],
+    ['action', 'NOTIFY', 'simple-action-choice', 'Notify people', 'Change task fields']
+  ]) {
+    h.c.openSimplePicker(kind); root.fireInput(query, kind);
+    assert.equal(h.c.getState().pickerQuery, query);
+    assert.equal((root.innerHTML.match(new RegExp(`data-auto-action="${action}"`, 'g')) || []).length, 1);
+    assert.match(root.innerHTML, new RegExp(expected));
+    assert.doesNotMatch(root.innerHTML, new RegExp(unrelated));
+  }
+});
+test('complex definitions stay in Advanced so conditions and multiple actions remain visible', async () => {
+  const root = { innerHTML: '' }, h = harness({ root });
+  const complex = { schemaVersion: 1, trigger: { type: 'task_created' }, condition: { field: 'status', operator: 'equals', value: 'done' }, steps: [def().steps[0], { nodeId: 'notify', type: 'notify', payload: { message: 'Review' } }] };
+  h.handle(async () => ({ rule: h.rule, version: { ...h.version, definition: complex }, diagnostics: [] }));
+  await h.c.openRule('r1');
+  assert.equal(h.c.getState().representation, 'blocks');
+  assert.match(h.c.getState().status, /Advanced editor required/);
+  assert.doesNotMatch(root.innerHTML, /data-auto-simple-builder/);
+  assert.match(root.innerHTML, /data-auto-node="step"/);
+  assert.match(root.innerHTML, /data-auto-node="notify"/);
+});
+test('unsupported schema definitions stay in Advanced even with one supported trigger and action', async () => {
+  const root = { innerHTML: '' }, h = harness({ root });
+  const unsupported = { ...def(), schemaVersion: 2 };
+  h.handle(async () => ({ rule: h.rule, version: { ...h.version, definition: unsupported }, diagnostics: [] }));
+  await h.c.openRule('r1');
+  assert.equal(h.c.getState().representation, 'blocks');
+  assert.match(h.c.getState().status, /unsupported schema version/i);
+  assert.doesNotMatch(root.innerHTML, /data-auto-simple-builder/);
+  assert.doesNotMatch(root.innerHTML, /data-auto-action="recipe"/);
+  assert.match(root.innerHTML, /data-auto-node="step"/);
 });
 test('same-scope transient refresh keeps draft while disabling actions; schema changes invalidate preview', async () => {
   const h = harness(); await h.c.openRule('r1'); await sample(h); await h.c.generatePreview(); assert.ok(h.c.getState().preview);
@@ -71,7 +135,7 @@ test('held save acknowledgement preserves newer definition instead of overwritin
   assert.equal(h.c.getState().draft.definition.steps[0].payload.patch.status, 'in_progress'); assert.equal(h.c.getState().dirty, true); assert.equal(h.c.getState().rule.revision, 2);
 });
 test('lost acknowledgement blocks changed mutation until exact original payload and ID are reconciled', async () => {
-  const h = harness(); h.c.newDraft(); h.handle(async () => { throw new Error('connection lost'); }); await h.c.mutate('create');
+  const h = harness(); h.c.newDraft(); h.c.chooseSimpleTrigger('task_created'); h.c.chooseSimpleAction('set_field'); h.handle(async () => { throw new Error('connection lost'); }); await h.c.mutate('create');
   const request = copy(h.c.getState().pending); h.c.updateDraft({ title: 'Newer title' }); const count = h.calls.length; await h.c.mutate('create'); assert.equal(h.calls.length, count);
   h.handle(async (_url, options) => { assert.deepEqual(JSON.parse(options.body), request.body); return { rule: { ...h.rule, title: request.body.title }, version: { ...h.version, actorUid: 'u1', definition: request.body.definition } }; });
   await h.c.retryMutation(); assert.equal(h.c.getState().pending, null); assert.equal(h.c.getState().draft.title, 'Newer title'); assert.equal(h.c.getState().dirty, true); assert.equal(h.c.getState().rule.ruleId, 'r1');

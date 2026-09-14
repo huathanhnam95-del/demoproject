@@ -55,12 +55,12 @@
     const entries = Object.entries(value || {}).flatMap(([field, v]) => field === 'values' ? Object.entries(v || {}).map(([columnId, typedValue]) => ({ field: { columnId }, value: typedValue, path: [...path, 'values', columnId] })) : [{ field, value: v, path: [...path, field] }]);
     return `<div class="crm-auto-fields">${entries.map(entry => `<div class="crm-auto-field-value">${typed(fieldLabel(entry.field, context), entry.value, E.fieldType(entry.field, context), node, entry.path, context, entry.field)}${requiredTitle && entry.field === 'title' ? '' : button('field-remove', 'Remove field', attr(node, entry.path))}</div>`).join('')}</div><label>Add a field<select class="crm-input" ${attr(node, path, 'add-field')}><option value="">Choose a field</option>${options(fields(context), '')}</select></label>`;
   }
-  function steps(list, context, { mode = 'recipe', parentId = '', branch = 'steps', depth = 0, readOnly = false } = {}) {
+  function steps(list, context, { mode = 'recipe', parentId = '', branch = 'steps', depth = 0, readOnly = false, simple = false } = {}) {
     if (depth > 8) return '<p>Too many nested levels. This definition needs repair.</p>';
     return `<ol class="crm-auto-steps crm-auto-${esc(mode)}">${(list || []).map((node, index) => {
       let body = '';
       const p = node.payload || {}, id = node.nodeId;
-      if (node.type === 'if') body = `${condition(node.condition, id, ['condition'], context)}<h5>Then</h5>${steps(node.then, context, { mode, parentId: id, branch: 'then', depth: depth + 1, readOnly })}<h5>Otherwise</h5>${steps(node.else, context, { mode, parentId: id, branch: 'else', depth: depth + 1, readOnly })}`;
+      if (node.type === 'if') body = `${condition(node.condition, id, ['condition'], context)}<h5>Then</h5>${steps(node.then, context, { mode, parentId: id, branch: 'then', depth: depth + 1, readOnly, simple })}<h5>Otherwise</h5>${steps(node.else, context, { mode, parentId: id, branch: 'else', depth: depth + 1, readOnly, simple })}`;
       else if (node.type === 'set_field') body = target(p.target, id, ['payload', 'target'], context) + patch(p.patch, id, ['payload', 'patch'], context);
       else if (node.type === 'assign') body = target(p.target, id, ['payload', 'target'], context) + `<div class="crm-auto-fields">${typed('Accountable owner', p.ownerUid, 'people', id, ['payload', 'ownerUid'], context, 'ownerUid')}${typed('Additional assignees', p.assigneeUids, 'people', id, ['payload', 'assigneeUids'], context, 'assigneeUids')}</div>`;
       else if (node.type === 'move_section' || node.type === 'create_task') {
@@ -71,8 +71,8 @@
         if (Array.isArray(p.recipients)) body += `<label>Members<select class="crm-input" multiple size="3" ${attr(id, ['payload', 'recipients'], 'people')}>${options(members(context), p.recipients, { multiple: true })}</select></label>`;
       } else if (node.type === 'delay') body = input('Wait (minutes)', (p.durationMs || 0) / 60000, attr(id, ['payload', 'durationMs'], 'minutes'), 'number', 'min="0.0000166666666667" max="43200" step="any"') + '<p class="crm-muted">After waiting, conditions use a fresh task snapshot.</p>';
       else body = '<p>Unsupported step. Replace this step to repair the definition.</p>';
-      return `<li class="crm-auto-step" data-auto-step="${esc(id)}"><header><span class="crm-auto-step-index">${mode === 'recipe' ? 'Then' : 'Step'} ${index + 1}</span>${select('Action', E.types.map(type => ({ value: type, label: labels[type] })), node.type, `data-auto-node="${esc(id)}" data-auto-kind="node-type"`)}${readOnly ? '' : `<div class="crm-auto-step-tools">${button('move-up', 'Move up', `data-node-id="${esc(id)}"${index === 0 ? ' disabled' : ''}`)}${button('move-down', 'Move down', `data-node-id="${esc(id)}"${index === list.length - 1 ? ' disabled' : ''}`)}${button('copy-step', 'Duplicate step', `data-node-id="${esc(id)}"`)}${button('remove-step', 'Remove step', `data-node-id="${esc(id)}"`)}</div>`}</header>${body}</li>`;
-    }).join('')}</ol>${readOnly ? '' : button('add-step', 'Add step', `data-parent-id="${esc(parentId)}" data-branch="${esc(branch)}"`)}`;
+      return `<li class="crm-auto-step" data-auto-step="${esc(id)}"><header><span class="crm-auto-step-index">${mode === 'recipe' ? 'Then' : 'Step'} ${index + 1}</span>${simple ? '' : select('Action', E.types.map(type => ({ value: type, label: labels[type] })), node.type, `data-auto-node="${esc(id)}" data-auto-kind="node-type"`)}${readOnly || simple ? '' : `<div class="crm-auto-step-tools">${button('move-up', 'Move up', `data-node-id="${esc(id)}"${index === 0 ? ' disabled' : ''}`)}${button('move-down', 'Move down', `data-node-id="${esc(id)}"${index === list.length - 1 ? ' disabled' : ''}`)}${button('copy-step', 'Duplicate step', `data-node-id="${esc(id)}"`)}${button('remove-step', 'Remove step', `data-node-id="${esc(id)}"`)}</div>`}</header>${body}</li>`;
+    }).join('')}</ol>${readOnly || simple ? '' : button('add-step', 'Add step', `data-parent-id="${esc(parentId)}" data-branch="${esc(branch)}"`)}`;
   }
   function definition(value, context, mode = 'recipe', readOnly = false) {
     const trigger = value.trigger || {};
@@ -81,6 +81,44 @@
     if (trigger.type === 'status_changed') when += select('From', statusOptions, trigger.from || '', attr('', ['trigger', 'from'], 'optional')) + select('To', statusOptions, trigger.to || '', attr('', ['trigger', 'to'], 'optional'));
     if (trigger.type === 'due_date') when += input('Vietnam time', trigger.time || '09:00', attr('', ['trigger', 'time']), 'time') + input('Days before / after due date', trigger.offsetDays || 0, attr('', ['trigger', 'offsetDays'], 'number'), 'number', 'min="-30" max="30" step="1"');
     return `<fieldset class="crm-auto-definition"${readOnly ? ' disabled' : ''}><legend>${readOnly ? 'Saved definition' : 'Build the rule'}</legend><div class="crm-auto-when crm-auto-fields">${when}</div><h4>Only if</h4>${condition(value.condition, '', ['condition'], context, true)}${steps(value.steps, context, { mode, readOnly })}</fieldset>`;
+  }
+  function isBlankDefinition(value) {
+    return !value?.condition && value?.schemaVersion === 1 && value?.trigger?.type === '' && Array.isArray(value.steps) && value.steps.length === 0;
+  }
+  function isSimpleDefinition(value) {
+    const step = value?.steps?.[0];
+    return value?.schemaVersion === 1 && !value?.condition && E.triggers.includes(value?.trigger?.type) && Array.isArray(value?.steps) && value.steps.length === 1 && E.types.includes(step?.type) && step.type !== 'if';
+  }
+  function isSimpleBuilderDraft(value) {
+    const step = value?.steps?.[0], triggerType = value?.trigger?.type;
+    return value?.schemaVersion === 1 && !value?.condition && Array.isArray(value?.steps) && value.steps.length <= 1 && (!triggerType || E.triggers.includes(triggerType)) && (!step || (E.types.includes(step.type) && step.type !== 'if'));
+  }
+  function simpleDefinitionReason(value) {
+    if (isBlankDefinition(value) || isSimpleDefinition(value)) return '';
+    if (value?.schemaVersion !== 1) return 'This rule uses an unsupported schema version.';
+    if (value?.condition) return 'This rule has conditions.';
+    if (!Array.isArray(value?.steps) || value.steps.length !== 1) return 'This rule has multiple actions or no action.';
+    if (!E.triggers.includes(value?.trigger?.type)) return 'This rule has an unsupported trigger.';
+    if (value.steps[0]?.type === 'if') return 'Conditional steps require Advanced.';
+    return 'This rule has an unsupported action.';
+  }
+  function simplePicker(kind, context, query = '') {
+    const values = kind === 'trigger' ? E.triggers : E.types;
+    const action = kind === 'trigger' ? 'simple-trigger-choice' : 'simple-action-choice';
+    const normalized = String(query || '').trim().toLowerCase();
+    const matches = values.filter(type => !normalized || `${type} ${labels[type] || type}`.toLowerCase().includes(normalized));
+    const title = kind === 'trigger' ? 'Choose a trigger' : 'Choose an action';
+    return `<section class="crm-auto-picker" data-auto-picker="${kind}" role="dialog" aria-label="${title}"><label for="auto-picker-search">Search choices</label><input id="auto-picker-search" class="crm-input" type="search" data-auto-picker-search data-auto-picker-type="${kind}" value="${esc(query)}" autocomplete="off" aria-controls="auto-picker-options"><ul id="auto-picker-options" role="listbox" aria-label="${title}">${matches.map(type => `<li><button type="button" class="crm-btn-secondary" data-auto-action="${action}" data-auto-choice="${esc(type)}" role="option" aria-selected="false">${esc(labels[type] || type)}</button></li>`).join('') || '<li class="crm-muted">No matching choices.</li>'}</ul><button type="button" class="crm-btn-secondary" data-auto-action="close-picker">Close chooser</button></section>`;
+  }
+  function simpleDefinition(value, context, { picker = '', query = '' } = {}) {
+    const trigger = value?.trigger || {}, step = value?.steps?.[0], triggerLabel = labels[trigger.type] || 'Choose a trigger';
+    const actionLabel = labels[step?.type] || 'Choose an action';
+    const statusOptions = [{ value: '', label: 'Any status' }, ...E.statuses.map(key => ({ value: key, label: context.project?.statusLabels?.[key] || key.replace(/_/g, ' ') }))];
+    let triggerConfig = '';
+    if (trigger.type === 'status_changed') triggerConfig = `<div class="crm-auto-simple-config">${select('From', statusOptions, trigger.from || '', attr('', ['trigger', 'from'], 'optional'))}${select('To', statusOptions, trigger.to || '', attr('', ['trigger', 'to'], 'optional'))}</div>`;
+    if (trigger.type === 'due_date') triggerConfig = `<div class="crm-auto-simple-config">${input('Vietnam time', trigger.time || '09:00', attr('', ['trigger', 'time']), 'time')}${input('Days before / after due date', trigger.offsetDays ?? 0, attr('', ['trigger', 'offsetDays'], 'number'), 'number', 'min="-30" max="30" step="1"')}</div>`;
+    const actionConfig = step ? `<div class="crm-auto-simple-action-config">${steps([step], context, { mode: 'recipe', simple: true })}</div>` : '<p class="crm-auto-placeholder">Choose what should happen after the trigger.</p>';
+    return `<section class="crm-auto-simple-builder" data-auto-simple-builder aria-label="Automation builder"><div class="crm-auto-simple-choice"><span class="crm-auto-simple-kicker">When</span><button type="button" class="crm-btn-secondary crm-auto-choice-button" data-auto-action="simple-trigger" aria-haspopup="dialog" aria-expanded="${picker === 'trigger'}" aria-controls="auto-picker-trigger">${esc(triggerLabel)}</button>${triggerConfig}</div><div class="crm-auto-flow-connector" aria-hidden="true">↓</div><div class="crm-auto-simple-choice"><span class="crm-auto-simple-kicker">Then</span><button type="button" class="crm-btn-secondary crm-auto-choice-button" data-auto-action="simple-action" aria-haspopup="dialog" aria-expanded="${picker === 'action'}" aria-controls="auto-picker-action">${esc(actionLabel)}</button>${actionConfig}</div>${picker ? `<div id="auto-picker-${picker}">${simplePicker(picker, context, query)}</div>` : ''}</section>`;
   }
   function displayValue(value, field, context) {
     const type = typeof field === 'string' && field.startsWith('values.') ? E.fieldType({ columnId: field.slice(7) }, context) : E.builtins[field];
@@ -94,5 +132,5 @@
     if (!value) return '';
     return `<h4>Preview</h4><p>No tasks have changed. Review before activation.</p>${!value.effects?.length ? '<p>The sample does not match, so this rule would make no changes.</p>' : `<ol>${value.effects.map(effect => `<li><strong>${esc(labels[effect.type] || 'Step')}</strong>${effect.target ? ` · ${esc(effect.target.label)}` : ''}${effect.provisional ? '<span class="crm-auto-warning"> Provisional after waiting</span>' : ''}${effect.changes?.length ? `<ul>${effect.changes.map(change => `<li>${esc(fieldLabel(change.field, context))}: ${esc(displayValue(change.before, change.field, context))} → ${esc(displayValue(change.after, change.field, context))}</li>`).join('')}</ul>` : ''}${effect.recipientUids?.length ? `<p>Notify: ${esc(displayValue(effect.recipientUids, 'assigneeUids', context))}</p>` : ''}${effect.section ? `<p>Section: ${esc(effect.section.label)}</p>` : ''}</li>`).join('')}</ol>`}${(value.warnings || []).map(warning => `<p class="crm-auto-warning">${esc(warning)}</p>`).join('')}`;
   }
-  globalScope.CrmAutomationsRenderer = { esc, labels, button, attr, options, select, input, members, fields, fieldLabel, definition, preview, displayValue };
+  globalScope.CrmAutomationsRenderer = { esc, labels, button, attr, options, select, input, members, fields, fieldLabel, definition, isBlankDefinition, isSimpleDefinition, isSimpleBuilderDraft, simpleDefinitionReason, simpleDefinition, simplePicker, preview, displayValue };
 })(typeof window !== 'undefined' ? window : globalThis);

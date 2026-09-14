@@ -5785,6 +5785,11 @@
       showToast('This workspace is not available yet. Showing Dashboard.', 'info');
     }
 
+    if (lastRenderedPanel === 'entrance-test-ui' && state.main !== 'entrance-test-ui') {
+      if (window.CrmEntranceTestUiLab?.canLeave?.() === false) { state.main = 'entrance-test-ui'; state.sub = ''; updateHash(); return; }
+      window.CrmEntranceTestUiLab?.dispose?.();
+    }
+
     // Nav active state
     elements.navItems.forEach((btn) => {
       const isActive = btn.dataset.main === state.main;

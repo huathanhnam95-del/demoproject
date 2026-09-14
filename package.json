@@ -5,6 +5,11 @@
   "scripts": {
     "check:structure": "node scripts/structure/check.cjs check",
     "test:structure": "node --test tests/structure/check.test.cjs",
+    "test:entrance-test-ui": "node --test tests/entrance-test-ui/content.test.mjs tests/entrance-test-ui/state.test.mjs tests/entrance-test-ui/persistence.test.mjs tests/entrance-test-ui/view.test.mjs tests/entrance-test-ui/audio.test.mjs tests/entrance-test-ui/qa.test.mjs tests/entrance-test-ui/host.test.mjs tests/entrance-test-ui/annotation-model.test.mjs tests/entrance-test-ui/annotation-anchors.test.mjs tests/entrance-test-ui/annotation-store.test.mjs tests/entrance-test-ui/annotation-host.test.mjs",
+    "test:entrance-test-ui:annotations": "node --test tests/entrance-test-ui/annotation-model.test.mjs tests/entrance-test-ui/annotation-anchors.test.mjs tests/entrance-test-ui/annotation-store.test.mjs tests/entrance-test-ui/annotation-host.test.mjs",
+    "test:entrance-test-ui:rules": "node --test tests/firestore/entrance-test-ui-annotations-rules.test.cjs",
+    "test:entrance-test-ui:annotations:browser": "python -X utf8 tests/browser/entrance-test-ui-annotations-check.py",
+    "test:entrance-test-ui:browser": "python -X utf8 tests/browser/entrance-test-ui-demo-check.py",
     "test:release": "node --test tests/release/firebase-release-cli.test.cjs",
     "check:crm:selection": "node scripts/crm/verification-selection.cjs check",
     "test:crm:selection": "node --test tests/crm/verification-selection.test.cjs",

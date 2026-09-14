@@ -1,15 +1,9 @@
 /**
  * Entrance Test UI — internal design review.
  *
- * Hosts the three candidate skins (public/entrance-test-ui-lab.html) in an
- * iframe and collects staff ratings against them.
- *
- * Shape of the exercise:
- *   - Three MODES (skins A / B / C), identical behaviour, different looks.
- *   - Eight PAGES per mode, the distinct screens of the test.
- *   - Five CRITERIA per page, the same five everywhere so totals compare.
- *   - Up to two FONT picks per language, chosen once for the whole test and
- *     previewed live on the real pages rather than on a swatch.
+ * Displays Demo D and collects five ratings on each of eight screens.
+ * Historical designs and their saved rating/font data remain compatible.
+ * Up to two font picks per language are shared historical votes.
  *
  * Everyone signs in on the same CRM account, so the rater is the name they
  * type on entry; that name slugs to their document id, which means re-entering
@@ -26,9 +20,7 @@
   const MAX_FONT_PICKS = 2;
 
   const SKINS = [
-    { id: 'a', label: 'A · Editorial', hint: 'Giấy ấm, serif, kẻ mảnh' },
-    { id: 'b', label: 'B · Instrument', hint: 'Chrome đen, lưới chặt, số mono' },
-    { id: 'c', label: 'C · Signal', hint: 'Khối màu phẳng, viền dày' }
+    { id: 'd', label: 'D · Signal Noto', hint: 'Nền trắng, Noto Sans, đọc liền mạch' }
   ];
 
   const PAGES = [
@@ -56,12 +48,17 @@
 
   const state = {
     rater: null,
-    skin: 'b',
+    loaded: false,
+    generation: 0,
+    pending: [],
+    saving: false,
+    skin: 'd',
     page: 'intro',
     tab: 'rate',                 // rate | results
     ratings: {},                 // "skin:page:criterion" -> 1..5
     fonts: { vn: [], en: [] },   // up to MAX_FONT_PICKS ids each
-    preview: { vn: '', en: '' }, // what the frame is showing right now
+    preview: { vn: '', en: '' }, // historical A/B/C preview
+    previewD: { vn: '', en: '' }, // Demo D stays on its Noto defaults until explicitly previewed
     all: [],
     saveTimer: null,
     status: '',
@@ -70,6 +67,8 @@
 
   let root = null;
   let booted = false;
+  let annotationController = null;
+  let mountGeneration = 0;
 
   // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -99,8 +98,10 @@
 
   // ── progress and gating ──────────────────────────────────────────────────
 
+  function validScore(value) { return Number.isInteger(value) && value >= 1 && value <= 5; }
+
   function pageComplete(skin, pageId) {
-    return CRITERIA.every(c => state.ratings[key(skin, pageId, c.id)] > 0);
+    return CRITERIA.every(c => validScore(state.ratings[key(skin, pageId, c.id)]));
   }
 
   function pagesDone(skin) { return PAGES.filter(p => pageComplete(skin, p.id)).length; }
@@ -108,7 +109,7 @@
   function ratingsDone() {
     let n = 0;
     SKINS.forEach(s => PAGES.forEach(p => CRITERIA.forEach(c => {
-      if (state.ratings[key(s.id, p.id, c.id)] > 0) n += 1;
+      if (validScore(state.ratings[key(s.id, p.id, c.id)])) n += 1;
     })));
     return n;
   }
@@ -142,45 +143,61 @@
   }
 
   async function loadRater(id) {
+    const generation = ++state.generation;
+    state.loaded = false;
     const store = db();
-    if (!store) return;
     try {
+      if (!store) throw new Error('Firebase unavailable');
       const snap = await store.collection(COLLECTION).doc(id).get();
+      if (generation !== state.generation || state.rater?.id !== id) return;
       const data = snap.exists ? (snap.data() || {}) : {};
       state.ratings = data.ratings && typeof data.ratings === 'object' ? data.ratings : {};
       state.fonts = normaliseFonts(data.fonts);
+      state.loaded = true;
+      state.status = '';
     } catch (e) {
-      state.status = 'Không tải được điểm đã lưu: ' + (e && e.message ? e.message : e);
+      if (generation !== state.generation || state.rater?.id !== id) return;
+      state.status = 'Không tải được điểm đã lưu. Thử lại: ' + e.message;
     }
-    // Open on the rater's own pick so they see their choice, not a default.
-    state.preview.vn = state.fonts.vn[0] || 'be-vietnam-pro';
-    state.preview.en = state.fonts.en[0] || '';
+    state.previewD = { vn: '', en: '' };
     render();
   }
 
-  function scheduleSave() {
+  function scheduleSave(change) {
+    if (!state.loaded || !state.rater || !change) return;
+    state.pending.push({ ...change, rater: { ...state.rater }, generation: state.generation });
     state.status = 'Đang lưu…';
     updateStatusLine();
-    if (state.saveTimer) clearTimeout(state.saveTimer);
+    clearTimeout(state.saveTimer);
     state.saveTimer = setTimeout(save, 600);
   }
 
   async function save() {
     const store = db();
-    if (!store || !state.rater) return;
+    if (!store || state.saving) return;
+    state.saving = true;
     try {
-      await store.collection(COLLECTION).doc(state.rater.id).set({
-        name: state.rater.name,
-        ratings: state.ratings,
-        fonts: state.fonts,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      while (state.pending.length) {
+        const change = state.pending[0];
+        if (change.generation !== state.generation || change.rater.id !== state.rater?.id) { state.pending.shift(); continue; }
+        const ref = store.collection(COLLECTION).doc(change.rater.id);
+        await store.runTransaction(async (tx) => {
+          const snap = await tx.get(ref);
+          if (change.generation !== state.generation || change.rater.id !== state.rater?.id) throw new Error('Reviewer changed');
+          const data = snap.exists ? snap.data() : { name: change.rater.name, ratings: {}, fonts: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+          const next = { ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+          if (change.kind === 'rating') {
+            next.ratings = { ...(data.ratings || {}) };
+            if (change.value) next.ratings[change.key] = change.value;
+            else delete next.ratings[change.key];
+          } else next.fonts = { ...(data.fonts || {}), [change.language]: change.value };
+          tx.set(ref, next);
+        });
+        state.pending.shift();
+      }
       state.status = 'Đã lưu';
-    } catch (e) {
-      state.status = 'Lỗi lưu: ' + (e && e.message ? e.message : e);
-    }
-    updateStatusLine();
+    } catch (e) { state.status = 'Lỗi lưu — Thử lại: ' + e.message; }
+    finally { state.saving = false; updateStatusLine(); }
   }
 
   async function loadAll() {
@@ -201,6 +218,7 @@
   function frame() { return document.getElementById('et-ui-frame'); }
 
   function frameUrl() {
+    if (state.skin === 'd') return '/entrance-test-ui/?revisionId=academic-noto-v1';
     const p = new URLSearchParams({ skin: state.skin });
     if (state.preview.vn) p.set('vn', state.preview.vn);
     if (state.preview.en) p.set('en', state.preview.en);
@@ -210,18 +228,24 @@
   function post(msg) {
     const f = frame();
     if (!f || !f.contentWindow) return;
-    try { f.contentWindow.postMessage(msg, window.location.origin); } catch (e) { /* not ready */ }
+    try { f.contentWindow.postMessage(msg, new URL(f.src, window.location.href).origin); } catch (e) { /* not ready */ }
   }
 
   function pushPreview() {
+    if (state.skin === 'd') {
+      post({ type: 'etui:fonts', skin: 'd', revisionId: 'academic-noto-v1', vn: state.previewD.vn, en: state.previewD.en });
+      return;
+    }
     post({ type: 'etlab:fonts', vn: state.preview.vn, en: state.preview.en });
   }
 
   window.addEventListener('message', (ev) => {
-    if (ev.origin !== window.location.origin) return;
+    if (!frame() || ev.origin !== new URL(frame().src, window.location.href).origin || ev.source !== frame().contentWindow) return;
     const msg = ev.data;
-    if (!msg || msg.type !== 'etlab:page') return;
+    if (!msg || !['etlab:page', 'etui:page'].includes(msg.type)) return;
+    if (msg.type === 'etui:page' && (msg.revisionId !== 'academic-noto-v1' || msg.skin !== 'd')) return;
     if (msg.skin !== state.skin) return;      // stale frame during a skin swap
+    if (!PAGES.some(p => p.id === msg.page)) return;
     if (msg.page === state.page) return;
     state.page = msg.page;
     if (state.tab === 'rate') { renderRatingColumn(); refreshChrome(); }
@@ -250,7 +274,7 @@
     const c = completion();
 
     const steps = [
-      ['1', 'Chọn mẫu thiết kế', 'A, B hoặc C. Cả ba hoạt động giống hệt nhau, chỉ khác giao diện.'],
+      ['1', 'Chọn mẫu thiết kế', 'Đánh giá Demo D · Signal Noto.'],
       ['2', 'Xem hết 8 trang', 'Bấm từng nút trang, hoặc thao tác thẳng trong bản mẫu.'],
       ['3', 'Chấm 5 tiêu chí', 'Ở cột bên phải. Bấm lại đúng ngôi sao đó để xoá điểm.'],
       ['4', 'Chọn font', 'Làm 1 lần cho cả bài test, tối đa 2 font mỗi ngôn ngữ.']
@@ -277,7 +301,7 @@
       '<div class="et-reqbar">' +
         '<span class="et-reqbar-label">' + (c.done
           ? 'Đã hoàn tất — cảm ơn bạn. Tab Kết quả đã mở.'
-          : 'Bắt buộc xong cả ba mục mới xem được Kết quả:') + '</span>' +
+          : 'Bắt buộc xong cả bốn mục mới xem được Kết quả:') + '</span>' +
         checks +
       '</div>' +
     '</section>';
@@ -322,7 +346,7 @@
     }).join('');
 
     return '<div class="et-row">' +
-      '<span class="et-rowlabel"><b>Bước 1 — Mẫu thiết kế</b><em>chọn 1 trong 3, chấm cả ba</em></span>' +
+      '<span class="et-rowlabel"><b>Bước 1 — Mẫu thiết kế</b><em>Demo D · 8 trang</em></span>' +
       '<div class="et-skins">' + btns + '</div>' +
     '</div>';
   }
@@ -352,16 +376,17 @@
     list.forEach(f => cat.ensure && cat.ensure(f.google));
 
     const picked = state.fonts[kind] || [];
+    const preview = state.skin === 'd' ? state.previewD : state.preview;
 
     const defaultChip = kind === 'en'
-      ? '<span class="et-fontchip' + (!state.preview.en ? ' is-previewing' : '') + '">' +
+      ? '<span class="et-fontchip' + (!preview.en ? ' is-previewing' : '') + '">' +
           '<button class="et-fontchip-name" type="button" data-preview="en" data-font="" ' +
             'title="Dùng font mặc định của mẫu">Mặc định</button>' +
         '</span>'
       : '';
 
     const chips = list.map((f) => {
-      const isPreview = state.preview[kind] === f.id;
+      const isPreview = preview[kind] === f.id;
       const isPicked = picked.indexOf(f.id) !== -1;
       return '<span class="et-fontchip' + (isPreview ? ' is-previewing' : '') + (isPicked ? ' is-picked' : '') + '">' +
         '<button class="et-fontchip-name" type="button" data-preview="' + kind + '" data-font="' + esc(f.id) + '" ' +
@@ -432,7 +457,7 @@
           ' · <b>' + done + '/' + CRITERIA.length + '</b> tiêu chí</div>' +
       '</div>' +
       CRITERIA.map(c => starRow(page.id, c)).join('') +
-      '<div class="et-rate-foot"><span id="et-ui-status">' + esc(state.status || '') + '</span></div>';
+      '<button type="button" data-action="retry-ratings">Thử lại tải/lưu điểm</button><div class="et-rate-foot"><span id="et-ui-status">' + esc(state.status || '') + '</span></div>';
   }
 
   function updateStatusLine() {
@@ -495,6 +520,7 @@
       '<div class="et-stage">' +
         '<div class="et-frame-wrap">' +
           '<div class="et-frame-cap">Bản mẫu thật — bấm, gõ và thao tác trực tiếp trong khung này</div>' +
+          '<div id="et-annotations-mount"></div>' +
           '<iframe id="et-ui-frame" src="' + esc(frameUrl()) + '" title="Bản mẫu giao diện bài kiểm tra"></iframe>' +
         '</div>' +
         '<aside id="et-ui-rating-col" class="et-rating-col"></aside>' +
@@ -512,10 +538,9 @@
     const totals = SKINS.map((s) => {
       let sum = 0, count = 0;
       raters.forEach((r) => {
-        Object.keys(r.ratings || {}).forEach((k) => {
-          if (k.split(':')[0] !== s.id) return;
-          const v = Number(r.ratings[k]);
-          if (v >= 1 && v <= 5) { sum += v; count += 1; }
+        PAGES.flatMap(p => CRITERIA.map(c => key(s.id, p.id, c.id))).forEach((k) => {
+          const v = r.ratings[k];
+          if (validScore(v)) { sum += v; count += 1; }
         });
       });
       return { skin: s, sum: sum, count: count, avg: count ? sum / count : 0 };
@@ -536,8 +561,8 @@
           let sum = 0, n = 0;
           raters.forEach((r) => {
             keysFor(row, s).forEach((k) => {
-              const v = Number(r.ratings[k]);
-              if (v >= 1 && v <= 5) { sum += v; n += 1; }
+              const v = r.ratings[k];
+              if (validScore(v)) { sum += v; n += 1; }
             });
           });
           return '<td>' + (n ? (sum / n).toFixed(2) : '—') + '</td>';
@@ -571,7 +596,7 @@
       avgTable(PAGES, (p, s) => CRITERIA.map(c => key(s.id, p.id, c.id))) +
       '<h3 class="et-results-title">Điểm trung bình theo tiêu chí</h3>' +
       avgTable(CRITERIA, (c, s) => PAGES.map(p => key(s.id, p.id, c.id))) +
-      '<h3 class="et-results-title">Bình chọn font (mỗi người tối đa ' + MAX_FONT_PICKS + ')</h3>' +
+      '<h3 class="et-results-title">Bình chọn font lịch sử, qua các thiết kế (mỗi người tối đa ' + MAX_FONT_PICKS + ')</h3>' +
       '<div class="et-fontvotes">' +
         '<div><h4>Tiếng Việt</h4><ul>' + fontTally('vn') + '</ul></div>' +
         '<div><h4>Tiếng Anh</h4><ul>' + fontTally('en') + '</ul></div>' +
@@ -583,6 +608,8 @@
 
   function render() {
     if (!root) return;
+    annotationController?.destroy(); annotationController = null;
+    const generation = ++mountGeneration;
     if (!state.rater) { root.innerHTML = renderGate(); return; }
 
     const body = state.tab === 'results' ? renderResultsTab() : renderRateTab();
@@ -592,6 +619,10 @@
       renderRatingColumn();
       const f = frame();
       if (f) f.addEventListener('load', pushPreview, { once: true });
+      if (f && window.firebase?.auth && state.loaded) import('./entrance-test-ui/annotations-controller.js').then(({ createAnnotationsController }) => {
+        if (generation !== mountGeneration || !f.isConnected) return;
+        annotationController = createAnnotationsController({ mount: document.getElementById('et-annotations-mount'), frame: f, getRater: () => state.rater });
+      }).catch(error => { const m = document.getElementById('et-annotations-mount'); if (m) m.textContent = 'Feedback unavailable: ' + error.message; });
     }
   }
 
@@ -645,10 +676,17 @@
       return;
     }
 
+    if ((t.dataset.action === 'switch-rater' || t.dataset.tab) && annotationController && !annotationController.canLeave()) return;
+
     if (t.dataset.action === 'switch-rater') {
+      if (state.pending.length || state.saving) { notice('Hãy lưu điểm trước khi đổi người.'); return; }
+      clearTimeout(state.saveTimer);
+      state.generation += 1;
+      state.loaded = false;
       state.rater = null;
       state.ratings = {};
       state.fonts = { vn: [], en: [] };
+      state.previewD = { vn: '', en: '' };
       try { localStorage.removeItem(RATER_KEY); } catch (e) { /* ignore */ }
       render();
       return;
@@ -663,7 +701,7 @@
     }
 
     if (t.dataset.skin) {
-      if (t.dataset.skin === state.skin) return;
+      if (t.dataset.skin !== 'd' || t.dataset.skin === state.skin) return;
       state.skin = t.dataset.skin;
       state.page = 'intro';
       render();
@@ -674,18 +712,25 @@
       // Re-rendering here would rebuild the iframe and bounce it back to the
       // intro; drive the existing frame instead and repaint just the chrome.
       state.page = t.dataset.goto;
-      post({ type: 'etlab:goto', page: state.page });
+      post(state.skin === 'd'
+        ? { type: 'etui:goto', skin: 'd', revisionId: 'academic-noto-v1', page: state.page }
+        : { type: 'etlab:goto', page: state.page });
       renderRatingColumn();
       refreshChrome();
       return;
     }
 
     if (t.hasAttribute('data-preview')) {
-      state.preview[t.dataset.preview] = t.dataset.font || '';
+      const preview = state.skin === 'd' ? state.previewD : state.preview;
+      preview[t.dataset.preview] = t.dataset.font || '';
       pushPreview();          // live restyle, no reload, current page keeps its state
       repaintFontBar();
       return;
     }
+
+    if (t.dataset.action === 'retry-ratings') { if (state.pending.length) save(); else loadRater(state.rater.id); return; }
+
+    if ((t.dataset.vote || t.dataset.rate) && !state.loaded) return;
 
     if (t.dataset.vote) {
       const kind = t.dataset.vote;
@@ -701,13 +746,13 @@
         return;
       } else {
         list.push(id);
-        state.preview[kind] = id;   // choosing it is also a reason to show it
+        (state.skin === 'd' ? state.previewD : state.preview)[kind] = id;   // choosing it is also a reason to show it
         pushPreview();
       }
 
       repaintFontBar();
       refreshChrome();
-      scheduleSave();
+      scheduleSave({ kind: 'font', language: kind, value: list.slice() });
       return;
     }
 
@@ -730,7 +775,7 @@
       }
 
       refreshChrome();
-      scheduleSave();
+      scheduleSave({ kind: 'rating', key: k, value: state.ratings[k] || 0 });
       return;
     }
   }
@@ -747,7 +792,8 @@
 
   function boot() {
     root = document.getElementById('entrance-test-ui-root');
-    if (!root || booted) return;
+    if (!root) return;
+    if (booted) { if (!annotationController) render(); return; }
     booted = true;
 
     try {
@@ -764,5 +810,5 @@
 
   // Booted by crm-admin.js the first time the tab is opened, so the embedded
   // prototype never loads on any other CRM page.
-  window.CrmEntranceTestUiLab = { boot: boot };
+  window.CrmEntranceTestUiLab = { boot: boot, canLeave: () => !annotationController || annotationController.canLeave(), dispose: () => { mountGeneration += 1; annotationController?.destroy(); annotationController = null; } };
 })();

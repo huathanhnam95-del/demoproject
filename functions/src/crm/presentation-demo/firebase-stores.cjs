@@ -30,6 +30,7 @@ const OPERATION_LEASE_MS = 30000;
 
 function tokenHash(value) { return crypto.createHash('sha256').update(String(value || '')).digest('hex'); }
 function operationHash(value) { return tokenHash(JSON.stringify(value ?? null)); }
+function runtimeCommandHash(command, generation) { return tokenHash(JSON.stringify({ generation, command })); }
 function ticketId(value) { return tokenHash(value); }
 function notebookId(roomId, uid) { return tokenHash(`${roomId}:${uid}`); }
 function cloneValue(value) { return value === undefined ? undefined : clone(value); }
@@ -51,6 +52,28 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     function notebookPageRef(roomId, uid, pageId) { return db.collection(COLLECTIONS.notebookPages).doc(`${notebookId(roomId, uid)}:${pageId}`); }
     function archiveRef(roomId) { return db.collection(COLLECTIONS.archives).doc(String(roomId)); }
     function archivePageRef(roomId, uid, pageId) { return db.collection(COLLECTIONS.archivePages).doc(`${roomId}:${uid}:${pageId}`); }
+    function liveRoomRef(roomId) { return rtdb.ref(`presentationRooms/${roomId}`); }
+
+    // RTDB is the canonical low-latency room state. Firestore retains the
+    // directory, notes and archive projections and is repaired from this
+    // revisioned outbox when its mirror write is unavailable.
+    async function mirrorCanonicalRoom(room) {
+        const ref = liveRoomRef(room.roomId);
+        await ref.transaction(current => {
+            if (!current || Number(current.revision) <= Number(room.revision)) return cloneValue(room);
+            const next = cloneValue(current);
+            let membershipChanged = false;
+            for (const slotId of Object.keys(room.slots || {})) {
+                const incoming = room.slots[slotId]; const target = next.slots?.[slotId];
+                if (!incoming?.uid || !target || target.uid === incoming.uid) continue;
+                Object.assign(target, { uid: incoming.uid, displayName: incoming.displayName, originalRole: incoming.originalRole, joinedAt: incoming.joinedAt, bootstrapAt: incoming.bootstrapAt || target.bootstrapAt });
+                membershipChanged = true;
+            }
+            if (membershipChanged) next.revision = Number(current.revision) + 1;
+            return next;
+        });
+        return cloneValue(room);
+    }
 
     function assertCurrentRoom(room, now = clock()) {
         if (!room) fail('ROOM_NOT_FOUND');
@@ -115,11 +138,52 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         }
     }
 
+    function mergeRoomState(firestoreRoom, liveRoom) {
+        const merged = liveRoom && Number(liveRoom.revision) >= Number(firestoreRoom.revision)
+            ? { ...firestoreRoom, ...liveRoom }
+            : { ...firestoreRoom };
+        const slots = Object.fromEntries(Object.keys(firestoreRoom.slots || {}).map(slotId => {
+            const firestoreSlot = firestoreRoom.slots[slotId] || {};
+            const liveSlot = liveRoom?.slots?.[slotId] || {};
+            return [slotId, {
+                ...firestoreSlot,
+                ...(liveRoom && Number(liveRoom.revision) >= Number(firestoreRoom.revision) ? liveSlot : {}),
+                uid: firestoreSlot.uid || liveSlot.uid || null,
+                displayName: (firestoreSlot.uid ? firestoreSlot.displayName : liveSlot.displayName) ?? firestoreSlot.displayName ?? `Participant ${slotId.slice(1)}`,
+                joinedAt: firestoreSlot.joinedAt ?? liveSlot.joinedAt ?? null,
+                originalRole: (firestoreSlot.uid ? firestoreSlot.originalRole : liveSlot.originalRole) ?? firestoreSlot.originalRole ?? (slotId === 'p0' ? 'admin' : 'participant'),
+                relationship: { leader: null, follower: null, carry: null, handhold: null, ...(firestoreSlot.relationship || {}), ...(liveSlot.relationship || {}) },
+                notes: [],
+                notesRevision: Math.max(Number(firestoreSlot.notesRevision) || 0, Number(liveSlot.notesRevision) || 0)
+            }];
+        }));
+        const deck = { ...(firestoreRoom.deck || {}), ...(merged.deck || {}) };
+        deck.room = deck.room ?? null;
+        deck.etaOrigin = deck.etaOrigin ?? null;
+        const activity = { ...(firestoreRoom.activity || {}), ...(merged.activity || {}) };
+        activity.id = activity.id ?? null;
+        activity.phase = activity.phase ?? null;
+        activity.state = activity.state ?? null;
+        return {
+            ...merged,
+            allParticipantsJoinedAt: merged.allParticipantsJoinedAt ?? null,
+            startedAt: merged.startedAt ?? null,
+            endedAt: merged.endedAt ?? null,
+            endReason: merged.endReason ?? null,
+            deck,
+            activity,
+            slots
+        };
+    }
+
     async function getRoom(roomId) {
         const ref = roomRef(roomId);
         const snap = await ref.get();
         if (!snap.exists) return null;
-        const current = snap.data();
+        const firestoreRoom = snap.data();
+        const liveSnap = await liveRoomRef(roomId).get().catch(() => ({ exists: false }));
+        const liveRoom = liveSnap.exists ? liveSnap.val() : null;
+        const current = mergeRoomState(firestoreRoom, liveRoom);
         if (ACTIVE_LIFECYCLES.has(current.lifecycle) && Number(current.expiresAt) <= clock()) {
             const ended = await db.runTransaction(async tx => {
                 const fresh = await tx.get(ref);
@@ -140,11 +204,16 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         const identity = assertActiveIdentity(input);
         const maximum = Math.min(100, Math.max(1, Number(limit) || 50));
         const snap = await db.collection(COLLECTIONS.rooms).get();
-        return snap.docs.map(doc => doc.data())
+        const matching = snap.docs.map(doc => doc.data())
             .filter(room => room.presenterUid === identity.uid || Object.values(room.slots || {}).some(slot => slot.uid === identity.uid))
             .sort((a, b) => Number(b.lastPresenterActivityAt || b.createdAt || 0) - Number(a.lastPresenterActivityAt || a.createdAt || 0))
-            .slice(0, maximum)
-            .map(room => ({ ...publicRoomSnapshot(room, identity.uid), roomId: room.roomId, code: room.code }));
+            .slice(0, maximum);
+        const snapshots = [];
+        for (const room of matching) {
+            const current = await getRoom(room.roomId);
+            if (current) snapshots.push({ ...publicRoomSnapshot(current, identity.uid), roomId: current.roomId, code: current.code });
+        }
+        return snapshots;
     }
 
     async function publicResult(room, uid) {
@@ -168,7 +237,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         return runSerial(`presenter:${identity.uid}`, () => idempotent('create', operationId, { uid: identity.uid }, async () => {
             const existing = await db.collection(COLLECTIONS.rooms).where('presenterUid', '==', identity.uid).get();
             const active = existing.docs.map(doc => doc.data()).find(room => ACTIVE_LIFECYCLES.has(room.lifecycle));
-            if (active) return publicResult(active, identity.uid);
+            if (active) return publicResult(await getRoom(active.roomId), identity.uid);
             for (let attempt = 0; attempt < 12; attempt += 1) {
                 const roomId = idFactory();
                 const code = String(makeCode(attempt)).toUpperCase().replace(/[\s-]/g, '');
@@ -186,7 +255,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                     tx.set(lockRef(identity.uid), { roomId: room.roomId, updatedAt: clock() });
                     return room;
                 });
-                if (created) return publicResult(created, identity.uid);
+                if (created) { await mirrorCanonicalRoom(created); return publicResult(created, identity.uid); }
             }
             fail('ROOM_CODE_UNAVAILABLE');
         }));
@@ -216,7 +285,9 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 tx.set(ref, room);
                 return { room, seatId: slot.slotId };
             });
-            return { roomId: joined.room.roomId, code: joined.room.code, seatId: joined.seatId, role: joined.room.slots[joined.seatId].role, snapshot: await publicResult(joined.room, identity.uid) };
+            await mirrorCanonicalRoom(joined.room);
+            const canonical = await getRoom(joined.room.roomId);
+            return { roomId: canonical.roomId, code: canonical.code, seatId: joined.seatId, role: canonical.slots[joined.seatId].role, snapshot: await publicResult(canonical, identity.uid) };
         }));
     }
 
@@ -236,7 +307,8 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             tx.set(ref, value);
             return value;
         });
-        return publicResult(room, identity.uid);
+        await mirrorCanonicalRoom(room);
+        return publicResult(await getRoom(roomId), identity.uid);
     }
 
     async function issueTicket(input, roomId) {
@@ -284,7 +356,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             tx.set(ref, value);
             return value;
         });
-        return publicResult(room, identity.uid);
+        return publicResult(await getRoom(roomId), identity.uid);
     }
 
     async function updateNotebookMetadata(roomId, seatId, metadata = {}) {
@@ -320,63 +392,113 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
 
     async function syncRuntimeState(roomId, runtimeState, { expectedRevision = null, expectedGenerations = null, expectedOwner = null } = {}) {
         const ref = roomRef(roomId);
-        const persisted = await db.runTransaction(async tx => {
-            const snap = await tx.get(ref);
-            const current = snap.exists ? snap.data() : null;
-            assertCurrentRoomInTransaction(tx, ref, current);
-            if (runtimeState.roomId !== current.roomId) fail('RUNTIME_ROOM_MISMATCH');
-            if (expectedRevision !== null && current.revision !== expectedRevision) fail('RUNTIME_REVISION_CONFLICT');
-            if (Number(runtimeState.revision) <= Number(current.revision)) fail('RUNTIME_REVISION_STALE');
-            for (const slotId of Object.keys(current.slots)) {
-                if (current.slots[slotId].uid !== runtimeState.slots?.[slotId]?.uid) fail('RUNTIME_MEMBERSHIP_STALE');
-                if (expectedGenerations && Number(current.slots[slotId].connectionGeneration) !== Number(expectedGenerations[slotId])) fail('RUNTIME_GENERATION_CONFLICT');
+        const liveRef = liveRoomRef(roomId);
+        const firestoreSnap = await ref.get();
+        const liveSnap = await liveRef.get();
+        const fallback = firestoreSnap.exists ? firestoreSnap.data() : null;
+        const initial = liveSnap.exists ? liveSnap.val() : fallback;
+        if (!initial) fail('ROOM_NOT_FOUND');
+        let transactionError = null;
+        const abort = (code, message = code) => { transactionError = { code, message }; return undefined; };
+        let persisted;
+        const committed = await liveRef.transaction(currentValue => {
+            const current = currentValue || initial;
+            if (runtimeState.roomId !== current.roomId) return abort('RUNTIME_ROOM_MISMATCH');
+            if (current.lifecycle === 'ended') return abort('ROOM_ENDED');
+            if (Number(current.expiresAt) <= clock()) return abort('ROOM_EXPIRED', 'This room has expired and cannot be revived.');
+            if (expectedRevision !== null && Number(current.revision) !== Number(expectedRevision)) return abort('RUNTIME_REVISION_CONFLICT');
+            if (Number(runtimeState.revision) <= Number(current.revision)) return abort('RUNTIME_REVISION_STALE');
+            for (const slotId of Object.keys(current.slots || {})) {
+                if (current.slots[slotId].uid !== runtimeState.slots?.[slotId]?.uid) return abort('RUNTIME_MEMBERSHIP_STALE');
+                if (expectedGenerations && Number(current.slots[slotId].connectionGeneration) !== Number(expectedGenerations[slotId])) return abort('RUNTIME_GENERATION_CONFLICT');
             }
-            if (expectedOwner && (current.owner?.gatewayId !== expectedOwner.gatewayId || current.owner?.ownerEpoch !== expectedOwner.ownerEpoch)) fail('OWNER_FENCED');
+            if (expectedOwner && (current.owner?.gatewayId !== expectedOwner.gatewayId || current.owner?.ownerEpoch !== expectedOwner.ownerEpoch)) return abort('OWNER_FENCED');
             const next = cloneValue(runtimeState);
-            for (const slotId of Object.keys(current.slots)) {
-                // Private page bodies live in page documents, never in the hot
-                // room document or the RTDB mirror.
+            for (const slotId of Object.keys(current.slots || {})) {
                 next.slots[slotId].notes = [];
-                next.slots[slotId].notesRevision = current.slots[slotId].notesRevision || 0;
+                next.slots[slotId].notesRevision = Math.max(Number(current.slots[slotId].notesRevision) || 0, Number(fallback?.slots?.[slotId]?.notesRevision) || 0);
             }
-            tx.set(ref, next);
             return next;
         });
-        const liveRef = rtdb.ref(`presentationRooms/${roomId}`);
-        if (typeof liveRef.transaction === 'function') {
-            await liveRef.transaction(current => current && Number(current.revision) > Number(persisted.revision) ? current : cloneValue(persisted));
-        } else await liveRef.set(cloneValue(persisted));
-        return cloneValue(persisted);
+        if (transactionError) fail(transactionError.code, transactionError.message);
+        if (!committed?.committed) fail('RUNTIME_REVISION_CONFLICT');
+        persisted = cloneValue(committed.snapshot.val());
+        try {
+            await db.runTransaction(async tx => {
+                const snap = await tx.get(ref);
+                if (!snap.exists) return;
+                const current = snap.data();
+                if (Number(current.revision) > Number(persisted.revision)) return;
+                // RTDB omits null-only and empty child maps. Mirror the full
+                // command state to Firestore so a temporary RTDB read failure
+                // cannot turn a valid room into a schema-invalid projection.
+                const mirror = cloneValue(runtimeState);
+                for (const slotId of Object.keys(mirror.slots || {})) {
+                    mirror.slots[slotId].notes = [];
+                    mirror.slots[slotId].notesRevision = current.slots[slotId].notesRevision || 0;
+                }
+                tx.set(ref, mirror);
+            });
+        } catch (error) {
+            // Accepted live state remains in RTDB. This durable outbox is the
+            // repair signal; it must never turn a committed command into a
+            // misleading partial-write response.
+            try { await rtdb.ref(`presentationRoomOutbox/${roomId}/${persisted.revision}`).set({ roomId, revision: persisted.revision, state: persisted, queuedAt: clock(), kind: 'firestore-mirror' }); } catch (_) { /* canonical state is already committed */ }
+        }
+        return persisted;
     }
 
     async function claimRuntimeOwner(roomId, gatewayId, now = clock(), { force = false } = {}) {
         const ref = roomRef(roomId);
-        const result = await db.runTransaction(async tx => {
-            const snap = await tx.get(ref);
-            const room = snap.exists ? snap.data() : null;
-            assertCurrentRoomInTransaction(tx, ref, room);
-            if (!ACTIVE_LIFECYCLES.has(room.lifecycle)) fail('ROOM_ENDED');
-            const owner = room.owner || { gatewayId: null, ownerEpoch: 0, leaseUntil: 0 };
-            if (!force && owner.gatewayId && owner.gatewayId !== gatewayId && Number(owner.leaseUntil) >= now) fail('OWNER_LEASE_HELD');
+        const liveRef = liveRoomRef(roomId);
+        const firestoreSnap = await ref.get();
+        const liveSnap = await liveRef.get();
+        const initial = liveSnap.exists ? liveSnap.val() : (firestoreSnap.exists ? firestoreSnap.data() : null);
+        if (!initial) fail('ROOM_NOT_FOUND');
+        let transactionError = null;
+        const abort = (code, message = code) => { transactionError = { code, message }; return undefined; };
+        let committed;
+        committed = await liveRef.transaction(currentValue => {
+            const room = currentValue || initial;
+            if (!ACTIVE_LIFECYCLES.has(room.lifecycle)) return abort('ROOM_ENDED');
+            const owner = { gatewayId: null, ownerEpoch: 0, leaseUntil: 0, ...(room.owner || {}) };
+            // `force` is intentionally ignored at this boundary. Reconnect
+            // replaces a seat generation, not the live simulation leader.
+            if (owner.gatewayId && owner.gatewayId !== gatewayId && Number(owner.leaseUntil) >= now) return abort('OWNER_LEASE_HELD');
             if (owner.gatewayId !== gatewayId) owner.ownerEpoch = Number(owner.ownerEpoch || 0) + 1;
-            owner.gatewayId = String(gatewayId);
-            owner.leaseUntil = now + OWNER_LEASE_MS;
-            room.owner = owner;
-            room.revision += 1;
-            tx.set(ref, room);
-            return { owner, room };
+            owner.gatewayId = String(gatewayId); owner.leaseUntil = now + OWNER_LEASE_MS;
+            return { ...room, owner, revision: Number(room.revision) + 1 };
         });
-        return cloneValue(result);
+        if (transactionError) fail(transactionError.code, transactionError.message);
+        if (!committed?.committed) fail('OWNER_LEASE_HELD');
+        // The transaction snapshot is the RTDB wire shape and may omit
+        // null-only children. Rehydrate it before returning it to a cached
+        // runtime or mirroring it back to Firestore.
+        const room = await getRoom(roomId);
+        try {
+            await db.runTransaction(async tx => {
+                const snap = await tx.get(ref);
+                if (!snap.exists || Number(snap.data().revision) > Number(room.revision)) return;
+                tx.set(ref, room);
+            });
+        } catch (_) {
+            try { await rtdb.ref(`presentationRoomOutbox/${roomId}/${room.revision}`).set({ roomId, revision: room.revision, state: room, queuedAt: clock(), kind: 'firestore-mirror' }); } catch (_) { /* canonical state is already committed */ }
+        }
+        return { owner: cloneValue(room.owner), room };
     }
 
-    async function readRuntimeCommandReceipt(roomId, seatId, commandId) {
+    async function readRuntimeCommandReceipt(roomId, seatId, commandId, { generation = null, command = null } = {}) {
         const snap = await operationRef(`command:${roomId}:${seatId}`, commandId).get();
-        return snap.exists && snap.data()?.status === 'complete' ? cloneValue(snap.data().result) : null;
+        if (!snap.exists || snap.data()?.status !== 'complete') return null;
+        const value = snap.data();
+        if (generation !== null && value.generation !== generation) fail('COMMAND_RECEIPT_SUPERSEDED');
+        if (command && value.commandHash !== runtimeCommandHash(command, generation)) fail('COMMAND_RECEIPT_CONFLICT');
+        return cloneValue(value.result);
     }
 
-    async function writeRuntimeCommandReceipt(roomId, seatId, commandId, result) {
+    async function writeRuntimeCommandReceipt(roomId, seatId, commandId, result, { generation, command } = {}) {
         const ref = operationRef(`command:${roomId}:${seatId}`, commandId);
-        await ref.set({ scope: 'runtime-command', roomId, seatId, commandId, status: 'complete', result: cloneValue(result), completedAt: clock() }, { merge: true });
+        await ref.set({ scope: 'runtime-command', roomId, seatId, commandId, generation, commandHash: runtimeCommandHash(command, generation), status: 'complete', result: cloneValue(result), completedAt: clock() }, { merge: true });
         return cloneValue(result);
     }
 

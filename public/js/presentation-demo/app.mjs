@@ -34,11 +34,23 @@ function renderRoomHistory(rooms = []) {
   for (const value of rooms) {
     const row = document.createElement('div'); row.className = 'pd-history-row';
     const label = document.createElement('span'); label.textContent = `${value.code} · ${value.lifecycle}`;
+    const notes = document.createElement('div'); notes.className = 'pd-history-notes';
     const actions = document.createElement('span'); actions.className = 'pd-history-actions';
     const open = document.createElement('button'); open.type = 'button'; open.className = 'pd-button pd-button-secondary'; open.textContent = value.lifecycle === 'ended' ? 'View archive' : 'Open room';
     open.addEventListener('click', async () => {
       if (value.lifecycle === 'ended') {
-        try { const archive = await transport.readArchive(value.roomId); label.textContent = `${value.code} · archived · ${Object.keys(archive.notebooks || {}).length} notebook(s)`; } catch (error) { label.textContent = errorText(error); }
+        try {
+          const archive = await transport.readArchive(value.roomId);
+          label.textContent = `${value.code} · archived · ${Object.keys(archive.notebooks || {}).length} notebook(s)`;
+          notes.replaceChildren();
+          for (const [uid, notebook] of Object.entries(archive.notebooks || {})) {
+            const heading = document.createElement('strong'); heading.textContent = `Notes · ${uid}`; notes.append(heading);
+            for (const page of notebook?.pages || []) {
+              const item = document.createElement('p'); item.textContent = `${page.title}: ${page.body}`; notes.append(item);
+            }
+          }
+          if (!notes.children.length) notes.textContent = 'No saved notes.';
+        } catch (error) { label.textContent = errorText(error); }
       } else await loadRoomIntoLobby(value);
     });
     actions.append(open);
@@ -49,7 +61,7 @@ function renderRoomHistory(rooms = []) {
       });
       actions.append(exportButton);
     }
-    row.append(label, actions); els.roomHistory.append(row);
+    row.append(label, actions, notes); els.roomHistory.append(row);
   }
 }
 
@@ -139,11 +151,13 @@ function renderGame(currentRoom) {
   renderSlots(els.gameSlots, currentRoom);
   const joined = ['p1', 'p2', 'p3'].every(slotId => currentRoom.slots[slotId]?.uid);
   els.gate.textContent = currentRoom.lifecycle === 'reception' ? (joined ? 'Reception ready · presenter can continue' : 'Waiting for all three participants to join') : currentRoom.lifecycle === 'ended' ? 'This room has ended' : `Scene: ${currentRoom.deck?.room || 'reception'} · Revision ${currentRoom.revision}`;
+  els.gate.dataset.deckRoom = currentRoom.deck?.room || 'reception';
+  els.gate.dataset.deckSlide = String(currentRoom.deck?.slide || 0);
   show(els.skip, model?.isPresenter() && currentRoom.lifecycle === 'playing');
   show(els.end, model?.isPresenter() && currentRoom.lifecycle !== 'ended');
   show(els.start, model?.isPresenter() && currentRoom.lifecycle === 'reception' && !!currentRoom.allParticipantsJoinedAt);
   show(els.previous, model?.isPresenter()); show(els.next, model?.isPresenter());
-  els.connection.textContent = transport?.state === 'reconnecting' ? 'Reconnecting…' : model?.connection ? `Connected · ${model.connection.seatId}` : 'Disconnected';
+  els.connection.textContent = transport?.state === 'reconnecting' ? 'Reconnecting…' : model?.connection && transport?.connection && transport?.socket?.readyState === WebSocket.OPEN ? `Connected · ${model.connection.seatId}` : 'Disconnected';
   els.receptionContinue.disabled = !joined;
   drawGame();
   if (!els.deck.src) els.deck.src = '/presentation-demo/native/deck.html';
@@ -192,7 +206,7 @@ async function createRoom() {
 }
 
 async function loadRoomHistory() {
-  if (!identity?.isAdmin && identity?.moduleGrants?.projects !== true) return;
+  if (!identity?.isAdmin && identity?.moduleGrants?.projects !== true && identity?.isTeacher !== true) return;
   try { renderRoomHistory(await transport.rooms()); } catch (_) { if (els.roomHistory) els.roomHistory.textContent = 'Room history is unavailable.'; }
 }
 
@@ -246,7 +260,7 @@ async function boot() {
   identity = await bootAuth();
   if (!identity) { els.authStatus.textContent = 'Sign-in required'; els.authMessage.innerHTML = `Sign in through the CRM before joining this room. <a href="${signInUrl()}">Go to sign in</a>`; return; }
   transport = new PresentationTransport(identity, { failoverOrigins: window.__BEL_PRESENTATION_FAILOVER_ORIGINS || [] });
-  transport.onState = state => { if (els.connection) els.connection.textContent = state === 'reconnecting' ? 'Reconnecting…' : state === 'connecting' ? 'Connecting…' : state === 'connected' && model?.connection ? `Connected · ${model.connection.seatId}` : 'Disconnected'; };
+  transport.onState = state => { if (els.connection) els.connection.textContent = state === 'reconnecting' ? 'Reconnecting…' : state === 'connecting' ? 'Connecting…' : state === 'connected' && model?.connection && transport?.connection && transport?.socket?.readyState === WebSocket.OPEN ? `Connected · ${model.connection.seatId}` : 'Disconnected'; };
   transport.onReconnect = async connection => { if (model) { model.connection = connection; model.sequence = 0; } if (room) renderGame(await transport.room(room.roomId)); message('Room connection restored.'); };
   els.authStatus.textContent = identity.local ? `Local rehearsal · ${identity.uid}` : `Signed in · ${identity.email || identity.uid}`; els.authMessage.textContent = 'Your account identity is checked by the server for every room action.';
   try { nativeRenderer = await createNativeRenderer(els.canvas); } catch (error) { console.warn('[Presentation Demo] Native renderer unavailable:', error); }

@@ -33,7 +33,7 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
         }),
         rooms: handler(async (req, res) => {
             const current = await identity(req);
-            if (current.isAdmin !== true && current.moduleGrants?.projects !== true) fail('PROJECTS_ACCESS_REQUIRED', 'Projects access is required to view room history.');
+            if (current.isAdmin !== true && current.moduleGrants?.projects !== true && current.isTeacher !== true) fail('PROJECTS_ACCESS_REQUIRED', 'Projects access is required to view room history.');
             return ok(res, await roomService.listRooms(current, { limit: req.query?.limit }));
         }),
         room: handler(async (req, res) => {
@@ -50,7 +50,7 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
         ticket: handler(async (req, res) => ok(res, await roomService.issueTicket(await identity(req), req.params.roomId))),
         connect: handler(async (req, res) => ok(res, await connections.open(await identity(req), req.body?.ticket, { replaceExisting: req.body?.replaceExisting === true }))),
         heartbeat: handler(async (req, res) => ok(res, await connections.heartbeatById(req.body?.connectionId, await identity(req)))),
-        input: handler(async (req, res) => ok(res, await connections.inputById(req.body?.connectionId, req.body?.command, await identity(req)))),
+        input: handler(async (req, res) => ok(res, await connections.inputById(req.body?.connectionId, req.body?.command, await identity(req), { commandId: req.body?.commandId || null }))),
         disconnect: handler(async (req, res) => ok(res, await connections.closeById(req.body?.connectionId, await identity(req)))),
         readNotes: handler(async (req, res) => ok(res, await notes.readNotebook(await identity(req), req.params.roomId, req.params.uid || undefined))),
         saveNote: handler(async (req, res) => ok(res, await notes.savePage(await identity(req), req.params.roomId, req.params.uid || undefined, req.body))),

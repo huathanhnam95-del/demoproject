@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const { safeEnvironment, temporaryFirebaseConfig } = require('../../scripts/bel-demo/start-online-emulators.cjs');
+const { safeEnvironment, temporaryFirebaseConfig, windowsFirebaseCleanupScript } = require('../../scripts/bel-demo/start-online-emulators.cjs');
+const { settleOutcome } = require('../../scripts/bel-demo/rehearse-online.cjs');
 
 const ports = {
     auth: { host: '127.0.0.1', port: 19101 },
@@ -29,4 +30,24 @@ test('emulator orchestration is demo-scoped, credential-free, and disables the e
     } finally {
         fs.rmSync(filename, { force: true });
     }
+});
+
+test('Windows cleanup targets only the Firebase launcher bound to the exact scratch config', () => {
+    const configPath = String.raw`C:\Users\Admin\.codex\worktrees\a08e\Cursor AI\.firebase-online-test.json`;
+    const script = windowsFirebaseCleanupScript(configPath);
+    assert.match(script, /GetFullPath/);
+    assert.match(script, /firebase\.js/);
+    assert.match(script, /emulators:start/);
+    assert.match(script, /\.Contains\(\$config/);
+    assert.match(script, /taskkill/);
+    assert.match(script, /\/T/);
+    assert.match(script, /\/F/);
+    assert.ok(script.includes(configPath));
+});
+
+test('browser failures are captured as handled outcomes while the runner waits for failover', async () => {
+    const failure = new Error('browser failed before failover');
+    const outcome = await settleOutcome(Promise.reject(failure));
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.error, failure);
 });

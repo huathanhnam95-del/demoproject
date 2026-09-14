@@ -68,7 +68,9 @@ function createServer({ services, authMiddleware, gatewayAuthenticate = null, ga
   const app = express();
   app.disable('x-powered-by');
   // A valid note body is contractually allowed to be 50,000 characters.
-  app.use(express.json({ limit: '80kb' }));
+  // MAX_NOTE_BODY is 50,000 characters. UTF-8 Vietnamese notes can exceed
+  // 80 KiB even though they are valid application payloads.
+  app.use(express.json({ limit: '256kb' }));
   app.get(['/config', '/api/config'], (_req, res) => {
     const online = String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() === '1';
     const emulator = String(process.env.FIREBASE_AUTH_EMULATOR_HOST || '').trim();

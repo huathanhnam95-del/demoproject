@@ -121,13 +121,13 @@ function validateRoomState(room) {
     if (!isPlainRecord(room.slots) || JSON.stringify(Object.keys(room.slots)) !== JSON.stringify(SLOT_IDS)) fail('ROOM_INVALID');
     for (const [index, slotId] of SLOT_IDS.entries()) {
         const slot = room.slots[slotId];
-        if (!isPlainRecord(slot) || slot.slotId !== slotId || slot.role !== (index === 0 ? 'presenter' : 'participant')) fail('ROOM_INVALID');
-        if (slot.uid !== null && !isUid(slot.uid)) fail('ROOM_INVALID');
-        if (!isPlainRecord(slot.position) || !Number.isFinite(slot.position.x) || !Number.isFinite(slot.position.y)) fail('ROOM_INVALID');
-        if (!isPlainRecord(slot.activity) || typeof slot.activity.ready !== 'boolean') fail('ROOM_INVALID');
-        if (!isPlainRecord(slot.relationship)) fail('ROOM_INVALID');
-        if (!Number.isSafeInteger(slot.connectionGeneration) || slot.connectionGeneration < 0) fail('ROOM_INVALID');
-        if (!Array.isArray(slot.notes)) fail('ROOM_INVALID');
+        if (!isPlainRecord(slot) || slot.slotId !== slotId || slot.role !== (index === 0 ? 'presenter' : 'participant')) fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:identity`);
+        if (slot.uid !== null && !isUid(slot.uid)) fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:uid`);
+        if (!isPlainRecord(slot.position) || !Number.isFinite(slot.position.x) || !Number.isFinite(slot.position.y)) fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:position`);
+        if (!isPlainRecord(slot.activity) || typeof slot.activity.ready !== 'boolean') fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:activity`);
+        if (!isPlainRecord(slot.relationship)) fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:relationship`);
+        if (!Number.isSafeInteger(slot.connectionGeneration) || slot.connectionGeneration < 0) fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:generation`);
+        if (!Array.isArray(slot.notes)) fail('ROOM_INVALID', `ROOM_INVALID:${slotId}:notes`);
         for (const note of slot.notes) {
             if (!isPlainRecord(note) || !/^[A-Za-z0-9:_-]{1,128}$/.test(note.id) || typeof note.title !== 'string' || note.title.length > 200 || typeof note.body !== 'string' || note.body.length > MAX_NOTE_BODY || !Number.isSafeInteger(note.version) || note.version < 1) fail('ROOM_INVALID');
         }

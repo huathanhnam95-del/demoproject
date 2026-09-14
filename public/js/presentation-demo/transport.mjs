@@ -13,6 +13,11 @@ export class PresentationTransport {
 
   setState(state) { this.state = state; this.onState?.(state); }
 
+  reconnectWithLock() {
+    if (!this.reconnectPromise) this.reconnectPromise = this.reconnect().finally(() => { this.reconnectPromise = null; });
+    return this.reconnectPromise;
+  }
+
   async request(path, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...(await authHeaders(this.identity)), ...(options.headers || {}) };
     let response;
@@ -61,6 +66,7 @@ export class PresentationTransport {
     socket.addEventListener('close', () => this.handleSocketClose(socket));
     await new Promise((resolve, reject) => { socket.addEventListener('open', resolve, { once: true }); socket.addEventListener('error', () => { try { socket.close(); } catch (_) {} reject(Object.assign(new Error('Authenticated WebSocket connection failed.'), { code: 'WS_CONNECT_FAILED' })); }, { once: true }); });
     const connection = await this.socketRequest('connect', { ticket: ticketValue, replaceExisting });
+    if (this.socket !== socket || socket.readyState !== WebSocket.OPEN) throw Object.assign(new Error('The authenticated WebSocket closed during connection setup.'), { code: 'WS_DISCONNECTED' });
     this.connection = connection;
     if (!automatic) this.setState('connected');
     return connection;
@@ -73,7 +79,7 @@ export class PresentationTransport {
     this.socketWaiters.clear();
     if (this.intentionalClose || !this.socketRoomId) { this.setState('disconnected'); return; }
     this.setState('reconnecting');
-    if (!this.reconnectPromise) this.reconnectPromise = this.reconnect().finally(() => { this.reconnectPromise = null; });
+    this.reconnectWithLock();
   }
 
   async reconnect() {
@@ -90,7 +96,11 @@ export class PresentationTransport {
     }
     throw Object.assign(new Error('The room connection could not be restored.'), { code: 'WS_RECONNECT_FAILED' });
   }
-  socketRequest(type, payload = {}) {
+  async socketRequest(type, payload = {}) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN || (type !== 'connect' && !this.connection)) {
+      if (!this.socketRoomId || this.intentionalClose) throw Object.assign(new Error('WebSocket is not connected.'), { code: 'WS_NOT_CONNECTED' });
+      await this.reconnectWithLock();
+    }
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) throw Object.assign(new Error('WebSocket is not connected.'), { code: 'WS_NOT_CONNECTED' });
     const requestId = crypto.randomUUID();
     return new Promise((resolve, reject) => {

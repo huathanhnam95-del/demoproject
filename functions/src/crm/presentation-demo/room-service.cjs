@@ -46,6 +46,7 @@ function createMutex() {
 
 function defaultIdFactory() { return crypto.randomUUID().replace(/-/g, ''); }
 function defaultTicketFactory() { return crypto.randomBytes(32).toString('base64url'); }
+function runtimeCommandHash(command, generation) { return crypto.createHash('sha256').update(JSON.stringify({ generation, command })).digest('hex'); }
 
 function publicResult(room, actorUid) {
     return { ...publicRoomSnapshot(room, actorUid), roomId: room.roomId, code: room.code };
@@ -269,12 +270,16 @@ function createRoomService({
         });
     }
 
-    async function readRuntimeCommandReceipt(roomId, seatId, commandId) {
-        return clone(stores.commandReceipts.get(`${roomId}:${seatId}:${commandId}`) || null);
+    async function readRuntimeCommandReceipt(roomId, seatId, commandId, { generation = null, command = null } = {}) {
+        const receipt = stores.commandReceipts.get(`${roomId}:${seatId}:${commandId}`);
+        if (!receipt) return null;
+        if (generation !== null && receipt.generation !== generation) fail('COMMAND_RECEIPT_SUPERSEDED');
+        if (command && receipt.commandHash !== runtimeCommandHash(command, generation)) fail('COMMAND_RECEIPT_CONFLICT');
+        return clone(receipt.result);
     }
 
-    async function writeRuntimeCommandReceipt(roomId, seatId, commandId, result) {
-        stores.commandReceipts.set(`${roomId}:${seatId}:${commandId}`, { roomId, seatId, commandId, result: clone(result), createdAt: clock() });
+    async function writeRuntimeCommandReceipt(roomId, seatId, commandId, result, { generation, command } = {}) {
+        stores.commandReceipts.set(`${roomId}:${seatId}:${commandId}`, { roomId, seatId, commandId, generation, commandHash: runtimeCommandHash(command, generation), result: clone(result), createdAt: clock() });
         return clone(result);
     }
 

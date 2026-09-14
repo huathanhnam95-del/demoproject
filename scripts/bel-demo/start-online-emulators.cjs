@@ -74,6 +74,25 @@ function temporaryFirebaseConfig(ports) {
     return filename;
 }
 
+function windowsFirebaseCleanupScript(temporaryConfig) {
+    const escapedConfig = path.resolve(temporaryConfig).replace(/'/g, "''");
+    return [
+        `$config = [System.IO.Path]::GetFullPath('${escapedConfig}')`,
+        '$targets = @(Get-CimInstance Win32_Process | Where-Object {',
+        "    $_.Name -eq 'node.exe' -and $_.CommandLine -and",
+        '    $_.CommandLine.Contains($config) -and',
+        "    $_.CommandLine.Contains('firebase.js') -and",
+        "    $_.CommandLine.Contains('emulators:start')",
+        '})',
+        'foreach ($target in $targets) { & taskkill /PID $target.ProcessId /T /F | Out-Null }'
+    ].join('\n');
+}
+
+function stopWindowsFirebaseByConfig(temporaryConfig) {
+    const encoded = Buffer.from(windowsFirebaseCleanupScript(temporaryConfig), 'utf16le').toString('base64');
+    execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], { stdio: 'ignore' });
+}
+
 function ensureFunctionDependencies() {
     const packageEntry = path.join(repo, 'functions', 'node_modules', 'firebase-functions', 'package.json');
     if (fs.existsSync(packageEntry)) return;
@@ -125,13 +144,17 @@ async function startOnlineEmulators({ evidenceDir = null } = {}) {
         });
     });
     const stop = async () => {
-        if (child.exitCode !== null || child.killed) { try { fs.unlinkSync(temporaryConfig); } catch (_) {} if (log && !logClosed) { logClosed = true; try { fs.closeSync(log); } catch (_) {} } return; }
-        if (process.platform === 'win32' && child.pid) {
-            // firebase.cmd is launched through a shell on Windows; terminate
-            // the shell tree before its wrapper exits and orphan the Node CLI.
-            try { execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' }); } catch (_) { try { child.kill('SIGTERM'); } catch (_) {} }
-        } else child.kill('SIGTERM');
-        await new Promise(resolve => { const timer = setTimeout(resolve, 3000); child.once('exit', () => { clearTimeout(timer); resolve(); }); });
+        const childRunning = child.exitCode === null && !child.killed;
+        if (process.platform === 'win32') {
+            // The .cmd shell can exit before the long-lived Firebase Node CLI.
+            // Kill both the still-attached tree and any exact config-bound
+            // launcher so a failed rehearsal cannot orphan emulator JVMs.
+            if (childRunning && child.pid) {
+                try { execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' }); } catch (_) { try { child.kill('SIGTERM'); } catch (_) {} }
+            }
+            try { stopWindowsFirebaseByConfig(temporaryConfig); } catch (_) { if (childRunning) try { child.kill('SIGTERM'); } catch (_) {} }
+        } else if (childRunning) child.kill('SIGTERM');
+        if (childRunning) await new Promise(resolve => { const timer = setTimeout(resolve, 3000); child.once('exit', () => { clearTimeout(timer); resolve(); }); });
         try { fs.unlinkSync(temporaryConfig); } catch (_) {}
         if (log && !logClosed) { logClosed = true; try { fs.closeSync(log); } catch (_) {} }
     };
@@ -163,4 +186,4 @@ async function main() {
 
 if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
 
-module.exports = { config, safeEnvironment, startOnlineEmulators, temporaryFirebaseConfig, waitFor };
+module.exports = { config, safeEnvironment, startOnlineEmulators, temporaryFirebaseConfig, waitFor, windowsFirebaseCleanupScript };

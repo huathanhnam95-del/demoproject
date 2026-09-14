@@ -47,7 +47,16 @@ function createConnectionService({ roomService, clock = () => Date.now(), gatewa
 
     async function ensureOwner(roomId, { force = false } = {}) {
         if (typeof roomService.claimRuntimeOwner !== 'function') return null;
-        const result = await roomService.claimRuntimeOwner(roomId, gatewayId, clock(), { force });
+        let result;
+        try {
+            // Gateways route requests; they do not own a seat. A live
+            // simulation owner remains authoritative until its lease expires.
+            result = await roomService.claimRuntimeOwner(roomId, gatewayId, clock(), { force: false });
+        } catch (error) {
+            if (error?.code !== 'OWNER_LEASE_HELD') throw error;
+            const current = await roomService.getRoom(roomId);
+            return current?.owner || null;
+        }
         const runtime = runtimes.get(roomId);
         if (runtime && runtime.room.revision < result.room.revision) runtime.refreshRoom(result.room);
         return result.owner;
@@ -58,7 +67,6 @@ function createConnectionService({ roomService, clock = () => Date.now(), gatewa
         const rawTicket = ticket.ticket || ticket;
         const admission = await roomService.consumeTicket(identity, rawTicket, { markUsed: false });
         return withRoomLock(admission.roomId, async () => {
-            if (replaceExisting) await ensureOwner(admission.roomId, { force: true });
             const runtime = await getRuntime(admission.roomId);
             const baseState = runtime.rawState();
             const connectionId = crypto.randomUUID();
@@ -87,33 +95,57 @@ function createConnectionService({ roomService, clock = () => Date.now(), gatewa
     async function heartbeat(context, identity = null) {
         const current = await contextFor(context, identity);
         return withRoomLock(current.roomId, async () => {
-            await ensureOwner(current.roomId);
-            await getRuntime(current.roomId);
-            const baseState = current.runtime.rawState();
-            current.runtime.tick(clock());
-            const result = current.runtime.heartbeat(current.seatId, current.generation, clock());
-            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState(), writeFence(baseState));
-            return result;
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                await ensureOwner(current.roomId);
+                const runtime = await getRuntime(current.roomId);
+                const baseState = runtime.rawState();
+                const tick = runtime.tick(clock());
+                try {
+                    const result = runtime.heartbeat(current.seatId, current.generation, clock());
+                    await roomService.syncRuntimeState(current.roomId, runtime.rawState(), writeFence(baseState));
+                    return result;
+                } catch (error) {
+                    if (tick.expiredSlots?.length && error?.code !== 'RUNTIME_REVISION_CONFLICT') await roomService.syncRuntimeState(current.roomId, runtime.rawState(), writeFence(baseState));
+                    if (error?.code === 'RUNTIME_REVISION_CONFLICT' && attempt < 2) continue;
+                    throw error;
+                }
+            }
+            fail('RUNTIME_REVISION_CONFLICT');
         });
     }
 
     async function input(context, command, identity = null, { commandId = null } = {}) {
         const current = await contextFor(context, identity);
         return withRoomLock(current.roomId, async () => {
-            await ensureOwner(current.roomId);
-            await getRuntime(current.roomId);
-            if (commandId && typeof roomService.readRuntimeCommandReceipt === 'function') {
-                const receipt = await roomService.readRuntimeCommandReceipt(current.roomId, current.seatId, commandId);
-                if (receipt) return receipt;
-                const persisted = await roomService.getRoom(current.roomId);
-                if (Number(command?.seq) <= Number(persisted?.lastCommandSeq?.[current.seatId] || 0)) return { accepted: true, type: command?.type, replayed: true, revision: persisted.revision, snapshot: current.runtime.snapshot(current.uid) };
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+                await ensureOwner(current.roomId);
+                const runtime = await getRuntime(current.roomId);
+                const baseState = runtime.rawState();
+                const tick = runtime.tick(clock());
+                try { runtime.requireGeneration(current.seatId, current.generation); }
+                catch (error) {
+                    if (tick.expiredSlots?.length) await roomService.syncRuntimeState(current.roomId, runtime.rawState(), writeFence(baseState));
+                    throw error;
+                }
+                if (commandId && typeof roomService.readRuntimeCommandReceipt === 'function') {
+                    const receipt = await roomService.readRuntimeCommandReceipt(current.roomId, current.seatId, commandId, { generation: current.generation, command });
+                    if (receipt) {
+                        if (tick.expiredSlots?.length) await roomService.syncRuntimeState(current.roomId, runtime.rawState(), writeFence(baseState));
+                        return receipt;
+                    }
+                }
+                try {
+                    const result = runtime.command(current.seatId, current.generation, command, clock());
+                    await roomService.syncRuntimeState(current.roomId, runtime.rawState(), writeFence(baseState));
+                    if (commandId && typeof roomService.writeRuntimeCommandReceipt === 'function') await roomService.writeRuntimeCommandReceipt(current.roomId, current.seatId, commandId, result, { generation: current.generation, command });
+                    return result;
+                } catch (error) {
+                    if (tick.expiredSlots?.length && error?.code !== 'RUNTIME_REVISION_CONFLICT') await roomService.syncRuntimeState(current.roomId, runtime.rawState(), writeFence(baseState));
+                    if (error?.code === 'RUNTIME_REVISION_CONFLICT' && attempt < 2) continue;
+                    throw error;
+                }
             }
-            const baseState = current.runtime.rawState();
-            current.runtime.tick(clock());
-            const result = current.runtime.command(current.seatId, current.generation, command, clock());
-            await roomService.syncRuntimeState(current.roomId, current.runtime.rawState(), writeFence(baseState));
-            if (commandId && typeof roomService.writeRuntimeCommandReceipt === 'function') await roomService.writeRuntimeCommandReceipt(current.roomId, current.seatId, commandId, result);
-            return result;
+            fail('RUNTIME_REVISION_CONFLICT');
         });
     }
 

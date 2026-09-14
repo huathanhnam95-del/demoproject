@@ -106,3 +106,16 @@ test('done view shows a local receipt and does not present learner submission co
   assert.match(html, /demo-local/);
   assert.doesNotMatch(html, /data-action="submit-demo"/);
 });
+test('semantic registry is unique across every canonical question and screen',async()=>{
+ const {NORMALIZED_DEMO_DATA}=await import('../../public/js/entrance-test-ui/demo-data.js');
+ const {getCopy}=await import('../../public/js/entrance-test-ui/copy.js');
+ const {createDraft,summarizeAssessment}=await import('../../public/js/entrance-test-ui/state.js');
+ const sections=NORMALIZED_DEMO_DATA.sections,questions=sections.flatMap(s=>s.questions.map(q=>({...q,sectionId:s.id})));
+ const base=createDraft({attemptId:'registry',revisionId:'academic-noto-v1',contentVersion:'entrance_test_36plus_v1'});
+ for(const view of ['intro','miccheck','review','done',...questions.map(q=>q.questionId)]){
+  const q=questions.find(q=>q.questionId===view),state={...base,view:q?'question':view,activeQuestionId:q?.questionId||questions[0].questionId};
+  const html=renderApp({draft:state,sections,questions,summary:summarizeAssessment(questions,state),currentQuestion:q,copy:getCopy(state.locale)});
+  const ids=[...html.matchAll(/data-et-annotation-id="([^"]+)"/g)].map(m=>m[1]);assert.ok(ids.length,view);assert.equal(new Set(ids).size,ids.length,view);
+  if(q){assert.ok(ids.includes(`question/${q.questionId}/passage`));for(const part of q.parts||[])if(part.type==='blank')assert.ok(ids.includes(`question/${q.questionId}/blank/${part.blankId}`));}
+ }
+});

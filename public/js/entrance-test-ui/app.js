@@ -1,3 +1,4 @@
+import { createAnnotationOverlay } from './annotation-overlay.js';
 import { NORMALIZED_DEMO_DATA } from './demo-data.js';
 import { getCopy } from './copy.js';
 import {
@@ -59,6 +60,7 @@ async function boot() {
   const footerRoot = document.getElementById('et-footer-status');
   if (!appRoot || !headerRoot || !footerRoot) throw new Error('Demo D shell is incomplete');
 
+  let annotations = null;
   const runtime = {
     storage: null,
     queue: null,
@@ -165,6 +167,7 @@ async function boot() {
       if (canvas) drawMeter(canvas);
     }
     announcePage();
+    annotations?.refresh();
   }
 
   function loadCurrentRecording() {
@@ -214,7 +217,7 @@ async function boot() {
     if (!window.parent || window.parent === window) return;
     const question = currentQuestion();
     const page = runtime.draft.view === 'question' ? (question?.sectionId === 'listen_write' ? 'listening' : question?.sectionId || 'intro') : runtime.draft.view;
-    window.parent.postMessage({ type: 'etui:page', skin: 'd', revisionId: REVISION_ID, page, view: runtime.draft.view }, '*');
+    window.parent.postMessage({ type: 'etui:page', skin: 'd', revisionId: REVISION_ID, page, view: runtime.draft.view }, window.location.origin);
   }
 
   async function enqueueDraft(nextDraft) {
@@ -477,16 +480,22 @@ async function boot() {
   appRoot.addEventListener('compositionend', (event) => { runtime.compositions.delete(event.target); event.target.dispatchEvent(new Event('input', { bubbles: true })); });
   headerRoot.addEventListener('click', (event) => { const element = event.target.closest('[data-action]'); if (element) onAction(element.dataset.action, element); });
   window.addEventListener('message', (event) => {
+    if (window.parent === window || event.source !== window.parent || event.origin !== window.location.origin) return;
     const message = event.data;
-    if (!message || typeof message !== 'object') return;
-    if (message.type === 'etui:goto' && message.skin === 'd' && (!message.revisionId || message.revisionId === REVISION_ID)) {
+    if (!message || typeof message !== 'object' || message.revisionId !== REVISION_ID) return;
+    if (message.type === 'etui:goto' && message.skin === 'd' && message.revisionId === REVISION_ID) {
       const firstBySection = (sectionId) => QUESTIONS.find((question) => question.sectionId === sectionId);
-      const target = message.page === 'listening' ? firstBySection('listen_write') : firstBySection(message.page);
+      const target = message.questionId ? QUESTIONS.find(q => q.questionId === message.questionId && (q.sectionId === 'listen_write' ? 'listening' : q.sectionId) === message.page) : message.page === 'listening' ? firstBySection('listen_write') : firstBySection(message.page);
+      if (message.questionId && !target) return;
       if (target) goTo(target.questionId);
       else if (['intro', 'miccheck', 'review', 'done'].includes(message.page)) dispatch({ type: 'set-view', view: message.page });
     }
-    if (message.type === 'etui:fonts' && message.skin === 'd' && (!message.revisionId || message.revisionId === REVISION_ID)) {
-      runtime.candidateFonts = { en: String(message.en || ''), vi: String(message.vi || '') };
+    if (message.type === 'etui:fonts' && message.skin === 'd' && message.revisionId === REVISION_ID) {
+      const catalog = window.ENTRANCE_TEST_UI_FONTS;
+      const resolveFont = (lang, id) => { if (!id) return ''; const font = catalog?.[lang]?.find(f => f.id === id); if (!font) return null; catalog.ensure(font.google); return font.name; };
+      const en = resolveFont('en', message.en), vi = resolveFont('vn', message.vi ?? message.vn);
+      if (en === null || vi === null) return;
+      runtime.candidateFonts = { en, vi };
       render();
     }
   });
@@ -507,8 +516,19 @@ async function boot() {
   } catch (_) {
     runtime.storage = null; runtime.queue = null; runtime.persistenceState = 'memory'; runtime.draft = createDraft({ attemptId: makeAttemptId(), revisionId: REVISION_ID, contentVersion: CONTENT_VERSION }); setStoredAttemptId(runtime.draft.attemptId);
   }
+  annotations = createAnnotationOverlay({
+    getContext: () => ({ view: runtime.draft.view, questionId: runtime.draft.view === 'question' ? runtime.draft.activeQuestionId : null, componentState: [document.querySelector('[data-qa-disclosure][open]') ? 'qa' : '', document.querySelector('#et-overview-dialog[open]') ? 'overview' : '', ...Array.from(document.querySelectorAll('[data-et-disclosure][open]'), el => el.dataset.etDisclosure)].filter(Boolean).sort().join(',') }),
+    navigate: async (context) => { if (context.view === 'question') goTo(context.questionId); else if (runtime.draft.view !== context.view) dispatch({ type: 'set-view', view: context.view });
+      const states = new Set(context.componentState.split(','));
+      const qaDisclosure = document.querySelector('[data-qa-disclosure]'); if (qaDisclosure) qaDisclosure.open = states.has('qa');
+      document.querySelectorAll('[data-et-disclosure]').forEach(el => { el.open = states.has(el.dataset.etDisclosure); });
+      const overview = document.querySelector('#et-overview-dialog'); if (overview && states.has('overview') && !overview.open) overview.showModal();
+    },
+    isRecording: () => runtime.audioState.status === 'recording',
+    stopRecording: async () => { const button = document.querySelector('[data-mic-action="stop"], [data-action="record-stop"]'); button?.click(); }
+  });
   render();
-  if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'etui:ready', skin: 'd', revisionId: REVISION_ID, contentVersion: CONTENT_VERSION }, '*');
+  if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'etui:ready', skin: 'd', revisionId: REVISION_ID, contentVersion: CONTENT_VERSION }, window.location.origin);
   return { runtime, questions: QUESTIONS, sections: SECTIONS };
 }
 

@@ -300,11 +300,7 @@
             el('projects-view-previous').disabled = loading || !previous.length;
             el('projects-view-more').disabled = loading || !response?.hasMore;
             const rows = array(response?.tasks), a = response?.aggregates;
-            const fullSummary = response ? `${response.matchingTaskCount} matching tasks ${view === 'calendar' ? `overlapping ${calendarMonth} with the shared filters` : 'in the full project'}. Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page. Active-leaf completion: ${a?.completedLeafTaskCount ?? 0}/${a?.activeLeafTaskCount ?? 0} (${a?.completionPercent ?? 0}%). Context ancestors are excluded from matching totals.` : '';
-            const summary = el('projects-view-summary');
-            summary.textContent = view === 'board' ? '' : (response ? `${response.matchingTaskCount} matching tasks${view === 'calendar' ? ` overlapping ${calendarMonth}` : ''} · ${a?.completionPercent ?? 0}% complete${rows.length < response.matchingTaskCount ? ` · Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page` : ''}` : '');
-            summary.title = fullSummary;
-            summary.setAttribute?.('aria-label', fullSummary);
+            el('projects-view-summary').textContent = response ? `${response.matchingTaskCount} matching tasks ${view === 'calendar' ? `overlapping ${calendarMonth} with the shared filters` : 'in the full project'}. Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page. Active-leaf completion: ${a?.completedLeafTaskCount ?? 0}/${a?.activeLeafTaskCount ?? 0} (${a?.completionPercent ?? 0}%). Context ancestors are excluded from matching totals.` : '';
             if (view === 'board') return;
             if (!response && view === 'calendar') { renderCalendar([]); return; }
             if (!response) { el('projects-view-content').innerHTML = '<p class="crm-muted">Choose a project or refresh the view.</p>'; return; }

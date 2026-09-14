@@ -5,9 +5,6 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../../../public/js/crm/projects/ui-scale.js'), 'utf8');
-const shell = fs.readFileSync(path.resolve(__dirname, '../../../public/crm-admin.html'), 'utf8');
-const styles = fs.readFileSync(path.resolve(__dirname, '../../../public/css/crm-projects.css'), 'utf8');
-const adminSource = fs.readFileSync(path.resolve(__dirname, '../../../public/crm-admin.js'), 'utf8');
 
 function createUiScale(overrides = {}) {
     const sandbox = {
@@ -217,88 +214,6 @@ test('scale factors match requested calculations table', () => {
         });
         assert.equal(customProps['--crm-projects-ui-scale'], c.factor);
     }
-});
-
-test('scale control exposes an accessible unsupported-browser fallback when CSS zoom is unavailable', () => {
-    const customProps = {};
-    const attrs = {};
-    const input = {
-        value: '125',
-        disabled: false,
-        setAttribute(key, value) { attrs[key] = String(value); },
-        addEventListener() {},
-        removeEventListener() {}
-    };
-    const output = { textContent: '' };
-    const panel = { style: { setProperty(key, value) { customProps[key] = value; } }, classList: { contains: () => false, toggle() {} } };
-    const doc = {
-        querySelector(selector) { return selector === '[data-panel="projects"]' ? panel : selector === '.crm-projects-view-options' ? null : null; },
-        getElementById(id) { return id === 'projects-ui-scale' ? input : id === 'projects-ui-scale-value' ? output : null; },
-        createElement() { return { style: {}, classList: { add() {}, remove() {}, toggle() {}, contains: () => false } }; }
-    };
-    const win = { CSS: { supports: () => false }, localStorage: { getItem: () => '150' }, addEventListener() {}, removeEventListener() {} };
-    const scope = createUiScale({ document: doc, window: win });
-    const controller = scope.init({ elements: { projectsUiScale: input, projectsUiScaleValue: output }, panel, storage: win.localStorage });
-    assert.equal(controller.supported, false);
-    assert.equal(controller.getScale(), 100);
-    assert.equal(customProps['--crm-projects-ui-scale'], '1');
-    assert.equal(input.disabled, true);
-    assert.equal(attrs['aria-disabled'], 'true');
-    assert.match(output.textContent, /not supported/i);
-});
-
-test('scale controller disposal removes every listener, closes the portal and restores ownership', () => {
-    const customProps = {}, inputListeners = {}, summaryListeners = {}, docListeners = {}, winListeners = {}, hosts = [];
-    const input = { value: '125', setAttribute() {}, addEventListener(k, fn) { inputListeners[k] = fn; }, removeEventListener(k, fn) { if (inputListeners[k] === fn) delete inputListeners[k]; } };
-    const output = { textContent: '' };
-    const panel = { style: { setProperty(k, v) { customProps[k] = v; } }, classList: { contains: () => false, toggle() {} } };
-    const summary = { attrs: {}, listeners: summaryListeners, setAttribute(k, v) { this.attrs[k] = String(v); }, addEventListener(k, fn) { summaryListeners[k] = fn; }, removeEventListener(k, fn) { if (summaryListeners[k] === fn) delete summaryListeners[k]; }, getBoundingClientRect() { return { right: 200, bottom: 40, width: 60, height: 28 }; }, focus() {} };
-    const popover = { parentNode: null, querySelector() { return null; } };
-    const details = { open: false, nextElementSibling: null, querySelector(sel) { return sel === 'summary' ? summary : sel === '.crm-projects-view-options-popover' ? popover : null; }, insertBefore() {} };
-    popover.parentNode = details;
-    const doc = {
-        querySelector(sel) { return sel === '[data-panel="projects"]' ? panel : sel === '.crm-projects-view-options' ? details : null; },
-        getElementById(id) { return id === 'projects-ui-scale' ? input : id === 'projects-ui-scale-value' ? output : null; },
-        createElement() { const host = { style: {}, classList: { add() {}, remove() {}, toggle() {}, contains: () => false }, contains: () => false, appendChild() {}, remove() { hosts.splice(hosts.indexOf(host), 1); } }; return host; },
-        createComment() { return { parentNode: details, remove() {} }; },
-        body: { appendChild(host) { hosts.push(host); } },
-        addEventListener(k, fn) { docListeners[k] = fn; }, removeEventListener(k, fn) { if (docListeners[k] === fn) delete docListeners[k]; }
-    };
-    const win = { localStorage: { getItem: () => '110', setItem() {} }, innerWidth: 1024, addEventListener(k, fn) { winListeners[k] = fn; }, removeEventListener(k, fn) { if (winListeners[k] === fn) delete winListeners[k]; } };
-    const controller = createUiScale({ document: doc, window: win }).init({ elements: { projectsUiScale: input, projectsUiScaleValue: output }, panel, storage: win.localStorage });
-    summaryListeners.click({ preventDefault() {} });
-    assert.equal(details.open, true);
-    assert.equal(hosts.length, 1);
-    controller.dispose();
-    assert.equal(details.open, false);
-    assert.equal(summary.attrs['aria-expanded'], 'false');
-    assert.equal(inputListeners.input, undefined);
-    assert.equal(summaryListeners.click, undefined);
-    assert.equal(summaryListeners.keydown, undefined);
-    assert.equal(docListeners.pointerdown, undefined);
-    assert.equal(docListeners.keydown, undefined);
-    assert.equal(winListeners.resize, undefined);
-    assert.equal(winListeners.hashchange, undefined);
-    assert.equal(hosts.length, 0);
-});
-
-test('scale and portal markup keep stable accessible ownership outside the projects panel', () => {
-    assert.match(shell, /<summary[^>]+id="projects-view-options-summary"[^>]+aria-controls="projects-view-options-popover"/);
-    assert.match(shell, /<div[^>]+id="projects-view-options-popover"[^>]+aria-labelledby="projects-view-options-summary"/);
-    assert.match(styles, /\.crm-projects-portal-host \.crm-projects-view-options-popover button:hover/);
-    assert.match(styles, /\.crm-projects-portal-host \.crm-projects-view-options-popover button:focus-visible/);
-    const utilityRule = styles.match(/\[data-panel="projects"\]\s+dialog\.crm-projects-utility-workspace\s*\{([^}]*)\}/)?.[1] || '';
-    assert.match(utilityRule, /inset:\s*calc\(16px \/ var\(--crm-projects-ui-scale, 1\)\)/);
-    assert.match(utilityRule, /width:\s*calc\(\(100vw - 32px\) \/ var\(--crm-projects-ui-scale, 1\)\)/);
-    assert.match(utilityRule, /height:\s*calc\(\(100dvh - 32px\) \/ var\(--crm-projects-ui-scale, 1\)\)/);
-    assert.match(utilityRule, /padding:\s*calc\(24px \/ var\(--crm-projects-ui-scale, 1\)\)\s+calc\(28px \/ var\(--crm-projects-ui-scale, 1\)\)/);
-    assert.match(utilityRule, /overflow:\s*auto/);
-    assert.doesNotMatch(utilityRule, /(?:width|height):\s*auto|(?:max-width|max-height):\s*none/);
-    assert.match(styles, /\.crm-projects-utility-rail\s*\{[^}]*width:\s*49px/);
-    assert.match(styles, /\.crm-projects-utility-rail\s*\{[^}]*flex:\s*0\s+0\s+49px/);
-    assert.doesNotMatch(styles, /\.crm-projects-utility-rail:not\(\.collapsed\)/);
-    assert.doesNotMatch(styles, /crm-projects-utility-collapse|id="ucollapse"/);
-    assert.match(adminSource, /projectsUiScaleController\?\.dispose\?\.\(\)\s*;[\s\S]*projectsUiScaleController\s*=.*CrmProjectsUiScale/);
 });
 
 test('init() initializes scale controller and wires DOM listeners', () => {

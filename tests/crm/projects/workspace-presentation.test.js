@@ -9,7 +9,7 @@ const source = fs.readFileSync(path.join(root, 'public/js/crm/projects/workspace
 const html = fs.readFileSync(path.join(root, 'public/crm-admin.html'), 'utf8');
 
 // Event/observer adapter, not a browser geometry or native focus-trap substitute.
-function fixture({ innerWidth = 1920 } = {}) {
+function fixture() {
     const pendingObservers = new Set(), observers = [], timers = new Map();
     let timerId = 0, uid = 'actor-a';
     const selected = [], managed = [], nodes = new Map();
@@ -36,7 +36,6 @@ function fixture({ innerWidth = 1920 } = {}) {
         append(child) { child.parent = this; this.children.push(child); return child; }
         contains(node) { return this === node || this.children.some(child => child.contains(node)); }
         matches(selector) {
-            if (selector.startsWith('#')) return this.id === selector.slice(1);
             const attr = selector.match(/^\[([^=\]]+)(?:="([^"]*)")?\]$/);
             return attr ? Object.hasOwn(this.attrs, attr[1]) && (attr[2] === undefined || this.attrs[attr[1]] === attr[2]) : this.tagName === selector;
         }
@@ -86,32 +85,23 @@ function fixture({ innerWidth = 1920 } = {}) {
     const title = filters.append(new Element('input', { name: 'title' }));
     const status = filters.append(new Element('select', { name: 'status' }));
     const filterDetails = filters.append(new Element('details'));
-    const utility = add('projects-utility-rail', 'aside');
-    const utilityTabs = utility.append(new Element('div'));
-    const utilityAssistant = utilityTabs.append(new Element('button', { id: 'projects-utab-assistant', 'data-u': 'assistant' }));
-    utilityTabs.append(new Element('button', { id: 'projects-utab-notifications', 'data-u': 'notifications' }));
-    utilityTabs.append(new Element('button', { id: 'projects-utab-automations', 'data-u': 'automations' }));
-    utilityTabs.append(new Element('button', { id: 'projects-utab-recovery', 'data-u': 'recovery' }));
-    utilityTabs.append(new Element('button', { id: 'projects-utab-linked-records', 'data-u': 'linked-records' }));
-    const utilityDialog = add('projects-utility-workspace', 'dialog', panel, { 'data-projects-dialog': '', hidden: '' });
-    const utilityClose = utilityDialog.append(new Element('button', { 'data-projects-close': '' }));
-    ['assistant', 'notifications', 'automations', 'recovery', 'linked-records'].forEach(name => utilityDialog.append(new Element('div', { id: `projects-upane-${name}`, 'data-p': name })));
-    const recovery = add('projects-board-recovery', 'section', utilityDialog, { hidden: '' });
-    const automations = add('projects-automations', 'section', utilityDialog, { hidden: '' });
-    const notifications = add('projects-notifications', 'section', utilityDialog, { hidden: '' });
+    const utility = panel.append(new Element('details'));
+    const recovery = add('projects-board-recovery', 'section', utility, { hidden: '' });
+    const automations = add('projects-automations', 'section', utility, { hidden: '' });
+    const notifications = add('projects-notifications', 'section', utility, { hidden: '' });
     class MutationObserver {
         constructor(callback) { this.callback = callback; observers.push(this); }
         observe(target, options) { this.target = target; this.options = options; }
         disconnect() { this.target = null; pendingObservers.delete(this); }
     }
-    const scope = { document, MutationObserver, innerWidth, setTimeout(callback) { timers.set(++timerId, callback); return timerId; }, clearTimeout(id) { timers.delete(id); } };
+    const scope = { document, MutationObserver, setTimeout(callback) { timers.set(++timerId, callback); return timerId; }, clearTimeout(id) { timers.delete(id); } };
     vm.runInNewContext(source, scope, { filename: 'workspace.js' });
     const controller = scope.CrmProjectsWorkspace.createController({ document, getCurrentUser: () => ({ uid }), selectProject: id => selected.push(id), onManageAccess: () => managed.push(uid) });
     controller.init();
     function flush() { let iterations = 0; while (pendingObservers.size) { assert.ok(++iterations < 30, 'observer loop must settle'); const batch = [...pendingObservers]; pendingObservers.clear(); batch.forEach(observer => { if (observer.target) observer.callback(); }); } }
     function tick() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(callback => callback()); flush(); }
     const summary = (grant, admin = false) => ({ identity: { uid, moduleGrants: { projects: grant } }, canManagePeople: admin });
-    return { controller, nodes, panel, rail, projectNav, toggle, settings, settingsClose, opener, tabs, sections, detail, detailCancel, create, createCancel, filters, title, status, filterDetails, utility, utilityAssistant, utilityDialog, utilityClose, recovery, automations, notifications, selected, managed, document, timers, observers, flush, tick, summary, Element, setActor(value) { uid = value; } };
+    return { controller, nodes, panel, rail, projectNav, toggle, settings, settingsClose, opener, tabs, sections, detail, detailCancel, create, createCancel, filters, title, status, filterDetails, utility, recovery, automations, notifications, selected, managed, document, timers, observers, flush, tick, summary, Element, setActor(value) { uid = value; } };
 }
 
 test('access onboarding distinguishes module grant, actionable admin access and another actor summary', () => {
@@ -222,34 +212,8 @@ test('title search delegates a debounced submit, respects reset/actor/disabled s
     f.title.dispatch('input'); f.toggle.click(); assert.equal(f.timers.size, 0); assert.equal(f.rail.classList.contains('is-open'), false);
 });
 
-test('recovery and notification startup stay closed; explicit automation reveals the utility', () => {
-    const f = fixture(); f.notifications.hidden = false; f.flush(); assert.equal(f.utilityDialog.open, false);
-    f.recovery.hidden = false; f.flush(); assert.equal(f.utilityDialog.open, false, 'recovery visibility on board load must not open the utility');
-    f.automations.hidden = false; f.flush(); assert.equal(f.utilityDialog.open, true); assert.equal(f.utility.classList.contains('collapsed'), false);
-    f.utilityClose.click(); f.flush(); assert.equal(f.utilityDialog.open, false); assert.equal(f.utility.classList.contains('collapsed'), false);
-});
-
-test('utility launcher opens the real workspace dialog without changing compact rail state', () => {
-    for (const innerWidth of [1920, 1280]) {
-        const f = fixture({ innerWidth });
-        assert.equal(f.utility.classList.contains('collapsed'), false);
-        assert.equal(f.utility.dataset.userToggled, undefined);
-        f.utilityAssistant.click(); f.flush();
-        assert.equal(f.utilityDialog.open, true);
-        assert.equal(f.utility.classList.contains('collapsed'), false);
-        f.utilityClose.click(); f.flush();
-        assert.equal(f.utilityDialog.open, false);
-        assert.equal(f.utility.classList.contains('collapsed'), false);
-        f.utilityAssistant.click(); f.flush();
-        assert.equal(f.utilityDialog.open, true);
-        assert.equal(f.utility.classList.contains('collapsed'), false);
-    }
-});
-
-test('linked records is one utility-owned container and the utility shell has an accessible workspace dialog', () => {
-    assert.equal((html.match(/id="projects-project-links"/g) || []).length, 1);
-    assert.match(html, /id="projects-upane-linked-records"/);
-    assert.match(html, /id="projects-utility-workspace"[^>]+data-projects-dialog/);
-    assert.doesNotMatch(html, /id="ucollapse"/);
-    assert.doesNotMatch(source, /RAIL_INLINE_MIN_WIDTH|syncRailDefault|userToggled|ucollapse/);
+test('recovery and notification startup stay collapsed; explicit automation reveals the utility', () => {
+    const f = fixture(); f.notifications.hidden = false; f.flush(); assert.equal(f.utility.open, false);
+    f.recovery.hidden = false; f.flush(); assert.equal(f.utility.open, false, 'recovery visibility on board load must not open the utility');
+    f.utility.open = false; f.automations.hidden = false; f.flush(); assert.equal(f.utility.open, true);
 });

@@ -17,7 +17,6 @@
     return { ...node, payload: payloads[type] };
   }
   const create = context => ({ schemaVersion: 1, trigger: { type: 'task_created' }, steps: [newNode('set_field', context)] });
-  const createBlank = () => ({ schemaVersion: 1, trigger: { type: '' }, steps: [] });
   function walk(definition, fn) {
     function visit(list, parentId = '', branch = 'steps', prefix = '') { (list || []).forEach((node, index) => { const path = `${prefix}/${node.nodeId}`; fn({ node, list, index, parentId, branch, path }); if (node.type === 'if') { visit(node.then, node.nodeId, 'then', `${path}/then`); visit(node.else, node.nodeId, 'else', `${path}/else`); } }); }
     visit(definition.steps);
@@ -181,7 +180,7 @@
     return warnings;
   }
 
-  const api = { clone, types, triggers, builtins, statuses, priorities, nodeId, leaf, newNode, create, createBlank, walk, find, editNode, insert, remove, reorder, duplicate, setAt, getAt, fieldType, operators, defaultValue, validate, RECIPES, detectCompetingRules };
+  const api = { clone, types, triggers, builtins, statuses, priorities, nodeId, leaf, newNode, create, walk, find, editNode, insert, remove, reorder, duplicate, setAt, getAt, fieldType, operators, defaultValue, validate, RECIPES, detectCompetingRules };
   globalScope.CrmAutomationDefinitionEditor = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

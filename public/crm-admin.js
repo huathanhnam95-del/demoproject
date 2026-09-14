@@ -1719,7 +1719,6 @@
         elements.projectsBoardTheme.textContent = isDark ? 'Theme' : 'Dark';
       });
     }
-    window.projectsUiScaleController?.dispose?.();
     window.projectsUiScaleController = window.CrmProjectsUiScale?.init?.({
       elements,
       panel: document.querySelector('[data-panel="projects"]')

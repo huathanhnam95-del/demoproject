@@ -105,8 +105,12 @@ def run(output,emulators=False):
                 dialog.get_by_role('button',name='Save',exact=True).click();dialog.wait_for(state='hidden')
                 saved=page.evaluate("JSON.parse(localStorage.getItem('annotation-fixture-v1'))")
                 assert len(saved)==1;id,item=next(iter(saved.items()));assert item['context']['view']=='intro'
-                page.get_by_label('Show marks').check()
+                assert not page.get_by_label('Show marks').is_checked()
+                page.get_by_role('button',name='Feedback (loaded 1)',exact=True).click()
                 child=page.locator('#et-ui-frame').element_handle().content_frame()
+                child.wait_for_selector('.et-annotation-overlay ellipse')
+                page.get_by_role('button',name='Close feedback',exact=True).click()
+                page.get_by_label('Show marks').check()
                 child.wait_for_selector('.et-annotation-overlay ellipse')
                 geometry=child.evaluate("""async item=>{const f=Object.values(item.anchor.fragments)[0],b=document.querySelector('[data-et-annotation-id=\"'+f.targetId+'\"]').getBoundingClientRect();const rect={left:b.left+f.rect.x0*b.width,right:b.left+f.rect.x1*b.width,top:b.top+f.rect.y0*b.height,bottom:b.top+f.rect.y1*b.height};const e=document.querySelector('.et-annotation-overlay ellipse');return {expected:{cx:(rect.left+rect.right)/2,cy:(rect.top+rect.bottom)/2},actual:{cx:Number(e.getAttribute('cx')),cy:Number(e.getAttribute('cy'))}};}""",item)
                 drift=max(abs(geometry['expected'][k]-geometry['actual'][k]) for k in ['cx','cy']);assert drift<=3;result['geometry'].append({'dsf':dsf,'drift':drift,**geometry})

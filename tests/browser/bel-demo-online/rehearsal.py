@@ -140,6 +140,16 @@ def walk_to(page, target, timeout=35):
             return
         player,point=path['p'],path['point']
         dx,dy=point['x']-player['x'],point['y']-player['y']
+        # J's cube-4 approach runs along the narrow corridor immediately
+        # below the table. If the planner has reached that corridor but its
+        # next diagonal is blocked by the tabletop, make the small horizontal
+        # correction with the same real keyboard input the player uses.
+        if (isinstance(target, str) and target.startswith('cube-') and player['scene'] == 'J'
+                and player['y'] >= path['t']['y'] + 35 and abs(player['x'] - path['t']['x']) < 70):
+            for key in ['a', 'd', 's', 'w']:
+                page.keyboard.up(key)
+            dx, dy = path['t']['x'] - player['x'], 0
+            point = {'x': player['x'] + dx, 'y': player['y']}
         keys=[]
         if abs(dx)>2: keys.append('d' if dx>0 else 'a')
         if abs(dy)>2: keys.append('s' if dy>0 else 'w')

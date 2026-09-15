@@ -13,16 +13,19 @@ async function run() {
   const evidenceDir = process.env.BEL_EVIDENCE_DIR || '';
   const routeTimeoutMs = Number(process.env.BEL_ROUTE_TIMEOUT_MS || 15000);
   const routeBudgetMs = Number(process.env.BEL_ROUTE_BUDGET_MS || 10000);
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
-  const context = await browser.newContext({
-    ignoreHTTPSErrors: true,
-    viewport: { width: 1440, height: 1000 }
-  });
-  const page = await context.newPage();
   const heldRoutes = [];
   const errors = [];
+  let browser;
 
-  const firebaseStub = `(() => {
+  try {
+    browser = await chromium.launch({ channel: 'chrome', headless: true });
+    const context = await browser.newContext({
+      ignoreHTTPSErrors: true,
+      viewport: { width: 1440, height: 1000 }
+    });
+    const page = await context.newPage();
+
+    const firebaseStub = `(() => {
     if (window.firebase) return;
     const user = {
       uid: 'fixture-admin',
@@ -36,9 +39,16 @@ async function run() {
     };
     const authFactory = () => auth;
     authFactory.Auth = { Persistence: { LOCAL: 'local' } };
-    const firestoreFactory = () => ({
-      collection: () => ({ doc: () => ({ get: async () => ({ exists: false }) }) })
-    });
+    const emptySnapshot = { empty: true, docs: [], forEach() {} };
+    const query = {
+      doc: () => ({ get: async () => ({ exists: false, data: () => ({}) }) }),
+      where() { return this; },
+      orderBy() { return this; },
+      limit() { return this; },
+      get: async () => emptySnapshot,
+      onSnapshot(callback) { queueMicrotask(() => callback(emptySnapshot)); return () => {}; }
+    };
+    const firestoreFactory = () => ({ collection: () => query });
     firestoreFactory.FieldValue = { serverTimestamp: () => ({}) };
     window.firebase = {
       apps: [],
@@ -48,77 +58,77 @@ async function run() {
       storage: () => ({})
     };
   })();`;
-  await page.route('https://www.gstatic.com/firebasejs/**', route => route.fulfill({
+    await page.route('https://www.gstatic.com/firebasejs/**', route => route.fulfill({
     status: 200,
     contentType: 'application/javascript',
     body: firebaseStub
   }));
-  await page.route('**/api/config', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ success: true, config: { apiKey: 'fixture-key', projectId: 'fixture-project' } })
-  }));
-  await page.route('**/api/admin/status', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ success: true, isAdmin: true, capabilities: {} })
-  }));
-  await page.route('**/api/projects/access', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ success: true, identity: { accountStatus: 'active', moduleGrants: { projects: true } }, projects: [{ id: 'fixture-project' }], canManagePeople: true })
-  }));
-  await page.route(/https:\/\/(?:unpkg\.com|cdn\.jsdelivr\.net)\//, route => {
-    heldRoutes.push(route);
-  });
-  page.on('pageerror', error => errors.push(error.message));
-
-  const started = Date.now();
-  await page.goto(target, { waitUntil: 'commit', timeout: 30000 });
-  try {
-    await page.waitForFunction(() => {
-      const gate = document.getElementById('crm-loading');
-      const panel = document.querySelector('.crm-panel[data-panel="entrance-test-ui"]');
-      return (!gate || getComputedStyle(gate).display === 'none')
-        && panel && getComputedStyle(panel).display !== 'none'
-        && document.querySelector('#et-ui-name');
-    }, null, { timeout: routeTimeoutMs });
-  } catch (error) {
-    const state = await page.evaluate(() => {
-      const gate = document.getElementById('crm-loading');
-      const visiblePanel = Array.from(document.querySelectorAll('.crm-panel')).find(node => getComputedStyle(node).display !== 'none');
-      return {
-        url: location.href,
-        readyState: document.readyState,
-        gateDisplay: gate ? getComputedStyle(gate).display : 'missing',
-        gateText: document.getElementById('crm-loading-text')?.textContent || '',
-        visiblePanel: visiblePanel?.dataset?.panel || '',
-        skinCount: document.querySelectorAll('[data-skin]').length
-      };
+    await page.route('**/api/**', route => {
+      const pathname = new URL(route.request().url()).pathname;
+      let body;
+      if (pathname === '/api/config') {
+        body = { success: true, config: { apiKey: 'fixture-key', projectId: 'fixture-project' } };
+      } else if (pathname === '/api/admin/status') {
+        body = { success: true, isAdmin: true, capabilities: {} };
+      } else if (pathname === '/api/projects/access') {
+        body = { success: true, identity: { accountStatus: 'active', moduleGrants: { projects: true } }, projects: [{ id: 'fixture-project' }], canManagePeople: true };
+      } else {
+        body = { success: true, items: [], data: [], projects: [], students: [], courses: [], classrooms: [], leads: [], invoices: [], payments: [], enrollments: [], sources: [] };
+      }
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
     });
-    console.error(JSON.stringify({ state, heldRoutes: heldRoutes.length, errors }, null, 2));
+    await page.route(/https:\/\/(?:unpkg\.com|cdn\.jsdelivr\.net)\//, route => {
+      heldRoutes.push(route);
+    });
+    page.on('pageerror', error => errors.push(error.message));
+
+    const started = Date.now();
+    await page.goto(target, { waitUntil: 'commit', timeout: 30000 });
+    try {
+      await page.waitForFunction(() => {
+        const gate = document.getElementById('crm-loading');
+        const panel = document.querySelector('.crm-panel[data-panel="entrance-test-ui"]');
+        return (!gate || getComputedStyle(gate).display === 'none')
+          && panel && getComputedStyle(panel).display !== 'none'
+          && document.querySelector('#et-ui-name');
+      }, null, { timeout: routeTimeoutMs });
+    } catch (error) {
+      const state = await page.evaluate(() => {
+        const gate = document.getElementById('crm-loading');
+        const visiblePanel = Array.from(document.querySelectorAll('.crm-panel')).find(node => getComputedStyle(node).display !== 'none');
+        return {
+          url: location.href,
+          readyState: document.readyState,
+          gateDisplay: gate ? getComputedStyle(gate).display : 'missing',
+          gateText: document.getElementById('crm-loading-text')?.textContent || '',
+          visiblePanel: visiblePanel?.dataset?.panel || '',
+          skinCount: document.querySelectorAll('[data-skin]').length
+        };
+      });
+      console.error(JSON.stringify({ state, heldRoutes: heldRoutes.length, errors }, null, 2));
+      throw error;
+    }
+    const elapsedMs = Date.now() - started;
+    await page.locator('#et-ui-name').fill('Loading regression fixture');
+    await page.locator('#et-ui-enter').click();
+    await page.locator('[data-skin="d"]').waitFor({ state: 'visible', timeout: 5000 });
+    const skins = await page.locator('[data-skin]').allTextContents();
+
+    assert.ok(heldRoutes.length >= 1, 'Expected at least one unrelated deferred CDN request to remain pending');
+    assert.strictEqual(skins.length, 4, `Expected all four design choices, got: ${skins.join(' | ')}`);
+    assert.ok(skins.some(label => /D\s*·\s*Signal Noto/.test(label)), `Expected Demo D among four skins: ${skins.join(' | ')}`);
+    assert.ok(elapsedMs <= routeBudgetMs, `Entrance Test route must render within ${routeBudgetMs}ms while unrelated deferred assets are pending; got ${elapsedMs}ms`);
+    assert.deepStrictEqual(errors, [], `Unexpected page errors: ${JSON.stringify(errors)}`);
+
+    if (evidenceDir) {
+      fs.mkdirSync(evidenceDir, { recursive: true });
+      await page.screenshot({ path: path.join(evidenceDir, 'crm-entrance-test-ui-loading.png'), fullPage: true });
+    }
+    console.log(JSON.stringify({ success: true, elapsedMs, skinCount: skins.length, demoD: true, deferredRequestsHeld: heldRoutes.length }));
+  } finally {
     await Promise.all(heldRoutes.map(route => route.fulfill({ status: 204, body: '' }).catch(() => {})));
-    await browser.close();
-    throw error;
+    await browser?.close();
   }
-  const elapsedMs = Date.now() - started;
-  await page.locator('#et-ui-name').fill('Loading regression fixture');
-  await page.locator('#et-ui-enter').click();
-  await page.locator('[data-skin="d"]').waitFor({ state: 'visible', timeout: 5000 });
-  const skins = await page.locator('[data-skin]').allTextContents();
-
-  assert.ok(heldRoutes.length >= 1, 'Expected at least one unrelated deferred CDN request to remain pending');
-  assert.ok(skins.some(label => /D\s*·\s*Signal Noto/.test(label)), `Expected Demo D among four skins: ${skins.join(' | ')}`);
-  assert.ok(elapsedMs <= routeBudgetMs, `Entrance Test route must render within ${routeBudgetMs}ms while unrelated deferred assets are pending; got ${elapsedMs}ms`);
-  assert.deepStrictEqual(errors, [], `Unexpected page errors: ${JSON.stringify(errors)}`);
-
-  if (evidenceDir) {
-    fs.mkdirSync(evidenceDir, { recursive: true });
-    await page.screenshot({ path: path.join(evidenceDir, 'crm-entrance-test-ui-loading.png'), fullPage: true });
-  }
-  await Promise.all(heldRoutes.map(route => route.fulfill({ status: 204, body: '' }).catch(() => {})));
-  await browser.close();
-  console.log(JSON.stringify({ success: true, elapsedMs, skinCount: skins.length, demoD: true, deferredRequestsHeld: heldRoutes.length }));
 }
 
 run().catch(error => {

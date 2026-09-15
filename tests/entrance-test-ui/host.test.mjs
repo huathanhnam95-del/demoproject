@@ -9,13 +9,13 @@ function host(store) {
  vm.runInNewContext(source.replace(/window\.CrmEntranceTestUiLab = \{ boot: boot[^\n]+/,  'window.test = { state, completion, frameUrl, loadRater, scheduleSave, save, SKINS };'), context);
  return context.window.test;
 }
-test('D only defaults and 40 valid scores gate results with historical fonts', () => {
- const h = host(); assert.equal(h.state.skin, 'd'); assert.deepEqual(Array.from(h.SKINS, s => s.id), ['d']); assert.equal(h.completion().need, 40);
- for (const skin of ['a','b','c']) for (const p of ['intro','miccheck','speaking','vocab','grammar','listening','review','done']) for(const c of ['visual','readability','usability','clarity','trust']) h.state.ratings[`${skin}:${p}:${c}`] = 5;
- assert.equal(h.completion().have, 0);
- for(const key of Object.keys(h.state.ratings).filter(k=>k.startsWith('a:'))) h.state.ratings['d'+key.slice(1)] = 5;
+test('A through D remain selectable and 160 valid scores gate results with historical fonts', () => {
+ const h = host(); assert.equal(h.state.skin, 'b'); assert.deepEqual(Array.from(h.SKINS, s => s.id), ['a','b','c','d']); assert.equal(h.completion().need, 160);
+ for (const skin of ['a','b','c','d']) for (const p of ['intro','miccheck','speaking','vocab','grammar','listening','review','done']) for(const c of ['visual','readability','usability','clarity','trust']) h.state.ratings[`${skin}:${p}:${c}`] = 5;
+ assert.equal(h.completion().have, 160);
  h.state.fonts = {vn:['legacy'],en:['legacy']}; assert.equal(h.completion().done, true);
  h.state.ratings['d:intro:visual'] = 99; assert.equal(h.completion().done, false);
+ h.state.skin = 'd';
  assert.match(h.frameUrl(), /entrance-test-ui/);
 });
 test('explicit rating transaction preserves historical maps and creation time, including clearing', async () => {

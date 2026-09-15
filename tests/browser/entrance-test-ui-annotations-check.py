@@ -25,6 +25,7 @@ def prepare(page,base):
     if page.locator('#et-ui-name').count():
         page.locator('#et-ui-name').fill('Reviewer');page.locator('#et-ui-enter').click()
     page.wait_for_function("document.querySelector('#et-ui-status')?.textContent === ''")
+    page.locator("[data-skin='d']").click()
     page.frame_locator('#et-ui-frame').locator('[data-view]').wait_for()
     page.evaluate(SETUP)
     page.get_by_role('button',name='Annotate',exact=True).wait_for()

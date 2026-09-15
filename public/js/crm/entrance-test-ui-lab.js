@@ -1,8 +1,8 @@
 /**
  * Entrance Test UI — internal design review.
  *
- * Displays Demo D and collects five ratings on each of eight screens.
- * Historical designs and their saved rating/font data remain compatible.
+ * Hosts the three historical candidate skins and the fourth Demo D candidate.
+ * Each skin keeps the same eight-screen, five-criterion rating workflow.
  * Up to two font picks per language are shared historical votes.
  *
  * Everyone signs in on the same CRM account, so the rater is the name they
@@ -20,6 +20,9 @@
   const MAX_FONT_PICKS = 2;
 
   const SKINS = [
+    { id: 'a', label: 'A · Editorial', hint: 'Giấy ấm, serif, kẻ mảnh' },
+    { id: 'b', label: 'B · Instrument', hint: 'Chrome đen, lưới chặt, số mono' },
+    { id: 'c', label: 'C · Signal', hint: 'Khối màu phẳng, viền dày' },
     { id: 'd', label: 'D · Signal Noto', hint: 'Nền trắng, Noto Sans, đọc liền mạch' }
   ];
 
@@ -52,7 +55,7 @@
     generation: 0,
     pending: [],
     saving: false,
-    skin: 'd',
+    skin: 'b',
     page: 'intro',
     tab: 'rate',                 // rate | results
     ratings: {},                 // "skin:page:criterion" -> 1..5
@@ -153,6 +156,8 @@
       const data = snap.exists ? (snap.data() || {}) : {};
       state.ratings = data.ratings && typeof data.ratings === 'object' ? data.ratings : {};
       state.fonts = normaliseFonts(data.fonts);
+      state.preview.vn = state.fonts.vn[0] || 'be-vietnam-pro';
+      state.preview.en = state.fonts.en[0] || '';
       state.loaded = true;
       state.status = '';
     } catch (e) {
@@ -274,7 +279,7 @@
     const c = completion();
 
     const steps = [
-      ['1', 'Chọn mẫu thiết kế', 'Đánh giá Demo D · Signal Noto.'],
+      ['1', 'Chọn mẫu thiết kế', 'A, B, C hoặc D. Cả bốn dùng cùng quy trình chấm, chỉ khác giao diện.'],
       ['2', 'Xem hết 8 trang', 'Bấm từng nút trang, hoặc thao tác thẳng trong bản mẫu.'],
       ['3', 'Chấm 5 tiêu chí', 'Ở cột bên phải. Bấm lại đúng ngôi sao đó để xoá điểm.'],
       ['4', 'Chọn font', 'Làm 1 lần cho cả bài test, tối đa 2 font mỗi ngôn ngữ.']
@@ -346,7 +351,7 @@
     }).join('');
 
     return '<div class="et-row">' +
-      '<span class="et-rowlabel"><b>Bước 1 — Mẫu thiết kế</b><em>Demo D · 8 trang</em></span>' +
+      '<span class="et-rowlabel"><b>Bước 1 — Mẫu thiết kế</b><em>chọn 1 trong 4, chấm cả bốn</em></span>' +
       '<div class="et-skins">' + btns + '</div>' +
     '</div>';
   }
@@ -619,7 +624,7 @@
       renderRatingColumn();
       const f = frame();
       if (f) f.addEventListener('load', pushPreview, { once: true });
-      if (f && window.firebase?.auth && state.loaded) import('./entrance-test-ui/annotations-controller.js').then(({ createAnnotationsController }) => {
+      if (f && state.skin === 'd' && window.firebase?.auth && state.loaded) import('./entrance-test-ui/annotations-controller.js').then(({ createAnnotationsController }) => {
         if (generation !== mountGeneration || !f.isConnected) return;
         annotationController = createAnnotationsController({ mount: document.getElementById('et-annotations-mount'), frame: f, getRater: () => state.rater });
       }).catch(error => { const m = document.getElementById('et-annotations-mount'); if (m) m.textContent = 'Feedback unavailable: ' + error.message; });
@@ -676,7 +681,7 @@
       return;
     }
 
-    if ((t.dataset.action === 'switch-rater' || t.dataset.tab) && annotationController && !annotationController.canLeave()) return;
+    if ((t.dataset.action === 'switch-rater' || t.dataset.tab || t.dataset.skin) && annotationController && !annotationController.canLeave()) return;
 
     if (t.dataset.action === 'switch-rater') {
       if (state.pending.length || state.saving) { notice('Hãy lưu điểm trước khi đổi người.'); return; }
@@ -701,7 +706,7 @@
     }
 
     if (t.dataset.skin) {
-      if (t.dataset.skin !== 'd' || t.dataset.skin === state.skin) return;
+      if (!SKINS.some(skin => skin.id === t.dataset.skin) || t.dataset.skin === state.skin) return;
       state.skin = t.dataset.skin;
       state.page = 'intro';
       render();

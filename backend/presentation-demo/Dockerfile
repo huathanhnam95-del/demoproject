@@ -7,6 +7,8 @@ RUN cd /app/functions && npm ci --omit=dev
 COPY backend/presentation-demo/server.cjs ./
 COPY backend/presentation-demo/gateway.cjs ./
 COPY functions/src /app/functions/src
-COPY public /app/public
+COPY public/presentation-demo /app/public/presentation-demo
+COPY public/js/presentation-demo /app/public/js/presentation-demo
+COPY public/prototypes/bel-working-as-equals-demo /app/public/prototypes/bel-working-as-equals-demo
 EXPOSE 8080
 CMD ["node", "server.cjs"]

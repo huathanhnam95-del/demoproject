@@ -1,0 +1,101 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+
+const ROOT = path.resolve(__dirname, '../..');
+const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
+const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
+const normalizedSha256 = relative => sha256(read(relative).replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n'));
+
+test('candidate Firestore rules are the compiled live-preserving merge', () => {
+  const rules = read('firestore.rules');
+  assert.equal(normalizedSha256('firestore.rules'), 'c42d3fdccbc285e8b366b972688dd9bfc1b26838e14847d8cb1a68b2ca6972d5');
+  assert.match(rules, /match \/entranceTestUiAnnotations\/demo-d\/items\/\{annotationId\}/);
+  for (const collection of ['crmPresentationPresenterLocks', 'crmPresentationRoomCodes', 'crmPresentationRooms', 'crmPresentationOperations', 'crmPresentationArchives', 'crmPresentationEvents']) {
+    assert.match(rules, new RegExp(`match /${collection}/`), `missing BEL namespace ${collection}`);
+  }
+});
+
+test('Realtime Database root placement uses one reviewed exact governance exception', () => {
+  const policy = JSON.parse(read('scripts/structure/policy.json'));
+  assert.equal(policy.rootEntries.some(entry => (entry.path || entry) === 'database.rules.json'), false);
+  const matches = policy.exceptions.filter(entry => entry.path === 'database.rules.json' && entry.ruleId === 'R1.ROOT_ENTRY');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].approval, 'Codex task 01a09a56-d502-76a3-96b9-570d0cc26cd6');
+  for (const key of ['owner', 'rationale', 'evidence', 'reviewDate']) assert.ok(matches[0][key], `exception ${key} is required`);
+});
+
+test('gateway image has an exact small Docker context contract', () => {
+  const manifest = JSON.parse(read('scripts/bel-demo/release-remediation-manifest.json'));
+  assert.equal(manifest.schemaVersion, 1);
+  assert.equal(manifest.gatewayContext.maxBytes, 50_000_000);
+  assert.equal(manifest.gatewayContext.hostingCandidateFileCount, 75);
+  assert.ok(manifest.gatewayContext.includeTrees.includes('public/prototypes/bel-working-as-equals-demo'));
+  assert.ok(manifest.gatewayContext.excludeFiles.includes('public/prototypes/bel-working-as-equals-demo/README.md'));
+  assert.ok(manifest.gatewayContext.forbiddenPrefixes.includes('public/database/'));
+
+  const dockerfile = read('backend/presentation-demo/Dockerfile');
+  assert.doesNotMatch(dockerfile, /^COPY public \/app\/public$/m);
+  for (const source of ['public/presentation-demo', 'public/js/presentation-demo', 'public/prototypes/bel-working-as-equals-demo']) {
+    assert.match(dockerfile, new RegExp(`^COPY ${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} `, 'm'));
+  }
+  const dockerignore = read('backend/presentation-demo/Dockerfile.dockerignore');
+  assert.match(dockerignore, /^\*\*$/m);
+  assert.match(dockerignore, /^!functions\/src\/\*\*$/m);
+  assert.doesNotMatch(dockerignore, /^!public\/database(?:\/|$)/m);
+});
+
+test('shared CRM entry files retain live bootstrap and Projects markers while adding BEL', () => {
+  const html = read('public/crm-admin.html');
+  const script = read('public/crm-admin.js');
+  for (const marker of [
+    '20260914-v2.0.6',
+    'data-view="timeline"',
+    'books-word-segmenter.js?v=20260914-v2.0.6"></script>',
+    'mermaid.min.js" defer',
+    'data-main="presentation-demo"',
+    'data-panel="presentation-demo"',
+    'js/crm/presentation-demo-workspace.js?v=20260914-v2.0.6'
+  ]) assert.ok(html.includes(marker), `missing CRM HTML marker: ${marker}`);
+  for (const marker of [
+    'function startCrmAdmin()',
+    'startCrmAdmin();',
+    '"presentation-demo": { label:',
+    "['projects', 'presentation-demo'].includes",
+    "requested === 'presentation-demo'"
+  ]) assert.ok(script.includes(marker), `missing CRM script marker: ${marker}`);
+});
+
+test('API candidate preserves deployed deltas and verified Projects behavior', () => {
+  const deployed = {
+    'functions/src/crm/data-input/command-service.js': '5089844283aa4716b65e67f7e0ccccc1c4dc938337a98fb8213a38e2c362305d',
+    'functions/src/crm/projects/task-links-service.js': '43b912145ad6422e2ebf1f4d28df55d2150d79dae215d53f4c4d1b212a789fe7',
+    'functions/src/data/read-aloud-connected-speech-index.json': '594e9393f15912e7e50d0a20b3a9b548e663bd7d4856ef9b90c90d05179ee8c0'
+  };
+  for (const [relative, expected] of Object.entries(deployed)) assert.equal(normalizedSha256(relative), expected, relative);
+  assert.deepEqual(
+    fs.readFileSync(path.join(ROOT, 'public/database/RA/connected-speech-index.json')),
+    fs.readFileSync(path.join(ROOT, 'functions/src/data/read-aloud-connected-speech-index.json')),
+    'deployed Functions index must match its canonical public source'
+  );
+
+  const feed = read('functions/src/crm/projects/change-feed-service.js');
+  for (const marker of ['operationId', 'actorUid', 'command']) assert.ok(feed.includes(marker), `change feed must preserve ${marker}`);
+
+  const commands = read('functions/src/crm/projects/domain/command-service.js');
+  assert.match(commands, /effectiveSectionId:\s*resolvedSectionId/);
+  assert.match(commands, /expectedStructureRevision !== undefined/);
+  assert.match(commands, /structureRevision:\s*structureBefore/);
+});
+
+test('release verifier is present and read-only by default', () => {
+  const verifier = read('scripts/bel-demo/verify-release-remediation.cjs');
+  assert.match(verifier, /--evidence/);
+  assert.match(verifier, /process\.env\.ComSpec/, 'Windows gcloud invocation must use the command processor');
+  assert.doesNotMatch(verifier, /execFileSync\(gcloud,/, 'Node cannot execute gcloud.cmd directly on Windows');
+  assert.doesNotMatch(verifier, /firebase\s+deploy|gcloud\s+run\s+deploy|populateFiles/);
+});

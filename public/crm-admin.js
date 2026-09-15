@@ -285,14 +285,15 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function startCrmAdmin() {
     cacheElements();
     bindBulkDeleteWarningModal();
     init().catch((e) => {
       console.error('[CRM Admin] Fatal init error:', e);
       showGateMessage('Initialization failed.', e?.message || 'Unknown error');
     });
-  });
+  }
+  startCrmAdmin();
   window.addEventListener('pagehide', () => {
     dashboardController?.dispose?.();
   });
@@ -1264,16 +1265,20 @@
     updateAdminCapabilityNav();
 
     // Ready
-    hideGate();
     setupScoreDecorations();
     setupMoneyInputs();
 
     if (state.accessMode === 'admin') {
       initPronunciationDualArena();
-      if (window.CrmSegmentationStudy && typeof window.CrmSegmentationStudy.init === 'function') {
+      const initSegmentationStudy = () => {
+        if (!window.CrmSegmentationStudy || typeof window.CrmSegmentationStudy.init !== 'function') return;
         window.CrmSegmentationStudy.init().catch((error) => {
           console.error('[Segmentation Study] Initialization failed:', error);
         });
+      };
+      initSegmentationStudy();
+      if (!window.CrmSegmentationStudy && document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSegmentationStudy, { once: true });
       }
       if (isLikelyLocalEnvironment()) {
         // Optional local sync discovery must not delay workspace initialization.
@@ -1720,6 +1725,7 @@
         elements.projectsBoardTheme.textContent = isDark ? 'Theme' : 'Dark';
       });
     }
+    window.projectsUiScaleController?.dispose?.();
     window.projectsUiScaleController = window.CrmProjectsUiScale?.init?.({
       elements,
       panel: document.querySelector('[data-panel="projects"]')
@@ -1958,6 +1964,7 @@
     }
     applyRouteFromHash({ initial: true });
     render();
+    hideGate();
 
     if (state.accessMode === 'admin') {
       refreshStudentLists().catch((e) => {
@@ -5795,6 +5802,11 @@
       state.sub = DEFAULT_ROUTE.sub;
       updateHash();
       showToast('This workspace is not available yet. Showing Dashboard.', 'info');
+    }
+
+    if (lastRenderedPanel === 'entrance-test-ui' && state.main !== 'entrance-test-ui') {
+      if (window.CrmEntranceTestUiLab?.canLeave?.() === false) { state.main = 'entrance-test-ui'; state.sub = ''; updateHash(); return; }
+      window.CrmEntranceTestUiLab?.dispose?.();
     }
 
     // Nav active state

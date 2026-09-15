@@ -1,0 +1,24 @@
+# The gateway image uses only the functions runtime and BEL presentation assets.
+# Keep this Dockerfile-specific so other repository images retain their contexts.
+**
+!backend/
+!backend/presentation-demo/
+!backend/presentation-demo/package.json
+!backend/presentation-demo/package-lock.json
+!backend/presentation-demo/server.cjs
+!backend/presentation-demo/gateway.cjs
+!functions/
+!functions/package.json
+!functions/package-lock.json
+!functions/src/
+!functions/src/**
+!public/
+!public/presentation-demo/
+!public/presentation-demo/**
+!public/js/
+!public/js/presentation-demo/
+!public/js/presentation-demo/**
+!public/prototypes/
+!public/prototypes/bel-working-as-equals-demo/
+!public/prototypes/bel-working-as-equals-demo/**
+public/prototypes/bel-working-as-equals-demo/README.md

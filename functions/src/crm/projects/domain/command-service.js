@@ -439,10 +439,11 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
             const sectionRows = await readCollection(transaction, projectCollection(db, project.id, 'sections'));
             const sectionMap = mapById(sectionRows);
             const parentTaskId = parentReference;
+            let parentState = null;
             if (parentTaskId) {
                 const parent = taskMap.get(parentTaskId);
                 if (!parent || effectiveLifecycle(taskMap, parentTaskId) !== 'active') throw new DomainError(409, 'INVALID_PARENT_REFERENCE', 'Parent task must be active and in this project.');
-                const parentState = resolveTaskState({ tasks: taskMap, taskId: parentTaskId });
+                parentState = resolveTaskState({ tasks: taskMap, taskId: parentTaskId });
                 if (parentState.pathIds.length >= 5) throw new DomainError(400, 'MAX_DEPTH_EXCEEDED', 'Subtask hierarchy cannot exceed 5 levels.');
             }
             const resolvedSectionId = parentTaskId ? effectiveSection(taskMap, parentTaskId) : id(sectionReference, 'section ID');
@@ -481,7 +482,10 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
             const structureBefore = readRevision(project.data, 'structureRevision');
             assertExpected(structureBefore, expectedStructure, 'STALE_STRUCTURE_REVISION', 'Project structure changed; refresh and retry.');
             transaction.set(project.ref, { structureRevision: structureBefore + 1, updatedAt: timestamp, updatedBy: identity.uid }, { merge: true });
-            return { result: { task: { ...task, id: taskId }, structureRevision: structureBefore + 1 }, before: { taskId, revision: 0, rebalance: rebalanceBefore }, after: { taskId, revision: 1, rebalance: rebalanceAfter }, inverse: { kind: 'createTask', targetId: taskId, rebalanceBefore, rebalanceAfter }, affectedIds: [project.id, taskId, ...rebalanceAfter.map((entry) => entry.id)], affectedPaths: [projectPath(project.id), recordPath(project.id, 'tasks', taskId), ...rebalanceAfter.map((entry) => recordPath(project.id, 'tasks', entry.id))], structureRevisionBefore: structureBefore, structureRevisionAfter: structureBefore + 1, beforeRevisions: revisionMap([[projectPath(project.id), projectRevision(project.data)], [recordPath(project.id, 'tasks', taskId), null], ...rebalanceBefore.map((entry) => [recordPath(project.id, 'tasks', entry.id), entry.revision])]), afterRevisions: revisionMap([[projectPath(project.id), projectRevision(project.data, { structureRevision: structureBefore + 1 })], [recordPath(project.id, 'tasks', taskId), 1], ...rebalanceAfter.map((entry) => [recordPath(project.id, 'tasks', entry.id), entry.revision])]) };
+            const ancestorIds = parentTaskId ? (parentState?.pathIds || []) : [];
+            const pathIds = parentTaskId ? [taskId, ...(parentState?.pathIds || [])] : [taskId];
+            const serializedCreated = { ...task, id: taskId, effectiveSectionId: resolvedSectionId, effectiveLifecycle: 'active', ancestorIds, pathIds, activeChildCount: 0 };
+            return { result: { task: serializedCreated, structureRevision: structureBefore + 1 }, before: { taskId, revision: 0, rebalance: rebalanceBefore }, after: { taskId, revision: 1, rebalance: rebalanceAfter }, inverse: { kind: 'createTask', targetId: taskId, rebalanceBefore, rebalanceAfter }, affectedIds: [project.id, taskId, ...rebalanceAfter.map((entry) => entry.id)], affectedPaths: [projectPath(project.id), recordPath(project.id, 'tasks', taskId), ...rebalanceAfter.map((entry) => recordPath(project.id, 'tasks', entry.id))], structureRevisionBefore: structureBefore, structureRevisionAfter: structureBefore + 1, beforeRevisions: revisionMap([[projectPath(project.id), projectRevision(project.data)], [recordPath(project.id, 'tasks', taskId), null], ...rebalanceBefore.map((entry) => [recordPath(project.id, 'tasks', entry.id), entry.revision])]), afterRevisions: revisionMap([[projectPath(project.id), projectRevision(project.data, { structureRevision: structureBefore + 1 })], [recordPath(project.id, 'tasks', taskId), 1], ...rebalanceAfter.map((entry) => [recordPath(project.id, 'tasks', entry.id), entry.revision])]) };
         }});
     }
 
@@ -654,7 +658,7 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         delete input.expectedStructureRevision;
         const payload = validateSectionInput(input);
         const opId = ensureOperation(rawPayload.operationId);
-        const expectedStructure = requiredRevision(rawPayload.expectedStructureRevision, 'EXPECTED_STRUCTURE_REVISION_REQUIRED', 'expectedStructureRevision is required for section edits.');
+        const expectedStructure = rawPayload.expectedStructureRevision !== undefined ? requiredRevision(rawPayload.expectedStructureRevision, 'EXPECTED_STRUCTURE_REVISION_REQUIRED', 'expectedStructureRevision is required for section edits.') : null;
         return runCommand({ actorUid: identity.uid, command: 'updateSection', projectId, targetId: id(sectionId, 'section ID'), operationId: opId, payload: { ...payload, expectedRevision: rawPayload.expectedRevision, expectedStructureRevision: expectedStructure }, access: { owner: true, roles: ['Owner'] }, execute: async ({ transaction, contentAccess }) => {
             assertProjectActive(contentAccess.project);
             const currentSnapshot = await transaction.get(sectionRef(db, projectId, sectionId));
@@ -666,9 +670,10 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
             const next = { ...current, ...payload, revision: expected + 1, updatedAt: iso(now()), updatedBy: identity.uid };
             transaction.set(sectionRef(db, projectId, sectionId), next);
             const structureBefore = readRevision(contentAccess.project.data, 'structureRevision');
-            assertExpected(structureBefore, expectedStructure, 'STALE_STRUCTURE_REVISION', 'Project structure changed; refresh and retry.');
-            transaction.set(contentAccess.project.ref, { structureRevision: structureBefore + 1, updatedAt: next.updatedAt, updatedBy: identity.uid }, { merge: true });
-            return { result: { section: { ...next, id: sectionId }, structureRevision: structureBefore + 1 }, before: { sectionId, revision: expected }, after: { sectionId, revision: next.revision }, affectedIds: [projectId, sectionId], affectedPaths: [projectPath(projectId), recordPath(projectId, 'sections', sectionId)], structureRevisionBefore: structureBefore, structureRevisionAfter: structureBefore + 1, beforeRevisions: revisionMap([[projectPath(projectId), projectRevision(contentAccess.project.data)], [recordPath(projectId, 'sections', sectionId), expected]]), afterRevisions: revisionMap([[projectPath(projectId), projectRevision(contentAccess.project.data, { structureRevision: structureBefore + 1 })], [recordPath(projectId, 'sections', sectionId), next.revision]]) };
+            if (expectedStructure !== null) {
+                assertExpected(structureBefore, expectedStructure, 'STALE_STRUCTURE_REVISION', 'Project structure changed; refresh and retry.');
+            }
+            return { result: { section: { ...next, id: sectionId }, structureRevision: structureBefore }, before: { sectionId, revision: expected }, after: { sectionId, revision: next.revision }, affectedIds: [projectId, sectionId], affectedPaths: [projectPath(projectId), recordPath(projectId, 'sections', sectionId)], structureRevisionBefore: structureBefore, structureRevisionAfter: structureBefore, beforeRevisions: revisionMap([[projectPath(projectId), projectRevision(contentAccess.project.data)], [recordPath(projectId, 'sections', sectionId), expected]]), afterRevisions: revisionMap([[projectPath(projectId), projectRevision(contentAccess.project.data)], [recordPath(projectId, 'sections', sectionId), next.revision]]) };
         }});
     }
 

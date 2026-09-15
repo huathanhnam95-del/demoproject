@@ -34,8 +34,8 @@ function hints(event) {
         // Parent identifiers remain server-side; structural reconciliation uses
         // the member's authorized loaded branches, never hidden descendants.
     }
-    if (taskIds.size + messageIds.size > LIMITS.ids) return { taskIds: [], messageIds: [], refresh: true, discussionRefresh: messageIds.size > 0 };
-    return { taskIds: [...taskIds], messageIds: [...messageIds], refresh, aggregates, discussionRefresh: false };
+    if (taskIds.size + messageIds.size > LIMITS.ids) return { taskIds: [], messageIds: [], refresh: true, discussionRefresh: messageIds.size > 0, operationId: event.operationId || null, actorUid: event.actorUid || null, command: event.command || null };
+    return { taskIds: [...taskIds], messageIds: [...messageIds], refresh, aggregates, discussionRefresh: false, operationId: event.operationId || null, actorUid: event.actorUid || null, command: event.command || null };
 }
 function encodeCursor(value) { return Buffer.from(JSON.stringify(value)).toString('base64url'); }
 function decodeCursor(raw, actorUid, projectId, heads) {

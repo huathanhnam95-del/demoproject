@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "sourceTaskId": "01a09a56-d502-76a3-96b9-570d0cc26cd6",
+  "candidateBaselineSha": "96bccd781437ed903999b5d02087623c37a25eff",
+  "firestore": {
+    "mergedNormalizedSha256": "c42d3fdccbc285e8b366b972688dd9bfc1b26838e14847d8cb1a68b2ca6972d5",
+    "liveRuleset": "projects/listening-tasks-3ae34/rulesets/0b0534dc-d53a-45f2-ba95-6d5f261a1922",
+    "belNamespaceCount": 6
+  },
+  "governance": {
+    "path": "database.rules.json",
+    "ruleId": "R1.ROOT_ENTRY",
+    "approval": "Codex task 01a09a56-d502-76a3-96b9-570d0cc26cd6"
+  },
+  "gatewayContext": {
+    "dockerfile": "backend/presentation-demo/Dockerfile",
+    "dockerignore": "backend/presentation-demo/Dockerfile.dockerignore",
+    "maxBytes": 50000000,
+    "hostingCandidateFileCount": 75,
+    "includeFiles": [
+      "backend/presentation-demo/package.json",
+      "backend/presentation-demo/package-lock.json",
+      "backend/presentation-demo/server.cjs",
+      "backend/presentation-demo/gateway.cjs",
+      "functions/package.json",
+      "functions/package-lock.json"
+    ],
+    "includeTrees": [
+      "functions/src",
+      "public/presentation-demo",
+      "public/js/presentation-demo",
+      "public/prototypes/bel-working-as-equals-demo"
+    ],
+    "excludeFiles": [
+      "public/prototypes/bel-working-as-equals-demo/README.md"
+    ],
+    "forbiddenPrefixes": [
+      "public/database/"
+    ],
+    "dockerignorePatterns": [
+      "**",
+      "!backend/",
+      "!backend/presentation-demo/",
+      "!backend/presentation-demo/package.json",
+      "!backend/presentation-demo/package-lock.json",
+      "!backend/presentation-demo/server.cjs",
+      "!backend/presentation-demo/gateway.cjs",
+      "!functions/",
+      "!functions/package.json",
+      "!functions/package-lock.json",
+      "!functions/src/",
+      "!functions/src/**",
+      "!public/",
+      "!public/presentation-demo/",
+      "!public/presentation-demo/**",
+      "!public/js/",
+      "!public/js/presentation-demo/",
+      "!public/js/presentation-demo/**",
+      "!public/prototypes/",
+      "!public/prototypes/bel-working-as-equals-demo/",
+      "!public/prototypes/bel-working-as-equals-demo/**",
+      "public/prototypes/bel-working-as-equals-demo/README.md"
+    ]
+  },
+  "apiLineage": {
+    "revision": "api-00129-dat",
+    "sourceObject": "gs://gcf-v2-sources-737872673808-us-central1/api/function-source.zip#1789442285319127",
+    "sourceZipSha256": "774ae1326936c82c60376df91a6ec4f16793c4e6f742435170c1da34d7084950",
+    "deployedNormalizedHashes": {
+      "functions/package.json": "f3f91878b090e3cf564e3e9f4a178873193d36c66548e3f3b8970a49d26a0c93",
+      "functions/package-lock.json": "2d13148698996c78bf2765ceabfa2a346f470ebfc39ed55fc8e825fa961dc370",
+      "functions/src/crm/data-input/command-service.js": "5089844283aa4716b65e67f7e0ccccc1c4dc938337a98fb8213a38e2c362305d",
+      "functions/src/crm/projects/domain/command-service.js": "8f570d4782a0851decd1b5d202d56b7ed4d17fd6cbdbe3faf647476a9d598f83",
+      "functions/src/crm/projects/task-links-service.js": "43b912145ad6422e2ebf1f4d28df55d2150d79dae215d53f4c4d1b212a789fe7",
+      "functions/src/data/read-aloud-connected-speech-index.json": "594e9393f15912e7e50d0a20b3a9b548e663bd7d4856ef9b90c90d05179ee8c0"
+    },
+    "generatedSourcePairs": {
+      "public/database/RA/connected-speech-index.json": "functions/src/data/read-aloud-connected-speech-index.json"
+    },
+    "verifiedNewerNormalizedHashes": {
+      "functions/src/crm/projects/change-feed-service.js": "3025cf4a8a9f618684366f5709dc09c1d71245fe007806d81c07c1ede9ec9d5a",
+      "functions/src/crm/projects/domain/command-service.js": "c2fecefd8faf0aa5f89662d1525084ad270e41f2e6342c035f6109b485cd5c1c"
+    },
+    "walkthroughMarkers": {
+      "functions/src/crm/projects/change-feed-service.js": [
+        "operationId",
+        "actorUid",
+        "command"
+      ],
+      "functions/src/crm/projects/domain/command-service.js": [
+        "effectiveSectionId: resolvedSectionId",
+        "expectedStructureRevision !== undefined",
+        "structureRevision: structureBefore"
+      ]
+    }
+  },
+  "hostingOverlay": {
+    "site": "listening-tasks-3ae34",
+    "candidatePaths": [
+      "public/crm-admin.html",
+      "public/crm-admin.js",
+      "public/js/crm/presentation-demo-workspace.js",
+      "public/js/presentation-demo/app.mjs",
+      "public/js/presentation-demo/auth.mjs",
+      "public/js/presentation-demo/core/activities/bridge.mjs",
+      "public/js/presentation-demo/core/activities/cubes.mjs",
+      "public/js/presentation-demo/core/activities/reversal.mjs",
+      "public/js/presentation-demo/core/content/source.mjs",
+      "public/js/presentation-demo/core/state/progression.mjs",
+      "public/js/presentation-demo/core/state/session.mjs",
+      "public/js/presentation-demo/core/world/geometry.mjs",
+      "public/js/presentation-demo/core/world/scenes.mjs",
+      "public/js/presentation-demo/core/world/simulation.mjs",
+      "public/js/presentation-demo/notebook.mjs",
+      "public/js/presentation-demo/presentation/adapter.mjs",
+      "public/js/presentation-demo/presentation/final.mjs",
+      "public/js/presentation-demo/presentation/frame.mjs",
+      "public/js/presentation-demo/transport.mjs",
+      "public/js/presentation-demo/view-model.mjs",
+      "public/presentation-demo/index.html",
+      "public/presentation-demo/native/deck.html",
+      "public/presentation-demo/presentation-demo.css",
+      "public/prototypes/bel-working-as-equals-demo/README.md",
+      "public/prototypes/bel-working-as-equals-demo/_ds/modernist-6011e8f4-2365-454d-a807-ad62f6c72890/_ds_bundle.js",
+      "public/prototypes/bel-working-as-equals-demo/_ds/modernist-6011e8f4-2365-454d-a807-ad62f6c72890/styles.css",
+      "public/prototypes/bel-working-as-equals-demo/activities/bridge.mjs",
+      "public/prototypes/bel-working-as-equals-demo/activities/cubes.mjs",
+      "public/prototypes/bel-working-as-equals-demo/activities/reversal.mjs",
+      "public/prototypes/bel-working-as-equals-demo/app.mjs",
+      "public/prototypes/bel-working-as-equals-demo/art/A.png",
+      "public/prototypes/bel-working-as-equals-demo/art/B.png",
+      "public/prototypes/bel-working-as-equals-demo/art/C.png",
+      "public/prototypes/bel-working-as-equals-demo/art/D.png",
+      "public/prototypes/bel-working-as-equals-demo/art/F-complete.png",
+      "public/prototypes/bel-working-as-equals-demo/art/F.png",
+      "public/prototypes/bel-working-as-equals-demo/art/I.png",
+      "public/prototypes/bel-working-as-equals-demo/art/J.png",
+      "public/prototypes/bel-working-as-equals-demo/art/home.png",
+      "public/prototypes/bel-working-as-equals-demo/art/reception.png",
+      "public/prototypes/bel-working-as-equals-demo/art/street.png",
+      "public/prototypes/bel-working-as-equals-demo/content/source.mjs",
+      "public/prototypes/bel-working-as-equals-demo/index.html",
+      "public/prototypes/bel-working-as-equals-demo/native/deck-stage.js",
+      "public/prototypes/bel-working-as-equals-demo/native/deck.html",
+      "public/prototypes/bel-working-as-equals-demo/native/images/chet.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/close.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/cover.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/erik.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/gabe.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/hub.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/josh.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/mike.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/rich.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/images/threshold.jpg",
+      "public/prototypes/bel-working-as-equals-demo/native/support.js",
+      "public/prototypes/bel-working-as-equals-demo/presentation/adapter.mjs",
+      "public/prototypes/bel-working-as-equals-demo/presentation/final.mjs",
+      "public/prototypes/bel-working-as-equals-demo/presentation/frame.mjs",
+      "public/prototypes/bel-working-as-equals-demo/presentation/source-manifest.json",
+      "public/prototypes/bel-working-as-equals-demo/state/progression.mjs",
+      "public/prototypes/bel-working-as-equals-demo/state/protocol.mjs",
+      "public/prototypes/bel-working-as-equals-demo/state/session.mjs",
+      "public/prototypes/bel-working-as-equals-demo/state/storage.mjs",
+      "public/prototypes/bel-working-as-equals-demo/styles.css",
+      "public/prototypes/bel-working-as-equals-demo/ui/notebook.mjs",
+      "public/prototypes/bel-working-as-equals-demo/ui/panels.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/activity-renderer.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/geometry.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/input.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/network.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/renderer.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/scenes.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/simulation.mjs",
+      "public/prototypes/bel-working-as-equals-demo/world/sprites.mjs"
+    ],
+    "liveSharedBases": {
+      "public/crm-admin.html": {
+        "rawSha256": "93f32895e71c54384f765b2590ea49d619b4915c5bf435445511832e2f1f8b82",
+        "normalizedSha256": "93f32895e71c54384f765b2590ea49d619b4915c5bf435445511832e2f1f8b82"
+      },
+      "public/crm-admin.js": {
+        "rawSha256": "20ab8d5ba824484af4ab94ff39e5abadd31fb75d7ba68e53e229b812ceefefc8",
+        "normalizedSha256": "20ab8d5ba824484af4ab94ff39e5abadd31fb75d7ba68e53e229b812ceefefc8"
+      }
+    },
+    "preservedLiveMarkers": {
+      "/js/crm/projects/board.js": [
+        "crm-board-status-pill",
+        "crm-board-expander is-leaf",
+        "data-action=\"add-subtask\""
+      ],
+      "/css/crm-projects.css": [
+        ".crm-board-expander.is-leaf",
+        ".crm-board-status-pill",
+        ".crm-projects-calendar-grid"
+      ],
+      "/js/crm/projects/views.js": [
+        "crm-projects-calendar-bar",
+        "projects-calendar-view-provenance",
+        "data-cal-nav"
+      ]
+    }
+  }
+}

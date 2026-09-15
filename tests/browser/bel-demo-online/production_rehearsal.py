@@ -22,9 +22,10 @@ import os
 import re
 import sys
 import time
+import uuid
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import unquote, urlparse, urlunparse
 from urllib.request import Request, urlopen
 
 
@@ -36,6 +37,7 @@ FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 EXPIRY_UNIT = "epoch-seconds"
 IDENTITY_MAX_AGE_SECONDS = 300
+IDENTITY_REQUEST_CLOCK_SKEW_SECONDS = 5
 ANNOTATION_STYLESHEET_PATH = "public/css/entrance-test-ui-annotations.css"
 
 
@@ -164,6 +166,45 @@ def finite_epoch(value: object, label: str, *, future: bool = False) -> float:
 def stable_hash(value: object) -> str:
     payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def hosting_url_to_repo_path(asset_url: str, base_url: str) -> str | None:
+    asset = urlparse(str(asset_url or ""))
+    base = urlparse(str(base_url or ""))
+    if asset.scheme.lower() != base.scheme.lower() or asset.netloc.lower() != base.netloc.lower():
+        return None
+    asset_path = unquote(asset.path or "/")
+    base_path = (base.path or "").rstrip("/")
+    if base_path and (asset_path == base_path or asset_path.startswith(base_path + "/")):
+        asset_path = asset_path[len(base_path):] or "/"
+    if asset_path.endswith("/"):
+        asset_path += "index.html"
+    relative = asset_path.lstrip("/")
+    return f"public/{relative}" if relative else "public/index.html"
+
+
+def read_authoritative_notes(page, room_id: str, uid: str) -> dict[str, object]:
+    result = page.evaluate(
+        """async ({roomId, uid}) => {
+            const user = window.firebase?.auth?.()?.currentUser;
+            if (!user) return { status: 401, body: { success: false, message: 'No authenticated user' } };
+            const token = await user.getIdToken();
+            const response = await fetch(`/api/presentation-demo/rooms/${encodeURIComponent(roomId)}/notes/${encodeURIComponent(uid)}`, {
+                headers: { Authorization: `Bearer ${token}` }, cache: 'no-store'
+            });
+            return { status: response.status, body: await response.json().catch(() => ({})) };
+        }""",
+        {"roomId": room_id, "uid": uid},
+    )
+    if not isinstance(result, dict) or result.get("status") != 200:
+        raise RehearsalError("authoritative notebook readback did not return HTTP 200")
+    body = result.get("body")
+    if not isinstance(body, dict) or body.get("success") is False:
+        raise RehearsalError("authoritative notebook readback was rejected by the server")
+    data = body.get("data", body)
+    if not isinstance(data, dict) or not isinstance(data.get("pages", []), list):
+        raise RehearsalError("authoritative notebook readback did not contain a pages list")
+    return data
 
 
 def validate_account(account: object, label: str) -> dict[str, str]:
@@ -355,6 +396,22 @@ def validate_deployed_identities(args: argparse.Namespace, identity_source: Path
         raise RehearsalError("deployed identities readAt must be a finite epoch-seconds timestamp") from error
     if not math.isfinite(read_at) or read_at > time.time() + 5 or time.time() - read_at > IDENTITY_MAX_AGE_SECONDS:
         raise RehearsalError("deployed identities readback is stale or has an invalid timestamp")
+    if provider:
+        provider_request = identity.get("_providerRequest")
+        if not isinstance(provider_request, dict):
+            raise RehearsalError("deployed identities provider response is not bound to the current request")
+        request_nonce = nonempty(provider_request.get("requestNonce"), "provider request nonce")
+        if identity.get("requestNonce") != request_nonce:
+            raise RehearsalError("deployed identities provider response nonce does not match the current request")
+        try:
+            request_started_at = float(provider_request.get("requestStartedAt"))
+            request_completed_at = float(provider_request.get("requestCompletedAt"))
+        except (TypeError, ValueError) as error:
+            raise RehearsalError("provider request timestamps must be finite epoch-seconds values") from error
+        if not math.isfinite(request_started_at) or not math.isfinite(request_completed_at) or request_completed_at < request_started_at:
+            raise RehearsalError("provider request timestamps must be finite and ordered")
+        if read_at < request_started_at - IDENTITY_REQUEST_CLOCK_SKEW_SECONDS or read_at > request_completed_at + IDENTITY_REQUEST_CLOCK_SKEW_SECONDS:
+            raise RehearsalError("deployed identities provider sample was not read during the current request")
     if not isinstance(identity.get("state"), dict) or not SHA256_RE.fullmatch(str(identity.get("stateHash") or "")):
         raise RehearsalError("deployed identities must contain a state object and full stateHash")
     if identity["stateHash"] != stable_hash(identity["state"]):
@@ -393,7 +450,14 @@ def normalized_identity_provider_url(value: str) -> str:
 
 def read_deployed_identities_provider(args: argparse.Namespace, scenario: str) -> dict[str, object]:
     url = normalized_identity_provider_url(args.deployed_identities_url)
-    headers = {"Accept": "application/json"}
+    request_nonce = uuid.uuid4().hex
+    request_started_at = time.time()
+    headers = {
+        "Accept": "application/json",
+        "Cache-Control": "no-store",
+        "Pragma": "no-cache",
+        "X-BEL-Request-Nonce": request_nonce,
+    }
     token = os.environ.get("BEL_DEPLOYED_IDENTITIES_TOKEN", "").strip()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -403,6 +467,7 @@ def read_deployed_identities_provider(args: argparse.Namespace, scenario: str) -
             if response.status != 200:
                 raise RehearsalError(f"deployed identities provider returned HTTP {response.status}")
             body = response.read()
+        request_completed_at = time.time()
     except HTTPError as error:
         raise RehearsalError(f"deployed identities provider returned HTTP {error.code}") from error
     except (OSError, URLError) as error:
@@ -417,6 +482,11 @@ def read_deployed_identities_provider(args: argparse.Namespace, scenario: str) -
     identity["source"] = url
     identity["readMethod"] = "GET"
     identity["scenario"] = scenario
+    identity["_providerRequest"] = {
+        "requestNonce": request_nonce,
+        "requestStartedAt": request_started_at,
+        "requestCompletedAt": request_completed_at,
+    }
     return identity
 
 
@@ -551,7 +621,7 @@ def redacted_text(value: object) -> str:
     return text[:500]
 
 
-def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, surface: str) -> None:
+def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, surface: str, base_url: str | None = None, candidate_manifest: dict[str, object] | None = None) -> None:
     bucket = {"console": [], "pageErrors": [], "requestFailures": [], "allowedRequestFailures": 0, "servedAssets": []}
     diagnostics.setdefault(role, {})[surface] = bucket
 
@@ -565,9 +635,18 @@ def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, sur
     page.on("requestfailed", lambda request: append("requestFailures", safe_url(request.url)))
 
     def capture_served_asset(response) -> None:
-        if urlparse(response.url).path.rstrip("/").lstrip("/") != ANNOTATION_STYLESHEET_PATH:
+        repo_path = hosting_url_to_repo_path(response.url, base_url or response.url)
+        manifest_files = candidate_manifest.get("files", {}) if isinstance(candidate_manifest, dict) else None
+        content_type = response.headers.get("content-type", "")
+        if repo_path is None or not re.search(r"text/html|(?:java|ecma)script|text/css", content_type, re.IGNORECASE):
             return
-        record = {"url": safe_url(response.url), "status": response.status, "contentType": response.headers.get("content-type", "")}
+        record = {
+            "url": safe_url(response.url),
+            "repoPath": repo_path,
+            "status": response.status,
+            "contentType": content_type,
+            "expectedSha256": manifest_files.get(repo_path) if manifest_files is not None else None,
+        }
         try:
             body = response.body()
             record.update({"bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()})
@@ -578,27 +657,40 @@ def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, sur
     page.on("response", capture_served_asset)
 
 
-def assert_candidate_asset(diagnostics: dict[str, object], role: str, surface: str, candidate_manifest: dict[str, object], result: dict[str, object]) -> None:
+def assert_candidate_assets(diagnostics: dict[str, object], role: str, surface: str, candidate_manifest: dict[str, object], result: dict[str, object]) -> None:
     bucket = diagnostics.get(role, {}).get(surface, {})
     responses = bucket.get("servedAssets", [])
-    expected = candidate_manifest.get("files", {}).get(ANNOTATION_STYLESHEET_PATH)
-    if not SHA256_RE.fullmatch(str(expected or "")):
-        raise RehearsalError(f"candidate manifest does not bind {ANNOTATION_STYLESHEET_PATH}")
-    response = next((item for item in reversed(responses) if item.get("status") == 200 and re.search(r"text/css", str(item.get("contentType", "")), re.IGNORECASE)), None)
-    if response is None:
-        raise RehearsalError(f"{role}/{surface} did not serve the candidate annotation stylesheet as 200 text/css")
-    if response.get("bodyError") or response.get("sha256") != expected:
-        raise RehearsalError(f"{role}/{surface} served annotation bytes do not match the reviewed candidate manifest")
-    result.setdefault("browserServedCandidateAssets", []).append({
-        "role": role,
-        "surface": surface,
-        "url": response["url"],
-        "status": response["status"],
-        "contentType": response["contentType"],
-        "bytes": response["bytes"],
-        "sha256": response["sha256"],
-        "boundToCandidateManifest": True,
-    })
+    manifest_files = candidate_manifest.get("files", {})
+    if not isinstance(manifest_files, dict) or not manifest_files:
+        raise RehearsalError("candidate manifest does not contain a non-empty files map")
+    if not responses:
+        raise RehearsalError(f"{role}/{surface} did not serve any manifest-bound CRM/BEL assets")
+    for response in responses:
+        repo_path = response.get("repoPath")
+        expected = manifest_files.get(repo_path)
+        if not SHA256_RE.fullmatch(str(expected or "")):
+            raise RehearsalError(f"{role}/{surface} served asset is not bound to the candidate manifest: {repo_path}")
+        if response.get("status") != 200 or response.get("bodyError") or response.get("sha256") != expected:
+            raise RehearsalError(f"{role}/{surface} served bytes do not match the candidate manifest for {repo_path}")
+        asset = {
+            "role": role,
+            "surface": surface,
+            "repoPath": repo_path,
+            "url": response["url"],
+            "status": response["status"],
+            "contentType": response["contentType"],
+            "bytes": response["bytes"],
+            "sha256": response["sha256"],
+            "boundToCandidateManifest": True,
+        }
+        existing = result.setdefault("browserServedCandidateAssets", [])
+        if not any(item.get("role") == role and item.get("surface") == surface and item.get("repoPath") == repo_path and item.get("url") == asset["url"] and item.get("sha256") == asset["sha256"] for item in existing):
+            existing.append(asset)
+
+
+def assert_candidate_asset(diagnostics: dict[str, object], role: str, surface: str, candidate_manifest: dict[str, object], result: dict[str, object]) -> None:
+    """Compatibility wrapper retained for callers that assert a completed surface."""
+    assert_candidate_assets(diagnostics, role, surface, candidate_manifest, result)
 
 
 def assert_no_authority_hooks(page, surface: str) -> None:
@@ -620,7 +712,7 @@ def assert_diagnostics_clean(diagnostics: dict[str, object]) -> None:
 def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], role: str, diagnostics: dict[str, object], candidate_manifest: dict[str, object] | None = None, result: dict[str, object] | None = None):
     context = browser.new_context(accept_downloads=True)
     crm = context.new_page()
-    attach_page_diagnostics(crm, diagnostics, role, "crm")
+    attach_page_diagnostics(crm, diagnostics, role, "crm", base_url, candidate_manifest)
     crm.set_default_timeout(30000)
     crm_url = f"{base_url}/crm-admin.html"
     crm.goto(crm_url, wait_until="domcontentloaded")
@@ -647,27 +739,30 @@ def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], ro
     with crm.expect_popup(timeout=15000) as popup_info:
         open_button.click()
     lobby = popup_info.value
-    attach_page_diagnostics(lobby, diagnostics, role, "lobby")
+    attach_page_diagnostics(lobby, diagnostics, role, "lobby", base_url, candidate_manifest)
     lobby.set_default_timeout(30000)
     lobby.wait_for_load_state("domcontentloaded")
     wait_for_text(lobby, "#pd-auth-status", "Signed in", timeout=30000)
     if candidate_manifest is not None and result is not None:
-        assert_candidate_asset(diagnostics, role, "crm", candidate_manifest, result)
+        assert_candidate_assets(diagnostics, role, "crm", candidate_manifest, result)
+        assert_candidate_assets(diagnostics, role, "lobby", candidate_manifest, result)
     assert_no_authority_hooks(crm, f"{role} CRM")
     assert_no_authority_hooks(lobby, f"{role} lobby")
     return {"context": context, "crm": crm, "lobby": lobby, "game": None}
 
 
-def open_game_client(client: dict[str, object], role: str, diagnostics: dict[str, object]):
+def open_game_client(client: dict[str, object], role: str, diagnostics: dict[str, object], base_url: str | None = None, candidate_manifest: dict[str, object] | None = None, result: dict[str, object] | None = None):
     lobby = client["lobby"]
     with lobby.expect_popup(timeout=15000) as popup_info:
         lobby.locator("#pd-open-game").click()
     game = popup_info.value
-    attach_page_diagnostics(game, diagnostics, role, "game")
+    attach_page_diagnostics(game, diagnostics, role, "game", base_url, candidate_manifest)
     game.set_default_timeout(30000)
     game.wait_for_load_state("domcontentloaded")
     wait_for_text(game, "#pd-connection-status", "Connected", timeout=45000)
     assert_no_authority_hooks(game, f"{role} game")
+    if candidate_manifest is not None and result is not None:
+        assert_candidate_assets(diagnostics, role, "game", candidate_manifest, result)
     client["game"] = game
     return game
 
@@ -755,7 +850,7 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
 
             for role in ("presenter", "p1", "p2", "p3"):
                 validate_scenario_approval(args, approval_path, f"game-connect-p{0 if role == 'presenter' else role[1:]}")
-                open_game_client(clients[role], role, diagnostics)
+                open_game_client(clients[role], role, diagnostics, base_url, candidate_manifest, result)
             result["assertions"].append("four-player-game-connections-complete")
 
             presenter_game = clients["presenter"]["game"]
@@ -826,6 +921,12 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
                 game.locator("#pd-note-body").fill(body)
                 game.locator("#pd-save-note").click()
                 wait_for_text(game, "#pd-note-status", "Saved", timeout=30000)
+                room_id = game.evaluate("() => new URL(window.location.href).searchParams.get('room') || ''")
+                uid = game.evaluate("() => window.firebase?.auth?.()?.currentUser?.uid || ''")
+                authoritative = read_authoritative_notes(game, room_id, uid)
+                server_page = next((page for page in authoritative.get("pages", []) if page.get("id") == "main"), None)
+                if not server_page or server_page.get("title") != title or server_page.get("body") != body:
+                    raise RehearsalError(f"authoritative Vietnamese note readback failed for {role}")
                 game.evaluate("""() => {
                     for (const key of Object.keys(localStorage)) {
                         if (key.startsWith('bel.presentation.draft:') || key.startsWith('bel.presentation.pages:') || key.startsWith('bel.presentation.activePage:')) localStorage.removeItem(key);
@@ -836,7 +937,7 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
                 game.locator("#pd-note-title").wait_for(state="visible", timeout=30000)
                 if game.locator("#pd-note-title").input_value() != title or game.locator("#pd-note-body").input_value() != body:
                     raise RehearsalError(f"persisted Vietnamese note readback failed for {role}")
-                readback[role] = {"title": title, "body": body, "version": "server-readback", "localDraftClearedBeforeReload": True}
+                readback[role] = {"title": title, "body": body, "version": server_page.get("version"), "serverReadbackVerifiedBeforeReload": True, "localDraftClearedBeforeReload": True}
             result["notes"] = readback
             result["assertions"].extend(["three-participant-vietnamese-notes-saved", "three-participant-notes-read-back-after-reload"])
 
@@ -875,7 +976,16 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
             if args.screenshot:
                 for role, client in clients.items():
                     client["lobby"].screenshot(path=str(evidence / f"four-player-lobby-{role}.png"), full_page=True)
+            if candidate_manifest is not None:
+                for role in ("presenter", "p1", "p2", "p3"):
+                    for surface in ("crm", "lobby", "game"):
+                        if diagnostics.get(role, {}).get(surface, {}).get("servedAssets"):
+                            assert_candidate_assets(diagnostics, role, surface, candidate_manifest, result)
             assert_diagnostics_clean(diagnostics)
+            if candidate_manifest is not None:
+                for surface in ("crm", "lobby", "game"):
+                    if diagnostics.get(args.role, {}).get(surface, {}).get("servedAssets"):
+                        assert_candidate_assets(diagnostics, args.role, surface, candidate_manifest, result)
             result["diagnostics"] = diagnostics
     finally:
         result["diagnostics"] = diagnostics
@@ -914,7 +1024,7 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
             page.on("console", on_console)
             page.on("pageerror", lambda error: page_errors.append(type(error).__name__))
             page.on("requestfailed", lambda request: request_failures.append(safe_url(request.url)))
-            attach_page_diagnostics(page, diagnostics, args.role, "crm")
+            attach_page_diagnostics(page, diagnostics, args.role, "crm", base_url, candidate_manifest)
 
             crm_url = f"{base_url}/crm-admin.html"
             if args.allow_live_writes:
@@ -963,18 +1073,20 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
                 else:
                     result["assertions"].append("normal-crm-more-presentation-demo-launch")
                     if candidate_manifest is not None:
-                        assert_candidate_asset(diagnostics, args.role, "crm", candidate_manifest, result)
+                        assert_candidate_assets(diagnostics, args.role, "crm", candidate_manifest, result)
 
             if open_button is not None:
                 with page.expect_popup(timeout=15000) as popup_info:
                     open_button.click()
                 lobby = popup_info.value
-                attach_page_diagnostics(lobby, diagnostics, args.role, "lobby")
+                attach_page_diagnostics(lobby, diagnostics, args.role, "lobby", base_url, candidate_manifest)
             else:
                 lobby = page
             lobby.set_default_timeout(20000)
             lobby.wait_for_load_state("domcontentloaded")
             wait_for_text(lobby, "#pd-auth-status", "Signed in", timeout=30000)
+            if candidate_manifest is not None:
+                assert_candidate_assets(diagnostics, args.role, "lobby", candidate_manifest, result)
             assert_no_authority_hooks(page, f"{args.role} CRM")
             if lobby.evaluate("() => Boolean(window.belOnlineDebug || window.__phase4Login || window.__BEL_EMULATOR__)"):
                 raise RehearsalError("production rehearsal detected a debug or emulator authority hook")
@@ -1021,7 +1133,7 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
                 with lobby.expect_popup(timeout=15000) as game_info:
                     lobby.locator("#pd-open-game").click()
                 game = game_info.value
-                attach_page_diagnostics(game, diagnostics, args.role, "game")
+                attach_page_diagnostics(game, diagnostics, args.role, "game", base_url, candidate_manifest)
                 game.set_default_timeout(30000)
                 game.wait_for_load_state("domcontentloaded")
                 wait_for_text(game, "#pd-connection-status", "Connected", timeout=45000)

@@ -296,9 +296,8 @@ test('notebook reload restores the active unsaved page and its local draft', asy
         const firstBrowser = installBrowser();
         const first = bindNotebook({ transport, roomId: 'room-reload', identity: { uid: 'p1' }, elements: firstBrowser.elements });
         await first.load();
-        firstBrowser.created.find(element => element.tagName === 'button').click();
         const activePageId = firstBrowser.created.find(element => element.tagName === 'select').value;
-        firstBrowser.elements.title.value = 'Unsaved page';
+        firstBrowser.elements.title.value = 'Unsaved main page';
         firstBrowser.elements.body.value = 'Unsaved Vietnamese: hợp tác';
         first.persistDraft();
 

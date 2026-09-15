@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { acceptFrameMessage, createFrameMessage } from '../../public/js/presentation-demo/presentation/frame.mjs';
 import { etaForServerTime } from '../../public/js/presentation-demo/presentation/final.mjs';
+import { bindNotebook } from '../../public/js/presentation-demo/notebook.mjs';
 
 const require = createRequire(import.meta.url);
 const {
@@ -147,4 +148,46 @@ test('archive migration verifies the persisted v2 bytes before deleting legacy a
   assert.deepEqual(migrated.page, page);
   assert.equal(legacyDeleted, true);
   assert.throws(() => resolveArchivePageRecords([{ id: legacy, data: page }, { id: v2, data: { ...page, updatedBy: 'other-user' } }], { roomId: tuple[0], uid: tuple[1] }), error => error.code === 'ARCHIVE_PAGE_CONFLICT');
+});
+
+test('empty authoritative server notebook does not resurrect a matching local draft', async () => {
+  const previous = { window: globalThis.window, document: globalThis.document, localStorage: globalThis.localStorage };
+  class FakeElement {
+    constructor() { this.value = ''; this.disabled = false; this.hidden = false; this.children = []; }
+    before() {}
+    setAttribute() {}
+    replaceChildren(...children) { this.children = children; }
+    append(...children) { this.children.push(...children); }
+    addEventListener() {}
+  }
+  const values = new Map();
+  globalThis.localStorage = {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: key => values.delete(key),
+    key: index => [...values.keys()][index] ?? null
+  };
+  globalThis.window = { clearTimeout, setTimeout };
+  globalThis.document = { createElement: () => new FakeElement() };
+  values.set('bel.presentation.draft:uid-1:room-1:main', JSON.stringify({ title: 'Local draft', body: 'Must not become saved' }));
+  const elements = { title: new FakeElement(), body: new FakeElement(), save: new FakeElement(), status: new FakeElement() };
+  try {
+    const notebook = bindNotebook({ transport: { readNotes: async () => ({ pages: [] }) }, roomId: 'room-1', identity: { uid: 'uid-1' }, elements });
+    await notebook.load();
+    assert.equal(elements.title.value, '');
+    assert.equal(elements.body.value, '');
+    assert.notEqual(elements.status.value, 'Draft restored');
+    values.set('bel.presentation.pages:uid-1:room-1', JSON.stringify([{ id: 'main', title: 'Local catalog', version: 2 }]));
+    values.set('bel.presentation.draft:uid-1:room-1:main', JSON.stringify({ title: 'Stale local draft', body: 'Must not override server' }));
+    const staleElements = { title: new FakeElement(), body: new FakeElement(), save: new FakeElement(), status: new FakeElement() };
+    const staleNotebook = bindNotebook({ transport: { readNotes: async () => ({ pages: [{ id: 'main', title: 'Authoritative server page', body: 'Server value', version: 1 }] }) }, roomId: 'room-1', identity: { uid: 'uid-1' }, elements: staleElements });
+    await staleNotebook.load();
+    assert.equal(staleElements.title.value, 'Authoritative server page');
+    assert.equal(staleElements.body.value, 'Server value');
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+  }
 });

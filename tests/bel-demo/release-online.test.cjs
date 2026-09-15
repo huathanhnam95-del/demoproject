@@ -656,8 +656,12 @@ test('production rehearsal revalidates the full approval and fresh provider stat
     fs.writeFileSync(approvalPath, JSON.stringify(approval));
     fs.writeFileSync(leasePath, JSON.stringify(lease));
     const script = `import importlib.util, json, sys, time\nfrom argparse import Namespace\nspec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])\nmodule = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(module)\nargs = Namespace(candidate_sha=sys.argv[4], base_sha=sys.argv[6], scope_hash=sys.argv[7], four_player=False, create_room=False, room_code=None, open_game=False, role='presenter', lease_file=sys.argv[3], deployed_identities=None, deployed_identities_url=None, validate_only=False, _fresh_deployed_reads=[])\napproval_path = module.Path(sys.argv[2])\nlease_path = module.Path(sys.argv[3])\nprovider_state = {'schemaVersion': 1, 'expiryUnit': 'epoch-seconds', 'owner': 'owner', 'resources': ['hosting'], 'candidateSha': args.candidate_sha, 'baseSha': args.base_sha, 'scopeHash': args.scope_hash, 'readAt': time.time(), 'state': {'deployed': 'v1'}, 'stateHash': module.stable_hash({'deployed': 'v1'}), 'source': 'https://provider.example/identities'}\nmutation_count = 0\ndef provider(scenario):\n    value = dict(provider_state)\n    value['readAt'] = time.time()\n    value['state'] = dict(provider_state['state'])\n    value['stateHash'] = module.stable_hash(value['state'])\n    return value\ndef check(name, mutate):\n    global mutation_count\n    approval = json.loads(approval_path.read_text())\n    lease = json.loads(lease_path.read_text())\n    mutate(approval, lease, provider_state)\n    approval_path.write_text(json.dumps(approval))\n    lease_path.write_text(json.dumps(lease))\n    try:\n        module.validate_scenario_approval(args, approval_path, 'normal-crm-launch', provider)\n    except module.RehearsalError:\n        print(name)\n        return\n    mutation_count += 1\n    raise SystemExit('expected rejection: '+name)\nmodule.validate_scenario_approval(args, approval_path, 'normal-crm-launch', provider)\nfor name, mutate in [('drift', lambda approval, lease, identity: (identity.update({'state': {'deployed': 'drifted'}}))), ('ownership-loss', lambda approval, lease, identity: lease.update({'owner': 'other'})), ('scope-mismatch', lambda approval, lease, identity: identity.update({'candidateSha': 'b' * 40})), ('revoked-approval', lambda approval, lease, identity: approval.update({'mode': 'revoked'})), ('expired-approval', lambda approval, lease, identity: approval.update({'expiresAt': time.time() - 1})), ('nan-expiry', lambda approval, lease, identity: approval.update({'expiresAt': 'NaN'})), ('infinity-expiry', lambda approval, lease, identity: approval.update({'expiresAt': 'Infinity'}))]:\n    approval = json.loads(approval_path.read_text()) if False else None\n    approval_path.write_text(json.dumps(${JSON.stringify(approval)}))\n    lease_path.write_text(json.dumps(${JSON.stringify(lease)}))\n    provider_state.update({'owner': 'owner', 'candidateSha': args.candidate_sha, 'state': {'deployed': 'v1'}})\n    check(name, mutate)\nprint('provider-read-count='+str(len(args._fresh_deployed_reads)))\nassert mutation_count == 0\nprint('freshness-matrix-passed')`;
+    const adaptedScript = script.replace(
+        "    value = dict(provider_state)\n    value['readAt'] = time.time()",
+        "    value = dict(provider_state)\n    value['requestNonce'] = 'callback-request'\n    value['_providerRequest'] = {'requestNonce': value['requestNonce'], 'requestStartedAt': time.time() - 0.01, 'requestCompletedAt': time.time() + 0.01}\n    value['readAt'] = time.time()"
+    );
     try {
-        const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
+        const result = childProcess.spawnSync('python', ['-c', adaptedScript, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
         assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
         for (const marker of ['drift', 'ownership-loss', 'scope-mismatch', 'revoked-approval', 'expired-approval', 'nan-expiry', 'infinity-expiry', 'provider-read-count=1', 'freshness-matrix-passed']) assert.match(result.stdout, new RegExp(marker));
     } finally {
@@ -688,4 +692,178 @@ test('rollback reconciliation applies only the approved inverse delta and preser
         reviewedFiles: reviewedCurrent,
         inverseOverlay: {}
     }), error => error.code === 'ROLLBACK_BASELINE_DRIFT');
+});
+
+test('production identity provider execution binds a unique request nonce and rejects a pre-request cached sample', () => {
+    const script = String.raw`import importlib.util, json, sys, time
+from argparse import Namespace
+spec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+args = Namespace(deployed_identities_url='https://provider.example/identities')
+approval = {'owner': 'owner', 'resources': ['hosting'], 'candidateSha': 'a' * 40, 'baseSha': 'b' * 40, 'scopeHash': 'c' * 64}
+mode = 'fresh'
+headers_seen = []
+class Response:
+    status = 200
+    def __init__(self, payload): self.payload = payload
+    def __enter__(self): return self
+    def __exit__(self, *args): return False
+    def read(self): return json.dumps(self.payload).encode('utf-8')
+def fake_urlopen(request, timeout):
+    global mode
+    headers_seen.append({key.lower(): value for key, value in request.header_items()})
+    nonce = request.headers.get('X-bel-request-nonce')
+    state = {'deployed': 'v1'}
+    read_at = time.time() if mode == 'fresh' else time.time() - 240
+    return Response({'schemaVersion': 1, 'expiryUnit': 'epoch-seconds', 'owner': 'owner', 'resources': ['hosting'], 'candidateSha': 'a' * 40, 'baseSha': 'b' * 40, 'scopeHash': 'c' * 64, 'requestNonce': nonce, 'readAt': read_at, 'state': state, 'stateHash': module.stable_hash(state)})
+module.urlopen = fake_urlopen
+fresh = module.read_deployed_identities_provider(args, 'normal-crm-launch')
+module.validate_deployed_identities(args, fresh, approval, None, provider=True)
+assert fresh['_providerRequest']['requestNonce']
+assert headers_seen[0]['cache-control'] == 'no-store'
+assert headers_seen[0]['x-bel-request-nonce'] == fresh['_providerRequest']['requestNonce']
+mode = 'stale'
+stale = module.read_deployed_identities_provider(args, 'normal-crm-launch')
+try:
+    module.validate_deployed_identities(args, stale, approval, None, provider=True)
+except module.RehearsalError as error:
+    assert 'current request' in str(error) or 'stale' in str(error)
+else:
+    raise SystemExit('expected a pre-request cached provider sample to be rejected')
+print('provider-current-request-passed')`;
+    const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(result.stdout, /provider-current-request-passed/);
+});
+
+test('served candidate assets map Hosting URLs to repository files and reject altered response bytes', () => {
+    const script = String.raw`import importlib.util, sys
+from argparse import Namespace
+spec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+class Response:
+    status = 200
+    def __init__(self, url, body, content_type): self.url, self._body, self.headers = url, body, {'content-type': content_type}
+    def body(self): return self._body
+class Page:
+    def __init__(self): self.handlers = {}
+    def on(self, event, callback): self.handlers[event] = callback
+    def emit(self, event, value): self.handlers[event](value)
+responses = [
+    Response('https://demo.example.test/presentation/crm-admin.html?v=1', b'<html>', 'text/html'),
+    Response('https://demo.example.test/js/presentation-demo/app.mjs?v=1', b'import {}', 'text/javascript'),
+    Response('https://demo.example.test/css/entrance-test-ui-annotations.css?v=1', b'.annotation{}', 'text/css')
+]
+manifest = {'files': {response_url: module.hashlib.sha256(body).hexdigest() for response_url, body in [
+    ('public/crm-admin.html', responses[0]._body), ('public/js/presentation-demo/app.mjs', responses[1]._body), ('public/css/entrance-test-ui-annotations.css', responses[2]._body)
+]}}
+assert module.hosting_url_to_repo_path(responses[0].url, 'https://demo.example.test/presentation') == 'public/crm-admin.html'
+assert module.hosting_url_to_repo_path(responses[1].url, 'https://demo.example.test/presentation') == 'public/js/presentation-demo/app.mjs'
+diagnostics = {}
+page = Page()
+module.attach_page_diagnostics(page, diagnostics, 'presenter', 'crm', 'https://demo.example.test/presentation', manifest)
+for response in responses: page.emit('response', response)
+result = {}
+module.assert_candidate_assets(diagnostics, 'presenter', 'crm', manifest, result)
+assert len(result['browserServedCandidateAssets']) == 3
+altered = Page()
+altered_diagnostics = {}
+module.attach_page_diagnostics(altered, altered_diagnostics, 'presenter', 'crm', 'https://demo.example.test/presentation', manifest)
+altered.emit('response', Response(responses[0].url, b'<altered>', 'text/html'))
+try:
+    module.assert_candidate_assets(altered_diagnostics, 'presenter', 'crm', manifest, {})
+except module.RehearsalError as error:
+    assert 'candidate manifest' in str(error) or 'candidate' in str(error)
+else:
+    raise SystemExit('expected altered served bytes to be rejected')
+print('served-asset-mapping-passed')`;
+    const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(result.stdout, /served-asset-mapping-passed/);
+});
+
+test('Chrome rehearsal reads notebook persistence from the authoritative server endpoint', () => {
+    const script = String.raw`import importlib.util, sys
+spec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+class Page:
+    def evaluate(self, source, payload):
+        assert 'fetch' in source and 'getIdToken' in source
+        assert payload == {'roomId': 'room-1', 'uid': 'uid-1'}
+        return {'status': 200, 'body': {'success': True, 'data': {'pages': [{'id': 'main', 'title': 'Server', 'body': 'Authoritative'}]}}}
+notes = module.read_authoritative_notes(Page(), 'room-1', 'uid-1')
+assert notes['pages'][0]['body'] == 'Authoritative'
+print('authoritative-notes-readback-passed')`;
+    const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(result.stdout, /authoritative-notes-readback-passed/);
+});
+
+test('intervening provider deployment drift is rejected before the next approved mutation', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bel-rehearsal-provider-drift-'));
+    const approvalPath = path.join(root, 'approval.json');
+    const leasePath = path.join(root, 'lease.json');
+    const candidateSha = CANDIDATE_SHA;
+    const baseSha = BASE_SHA;
+    const scopeHash = SCOPE_HASH;
+    const state = { deployed: 'v1' };
+    const stateHash = crypto.createHash('sha256').update(JSON.stringify(state)).digest('hex');
+    const now = Math.floor(Date.now() / 1000);
+    const scenario = {
+        action: 'normal-crm-launch', schemaVersion: 1, expiryUnit: 'epoch-seconds', owner: 'owner', leaseId: 'lease', operationId: 'operation',
+        candidateSha, baseSha, scopeHash, resources: ['hosting'], expiresAt: now + 3600, expectedState: state, expectedStateHash: stateHash
+    };
+    const approval = {
+        mode: 'production-approved', schemaVersion: 1, expiryUnit: 'epoch-seconds', owner: 'owner', leaseId: 'lease', candidateSha, baseSha, scopeHash,
+        resources: ['hosting'], actions: ['normal-crm-launch', 'open-presentation-demo'], expiresAt: now + 3600, scenarios: { 'normal-crm-launch': scenario }
+    };
+    const lease = { schemaVersion: 1, expiryUnit: 'epoch-seconds', operationId: 'operation', operationState: 'pending', state: 'ACTIVE', owner: 'owner', leaseId: 'lease', candidateSha, baseSha, scopeHash, resources: ['hosting'], expiresAt: now + 3600 };
+    fs.writeFileSync(approvalPath, JSON.stringify(approval));
+    fs.writeFileSync(leasePath, JSON.stringify(lease));
+    const script = String.raw`import importlib.util, json, sys, time
+from argparse import Namespace
+spec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+args = Namespace(candidate_sha=sys.argv[4], base_sha=sys.argv[6], scope_hash=sys.argv[7], four_player=False, create_room=False, room_code=None, open_game=False, role='presenter', lease_file=sys.argv[3], deployed_identities=None, deployed_identities_url='https://provider.example/identities', validate_only=False, _fresh_deployed_reads=[])
+approval_path = module.Path(sys.argv[2])
+lease_path = module.Path(sys.argv[3])
+provider_state = {'deployed': 'v1'}
+provider_calls = 0
+mutation_count = 0
+class Response:
+    status = 200
+    def __init__(self, payload): self.payload = payload
+    def __enter__(self): return self
+    def __exit__(self, *args): return False
+    def read(self): return json.dumps(self.payload).encode('utf-8')
+def fake_urlopen(request, timeout):
+    global provider_calls
+    provider_calls += 1
+    nonce = request.headers.get('X-bel-request-nonce')
+    read_at = time.time()
+    return Response({'schemaVersion': 1, 'expiryUnit': 'epoch-seconds', 'owner': 'owner', 'resources': ['hosting'], 'candidateSha': args.candidate_sha, 'baseSha': args.base_sha, 'scopeHash': args.scope_hash, 'requestNonce': nonce, 'readAt': read_at, 'state': dict(provider_state), 'stateHash': module.stable_hash(provider_state)})
+module.urlopen = fake_urlopen
+module.validate_scenario_approval(args, approval_path, 'normal-crm-launch')
+mutation_count += 1
+provider_state['deployed'] = 'v2'
+try:
+    module.validate_scenario_approval(args, approval_path, 'normal-crm-launch')
+except module.RehearsalError as error:
+    assert 'expected state' in str(error) or 'deployed state' in str(error)
+else:
+    raise SystemExit('expected intervening provider deployment drift to be rejected')
+assert mutation_count == 1
+assert provider_calls == 2
+print('provider-drift-blocked-before-mutation')`;
+    try {
+        const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
+        assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+        assert.match(result.stdout, /provider-drift-blocked-before-mutation/);
+    } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+    }
 });

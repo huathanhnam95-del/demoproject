@@ -59,7 +59,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     window.clearTimeout(draftTimer);
     if (forPageId === pageId) persistDraft(forPageId);
   }
-  function selectPage(nextId) {
+  function selectPage(nextId, { restoreLocalDraft = true } = {}) {
     window.clearTimeout(autosaveTimer); conflicted = false;
     if (hasSelection) flushDraft(pageId);
     editGeneration += 1;
@@ -69,20 +69,22 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     version = page?.version || 0;
     elements.title.value = page?.title || '';
     elements.body.value = page?.body || '';
-    restoreDraft();
+    if (restoreLocalDraft) restoreDraft();
     renderPageList();
     hasSelection = true;
   }
   async function load() {
     const result = await transport.readNotes(roomId);
     const serverPages = result.pages || [];
-    const known = new Map(serverPages.map(page => [page.id, page]));
-    for (const page of readPageCatalog()) if (!known.has(page.id)) known.set(page.id, { id: page.id, title: page.title || '', body: '', version: Number(page.version) || 0 });
-    pages = [...known.values()].sort((a, b) => a.id.localeCompare(b.id));
+    const localCatalog = readPageCatalog();
+    pages = [...serverPages].sort((a, b) => a.id.localeCompare(b.id));
     persistPageCatalog();
     const selectedPageId = readPageSelection();
     pageId = pages.some(page => page.id === selectedPageId) ? selectedPageId : (pages[0]?.id || 'main');
-    selectPage(pageId);
+    const serverPage = pages.find(page => page.id === pageId);
+    const localPage = localCatalog.find(page => page.id === pageId);
+    const restoreLocalDraft = Boolean(serverPage) && (!localPage || Number(serverPage.version) >= Number(localPage.version));
+    selectPage(pageId, { restoreLocalDraft });
   }
   async function save() {
     window.clearTimeout(autosaveTimer);

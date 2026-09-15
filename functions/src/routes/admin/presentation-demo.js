@@ -1,6 +1,6 @@
 'use strict';
 
-const { assertActiveIdentity } = require('../../crm/presentation-demo/identity.cjs');
+const { assertActiveIdentity, assertRoomActor } = require('../../crm/presentation-demo/identity.cjs');
 const { fail, assertOperationEnabled } = require('../../crm/presentation-demo/contracts.cjs');
 
 function createPresentationDemoHandlers({ roomService, connections, notes, archives, pdf, resolveIdentity = req => req.user } = {}) {
@@ -90,6 +90,11 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
         exportPdf: handler(async (req, res) => {
             const current = await identity(req);
             if (Object.keys(req.query || {}).some(key => key !== 'scope')) fail('EXPORT_FORBIDDEN');
+            const room = await roomService.getRoom(req.params.roomId);
+            if (!room) fail('ROOM_NOT_FOUND', 'Room not found.');
+            const membership = Object.values(room.slots).find(slot => slot.uid === current.uid);
+            assertRoomActor(current, membership && { uid: membership.uid, seatId: membership.slotId, role: membership.role });
+            if (room.lifecycle === 'ended' && room.archiveStatus !== 'archived') fail('ARCHIVE_NOT_FOUND', 'Saved notes are still being finalized.');
             await roomService.throttle?.(current, 'export', 6);
             const buffer = await pdf.exportPdf(current, req.params.roomId, req.query?.scope);
             res.set('Content-Type', 'application/pdf');

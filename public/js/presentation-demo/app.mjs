@@ -26,7 +26,7 @@ let heartbeatTimer = null;
 let room = null;
 let previousWorld = null, receivedAt = performance.now();
 let nativeRenderer = null;
-let source = null, input = null, inputTimer = null, animation = null, readyPending = false, panelInstance = null;
+let source = null, input = null, inputTimer = null, animation = null, readyPending = false, exportInFlight = false, panelInstance = null;
 const worldElements = { prompt: 'pd-world-prompt', activity: 'pd-activity-status', panel: 'pd-world-panel', pair: 'pd-pair-request', interact: 'pd-interact', profile: 'pd-profile', release: 'pd-release', drop: 'pd-drop', dismount: 'pd-dismount', activityStart: 'pd-activity-start', activityReset: 'pd-activity-reset', pause: 'pd-pause', closePresentation: 'pd-close-presentation' };
 for (const [key, id] of Object.entries(worldElements)) els[key] = $(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -34,6 +34,13 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':
 function show(element, visible) { element.hidden = !visible; }
 function message(text, tone = 'info') { els.gameMessage.textContent = text; els.gameMessage.dataset.tone = tone; }
 function errorText(error) { return error?.message || 'The online room request failed.'; }
+function archivePending(value = room) { return value?.lifecycle === 'ended' && value.archiveStatus !== 'archived'; }
+function syncExportButton(value = room) {
+  const pending = archivePending(value);
+  els.export.disabled = exportInFlight;
+  els.export.textContent = exportInFlight ? (pending ? 'Finalizing saved notes…' : 'Preparing PDF…') : pending ? 'Export when ready' : 'Export my notes';
+  els.export.title = pending ? 'Saved notes are still being finalized. Select to wait for the retained PDF.' : '';
+}
 
 function renderRoomHistory(rooms = []) {
   if (!els.roomHistory) return;
@@ -42,7 +49,7 @@ function renderRoomHistory(rooms = []) {
   const heading = document.createElement('p'); heading.className = 'pd-kicker'; heading.textContent = 'Your rooms'; els.roomHistory.append(heading);
   for (const value of rooms) {
     const row = document.createElement('div'); row.className = 'pd-history-row';
-    const label = document.createElement('span'); label.textContent = `${value.code} · ${value.lifecycle}`;
+    const label = document.createElement('span'); label.textContent = archivePending(value) ? `${value.code} · Finalizing saved notes` : `${value.code} · ${value.lifecycle}`;
     const notes = document.createElement('div'); notes.className = 'pd-history-notes';
     const actions = document.createElement('span'); actions.className = 'pd-history-actions';
     const open = document.createElement('button'); open.type = 'button'; open.className = 'pd-button pd-button-secondary'; open.textContent = value.lifecycle === 'ended' ? 'View archive' : 'Open room';
@@ -64,9 +71,12 @@ function renderRoomHistory(rooms = []) {
     });
     actions.append(open);
     if (value.lifecycle === 'ended') {
-      const exportButton = document.createElement('button'); exportButton.type = 'button'; exportButton.className = 'pd-button pd-button-secondary'; exportButton.textContent = 'Export PDF';
+      const exportButton = document.createElement('button'); exportButton.type = 'button'; exportButton.className = 'pd-button pd-button-secondary'; exportButton.textContent = archivePending(value) ? 'Export when ready' : 'Export PDF';
       exportButton.addEventListener('click', async () => {
-        try { const blob = await transport.exportPdf(value.roomId); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `bel-presentation-${value.roomId}.pdf`; link.click(); URL.revokeObjectURL(link.href); label.textContent = `${value.code} · archived · export downloaded`; } catch (error) { label.textContent = errorText(error); }
+        exportButton.disabled = true;
+        if (archivePending(value)) label.textContent = `${value.code} · Finalizing saved notes · PDF will download when ready`;
+        try { const blob = await transport.exportPdf(value.roomId); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `bel-presentation-${value.roomId}.pdf`; link.click(); URL.revokeObjectURL(link.href); value.archiveStatus = 'archived'; label.textContent = `${value.code} · archived · export downloaded`; exportButton.textContent = 'Export PDF'; } catch (error) { label.textContent = errorText(error); }
+        finally { exportButton.disabled = false; }
       });
       actions.append(exportButton);
     }
@@ -87,7 +97,7 @@ function renderSlots(target, currentRoom) {
 function renderRoom(currentRoom) {
   room = currentRoom;
   els.roomCode.textContent = currentRoom.code;
-  els.roomStatus.textContent = currentRoom.lifecycle === 'ended' ? `Room ended · ${currentRoom.endReason || 'completed'}` : `You are ${Object.values(currentRoom.slots).find(slot => slot.uid === identity.uid)?.role || 'a participant'}.`;
+  els.roomStatus.textContent = archivePending(currentRoom) ? 'Room ended · Finalizing saved notes' : currentRoom.lifecycle === 'ended' ? `Room ended · ${currentRoom.endReason || 'completed'}` : `You are ${Object.values(currentRoom.slots).find(slot => slot.uid === identity.uid)?.role || 'a participant'}.`;
   renderSlots(els.slots, currentRoom);
   const joined = ['p1', 'p2', 'p3'].every(slotId => currentRoom.slots[slotId]?.uid);
   const presenter = currentRoom.presenterUid === identity.uid;
@@ -145,10 +155,11 @@ function renderGame(currentRoom) {
   if (room?.revision !== currentRoom.revision) { previousWorld = room?.gameplay; receivedAt = performance.now(); }
   room = currentRoom; model?.setRoom(room);
   notebook?.setReadOnly(room.lifecycle === 'ended');
+  syncExportButton(currentRoom);
   els.gameCode.textContent = currentRoom.code;
   renderSlots(els.gameSlots, currentRoom);
   const player = ownPlayer(), world = room.gameplay, presenter = model?.isPresenter(), active = world?.presentation?.active;
-  els.gate.textContent = room.lifecycle === 'ended' ? 'This room has ended' : player ? SCENES[player.scene].title : 'Connecting to the room';
+  els.gate.textContent = archivePending(room) ? 'Room ended · Finalizing saved notes' : room.lifecycle === 'ended' ? 'This room has ended' : player ? SCENES[player.scene].title : 'Connecting to the room';
   els.gate.dataset.deckRoom = currentRoom.deck?.room || 'reception';
   els.gate.dataset.deckSlide = String(currentRoom.deck?.slide || 0);
   if (player) { document.body.dataset.scene = player.scene; document.body.dataset.actor = player.id; document.body.dataset.ready = String(model.slot().activity.ready); }
@@ -248,7 +259,10 @@ async function joinRoom(event) {
 }
 
 async function saveAndDownload() {
-  try { if (room.lifecycle !== 'ended') await notebook?.save(); message('Preparing PDF from saved notes…'); const blob = await transport.exportPdf(room.roomId); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `bel-presentation-${room.roomId}.pdf`; link.click(); URL.revokeObjectURL(link.href); message('PDF export downloaded.'); } catch (error) { message(errorText(error), 'error'); }
+  if (exportInFlight) return;
+  exportInFlight = true; syncExportButton();
+  try { if (room.lifecycle !== 'ended') await notebook?.save(); message(archivePending() ? 'Finalizing saved notes. Your PDF will download when ready…' : 'Preparing PDF from saved notes…'); const blob = await transport.exportPdf(room.roomId); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `bel-presentation-${room.roomId}.pdf`; link.click(); URL.revokeObjectURL(link.href); if (room.lifecycle === 'ended') { room = { ...room, archiveStatus: 'archived' }; model?.setRoom(room); } message('PDF export downloaded.'); } catch (error) { message(errorText(error), 'error'); }
+  finally { exportInFlight = false; syncExportButton(); }
 }
 
 function closeWorldPanel() { els.panel.hidden = true; input?.clear(); els.canvas.focus(); }
@@ -353,7 +367,7 @@ function bindEvents() {
   els.receptionContinue.addEventListener('click', openGame);
   els.start.addEventListener('click', () => model.command('transition', { to: 'playing' }).then(() => transport.room(room.roomId)).then(renderGame).catch(error => message(errorText(error), 'error')));
   els.replace.addEventListener('click', () => connectGame(true));
-  els.end.addEventListener('click', async () => { if (!window.confirm('End this room and finalize the retained notes?')) return; try { await notebook?.save(); await transport.endRoom(room.roomId); renderGame(await transport.room(room.roomId)); message('Room ended by the presenter.'); } catch (error) { message(errorText(error), 'error'); } });
+  els.end.addEventListener('click', async () => { if (!window.confirm('End this room and finalize the retained notes?')) return; try { await notebook?.save(); message('Ending room and finalizing saved notes…'); const ended = await transport.endRoom(room.roomId); renderGame(ended); message(archivePending(ended) ? 'Room ended. Finalizing saved notes; export will wait for the retained PDF.' : 'Room ended by the presenter. Saved notes are ready to export.'); } catch (error) { message(errorText(error), 'error'); } });
   els.skip.addEventListener('click', () => worldAction(ownPlayer()?.scene === 'F' ? 'activity' : 'skip', ownPlayer()?.scene === 'F' ? { action: 'skip' } : {}));
   els.previous.addEventListener('click', () => presentation.previous(room.deck.room || 'A', room.deck.slide).catch(error => message(errorText(error), 'error')));
   els.next.addEventListener('click', () => presentation.next(room.deck.room || 'A', room.deck.slide).catch(error => message(errorText(error), 'error')));

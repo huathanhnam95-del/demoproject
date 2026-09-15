@@ -182,6 +182,7 @@ function publicRoomSnapshot(room, actorUid = null) {
         startedAt: room.startedAt,
         endedAt: room.endedAt,
         endReason: room.endReason,
+        archiveStatus: room.archiveStatus,
         expiresAt: room.expiresAt,
         deck: clone(room.deck),
         activity: clone(room.activity),

@@ -125,8 +125,8 @@ export class PresentationTransport {
   saveNote(roomId, page) { return this.request(`/rooms/${encodeURIComponent(roomId)}/notes/${encodeURIComponent(this.identity.uid)}`, { method: 'PUT', body: JSON.stringify(page) }); }
   endRoom(roomId) { return this.request(`/rooms/${encodeURIComponent(roomId)}/end`, { method: 'POST', body: JSON.stringify({ reason: 'explicit' }) }); }
   async exportPdf(roomId) {
-    const deadline = performance.now() + 5000;
-    let terminal = false;
+    const deadline = performance.now() + 12000;
+    let terminal = false, retryDelay = 250;
     for (;;) {
       try { return await this.request(`/rooms/${encodeURIComponent(roomId)}/export.pdf`); }
       catch (error) {
@@ -136,8 +136,10 @@ export class PresentationTransport {
         // a local draft while waiting for the retained saved-note snapshot.
         if (!terminal) terminal = (await this.room(roomId)).lifecycle === 'ended';
         if (!terminal) throw error;
-        if (performance.now() >= deadline) throw Object.assign(new Error('Saved notes are still being finalized. Please try the export again shortly.'), { code: 'ARCHIVE_PENDING' });
-        await new Promise(resolve => window.setTimeout(resolve, 250));
+        const remaining = deadline - performance.now();
+        if (remaining <= 0) throw Object.assign(new Error('Saved notes are still being finalized. Please try the export again shortly.'), { code: 'ARCHIVE_PENDING' });
+        await new Promise(resolve => window.setTimeout(resolve, Math.min(retryDelay, remaining)));
+        retryDelay = Math.min(Math.ceil(retryDelay * 1.5), 1000);
       }
     }
   }

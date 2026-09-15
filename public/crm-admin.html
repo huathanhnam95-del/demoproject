@@ -2990,11 +2990,6 @@
   <script src="js/crm/bel-assistant.js?v=20260914-v2.0.6&input=20260908-3"></script>
   <script src="arpabet-ipa-map.js?v=20260914-v2.0.6"></script>
   <script src="phonetics.js?v=20260914-v2.0.6"></script>
-  <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
-  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
-  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
-  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
   <script src="js/crm/teaching-session-mindmap.js?v=20260914-v2.0.6"></script>
   <script src="js/crm/teaching-session-pdf.js?v=20260914-v2.0.6"></script>
   <script src="js/crm/teaching-sessions.js?v=20260914-v2.0.6"></script>
@@ -3005,8 +3000,6 @@
   <script src="js/crm/entrance-test-ui-lab.js?v=20260914-v2.0.6&etui=20260909-etui2"></script>
   <script src="js/crm/projects/workspace.js?v=20260914-v2.0.6"></script>
   <script src="js/crm/projects/ui-scale.js?v=20260914-v2.0.6"></script>
-  <script src="crm-admin.js?v=20260914-v2.0.6"></script>
-  <script src="js/crm/segmentation-study.js?v=20260914-v2.0.6" defer></script>
   <!-- Fullscreen CRM Books Mind Map Modal -->
   <div id="crm-books-mindmap-modal" class="crm-books-mindmap-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="crm-mindmap-title">
     <div class="crm-mindmap-header">
@@ -3258,6 +3251,15 @@
       </button>
     </div>
   </div>
+
+  <!-- Start the CRM shell after all markup is parsed, without waiting for unrelated deferred tools. -->
+  <script src="crm-admin.js?v=20260914-v2.0.6"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/regions.min.js" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/timeline.min.js" defer></script>
+  <script src="https://unpkg.com/wavesurfer.js@7.12.6/dist/plugins/spectrogram.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js" defer></script>
+  <script src="js/crm/segmentation-study.js?v=20260914-v2.0.6" defer></script>
 
 </body>
 

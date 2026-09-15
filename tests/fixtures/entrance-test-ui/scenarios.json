@@ -1,0 +1,46 @@
+{
+  "allEmpty": {
+    "answers": {},
+    "flags": {},
+    "recordingRefs": {}
+  },
+  "partial": {
+    "answers": {
+      "vocab_q1": {
+        "vocab_q1__b1": " primates ",
+        "vocab_q1__b2": "diet"
+      }
+    },
+    "flags": {"vocab_q1": true},
+    "recordingRefs": {}
+  },
+  "complete": {
+    "answers": {
+      "vocab_q1": {
+        "vocab_q1__b1": "primates",
+        "vocab_q1__b2": "diet",
+        "vocab_q1__b3": "easy",
+        "vocab_q1__b4": "throat"
+      }
+    },
+    "flags": {},
+    "recordingRefs": {}
+  },
+  "flagged": {
+    "answers": {},
+    "flags": {"grammar_q2": true},
+    "recordingRefs": {}
+  },
+  "missingAudio": {
+    "answers": {},
+    "flags": {},
+    "recordingRefs": {},
+    "audioUnavailable": ["listen_write_q1", "listen_write_q2"]
+  },
+  "failedSave": {
+    "answers": {"vocab_q1": {"vocab_q1__b1": "primates"}},
+    "flags": {},
+    "recordingRefs": {},
+    "persistenceError": "quota"
+  }
+}

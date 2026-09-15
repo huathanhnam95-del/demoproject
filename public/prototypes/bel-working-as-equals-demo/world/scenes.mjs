@@ -56,15 +56,16 @@ export const SCENES={
 export const instance=(id,scene)=>scene==='home'?`home:${id}`:scene;
 export const sceneFor=p=>SCENES[p.scene];
 export function entry(scene,id,from) {
-  const offset=Number(id[1])*27;
-  if(scene==='street') return {x:310+offset,y:410};
-  if(scene==='reception' && from==='street') return {x:465+offset,y:372};
+  const offset=Number(id[1])*42;
+  if(scene==='street') return {x:290+offset,y:410};
+  if(scene==='reception' && from==='street') return {x:430+offset,y:372};
   if(scene==='home') return {x:500,y:368};
   if(scene==='A' && from?.startsWith('B')) return {x:180+offset,y:300};
-  if(['C','E','G'].includes(scene)) return {x:451+offset,y:370};
-  if(scene==='F') return {x:350+Number(id[1])*68,y:375};
-  if(scene==='I') return {x:470+Number(id[1])*21,y:365};
-  if(scene==='J') return {x:450+Number(id[1])*30,y:370};
-  if(scene==='D') return {x:451+offset,y:393};
-  return {...SCENES[scene].spawn};
+  if(scene==='A') return {x:400+offset,y:370};
+  if(['C','E','G'].includes(scene)) return {x:400+offset,y:370};
+  if(scene==='F') return {x:320+Number(id[1])*68,y:375};
+  if(scene==='I') return {x:420+offset,y:365};
+  if(scene==='J') return {x:400+offset,y:370};
+  if(scene==='D') return {x:400+offset,y:393};
+  const s=SCENES[scene]?.spawn;return s?{x:s.x-60+offset,y:s.y}:{x:400+offset,y:370};
 }

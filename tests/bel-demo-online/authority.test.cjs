@@ -170,3 +170,57 @@ test('mutation disable fences a pump already waiting at the commit boundary', as
         if (previous === undefined) delete process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED; else process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = previous;
     }
 });
+
+test('retrying pending movement preserves its first trusted queue time and one receipt', async () => {
+    const previous = process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED;
+    let now = 1000, retriedCallbacks = 0;
+    const room = createRoomState({ roomId: 'pending-movement-retry', code: 'ABCD26', presenterUid: 'admin', now });
+    const runtime = new (require('../../functions/src/crm/presentation-demo/runtime.cjs').AuthoritativeRuntime)(room, { clock: () => now });
+    runtime.connect('p0');
+    const store = createMemoryAuthorityStore({ rooms: new Map([[room.roomId, runtime.rawState()]]) });
+    const transact = store.transact.bind(store);
+    store.transact = (id, update) => transact(id, current => {
+        const firstAttempt = update(structuredClone(current));
+        if (retriedCallbacks === 0 && firstAttempt?.lastInputSeq?.p0 === 1) {
+            retriedCallbacks += 1;
+            process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = '0';
+            return update(structuredClone(current));
+        }
+        return firstAttempt;
+    });
+    const authority = createRoomAuthority({ store, clock: () => now, autoStart: false });
+    const identity = { uid: 'admin', accountStatus: 'active', isAdmin: true };
+    const request = { kind: 'input', id: 'retry-input', identity, seatId: 'p0', generation: 1, command: { type: 'move', seq: 1, dx: 1, dy: 0 } };
+    try {
+        await assert.rejects(authority.submit(room.roomId, request), { code: 'SERVICE_RECOVERY' });
+        await authority.drain();
+        const frozen = await store.read(room.roomId);
+        const pending = Object.values(frozen._inbox || {});
+        assert.equal(retriedCallbacks, 1);
+        assert.equal(frozen.lastInputSeq.p0, 0);
+        assert.equal(pending.length, 1);
+        assert.equal(pending[0].queuedAt, 1000);
+
+        process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = '1';
+        now = 2000;
+        const recovered = await authority.submit(room.roomId, request);
+        await authority.drain();
+        const committed = await store.read(room.roomId);
+        const beforeX = committed.gameplay.players.p0.x;
+        assert.equal(recovered.accepted, true);
+        assert.equal(committed.lastInputSeq.p0, 1);
+        assert.equal(committed.gameplay.inputs.p0?.at, 1000);
+        assert.equal(Object.keys(committed._receipts || {}).length, 1);
+
+        now = 2100;
+        await authority.pump(room.roomId);
+        const afterTick = await store.read(room.roomId);
+        assert.equal(afterTick.gameplay.players.p0.x, beforeX, 'the original movement intent is stale after recovery');
+        assert.deepEqual(await authority.submit(room.roomId, request), recovered, 'same-operation replay returns the committed receipt');
+        await assert.rejects(authority.submit(room.roomId, { ...request, command: { ...request.command, dx: -1 } }), { code: 'COMMAND_RECEIPT_CONFLICT' });
+        assert.equal((await store.read(room.roomId)).lastInputSeq.p0, 1);
+    } finally {
+        authority.close(); await authority.drain();
+        if (previous === undefined) delete process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED; else process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = previous;
+    }
+});

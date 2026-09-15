@@ -38,6 +38,7 @@ export function drawBridgeActors(c,w,actor,images){
 }
 export function prepareChoicesBackground(c,original,studio){
   c.drawImage(original,700,106,29,26,583,106,29,26);c.fillStyle='#192e3b';c.fillRect(575,107,9,21);
+  c.drawImage(original,540,128,30,20,610,128,30,20);
   const tile=document.createElement('canvas');tile.width=80;tile.height=60;tile.getContext('2d').drawImage(original,451,160,80,60,0,0,80,60);
   c.fillStyle=c.createPattern(tile,'repeat');c.beginPath();for(const [i,[x,y]]of [[149,130],[850,130],[940,265],[940,390],[60,390],[60,265]].entries())i?c.lineTo(x,y):c.moveTo(x,y);c.closePath();c.fill();
   for(const [x,y,w,h]of [[270,61,49,70],[659,61,38,74],[614,101,40,65],[61,275,50,85],[887,275,53,85]])c.drawImage(original,x,y,w,h,x,y,w,h);

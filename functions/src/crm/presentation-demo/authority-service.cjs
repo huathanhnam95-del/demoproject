@@ -167,9 +167,10 @@ function createRoomAuthority({ store, gatewayId = crypto.randomUUID(), clock = D
                 }
                 if (room.lifecycle === 'ended' || room.expiresAt <= queuedAt) fail('ROOM_ENDED');
                 room._inbox ||= {};
-                if (room._inbox[key] && room._inbox[key].requestHash !== payloadHash) fail('COMMAND_RECEIPT_CONFLICT');
-                if (!room._inbox[key] && Object.keys(room._inbox).length >= MAX_INBOX) fail('RATE_LIMITED');
-                room._inbox[key] = { ...structuredClone(request), requestHash: payloadHash, queuedAt };
+                const pending = room._inbox[key];
+                if (pending && pending.requestHash !== payloadHash) fail('COMMAND_RECEIPT_CONFLICT');
+                if (!pending && Object.keys(room._inbox).length >= MAX_INBOX) fail('RATE_LIMITED');
+                room._inbox[key] = { ...structuredClone(request), requestHash: payloadHash, queuedAt: Number.isFinite(pending?.queuedAt) ? pending.queuedAt : queuedAt };
                 if (Buffer.byteLength(JSON.stringify(room)) > 65536) fail('RATE_LIMITED');
                 return room;
             } catch (error) { failure = error; return undefined; }

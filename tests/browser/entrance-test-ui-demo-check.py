@@ -373,13 +373,7 @@ def audio_case(page, base: str, output: Path, fake_audio: Path, results: dict):
 
 
 def host_case(page, base: str, output: Path, results: dict):
-    page.goto(base + "/__fixtures__/evaluator-host.html")
-    page.wait_for_selector("#et-ui-name")
-    page.locator("#et-ui-name").fill("Demo D browser rater")
-    page.locator("#et-ui-enter").click()
-    page.wait_for_selector("[data-skin='d']")
-    skins = page.locator("[data-skin]").count()
-    assert_true(skins == 4, f"Evaluator exposes {skins} skins, expected four")
+    page.goto(base + "/entrance-test-ui-lab.html")
     page.evaluate(
         """async (name) => {
           localStorage.removeItem('entrance_test_ui_demo_v1:activeAttemptId');
@@ -390,6 +384,13 @@ def host_case(page, base: str, output: Path, results: dict):
         }""",
         DB_NAME,
     )
+    page.goto(base + "/__fixtures__/evaluator-host.html")
+    page.wait_for_selector("#et-ui-name")
+    page.locator("#et-ui-name").fill("Demo D browser rater")
+    page.locator("#et-ui-enter").click()
+    page.wait_for_selector("[data-skin='d']")
+    skins = page.locator("[data-skin]").count()
+    assert_true(skins == 1, f"Evaluator exposes {skins} skins, expected D only")
     page.locator("[data-skin='d']").click()
     page.wait_for_function("document.querySelector('#et-ui-frame')?.getAttribute('src').includes('entrance-test-ui/')")
     frame = page.frame_locator("#et-ui-frame")
@@ -399,13 +400,13 @@ def host_case(page, base: str, output: Path, results: dict):
     frame.locator("[data-view='question'][data-question-id='grammar_q1']").wait_for(timeout=10000)
     page.locator("[data-rate='visual'][data-value='4']").click()
     assert_true("4/5" in page.locator("[data-crit='visual']").inner_text(), "Demo D star rating did not render")
-    page.locator("[data-skin='a']").click()
-    page.wait_for_function("document.querySelector('#et-ui-frame')?.getAttribute('src').includes('entrance-test-ui-lab.html?skin=a')")
-    page.locator("[data-skin='b']").click()
-    page.wait_for_function("document.querySelector('#et-ui-frame')?.getAttribute('src').includes('entrance-test-ui-lab.html?skin=b')")
-    page.locator("[data-skin='d']").click()
-    page.wait_for_function("document.querySelector('#et-ui-frame')?.getAttribute('src').includes('entrance-test-ui/')")
-    assert_true("bốn" in page.locator(".et-guide").inner_text().lower(), "Evaluator requirement copy was not extended to four demos")
+    assert_true(page.locator("[data-skin='a'],[data-skin='b'],[data-skin='c']").count() == 0, "Legacy controls remain reachable")
+    assert_true("/40" in page.locator(".et-guide").inner_text(), "D-only completion does not require 40 scores")
+    legacy = page.context.new_page()
+    for skin in ["a", "b", "c"]:
+        response = legacy.goto(base + "/entrance-test-ui-lab.html?skin=" + skin)
+        assert_true(response.ok and legacy.locator("body").inner_text().strip(), "Historical standalone route missing")
+    legacy.close()
     page.screenshot(path=str(output / "evaluator-demo-d.png"), full_page=True)
     results["host"] = {"status": "pass", "skinCount": skins, "dFrame": True, "dRating": "4/5", "historicalFrames": ["a", "b"]}
 

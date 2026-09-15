@@ -64,6 +64,46 @@
   },
   "commands": [
     {
+      "name": "test:entrance-test-ui:annotations",
+      "program": "node",
+      "args": [
+        "--test",
+        "tests/entrance-test-ui/annotation-model.test.mjs",
+        "tests/entrance-test-ui/annotation-anchors.test.mjs",
+        "tests/entrance-test-ui/annotation-store.test.mjs",
+        "tests/entrance-test-ui/annotation-host.test.mjs"
+      ],
+      "target": "tests/entrance-test-ui/annotation-model.test.mjs",
+      "effects": [
+        "read-only"
+      ]
+    },
+    {
+      "name": "test:entrance-test-ui:rules",
+      "program": "node",
+      "args": [
+        "--test",
+        "tests/firestore/entrance-test-ui-annotations-rules.test.cjs"
+      ],
+      "target": "tests/firestore/entrance-test-ui-annotations-rules.test.cjs",
+      "effects": [
+        "local-write"
+      ]
+    },
+    {
+      "name": "test:entrance-test-ui:annotations:browser",
+      "program": "python",
+      "args": [
+        "-X",
+        "utf8",
+        "tests/browser/entrance-test-ui-annotations-check.py"
+      ],
+      "target": "tests/browser/entrance-test-ui-annotations-check.py",
+      "effects": [
+        "local-write"
+      ]
+    },
+    {
       "name": "check:structure",
       "program": "node",
       "args": ["scripts/structure/check.cjs", "check"],
@@ -80,9 +120,24 @@
     {
       "name": "test:entrance-test-ui",
       "program": "node",
-      "args": ["--test", "tests/entrance-test-ui/content.test.mjs", "tests/entrance-test-ui/state.test.mjs", "tests/entrance-test-ui/persistence.test.mjs", "tests/entrance-test-ui/view.test.mjs", "tests/entrance-test-ui/audio.test.mjs", "tests/entrance-test-ui/qa.test.mjs", "tests/entrance-test-ui/host.test.mjs"],
+      "args": [
+        "--test",
+        "tests/entrance-test-ui/content.test.mjs",
+        "tests/entrance-test-ui/state.test.mjs",
+        "tests/entrance-test-ui/persistence.test.mjs",
+        "tests/entrance-test-ui/view.test.mjs",
+        "tests/entrance-test-ui/audio.test.mjs",
+        "tests/entrance-test-ui/qa.test.mjs",
+        "tests/entrance-test-ui/host.test.mjs",
+        "tests/entrance-test-ui/annotation-model.test.mjs",
+        "tests/entrance-test-ui/annotation-anchors.test.mjs",
+        "tests/entrance-test-ui/annotation-store.test.mjs",
+        "tests/entrance-test-ui/annotation-host.test.mjs"
+      ],
       "target": "tests/entrance-test-ui/content.test.mjs",
-      "effects": ["read-only"]
+      "effects": [
+        "read-only"
+      ]
     },
     {
       "name": "test:entrance-test-ui:browser",

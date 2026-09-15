@@ -145,11 +145,14 @@ def walk_to(page, target, timeout=35):
         # next diagonal is blocked by the tabletop, make the small horizontal
         # correction with the same real keyboard input the player uses.
         if (isinstance(target, str) and target.startswith('cube-') and player['scene'] == 'J'
-                and player['y'] >= path['t']['y'] + 35 and abs(player['x'] - path['t']['x']) < 70):
+                and path['t']['y'] >= 250
+                and path['t']['y'] + 35 <= player['y'] <= path['t']['y'] + 55
+                and abs(player['x'] - path['t']['x']) < 70):
             for key in ['a', 'd', 's', 'w']:
                 page.keyboard.up(key)
-            dx, dy = path['t']['x'] - player['x'], 0
-            point = {'x': player['x'] + dx, 'y': player['y']}
+            dx = path['t']['x'] - player['x']
+            dy = path['t']['y'] - player['y'] if abs(dx) <= 12 else 0
+            point = {'x': player['x'] + dx, 'y': player['y'] + dy}
         keys=[]
         if abs(dx)>2: keys.append('d' if dx>0 else 'a')
         if abs(dy)>2: keys.append('s' if dy>0 else 'w')

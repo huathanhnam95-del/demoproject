@@ -867,3 +867,115 @@ print('provider-drift-blocked-before-mutation')`;
         fs.rmSync(root, { recursive: true, force: true });
     }
 });
+
+test('the Chrome J table-corridor planner reaches all three participant cube pairs with real movement geometry', async () => {
+    const [{ SCENES }, geometry, simulation, cubes] = await Promise.all([
+        import('../../public/js/presentation-demo/core/world/scenes.mjs'),
+        import('../../public/js/presentation-demo/core/world/geometry.mjs'),
+        import('../../public/js/presentation-demo/core/world/simulation.mjs'),
+        import('../../public/js/presentation-demo/core/activities/cubes.mjs')
+    ]);
+    const { RADIUS, distance, move } = geometry;
+    const { solidsFor, targets } = simulation;
+    const INTERACTION_RADIUS = 48;
+    const WALK_SPEED = 108;
+    const SERVER_STEP_SECONDS = 0.075;
+    const approaches = [
+        ['p1', 'cube-1', { x: 320, y: 345 }],
+        ['p2', 'cube-3', { x: 360, y: 345 }],
+        ['p1', 'cube-2', { x: 320, y: 345 }],
+        ['p2', 'cube-5', { x: 360, y: 345 }],
+        ['p1', 'cube-0', { x: 320, y: 345 }],
+        ['p2', 'cube-4', { x: 360, y: 345 }]
+    ];
+
+    function worldFor(id, start) {
+        return {
+            players: {
+                [id]: { id, scene: 'J', instance: 'J', x: start.x, y: start.y, connected: true, ride: null, carry: null }
+            },
+            cubes: cubes.createCubes(),
+            routes: {}
+        };
+    }
+
+    function planWalk(world, id, targetId) {
+        const player = world.players[id];
+        const target = targets(world, id).find(value => value.id === targetId);
+        assert.ok(target, `target ${targetId} must remain available in the authored J scene`);
+        if (distance(player, target) <= INTERACTION_RADIUS) return { done: true, player, target };
+        const scene = SCENES[player.scene];
+        const solids = solidsFor(world, id);
+        const start = { x: player.x, y: player.y, g: 0, h: distance(player, target), parent: null };
+        const open = [start];
+        const seen = new Map([['0,0', 0]]);
+        let found = null;
+        for (let visits = 0; open.length && visits < 15000; visits += 1) {
+            open.sort((a, b) => (b.g + b.h) - (a.g + a.h));
+            const current = open.pop();
+            if (distance(current, target) <= INTERACTION_RADIUS) { found = current; break; }
+            const gap = distance(current, target);
+            if (gap <= INTERACTION_RADIUS + 9) {
+                const scale = (gap - INTERACTION_RADIUS + 0.1) / gap;
+                const approach = move(current, (target.x - current.x) * scale, (target.y - current.y) * scale, scene, solids, RADIUS);
+                if (distance(approach, target) <= INTERACTION_RADIUS) { found = { ...approach, parent: current }; break; }
+            }
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+                const x = current.x + dx * 6, y = current.y + dy * 6;
+                if (x < 0 || x > 1000 || y < 0 || y > 480) continue;
+                const moved = move(current, dx * 6, dy * 6, scene, solids, RADIUS);
+                if (Math.hypot(moved.x - x, moved.y - y) > 0.01) continue;
+                const cost = current.g + Math.hypot(dx, dy) * 6;
+                const key = `${Math.round((x - player.x) / 6)},${Math.round((y - player.y) / 6)}`;
+                if ((seen.get(key) ?? Infinity) <= cost) continue;
+                seen.set(key, cost);
+                open.push({ x, y, g: cost, h: Math.max(0, Math.hypot(x - target.x, y - target.y) - INTERACTION_RADIUS), parent: current });
+            }
+        }
+        assert.ok(found, `a bounded path must exist for ${id} -> ${targetId}`);
+        const raw = [];
+        while (found.parent) { raw.unshift({ x: found.x, y: found.y }); found = found.parent; }
+        const corners = [];
+        let previous = start, direction = '';
+        for (const point of raw) {
+            const nextDirection = `${Math.sign(point.x - previous.x)},${Math.sign(point.y - previous.y)}`;
+            if (direction && direction !== nextDirection) corners.push(previous);
+            direction = nextDirection;
+            previous = point;
+        }
+        corners.push(raw.at(-1));
+        return { done: false, player, target, point: corners[0] };
+    }
+
+    function drive(world, id, targetId) {
+        for (let step = 1; step <= 1200; step += 1) {
+            const path = planWalk(world, id, targetId);
+            if (path.done) return step - 1;
+            let dx = path.point.x - path.player.x;
+            let dy = path.point.y - path.player.y;
+            // The tabletop blocks upward motion until the player is aligned
+            // horizontally with the target from the real lower corridor.
+            if (path.target.y >= 250 && path.player.y >= path.target.y + 35 && path.player.y <= path.target.y + 55
+                && Math.abs(path.player.x - path.target.x) < 70) {
+                dx = path.target.x - path.player.x;
+                dy = Math.abs(dx) <= 12 ? path.target.y - path.player.y : 0;
+            }
+            const magnitude = Math.hypot(dx, dy) || 1;
+            const next = move(path.player, dx / magnitude * WALK_SPEED * SERVER_STEP_SECONDS, dy / magnitude * WALK_SPEED * SERVER_STEP_SECONDS, SCENES.J, solidsFor(world, id), RADIUS);
+            assert.ok(distance(next, path.player) > 0.01, `real-key movement stalled at ${id} -> ${targetId} on step ${step}`);
+            Object.assign(path.player, next);
+        }
+        assert.fail(`real-key planner exceeded its bounded step budget for ${id} -> ${targetId}`);
+    }
+
+    const results = approaches.map(([id, targetId, start]) => {
+        const world = worldFor(id, start);
+        const steps = drive(world, id, targetId);
+        const target = targets(world, id).find(value => value.id === targetId);
+        return { id, targetId, steps, distance: distance(world.players[id], target) };
+    });
+    assert.equal(results.length, 6);
+    assert.ok(results.every(result => result.distance <= INTERACTION_RADIUS));
+    assert.ok(results.every(result => result.steps <= 1200));
+    assert.deepEqual(results.map(result => result.targetId), ['cube-1', 'cube-3', 'cube-2', 'cube-5', 'cube-0', 'cube-4']);
+});

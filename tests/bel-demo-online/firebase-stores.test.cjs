@@ -117,6 +117,90 @@ test('expiry scanning resumes past a full page of retained terminal rooms', { sk
     assert.equal(expired.length, 1); assert.equal(expired[0].roomId, room.roomId); assert.equal(expired[0].lifecycle, 'ended');
 });
 
+test('stale expiry reads cannot end a room after canonical presenter activity extends it', { skip: !emulatorSelected }, async () => {
+    const firebase = require('../../functions/src/utils/firebase_admin_init');
+    const { createFirebasePresentationDemoServices } = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');
+    const { AuthoritativeRuntime } = require('../../functions/src/crm/presentation-demo/runtime.cjs');
+    const { hydrate } = require('../../functions/src/crm/presentation-demo/authority-store.cjs');
+    let now = 1000, intercept = false, activity;
+    const suffix = crypto.randomUUID(), roomId = `expiry-race-${suffix}`, real = firebase.getDatabase(), target = real.ref(`presentationRooms/${roomId}`);
+    const proxy = { ref(name) {
+        const ref = real.ref(name);
+        if (name !== `presentationRooms/${roomId}`) return ref;
+        return new Proxy(ref, { get(object, key) {
+            if (key === 'get') return async () => {
+                const old = await object.get();
+                if (intercept) {
+                    intercept = false;
+                    const deadline = old.val().expiresAt;
+                    now = deadline - 1;
+                    await target.transaction(raw => {
+                        const runtime = new AuthoritativeRuntime(hydrate(raw || old.val()), { clock: () => now });
+                        const result = runtime.command('p0', 1, { type: 'profile', seq: 1, name: 'Accepted before expiry', appearance: { hat: 'none', glasses: false, shirt: 'blue' } }, now);
+                        activity = { accepted: result.accepted, oldDeadline: deadline, newDeadline: runtime.room.expiresAt };
+                        return JSON.parse(JSON.stringify(runtime.rawState()));
+                    }, undefined, false);
+                    now = deadline + 1;
+                }
+                return old;
+            };
+            const value = object[key]; return typeof value === 'function' ? value.bind(object) : value;
+        } });
+    } };
+    const service = createFirebasePresentationDemoServices({ db: firebase.db, rtdb: proxy, clock: () => now, idFactory: () => roomId, codeFactory: () => 'XYR234' });
+    const identity = { uid: `expiry-admin-${suffix}`, accountStatus: 'active', isAdmin: true };
+    await service.roomService.createOrResume(identity);
+    const original = hydrate((await target.get()).val()); now = original.expiresAt - 10;
+    const runtime = new AuthoritativeRuntime(original, { clock: () => now }); runtime.connect('p0');
+    await target.set(JSON.parse(JSON.stringify(runtime.rawState())));
+    intercept = true;
+    const result = await service.roomService.getRoom(roomId);
+    const stored = (await target.get()).val();
+    assert.equal(activity.accepted, true);
+    assert.ok(activity.newDeadline > now);
+    assert.notEqual(result.lifecycle, 'ended');
+    assert.notEqual(stored.lifecycle, 'ended');
+    assert.equal(stored.expiresAt, activity.newDeadline);
+});
+
+test('maintenance reconciles an RTDB terminal fence after Firestore projection failure', { skip: !emulatorSelected }, async () => {
+    const firebase = require('../../functions/src/utils/firebase_admin_init');
+    const { createFirebasePresentationDemoServices, COLLECTIONS } = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');
+    const { createMaintenanceService } = require('../../functions/src/crm/presentation-demo/maintenance.cjs');
+    const { createPdfService } = require('../../functions/src/crm/presentation-demo/pdf-service.cjs');
+    let now = 1000, failProjection = false;
+    const db = new Proxy(firebase.db, { get(object, key) {
+        if (key === 'runTransaction') return (...args) => {
+            if (failProjection) { failProjection = false; throw Object.assign(new Error('Injected projection outage after terminal fence'), { code: 'UNAVAILABLE' }); }
+            return object.runTransaction(...args);
+        };
+        const value = object[key]; return typeof value === 'function' ? value.bind(object) : value;
+    } });
+    const suffix = crypto.randomUUID(), roomId = `terminal-gap-${suffix}`;
+    const admin = { uid: `terminal-admin-${suffix}`, accountStatus: 'active', isAdmin: true };
+    const participant = { uid: `terminal-p1-${suffix}`, accountStatus: 'active', isTeacher: true };
+    const first = createFirebasePresentationDemoServices({ db, rtdb: firebase.getDatabase(), clock: () => now, idFactory: () => roomId, codeFactory: () => 'TUR234' });
+    const room = await first.roomService.createOrResume(admin);
+    await first.roomService.join(participant, room.code);
+    await first.notes.savePage(participant, room.roomId, participant.uid, { pageId: 'saved', operationId: 'saved-operation', title: 'Saved note', body: 'Private retained regression note', expectedVersion: 0 });
+    failProjection = true;
+    await assert.rejects(first.roomService.end(admin, room.roomId), { code: 'UNAVAILABLE' });
+    assert.equal((await firebase.getDatabase().ref(`presentationRooms/${room.roomId}`).get()).val().lifecycle, 'ended');
+    assert.notEqual((await firebase.db.collection(COLLECTIONS.rooms).doc(room.roomId).get()).data().lifecycle, 'ended');
+    const replacement = createFirebasePresentationDemoServices({ db: firebase.db, rtdb: firebase.getDatabase(), clock: () => now });
+    const maintenance = createMaintenanceService({ roomService: replacement.roomService, archiveService: replacement.archives, clock: () => now });
+    const firstRun = await maintenance.run();
+    const secondRun = await maintenance.run();
+    assert.ok(firstRun.archived >= 1, 'maintenance may also finish pending rooms left by earlier durable fixtures');
+    assert.equal(secondRun.attemptedArchives, 0, 'an archived canonical room must leave the terminal reconciliation queue');
+    assert.equal(secondRun.failedArchives, 0);
+    assert.equal((await firebase.db.collection(COLLECTIONS.rooms).doc(room.roomId).get()).data().lifecycle, 'ended');
+    const archive = await replacement.archives.readArchive(participant, room.roomId);
+    assert.equal(archive.notebooks[participant.uid].pages[0].body, 'Private retained regression note');
+    const pdf = await createPdfService({ archives: replacement.archives, roomService: replacement.roomService, notesService: replacement.notes }).exportPdf(participant, room.roomId);
+    assert.equal(pdf.subarray(0, 5).toString(), '%PDF-');
+});
+
 test('durable CAS rejects equal-revision loss, fences stale generations, stores 21 full pages, and preserves demotion privacy', { skip: !emulatorSelected }, async () => {
     const firebase = require('../../functions/src/utils/firebase_admin_init');
     const { createFirebasePresentationDemoServices } = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');

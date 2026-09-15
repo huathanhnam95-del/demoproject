@@ -3,6 +3,7 @@
     ".read": false,
     ".write": false,
     "presentationRooms": {
+      ".indexOn": ["archiveStatus"],
       "$roomId": {
         ".read": false,
         ".write": false,

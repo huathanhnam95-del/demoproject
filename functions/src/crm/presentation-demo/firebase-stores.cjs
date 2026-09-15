@@ -131,6 +131,23 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         readArchivedReceipt: async (id, key) => (await rtdb.ref(`presentationReceipts/${id}/${key}`).get()).val()
     });
 
+    async function expireCanonicalRoom(roomId) {
+        const checkedAt = clock();
+        await authorityStore.ensure(roomId);
+        const terminal = await authorityStore.transact(roomId, current => {
+            if (!current || !ACTIVE_LIFECYCLES.has(current.lifecycle) || Number(current.expiresAt) > checkedAt) return undefined;
+            Object.assign(current, { lifecycle: 'ended', endedAt: checkedAt, endReason: 'expired', archiveStatus: 'pending', revision: current.revision + 1 });
+            if (current.gameplay) current.gameplay.inputs = {};
+            return current;
+        });
+        const current = roomState(terminal.value);
+        if (terminal.committed) {
+            await drainNoteEffects(roomId);
+            await mirrorAuthority(current);
+        }
+        return { committed: terminal.committed, room: current };
+    }
+
     function assertCurrentRoom(room, now = clock()) {
         if (!room) fail('ROOM_NOT_FOUND');
         if (room.lifecycle === 'ended') fail('ROOM_ENDED');
@@ -241,18 +258,8 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         const liveRoom = liveSnap.exists() ? hydrate(liveSnap.val()) : null;
         const current = mergeRoomState(firestoreRoom, liveRoom);
         if (ACTIVE_LIFECYCLES.has(current.lifecycle) && Number(current.expiresAt) <= clock()) {
-            const ended = await db.runTransaction(async tx => {
-                const fresh = await tx.get(ref);
-                if (!fresh.exists) return null;
-                const value = fresh.data();
-                if (ACTIVE_LIFECYCLES.has(value.lifecycle) && Number(value.expiresAt) <= clock()) {
-                    value.lifecycle = 'ended'; value.endedAt = clock(); value.endReason = 'expired'; value.archiveStatus = 'pending'; value.revision += 1;
-                    tx.set(ref, value); tx.delete(lockRef(value.presenterUid)); return value;
-                }
-                return value;
-            });
-            if (ended) await mirrorCanonicalRoom(ended);
-            return ended ? mergeRoomState(ended, hydrate((await liveRoomRef(roomId).get()).val())) : null;
+            const canonical = await expireCanonicalRoom(roomId);
+            return canonical.room ? mergeRoomState(firestoreRoom, canonical.room) : null;
         }
         return cloneValue(current);
     }
@@ -577,11 +584,19 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
 
     async function markArchiveStatus(roomId, status) {
         const ref = roomRef(roomId);
-        return db.runTransaction(async tx => {
+        const projected = await db.runTransaction(async tx => {
             const snap = await tx.get(ref);
             if (!snap.exists || snap.data().lifecycle !== 'ended') fail('ROOM_NOT_FOUND');
             const room = snap.data(); room.archiveStatus = status; tx.set(ref, room); return room;
         });
+        await authorityStore.ensure(roomId);
+        const canonical = await authorityStore.transact(roomId, current => {
+            if (!current || current.lifecycle !== 'ended') return undefined;
+            if (current.archiveStatus === status) return undefined;
+            current.archiveStatus = status; current.revision += 1;
+            return current;
+        });
+        return cloneValue(canonical.value ? roomState(canonical.value) : projected);
     }
 
     async function throttle(identity, scope, maximum) {
@@ -599,6 +614,21 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     async function listPendingArchives(limit = 100) {
         const snap = await db.collection(COLLECTIONS.rooms).where('archiveStatus', 'in', ['pending', 'failed']).limit(Math.min(100, Math.max(1, limit))).get();
         return snap.docs.map(doc => doc.data()).filter(room => ['pending', 'failed'].includes(room.archiveStatus)).sort((a, b) => Number(a.endedAt || 0) - Number(b.endedAt || 0)).slice(0, Math.max(0, limit));
+    }
+
+    async function reconcileTerminalRooms(limit = 100) {
+        const maximum = Math.min(100, Math.max(1, Number(limit) || 100));
+        const candidates = new Map();
+        for (const status of ['pending', 'failed']) {
+            const snap = await rtdb.ref('presentationRooms').orderByChild('archiveStatus').equalTo(status).limitToFirst(maximum).get();
+            for (const [roomId, value] of Object.entries(snap.val() || {})) {
+                const room = roomState(value);
+                if (room?.lifecycle === 'ended') candidates.set(roomId, room);
+            }
+        }
+        const terminal = [...candidates.values()].sort((a, b) => Number(a.endedAt || 0) - Number(b.endedAt || 0)).slice(0, maximum);
+        for (const room of terminal) await mirrorAuthority(room);
+        return terminal;
     }
 
     async function cleanupTransient(limit = 100) {
@@ -631,14 +661,8 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         const expired = [];
         for (const doc of snap.docs) {
             if (!ACTIVE_LIFECYCLES.has(doc.data().lifecycle)) continue;
-            await authorityStore.ensure(doc.id);
-            const terminal = await authorityStore.transact(doc.id, current => {
-                if (!current || !ACTIVE_LIFECYCLES.has(current.lifecycle) || current.expiresAt > clock()) return undefined;
-                Object.assign(current, { lifecycle: 'ended', endedAt: clock(), endReason: 'expired', archiveStatus: 'pending', revision: current.revision + 1 });
-                if (current.gameplay) current.gameplay.inputs = {};
-                return current;
-            });
-            if (terminal.committed) { await drainNoteEffects(doc.id); await mirrorAuthority(terminal.value); expired.push(roomState(terminal.value)); }
+            const terminal = await expireCanonicalRoom(doc.id);
+            if (terminal.committed) expired.push(terminal.room);
         }
         if (snap.size === 100) {
             const last = snap.docs.at(-1); await cursorRef.set({ lastExpiresAt: last.data().expiresAt, roomId: last.id, kind: 'expiry-cursor' });
@@ -646,7 +670,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         return expired;
     }
 
-    const roomService = { authorityStore, createOrResume, end, expireDue, cleanupTransient, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, throttle, recordExport, refreshRuntimeOnRead: true, durable: true };
+    const roomService = { authorityStore, createOrResume, end, expireDue, cleanupTransient, getRoom, issueTicket, join, listRooms, listPendingArchives, reconcileTerminalRooms, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, throttle, recordExport, refreshRuntimeOnRead: true, durable: true };
 
     async function membership(roomId, uid) {
         const room = await getRoom(roomId);
@@ -864,7 +888,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 if (existingSnap.exists) tx.set(archiveRef(roomId), value); else tx.create(archiveRef(roomId), value);
                 room.archiveStatus = 'pending'; tx.set(ref, room); return value;
             });
-            if (started.status === 'archived') return cloneValue(started);
+            if (started.status === 'archived') { await markArchiveStatus(roomId, 'archived'); return cloneValue(started); }
             const notebooks = {};
             for (const member of started.members) {
                 const notebook = await notes.readNotebookByUid(roomId, member.uid);
@@ -878,6 +902,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 const next = { ...value, status: 'archived', checksum: archiveChecksum(payload), notebookRevisions: Object.fromEntries(Object.entries(notebooks).map(([uid, item]) => [uid, item.notebookRevision])), completedAt: clock() };
                 tx.set(archiveRef(roomId), next); if (roomSnap.exists) { const room = roomSnap.data(); room.archiveStatus = 'archived'; tx.set(ref, room); } return next;
             });
+            await markArchiveStatus(roomId, 'archived');
             return { ...cloneValue(archive), notebooks: cloneValue(notebooks) };
         },
         async readArchive(input, roomId) {

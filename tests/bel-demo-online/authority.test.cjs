@@ -117,3 +117,56 @@ test('receipt replay checks silent expiry even before the next presence tick', a
         await assert.rejects(f.b.submit(f.roomId, req), { code: 'STALE_CONNECTION' });
     } finally { f.close(); }
 });
+
+test('movement keeps its trusted queue time and expires while authority is suspended', async () => {
+    let now = 1000, entered, release;
+    const paused = new Promise(resolve => { entered = resolve; });
+    const hold = new Promise(resolve => { release = resolve; });
+    const room = createRoomState({ roomId: 'stale-movement', code: 'ABCD24', presenterUid: 'admin', now });
+    const runtime = new (require('../../functions/src/crm/presentation-demo/runtime.cjs').AuthoritativeRuntime)(room, { clock: () => now });
+    runtime.connect('p0');
+    const store = createMemoryAuthorityStore({ rooms: new Map([[room.roomId, runtime.rawState()]]) });
+    const authority = createRoomAuthority({ store, clock: () => now, autoStart: false, beforeCommit: async () => { entered(); await hold; } });
+    const identity = { uid: 'admin', accountStatus: 'active', isAdmin: true };
+    try {
+        const submitted = authority.submit(room.roomId, { kind: 'input', id: 'delayed-move', identity, seatId: 'p0', generation: 1, command: { type: 'move', seq: 1, dx: 1, dy: 0 } });
+        await paused;
+        const queuedAt = Object.values((await store.read(room.roomId))._inbox)[0].queuedAt;
+        now = 2000; release();
+        const result = await submitted;
+        const committed = await store.read(room.roomId);
+        const beforeX = committed.gameplay.players.p0.x;
+        now = 2100; await authority.pump(room.roomId);
+        const after = await store.read(room.roomId);
+        assert.equal(result.accepted, true);
+        assert.equal(queuedAt, 1000);
+        assert.equal(committed.gameplay.inputs.p0?.at, queuedAt);
+        assert.equal(after.gameplay.players.p0.x, beforeX, 'a movement older than 300 ms must not gain a fresh lifetime at commit');
+    } finally { release?.(); authority.close(); await authority.drain(); }
+});
+
+test('mutation disable fences a pump already waiting at the commit boundary', async () => {
+    const previous = process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED;
+    let now = 1000, entered, release;
+    const paused = new Promise(resolve => { entered = resolve; });
+    const hold = new Promise(resolve => { release = resolve; });
+    const room = createRoomState({ roomId: 'rollback-boundary', code: 'ABCD25', presenterUid: 'admin', now });
+    const runtime = new (require('../../functions/src/crm/presentation-demo/runtime.cjs').AuthoritativeRuntime)(room, { clock: () => now });
+    runtime.connect('p0');
+    const store = createMemoryAuthorityStore({ rooms: new Map([[room.roomId, runtime.rawState()]]) });
+    const authority = createRoomAuthority({ store, clock: () => now, autoStart: false, beforeCommit: async () => { entered(); await hold; } });
+    const identity = { uid: 'admin', accountStatus: 'active', isAdmin: true };
+    try {
+        const submitted = authority.submit(room.roomId, { kind: 'input', id: 'fenced-move', identity, seatId: 'p0', generation: 1, command: { type: 'move', seq: 1, dx: 1, dy: 0 } });
+        await paused;
+        process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = '0';
+        release();
+        await assert.rejects(submitted, { code: 'SERVICE_RECOVERY' });
+        const final = await store.read(room.roomId);
+        assert.equal(final.lastInputSeq.p0, 0);
+        assert.equal(Object.keys(final._inbox || {}).length, 1, 'disabled mutation work must remain queued for controlled recovery');
+    } finally {
+        release?.(); authority.close(); await authority.drain();
+        if (previous === undefined) delete process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED; else process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = previous;
+    }
+});

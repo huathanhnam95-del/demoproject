@@ -69,6 +69,9 @@ function createRoomAuthority({ store, gatewayId = crypto.randomUUID(), clock = D
         let reduced = 0;
         const committed = await transaction(id, current => {
             reduced = 0;
+            // The callback may be retried after async owner work. Re-read the
+            // in-process kill switch at every canonical commit attempt.
+            if (process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED === '0') return undefined;
             if (!current || current.owner.gatewayId !== gatewayId || current.owner.ownerEpoch !== owner.ownerEpoch || current.owner.leaseUntil <= now) return undefined;
             if (current.lifecycle === 'ended') return undefined;
             const inbox = { ...(current._inbox || {}) }, receipts = { ...(current._receipts || {}) };
@@ -94,7 +97,13 @@ function createRoomAuthority({ store, gatewayId = crypto.randomUUID(), clock = D
                         runtime.markBootstrap(request.seatId, now);
                     } else if (request.kind === 'heartbeat') result = runtime.heartbeat(request.seatId, request.generation, now);
                     else if (request.kind === 'disconnect') { runtime.setPresence(request.seatId, false, now, request.generation); result = { accepted: true }; }
-                    else if (request.kind === 'input') result = runtime.command(request.seatId, request.generation, request.command, now);
+                    else if (request.kind === 'input') {
+                        // Movement lifetime starts at trusted server receipt,
+                        // not after mailbox/owner contention. Discrete actions
+                        // remain evaluated at their canonical reduction time.
+                        const inputAt = request.command?.type === 'move' && Number.isFinite(request.queuedAt) ? request.queuedAt : now;
+                        result = runtime.command(request.seatId, request.generation, request.command, inputAt);
+                    }
                     else fail('COMMAND_TYPE_FORBIDDEN');
                     const { snapshot, gameplay, ...compact } = result;
                     receipt.ok = true; receipt.result = compact; reduced++;
@@ -185,6 +194,8 @@ function createRoomAuthority({ store, gatewayId = crypto.randomUUID(), clock = D
             const cancel = () => finish(Object.assign(new Error('Authority is shutting down; retry the same operation.'), { code: 'OUTCOME_UNKNOWN' }));
             const check = async () => {
                 if (settled) return;
+                try { assertOperationEnabled('mutation'); }
+                catch (error) { finish(error); return; }
                 if (reading) { changed = true; return; } reading = true;
                 try {
                     do {

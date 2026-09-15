@@ -7,4 +7,5 @@ test('Realtime Database presentation rooms are server-only', () => {
   assert.equal(rules.rules['.write'], false);
   assert.equal(rules.rules.presentationRooms['$roomId']['.read'], false);
   assert.equal(rules.rules.presentationRooms['$roomId']['.write'], false);
+  assert.deepEqual(rules.rules.presentationRooms['.indexOn'], ['archiveStatus']);
 });

@@ -90,7 +90,9 @@ def plan_walk(page, target):
           const {SCENES}=await import('/js/presentation-demo/core/world/scenes.mjs');
           const t=typeof target==='string'?sim.targets(w,seatId).find(t=>t.id===target):target;
           if(!t)throw Error('Target unavailable: '+JSON.stringify(target));
-              const reach=typeof target==='string'?47:27;
+              // Keep the planner aligned with interactWorld's 48px target
+              // radius so a valid interaction cannot spin at the boundary.
+              const reach=typeof target==='string'?48:27;
               if(geo.distance(p,t)<=reach)return {done:true,p,t};
           const solids=sim.solidsFor(w,seatId),scene=SCENES[p.scene],radius=p.ride?15:10;
           const start={x:p.x,y:p.y,g:0,h:geo.distance(p,t),parent:null};

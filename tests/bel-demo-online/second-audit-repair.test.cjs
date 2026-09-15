@@ -296,16 +296,22 @@ test('notebook reload restores the active unsaved page and its local draft', asy
         const firstBrowser = installBrowser();
         const first = bindNotebook({ transport, roomId: 'room-reload', identity: { uid: 'p1' }, elements: firstBrowser.elements });
         await first.load();
-        const activePageId = firstBrowser.created.find(element => element.tagName === 'select').value;
-        firstBrowser.elements.title.value = 'Unsaved main page';
+        const newPage = firstBrowser.created.find(element => element.tagName === 'button' && element.textContent === 'New page');
+        newPage.click();
+        const firstSelect = firstBrowser.created.find(element => element.tagName === 'select');
+        const activePageId = firstSelect.value;
+        firstBrowser.elements.title.value = 'Unsaved page';
         firstBrowser.elements.body.value = 'Unsaved Vietnamese: hợp tác';
         first.persistDraft();
 
         const secondBrowser = installBrowser();
         const second = bindNotebook({ transport, roomId: 'room-reload', identity: { uid: 'p1' }, elements: secondBrowser.elements });
         await second.load();
-        assert.equal(secondBrowser.created.find(element => element.tagName === 'select').value, activePageId);
+        const secondSelect = secondBrowser.created.find(element => element.tagName === 'select');
+        assert.equal(secondSelect.value, activePageId);
+        assert.ok(secondSelect.children.some(option => option.value === activePageId && option.textContent.startsWith('Unsaved')));
         assert.equal(secondBrowser.elements.body.value, 'Unsaved Vietnamese: hợp tác');
+        assert.match(secondBrowser.elements.status.textContent, /unsaved draft restored/i);
     } finally {
         Date.now = originalNow;
         global.document = originalGlobals.document;

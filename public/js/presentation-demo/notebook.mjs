@@ -22,7 +22,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
   elements.title.before(newPage);
 
   function renderPageList() {
-    pageSelect.replaceChildren(...pages.map(page => { const option = document.createElement('option'); option.value = page.id; option.textContent = page.title || page.id; return option; }));
+    pageSelect.replaceChildren(...pages.map(page => { const option = document.createElement('option'); option.value = page.id; option.textContent = page.localOnly ? `Unsaved — ${page.title || page.id}` : (page.title || page.id); return option; }));
     if (!pages.some(page => page.id === pageId)) { const option = document.createElement('option'); option.value = pageId; option.textContent = 'New observation'; pageSelect.append(option); }
     pageSelect.value = pageId;
   }
@@ -33,7 +33,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     } catch (_) { return []; }
   }
   function persistPageCatalog() {
-    try { localStorage.setItem(pageCatalogKey(roomId, identity.uid), JSON.stringify(pages.map(({ id, title, version }) => ({ id, title, version })))); } catch (_) { /* storage is best effort */ }
+    try { localStorage.setItem(pageCatalogKey(roomId, identity.uid), JSON.stringify(pages.map(({ id, title, version, localOnly }) => ({ id, title, version, ...(localOnly ? { localOnly: true } : {}) })))); } catch (_) { /* storage is best effort */ }
   }
   function readPageSelection() {
     try { return localStorage.getItem(pageSelectionKey(roomId, identity.uid)) || ''; } catch (_) { return ''; }
@@ -41,14 +41,21 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
   function persistPageSelection() {
     try { localStorage.setItem(pageSelectionKey(roomId, identity.uid), pageId); } catch (_) { /* storage is best effort */ }
   }
-  function restoreDraft() {
+  function readDraft(forPageId = pageId) {
     try {
-      const raw = localStorage.getItem(draftKey(roomId, identity.uid, pageId));
-      if (!raw) return false;
+      const raw = localStorage.getItem(draftKey(roomId, identity.uid, forPageId));
+      if (!raw) return null;
       const draft = JSON.parse(raw);
+      return draft && typeof draft === 'object' ? draft : null;
+    } catch (_) { return null; }
+  }
+  function restoreDraft() {
+    const draft = readDraft();
+    if (!draft) return false;
+    try {
       if (typeof draft.title === 'string') elements.title.value = draft.title;
       if (typeof draft.body === 'string') elements.body.value = draft.body;
-      elements.status.textContent = 'Draft restored';
+      elements.status.textContent = pages.find(page => page.id === pageId)?.localOnly ? 'Unsaved draft restored — save to publish' : 'Draft restored';
       return true;
     } catch (_) { return false; }
   }
@@ -77,13 +84,20 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     const result = await transport.readNotes(roomId);
     const serverPages = result.pages || [];
     const localCatalog = readPageCatalog();
-    pages = [...serverPages].sort((a, b) => a.id.localeCompare(b.id));
+    const serverIds = new Set(serverPages.map(page => page.id));
+    const localOnlyPages = localCatalog
+      .filter(page => page.id !== 'main' && !serverIds.has(page.id) && (page.localOnly === true || Number(page.version) === 0))
+      .map(page => {
+        const draft = readDraft(page.id);
+        return { ...page, title: typeof draft?.title === 'string' ? draft.title : (page.title || ''), body: typeof draft?.body === 'string' ? draft.body : '', version: 0, localOnly: true };
+      });
+    pages = [...serverPages, ...localOnlyPages].sort((a, b) => (Number(Boolean(a.localOnly)) - Number(Boolean(b.localOnly))) || a.id.localeCompare(b.id));
     persistPageCatalog();
     const selectedPageId = readPageSelection();
-    pageId = pages.some(page => page.id === selectedPageId) ? selectedPageId : (pages[0]?.id || 'main');
-    const serverPage = pages.find(page => page.id === pageId);
+    pageId = pages.some(page => page.id === selectedPageId) ? selectedPageId : (serverPages[0]?.id || localOnlyPages[0]?.id || 'main');
+    const serverPage = serverPages.find(page => page.id === pageId);
     const localPage = localCatalog.find(page => page.id === pageId);
-    const restoreLocalDraft = Boolean(serverPage) && (!localPage || Number(serverPage.version) >= Number(localPage.version));
+    const restoreLocalDraft = Boolean(!serverPage && localOnlyPages.some(page => page.id === pageId)) || Boolean(serverPage && (!localPage || Number(serverPage.version) >= Number(localPage.version)));
     selectPage(pageId, { restoreLocalDraft });
   }
   async function save() {
@@ -141,7 +155,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     if (!readOnly && !conflicted) { elements.status.textContent = 'Draft · waiting to save'; autosaveTimer = window.setTimeout(() => save().catch(() => {}), 1000); }
   };
   pageSelect.addEventListener('change', () => selectPage(pageSelect.value));
-  newPage.addEventListener('click', () => { const nextId = `page-${crypto.randomUUID()}`; pages.push({ id: nextId, title: '', body: '', version: 0 }); persistPageCatalog(); selectPage(nextId); });
+  newPage.addEventListener('click', () => { const nextId = `page-${crypto.randomUUID()}`; pages.push({ id: nextId, title: '', body: '', version: 0, localOnly: true }); persistPageCatalog(); selectPage(nextId); });
   elements.title.addEventListener('input', scheduleDraft);
   elements.body.addEventListener('input', scheduleDraft);
   elements.save.addEventListener('click', () => save().catch(error => { elements.status.textContent = error.message; }));

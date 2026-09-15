@@ -8,11 +8,13 @@ the resulting bearer token; no production credential is accepted here.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import time
 import traceback
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import expect, sync_playwright
@@ -26,6 +28,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--failover-signal")
     parser.add_argument("--accounts-file", required=True)
     parser.add_argument("--evidence", required=True)
+    parser.add_argument("--asset-capture-only", action="store_true")
+    parser.add_argument("--asset-manifest")
     return parser.parse_args()
 
 
@@ -74,6 +78,137 @@ def open_game(page, allow_existing: bool = False):
         message = game.locator("#pd-game-message").inner_text()
         raise AssertionError(f"Game connection did not become ready: status={status!r}, message={message!r}, url={game.url!r}")
     return game
+
+
+class ServedAssetCapture:
+    def __init__(self, base_url: str):
+        self.base = urlparse(base_url)
+        self.records: list[dict] = []
+        self._attached_pages: set[int] = set()
+
+    def attach(self, page, surface: str) -> None:
+        page_key = id(page)
+        if page_key in self._attached_pages:
+            return
+        self._attached_pages.add(page_key)
+        page.on("response", lambda response: self.capture(response, surface))
+
+    def capture(self, response, surface: str) -> None:
+        asset = urlparse(response.url)
+        if asset.scheme.lower() != self.base.scheme.lower() or asset.netloc.lower() != self.base.netloc.lower():
+            return
+        content_type = response.headers.get("content-type", "")
+        if not re.search(r"text/html|(?:java|ecma)script|text/css", content_type, re.IGNORECASE):
+            return
+        asset_path = unquote(asset.path or "/")
+        if asset_path == "/api" or asset_path.startswith("/api/"):
+            return
+        if asset_path.endswith("/"):
+            asset_path += "index.html"
+        relative = asset_path.lstrip("/") or "index.html"
+        record = {
+            "surface": surface,
+            "url": response.url.split("?", 1)[0],
+            "repoPath": f"public/{relative}",
+            "status": response.status,
+            "contentType": content_type,
+        }
+        try:
+            body = response.body()
+            record.update({"bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()})
+        except Exception as error:  # noqa: BLE001 - retain body-read failures for the comparison report
+            record["bodyError"] = str(error)[:500]
+        self.records.append(record)
+
+
+def compare_served_assets(records: list[dict], manifest: dict) -> dict:
+    expected = manifest.get("files")
+    if not isinstance(expected, dict) or not expected:
+        raise AssertionError("served-asset verification manifest must contain a non-empty files map")
+    by_path: dict[str, list[dict]] = {}
+    for record in records:
+        by_path.setdefault(record["repoPath"], []).append(record)
+    actual_paths = set(by_path)
+    expected_paths = set(expected)
+    missing = sorted(expected_paths - actual_paths)
+    extra = sorted(actual_paths - expected_paths)
+    altered = sorted(path for path in expected_paths & actual_paths if any(record.get("status") != 200 or record.get("bodyError") or record.get("sha256") != expected[path] for record in by_path[path]))
+    if missing or extra or altered:
+        raise AssertionError(json.dumps({"missing": missing, "extra": extra, "altered": altered}, ensure_ascii=False))
+    return {"expectedPathCount": len(expected_paths), "capturedPathCount": len(actual_paths), "missing": [], "extra": [], "altered": [], "allResponseBytesMatch": True}
+
+
+def run_asset_capture(args, account: dict, evidence: Path) -> dict:
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as error:
+        raise RuntimeError("Python Playwright is required for the Chrome asset capture.") from error
+    manifest = None
+    manifest_path = None
+    if args.asset_manifest:
+        manifest_path = Path(args.asset_manifest).resolve()
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    capture = ServedAssetCapture(args.base_url)
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(channel=args.channel, headless=True)
+        context = browser.new_context()
+        context.set_default_timeout(30000)
+        context.on("page", lambda page: capture.attach(page, "popup"))
+        crm = context.new_page()
+        capture.attach(crm, "crm")
+        crm.goto(f"{args.base_url}/crm-admin.html", wait_until="domcontentloaded")
+        crm.wait_for_function("() => window.firebase && typeof window.firebase.auth === 'function'", timeout=30000)
+        crm.wait_for_timeout(1000)
+        lobby = context.new_page()
+        capture.attach(lobby, "lobby")
+        lobby.goto(f"{args.base_url}/presentation-demo/index.html", wait_until="domcontentloaded")
+        lobby.wait_for_function("() => window.firebase && typeof window.firebase.auth === 'function'", timeout=30000)
+        lobby.evaluate(
+            """async ({email, password}) => {
+                const config = await fetch('/api/config', { cache: 'no-store' }).then(response => response.json());
+                const auth = window.firebase.auth();
+                if (config.authEmulatorUrl && !auth.__belAssetCaptureEmulatorConnected) {
+                    auth.useEmulator(config.authEmulatorUrl);
+                    auth.__belAssetCaptureEmulatorConnected = true;
+                }
+                await auth.signInWithEmailAndPassword(email, password);
+            }""",
+            {"email": account["email"], "password": account["password"]},
+        )
+        lobby.reload(wait_until="domcontentloaded")
+        capture.attach(lobby, "lobby")
+        lobby.set_default_timeout(30000)
+        lobby.wait_for_load_state("domcontentloaded")
+        wait_for_text(lobby, "#pd-auth-status", "Signed in", timeout=30000)
+        lobby.locator("#pd-create-room").wait_for(state="visible", timeout=15000)
+        lobby.locator("#pd-create-room").click()
+        lobby.locator("#pd-open-game").wait_for(state="visible", timeout=30000)
+        with lobby.expect_popup(timeout=15000) as game_info:
+            lobby.locator("#pd-open-game").click()
+        game = game_info.value
+        capture.attach(game, "game")
+        game.set_default_timeout(30000)
+        game.wait_for_load_state("domcontentloaded")
+        wait_for_text(game, "#pd-connection-status", "Connected", timeout=45000)
+        game.wait_for_timeout(1000)
+        browser.close()
+    records = sorted(capture.records, key=lambda item: (item["repoPath"], item["url"]))
+    comparison = compare_served_assets(records, manifest) if manifest is not None else None
+    return {
+        "schemaVersion": 1,
+        "status": "passed",
+        "channel": args.channel,
+        "baseUrl": args.base_url,
+        "accountUid": account["uid"],
+        "manifestPath": str(manifest_path) if manifest_path else None,
+        "candidateSha": manifest.get("candidateSha") if manifest else None,
+        "baseSha": manifest.get("baseSha") if manifest else None,
+        "assetCount": len(records),
+        "repoPathCount": len({record["repoPath"] for record in records}),
+        "records": records,
+        "comparison": comparison,
+        "assertion": "Chrome captured actual CRM, lobby, and game HTML/JavaScript/CSS response bodies and compared every repository path to the verification manifest.",
+    }
 
 
 def world_snapshot(page) -> dict:
@@ -436,6 +571,24 @@ def main() -> int:
     presenter = accounts["presenter"]["uid"]
     participants = [entry["uid"] for entry in accounts["participants"]]
     outsider = accounts["outsider"]["uid"]
+    if args.asset_capture_only:
+        try:
+            asset_result = run_asset_capture(args, accounts["presenter"], evidence)
+        except Exception as error:  # noqa: BLE001 - retain a bounded capture failure for diagnosis
+            asset_result = {
+                "schemaVersion": 1,
+                "status": "failed",
+                "channel": args.channel,
+                "baseUrl": args.base_url,
+                "manifestPath": str(Path(args.asset_manifest).resolve()) if args.asset_manifest else None,
+                "failure": {"type": type(error).__name__, "message": str(error)[:500]},
+            }
+            (evidence / "asset-capture.json").write_text(json.dumps(asset_result, indent=2) + "\n", encoding="utf-8")
+            print(json.dumps(asset_result, indent=2), flush=True)
+            return 1
+        (evidence / "asset-capture.json").write_text(json.dumps(asset_result, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(asset_result, indent=2), flush=True)
+        return 0
     requests: list[str] = []
     responses: list[tuple[int, str]] = []
     console_errors: list[str] = []
@@ -625,8 +778,8 @@ def main() -> int:
             result["assertions"].append("delayed-notebook-response-kept-newer-typing")
 
             # A new page is catalogued before its first server save. Reload the
-            # lobby, reopen the game, and require the authoritative server page
-            # set to win over that local-only page while retaining the main draft.
+            # lobby, reopen the game, and recover that page as clearly labeled
+            # unsaved local work while retaining the server-backed main draft.
             delayed_game.get_by_role("button", name="New page").click()
             new_page_id = delayed_game.locator("#pd-note-page").input_value()
             delayed_game.locator("#pd-note-title").fill("Unsaved page")
@@ -640,18 +793,23 @@ def main() -> int:
             games[participants[0]] = reopened
             try:
                 reopened.wait_for_function(
-                    "() => document.querySelector('#pd-note-page')?.value === 'main' && document.querySelector('#pd-note-body')?.value === 'NEWER RESPONSE'",
+                    "pageId => document.querySelector('#pd-note-page')?.value === pageId && document.querySelector('#pd-note-body')?.value === 'Unsaved Vietnamese: hợp tác'",
+                    arg=new_page_id,
                     timeout=15000,
                 )
             except PlaywrightTimeoutError:
                 notebook_after_reload = notebook_debug_state(reopened)
                 result["notebookReloadDiagnostics"] = {"before": notebook_before_reload, "after": notebook_after_reload}
-                raise AssertionError(f"Authoritative notebook reload did not select the server-backed main page: {json.dumps(result['notebookReloadDiagnostics'], ensure_ascii=False)}")
+                raise AssertionError(f"Notebook reload did not restore the labeled local-only page: {json.dumps(result['notebookReloadDiagnostics'], ensure_ascii=False)}")
             notebook_after_reload = notebook_debug_state(reopened)
             result["notebookReloadDiagnostics"] = {"before": notebook_before_reload, "after": notebook_after_reload}
-            if reopened.locator(f"#pd-note-page option[value='{new_page_id}']").count() != 0:
-                raise AssertionError("A local-only notebook page was resurrected after authoritative reload.")
-            result["assertions"].append("authoritative-notebook-reload-did-not-resurrect-local-only-page")
+            local_option = reopened.locator(f"#pd-note-page option[value='{new_page_id}']")
+            if local_option.count() != 1 or not local_option.inner_text().startswith("Unsaved"):
+                raise AssertionError("The recovered notebook page was not clearly labeled unsaved.")
+            reopened.locator("#pd-note-page").select_option("main")
+            if reopened.locator("#pd-note-body").input_value() != "NEWER RESPONSE":
+                raise AssertionError("The server-backed main notebook page was not retained alongside local work.")
+            result["assertions"].append("notebook-reload-restored-labeled-local-only-page-with-server-main-intact")
 
             if args.failover_signal:
                 print("rehearsal: failover checkpoint", flush=True)

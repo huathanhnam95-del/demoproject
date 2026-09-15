@@ -168,6 +168,19 @@ def stable_hash(value: object) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def candidate_asset_files(manifest: dict[str, object]) -> dict[str, str]:
+    publication_files = manifest.get("files", {})
+    verification_files = manifest.get("verificationFiles", {})
+    if not isinstance(publication_files, dict) or not isinstance(verification_files, dict):
+        raise RehearsalError("candidate manifest publication and verification file maps must be objects")
+    combined = dict(publication_files)
+    for relative, digest in verification_files.items():
+        if relative in combined and combined[relative] != digest:
+            raise RehearsalError(f"candidate manifest has conflicting hashes for {relative}")
+        combined[relative] = digest
+    return combined
+
+
 def hosting_url_to_repo_path(asset_url: str, base_url: str) -> str | None:
     asset = urlparse(str(asset_url or ""))
     base = urlparse(str(base_url or ""))
@@ -177,6 +190,8 @@ def hosting_url_to_repo_path(asset_url: str, base_url: str) -> str | None:
     base_path = (base.path or "").rstrip("/")
     if base_path and (asset_path == base_path or asset_path.startswith(base_path + "/")):
         asset_path = asset_path[len(base_path):] or "/"
+    if asset_path == "/api" or asset_path.startswith("/api/"):
+        return None
     if asset_path.endswith("/"):
         asset_path += "index.html"
     relative = asset_path.lstrip("/")
@@ -557,7 +572,7 @@ def validate_candidate_manifest(args: argparse.Namespace, manifest_path: Path) -
     verification_files = manifest.get("verificationFiles", {})
     if not isinstance(verification_files, dict):
         raise RehearsalError("candidate manifest verificationFiles must be an object when present")
-    bound_files = {**files, **verification_files}
+    bound_files = candidate_asset_files(manifest)
     for relative, digest in bound_files.items():
         if not isinstance(relative, str) or not relative or not SHA256_RE.fullmatch(str(digest)):
             raise RehearsalError(f"candidate manifest has an invalid SHA-256 for {relative}")
@@ -571,7 +586,7 @@ def validate_candidate_manifest(args: argparse.Namespace, manifest_path: Path) -
         actual = hashlib.sha256(candidate_path.read_bytes()).hexdigest()
         if actual != digest:
             raise RehearsalError(f"candidate manifest digest does not match candidate bytes for {relative}")
-    return {"revision": manifest["revision"], "fullRevision": manifest.get("fullRevision", manifest["revision"]), "baseSha": manifest.get("baseSha"), "files": dict(files), "verificationFiles": dict(verification_files), "boundToLocalBytes": True}
+    return {"revision": manifest["revision"], "fullRevision": manifest.get("fullRevision", manifest["revision"]), "baseSha": manifest.get("baseSha"), "files": dict(files), "verificationFiles": dict(verification_files), "publicationFileCount": len(files), "verificationFileCount": len(verification_files), "boundToLocalBytes": True}
 
 
 def safe_failure(error: BaseException) -> dict[str, str]:
@@ -636,7 +651,7 @@ def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, sur
 
     def capture_served_asset(response) -> None:
         repo_path = hosting_url_to_repo_path(response.url, base_url or response.url)
-        manifest_files = candidate_manifest.get("files", {}) if isinstance(candidate_manifest, dict) else None
+        manifest_files = candidate_asset_files(candidate_manifest) if isinstance(candidate_manifest, dict) else None
         content_type = response.headers.get("content-type", "")
         if repo_path is None or not re.search(r"text/html|(?:java|ecma)script|text/css", content_type, re.IGNORECASE):
             return
@@ -660,7 +675,7 @@ def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, sur
 def assert_candidate_assets(diagnostics: dict[str, object], role: str, surface: str, candidate_manifest: dict[str, object], result: dict[str, object]) -> None:
     bucket = diagnostics.get(role, {}).get(surface, {})
     responses = bucket.get("servedAssets", [])
-    manifest_files = candidate_manifest.get("files", {})
+    manifest_files = candidate_asset_files(candidate_manifest)
     if not isinstance(manifest_files, dict) or not manifest_files:
         raise RehearsalError("candidate manifest does not contain a non-empty files map")
     if not responses:

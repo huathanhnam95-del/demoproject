@@ -754,20 +754,35 @@ class Page:
 responses = [
     Response('https://demo.example.test/presentation/crm-admin.html?v=1', b'<html>', 'text/html'),
     Response('https://demo.example.test/js/presentation-demo/app.mjs?v=1', b'import {}', 'text/javascript'),
-    Response('https://demo.example.test/css/entrance-test-ui-annotations.css?v=1', b'.annotation{}', 'text/css')
+    Response('https://demo.example.test/css/entrance-test-ui-annotations.css?v=1', b'.annotation{}', 'text/css'),
+    Response('https://demo.example.test/crm-admin.css?v=1', b'.crm{}', 'text/css'),
+    Response('https://demo.example.test/api/local/admin-token', b'not an asset', 'text/html')
 ]
 manifest = {'files': {response_url: module.hashlib.sha256(body).hexdigest() for response_url, body in [
     ('public/crm-admin.html', responses[0]._body), ('public/js/presentation-demo/app.mjs', responses[1]._body), ('public/css/entrance-test-ui-annotations.css', responses[2]._body)
 ]}}
 assert module.hosting_url_to_repo_path(responses[0].url, 'https://demo.example.test/presentation') == 'public/crm-admin.html'
 assert module.hosting_url_to_repo_path(responses[1].url, 'https://demo.example.test/presentation') == 'public/js/presentation-demo/app.mjs'
+assert module.hosting_url_to_repo_path(responses[4].url, 'https://demo.example.test/presentation') is None
 diagnostics = {}
 page = Page()
 module.attach_page_diagnostics(page, diagnostics, 'presenter', 'crm', 'https://demo.example.test/presentation', manifest)
-for response in responses: page.emit('response', response)
+for response in responses[:3]: page.emit('response', response)
 result = {}
 module.assert_candidate_assets(diagnostics, 'presenter', 'crm', manifest, result)
 assert len(result['browserServedCandidateAssets']) == 3
+verification_manifest = {'files': {'public/crm-admin.html': module.hashlib.sha256(responses[0]._body).hexdigest()}, 'verificationFiles': {
+    'public/js/presentation-demo/app.mjs': module.hashlib.sha256(responses[1]._body).hexdigest(),
+    'public/css/entrance-test-ui-annotations.css': module.hashlib.sha256(responses[2]._body).hexdigest(),
+    'public/crm-admin.css': module.hashlib.sha256(responses[3]._body).hexdigest()
+}}
+verification_diagnostics = {}
+verification_page = Page()
+module.attach_page_diagnostics(verification_page, verification_diagnostics, 'presenter', 'crm', 'https://demo.example.test/presentation', verification_manifest)
+for response in responses: verification_page.emit('response', response)
+verification_result = {}
+module.assert_candidate_assets(verification_diagnostics, 'presenter', 'crm', verification_manifest, verification_result)
+assert len(verification_result['browserServedCandidateAssets']) == 4
 altered = Page()
 altered_diagnostics = {}
 module.attach_page_diagnostics(altered, altered_diagnostics, 'presenter', 'crm', 'https://demo.example.test/presentation', manifest)

@@ -83,7 +83,9 @@ test('actual Firestore archive migration preserves checksum/auth metadata, detec
     const suffix = `archive-migration-${crypto.randomUUID()}`;
     const admin = { uid: `admin-${suffix}`, accountStatus: 'active', isAdmin: true, isTeacher: true };
     const participant = { uid: `participant-${suffix}`, accountStatus: 'active', isTeacher: true };
-    const code = crypto.createHash('sha256').update(suffix).digest('hex').slice(0, 6).toUpperCase();
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const digest = crypto.createHash('sha256').update(suffix).digest();
+    const code = Array.from({ length: 6 }, (_, index) => alphabet[digest[index] % alphabet.length]).join('');
     const service = createFirebasePresentationDemoServices({ db: firebase.db, rtdb: firebase.getDatabase(), codeFactory: () => code });
     const room = await service.roomService.createOrResume(admin);
     await service.roomService.join(participant, room.roomId);

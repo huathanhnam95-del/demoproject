@@ -681,12 +681,12 @@ def main() -> int:
                 raise AssertionError(f"Unexpected authoritative slide state: {reference_state}")
             result["assertions"].append("server-authorized-movement-and-route-used")
 
-            # Backend failover must not erase the active local-only page draft.
+            # Backend failover must not erase the active server-backed page draft.
             wait_for_text(games[participants[0]], "#pd-note-body", "")
             restored_body = games[participants[0]].locator("#pd-note-body").input_value()
-            if restored_body != "Unsaved Vietnamese: hợp tác":
-                raise AssertionError(f"Reconnected participant lost its active unsaved page draft: {restored_body!r}")
-            result["assertions"].append("reconnect-preserved-active-unsaved-page")
+            if restored_body != "NEWER RESPONSE":
+                raise AssertionError(f"Reconnected participant lost its active server-backed page draft: {restored_body!r}")
+            result["assertions"].append("reconnect-preserved-active-server-backed-page-draft")
 
             games[presenter].once("dialog", lambda dialog: dialog.accept())
             games[presenter].locator("#pd-end-room").click()

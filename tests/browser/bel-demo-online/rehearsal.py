@@ -610,7 +610,8 @@ def main() -> int:
             result["assertions"].append("delayed-notebook-response-kept-newer-typing")
 
             # A new page is catalogued before its first server save. Reload the
-            # lobby, reopen the game, and require both its identity and draft.
+            # lobby, reopen the game, and require the authoritative server page
+            # set to win over that local-only page while retaining the main draft.
             delayed_game.get_by_role("button", name="New page").click()
             new_page_id = delayed_game.locator("#pd-note-page").input_value()
             delayed_game.locator("#pd-note-title").fill("Unsaved page")
@@ -623,21 +624,19 @@ def main() -> int:
             reopened = open_game(duplicate_page)
             games[participants[0]] = reopened
             try:
-                reopened.locator(f"#pd-note-page option[value='{new_page_id}']").wait_for(state="attached", timeout=15000)
                 reopened.wait_for_function(
-                    "([pageId, body]) => document.querySelector('#pd-note-page')?.value === pageId && document.querySelector('#pd-note-body')?.value === body",
-                    arg=[new_page_id, "Unsaved Vietnamese: hợp tác"],
+                    "() => document.querySelector('#pd-note-page')?.value === 'main' && document.querySelector('#pd-note-body')?.value === 'NEWER RESPONSE'",
                     timeout=15000,
                 )
             except PlaywrightTimeoutError:
                 notebook_after_reload = notebook_debug_state(reopened)
                 result["notebookReloadDiagnostics"] = {"before": notebook_before_reload, "after": notebook_after_reload}
-                raise AssertionError(f"New unsaved notebook page did not reappear after reload: {json.dumps(result['notebookReloadDiagnostics'], ensure_ascii=False)}")
+                raise AssertionError(f"Authoritative notebook reload did not select the server-backed main page: {json.dumps(result['notebookReloadDiagnostics'], ensure_ascii=False)}")
             notebook_after_reload = notebook_debug_state(reopened)
             result["notebookReloadDiagnostics"] = {"before": notebook_before_reload, "after": notebook_after_reload}
-            if reopened.locator("#pd-note-body").input_value() != "Unsaved Vietnamese: hợp tác":
-                raise AssertionError("New unsaved notebook page draft did not reappear after reload.")
-            result["assertions"].append("new-unsaved-notebook-page-restored-after-reload")
+            if reopened.locator(f"#pd-note-page option[value='{new_page_id}']").count() != 0:
+                raise AssertionError("A local-only notebook page was resurrected after authoritative reload.")
+            result["assertions"].append("authoritative-notebook-reload-did-not-resurrect-local-only-page")
 
             if args.failover_signal:
                 print("rehearsal: failover checkpoint", flush=True)

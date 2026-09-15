@@ -1,0 +1,9 @@
+/* Shared annotation affordances for the Entrance Test surfaces. */
+[data-entrance-annotation] {
+  border-inline-start: 3px solid var(--crm-accent, #2f6f67);
+  padding-inline-start: 0.5rem;
+}
+
+[data-entrance-annotation][hidden] {
+  display: none;
+}

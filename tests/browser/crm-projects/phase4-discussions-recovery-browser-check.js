@@ -318,8 +318,6 @@ async function main() {
         if (injectedConflictUrls.has(entry.url) && /status of 409/i.test(entry.text)) return true;
         let pathname = '';
         try { pathname = new URL(entry.url).pathname; } catch (_) { return false; }
-        if (/entrance-test-ui-annotations\.css/i.test(entry.text)
-            && /MIME type \('text\/html'\) is not a supported stylesheet MIME type/i.test(entry.text)) return true;
         return (pathname === '/api/admin/status' || pathname === '/api/teacher/status') && /status of 404/i.test(entry.text);
     };
     const capturePage = (page) => {

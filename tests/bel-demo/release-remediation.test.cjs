@@ -33,7 +33,9 @@ test('gateway image has an exact small Docker context contract', () => {
   const manifest = JSON.parse(read('scripts/bel-demo/release-remediation-manifest.json'));
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.gatewayContext.maxBytes, 50_000_000);
-  assert.equal(manifest.gatewayContext.hostingCandidateFileCount, 75);
+  assert.equal(manifest.gatewayContext.hostingCandidateFileCount, 77);
+  assert.ok(manifest.hostingOverlay.candidatePaths.includes('public/js/crm/projects/workspace.js'));
+  assert.ok(manifest.hostingOverlay.candidatePaths.includes('public/css/entrance-test-ui-annotations.css'));
   assert.ok(manifest.gatewayContext.includeTrees.includes('public/prototypes/bel-working-as-equals-demo'));
   assert.ok(manifest.gatewayContext.excludeFiles.includes('public/prototypes/bel-working-as-equals-demo/README.md'));
   assert.ok(manifest.gatewayContext.forbiddenPrefixes.includes('public/database/'));
@@ -122,4 +124,10 @@ test('release verifier is present and read-only by default', () => {
   assert.match(verifier, /multerLock/);
   assert.doesNotMatch(verifier, /execFileSync\(gcloud,/, 'Node cannot execute gcloud.cmd directly on Windows');
   assert.doesNotMatch(verifier, /firebase\s+deploy|gcloud\s+run\s+deploy|populateFiles/);
+});
+
+test('final browser gate includes the entrance stylesheet and does not suppress its MIME failure', () => {
+  assert.ok(fs.existsSync(path.join(ROOT, 'public/css/entrance-test-ui-annotations.css')));
+  const browser = read('tests/browser/crm-projects/phase4-discussions-recovery-browser-check.js');
+  assert.doesNotMatch(browser, /entrance-test-ui-annotations\.css[\s\S]*MIME type[\s\S]*return true/);
 });

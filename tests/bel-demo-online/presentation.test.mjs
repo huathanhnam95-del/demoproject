@@ -1,8 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { acceptFrameMessage, createFrameMessage } from '../../public/js/presentation-demo/presentation/frame.mjs';
 import { etaForServerTime } from '../../public/js/presentation-demo/presentation/final.mjs';
+
+const require = createRequire(import.meta.url);
+const { archivePageDocumentId, archivePageDocumentIdCandidates, decodeArchivePageDocumentId } = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');
 
 test('generated online deck keeps authored resources and online frame adapter', () => {
   const html = fs.readFileSync('public/presentation-demo/native/deck.html', 'utf8');
@@ -44,4 +48,16 @@ test('an export clicked at End waits for the archive without retrying forbidden 
     transport.request = async () => { throw Object.assign(new Error('forbidden'), { code: 'EXPORT_FORBIDDEN' }); };
     await assert.rejects(transport.exportPdf('other-room'), { code: 'EXPORT_FORBIDDEN' });
   } finally { if (previous === undefined) delete globalThis.window; else globalThis.window = previous; }
+});
+
+test('archive page IDs encode the complete room, uid, and page tuple without delimiter collisions', () => {
+  const first = ['room:one', 'uid:page', 'page:two'];
+  const second = ['room:one:uid', 'page', 'two'];
+  const firstId = archivePageDocumentId(...first);
+  const secondId = archivePageDocumentId(...second);
+
+  assert.match(firstId, /^v2_/);
+  assert.notEqual(firstId, secondId);
+  assert.deepEqual(decodeArchivePageDocumentId(firstId), first);
+  assert.deepEqual(archivePageDocumentIdCandidates(...first), [firstId, 'room:one:uid:page:page:two']);
 });

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sourceTaskId": "01a09a56-d502-76a3-96b9-570d0cc26cd6",
-  "candidateBaselineSha": "96bccd781437ed903999b5d02087623c37a25eff",
+  "candidateBaselineSha": "3f98da4d048e99bc9d97af39f2b209e30d64d192",
   "firestore": {
     "mergedNormalizedSha256": "c42d3fdccbc285e8b366b972688dd9bfc1b26838e14847d8cb1a68b2ca6972d5",
     "liveRuleset": "projects/listening-tasks-3ae34/rulesets/0b0534dc-d53a-45f2-ba95-6d5f261a1922",
@@ -16,7 +16,7 @@
     "dockerfile": "backend/presentation-demo/Dockerfile",
     "dockerignore": "backend/presentation-demo/Dockerfile.dockerignore",
     "maxBytes": 50000000,
-    "hostingCandidateFileCount": 75,
+    "hostingCandidateFileCount": 77,
     "includeFiles": [
       "backend/presentation-demo/package.json",
       "backend/presentation-demo/package-lock.json",
@@ -115,6 +115,8 @@
     "candidatePaths": [
       "public/crm-admin.html",
       "public/crm-admin.js",
+      "public/css/entrance-test-ui-annotations.css",
+      "public/js/crm/projects/workspace.js",
       "public/js/crm/presentation-demo-workspace.js",
       "public/js/presentation-demo/app.mjs",
       "public/js/presentation-demo/auth.mjs",

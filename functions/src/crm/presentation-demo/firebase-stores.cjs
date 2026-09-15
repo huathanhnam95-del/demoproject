@@ -34,6 +34,23 @@ function operationHash(value) { return tokenHash(JSON.stringify(value ?? null));
 function runtimeCommandHash(command, generation) { return tokenHash(JSON.stringify({ generation, command })); }
 function ticketId(value) { return tokenHash(value); }
 function notebookId(roomId, uid) { return tokenHash(`${roomId}:${uid}`); }
+function archiveTuple(roomId, uid, pageId) { return [String(roomId ?? ''), String(uid ?? ''), String(pageId ?? '')]; }
+function archivePageDocumentId(roomId, uid, pageId) {
+    // v2 is a lossless base64url encoding of the JSON tuple. Unlike the v1
+    // colon-joined ID, every valid room, uid, and page value has one identity.
+    return `v2_${Buffer.from(JSON.stringify(archiveTuple(roomId, uid, pageId)), 'utf8').toString('base64url')}`;
+}
+function decodeArchivePageDocumentId(id) {
+    const value = String(id || '');
+    if (!value.startsWith('v2_')) return null;
+    const tuple = JSON.parse(Buffer.from(value.slice(3), 'base64url').toString('utf8'));
+    if (!Array.isArray(tuple) || tuple.length !== 3 || tuple.some(item => typeof item !== 'string')) return null;
+    return tuple;
+}
+function legacyArchivePageDocumentId(roomId, uid, pageId) { return `${roomId}:${uid}:${pageId}`; }
+function archivePageDocumentIdCandidates(roomId, uid, pageId) {
+    return [archivePageDocumentId(roomId, uid, pageId), legacyArchivePageDocumentId(roomId, uid, pageId)];
+}
 function cloneValue(value) { return value === undefined ? undefined : clone(value); }
 
 function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.now(), idFactory = () => crypto.randomUUID().replace(/-/g, ''), codeFactory, ticketFactory = () => crypto.randomBytes(32).toString('base64url') } = {}) {
@@ -52,7 +69,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     function notebookRef(roomId, uid) { return db.collection(COLLECTIONS.notebooks).doc(notebookId(roomId, uid)); }
     function notebookPageRef(roomId, uid, pageId) { return db.collection(COLLECTIONS.notebookPages).doc(`${notebookId(roomId, uid)}:${pageId}`); }
     function archiveRef(roomId) { return db.collection(COLLECTIONS.archives).doc(String(roomId)); }
-    function archivePageRef(roomId, uid, pageId) { return db.collection(COLLECTIONS.archivePages).doc(`${roomId}:${uid}:${pageId}`); }
+    function archivePageRef(roomId, uid, pageId) { return db.collection(COLLECTIONS.archivePages).doc(archivePageDocumentId(roomId, uid, pageId)); }
     function liveRoomRef(roomId) { return rtdb.ref(`presentationRooms/${roomId}`); }
 
     // RTDB is the canonical low-latency room state. Firestore retains the
@@ -909,6 +926,10 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             const identity = assertActiveIdentity(input); const room = await getRoom(roomId); const current = room && Object.values(room.slots).find(value => value.uid === identity.uid); assertRoomActor(identity, current && { uid: current.uid, seatId: current.slotId, role: current.role });
             const snap = await archiveRef(roomId).get(); if (!snap.exists || snap.data().status !== 'archived') fail('ARCHIVE_NOT_FOUND');
             const archive = snap.data(); const member = archive.members.find(value => value.uid === identity.uid); if (!member) fail('EXPORT_FORBIDDEN');
+            // Reads stay field-based so v1 colon-joined archive pages remain
+            // compatible during migration. New writes use only v2 IDs; a
+            // backfill can copy each verified v1 page to its v2 ID and remove
+            // the old document after the archive checksum is unchanged.
             const pageSnap = await db.collection(COLLECTIONS.archivePages).where('roomId', '==', roomId).get(); const targetMembers = member.role === 'presenter' ? archive.members : [member]; const notebooks = {};
             for (const target of targetMembers) {
                 const pages = pageSnap.docs.map(doc => doc.data()).filter(page => page.roomId === roomId && page.uid === target.uid).sort((a, b) => a.id.localeCompare(b.id));
@@ -921,4 +942,13 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     return { COLLECTIONS, roomService: { ...roomService, claimRuntimeOwner, readRuntimeCommandReceipt, writeRuntimeCommandReceipt }, notes, archives, stores: { durable: true, db, rtdb } };
 }
 
-module.exports = { COLLECTIONS, createFirebasePresentationDemoServices, notebookId, ticketId };
+module.exports = {
+    COLLECTIONS,
+    archivePageDocumentId,
+    archivePageDocumentIdCandidates,
+    createFirebasePresentationDemoServices,
+    decodeArchivePageDocumentId,
+    legacyArchivePageDocumentId,
+    notebookId,
+    ticketId
+};

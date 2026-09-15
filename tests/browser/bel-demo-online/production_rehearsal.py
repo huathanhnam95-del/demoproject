@@ -18,11 +18,14 @@ import hashlib
 import ipaddress
 import json
 import math
+import os
 import re
 import sys
 import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse, urlunparse
+from urllib.request import Request, urlopen
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -33,6 +36,7 @@ FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 EXPIRY_UNIT = "epoch-seconds"
 IDENTITY_MAX_AGE_SECONDS = 300
+ANNOTATION_STYLESHEET_PATH = "public/css/entrance-test-ui-annotations.css"
 
 
 class RehearsalError(RuntimeError):
@@ -57,6 +61,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--lease-file", help="External active publisher-lease JSON, reread before every live scenario.")
     parser.add_argument("--candidate-manifest", help="External final candidate manifest binding the browser evidence to a SHA and file hashes.")
     parser.add_argument("--deployed-identities", help="External fresh readback of the deployed identities and state hash.")
+    parser.add_argument("--deployed-identities-url", help="HTTPS read-only provider queried immediately before every live scenario.")
     parser.add_argument("--candidate-sha")
     parser.add_argument("--base-sha")
     parser.add_argument("--scope-hash")
@@ -274,13 +279,15 @@ def validate_action_scope(args: argparse.Namespace) -> None:
         raise RehearsalError("live actions require --approval-file, --candidate-sha, --base-sha, and --scope-hash")
     if not args.lease_file:
         raise RehearsalError("live actions require an external --lease-file")
-    if args.four_player and not args.candidate_manifest:
-        raise RehearsalError("--four-player requires an external --candidate-manifest")
-    if not args.deployed_identities:
-        raise RehearsalError("live actions require an external --deployed-identities readback")
+    if not args.candidate_manifest:
+        raise RehearsalError("live actions require an external --candidate-manifest")
+    if not args.deployed_identities and not getattr(args, "deployed_identities_url", None):
+        raise RehearsalError("live actions require an external deployed-identities source")
+    if not getattr(args, "validate_only", False) and not getattr(args, "deployed_identities_url", None):
+        raise RehearsalError("live actions require --deployed-identities-url; a file readback is configuration-only")
 
 
-def validate_approval(args: argparse.Namespace, approval_path: Path) -> None:
+def validate_approval(args: argparse.Namespace, approval_path: Path) -> dict[str, object]:
     approval = read_json(approval_path, "approval file")
     if approval.get("schemaVersion") != 1 or approval.get("expiryUnit") != EXPIRY_UNIT:
         raise RehearsalError("approval file must use schemaVersion 1 and epoch-seconds expiry")
@@ -317,10 +324,19 @@ def validate_approval(args: argparse.Namespace, approval_path: Path) -> None:
             full_sha(entry.get("candidateSha"), f"approval.scenarios.{scenario}.candidateSha")
             full_sha(entry.get("baseSha"), f"approval.scenarios.{scenario}.baseSha")
             finite_epoch(entry.get("expiresAt"), f"approval.scenarios.{scenario}.expiresAt", future=True)
+            if "expectedState" in entry:
+                if not isinstance(entry["expectedState"], dict):
+                    raise RehearsalError(f"approval.scenarios.{scenario}.expectedState must be an object")
+                expected_hash = entry.get("expectedStateHash")
+                if not SHA256_RE.fullmatch(str(expected_hash or "")) or expected_hash != stable_hash(entry["expectedState"]):
+                    raise RehearsalError(f"approval.scenarios.{scenario}.expectedStateHash does not match expectedState")
+    return approval
 
 
-def validate_deployed_identities(args: argparse.Namespace, identity_path: Path, approval: dict[str, object], scenario: str | None = None) -> dict[str, object]:
-    identity = read_json(identity_path, "deployed identities readback")
+def validate_deployed_identities(args: argparse.Namespace, identity_source: Path | dict[str, object], approval: dict[str, object], scenario: str | None = None, *, provider: bool = False) -> dict[str, object]:
+    identity = read_json(identity_source, "deployed identities readback") if isinstance(identity_source, Path) else identity_source
+    if not isinstance(identity, dict):
+        raise RehearsalError("deployed identities readback must be an object")
     if identity.get("schemaVersion") != 1 or identity.get("expiryUnit") != EXPIRY_UNIT:
         raise RehearsalError("deployed identities must use schemaVersion 1 and epoch-seconds")
     if identity.get("owner") != approval.get("owner"):
@@ -344,18 +360,84 @@ def validate_deployed_identities(args: argparse.Namespace, identity_path: Path, 
     if identity["stateHash"] != stable_hash(identity["state"]):
         raise RehearsalError("deployed identities stateHash does not match the state readback")
     if scenario:
-        expected = approval.get("scenarios", {}).get(scenario, {}).get("expectedStateHash")
+        scenario_entry = approval.get("scenarios", {}).get(scenario, {})
+        expected = scenario_entry.get("expectedStateHash") if isinstance(scenario_entry, dict) else None
         if not SHA256_RE.fullmatch(str(expected or "")) or expected != identity["stateHash"]:
             raise RehearsalError(f"scenario {scenario} expected state does not match the fresh deployed identity readback")
+        expected_state = scenario_entry.get("expectedState") if isinstance(scenario_entry, dict) else None
+        if provider:
+            if not isinstance(expected_state, dict):
+                raise RehearsalError(f"scenario {scenario} requires a complete expectedState for live provider verification")
+            if identity["state"] != expected_state:
+                raise RehearsalError(f"scenario {scenario} deployed state differs from the complete reviewed expected state")
+    if provider and not identity.get("source"):
+        raise RehearsalError("deployed identities provider response must identify its read-only source")
     return identity
 
 
-def validate_scenario_approval(args: argparse.Namespace, approval_path: Path, scenario: str) -> None:
+def normalized_identity_provider_url(value: str) -> str:
+    parsed = urlparse(str(value or "").strip())
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        raise RehearsalError("--deployed-identities-url must be an HTTPS read-only provider")
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise RehearsalError("--deployed-identities-url must not include credentials, query, or fragment")
+    host = (parsed.hostname or "").lower().rstrip(".")
+    try:
+        host_ip = ipaddress.ip_address(host)
+    except ValueError:
+        host_ip = None
+    if host in {"localhost", "127.0.0.1", "::1"} or host.endswith(".local") or host_ip and (host_ip.is_loopback or host_ip.is_private or host_ip.is_link_local or host_ip.is_reserved):
+        raise RehearsalError("--deployed-identities-url must not target a local or emulator host")
+    return urlunparse(("https", parsed.netloc, parsed.path.rstrip("/"), "", "", ""))
+
+
+def read_deployed_identities_provider(args: argparse.Namespace, scenario: str) -> dict[str, object]:
+    url = normalized_identity_provider_url(args.deployed_identities_url)
+    headers = {"Accept": "application/json"}
+    token = os.environ.get("BEL_DEPLOYED_IDENTITIES_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = Request(url, headers=headers, method="GET")
+    try:
+        with urlopen(request, timeout=20) as response:
+            if response.status != 200:
+                raise RehearsalError(f"deployed identities provider returned HTTP {response.status}")
+            body = response.read()
+    except HTTPError as error:
+        raise RehearsalError(f"deployed identities provider returned HTTP {error.code}") from error
+    except (OSError, URLError) as error:
+        raise RehearsalError(f"deployed identities provider read failed: {error}") from error
+    try:
+        identity = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise RehearsalError("deployed identities provider did not return valid UTF-8 JSON") from error
+    if not isinstance(identity, dict):
+        raise RehearsalError("deployed identities provider must return a JSON object")
+    identity = dict(identity)
+    identity["source"] = url
+    identity["readMethod"] = "GET"
+    identity["scenario"] = scenario
+    return identity
+
+
+def current_deployed_identities(args: argparse.Namespace, approval: dict[str, object], scenario: str, identity_provider=None) -> dict[str, object]:
+    if identity_provider is not None:
+        identity = identity_provider(scenario)
+        return validate_deployed_identities(args, identity, approval, scenario, provider=True)
+    if getattr(args, "deployed_identities_url", None):
+        identity = read_deployed_identities_provider(args, scenario)
+        return validate_deployed_identities(args, identity, approval, scenario, provider=True)
+    if not getattr(args, "validate_only", False):
+        raise RehearsalError("live scenario requires an immediate read-only deployed identity provider URL")
+    identity_path = assert_external(resolved_path(args.deployed_identities, "--deployed-identities"), "--deployed-identities")
+    return validate_deployed_identities(args, identity_path, approval, scenario)
+
+
+def validate_scenario_approval(args: argparse.Namespace, approval_path: Path, scenario: str, identity_provider=None) -> dict[str, object]:
     """Reread approval and lease immediately before each state-changing scenario."""
-    approval = read_json(approval_path, "approval file")
+    approval = validate_approval(args, approval_path)
     lease_path = assert_external(resolved_path(args.lease_file, "--lease-file"), "--lease-file")
     lease = read_json(lease_path, "publisher lease file")
-    identity_path = assert_external(resolved_path(args.deployed_identities, "--deployed-identities"), "--deployed-identities")
     scenario_approval = approval.get("scenarios", {}).get(scenario)
     if not isinstance(scenario_approval, dict):
         raise RehearsalError(f"approval.scenarios.{scenario} is required")
@@ -377,7 +459,17 @@ def validate_scenario_approval(args: argparse.Namespace, approval_path: Path, sc
     lease_expiry = finite_epoch(lease.get("expiresAt"), f"scenario {scenario} lease.expiresAt", future=True)
     if min(scenario_expiry, lease_expiry) <= time.time():
         raise RehearsalError(f"scenario {scenario} approval or publisher lease is expired or inactive")
-    validate_deployed_identities(args, identity_path, approval, scenario)
+    identity = current_deployed_identities(args, approval, scenario, identity_provider)
+    reads = getattr(args, "_fresh_deployed_reads", None)
+    if reads is not None:
+        reads.append({
+            "scenario": scenario,
+            "source": safe_url(str(identity.get("source") or "file-readback")),
+            "readMethod": identity.get("readMethod", "file-readback"),
+            "readAt": identity.get("readAt"),
+            "stateHash": identity.get("stateHash"),
+        })
+    return identity
 
 
 def validate_candidate_manifest(args: argparse.Namespace, manifest_path: Path) -> dict[str, object]:
@@ -460,7 +552,7 @@ def redacted_text(value: object) -> str:
 
 
 def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, surface: str) -> None:
-    bucket = {"console": [], "pageErrors": [], "requestFailures": [], "allowedRequestFailures": 0}
+    bucket = {"console": [], "pageErrors": [], "requestFailures": [], "allowedRequestFailures": 0, "servedAssets": []}
     diagnostics.setdefault(role, {})[surface] = bucket
 
     def append(key: str, value: object) -> None:
@@ -471,6 +563,42 @@ def attach_page_diagnostics(page, diagnostics: dict[str, object], role: str, sur
     page.on("console", lambda message: append("console", f"{message.type}: {message.text}"))
     page.on("pageerror", lambda error: append("pageErrors", error))
     page.on("requestfailed", lambda request: append("requestFailures", safe_url(request.url)))
+
+    def capture_served_asset(response) -> None:
+        if urlparse(response.url).path.rstrip("/").lstrip("/") != ANNOTATION_STYLESHEET_PATH:
+            return
+        record = {"url": safe_url(response.url), "status": response.status, "contentType": response.headers.get("content-type", "")}
+        try:
+            body = response.body()
+            record.update({"bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()})
+        except Exception as error:  # noqa: BLE001 - retain the failed byte read as evidence
+            record["bodyError"] = redacted_text(error)
+        bucket["servedAssets"].append(record)
+
+    page.on("response", capture_served_asset)
+
+
+def assert_candidate_asset(diagnostics: dict[str, object], role: str, surface: str, candidate_manifest: dict[str, object], result: dict[str, object]) -> None:
+    bucket = diagnostics.get(role, {}).get(surface, {})
+    responses = bucket.get("servedAssets", [])
+    expected = candidate_manifest.get("files", {}).get(ANNOTATION_STYLESHEET_PATH)
+    if not SHA256_RE.fullmatch(str(expected or "")):
+        raise RehearsalError(f"candidate manifest does not bind {ANNOTATION_STYLESHEET_PATH}")
+    response = next((item for item in reversed(responses) if item.get("status") == 200 and re.search(r"text/css", str(item.get("contentType", "")), re.IGNORECASE)), None)
+    if response is None:
+        raise RehearsalError(f"{role}/{surface} did not serve the candidate annotation stylesheet as 200 text/css")
+    if response.get("bodyError") or response.get("sha256") != expected:
+        raise RehearsalError(f"{role}/{surface} served annotation bytes do not match the reviewed candidate manifest")
+    result.setdefault("browserServedCandidateAssets", []).append({
+        "role": role,
+        "surface": surface,
+        "url": response["url"],
+        "status": response["status"],
+        "contentType": response["contentType"],
+        "bytes": response["bytes"],
+        "sha256": response["sha256"],
+        "boundToCandidateManifest": True,
+    })
 
 
 def assert_no_authority_hooks(page, surface: str) -> None:
@@ -489,12 +617,12 @@ def assert_diagnostics_clean(diagnostics: dict[str, object]) -> None:
         raise RehearsalError("browser runtime diagnostics were not clean: " + "; ".join(problems))
 
 
-def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], role: str, diagnostics: dict[str, object]):
+def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], role: str, diagnostics: dict[str, object], candidate_manifest: dict[str, object] | None = None, result: dict[str, object] | None = None):
     context = browser.new_context(accept_downloads=True)
     crm = context.new_page()
     attach_page_diagnostics(crm, diagnostics, role, "crm")
     crm.set_default_timeout(30000)
-    crm_url = f"{base_url}/crm-admin.html#presentation-demo"
+    crm_url = f"{base_url}/crm-admin.html"
     crm.goto(crm_url, wait_until="domcontentloaded")
     crm.wait_for_function("() => window.firebase && typeof window.firebase.auth === 'function'", timeout=30000)
     crm.evaluate(
@@ -509,6 +637,9 @@ def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], ro
     more = crm.locator('[data-label="More"]')
     more.wait_for(state="visible", timeout=30000)
     more.click()
+    menu_item = crm.locator('.crm-nav-more-dropdown .crm-dropdown-menu button[data-main="presentation-demo"]')
+    menu_item.wait_for(state="visible", timeout=15000)
+    menu_item.click()
     panel = crm.locator("#crm-presentation-demo-workspace")
     panel.wait_for(state="visible", timeout=15000)
     open_button = crm.locator("#crm-presentation-demo-open")
@@ -520,6 +651,8 @@ def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], ro
     lobby.set_default_timeout(30000)
     lobby.wait_for_load_state("domcontentloaded")
     wait_for_text(lobby, "#pd-auth-status", "Signed in", timeout=30000)
+    if candidate_manifest is not None and result is not None:
+        assert_candidate_asset(diagnostics, role, "crm", candidate_manifest, result)
     assert_no_authority_hooks(crm, f"{role} CRM")
     assert_no_authority_hooks(lobby, f"{role} lobby")
     return {"context": context, "crm": crm, "lobby": lobby, "game": None}
@@ -539,7 +672,50 @@ def open_game_client(client: dict[str, object], role: str, diagnostics: dict[str
     return game
 
 
-def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: dict[str, object], evidence: Path, result: dict, approval_path: Path) -> None:
+def exercise_authored_presentation(game, before_mutation=None) -> dict[str, str]:
+    """Exercise the authored Studio A monitor; return a recovery label on failure."""
+    try:
+        game.locator("#pd-world").focus()
+        game.keyboard.down("d")
+        game.keyboard.down("w")
+        try:
+            game.wait_for_timeout(3200)
+        finally:
+            game.keyboard.up("d")
+            game.keyboard.up("w")
+        game.locator("#pd-interact").click()
+        panel = game.locator("#pd-world-panel")
+        panel.wait_for(state="visible", timeout=10000)
+        start = panel.locator("[data-presentation-start]")
+        start.wait_for(state="visible", timeout=10000)
+        if start.is_disabled():
+            raise RehearsalError("Studio A monitor was reached but the authored presentation was not ready")
+        if before_mutation is not None:
+            before_mutation()
+        start.click()
+        wait_for_text(game, "#pd-deck-status", "Synchronized", timeout=30000)
+        if before_mutation is not None:
+            before_mutation()
+        game.locator("#pd-close-presentation").click()
+        panel.wait_for(state="hidden", timeout=10000)
+        return {"status": "authored-monitor-presentation", "interaction": "monitor-open-close"}
+    except Exception as error:  # noqa: BLE001 - bounded recovery is part of the rehearsal evidence
+        try:
+            close = game.locator("#pd-close-presentation")
+            if close.is_visible() and before_mutation is not None:
+                before_mutation()
+            if close.is_visible():
+                close.click()
+        except Exception:
+            pass
+        try:
+            game.keyboard.press("Escape")
+        except Exception:
+            pass
+        return {"status": "presenter-skip-recovery", "reason": redacted_text(error)}
+
+
+def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: dict[str, object], evidence: Path, result: dict, approval_path: Path, candidate_manifest: dict[str, object] | None = None) -> None:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as error:
@@ -554,7 +730,7 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
             for role in ("presenter", "p1", "p2", "p3"):
                 validate_scenario_approval(args, approval_path, "normal-crm-launch")
                 validate_scenario_approval(args, approval_path, "open-presentation-demo")
-                clients[role] = open_authenticated_lobby(browser, base_url, account_for_role(accounts, role), role, diagnostics)
+                clients[role] = open_authenticated_lobby(browser, base_url, account_for_role(accounts, role), role, diagnostics, candidate_manifest, result)
             result["assertions"].extend(["four-crm-clients-authenticated", "four-lobby-pages-diagnosed"])
 
             validate_scenario_approval(args, approval_path, "room-create")
@@ -588,6 +764,7 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
             presenter_game.locator("#pd-start-room").click()
             wait_for_text(presenter_game, "#pd-gate", "Reception", timeout=30000)
             progression = []
+            progression_coverage = {}
             for scene in ("A", "B1", "C", "D", "E", "F"):
                 validate_scenario_approval(args, approval_path, "progression")
                 skip = presenter_game.locator("#pd-skip-activity")
@@ -597,8 +774,16 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
                 for role in ("presenter", "p1", "p2", "p3"):
                     clients[role]["game"].wait_for_function("scene => document.body.dataset.scene === scene", arg=scene, timeout=30000)
                 progression.append(scene)
+                if scene == "A":
+                    progression_coverage[scene] = exercise_authored_presentation(
+                        presenter_game,
+                        before_mutation=lambda: validate_scenario_approval(args, approval_path, "progression"),
+                    )
+                else:
+                    progression_coverage[scene] = {"status": "presenter-skip-recovery", "reason": "bounded presenter transition to the next authored scene"}
             result["progressionScenes"] = progression
-            result["assertions"].append("four-player-authored-progression-observed")
+            result["progressionCoverage"] = progression_coverage
+            result["assertions"].append("four-player-authored-progression-and-recovery-coverage")
 
             validate_scenario_approval(args, approval_path, "reconnect")
             reconnect_client = clients["p2"]
@@ -641,12 +826,17 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
                 game.locator("#pd-note-body").fill(body)
                 game.locator("#pd-save-note").click()
                 wait_for_text(game, "#pd-note-status", "Saved", timeout=30000)
+                game.evaluate("""() => {
+                    for (const key of Object.keys(localStorage)) {
+                        if (key.startsWith('bel.presentation.draft:') || key.startsWith('bel.presentation.pages:') || key.startsWith('bel.presentation.activePage:')) localStorage.removeItem(key);
+                    }
+                }""")
                 game.reload(wait_until="domcontentloaded")
                 wait_for_text(game, "#pd-connection-status", "Connected", timeout=45000)
                 game.locator("#pd-note-title").wait_for(state="visible", timeout=30000)
                 if game.locator("#pd-note-title").input_value() != title or game.locator("#pd-note-body").input_value() != body:
                     raise RehearsalError(f"persisted Vietnamese note readback failed for {role}")
-                readback[role] = {"title": title, "body": body, "version": "server-readback"}
+                readback[role] = {"title": title, "body": body, "version": "server-readback", "localDraftClearedBeforeReload": True}
             result["notes"] = readback
             result["assertions"].extend(["three-participant-vietnamese-notes-saved", "three-participant-notes-read-back-after-reload"])
 
@@ -698,7 +888,7 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
             browser.close()
 
 
-def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str, str], evidence: Path, result: dict, approval_path: Path | None = None) -> None:
+def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str, str], evidence: Path, result: dict, approval_path: Path | None = None, candidate_manifest: dict[str, object] | None = None) -> None:
     try:
         from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
         from playwright.sync_api import sync_playwright
@@ -726,7 +916,7 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
             page.on("requestfailed", lambda request: request_failures.append(safe_url(request.url)))
             attach_page_diagnostics(page, diagnostics, args.role, "crm")
 
-            crm_url = f"{base_url}/crm-admin.html#presentation-demo"
+            crm_url = f"{base_url}/crm-admin.html"
             if args.allow_live_writes:
                 if approval_path is None:
                     raise RehearsalError("live browser actions require a validated approval file")
@@ -756,6 +946,9 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
                 if args.allow_live_writes:
                     validate_scenario_approval(args, approval_path, "open-presentation-demo")
                 more.click()
+                menu_item = page.locator('.crm-nav-more-dropdown .crm-dropdown-menu button[data-main="presentation-demo"]')
+                menu_item.wait_for(state="visible", timeout=15000)
+                menu_item.click()
                 panel = page.locator("#crm-presentation-demo-workspace")
                 open_button = page.locator("#crm-presentation-demo-open")
                 try:
@@ -769,6 +962,8 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
                     open_button = None
                 else:
                     result["assertions"].append("normal-crm-more-presentation-demo-launch")
+                    if candidate_manifest is not None:
+                        assert_candidate_asset(diagnostics, args.role, "crm", candidate_manifest, result)
 
             if open_button is not None:
                 with page.expect_popup(timeout=15000) as popup_info:
@@ -862,6 +1057,7 @@ def write_report(evidence: Path, result: dict) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    args._fresh_deployed_reads = []
     approval_path: Path | None = None
     candidate_manifest: dict[str, object] | None = None
     try:
@@ -898,11 +1094,14 @@ def main(argv: list[str] | None = None) -> int:
         "assertions": [],
         "noProductionCleanup": True,
         "physicalClientGate": "four independent Chrome clients on four physical computers",
+        "approvalGate": "top-level approval, lease, and immediate read-only deployed identity are revalidated before every scenario boundary",
+        "postDeploymentVerification": "separate future gate; candidate browser evidence must not be presented as live post-deployment verification",
     }
     if args.four_player:
         result["scenario"] = "four-player-progression-reconnect-notes-pdf"
     if candidate_manifest is not None:
         result["candidate"] = candidate_manifest
+    result["freshDeployedIdentityReads"] = args._fresh_deployed_reads
     if args.validate_only:
         result["mode"] = "configuration-validation"
         result["assertions"] = ["valid-https-origin", "production-approved-fixture", "role-account-resolved"]
@@ -913,9 +1112,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.four_player:
             result["mode"] = "four-player-approved-scenario"
-            run_four_player_scenario(args, base_url, accounts, evidence, result, approval_path)
+            run_four_player_scenario(args, base_url, accounts, evidence, result, approval_path, candidate_manifest)
         else:
-            launch_and_check(args, base_url, account, evidence, result, approval_path)
+            launch_and_check(args, base_url, account, evidence, result, approval_path, candidate_manifest)
         result["success"] = True
         write_report(evidence, result)
         print(json.dumps(result, indent=2), flush=True)

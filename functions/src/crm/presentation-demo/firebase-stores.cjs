@@ -54,7 +54,17 @@ function archivePageDocumentIdCandidates(roomId, uid, pageId) {
     return [archivePageDocumentId(roomId, uid, pageId), legacyArchivePageDocumentId(roomId, uid, pageId)];
 }
 function archivePageSemanticValue(page) {
-    return Object.fromEntries(['roomId', 'uid', 'id', 'title', 'body', 'version', 'deleted'].map(key => [key, page?.[key] ?? null]));
+    if (!page || typeof page !== 'object' || Array.isArray(page)) return null;
+    // Archive page identity is the complete immutable page document. Keeping
+    // this field-complete makes updatedAt/updatedBy, deletion markers,
+    // checksums, and authorization metadata part of the legacy/v2 conflict
+    // decision instead of silently preferring one copy.
+    const canonical = value => Array.isArray(value)
+        ? value.map(canonical)
+        : value && typeof value === 'object'
+            ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]))
+            : value;
+    return canonical(page);
 }
 function archivePageRecordId(record) { return String(record?.id ?? record?.documentId ?? ''); }
 function archivePageRecordData(record) { return record?.data && typeof record.data === 'object' ? record.data : record; }
@@ -86,7 +96,7 @@ function resolveArchivePageRecords(records, { roomId, uid } = {}) {
     }
     return resolved.sort((left, right) => String(left.page.id).localeCompare(String(right.page.id)));
 }
-async function migrateArchivePageRecord(records, { roomId, uid, writeV2, deleteLegacy, removeLegacy = true } = {}) {
+async function migrateArchivePageRecord(records, { roomId, uid, writeV2, readV2, deleteLegacy, removeLegacy = true } = {}) {
     const resolved = resolveArchivePageRecords(records, { roomId, uid });
     if (!resolved.length) return null;
     if (resolved.length !== 1) throw Object.assign(new Error('archive migration expects one page tuple'), { code: 'ARCHIVE_PAGE_CONFLICT' });
@@ -95,10 +105,21 @@ async function migrateArchivePageRecord(records, { roomId, uid, writeV2, deleteL
         if (typeof writeV2 !== 'function') throw new TypeError('writeV2 is required for legacy archive page migration');
         await writeV2(item.v2Id, cloneValue(item.page));
     }
+    if (typeof readV2 !== 'function') throw new TypeError('readV2 is required to verify archive page migration before cleanup');
+    const persistedRaw = await readV2(item.v2Id);
+    const persistedRecord = persistedRaw?.exists !== undefined
+        ? (persistedRaw.exists ? { id: persistedRaw.id, data: persistedRaw.data() } : null)
+        : persistedRaw && typeof persistedRaw === 'object'
+            ? { id: archivePageRecordId(persistedRaw) || item.v2Id, data: archivePageRecordData(persistedRaw) }
+            : null;
+    const persisted = persistedRecord ? resolveArchivePageRecords([persistedRecord], { roomId, uid })[0] : null;
+    if (!persisted || persisted.storageVersion !== 'v2' || persisted.semanticHash !== item.semanticHash) {
+        fail('ARCHIVE_MIGRATION_VERIFY_FAILED', 'The v2 archive page could not be reread and verified; legacy data was retained.');
+    }
     if (removeLegacy && typeof deleteLegacy === 'function' && (item.storageVersion === 'legacy' || records.some(record => archivePageRecordId(record) === item.legacyId))) {
         await deleteLegacy(item.legacyId);
     }
-    return { ...item, storageVersion: 'v2', documentId: item.v2Id };
+    return { ...persisted, storageVersion: 'v2', documentId: item.v2Id };
 }
 function cloneValue(value) { return value === undefined ? undefined : clone(value); }
 

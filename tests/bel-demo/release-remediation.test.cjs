@@ -170,4 +170,20 @@ test('Chrome browser gate treats the annotation stylesheet as a real response an
   assert.match(browser, /et-annotation-overlay/);
   assert.match(browser, /et-annotation-capture-layer/);
   assert.doesNotMatch(browser, /MIME type[\s\S]*return true/);
+  assert.match(browser, /response\.body\(\)/);
+  assert.match(browser, /createHash\(['"]sha256['"]\)/);
+  assert.match(browser, /exactCandidateBytesServed/);
+  assert.match(browser, /phase4-annotation-css-served-evidence\.json/);
+});
+
+test('production rehearsal uses the real CRM More menu and binds live evidence to a separate post-deployment gate', () => {
+  const rehearsal = read('tests/browser/bel-demo-online/production_rehearsal.py');
+  assert.match(rehearsal, /crm-admin\.html"/);
+  assert.match(rehearsal, /crm-nav-more-dropdown \.crm-dropdown-menu button\[data-main="presentation-demo"\]/);
+  assert.match(rehearsal, /--deployed-identities-url/);
+  assert.match(rehearsal, /immediate read-only deployed identity provider/);
+  assert.match(rehearsal, /browserServedCandidateAssets/);
+  assert.match(rehearsal, /postDeploymentVerification/);
+  assert.match(rehearsal, /localDraftClearedBeforeReload/);
+  assert.match(rehearsal, /progressionCoverage/);
 });

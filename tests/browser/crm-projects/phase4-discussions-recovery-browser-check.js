@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -314,6 +315,7 @@ async function main() {
     const pageErrors = [];
     const network = [];
     const annotationResponses = [];
+    const annotationResponseRecords = [];
     const injectedConflictUrls = new Set();
     const expectedConsoleRecord = (entry) => {
         if (injectedConflictUrls.has(entry.url) && /status of 409/i.test(entry.text)) return true;
@@ -324,7 +326,9 @@ async function main() {
     const capturePage = (page) => {
         page.on('response', (response) => {
             if (!response.url().includes('/css/entrance-test-ui-annotations.css')) return;
-            annotationResponses.push({ url: response.url(), status: response.status(), contentType: response.headers()['content-type'] || '' });
+            const record = { url: response.url(), status: response.status(), contentType: response.headers()['content-type'] || '' };
+            annotationResponses.push({ response, ...record });
+            annotationResponseRecords.push(record);
         });
         page.on('console', (message) => {
             if (message.type() !== 'error') return;
@@ -984,7 +988,22 @@ async function main() {
         assert.deepStrictEqual(unexpectedConsoleErrors, [], `Chrome console errors: ${unexpectedConsoleErrors.map((entry) => entry.text).join('; ')}`);
         assert.ok(network.some((entry) => entry.method === 'GET' && entry.url.includes('/api/projects/')));
         const annotationResponse = annotationResponses.find((entry) => entry.status === 200 && /text\/css/i.test(entry.contentType));
-        assert.ok(annotationResponse, `Chrome must load the entrance annotation stylesheet as text/css: ${JSON.stringify(annotationResponses)}`);
+        assert.ok(annotationResponse, `Chrome must load the entrance annotation stylesheet as text/css: ${JSON.stringify(annotationResponseRecords)}`);
+        const servedAnnotationBytes = await annotationResponse.response.body();
+        const candidateAnnotationBytes = fs.readFileSync(path.join(PUBLIC_DIR, 'css/entrance-test-ui-annotations.css'));
+        const servedAnnotationEvidence = {
+            url: annotationResponse.url,
+            status: annotationResponse.status,
+            contentType: annotationResponse.contentType,
+            bytes: servedAnnotationBytes.length,
+            sha256: crypto.createHash('sha256').update(servedAnnotationBytes).digest('hex'),
+            candidateBytes: candidateAnnotationBytes.length,
+            candidateSha256: crypto.createHash('sha256').update(candidateAnnotationBytes).digest('hex'),
+            exactCandidateBytesServed: Buffer.compare(servedAnnotationBytes, candidateAnnotationBytes) === 0,
+            browserBinding: 'response.body() compared with the final local candidate bytes actually served to Chrome'
+        };
+        fs.writeFileSync(path.join(artifactDir, 'phase4-annotation-css-served-evidence.json'), `${JSON.stringify(servedAnnotationEvidence, null, 2)}\n`, 'utf8');
+        assert.deepStrictEqual(servedAnnotationBytes, candidateAnnotationBytes, 'Chrome must serve the exact final candidate annotation stylesheet bytes');
         const loadedAnnotationCss = await ownerPage.evaluate(() => [...document.styleSheets].flatMap((sheet) => {
             try { return [...sheet.cssRules].map((rule) => rule.cssText); } catch (_) { return []; }
         }).join('\n'));

@@ -12,6 +12,7 @@ const {
     createReleaseDriver,
     createDryRunPublisherAdapter,
     createFileLeaseProvider,
+    createRollbackManifest,
     ReleaseGateError,
     stableHash
 } = require('../../scripts/bel-demo/release-online.cjs');
@@ -633,11 +634,10 @@ test('production rehearsal binds every manifest digest to the exact local candid
     }
 });
 
-test('production rehearsal rejects deployed drift, ownership loss, scope mismatch, revoked approval, and non-finite expiry', () => {
+test('production rehearsal revalidates the full approval and fresh provider state before any mutation', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bel-rehearsal-freshness-'));
     const approvalPath = path.join(root, 'approval.json');
     const leasePath = path.join(root, 'lease.json');
-    const identityPath = path.join(root, 'identities.json');
     const candidateSha = CANDIDATE_SHA;
     const baseSha = BASE_SHA;
     const scopeHash = SCOPE_HASH;
@@ -646,23 +646,46 @@ test('production rehearsal rejects deployed drift, ownership loss, scope mismatc
     const now = Math.floor(Date.now() / 1000);
     const scenario = {
         action: 'normal-crm-launch', schemaVersion: 1, expiryUnit: 'epoch-seconds', owner: 'owner', leaseId: 'lease', operationId: 'operation',
-        candidateSha, baseSha, scopeHash, resources: ['hosting'], expiresAt: now + 3600, expectedStateHash: stateHash
+        candidateSha, baseSha, scopeHash, resources: ['hosting'], expiresAt: now + 3600, expectedState: state, expectedStateHash: stateHash
     };
     const approval = {
         mode: 'production-approved', schemaVersion: 1, expiryUnit: 'epoch-seconds', owner: 'owner', leaseId: 'lease', candidateSha, baseSha, scopeHash,
         resources: ['hosting'], actions: ['normal-crm-launch', 'open-presentation-demo'], expiresAt: now + 3600, scenarios: { 'normal-crm-launch': scenario }
     };
     const lease = { schemaVersion: 1, expiryUnit: 'epoch-seconds', operationId: 'operation', operationState: 'pending', state: 'ACTIVE', owner: 'owner', leaseId: 'lease', candidateSha, baseSha, scopeHash, resources: ['hosting'], expiresAt: now + 3600 };
-    const identity = { schemaVersion: 1, expiryUnit: 'epoch-seconds', owner: 'owner', resources: ['hosting'], candidateSha, baseSha, scopeHash, readAt: now, state, stateHash };
     fs.writeFileSync(approvalPath, JSON.stringify(approval));
     fs.writeFileSync(leasePath, JSON.stringify(lease));
-    fs.writeFileSync(identityPath, JSON.stringify(identity));
-    const script = `import importlib.util, json, sys\nfrom argparse import Namespace\nspec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])\nmodule = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(module)\nargs = Namespace(candidate_sha=sys.argv[5], base_sha=sys.argv[6], scope_hash=sys.argv[7], four_player=False, create_room=False, room_code=None, open_game=False, role='presenter', lease_file=sys.argv[3], deployed_identities=sys.argv[4])\napproval_path = module.Path(sys.argv[2])\nidentity_path = module.Path(sys.argv[4])\napproval = json.loads(approval_path.read_text())\nlease_path = module.Path(sys.argv[3])\nlease = json.loads(lease_path.read_text())\nidentity = json.loads(identity_path.read_text())\ndef check(name, fn):\n    try: fn()\n    except module.RehearsalError: print(name); return\n    raise SystemExit('expected rejection: '+name)\nmodule.validate_scenario_approval(args, approval_path, 'normal-crm-launch')\nfor name, mutate in [('drift', lambda: identity.update({'state': {'deployed': 'drifted'}, 'stateHash': module.stable_hash({'deployed': 'drifted'})})), ('ownership-loss', lambda: lease.update({'owner': 'other'})), ('scope-mismatch', lambda: identity.update({'candidateSha': 'b' * 40})), ('revoked-approval', lambda: approval.update({'mode': 'revoked'})), ('nan-expiry', lambda: approval.update({'expiresAt': 'NaN'})), ('infinity-expiry', lambda: approval.update({'expiresAt': 'Infinity'}))]:\n    approval.update({'mode': 'production-approved', 'expiresAt': module.time.time()+3600})\n    lease.update({'owner': 'owner'})\n    identity.update({'candidateSha': args.candidate_sha, 'state': {'deployed': 'v1'}, 'stateHash': module.stable_hash({'deployed': 'v1'})})\n    approval_path.write_text(json.dumps(approval)); lease_path.write_text(json.dumps(lease)); identity_path.write_text(json.dumps(identity))\n    mutate()\n    approval_path.write_text(json.dumps(approval)); lease_path.write_text(json.dumps(lease)); identity_path.write_text(json.dumps(identity))\n    check(name, (lambda: module.validate_approval(args, approval_path)) if name in ('revoked-approval','nan-expiry','infinity-expiry') else (lambda: module.validate_scenario_approval(args, approval_path, 'normal-crm-launch')))\nprint('freshness-matrix-passed')`;
+    const script = `import importlib.util, json, sys, time\nfrom argparse import Namespace\nspec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])\nmodule = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(module)\nargs = Namespace(candidate_sha=sys.argv[4], base_sha=sys.argv[6], scope_hash=sys.argv[7], four_player=False, create_room=False, room_code=None, open_game=False, role='presenter', lease_file=sys.argv[3], deployed_identities=None, deployed_identities_url=None, validate_only=False, _fresh_deployed_reads=[])\napproval_path = module.Path(sys.argv[2])\nlease_path = module.Path(sys.argv[3])\nprovider_state = {'schemaVersion': 1, 'expiryUnit': 'epoch-seconds', 'owner': 'owner', 'resources': ['hosting'], 'candidateSha': args.candidate_sha, 'baseSha': args.base_sha, 'scopeHash': args.scope_hash, 'readAt': time.time(), 'state': {'deployed': 'v1'}, 'stateHash': module.stable_hash({'deployed': 'v1'}), 'source': 'https://provider.example/identities'}\nmutation_count = 0\ndef provider(scenario):\n    value = dict(provider_state)\n    value['readAt'] = time.time()\n    value['state'] = dict(provider_state['state'])\n    value['stateHash'] = module.stable_hash(value['state'])\n    return value\ndef check(name, mutate):\n    global mutation_count\n    approval = json.loads(approval_path.read_text())\n    lease = json.loads(lease_path.read_text())\n    mutate(approval, lease, provider_state)\n    approval_path.write_text(json.dumps(approval))\n    lease_path.write_text(json.dumps(lease))\n    try:\n        module.validate_scenario_approval(args, approval_path, 'normal-crm-launch', provider)\n    except module.RehearsalError:\n        print(name)\n        return\n    mutation_count += 1\n    raise SystemExit('expected rejection: '+name)\nmodule.validate_scenario_approval(args, approval_path, 'normal-crm-launch', provider)\nfor name, mutate in [('drift', lambda approval, lease, identity: (identity.update({'state': {'deployed': 'drifted'}}))), ('ownership-loss', lambda approval, lease, identity: lease.update({'owner': 'other'})), ('scope-mismatch', lambda approval, lease, identity: identity.update({'candidateSha': 'b' * 40})), ('revoked-approval', lambda approval, lease, identity: approval.update({'mode': 'revoked'})), ('expired-approval', lambda approval, lease, identity: approval.update({'expiresAt': time.time() - 1})), ('nan-expiry', lambda approval, lease, identity: approval.update({'expiresAt': 'NaN'})), ('infinity-expiry', lambda approval, lease, identity: approval.update({'expiresAt': 'Infinity'}))]:\n    approval = json.loads(approval_path.read_text()) if False else None\n    approval_path.write_text(json.dumps(${JSON.stringify(approval)}))\n    lease_path.write_text(json.dumps(${JSON.stringify(lease)}))\n    provider_state.update({'owner': 'owner', 'candidateSha': args.candidate_sha, 'state': {'deployed': 'v1'}})\n    check(name, mutate)\nprint('provider-read-count='+str(len(args._fresh_deployed_reads)))\nassert mutation_count == 0\nprint('freshness-matrix-passed')`;
     try {
-        const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, identityPath, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
+        const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
         assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-        for (const marker of ['drift', 'ownership-loss', 'scope-mismatch', 'revoked-approval', 'nan-expiry', 'infinity-expiry', 'freshness-matrix-passed']) assert.match(result.stdout, new RegExp(marker));
+        for (const marker of ['drift', 'ownership-loss', 'scope-mismatch', 'revoked-approval', 'expired-approval', 'nan-expiry', 'infinity-expiry', 'provider-read-count=1', 'freshness-matrix-passed']) assert.match(result.stdout, new RegExp(marker));
     } finally {
         fs.rmSync(root, { recursive: true, force: true });
     }
+});
+
+test('rollback reconciliation applies only the approved inverse delta and preserves an intervening unrelated release', () => {
+    const interveningCurrent = {
+        'public/crm-admin.html': 'intervening-crm-release',
+        'public/css/entrance-test-ui-annotations.css': 'candidate-css',
+        'public/unrelated-release.txt': 'intervening-release-preserved'
+    };
+    const reviewedCurrent = clone(interveningCurrent);
+    const recovery = createRollbackManifest({
+        currentFiles: interveningCurrent,
+        reviewedFiles: reviewedCurrent,
+        inverseOverlay: {
+            'public/css/entrance-test-ui-annotations.css': 'live-baseline-css'
+        }
+    });
+    assert.equal(recovery.files['public/css/entrance-test-ui-annotations.css'], 'live-baseline-css');
+    assert.equal(recovery.files['public/unrelated-release.txt'], 'intervening-release-preserved');
+    assert.equal(recovery.preservesUnrelatedCurrentState, true);
+    assert.ok(recovery.preservedInterveningPaths.includes('public/unrelated-release.txt'));
+    assert.throws(() => createRollbackManifest({
+        currentFiles: { ...interveningCurrent, 'public/unrelated-release.txt': 'newer-than-reviewed' },
+        reviewedFiles: reviewedCurrent,
+        inverseOverlay: {}
+    }), error => error.code === 'ROLLBACK_BASELINE_DRIFT');
 });

@@ -71,13 +71,13 @@ test('archive page IDs encode the complete room, uid, and page tuple without del
 
 test('archive resolver returns exactly one page for legacy-only, v2-only, and identical mixed records', () => {
   const tuple = ['room-1', 'uid-1', 'main'];
-  const page = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'Ghi chú', body: 'Nội dung', version: 2, updatedAt: 123, updatedBy: 'uid-1' };
+  const page = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'Ghi chú', body: 'Nội dung', version: 2, updatedAt: 123, updatedBy: 'uid-1', checksum: 'page-checksum', auth: { actorUid: 'uid-1', role: 'participant' } };
   const v2 = archivePageDocumentId(...tuple);
   const legacy = legacyArchivePageDocumentId(...tuple);
   for (const [records, expectedVersion] of [
     [[{ id: legacy, data: page }], 'legacy'],
     [[{ id: v2, data: page }], 'v2'],
-    [[{ id: legacy, data: page }, { id: v2, data: { ...page } }], 'v2']
+    [[{ id: legacy, data: page }, { id: v2, data: { ...page, auth: { role: 'participant', actorUid: 'uid-1' } } }], 'v2']
   ]) {
     const resolved = resolveArchivePageRecords(records, { roomId: tuple[0], uid: tuple[1] });
     assert.equal(resolved.length, 1);
@@ -91,7 +91,7 @@ test('archive resolver fails closed on conflicting mixed versions and migration 
   const tuple = ['room-2', 'uid-2', 'page-1'];
   const legacy = legacyArchivePageDocumentId(...tuple);
   const v2 = archivePageDocumentId(...tuple);
-  const first = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'one', body: 'same', version: 1 };
+  const first = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'one', body: 'same', version: 1, updatedAt: 100, updatedBy: 'uid-2', checksum: 'checksum-1', auth: { actorUid: 'uid-2', role: 'participant' } };
   const second = { ...first, title: 'two' };
   assert.throws(
     () => resolveArchivePageRecords([{ id: legacy, data: first }, { id: v2, data: second }], { roomId: tuple[0], uid: tuple[1] }),
@@ -99,11 +99,13 @@ test('archive resolver fails closed on conflicting mixed versions and migration 
   );
 
   const writes = [];
+  let persisted = null;
   let deleteAttempts = 0;
   await assert.rejects(
     migrateArchivePageRecord([{ id: legacy, data: first }], {
       roomId: tuple[0], uid: tuple[1],
-      writeV2: async (id, data) => writes.push([id, data]),
+      writeV2: async (id, data) => { writes.push([id, data]); persisted = { id, data: structuredClone(data) }; },
+      readV2: async () => persisted,
       deleteLegacy: async () => { deleteAttempts += 1; throw new Error('interrupted cleanup'); }
     }),
     /interrupted cleanup/
@@ -112,9 +114,37 @@ test('archive resolver fails closed on conflicting mixed versions and migration 
   const retry = await migrateArchivePageRecord([{ id: legacy, data: first }, { id: v2, data: first }], {
     roomId: tuple[0], uid: tuple[1],
     writeV2: async (id) => writes.push([id]),
+    readV2: async () => persisted,
     deleteLegacy: async () => { deleteAttempts += 1; }
   });
   assert.equal(retry.storageVersion, 'v2');
   assert.equal(writes.length, 1, 'interrupted migration retry must not duplicate the v2 write');
   assert.equal(deleteAttempts, 2);
+});
+
+test('archive migration verifies the persisted v2 bytes before deleting legacy and preserves metadata conflicts', async () => {
+  const tuple = ['room-3', 'uid-3', 'page-1'];
+  const legacy = legacyArchivePageDocumentId(...tuple);
+  const v2 = archivePageDocumentId(...tuple);
+  const page = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'one', body: 'same', version: 3, updatedAt: 1700, updatedBy: 'uid-3', checksum: 'checksum-3', auth: { actorUid: 'uid-3', role: 'presenter' } };
+  let persisted = null;
+  await assert.rejects(migrateArchivePageRecord([{ id: legacy, data: page }], {
+    roomId: tuple[0], uid: tuple[1],
+    writeV2: async (id, data) => { persisted = { id, data }; },
+    readV2: async () => null,
+    deleteLegacy: async () => { throw new Error('legacy must not be deleted after an unverified write'); }
+  }), error => error.code === 'ARCHIVE_MIGRATION_VERIFY_FAILED');
+  assert.ok(persisted, 'the interrupted migration must leave the written v2 candidate available for retry');
+
+  let legacyDeleted = false;
+  const migrated = await migrateArchivePageRecord([{ id: legacy, data: page }], {
+    roomId: tuple[0], uid: tuple[1],
+    writeV2: async (id, data) => { persisted = { id, data: structuredClone(data) }; },
+    readV2: async () => persisted,
+    deleteLegacy: async id => { legacyDeleted = id === legacy; }
+  });
+  assert.equal(migrated.storageVersion, 'v2');
+  assert.deepEqual(migrated.page, page);
+  assert.equal(legacyDeleted, true);
+  assert.throws(() => resolveArchivePageRecords([{ id: legacy, data: page }, { id: v2, data: { ...page, updatedBy: 'other-user' } }], { roomId: tuple[0], uid: tuple[1] }), error => error.code === 'ARCHIVE_PAGE_CONFLICT');
 });

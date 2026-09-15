@@ -58,6 +58,30 @@ function equalState(left, right) {
     return stableHash(left) === stableHash(right);
 }
 
+function createRollbackManifest({ currentFiles, reviewedFiles, inverseOverlay } = {}) {
+    if (!currentFiles || typeof currentFiles !== 'object' || Array.isArray(currentFiles)) throw new TypeError('currentFiles must be an object');
+    if (!reviewedFiles || typeof reviewedFiles !== 'object' || Array.isArray(reviewedFiles)) throw new TypeError('reviewedFiles must be an object');
+    if (!inverseOverlay || typeof inverseOverlay !== 'object' || Array.isArray(inverseOverlay)) throw new TypeError('inverseOverlay must be an object');
+    if (!equalState(currentFiles, reviewedFiles)) {
+        throw new ReleaseGateError('ROLLBACK_BASELINE_DRIFT', 'Current production changed after rollback review; refresh the recovery manifest before mutation.');
+    }
+    const files = clone(currentFiles);
+    for (const [relative, value] of Object.entries(inverseOverlay)) {
+        if (value === null) delete files[relative];
+        else files[relative] = clone(value);
+    }
+    const preservedInterveningPaths = Object.keys(currentFiles).filter(relative => !Object.prototype.hasOwnProperty.call(inverseOverlay, relative));
+    return {
+        schemaVersion: 1,
+        mode: 'rollback-recovery-forward-apply',
+        reviewedCurrentStateHash: stableHash(reviewedFiles),
+        inverseDeltaHash: stableHash(inverseOverlay),
+        files,
+        preservedInterveningPaths,
+        preservesUnrelatedCurrentState: preservedInterveningPaths.every(relative => equalState(files[relative], currentFiles[relative]))
+    };
+}
+
 function nowValue(now) {
     const value = typeof now === 'function' ? now() : now;
     return Number(value ?? (Date.now() / 1000));
@@ -578,6 +602,7 @@ module.exports = {
     createFileLeaseProvider,
     createReleaseDriver,
     ReleaseGateError,
+    createRollbackManifest,
     stableHash,
     stableJson,
     parseArgs

@@ -76,6 +76,73 @@ test('two durable service instances share membership, runtime, notes, and archiv
     assert.equal((await first.archives.readArchive(participants[0], room.roomId)).notebooks[participants[0].uid].pages[0].body, 'hợp tác');
 });
 
+test('actual Firestore archive migration preserves checksum/auth metadata, detects metadata conflicts, and retains legacy on interrupted verification', { skip: !emulatorSelected }, async () => {
+    const firebase = require('../../functions/src/utils/firebase_admin_init');
+    const stores = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');
+    const { COLLECTIONS, archivePageDocumentId, legacyArchivePageDocumentId, migrateArchivePageRecord, createFirebasePresentationDemoServices } = stores;
+    const suffix = `archive-migration-${crypto.randomUUID()}`;
+    const admin = { uid: `admin-${suffix}`, accountStatus: 'active', isAdmin: true, isTeacher: true };
+    const participant = { uid: `participant-${suffix}`, accountStatus: 'active', isTeacher: true };
+    const code = crypto.createHash('sha256').update(suffix).digest('hex').slice(0, 6).toUpperCase();
+    const service = createFirebasePresentationDemoServices({ db: firebase.db, rtdb: firebase.getDatabase(), codeFactory: () => code });
+    const room = await service.roomService.createOrResume(admin);
+    await service.roomService.join(participant, room.roomId);
+    await service.notes.savePage(participant, room.roomId, participant.uid, {
+        pageId: 'metadata-page', title: 'Metadata survives', body: 'checksum and actor metadata', expectedVersion: 0
+    });
+    await service.roomService.end(admin, room.roomId);
+    await service.archives.archiveRoom(admin, room.roomId);
+    const archiveBefore = await service.archives.readArchive(participant, room.roomId);
+    const originalPage = archiveBefore.notebooks[participant.uid].pages[0];
+    assert.equal(originalPage.updatedBy, participant.uid);
+    assert.ok(archiveBefore.checksum);
+
+    const v2Id = archivePageDocumentId(room.roomId, participant.uid, originalPage.id);
+    const legacyId = legacyArchivePageDocumentId(room.roomId, participant.uid, originalPage.id);
+    const v2Ref = firebase.db.collection(COLLECTIONS.archivePages).doc(v2Id);
+    const legacyRef = firebase.db.collection(COLLECTIONS.archivePages).doc(legacyId);
+    await v2Ref.delete();
+    await legacyRef.set(originalPage);
+    let hideReadback = true;
+    await assert.rejects(migrateArchivePageRecord([{ id: legacyId, data: originalPage }], {
+        roomId: room.roomId,
+        uid: participant.uid,
+        writeV2: (id, data) => firebase.db.collection(COLLECTIONS.archivePages).doc(id).set(data),
+        readV2: async id => {
+            if (hideReadback) { hideReadback = false; return null; }
+            const snap = await firebase.db.collection(COLLECTIONS.archivePages).doc(id).get();
+            return snap.exists ? { id: snap.id, data: snap.data() } : null;
+        },
+        deleteLegacy: () => legacyRef.delete()
+    }), { code: 'ARCHIVE_MIGRATION_VERIFY_FAILED' });
+    assert.equal((await legacyRef.get()).exists, true, 'legacy page must remain after an unverified v2 write');
+    assert.equal((await v2Ref.get()).exists, true, 'the written v2 page must remain available for retry');
+
+    const retry = await migrateArchivePageRecord([
+        { id: legacyId, data: originalPage },
+        { id: v2Id, data: (await v2Ref.get()).data() }
+    ], {
+        roomId: room.roomId,
+        uid: participant.uid,
+        readV2: async id => {
+            const snap = await firebase.db.collection(COLLECTIONS.archivePages).doc(id).get();
+            return snap.exists ? { id: snap.id, data: snap.data() } : null;
+        },
+        deleteLegacy: () => legacyRef.delete()
+    });
+    assert.equal(retry.storageVersion, 'v2');
+    assert.equal((await legacyRef.get()).exists, false);
+    const archiveAfter = await service.archives.readArchive(participant, room.roomId);
+    assert.equal(archiveAfter.checksum, archiveBefore.checksum);
+    assert.equal(archiveAfter.notebooks[participant.uid].pages[0].updatedBy, participant.uid);
+
+    await legacyRef.set(originalPage);
+    await v2Ref.set({ ...originalPage, updatedBy: `${participant.uid}-different` });
+    await assert.rejects(service.archives.readArchive(participant, room.roomId), { code: 'ARCHIVE_PAGE_CONFLICT' });
+    await v2Ref.set(originalPage);
+    await legacyRef.delete();
+});
+
 test('End drains accepted durable note effects after a simulated worker loss', { skip: !emulatorSelected }, async () => {
     const firebase = require('../../functions/src/utils/firebase_admin_init');
     const { createFirebasePresentationDemoServices } = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');

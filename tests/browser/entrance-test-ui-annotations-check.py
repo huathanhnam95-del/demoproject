@@ -64,6 +64,7 @@ def emulator_case(browser,base,output):
             req=urllib.request.Request(url,data=json.dumps({'fields':{'isAdmin':{'booleanValue':True}}}).encode(),headers={'Content-Type':'application/json','Authorization':'Bearer owner'},method='PATCH')
             with urllib.request.urlopen(req) as response:assert response.status==200
         response=page.goto(base+'/crm-admin.html#entrance-test-ui');assert 'TEST_BOOTSTRAP' in response.text(),'Emulator bootstrap route did not match'
+        page.locator("[data-skin='d']").click()
 
         try:page.wait_for_function("document.querySelector('.et-annotation-toolbar button') && !document.querySelector('.et-annotation-toolbar button').disabled",timeout=45000)
         except Exception:

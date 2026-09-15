@@ -20,6 +20,11 @@ function fail(code, message = code) {
     throw error;
 }
 
+function assertOperationEnabled(kind) {
+    const flag = { admission: 'PRESENTATION_DEMO_ADMISSION_ENABLED', mutation: 'PRESENTATION_DEMO_MUTATIONS_ENABLED', archive: 'PRESENTATION_DEMO_ARCHIVED_ACCESS_ENABLED' }[kind];
+    if (flag && process.env[flag] === '0') fail('SERVICE_RECOVERY', 'This room service is temporarily read-only. Please try again later.');
+}
+
 function isPlainRecord(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value)
         && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
@@ -97,6 +102,7 @@ function createRoomState({ roomId, code, presenterUid, now = Date.now(), operati
         archiveStatus: 'live',
         owner: { gatewayId: null, ownerEpoch: 0, leaseUntil: 0 },
         lastCommandSeq: Object.fromEntries(SLOT_IDS.map(slotId => [slotId, 0])),
+        lastInputSeq: Object.fromEntries(SLOT_IDS.map(slotId => [slotId, 0])),
         deck: { room: null, slide: 1, steps: {}, finalPage: 'determine', etaOrigin: null, properties: { showQuotes: true, showFolio: true, photoTreatment: 'Black and white' } },
         activity: { id: null, phase: null, state: null },
         gameplay: {
@@ -159,6 +165,7 @@ function publicSlotSnapshot(slot, actorUid) {
 
 function publicRoomSnapshot(room, actorUid = null) {
     validateRoomState(room);
+    const actor = SLOT_IDS.find(id => room.slots[id].uid === actorUid);
     return {
         schemaVersion: room.schemaVersion,
         protocolVersion: room.protocolVersion,
@@ -169,6 +176,7 @@ function publicRoomSnapshot(room, actorUid = null) {
         presenterUid: room.presenterUid,
         lifecycle: room.lifecycle,
         revision: room.revision,
+        acceptedSequence: { command: room.lastCommandSeq?.[actor] || 0, input: room.lastInputSeq?.[actor] || 0 },
         createdAt: room.createdAt,
         allParticipantsJoinedAt: room.allParticipantsJoinedAt,
         startedAt: room.startedAt,
@@ -184,6 +192,31 @@ function publicRoomSnapshot(room, actorUid = null) {
 
 function validateClientCommand(command) {
     if (!isPlainRecord(command) || typeof command.type !== 'string') fail('COMMAND_TYPE_FORBIDDEN');
+    if (['world', 'presentation', 'profile'].includes(command.type)) {
+        if (!Number.isSafeInteger(command.seq) || command.seq < 1) fail('COMMAND_INVALID_SEQ');
+        if (command.type === 'world') {
+            exactKeys(command, ['type', 'seq', 'action', 'payload']);
+            if (!['interact', 'enter', 'social', 'accept', 'decline', 'release', 'drop', 'dismount', 'activity', 'skip', 'slide'].includes(command.action)) fail('COMMAND_TYPE_FORBIDDEN');
+            exactKeys(command.payload, ['instance', 'generation', 'target', 'action', 'values'], []);
+            if (command.payload.instance !== undefined && (typeof command.payload.instance !== 'string' || command.payload.instance.length > 30)) fail('COMMAND_INVALID_PAYLOAD');
+            if (command.payload.generation !== undefined && !Number.isSafeInteger(command.payload.generation)) fail('COMMAND_INVALID_PAYLOAD');
+            for (const key of ['target', 'action']) if (command.payload[key] !== undefined && (typeof command.payload[key] !== 'string' || command.payload[key].length > 80)) fail('COMMAND_INVALID_PAYLOAD');
+            if (command.payload.values !== undefined) {
+                exactKeys(command.payload.values, ['showQuotes', 'showFolio', 'photoTreatment'], []);
+                for (const key of ['showQuotes', 'showFolio']) if (command.payload.values[key] !== undefined && typeof command.payload.values[key] !== 'boolean') fail('COMMAND_INVALID_PAYLOAD');
+                if (command.payload.values.photoTreatment !== undefined && !['Black and white', 'Full colour'].includes(command.payload.values.photoTreatment)) fail('COMMAND_INVALID_PAYLOAD');
+            }
+        } else if (command.type === 'presentation') {
+            exactKeys(command, ['type', 'seq', 'action']);
+            if (!['open', 'close', 'pause', 'resume'].includes(command.action)) fail('COMMAND_INVALID_PAYLOAD');
+        } else {
+            exactKeys(command, ['type', 'seq', 'name', 'appearance']);
+            if (typeof command.name !== 'string' || !command.name.trim() || command.name.length > 80) fail('COMMAND_INVALID_PAYLOAD');
+            exactKeys(command.appearance, ['hat', 'glasses', 'shirt']);
+            if (!['none', 'straw', 'cap'].includes(command.appearance.hat) || typeof command.appearance.glasses !== 'boolean' || !['blue', 'teal', 'cream', 'amber', 'red'].includes(command.appearance.shirt)) fail('COMMAND_INVALID_PAYLOAD');
+        }
+        return clone(command);
+    }
     if (command.type === 'move') {
         exactKeys(command, ['type', 'seq', 'dx', 'dy']);
         if (!Number.isSafeInteger(command.seq) || command.seq < 1) fail('COMMAND_INVALID_SEQ');
@@ -197,8 +230,8 @@ function validateClientCommand(command) {
         return clone(command);
     }
     if (command.type === 'setReady') {
-        exactKeys(command, ['type', 'seq', 'ready']);
-        if (!Number.isSafeInteger(command.seq) || command.seq < 1 || typeof command.ready !== 'boolean') fail('COMMAND_INVALID_READY');
+        exactKeys(command, ['type', 'seq', 'ready', 'instance']);
+        if (!Number.isSafeInteger(command.seq) || command.seq < 1 || typeof command.ready !== 'boolean' || typeof command.instance !== 'string' || command.instance.length > 30) fail('COMMAND_INVALID_READY');
         return clone(command);
     }
     if (command.type === 'activity') {
@@ -229,6 +262,7 @@ module.exports = {
     SCENES,
     SIMULATION_VERSION,
     SLOT_IDS,
+    assertOperationEnabled,
     clone,
     createRoomState,
     fail,

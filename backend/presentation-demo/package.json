@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "main": "server.cjs",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "scripts": {
     "start": "node server.cjs"

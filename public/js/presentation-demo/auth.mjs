@@ -1,6 +1,7 @@
 const localParams = new URLSearchParams(window.location.search);
 
 function localUid() {
+  if (!['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) return '';
   return localParams.get('localUid') || sessionStorage.getItem('bel.presentation.localUid') || '';
 }
 
@@ -16,6 +17,7 @@ export async function bootAuth() {
     const config = await configResponse.json();
     if (config?.config?.apiKey && !window.firebase.apps?.length) window.firebase.initializeApp(config.config);
     const auth = window.firebase.auth();
+    if (config?.authEmulatorUrl && !['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) throw Error('Emulator configuration is not allowed on this origin.');
     if (config?.authEmulatorUrl && !auth.__belEmulatorConnected) {
       auth.useEmulator(config.authEmulatorUrl);
       auth.__belEmulatorConnected = true;

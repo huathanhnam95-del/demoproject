@@ -28,8 +28,8 @@ function createArchiveService({ roomService, notesService, stores = roomService?
             const notebook = await notesService.readNotebookByUid(hasActor ? identity : roomId, hasActor ? roomId : slot.uid, hasActor ? slot.uid : undefined);
             notebooks[slot.uid] = { notebookRevision: notebook.notebookRevision, pages: notebook.pages };
         }
-        const payload = { roomId, sourceRevision: room.revision, members, notebooks };
-        const archive = { archiveId: roomId, roomId, status: 'archived', createdAt: clock(), sourceRevision: room.revision, members, notebooks, checksum: checksum(payload) };
+        const payload = { roomId, sourceRevision: room.revision, members, notebooks, gameplay: room.gameplay, deck: room.deck };
+        const archive = { archiveId: roomId, roomId, status: 'archived', createdAt: clock(), sourceRevision: room.revision, members, notebooks, gameplay: clone(room.gameplay), deck: clone(room.deck), checksum: checksum(payload) };
         stores.archives.set(roomId, clone(archive));
         await roomService.markArchiveStatus(roomId, 'archived');
         return clone(archive);

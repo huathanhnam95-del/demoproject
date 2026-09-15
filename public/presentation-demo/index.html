@@ -11,6 +11,7 @@
 </head>
 <body data-presentation-demo>
   <main class="pd-shell">
+    <p class="pd-desktop-hint" role="note">Use a desktop or laptop with a keyboard to explore this room. Your saved notes and room history remain available here.</p>
     <header class="pd-header">
       <div>
         <p class="pd-eyebrow">Better English Learning</p>
@@ -79,8 +80,23 @@
           <span id="pd-connection-status" class="pd-status">Connecting…</span>
         </div>
         <div class="pd-canvas-wrap">
-          <canvas id="pd-world" width="1000" height="480" aria-label="Online BEL game world"></canvas>
+          <canvas id="pd-world" width="1000" height="480" tabindex="0" aria-label="Online BEL game world"></canvas>
           <div id="pd-gate" class="pd-gate" role="status"></div>
+        </div>
+        <p id="pd-world-prompt" aria-live="polite"></p>
+        <p id="pd-activity-status" role="status" hidden></p>
+        <div id="pd-world-panel" class="pd-world-panel" role="dialog" aria-label="World interaction" hidden></div>
+        <div id="pd-pair-request" class="pd-actions" hidden></div>
+        <div class="pd-actions">
+          <button id="pd-interact" class="pd-button pd-button-secondary" type="button">Interact · F</button>
+          <button id="pd-profile" class="pd-button pd-button-secondary" type="button">Character</button>
+          <button id="pd-release" class="pd-button pd-button-secondary" type="button" hidden>Let go · E</button>
+          <button id="pd-drop" class="pd-button pd-button-secondary" type="button" hidden>Put down</button>
+          <button id="pd-dismount" class="pd-button pd-button-secondary" type="button" hidden>Dismount</button>
+          <button id="pd-activity-start" class="pd-button pd-button-primary" type="button" hidden>Start activity</button>
+          <button id="pd-activity-reset" class="pd-button pd-button-secondary" type="button" hidden>Reset bridge</button>
+          <button id="pd-pause" class="pd-button pd-button-secondary" type="button" hidden>Pause</button>
+          <button id="pd-close-presentation" class="pd-button pd-button-secondary" type="button" hidden>Return to room</button>
         </div>
         <div class="pd-deck-wrap">
           <div class="pd-deck-heading"><span class="pd-kicker">Authored deck</span><span id="pd-deck-status" class="pd-muted">Loading presentation…</span></div>
@@ -88,7 +104,7 @@
         </div>
         <div class="pd-game-toolbar">
           <span>WASD to move · F for interaction</span>
-          <button id="pd-start-room" class="pd-button pd-button-primary" type="button" hidden>Start presentation</button>
+          <button id="pd-start-room" class="pd-button pd-button-primary" type="button" hidden>Open Reception</button>
           <button id="pd-replace-connection" class="pd-button pd-button-secondary" type="button" hidden>Continue here</button>
           <button id="pd-skip-activity" class="pd-button pd-button-secondary" type="button" hidden>Presenter skip activity</button>
           <button id="pd-end-room" class="pd-button pd-button-danger" type="button" hidden>End room</button>
@@ -116,6 +132,14 @@
             <button id="pd-slide-next" class="pd-button pd-button-secondary" type="button" hidden>Next slide</button>
           </div>
           <button id="pd-export-pdf" class="pd-button pd-button-secondary" type="button">Export my notes</button>
+          <button id="pd-reveal" class="pd-button pd-button-secondary" type="button" hidden>Reveal next point</button>
+          <details id="pd-display-options" hidden>
+            <summary>Presentation display</summary>
+            <label><input id="pd-show-quotes" type="checkbox" checked> Show quotes</label>
+            <label><input id="pd-show-folio" type="checkbox" checked> Show page numbers</label>
+            <label for="pd-photo-treatment">Photos</label>
+            <select id="pd-photo-treatment"><option>Black and white</option><option>Full colour</option></select>
+          </details>
         </section>
       </aside>
     </section>

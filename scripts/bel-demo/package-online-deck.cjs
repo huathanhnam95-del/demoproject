@@ -15,10 +15,12 @@ function renderOnlineDeck() {
   const raw = fs.readFileSync(source, 'utf8');
   const deck = raw
     .replace(/src="\.\/support\.js"/g, 'src="/prototypes/bel-working-as-equals-demo/native/support.js"')
+    .replace(/src="(?:\.\/)?deck-stage\.js"/g, 'src="/prototypes/bel-working-as-equals-demo/native/deck-stage.js"')
+    .replace(/from="(?:\.\/)?deck-stage\.js"/g, 'from="/prototypes/bel-working-as-equals-demo/native/deck-stage.js"')
     .replace(/(?:href|src)="\.\.\/_ds\//g, match => `${match.slice(0, match.indexOf('"') + 1)}/prototypes/bel-working-as-equals-demo/_ds/`)
     .replace(/src="images\//g, 'src="/prototypes/bel-working-as-equals-demo/native/images/')
-    .replace(/src="\.\.\/presentation\/frame\.mjs"/g, 'src="/prototypes/bel-working-as-equals-demo/presentation/frame.mjs"');
-  if (!deck.includes('/prototypes/bel-working-as-equals-demo/presentation/frame.mjs')) {
+    .replace(/src="\.\.\/presentation\/frame\.mjs"/g, 'src="/js/presentation-demo/presentation/frame.mjs"');
+  if (!deck.includes('/js/presentation-demo/presentation/frame.mjs')) {
     throw new Error('Authored deck frame adapter was not found in the source deck.');
   }
   return deck;

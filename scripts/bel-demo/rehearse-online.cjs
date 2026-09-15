@@ -227,7 +227,7 @@ function runBrowser(baseUrl, evidenceDir, accounts, { failoverUrl = null, signal
   return run;
 }
 
-async function waitForFile(filename, timeoutMs = 120000) {
+async function waitForFile(filename, timeoutMs = 1800000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (fs.existsSync(filename)) return;
@@ -300,4 +300,4 @@ async function main() {
 
 if (require.main === module) main().then(() => process.exit(0)).catch(error => { console.error(error.stack || error.message); process.exit(1); });
 
-module.exports = { assertSafeEnvironment, readAdminCredential, seedAccounts, runBrowser, settleOutcome };
+module.exports = { assertSafeEnvironment, readAdminCredential, seedAccounts, runBrowser, settleOutcome, startBackend, stopBackend, signInToken, apiJson };

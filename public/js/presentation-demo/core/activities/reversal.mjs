@@ -1,4 +1,5 @@
 // Authored activity scenarios grounded in slide 19, not quotations from it.
+import {requiredPlayers} from '../state/progression.mjs';
 export const QUESTIONS=[
  ['I choose work that fits my teaching strengths,','and I take responsibility for moving it forward.','Do','Freedom and ownership go together.'],
  ['I ask a colleague for advice,','but I stop ordinary helpful work until they give me permission.',"Don't",'Advice is useful; ordinary helpful work does not need an approval gate.'],
@@ -15,7 +16,7 @@ export function choiceAt(p){
  if(p.x>=581&&p.x<=866)return "Don't";
  return null;
 }
-export const choiceReady=(w,b)=>Object.values(b.players).every(p=>p.connected&&p.ready&&w.players[p.id].scene==='I');
+export const choiceReady=(w,b)=>requiredPlayers(b).every(p=>p.connected&&p.ready&&w.players[p.id].scene==='I');
 export function startReversal(w,b){
  if(!choiceReady(w,b))throw Error('Wait for all three participants in I.');
  if(w.reversal.phase!=='gathering')throw Error('The activity has already started.');
@@ -24,14 +25,16 @@ export function startReversal(w,b){
 export function tickReversal(w,b,elapsed,paused){
  const r=w.reversal;
  for(const id of ['p1','p2','p3'])if(w.players[id].scene!=='I')r.debuffs[id]=0;
- if(paused||!choiceReady(w,b)||['gathering','complete'].includes(r.phase))return;
+ if(paused||(!b.online&&!choiceReady(w,b))||['gathering','complete'].includes(r.phase))return;
  for(const id of ['p1','p2','p3'])r.debuffs[id]=Math.max(0,r.debuffs[id]-elapsed);
  r.remaining=Math.max(0,r.remaining-elapsed);if(r.remaining>0)return;
  if(r.phase==='opening'){r.phase='choice';r.remaining=5000;return;}
  if(r.phase==='choice'){
    const result={index:r.index,answer:QUESTIONS[r.index][2],players:{}};
    for(const id of ['p1','p2','p3']){
+     if(b.online&&(!b.players[id].connected||w.players[id].scene!=='I')){result.players[id]={choice:null,correct:false,linked:false,evaluated:false};continue;}
      const choice=choiceAt(w.players[id]),correct=choice===result.answer;result.players[id]={choice,correct,linked:!!w.players[id].leader};
+     if(b.online)result.players[id].evaluated=true;
      if(!correct&&r.debuffs[id]===0)r.debuffs[id]=20000;
    }
    r.results.push(result);

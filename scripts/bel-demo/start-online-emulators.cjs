@@ -125,7 +125,9 @@ async function startOnlineEmulators({ evidenceDir = null } = {}) {
     if (logPath) fs.mkdirSync(path.dirname(logPath), { recursive: true });
     const log = logPath ? fs.openSync(logPath, 'w') : null;
     const executable = process.platform === 'win32' ? 'firebase.cmd' : 'firebase';
-    const child = spawn(executable, ['emulators:start', '--only', 'auth,firestore,database,functions,storage', '--project', config.projectId, '--config', process.platform === 'win32' ? `"${temporaryConfig}"` : temporaryConfig, '--non-interactive'], { cwd: repo, env: environment, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, shell: process.platform === 'win32' });
+    // CLI debug logs follow cwd; keep them in the evidence directory. The
+    // explicit config remains beside firebase.json for source resolution.
+    const child = spawn(executable, ['emulators:start', '--only', 'auth,firestore,database,functions,storage', '--project', config.projectId, '--config', process.platform === 'win32' ? `"${temporaryConfig}"` : temporaryConfig, '--non-interactive'], { cwd: evidenceDir ? path.resolve(evidenceDir) : repo, env: environment, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, shell: process.platform === 'win32' });
     let logClosed = false;
     let readyResolve;
     const readySignal = new Promise(resolve => { readyResolve = resolve; });
@@ -167,6 +169,20 @@ async function startOnlineEmulators({ evidenceDir = null } = {}) {
             waitFor(`http://${ports.functions.host}:${ports.functions.port}/${config.projectId}/us-central1/api/config`),
             readySignal
         ]), childFailure]);
+        // The CLI can initialize a fallback namespace in a demo project.
+        // Explicitly install the repository rules into the exact namespace
+        // used by the app before admitting any test clients.
+        const databaseBase = `http://${ports.database.host}:${ports.database.port}`;
+        const namespace = `${config.projectId}-default-rtdb`;
+        const rules = fs.readFileSync(path.join(repo, 'database.rules.json'), 'utf8');
+        const rulesUrl = `${databaseBase}/.settings/rules.json?ns=${namespace}`;
+        const installed = await fetch(rulesUrl, { method: 'PUT', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }, body: rules });
+        if (!installed.ok) throw new Error(`RTDB emulator rules installation failed (${installed.status}).`);
+        const actual = await fetch(rulesUrl, { headers: { Authorization: 'Bearer owner' } }).then(response => response.json());
+        if (JSON.stringify(actual) !== JSON.stringify(JSON.parse(rules))) throw new Error('RTDB emulator rules do not match the repository.');
+        const denial = await fetch(`${databaseBase}/presentationRooms.json?ns=${namespace}`);
+        if (![401, 403].includes(denial.status)) throw new Error('RTDB emulator must deny direct anonymous room reads.');
+        if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'database-rules-installed.json'), JSON.stringify({ namespace, sha256: require('node:crypto').createHash('sha256').update(rules).digest('hex'), anonymousStatus: denial.status }, null, 2));
         return { child, stop, environment, projectId: config.projectId, ports, logPath, temporaryConfig };
     } catch (error) {
         await stop();

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import time
+import traceback
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -75,21 +76,269 @@ def open_game(page, allow_existing: bool = False):
     return game
 
 
-def walk_all(games: dict, uids: list[str]) -> None:
-    """Create measurable server-side travel for every connected seat."""
-    for uid in uids:
-        wait_for_text(games[uid], "#pd-connection-status", "Connected", timeout=30000)
-    for uid in uids:
-        game = games[uid]
-        # Notes and other controls may retain focus between route segments;
-        # movement keys must reach the game listener rather than a textarea.
-        game.locator("#pd-world").click(position={"x": 10, "y": 10})
-        game.keyboard.down("d")
-        game.wait_for_timeout(750)
-        game.keyboard.up("d")
-    games[uids[0]].wait_for_timeout(1000)
-    for uid in uids:
-        wait_for_text(games[uid], "#pd-connection-status", "Connected", timeout=30000)
+def world_snapshot(page) -> dict:
+    return page.evaluate("window.belOnlineDebug.snapshot()")
+
+
+def plan_walk(page, target):
+    return page.evaluate(
+        """async target => {
+          const {room,seatId} = window.belOnlineDebug.snapshot();
+          const w=room.gameplay,p=w.players[seatId];
+          const sim=await import('/js/presentation-demo/core/world/simulation.mjs');
+          const geo=await import('/js/presentation-demo/core/world/geometry.mjs');
+          const {SCENES}=await import('/js/presentation-demo/core/world/scenes.mjs');
+          const t=typeof target==='string'?sim.targets(w,seatId).find(t=>t.id===target):target;
+          if(!t)throw Error('Target unavailable: '+JSON.stringify(target));
+              const reach=typeof target==='string'?47:27;
+              if(geo.distance(p,t)<=reach)return {done:true,p,t};
+          const solids=sim.solidsFor(w,seatId),scene=SCENES[p.scene],radius=p.ride?15:10;
+          const start={x:p.x,y:p.y,g:0,h:geo.distance(p,t),parent:null};
+          const open=[start],seen=new Map([['0,0',0]]);
+          let found=null,visits=0;
+          while(open.length&&visits++<15000){
+            open.sort((a,b)=>(b.g+b.h)-(a.g+a.h));const current=open.pop();
+            if(geo.distance(current,t)<=reach){found=current;break;}
+            // End on the interaction circle even when its narrow reachable
+            // strip falls between grid rows (notably J's tabletop cubes).
+            const gap=geo.distance(current,t);
+            if(gap<=reach+9){
+              const scale=(gap-reach+.1)/gap;
+              const approach=geo.move(current,(t.x-current.x)*scale,(t.y-current.y)*scale,scene,solids,radius);
+              if(geo.distance(approach,t)<=reach){found={...approach,parent:current};break;}
+            }
+            for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
+              const x=current.x+dx*6,y=current.y+dy*6;
+              if(x<0||x>1000||y<0||y>480)continue;
+              const moved=geo.move(current,dx*6,dy*6,scene,solids,radius);
+              if(Math.hypot(moved.x-x,moved.y-y)>.01)continue;
+              const g=current.g+Math.hypot(dx,dy)*6,k=Math.round((x-p.x)/6)+','+Math.round((y-p.y)/6);
+              if((seen.get(k)??Infinity)<=g)continue;
+              seen.set(k,g);open.push({x,y,g,h:Math.max(0,Math.hypot(x-t.x,y-t.y)-reach),parent:current});
+            }
+          }
+          if(!found)throw Error('No walkable path '+JSON.stringify({p,t,visits}));
+          const raw=[];while(found.parent){raw.unshift({x:found.x,y:found.y});found=found.parent;}
+          const corners=[];let previous=start,direction='';
+          for(let i=0;i<raw.length;i++){
+            const point=raw[i],nextDirection=Math.sign(point.x-previous.x)+','+Math.sign(point.y-previous.y);
+            if(direction&&direction!==nextDirection)corners.push(previous);
+            direction=nextDirection;previous=point;
+          }
+          corners.push(raw.at(-1));return {done:false,p,t,point:corners[0]};
+        }""", target)
+
+
+def walk_to(page, target, timeout=35):
+    """Read the committed world, plan through its floor, and press real keys."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        path = plan_walk(page,target)
+        if path['done']:
+            return
+        player,point=path['p'],path['point']
+        dx,dy=point['x']-player['x'],point['y']-player['y']
+        keys=[]
+        if abs(dx)>2: keys.append('d' if dx>0 else 'a')
+        if abs(dy)>2: keys.append('s' if dy>0 else 'w')
+        if not keys:
+            # A continuous endpoint can be less than two pixels away. Press
+            # toward its strongest axis instead of spinning without input.
+            keys.append(('d' if dx>0 else 'a') if abs(dx)>abs(dy) else ('s' if dy>0 else 'w'))
+        page.locator('#pd-world').focus()
+        for key in keys: page.keyboard.down(key)
+        duration=min(450,max(85,(dx*dx+dy*dy)**.5/(165 if player.get('ride') else 108)*1000-45))
+        page.wait_for_timeout(duration)
+        for key in keys: page.keyboard.up(key)
+        page.wait_for_timeout(220)
+    raise AssertionError(f'Walking timed out toward {target}: {world_snapshot(page)}')
+
+
+def interact_target(page, target, expected_kind=None):
+    walk_to(page,target)
+    location=page.evaluate("target => {const s=window.belOnlineDebug.snapshot();return import('/js/presentation-demo/core/world/simulation.mjs').then(m=>m.targets(s.room.gameplay,s.seatId).find(t=>t.id===target));}",target)
+    box=page.locator('#pd-world').bounding_box()
+    page.locator('#pd-world').click(position={'x':location['x']*box['width']/1000,'y':location['y']*box['height']/480})
+    if expected_kind:
+        page.wait_for_function("kind => {const p=document.querySelector('#pd-world-panel');return !p.hidden && p.dataset.kind===kind;}",arg=expected_kind)
+    page.wait_for_timeout(200)
+
+
+def enter_door(page, target, scene):
+    interact_target(page,target,'door')
+    page.locator('#pd-world-panel [data-enter]').click()
+    page.wait_for_function("scene => document.body.dataset.scene===scene && document.body.dataset.ready==='true'",arg=scene)
+
+
+def close_panel(page):
+    if page.locator('#pd-world-panel').is_visible(): page.locator('#pd-world-panel [data-close]').click()
+
+
+def open_presentation(page,scene):
+    interact_target(page,'monitor','monitor')
+    page.locator('#pd-world-panel [data-presentation-start]').click()
+    page.wait_for_function("scene => {const w=window.belOnlineDebug.snapshot().room.gameplay;return w.presentation.active&&w.presentation.roomId===scene;}",arg=scene)
+
+
+def walk_group(games, destinations, timeout=40):
+    deadline=time.monotonic()+timeout
+    pending=dict(destinations)
+    while pending and time.monotonic()<deadline:
+        held=[]
+        for uid,target in list(pending.items()):
+            page=games[uid]; path=plan_walk(page,target)
+            if path['done']: del pending[uid]; continue
+            player,point=path['p'],path['point']; dx,dy=point['x']-player['x'],point['y']-player['y']
+            # A wrong floor answer reverses the real controls; compensate with
+            # the same keyboard that a player uses, never a state mutation.
+            snap=world_snapshot(page)
+            reverse=player['scene']=='I' and snap['room']['gameplay']['reversal']['debuffs'].get(player['id'],0)>0
+            if reverse: dx,dy=-dx,-dy
+            keys=[]
+            if abs(dx)>2: keys.append('d' if dx>0 else 'a')
+            if abs(dy)>2: keys.append('s' if dy>0 else 'w')
+            if not keys: keys.append(('d' if dx>0 else 'a') if abs(dx)>abs(dy) else ('s' if dy>0 else 'w'))
+            page.locator('#pd-world').focus()
+            for key in keys: page.keyboard.down(key)
+            held.append((page,keys))
+        if not held: break
+        held[0][0].wait_for_timeout(180)
+        for page,keys in held:
+            for key in keys: page.keyboard.up(key)
+        held[0][0].wait_for_timeout(180)
+    if pending: raise AssertionError(f'Group walking timed out: {pending}')
+
+
+def physical_route(games,presenter,participants,base_url,room_id,evidence,result):
+    actors=[presenter,*participants]; host=games[presenter]; trace=[]
+    def record(stage):
+        snap=world_snapshot(host)
+        trace.append({'stage':stage,'revision':snap['room']['revision'],'scenes':{k:p['scene'] for k,p in snap['room']['gameplay']['players'].items()}})
+        print('rehearsal: physical route '+stage,flush=True)
+        host.screenshot(path=str(evidence/('world-'+stage+'.png')),full_page=True)
+    def doors(target,scene):
+        for uid in actors: enter_door(games[uid],target,scene)
+        record(scene)
+    def present(scene,last):
+        open_presentation(host,scene)
+        if scene=='A':
+            host.locator('#pd-display-options summary').click()
+            host.locator('#pd-show-quotes').uncheck()
+            host.locator('#pd-show-folio').uncheck()
+            host.locator('#pd-photo-treatment').select_option('Full colour')
+            for uid in actors:
+                games[uid].wait_for_function("() => {const p=window.belOnlineDebug.snapshot().room.deck.properties; return p.showQuotes===false&&p.showFolio===false&&p.photoTreatment==='Full colour';}")
+            result['assertions'].append('presentation-properties-shared-across-four-clients')
+        first=world_snapshot(host)['room']['deck']['slide']
+        for slide in range(first,last+1):
+            if slide>first: advance_slide(games,presenter,actors,scene,slide,base_url,room_id)
+            for uid in actors:
+                rendered=games[uid].frame_locator('#pd-deck').locator(f'deck-stage > section[data-deck-slide="{slide-1}"][data-deck-active]')
+                expect(rendered).to_be_visible(timeout=15000)
+            if slide in [2,4,5,6]:
+                host.locator('#pd-reveal').click()
+                for uid in actors:
+                    games[uid].wait_for_function("slide => window.belOnlineDebug.snapshot().room.deck.steps[slide]===2",arg=slide)
+                    shown=games[uid].frame_locator('#pd-deck').locator('section[data-deck-active] [data-phase="shown"]')
+                    expect(shown).to_have_count(2 if slide==2 else 1,timeout=15000)
+        host.locator('#pd-close-presentation').click()
+        host.wait_for_function('!window.belOnlineDebug.snapshot().room.gameplay.presentation.active')
+        record(scene+'-presentation')
+    # Home customization and a physical vehicle trip use the real controls.
+    game=games[participants[0]]
+    game.locator('#pd-profile').click();game.locator('#pd-world-panel input[name=name]').fill('Chrome character')
+    game.get_by_role('button',name='Save character',exact=True).click()
+    interact_target(game,'scooter');game.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.players.p1.ride==='scooter'")
+    for uid in participants:
+        enter_door(games[uid],'exit','street');enter_door(games[uid],'bel','reception')
+    record('reception')
+    # One explicit invitation and acceptance; release before independent travel.
+    interact_target(games[participants[0]],'p2','person')
+    games[participants[0]].locator('[data-social=hold]').click()
+    games[participants[1]].get_by_role('button',name='Accept',exact=True).click()
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.players.p1.follower==='p2'")
+    games[participants[1]].locator('#pd-release').click()
+    host.wait_for_function("!window.belOnlineDebug.snapshot().room.gameplay.players.p1.follower")
+    doors('studio','A')
+    interact_target(games[participants[0]],'seat-1-0')
+    games[participants[0]].wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.players.p1.seat==='seat-1-0'")
+    # The authored input ignores repeated interactions within 350 ms. Wait
+    # beyond that debounce and verify standing before independent travel.
+    games[participants[0]].wait_for_timeout(400)
+    games[participants[0]].locator('#pd-world').focus();games[participants[0]].keyboard.press('f')
+    games[participants[0]].wait_for_function("!window.belOnlineDebug.snapshot().room.gameplay.players.p1.seat")
+    present('A',3)
+    # Every B route is visited. Each reflection requires its physical shape.
+    for index,uid in enumerate(participants):
+        route='B'+str(index+1);enter_door(games[uid],'door-'+str(index+1),route)
+        for shape in range(3):
+            interact_target(games[uid],'shape-'+str(shape))
+            games[uid].wait_for_function("([id,object])=>window.belOnlineDebug.snapshot().room.gameplay.players[id].carry===object",arg=['p'+str(index+1),'shape-'+str(shape)])
+            interact_target(games[uid],'pedestal-'+str(shape),'reflection');close_panel(games[uid])
+        enter_door(games[uid],'onward','C')
+    enter_door(host,'door-1','B1');enter_door(host,'onward','C');record('B1-B2-B3')
+    present('C',9);doors('onward','D')
+    for index in range(5): interact_target(host,'portrait-'+str(index),'portrait');close_panel(host)
+    record('D-portraits');doors('end','E');present('E',16);doors('onward','F')
+    host.locator('#pd-activity-start').click();host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.bridge.phase==='preparation'")
+    before=world_snapshot(host)['room']['gameplay']['bridge'];assert 58000<before['remaining']<=60000
+    # Preserve the authored first 60/30/10 loop and demonstrate physical carry.
+    interact_target(games[participants[0]],'plank-0')
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.bridge.phase==='attempt'",timeout=70000)
+    interact_target(games[participants[0]],'plank-0')
+    games[participants[0]].wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.players.p1.carry==='plank-0'")
+    interact_target(games[participants[0]],'bridge-next')
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.bridge.placed===1")
+    generation=world_snapshot(host)['room']['gameplay']['bridge']['generation']
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.bridge.phase==='review'",timeout=35000)
+    review=world_snapshot(host)['room']['gameplay']['bridge'];assert review['generation']==generation+1 and 8500<review['remaining']<=10000
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.bridge.phase==='attempt'",timeout=12000)
+    host.locator('#pd-skip-activity').click();host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.bridge.placed===6")
+    result['bridgeLoop']={'preparationMs':before['remaining'],'reviewMs':review['remaining'],'generation':review['generation'],'placedBeforeReset':review['lastPlaced'],'assisted':True}
+    doors('onward','G');present('G',18);doors('onward','I')
+    present('I',19)
+    # Stay on authored floor regions through all six timed questions.
+    walk_group(games,{participants[0]:{'x':300,'y':290},participants[1]:{'x':710,'y':285},participants[2]:{'x':750,'y':325}})
+    host.locator('#pd-activity-start').click()
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.reversal.results.length>=1",timeout=12000)
+    first=world_snapshot(host)['room']['gameplay']['reversal'];assert first['results'][0]['players']['p1']['correct'] and not first['results'][0]['players']['p2']['correct']
+    assert 0<first['debuffs']['p2']<=20000
+    # Real disconnect leaves the remaining activity running and records an
+    # explicitly unevaluated answer. Reopen the same account afterward.
+    offline=games[participants[2]];offline_context=offline.context;offline_url=offline.url;offline.close()
+    host.wait_for_function("!window.belOnlineDebug.snapshot().room.slots.p3.connected",timeout=25000)
+    host.wait_for_function("window.belOnlineDebug.snapshot().room.gameplay.reversal.phase==='complete'",timeout=120000)
+    reversal=world_snapshot(host)['room']['gameplay']['reversal']
+    assert len(reversal['results'])==6 and any(row['players']['p3'].get('evaluated') is False for row in reversal['results'][1:])
+    offline=offline_context.new_page();offline.goto(offline_url);wait_for_text(offline,'#pd-connection-status','Connected',timeout=30000);games[participants[2]]=offline
+    offline.wait_for_function("document.body.dataset.ready==='true'")
+    result['reversal']=reversal;present('I',20);doors('onward','J')
+    # Complete three normal pairs using two distinct physical carriers.
+    for left,right,pair in [(1,3,0),(2,5,1),(0,4,2)]:
+        for uid,cube in [(participants[0],left),(participants[1],right)]:
+            interact_target(games[uid],'cube-'+str(cube))
+            games[uid].wait_for_function("([id,cube])=>window.belOnlineDebug.snapshot().room.gameplay.players[id].carry===cube",arg=['p1' if uid==participants[0] else 'p2','cube-'+str(cube)])
+        walk_to(games[participants[0]],{'x':320,'y':345});walk_to(games[participants[1]],{'x':360,'y':345})
+        interact_target(games[participants[0]],'p2')
+        host.wait_for_function("pair=>window.belOnlineDebug.snapshot().room.gameplay.cubes.pairs[pair]===true",arg=pair)
+    record('J-three-normal-pairs');open_presentation(host,'J')
+    assert world_snapshot(host)['room']['deck']['finalPage']=='determine'
+    host.locator('#pd-slide-next').click();host.wait_for_function("window.belOnlineDebug.snapshot().room.deck.finalPage==='eta'")
+    eta=world_snapshot(host)['room']['deck']['etaOrigin'];assert eta
+    for uid in actors: games[uid].wait_for_function("origin=>window.belOnlineDebug.snapshot().room.deck.etaOrigin===origin",arg=eta)
+    eta_values=[]
+    for uid in actors:
+        frame=games[uid].frame_locator('#pd-deck')
+        banner=frame.locator('[data-eta-banner][data-phase=shown]')
+        expect(banner).to_be_visible(timeout=15000)
+        values=banner.locator('div[style*="font-size:58px"],div[style*="font-size: 58px"]').all_text_contents()
+        assert len(values)==5,values
+        months,days,hours,minutes,seconds=map(int,values)
+        eta_values.append(months*30*86400+days*86400+hours*3600+minutes*60+seconds)
+    assert max(eta_values)-min(eta_values)<=2,eta_values
+    result['renderedEtaSeconds']=eta_values
+    result['assertions'].append('native-ETA-rendered-consistently-with-plus-minus-two-minute-client-clock-skew')
+    result['etaOrigin']=eta;result['routeTrace']=trace;result['assertions'].append('physical-home-street-reception-A-B1-B2-B3-C-D-E-F-G-I-J-and-shared-ETA')
 
 
 def advance_slide(
@@ -127,8 +376,7 @@ def advance_slide(
                 """([selector, expectedScene, expectedSlide, previous]) => {
                     const gate = document.querySelector(selector);
                     const text = gate?.textContent || '';
-                    return text.includes(`Scene: ${expectedScene}`) && text !== previous
-                        && gate?.dataset.deckRoom === expectedScene
+                    return gate?.dataset.deckRoom === expectedScene
                         && gate?.dataset.deckSlide === String(expectedSlide);
                 }""",
                 arg=["#pd-gate", expected_scene, expected_slide, previous_gates[uid]],
@@ -176,6 +424,15 @@ def main() -> int:
     requests: list[str] = []
     responses: list[tuple[int, str]] = []
     console_errors: list[str] = []
+    page_errors: list[str] = []
+    asset_failures: list[tuple[int, str]] = []
+    all_console_errors: list[str] = []
+    export_responses: list[dict] = []
+    def observe_page(page):
+        page.on('response', lambda response: export_responses.append({'status':response.status,'url':response.url.split('?')[0]}) if '/export.pdf' in response.url else None)
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.on('console', lambda message: all_console_errors.append(message.text) if message.type == 'error' else None)
+        page.on('response', lambda response: asset_failures.append((response.status, response.url.split('?')[0])) if response.status >= 400 and '/api/' not in response.url and (response.request.resource_type in ['script', 'stylesheet', 'image', 'font'] or response.url.split('?')[0].endswith(('.js','.mjs','.css'))) else None)
     result = {"channel": args.channel, "baseUrl": args.base_url, "accounts": [presenter, *participants], "assertions": []}
 
     with sync_playwright() as playwright:
@@ -189,9 +446,13 @@ def main() -> int:
                 print(f"rehearsal: opening lobby {uid}", flush=True)
                 context = browser.new_context()
                 context.set_default_timeout(10000)
+                context.on('page', observe_page)
+                if uid in participants[1:]:
+                    skew=120000 if uid==participants[1] else -120000
+                    context.add_init_script(f"const belOriginalNow=Date.now.bind(Date); Date.now=()=>belOriginalNow()+({skew});")
                 if args.failover_url:
                     context.add_init_script(f"window.__BEL_PRESENTATION_FAILOVER_ORIGINS = [{json.dumps(args.failover_url)}];")
-                context.tracing.start(screenshots=True, snapshots=True, sources=False)
+                context.tracing.start(screenshots=False, snapshots=False, sources=False)
                 context.on("page", lambda new_page: new_page.on("websocket", lambda websocket: requests.append(websocket.url)))
                 contexts[uid] = context
                 page = open_lobby(context, args.base_url, accounts["presenter"] if uid == presenter else next(entry for entry in accounts["participants"] if entry["uid"] == uid) if uid in participants else accounts["outsider"])
@@ -237,9 +498,10 @@ def main() -> int:
 
             duplicate_context = browser.new_context()
             duplicate_context.set_default_timeout(12000)
+            duplicate_context.on('page', observe_page)
             if args.failover_url:
                 duplicate_context.add_init_script(f"window.__BEL_PRESENTATION_FAILOVER_ORIGINS = [{json.dumps(args.failover_url)}];")
-            duplicate_context.tracing.start(screenshots=True, snapshots=True, sources=False)
+            duplicate_context.tracing.start(screenshots=False, snapshots=False, sources=False)
             duplicate_context.on("page", lambda new_page: new_page.on("websocket", lambda websocket: requests.append(websocket.url)))
             duplicate_page = open_lobby(duplicate_context, args.base_url, accounts["participants"][0])
             duplicate_page.locator("#pd-room-code").fill(room_code)
@@ -265,7 +527,7 @@ def main() -> int:
             wait_for_text(games[presenter], "#pd-start-room", "")
             games[presenter].locator("#pd-start-room").click()
             try:
-                wait_for_text(games[presenter], "#pd-gate", "Scene:")
+                games[presenter].wait_for_function("window.belOnlineDebug.snapshot().room.lifecycle==='playing'")
             except PlaywrightTimeoutError:
                 raise AssertionError(
                     f"Presenter transition did not open the route: gate={games[presenter].locator('#pd-gate').inner_text()!r}, "
@@ -284,42 +546,7 @@ def main() -> int:
             active_uids = [presenter, *participants]
             for uid in active_uids:
                 wait_for_text(games[uid], "#pd-connection-status", "Connected", timeout=30000)
-            # The reconnect callback updates the public status before the
-            # first post-reconnect command has necessarily reached OPEN.
-            games[presenter].wait_for_timeout(1500)
-            wait_for_text(games[presenter], "#pd-connection-status", "Connected", timeout=5000)
-            advance_slide(games, presenter, active_uids, "A", 2, args.base_url, room_id)
-            result["observedSlideGates"] = {uid: games[uid].locator("#pd-gate").inner_text() for uid in [presenter, *participants]}
-            result["slideMessage"] = games[presenter].locator("#pd-game-message").inner_text()
-            result["recentApiResponses"] = responses[-25:]
-            current_room = "A"
-            current_slide = 2
-            route_ranges = [("A", 3), ("C", 9), ("E", 16), ("G", 18), ("I", 20), ("J", 21)]
-            route_trace = [{"room": current_room, "slide": current_slide}]
-            for room_name, last_slide in route_ranges:
-                while current_room == room_name and current_slide < last_slide:
-                    current_slide += 1
-                    advance_slide(games, presenter, active_uids, room_name, current_slide, args.base_url, room_id)
-                    route_trace.append({"room": current_room, "slide": current_slide})
-                if room_name == "J":
-                    continue
-                next_room = route_ranges[route_ranges.index((room_name, last_slide)) + 1][0]
-                walk_all(games, active_uids)
-                current_room = next_room
-                current_slide = {
-                    "A": 1,
-                    "C": 4,
-                    "E": 10,
-                    "G": 17,
-                    "I": 19,
-                    "J": 21,
-                }[next_room]
-                advance_slide(games, presenter, active_uids, current_room, current_slide, args.base_url, room_id)
-                route_trace.append({"room": current_room, "slide": current_slide})
-            if current_room != "J" or current_slide != 21:
-                raise AssertionError(f"Full route did not reach Studio J slide 21: {route_trace}")
-            result["routeTrace"] = route_trace
-            result["assertions"].append("full-authored-route-reached-beyond-studio-a")
+            physical_route(games,presenter,participants,args.base_url,room_id,evidence,result)
 
             # Hold one save response while typing newer content. The save
             # handler must retain the newer local draft after the old response.
@@ -453,9 +680,6 @@ def main() -> int:
                 raise AssertionError(f"Authoritative slide state did not converge: {authoritative}")
             if reference_state["lifecycle"] != "playing" or reference_state["deck"]["room"] != "J" or reference_state["deck"]["slide"] != 21:
                 raise AssertionError(f"Unexpected authoritative slide state: {reference_state}")
-            if not all("Scene: A" in value for value in result["observedSlideGates"].values()):
-                print(json.dumps({"observedSlideGates": result["observedSlideGates"], "slideMessage": result["slideMessage"], "recentApiResponses": result["recentApiResponses"]}, indent=2))
-                raise AssertionError(f"Slide state did not converge across contexts: {result['observedSlideGates']}")
             result["assertions"].append("server-authorized-movement-and-route-used")
 
             # Backend failover must not erase the active local-only page draft.
@@ -471,8 +695,12 @@ def main() -> int:
             result["assertions"].append("explicit-end-left-terminal-room")
 
             for uid in [presenter, participants[0]]:
-                with games[uid].expect_download(timeout=15000) as download_info:
-                    games[uid].locator("#pd-export-pdf").click()
+                try:
+                    with games[uid].expect_download(timeout=15000) as download_info:
+                        games[uid].locator("#pd-export-pdf").click()
+                except PlaywrightTimeoutError:
+                    result['exportDiagnostics']={'uid':uid,'message':games[uid].locator('#pd-game-message').inner_text(),'responses':export_responses}
+                    raise AssertionError(f"PDF download did not finish: {result['exportDiagnostics']}")
                 download = download_info.value
                 target = evidence / f"{uid}-export.pdf"
                 download.save_as(str(target))
@@ -513,12 +741,22 @@ def main() -> int:
             unexpected_console_errors = [entry for entry in console_errors if not entry.startswith(f"{outsider}:")]
             if unexpected_console_errors:
                 raise AssertionError(f"Unexpected browser console errors: {unexpected_console_errors}")
+            if page_errors or asset_failures:
+                raise AssertionError(f"Browser runtime or asset failures: {page_errors!r}, {asset_failures!r}")
             result["assertions"].append("network-transport-observed-no-same-profile-channel")
+        except Exception as error:
+            result['failure'] = str(error)
+            print(traceback.format_exc(), flush=True)
+            (evidence / 'failure.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+            raise
         finally:
             result["requestCount"] = len(requests)
             result["networkRequests"] = sorted({url.split("?")[0] for url in requests if "/api/presentation-demo" in url})
             result["expectedConsoleErrors"] = [entry for entry in console_errors if entry.startswith(f"{outsider}:")]
             result["consoleErrors"] = [entry for entry in console_errors if not entry.startswith(f"{outsider}:")][:30]
+            result['pageErrors'] = page_errors
+            result['assetFailures'] = asset_failures
+            result['allConsoleErrors'] = all_console_errors[:80]
             for name, context in contexts.items():
                 try:
                     context.tracing.stop(path=str(evidence / f"trace-{name}.zip"))

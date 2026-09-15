@@ -8,6 +8,9 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
   let pages = [];
   let hasSelection = false;
   let editGeneration = 0;
+  let saving = null;
+  let autosaveTimer = 0, readOnly = false, conflicted = false;
+  const pendingOperations = new Map();
   const pageSelect = document.createElement('select');
   pageSelect.id = 'pd-note-page';
   pageSelect.setAttribute('aria-label', 'Note page');
@@ -57,6 +60,7 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     if (forPageId === pageId) persistDraft(forPageId);
   }
   function selectPage(nextId) {
+    window.clearTimeout(autosaveTimer); conflicted = false;
     if (hasSelection) flushDraft(pageId);
     editGeneration += 1;
     pageId = nextId || 'main';
@@ -81,11 +85,40 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     selectPage(pageId);
   }
   async function save() {
+    window.clearTimeout(autosaveTimer);
+    if (readOnly) return;
+    if (saving) { await saving; return save(); }
     const savedPageId = pageId;
     const savedVersion = version;
     const savedValues = { title: elements.title.value.trim() || 'Observation', body: elements.body.value };
     const saveGeneration = editGeneration;
-    const page = await transport.saveNote(roomId, { pageId: savedPageId, ...savedValues, expectedVersion: savedVersion });
+    const current = pages.find(page => page.id === savedPageId);
+    if (current?.version && current.title === savedValues.title && current.body === savedValues.body) { elements.status.textContent = 'Saved'; return current; }
+    const fingerprint = JSON.stringify({ savedPageId, savedVersion, savedValues });
+    const operationId = pendingOperations.get(fingerprint) || crypto.randomUUID();
+    pendingOperations.set(fingerprint, operationId);
+    elements.status.textContent = 'Saving…';
+    const pending = transport.saveNote(roomId, { operationId, pageId: savedPageId, ...savedValues, expectedVersion: savedVersion });
+    saving = pending;
+    let page;
+    try { page = await pending; }
+    catch (error) {
+      if (pageId === savedPageId) flushDraft();
+      if (error.code === 'NOTE_CONFLICT') {
+        conflicted = true;
+        const latest = await transport.readNotes(roomId);
+        const saved = latest.pages?.find(value => value.id === savedPageId);
+        let conflict = document.getElementById?.('pd-note-conflict');
+        if (!conflict) { conflict = document.createElement('pre'); conflict.id = 'pd-note-conflict'; elements.status.before(conflict); }
+        conflict.textContent = 'Current saved page (version ' + (saved?.version || 0) + ')\n' + (saved?.title || '') + '\n' + (saved?.body || '') + '\nYour draft is kept above. Reconcile it, then press Save.';
+        if (pageId === savedPageId) version = saved?.version || 0;
+      }
+      elements.status.textContent = error.code === 'NOTE_CONFLICT' ? 'Conflict · your draft is kept' : 'Offline draft · not saved to the server';
+      throw error;
+    } finally { saving = null; }
+    pendingOperations.delete(fingerprint);
+    conflicted = false;
+    const conflict = document.getElementById?.('pd-note-conflict'); if (conflict) conflict.remove();
     pages = [...pages.filter(value => value.id !== page.id), page].sort((a, b) => a.id.localeCompare(b.id));
     persistPageCatalog();
     const stillCurrent = pageId === savedPageId && editGeneration === saveGeneration;
@@ -99,11 +132,22 @@ export function bindNotebook({ transport, roomId, identity, elements }) {
     return page;
   }
   let draftTimer = 0;
-  const scheduleDraft = () => { editGeneration += 1; const forPageId = pageId; const values = { title: elements.title.value, body: elements.body.value }; window.clearTimeout(draftTimer); draftTimer = window.setTimeout(() => persistDraft(forPageId, values), 200); };
+  const scheduleDraft = () => {
+    editGeneration += 1; const forPageId = pageId; const values = { title: elements.title.value, body: elements.body.value };
+    window.clearTimeout(draftTimer); draftTimer = window.setTimeout(() => persistDraft(forPageId, values), 200);
+    window.clearTimeout(autosaveTimer);
+    if (!readOnly && !conflicted) { elements.status.textContent = 'Draft · waiting to save'; autosaveTimer = window.setTimeout(() => save().catch(() => {}), 1000); }
+  };
   pageSelect.addEventListener('change', () => selectPage(pageSelect.value));
-  newPage.addEventListener('click', () => { const nextId = `page-${Date.now()}`; pages.push({ id: nextId, title: '', body: '', version: 0 }); persistPageCatalog(); selectPage(nextId); });
+  newPage.addEventListener('click', () => { const nextId = `page-${crypto.randomUUID()}`; pages.push({ id: nextId, title: '', body: '', version: 0 }); persistPageCatalog(); selectPage(nextId); });
   elements.title.addEventListener('input', scheduleDraft);
   elements.body.addEventListener('input', scheduleDraft);
   elements.save.addEventListener('click', () => save().catch(error => { elements.status.textContent = error.message; }));
-  return { load, save, persistDraft, flushDraft, selectPage };
+  function setReadOnly(value) {
+    readOnly = value;
+    for (const element of [elements.title, elements.body, elements.save, newPage]) element.disabled = value;
+    if (value) { window.clearTimeout(autosaveTimer); flushDraft(); elements.status.textContent = 'Room ended · saved notebook is read-only'; }
+  }
+  function close() { flushDraft(); window.clearTimeout(autosaveTimer); setReadOnly(true); pendingOperations.clear(); pages = []; elements.title.value = ''; elements.body.value = ''; }
+  return { load, save, persistDraft, flushDraft, selectPage, setReadOnly, close };
 }

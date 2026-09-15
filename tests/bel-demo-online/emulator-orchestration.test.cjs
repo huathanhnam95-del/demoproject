@@ -4,6 +4,21 @@ const fs = require('node:fs');
 const { safeEnvironment, temporaryFirebaseConfig, windowsFirebaseCleanupScript } = require('../../scripts/bel-demo/start-online-emulators.cjs');
 const { settleOutcome } = require('../../scripts/bel-demo/rehearse-online.cjs');
 
+test('database wire observation handles split masked frames and never alters forwarded bytes', async () => {
+    const { wireObserver } = require('../../scripts/bel-demo/measure-online.cjs');
+    const { Sender } = require('../../functions/node_modules/ws');
+    const counts = {}, observe = wireObserver(counts);
+    observe(Buffer.from('GET /.ws HTTP/1.1\r\nUpgrade: websocket\r\n\r\n'));
+    const payload = Buffer.from(JSON.stringify({ t: 'd', d: { a: 'p', b: { text: 'x'.repeat(66000) } } }));
+    const frame = Buffer.concat(Sender.frame(payload, { fin: true, opcode: 1, mask: true, readOnly: true }));
+    const original = Buffer.from(frame);
+    for (let index = 0; index < frame.length; index += 37) observe(frame.subarray(index, index + 37));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(counts.p, 1); assert.equal(counts.observerErrors || 0, 0); assert.deepEqual(frame, original);
+    const http = {}; const rest = wireObserver(http); rest(Buffer.from('GET /room.json HTTP/1.1\r\nConnection: keep-alive\r\n\r\n')); rest(Buffer.alloc(100,255));
+    assert.equal(http.httpConnections, 1); assert.equal(http.observerErrors || 0, 0);
+});
+
 const ports = {
     auth: { host: '127.0.0.1', port: 19101 },
     firestore: { host: '127.0.0.1', port: 19080 },

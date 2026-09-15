@@ -1,4 +1,5 @@
 // Session-authoritative 60 / 30 / 10 second bridge loop. Rendering never owns time.
+import {requiredPlayers} from '../state/progression.mjs';
 export const PLANKS=[
   ['teal','diamond','Prepare your questions',650,351],
   ['violet','two bars','Discuss your opinions and approaches',210,337],
@@ -11,10 +12,10 @@ export const PHASES=['Preparation','Action','Review & revision'];
 export const plankPosition=index=>({x:500,y:233-index*16});
 export function createBridge(generation=0){return {generation,phase:'gathering',remaining:60000,attempt:0,placed:0,assisted:false,lastPlaced:0,
   planks:PLANKS.map(([color,mark,text,x,y],index)=>({id:`plank-${index}`,index,color,mark,text,x,y,owner:null,placed:false}))};}
-export const bridgeReady=(w,b)=>Object.values(b.players).every(p=>p.connected&&p.ready&&w.players[p.id].scene==='F');
+export const bridgeReady=(w,b)=>requiredPlayers(b).every(p=>p.connected&&p.ready&&w.players[p.id].scene==='F');
 export function resetBridge(w,b,{review=false}={}){
   const old=w.bridge,next=createBridge(old.generation+1);next.attempt=old.attempt;next.lastPlaced=old.placed;
-  next.phase=review?'review':Object.values(b.players).every(p=>p.connected&&p.ready&&['F','G'].includes(w.players[p.id].scene))?'preparation':'gathering';next.remaining=review?10000:60000;
+  next.phase=review?'review':requiredPlayers(b).every(p=>p.connected&&p.ready&&['F','G'].includes(w.players[p.id].scene))?'preparation':'gathering';next.remaining=review?10000:60000;
   w.bridge=next;
   for(const p of Object.values(w.players))if(['F','G'].includes(p.scene)){
     p.scene='F';p.instance='F';p.x=350+Number(p.id[1])*68;p.y=375;p.carry=null;p.seat=null;p.pose='idle';p.inspect=null;
@@ -23,7 +24,7 @@ export function resetBridge(w,b,{review=false}={}){
   for(const p of Object.values(w.players))if(p.scene==='F'&&p.follower){const q=w.players[p.follower];q.x=p.x+32;q.y=p.y-30;}
 }
 export function tickBridge(w,b,elapsed,paused){
-  const f=w.bridge;if(paused||!bridgeReady(w,b)||!['preparation','attempt','review'].includes(f.phase))return;
+  const f=w.bridge;if(paused||(!b.online&&!bridgeReady(w,b))||!['preparation','attempt','review'].includes(f.phase))return;
   f.remaining=Math.max(0,f.remaining-elapsed);
   if(f.remaining>0)return;
   if(f.phase==='attempt'){resetBridge(w,b,{review:true});return;}
@@ -38,7 +39,7 @@ export function bridgeControl(w,b,action){
     if(f.phase!=='gathering')throw Error('Preparation has already started.');
     f.phase='preparation';f.remaining=60000;return;
   }
-  if(action!=='skip'||!['preparation','attempt','review'].includes(f.phase))throw Error('Skip is available during preparation, an attempt or review.');
+  if(action!=='skip'||!(b.online?['gathering','preparation','attempt','review']:['preparation','attempt','review']).includes(f.phase))throw Error('Skip is available before the bridge is complete.');
   f.phase='complete';f.assisted=true;f.remaining=0;f.generation++;f.placed=6;
   f.planks.forEach(o=>Object.assign(o,plankPosition(o.index),{owner:null,placed:true}));
   for(const p of Object.values(w.players))if(p.scene==='F'){p.carry=null;p.inspect=null;}

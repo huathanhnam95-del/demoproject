@@ -13,6 +13,38 @@ const { createFirebasePresentationDemoServices } = require('../../functions/src/
 const { serverIdentityFromAuth } = require('../../functions/src/crm/presentation-demo/identity.cjs');
 const { installWebSocketGateway } = require('./gateway.cjs');
 
+const measurement = { firestoreReads: 0, firestoreWrites: 0, firestoreTransactions: 0, firestoreAttempts: 0 };
+const metricsEnabled = () => process.env.PRESENTATION_DEMO_METRICS === '1' && process.env.NODE_ENV !== 'production';
+function measureFirestore(db) {
+  if (!metricsEnabled() || db.__belMeasured) return;
+  db.__belMeasured = true;
+  const wrapped = new WeakSet();
+  function wrap(ref) {
+    if (!ref || wrapped.has(ref)) return ref;
+    wrapped.add(ref);
+    for (const name of ['doc', 'collection', 'where', 'limit', 'orderBy']) if (typeof ref[name] === 'function') {
+      const original = ref[name].bind(ref); ref[name] = (...args) => wrap(original(...args));
+    }
+    if (typeof ref.get === 'function') { const get = ref.get.bind(ref); ref.get = async (...args) => { const result = await get(...args); measurement.firestoreReads += Math.max(1, result.size || 1); return result; }; }
+    for (const name of ['set', 'update', 'delete', 'create']) if (typeof ref[name] === 'function') { const write = ref[name].bind(ref); ref[name] = async (...args) => { const result = await write(...args); measurement.firestoreWrites++; return result; }; }
+    return ref;
+  }
+  const collection = db.collection.bind(db); db.collection = (...args) => wrap(collection(...args));
+  const transaction = db.runTransaction.bind(db);
+  db.runTransaction = async (callback, options) => {
+    let writes = 0;
+    const result = await transaction(async tx => {
+      writes = 0; measurement.firestoreAttempts++;
+      const proxy = Object.create(tx);
+      proxy.get = async ref => { const value = await tx.get(ref); measurement.firestoreReads += Math.max(1, value.size || 1); return value; };
+      proxy.getAll = async (...refs) => { const values = await tx.getAll(...refs); measurement.firestoreReads += values.length; return values; };
+      for (const name of ['set', 'update', 'delete', 'create']) proxy[name] = (...args) => { writes++; tx[name](...args); return proxy; };
+      return callback(proxy);
+    }, options);
+    measurement.firestoreTransactions++; measurement.firestoreWrites += writes; return result;
+  };
+}
+
 function devIdentity(uid) { return { uid, email: `${uid}@local.invalid`, accountStatus: 'active', isAdmin: uid === 'admin', isTeacher: uid !== 'admin', local: true }; }
 
 function loopbackAuth(req, res, next) {
@@ -46,11 +78,13 @@ async function firebaseAuth(req, res, next) {
 }
 
 function defaultServices() {
+  if (process.env.NODE_ENV === 'production' && (process.env.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_DATABASE_EMULATOR_HOST || process.env.PRESENTATION_DEMO_DEV_AUTH === '1')) throw new Error('Production presentation runtime refuses emulator and development authentication settings.');
   const online = String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() === '1';
   const durable = String(process.env.PRESENTATION_DEMO_DURABLE_READY || '').trim() === '1';
   if (online && !durable) throw new Error('PRESENTATION_DEMO_ONLINE_ENABLED requires PRESENTATION_DEMO_DURABLE_READY=1.');
   if (durable) {
     const { db, getDatabase } = require('../../functions/src/utils/firebase_admin_init');
+    measureFirestore(db);
     const bundle = createFirebasePresentationDemoServices({ db, rtdb: getDatabase() });
     return { ...bundle, pdf: createPdfService({ archives: bundle.archives, roomService: bundle.roomService, notesService: bundle.notes }) , connections: createConnectionService({ roomService: bundle.roomService }) };
   }
@@ -61,7 +95,7 @@ function defaultServices() {
   return { roomService, connections: createConnectionService({ roomService }), notes, archives, pdf: createPdfService({ archives, roomService, notesService: notes }) };
 }
 
-function createServer({ services, authMiddleware, gatewayAuthenticate = null, gatewayResolveIdentity = async identity => identity } = {}) {
+function createServer({ services, authMiddleware, gatewayAuthenticate = null, gatewayResolveIdentity = async identity => identity, featureEnabled = () => process.env.PRESENTATION_DEMO_ONLINE_ENABLED === '1' } = {}) {
   const resolved = services || defaultServices();
   const useDurable = resolved.roomService?.durable === true;
   const auth = authMiddleware || (useDurable ? firebaseAuth : loopbackAuth);
@@ -79,6 +113,10 @@ function createServer({ services, authMiddleware, gatewayAuthenticate = null, ga
   app.use(express.static(path.resolve(__dirname, '../../public'), { etag: true, maxAge: 0 }));
   app.get('/favicon.ico', (_req, res) => res.status(204).end());
   app.get('/healthz', (_req, res) => res.json({ ok: true, service: 'bel-presentation-demo', durable: useDurable, websocket: true }));
+  if (metricsEnabled()) app.get('/local-measurements', (req, res) => {
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return res.sendStatus(404);
+    return res.json({ at: Date.now(), pid: process.pid, cpu: process.cpuUsage(), memory: process.memoryUsage(), authority: resolved.connections.authority.metrics, database: measurement });
+  });
   const allowedOrigins = String(process.env.PRESENTATION_DEMO_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean);
   app.use((req, res, next) => {
     const requestOrigin = String(req.headers.origin || '').trim();
@@ -92,7 +130,7 @@ function createServer({ services, authMiddleware, gatewayAuthenticate = null, ga
     }
     return next();
   });
-  app.use('/api/presentation-demo', auth, createPresentationDemoRouter({ ...resolved, authMiddleware: (_req, _res, next) => next(), resolveIdentity: req => req.user }));
+  app.use('/api/presentation-demo', (_req, res, next) => featureEnabled() ? next() : res.status(404).json({ success: false, error: { code: 'FEATURE_DISABLED' } }), auth, createPresentationDemoRouter({ ...resolved, authMiddleware: (_req, _res, next) => next(), resolveIdentity: req => req.user }));
   const server = http.createServer(app);
   const gatewayAuth = gatewayAuthenticate || (useDurable
     ? token => firebaseIdentity(token)
@@ -102,14 +140,32 @@ function createServer({ services, authMiddleware, gatewayAuthenticate = null, ga
       return /^[A-Za-z0-9_-]{1,80}$/.test(uid) ? devIdentity(uid) : null;
     });
   server.presentationDemoServices = resolved;
-  server.presentationDemoGateway = installWebSocketGateway(server, { connections: resolved.connections, authenticate: gatewayAuth, resolveIdentity: gatewayResolveIdentity, origin: allowedOrigins.length ? allowedOrigins : null });
+  server.presentationDemoGateway = installWebSocketGateway(server, { connections: resolved.connections, authenticate: gatewayAuth, resolveIdentity: gatewayResolveIdentity, origin: allowedOrigins.length ? allowedOrigins : null, enabled: featureEnabled });
+  server.once('close', () => { resolved.connections.shutdown?.().catch(() => {}); });
+  server.presentationDemoShutdown = async () => {
+    await server.presentationDemoGateway.close();
+    await resolved.connections.shutdown?.();
+    await new Promise(resolve => server.close(resolve));
+  };
   return server;
 }
 
 if (require.main === module) {
   const port = Number(process.env.PORT || 8080);
   const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
-  createServer().listen(port, host, () => console.log(`BEL Presentation Demo service listening on ${host}:${port}`));
+  const server = createServer().listen(port, host, () => console.log(`BEL Presentation Demo service listening on ${host}:${port}`));
+  let stopping = false;
+  const stop = async () => {
+    if (stopping) return; stopping = true;
+    await server.presentationDemoShutdown();
+    if (server.presentationDemoServices.roomService.durable) {
+      const firebase = require('../../functions/src/utils/firebase_admin_init');
+      firebase.getDatabase().goOffline();
+      await firebase.db.terminate();
+      for (const app of firebase.admin.apps) await app.delete();
+    }
+  };
+  process.once('SIGTERM', stop); process.once('SIGINT', stop);
 }
 
 module.exports = { createServer, firebaseAuth, firebaseIdentity, loopbackAuth };

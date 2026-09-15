@@ -3,6 +3,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { Worker, isMainThread, parentPort, workerData } = require('node:worker_threads');
+const { deflateSync } = require('node:zlib');
 const { assertActiveIdentity, assertRoomActor } = require('./identity.cjs');
 const { fail } = require('./contracts.cjs');
 
@@ -107,26 +109,26 @@ function wrapLines(lines, { fontPath = FONT_PATH, lookup = null, metrics = null,
     const font = metrics && lookup ? null : fs.readFileSync(fontPath);
     const cmap = lookup || cmapLookup(font);
     const widths = metrics || fontMetrics(font);
-    const lineLimit = Math.max(1000, Math.floor(maxWidth * 1000 / fontSize));
+    const lineLimit = Math.max(1, maxWidth * widths.unitsPerEm / fontSize);
     const output = [];
     for (const raw of lines) {
         const source = String(raw ?? '');
         for (const part of source.split(/\r?\n/)) {
-            let remaining = part;
-            if (!remaining) { output.push(''); continue; }
-            while (Array.from(remaining).reduce((sum, char) => sum + glyphWidth(char.codePointAt(0), cmap, widths), 0) > lineLimit) {
-                let width = 0; let cut = 0; let lastSpace = -1;
-                for (const [index, char] of Array.from(remaining).entries()) {
-                    const next = width + glyphWidth(char.codePointAt(0), cmap, widths);
-                    if (next > lineLimit) break;
-                    width = next; cut = index + 1; if (char === ' ') lastSpace = cut - 1;
+            const chars = Array.from(part);
+            if (!chars.length) { output.push(''); continue; }
+            let start = 0;
+            while (start < chars.length) {
+                let end = start, width = 0, space = -1;
+                while (end < chars.length) {
+                    const next = width + glyphWidth(chars[end].codePointAt(0), cmap, widths);
+                    if (next > lineLimit && end > start) break;
+                    width = next; if (chars[end] === ' ') space = end; end++;
                 }
-                if (cut < 1) cut = 1;
-                if (lastSpace > 0) cut = lastSpace;
-                output.push(remaining.slice(0, cut));
-                remaining = remaining.slice(cut).trimStart();
+                if (end < chars.length && space > start) end = space;
+                output.push(chars.slice(start, end).join(''));
+                start = end;
+                while (chars[start] === ' ') start++;
             }
-            output.push(remaining);
         }
     }
     return output;
@@ -186,8 +188,8 @@ function buildPdf(lines, { fontPath = FONT_PATH } = {}) {
             commands.push(`<${codes}> Tj`);
         });
         commands.push('ET');
-        const data = Buffer.from(commands.join('\n'), 'ascii');
-        objects.push(stream(`<< /Length ${data.length} >>`, data));
+        const data = deflateSync(Buffer.from(commands.join('\n'), 'ascii'));
+        objects.push(stream(`<< /Length ${data.length} /Filter /FlateDecode >>`, data));
     }
     // Existing offline consumers use this compact comment for provenance. PDF
     // readers ignore it; rendered text comes from the embedded Unicode font.
@@ -213,9 +215,24 @@ function buildPdf(lines, { fontPath = FONT_PATH } = {}) {
 
 function checksum(value) { return crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 
+let renderTail = Promise.resolve(), renderQueue = 0;
+function buildPdfAsync(lines) {
+    if (renderQueue >= 4) fail('PDF_BUSY', 'An export is already being prepared. Please try again shortly.');
+    renderQueue++;
+    const pending = renderTail.catch(() => {}).then(() => new Promise((resolve, reject) => {
+        const worker = new Worker(__filename, { workerData: { kind: 'bel-pdf', lines }, resourceLimits: { maxOldGenerationSizeMb: 256 } });
+        let output = null;
+        worker.once('message', bytes => { output = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength); });
+        worker.once('error', reject);
+        worker.once('exit', code => code === 0 && output ? resolve(output) : reject(Object.assign(new Error('PDF rendering did not complete.'), { code: 'PDF_RENDER_FAILED' })));
+    })).finally(() => { renderQueue--; });
+    renderTail = pending;
+    return pending;
+}
+
 function createPdfService({ archives, roomService = null, notesService = null } = {}) {
     if (!archives) throw new TypeError('archives is required');
-    async function activeExport(identity, roomId) {
+    async function activeExport(identity, roomId, scope) {
         if (!roomService || !notesService) fail('ARCHIVE_NOT_FOUND');
         const current = await roomService.getRoom(roomId);
         if (!current || current.lifecycle === 'ended') fail('ARCHIVE_NOT_FOUND');
@@ -223,24 +240,41 @@ function createPdfService({ archives, roomService = null, notesService = null } 
         const member = Object.values(current.slots).find(slot => slot.uid === viewer.uid);
         if (!member) fail('EXPORT_FORBIDDEN');
         assertRoomActor(viewer, { ...member, seatId: member.slotId });
-        const targetUids = member.role === 'presenter' ? Object.values(current.slots).map(slot => slot.uid).filter(Boolean) : [viewer.uid];
-        const notebooks = {};
-        for (const uid of targetUids) notebooks[uid] = await notesService.readNotebookByUid(viewer, roomId, uid);
-        return { roomId, checksum: checksum({ roomId, revision: current.revision, notebooks }), notebooks };
+        const selectedScope = scope || (member.role === 'presenter' ? 'participants' : 'own');
+        if (!['own', 'participants'].includes(selectedScope) || selectedScope === 'participants' && member.role !== 'presenter') fail('EXPORT_FORBIDDEN');
+        const targetUids = selectedScope === 'participants' ? ['p1', 'p2', 'p3'].map(id => current.slots[id].uid).filter(Boolean) : [viewer.uid];
+        const snapshot = await notesService.snapshotNotebooks(viewer, roomId, targetUids);
+        const notebooks = snapshot.notebooks;
+        return { roomId, checksum: checksum({ roomId, revision: snapshot.room.revision, notebooks }), notebooks, scope: selectedScope, members: Object.values(current.slots).filter(slot => slot.uid).map(slot => ({ uid: slot.uid, seatId: slot.slotId, displayName: slot.displayName, role: slot.role })) };
     }
-    async function exportPdf(identity, roomId) {
+    async function exportPdf(identity, roomId, scope) {
         let archive;
         try { archive = await archives.readArchive(identity, roomId); }
-        catch (error) { if (error.code !== 'ARCHIVE_NOT_FOUND') throw error; archive = await activeExport(identity, roomId); }
-        const lines = ['BEL Working as Equals', `Room ${archive.roomId}`, `Archive ${archive.checksum}`];
-        for (const [uid, notebook] of Object.entries(archive.notebooks || {})) {
-            lines.push(`Notes for ${uid}`);
-            for (const page of notebook.pages || []) lines.push(`${page.title}: ${page.body}`);
+        catch (error) { if (error.code !== 'ARCHIVE_NOT_FOUND') throw error; archive = await activeExport(identity, roomId, scope); }
+        const member = archive.members.find(item => item.uid === identity.uid);
+        const selectedScope = scope || archive.scope || (member.role === 'presenter' ? 'participants' : 'own');
+        if (!['own', 'participants'].includes(selectedScope) || selectedScope === 'participants' && member.role !== 'presenter') fail('EXPORT_FORBIDDEN');
+        const members = selectedScope === 'participants' ? archive.members.filter(item => ['p1', 'p2', 'p3'].includes(item.seatId)) : [member];
+        const exportedAt = new Date().toISOString();
+        const lines = ['BEL Working as Equals', `Room ${archive.roomId}`, `Snapshot ${archive.checksum}`, `Exported ${exportedAt}`, `Scope ${selectedScope} - saved pages only`];
+        const revisions = {};
+        for (const author of members) {
+            const notebook = archive.notebooks[author.uid];
+            revisions[author.uid] = notebook?.notebookRevision || 0;
+            lines.push(`Notes for ${author.displayName || author.uid} (${author.uid}) - saved revision ${revisions[author.uid]}`);
+            if (!notebook?.pages?.length) lines.push('No saved notes.');
+            for (const page of notebook?.pages || []) lines.push(`${page.title}: ${page.body}`);
         }
-        if (lines.length === 3) lines.push('No saved notes.');
-        return buildPdf(lines);
+        const buffer = await buildPdfAsync(lines);
+        await roomService?.recordExport?.(identity, { roomId, scope: selectedScope, revisions, exportedAt, checksum: archive.checksum, bytes: buffer.length });
+        return buffer;
     }
     return { exportPdf };
 }
 
 module.exports = { buildPdf, createPdfService, cmapLookup, wrapLines };
+
+if (!isMainThread && workerData?.kind === 'bel-pdf') {
+    const result = buildPdf(workerData.lines);
+    parentPort.postMessage(result, [result.buffer]);
+}

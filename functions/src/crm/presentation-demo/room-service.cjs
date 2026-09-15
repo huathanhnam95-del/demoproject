@@ -14,6 +14,7 @@ const {
 } = require('./contracts.cjs');
 const { createMemoryRuntimeStore } = require('./runtime-store.cjs');
 const { createMemoryOperationStore } = require('./operation-store.cjs');
+const { createMemoryAuthorityStore } = require('./authority-store.cjs');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TICKET_MS = 60 * 1000;
@@ -29,7 +30,8 @@ function createMemoryRoomStores() {
     const notebooks = new Map();
     const archives = new Map();
     const commandReceipts = new Map();
-    return { rooms, codes, presenterLocks, runtime, operations, tickets, notebooks, archives, commandReceipts };
+    const authority = createMemoryAuthorityStore({ rooms });
+    return { rooms, codes, presenterLocks, runtime, operations, tickets, notebooks, archives, commandReceipts, authority };
 }
 
 function createMutex() {
@@ -321,7 +323,7 @@ function createRoomService({
             .map(clone));
     }
 
-    return { claimRuntimeOwner, createOrResume, end, expireDue, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, readRuntimeCommandReceipt, syncRuntimeState, touchPresenter, updateNotebookMetadata, writeRuntimeCommandReceipt, stores, refreshRuntimeOnRead: true };
+    return { withRoomLock: withLock, authorityStore: stores.authority, claimRuntimeOwner, createOrResume, end, expireDue, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, readRuntimeCommandReceipt, syncRuntimeState, touchPresenter, updateNotebookMetadata, writeRuntimeCommandReceipt, stores, refreshRuntimeOnRead: true };
 }
 
 module.exports = { DAY_MS, OWNER_LEASE_MS, TICKET_MS, createMemoryRoomStores, createRoomService };

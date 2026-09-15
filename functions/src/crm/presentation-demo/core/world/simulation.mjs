@@ -46,7 +46,7 @@ export function drop(w,id){
   const o=(p.scene==='F'?w.bridge.planks:p.scene==='J'?w.cubes.cubes:w.routes[p.scene]).find(o=>o.id===p.carry);
   Object.assign(o,safeAnchor({x:p.x+27,y:p.y+10},SCENES[p.scene],solidsFor(w,id)),{owner:null});p.carry=null;p.inspect=null;
 }
-export function transition(w,id,to){
+export function transition(w,id,to,now=Date.now()){
   const p=w.players[id],from=p.scene;
   drop(w,id);p.seat=null;
   if(from.startsWith('B'))p.lastRoute=from;
@@ -56,14 +56,14 @@ export function transition(w,id,to){
   if(to!=='home'&&to!=='street')p.ride=null;
   Object.assign(p,{scene:to,instance:instance(id,to),pose:'idle',inspect:null});
   Object.assign(p,safeAnchor(entry(to,id,from),SCENES[to],solidsFor(w,id)));
-  p.transitionUntil=Date.now()+500;
+  p.transitionUntil=now+500;
 }
 export function carsAt(now){
   return [{x:((now/12)%1180)-90,y:207,w:128,h:43,color:'#b65339',dir:-1},
     {x:1090-((now/15)%1180),y:280,w:142,h:45,color:'#3475ad',dir:1}];
 }
 export function stepWorld(w,base,inputs,dt,now){
-  const elapsed=dt*1000;dt=Math.min(dt,.075); const globallyPaused=base.presentation.active||base.pauseReasons.length>0||!base.players.p0.connected;
+  const elapsed=dt*1000;dt=Math.min(dt,.075); const globallyPaused=base.presentation.active||base.pauseReasons.length>0||(!base.online&&!base.players.p0.connected);
   const active=base.presentation.active?base.presentation.roomId:null;
   if(active!==w.presentationWas){
     if(active){w.deck.room=active;w.deck.slide=GROUPS[active]?.[0]||1;if(active==='C')w.cStarted=true;if(active==='G')w.gStarted=true;for(const p of Object.values(w.players))p.request=null;}
@@ -92,7 +92,7 @@ export function stepWorld(w,base,inputs,dt,now){
       if(d>31){const m=Math.min(speed*dt,d-31);Object.assign(follower,move(follower,(p.x-follower.x)/d*m,(p.y-follower.y)/d*m,SCENES[p.scene],solidsFor(w,follower.id)));follower.pose='walking';follower.facing=p.facing;follower.distance+=m;}
     }
   }
-  if(!globallyPaused) for(const p of Object.values(w.players)) if(p.scene==='street'&&now>p.resetUntil){
+  if(!globallyPaused) for(const p of Object.values(w.players)) if(p.connected!==false&&p.scene==='street'&&now>p.resetUntil){
     if(carsAt(now).some(c=>Math.abs(p.x-c.x)<c.w/2+12&&Math.abs(p.y-c.y)<c.h/2+8)){
       p.x=460+Number(p.id[1])*30;p.y=p.y<240?155:365;p.resetUntil=now+1600;
       const pair=p.leader||p.follower;if(pair){Object.assign(w.players[pair],{x:p.x+32,y:p.y,resetUntil:p.resetUntil});}
@@ -119,7 +119,7 @@ export function act(w,base,id,command,now=Date.now()){
     else throw Error('Unknown native slide action.');
     return {kind:'ok'};
   }
-  ensure(!base.presentation.active&&!base.pauseReasons.length&&base.players.p0.connected,'World paused. Personal notes remain available.');
+  ensure(!base.presentation.active&&!base.pauseReasons.length&&(base.online||base.players.p0.connected),'World paused. Personal notes remain available.');
   ensure(payload.instance===p.instance,'That action belongs to a previous room.');
   if(p.scene==='F')ensure(payload.generation===w.bridge.generation,'That action belongs to a previous attempt.');
   if(type==='activity'){
@@ -138,7 +138,7 @@ export function act(w,base,id,command,now=Date.now()){
     ensure(id==='p0','Presenter only.');ensure(p.scene!=='F','Use Bridge Skip, then walk across.');const next={home:'street',street:'reception',reception:'A',A:'B1',B1:'C',B2:'C',B3:'C',C:'D',D:'E',E:'F',G:'I'}[p.scene];ensure(SCENES[next],'The next room is being integrated.');
     if(GROUPS[p.scene]){w.unlocked[p.scene]=true;w.unlockAt=now;}
     for(const q of Object.values(w.players))release(w,q.id);
-    for(const q of Object.values(w.players))transition(w,q.id,next);
+    for(const q of Object.values(w.players))transition(w,q.id,next,now);
     return {kind:'toast',text:'Presenter Continue gathered the group at the next entrance.'};
   }
   if(type==='interact'&&p.seat){
@@ -160,8 +160,8 @@ export function act(w,base,id,command,now=Date.now()){
     ensure(!(w.cStarted&&((p.scene.startsWith('B')&&t.to==='A')||(p.scene==='C'&&t.to==='route'))),'The previous section is complete.');
     ensure(!(p.scene==='G'&&t.to==='F'&&w.gStarted),'The bridge section is complete.');
     ensure(!(p.scene==='F'&&t.to==='G'&&w.bridge.phase!=='complete'),'Build the physical crossing first.');
-    ensure(!p.leader,'Your partner leads. Press E to let go.');const follower=p.follower;transition(w,id,t.to);
-    if(follower){transition(w,follower,t.to);Object.assign(w.players[follower],safeAnchor({x:p.x+32,y:p.y},SCENES[p.scene],solidsFor(w,follower)));}
+    ensure(!p.leader,'Your partner leads. Press E to let go.');const follower=p.follower;transition(w,id,t.to,now);
+    if(follower){transition(w,follower,t.to,now);Object.assign(w.players[follower],safeAnchor({x:p.x+32,y:p.y},SCENES[p.scene],solidsFor(w,follower)));}
     return {kind:'ok'};
   }
   ensure(type==='interact','Unknown world action.');

@@ -1,114 +1,100 @@
 'use strict';
 
+const crypto = require('node:crypto');
 const { assertActiveIdentity, assertRoomActor } = require('./identity.cjs');
 const { MAX_NOTE_BODY, clone, fail } = require('./contracts.cjs');
+const MAX_PAGES = 100, MAX_PAGE_IDS = 1000;
+const key = (roomId, uid) => roomId + ':' + uid;
+const visible = pages => pages.filter(page => page.deleted !== true);
+const revision = pages => pages.reduce((sum, page) => sum + page.version, 0);
+const hash = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-const MAX_PAGES = 100;
-const MAX_TITLE = 200;
-
-function key(roomId, uid) { return `${roomId}:${uid}`; }
-
-function visiblePages(pages) { return (pages || []).filter(page => page.deleted !== true); }
-
-function createNotebookService({ roomService, clock = () => Date.now(), maxPages = MAX_PAGES } = {}) {
-    if (!roomService) throw new TypeError('roomService is required');
-
-    async function membership(roomId, uid) {
-        const room = await roomService.getRoom(roomId);
+function createNotebookService({ roomService, clock = Date.now, maxPages = MAX_PAGES } = {}) {
+    if (!roomService?.withRoomLock) throw new TypeError('Transactional roomService required');
+    const stores = roomService.stores;
+    stores.noteReceipts ||= new Map();
+    function member(roomId, identity) {
+        const room = stores.rooms.get(roomId);
         if (!room) fail('ROOM_NOT_FOUND');
-        const slot = Object.values(room.slots).find(candidate => candidate.uid === uid);
+        const slot = Object.values(room.slots).find(slot => slot.uid === identity.uid);
         if (!slot) fail('NOTE_FORBIDDEN');
+        assertRoomActor(identity, { uid: slot.uid, seatId: slot.slotId, role: slot.role });
         return { room, slot };
     }
-
-    function pagesFor(roomId, uid) {
-        const pages = roomService.stores.notebooks.get(key(roomId, uid));
-        return pages ? clone(pages) : [];
+    const pagesFor = (roomId, uid) => clone(stores.notebooks.get(key(roomId, uid)) || []);
+    function targetFor(room, target, fallback) { return room.slots[target]?.uid || target || fallback; }
+    async function snapshotNotebooks(input, roomId, targetUids) {
+        const identity = assertActiveIdentity(input);
+        return roomService.withRoomLock(() => {
+            const { room, slot } = member(roomId, identity);
+            const notebooks = {};
+            for (const raw of targetUids) {
+                const uid = targetFor(room, raw, identity.uid);
+                if (uid !== identity.uid && (slot.role !== 'presenter' || !identity.isAdmin)) fail('NOTE_FORBIDDEN');
+                if (!Object.values(room.slots).some(slot => slot.uid === uid)) fail('NOTE_FORBIDDEN');
+                const pages = pagesFor(roomId, uid);
+                notebooks[uid] = { roomId, uid, notebookRevision: revision(pages), pages: visible(pages) };
+            }
+            return { room: clone(room), notebooks };
+        });
     }
-
-    function notebookRevision(roomId, uid) {
-        return pagesFor(roomId, uid).reduce((sum, page) => Math.max(sum, Number(page.version) || 0), 0);
-    }
-
-    function resolveTargetUid(room, value, fallbackUid) {
-        const raw = String(value || fallbackUid);
-        return room.slots[raw]?.uid || raw;
-    }
-
     async function readNotebook(input, roomId, targetUid) {
         const identity = assertActiveIdentity(input);
-        const { room, slot: requester } = await membership(roomId, identity.uid);
-        const target = resolveTargetUid(room, targetUid, identity.uid);
-        if (target !== identity.uid && requester.role !== 'presenter') fail('NOTE_FORBIDDEN');
-        await membership(roomId, target);
-        assertRoomActor(identity, { uid: requester.uid, seatId: requester.slotId, role: requester.role });
-        return { roomId: room.roomId, uid: target, notebookRevision: notebookRevision(roomId, target), pages: visiblePages(pagesFor(roomId, target)) };
+        const snapshot = await snapshotNotebooks(identity, roomId, [targetUid || identity.uid]);
+        return Object.values(snapshot.notebooks)[0];
     }
-
-    async function savePage(input, roomId, targetUid, page) {
-        const identity = assertActiveIdentity(input);
-        const { room, slot: requester } = await membership(roomId, identity.uid);
-        const target = resolveTargetUid(room, targetUid, identity.uid);
-        if (target !== identity.uid) fail('NOTE_AUTHOR_ONLY');
-        if (room.lifecycle === 'ended') fail('ROOM_ENDED');
-        const targetMembership = (await membership(roomId, target)).slot;
-        assertRoomActor(identity, { uid: requester.uid, seatId: requester.slotId, role: requester.role });
-        if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || typeof page.title !== 'string' || page.title.length > MAX_TITLE || typeof page.body !== 'string' || page.body.length > MAX_NOTE_BODY || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0) fail('NOTE_INVALID');
-        const pages = pagesFor(roomId, target);
-        const index = pages.findIndex(candidate => candidate.id === page.pageId);
-        const current = index >= 0 ? pages[index] : null;
-        const currentVersion = current?.version || 0;
-        if (currentVersion !== page.expectedVersion) fail('NOTE_CONFLICT');
-        const saved = { id: page.pageId, title: page.title, body: page.body, version: currentVersion + 1, updatedAt: clock(), updatedBy: identity.uid };
-        if (index >= 0) pages[index] = saved;
-        else {
-            if (pages.length >= maxPages) fail('NOTE_PAGE_LIMIT');
-            pages.push(saved);
-        }
-        roomService.stores.notebooks.set(key(roomId, target), clone(pages));
-        targetMembership.notes = clone(visiblePages(pages));
-        targetMembership.notesRevision = notebookRevision(roomId, target);
-        if (identity.uid === room.presenterUid) {
-            await roomService.touchPresenter(identity, roomId);
-        }
-        await roomService.updateNotebookMetadata(roomId, targetMembership.slotId, { notes: visiblePages(pages), notesRevision: targetMembership.notesRevision });
-        return clone(saved);
-    }
-
-    async function deletePage(input, roomId, targetUid, page) {
-        const identity = assertActiveIdentity(input);
-        const { room, slot: requester } = await membership(roomId, identity.uid);
-        const target = resolveTargetUid(room, targetUid, identity.uid);
-        if (target !== identity.uid) fail('NOTE_AUTHOR_ONLY');
-        if (room.lifecycle === 'ended') fail('ROOM_ENDED');
-        const targetMembership = (await membership(roomId, target)).slot;
-        assertRoomActor(identity, { uid: requester.uid, seatId: requester.slotId, role: requester.role });
-        if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0) fail('NOTE_INVALID');
-        const pages = pagesFor(roomId, target);
-        const index = pages.findIndex(candidate => candidate.id === page.pageId);
-        if (index < 0 || pages[index].version !== page.expectedVersion) fail('NOTE_CONFLICT');
-        pages[index] = { ...pages[index], version: pages[index].version + 1, deleted: true, deletedAt: clock(), deletedBy: identity.uid };
-        roomService.stores.notebooks.set(key(roomId, target), clone(pages));
-        targetMembership.notes = clone(visiblePages(pages));
-        if (identity.uid === room.presenterUid) {
-            await roomService.touchPresenter(identity, roomId);
-        }
-        await roomService.updateNotebookMetadata(roomId, targetMembership.slotId, { notes: visiblePages(pages), notesRevision: notebookRevision(roomId, target) });
-        return { deleted: true, pageId: page.pageId, pages: clone(visiblePages(pages)) };
-    }
-
     async function readNotebookByUid(inputOrRoomId, roomIdOrUid, maybeUid) {
-        const hasActor = inputOrRoomId && typeof inputOrRoomId === 'object';
-        const identity = hasActor ? assertActiveIdentity(inputOrRoomId) : null;
-        const roomId = hasActor ? roomIdOrUid : inputOrRoomId;
-        const uid = hasActor ? maybeUid : roomIdOrUid;
-        const { room, slot } = await membership(roomId, hasActor ? identity.uid : uid);
-        if (hasActor && uid !== identity.uid && (slot.role !== 'presenter' || identity.isAdmin !== true)) fail('NOTE_FORBIDDEN');
-        if (!room.slots[slot.slotId] || !Object.values(room.slots).some(value => value.uid === uid)) fail('NOTE_FORBIDDEN');
-        return { roomId, uid, notebookRevision: notebookRevision(roomId, uid), pages: visiblePages(pagesFor(roomId, uid)) };
+        if (typeof inputOrRoomId === 'object') return readNotebook(inputOrRoomId, roomIdOrUid, maybeUid);
+        // Internal terminal archive reader. Callers with a user identity use
+        // the authorized overload above.
+        const roomId = inputOrRoomId, uid = roomIdOrUid;
+        return roomService.withRoomLock(() => {
+            const room = stores.rooms.get(roomId);
+            if (!room || !Object.values(room.slots).some(slot => slot.uid === uid)) fail('NOTE_FORBIDDEN');
+            const pages = pagesFor(roomId, uid);
+            return { roomId, uid, notebookRevision: revision(pages), pages: visible(pages) };
+        });
     }
-
-    return { deletePage, readNotebook, readNotebookByUid, savePage };
+    async function mutate(input, roomId, targetUid, page, deleting) {
+        const identity = assertActiveIdentity(input);
+        if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0
+            || (!deleting && (typeof page.title !== 'string' || page.title.length > 200 || typeof page.body !== 'string' || page.body.length > MAX_NOTE_BODY))
+            || (page.operationId !== undefined && !/^[A-Za-z0-9:_-]{1,128}$/.test(page.operationId))) fail('NOTE_INVALID');
+        return roomService.withRoomLock(() => {
+            const { room, slot } = member(roomId, identity);
+            const target = targetFor(room, targetUid, identity.uid);
+            if (target !== identity.uid) fail('NOTE_AUTHOR_ONLY');
+            const receiptKey = page.operationId ? hash([roomId, identity.uid, page.operationId]) : null;
+            const inputHash = hash([deleting, page.pageId, page.expectedVersion, page.title, page.body]);
+            const previous = receiptKey && stores.noteReceipts.get(receiptKey);
+            if (previous) {
+                if (previous.inputHash !== inputHash) fail('OPERATION_ID_REUSED');
+                return deleting ? clone(previous.result) : { id: page.pageId, title: page.title, body: page.body, ...clone(previous.result) };
+            }
+            if (room.lifecycle === 'ended' || room.expiresAt <= clock()) fail('ROOM_ENDED');
+            const pages = pagesFor(roomId, target);
+            const index = pages.findIndex(item => item.id === page.pageId), current = pages[index];
+            if ((current?.version || 0) !== page.expectedVersion || (deleting && (!current || current.deleted))) fail('NOTE_CONFLICT');
+            if (!deleting && (!current || current.deleted) && visible(pages).length >= maxPages) fail('NOTE_PAGE_LIMIT');
+            if (!current && pages.length >= MAX_PAGE_IDS) fail('NOTE_PAGE_LIMIT');
+            const now = clock();
+            const saved = deleting ? { id: current.id, version: current.version + 1, deleted: true, deletedAt: now, deletedBy: identity.uid }
+                : { id: page.pageId, title: page.title, body: page.body, version: (current?.version || 0) + 1, updatedAt: now, updatedBy: identity.uid };
+            if (index < 0) pages.push(saved); else pages[index] = saved;
+            stores.notebooks.set(key(roomId, target), pages);
+            slot.notes = []; slot.notesRevision = revision(pages);
+            if (identity.uid === room.presenterUid) { room.lastPresenterActivityAt = now; room.expiresAt = now + 86400000; }
+            stores.rooms.set(roomId, room);
+            const result = deleting ? { deleted: true, pageId: page.pageId, pages: [] } : clone(saved);
+            if (receiptKey) {
+                const compact = deleting ? { deleted: true, pageId: page.pageId, pages: [] } : { id: saved.id, version: saved.version, updatedAt: saved.updatedAt, updatedBy: saved.updatedBy };
+                stores.noteReceipts.set(receiptKey, { inputHash, result: compact });
+            }
+            return result;
+        });
+    }
+    return { snapshotNotebooks, readNotebook, readNotebookByUid,
+        savePage: (identity, roomId, uid, page) => mutate(identity, roomId, uid, page, false),
+        deletePage: (identity, roomId, uid, page) => mutate(identity, roomId, uid, page, true) };
 }
-
 module.exports = { MAX_PAGES, createNotebookService };

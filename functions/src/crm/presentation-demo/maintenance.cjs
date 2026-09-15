@@ -14,7 +14,8 @@ function createMaintenanceService({ roomService, archiveService, clock = () => D
         for (const room of candidates.slice(0, limit)) {
             try { archived.push(await archiveService.archiveRoom(room.roomId)); } catch (error) { archived.push({ roomId: room.roomId, status: 'failed', errorClass: error.code || 'ARCHIVE_ERROR' }); }
         }
-        return { now: clock(), expired: ended.length, attemptedArchives: archived.length, archived: archived.filter(item => item.status === 'archived').length, failedArchives: archived.filter(item => item.status === 'failed').length };
+        const cleanup = await roomService.cleanupTransient?.(limit);
+        return { now: clock(), expired: ended.length, attemptedArchives: archived.length, archived: archived.filter(item => item.status === 'archived').length, failedArchives: archived.filter(item => item.status === 'failed').length, removedTransient: cleanup?.removed || 0 };
     }
     return { run };
 }

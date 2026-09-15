@@ -10,6 +10,7 @@ const {
     publicRoomSnapshot
 } = require('./contracts.cjs');
 const { assertActiveIdentity, assertPresenter, assertRoomActor } = require('./identity.cjs');
+const { createFirebaseAuthorityStore, hydrate, roomState } = require('./authority-store.cjs');
 
 const COLLECTIONS = Object.freeze({
     rooms: 'presentationDemoRooms',
@@ -59,9 +60,11 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     // revisioned outbox when its mirror write is unavailable.
     async function mirrorCanonicalRoom(room) {
         const ref = liveRoomRef(room.roomId);
+        const initial = (await ref.get()).val();
         await ref.transaction(current => {
-            if (!current || Number(current.revision) <= Number(room.revision)) return cloneValue(room);
-            const next = cloneValue(current);
+            current ||= initial;
+            if (!current) return cloneValue(room);
+            const next = hydrate(current);
             let membershipChanged = false;
             for (const slotId of Object.keys(room.slots || {})) {
                 const incoming = room.slots[slotId]; const target = next.slots?.[slotId];
@@ -69,11 +72,64 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 Object.assign(target, { uid: incoming.uid, displayName: incoming.displayName, originalRole: incoming.originalRole, joinedAt: incoming.joinedAt, bootstrapAt: incoming.bootstrapAt || target.bootstrapAt });
                 membershipChanged = true;
             }
-            if (membershipChanged) next.revision = Number(current.revision) + 1;
+            // Firestore owns admission and notebook metadata, never physics.
+            // Its revision cannot authorize replacing a newer live world.
+            for (const [slotId, incoming] of Object.entries(room.slots)) {
+                const target = next.slots[slotId];
+                target.bootstrapAt = Math.max(target.bootstrapAt || 0, incoming.bootstrapAt || 0) || null;
+                target.notesRevision = Math.max(target.notesRevision || 0, incoming.notesRevision || 0);
+            }
+            next.allParticipantsJoinedAt ||= room.allParticipantsJoinedAt || null;
+            next.lastPresenterActivityAt = Math.max(next.lastPresenterActivityAt, room.lastPresenterActivityAt);
+            next.expiresAt = Math.max(next.expiresAt, room.expiresAt);
+            if (room.lifecycle === 'ended') Object.assign(next, { lifecycle: 'ended', endedAt: room.endedAt, endReason: room.endReason, archiveStatus: room.archiveStatus });
+            if (membershipChanged || JSON.stringify(next) !== JSON.stringify(hydrate(current))) next.revision = Number(current.revision) + 1;
             return next;
-        });
+        }, undefined, false);
         return cloneValue(room);
     }
+
+    const mirroredAt = new Map();
+    async function mirrorAuthority(room, receipts = {}) {
+        await drainNoteEffects(room.roomId);
+        room = roomState(room);
+        delete room._effects;
+        // Receipts leave the bounded hot room only after this durable write.
+        // A crash before removal is safe: replay finds either copy.
+        if (Object.keys(receipts).length) await rtdb.ref(`presentationReceipts/${room.roomId}`).update(receipts);
+        if (room.lifecycle !== 'ended' && clock() - (mirroredAt.get(room.roomId) || 0) < 5000) return;
+        await db.runTransaction(async tx => {
+            const ref = roomRef(room.roomId), snap = await tx.get(ref);
+            if (!snap.exists) return;
+            const current = snap.data();
+            if (Number(current.runtimeRevision || 0) > room.revision) return;
+            const presenterLock = room.lifecycle === 'ended' || current.lifecycle === 'ended' ? await tx.get(lockRef(current.presenterUid)) : null;
+            const next = cloneValue(room);
+            for (const [id, slot] of Object.entries(current.slots)) {
+                if (!next.slots[id].uid && slot.uid) Object.assign(next.slots[id], { uid: slot.uid, displayName: slot.displayName, originalRole: slot.originalRole, joinedAt: slot.joinedAt });
+                next.slots[id].notes = [];
+                next.slots[id].notesRevision = slot.notesRevision || 0;
+            }
+            next.lastPresenterActivityAt = Math.max(next.lastPresenterActivityAt, current.lastPresenterActivityAt);
+            next.expiresAt = Math.max(next.expiresAt, current.expiresAt);
+            if (current.lifecycle === 'ended') Object.assign(next, { lifecycle: 'ended', endedAt: current.endedAt, endReason: current.endReason, archiveStatus: current.archiveStatus });
+            next.runtimeRevision = room.revision;
+            tx.set(ref, next);
+            if (next.lifecycle === 'ended' && presenterLock?.data()?.roomId === room.roomId) tx.delete(lockRef(next.presenterUid));
+        });
+        mirroredAt.set(room.roomId, clock());
+        // Consume older outbox records left by the previous implementation.
+        const outbox = rtdb.ref(`presentationRoomOutbox/${room.roomId}`);
+        const queued = (await outbox.get()).val() || {};
+        const done = Object.fromEntries(Object.entries(queued).filter(([, item]) => item.revision <= room.revision).map(([key]) => [key, null]));
+        if (Object.keys(done).length) await outbox.update(done);
+    }
+    const authorityStore = createFirebaseAuthorityStore({
+        rtdb,
+        loadRoom: async id => { const snap = await roomRef(id).get(); return snap.exists ? snap.data() : null; },
+        mirror: mirrorAuthority,
+        readArchivedReceipt: async (id, key) => (await rtdb.ref(`presentationReceipts/${id}/${key}`).get()).val()
+    });
 
     function assertCurrentRoom(room, now = clock()) {
         if (!room) fail('ROOM_NOT_FOUND');
@@ -139,7 +195,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     }
 
     function mergeRoomState(firestoreRoom, liveRoom) {
-        const merged = liveRoom && Number(liveRoom.revision) >= Number(firestoreRoom.revision)
+        const merged = liveRoom
             ? { ...firestoreRoom, ...liveRoom }
             : { ...firestoreRoom };
         const slots = Object.fromEntries(Object.keys(firestoreRoom.slots || {}).map(slotId => {
@@ -147,7 +203,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             const liveSlot = liveRoom?.slots?.[slotId] || {};
             return [slotId, {
                 ...firestoreSlot,
-                ...(liveRoom && Number(liveRoom.revision) >= Number(firestoreRoom.revision) ? liveSlot : {}),
+                ...(liveRoom ? liveSlot : {}),
                 uid: firestoreSlot.uid || liveSlot.uid || null,
                 displayName: (firestoreSlot.uid ? firestoreSlot.displayName : liveSlot.displayName) ?? firestoreSlot.displayName ?? `Participant ${slotId.slice(1)}`,
                 joinedAt: firestoreSlot.joinedAt ?? liveSlot.joinedAt ?? null,
@@ -181,8 +237,8 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         const snap = await ref.get();
         if (!snap.exists) return null;
         const firestoreRoom = snap.data();
-        const liveSnap = await liveRoomRef(roomId).get().catch(() => ({ exists: false }));
-        const liveRoom = liveSnap.exists ? liveSnap.val() : null;
+        const liveSnap = await liveRoomRef(roomId).get();
+        const liveRoom = liveSnap.exists() ? hydrate(liveSnap.val()) : null;
         const current = mergeRoomState(firestoreRoom, liveRoom);
         if (ACTIVE_LIFECYCLES.has(current.lifecycle) && Number(current.expiresAt) <= clock()) {
             const ended = await db.runTransaction(async tx => {
@@ -195,7 +251,8 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 }
                 return value;
             });
-            return cloneValue(ended);
+            if (ended) await mirrorCanonicalRoom(ended);
+            return ended ? mergeRoomState(ended, hydrate((await liveRoomRef(roomId).get()).val())) : null;
         }
         return cloneValue(current);
     }
@@ -356,6 +413,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             tx.set(ref, value);
             return value;
         });
+        await mirrorCanonicalRoom(room);
         return publicResult(await getRoom(roomId), identity.uid);
     }
 
@@ -376,6 +434,18 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     async function end(input, roomId, reason = 'explicit') {
         const identity = assertPresenter(input);
         const ref = roomRef(roomId);
+        let denied = null;
+        await authorityStore.ensure(roomId);
+        await authorityStore.transact(roomId, current => {
+            denied = null;
+            if (current.presenterUid !== identity.uid) { denied = true; return undefined; }
+            if (current.lifecycle === 'ended') return undefined;
+            Object.assign(current, { lifecycle: 'ended', endedAt: clock(), endReason: reason, archiveStatus: 'pending', revision: current.revision + 1 });
+            if (current.gameplay) current.gameplay.inputs = {};
+            return current;
+        });
+        if (denied) fail('ACTOR_MISMATCH');
+        await drainNoteEffects(roomId);
         const room = await db.runTransaction(async tx => {
             const snap = await tx.get(ref);
             if (!snap.exists) fail('ROOM_NOT_FOUND');
@@ -387,7 +457,10 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             tx.delete(lockRef(identity.uid));
             return value;
         });
-        return cloneValue(room);
+        await mirrorCanonicalRoom(room);
+        const canonical = roomState(await authorityStore.read(roomId));
+        await mirrorAuthority(canonical);
+        return cloneValue(canonical);
     }
 
     async function syncRuntimeState(roomId, runtimeState, { expectedRevision = null, expectedGenerations = null, expectedOwner = null } = {}) {
@@ -511,30 +584,69 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         });
     }
 
+    async function throttle(identity, scope, maximum) {
+        const window = Math.floor(clock() / 60000), ref = operationRef('rate', operationHash([identity.uid, scope, window]));
+        await db.runTransaction(async tx => {
+            const snap = await tx.get(ref), count = snap.exists ? snap.data().count : 0;
+            if (count >= maximum) fail('RATE_LIMITED', 'Please wait a minute before trying again.');
+            tx.set(ref, { uid: identity.uid, scope, window, count: count + 1, expiresAt: (window + 2) * 60000 });
+        });
+    }
+    async function recordExport(identity, record) {
+        await operationRef('export', crypto.randomUUID()).set({ ...record, uid: identity.uid, kind: 'export', at: clock() });
+    }
+
     async function listPendingArchives(limit = 100) {
-        const snap = await db.collection(COLLECTIONS.rooms).where('lifecycle', '==', 'ended').get();
+        const snap = await db.collection(COLLECTIONS.rooms).where('archiveStatus', 'in', ['pending', 'failed']).limit(Math.min(100, Math.max(1, limit))).get();
         return snap.docs.map(doc => doc.data()).filter(room => ['pending', 'failed'].includes(room.archiveStatus)).sort((a, b) => Number(a.endedAt || 0) - Number(b.endedAt || 0)).slice(0, Math.max(0, limit));
     }
 
+    async function cleanupTransient(limit = 100) {
+        const maximum = Math.min(100, Math.max(1, limit));
+        let removed = 0;
+        for (const collection of [COLLECTIONS.tickets, COLLECTIONS.operations]) {
+            const expired = await db.collection(collection).where('expiresAt', '<=', clock()).limit(maximum).get();
+            for (const doc of expired.docs) {
+                const value = doc.data();
+                // Accepted effects and receipts are retained. Unaccepted staging
+                // is terminally fenced before deleting, so a retry cannot attach
+                // a reference to a payload that cleanup has removed.
+                if (value.status === 'staged') {
+                    const room = await authorityStore.read(value.roomId);
+                    if (!room || room.lifecycle !== 'ended' || Object.keys(room._effects || {}).length) continue;
+                }
+                if (collection === COLLECTIONS.operations && value.status && value.status !== 'staged') continue;
+                await doc.ref.delete(); removed++;
+            }
+        }
+        return { removed };
+    }
+
     async function expireDue() {
-        const snap = await db.collection(COLLECTIONS.rooms).get();
+        const cursorRef = operationRef('maintenance', 'expiry-scan');
+        const cursor = (await cursorRef.get()).data();
+        let query = db.collection(COLLECTIONS.rooms).where('expiresAt', '<=', clock()).orderBy('expiresAt').orderBy('__name__');
+        if (cursor) query = query.startAfter(cursor.lastExpiresAt, cursor.roomId);
+        const snap = await query.limit(100).get();
         const expired = [];
         for (const doc of snap.docs) {
-            const ref = doc.ref;
-            const room = await db.runTransaction(async tx => {
-                const currentSnap = await tx.get(ref);
-                if (!currentSnap.exists) return null;
-                const value = currentSnap.data();
-                if (!ACTIVE_LIFECYCLES.has(value.lifecycle) || Number(value.expiresAt) > clock()) return null;
-                value.lifecycle = 'ended'; value.endedAt = clock(); value.endReason = 'expired'; value.archiveStatus = 'pending'; value.revision += 1;
-                tx.set(ref, value); tx.delete(lockRef(value.presenterUid)); return value;
+            if (!ACTIVE_LIFECYCLES.has(doc.data().lifecycle)) continue;
+            await authorityStore.ensure(doc.id);
+            const terminal = await authorityStore.transact(doc.id, current => {
+                if (!current || !ACTIVE_LIFECYCLES.has(current.lifecycle) || current.expiresAt > clock()) return undefined;
+                Object.assign(current, { lifecycle: 'ended', endedAt: clock(), endReason: 'expired', archiveStatus: 'pending', revision: current.revision + 1 });
+                if (current.gameplay) current.gameplay.inputs = {};
+                return current;
             });
-            if (room) expired.push(room);
+            if (terminal.committed) { await drainNoteEffects(doc.id); await mirrorAuthority(terminal.value); expired.push(roomState(terminal.value)); }
         }
+        if (snap.size === 100) {
+            const last = snap.docs.at(-1); await cursorRef.set({ lastExpiresAt: last.data().expiresAt, roomId: last.id, kind: 'expiry-cursor' });
+        } else await cursorRef.delete();
         return expired;
     }
 
-    const roomService = { createOrResume, end, expireDue, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, refreshRuntimeOnRead: true, durable: true };
+    const roomService = { authorityStore, createOrResume, end, expireDue, cleanupTransient, getRoom, issueTicket, join, listRooms, listPendingArchives, markArchiveStatus, markBootstrap, consumeTicket, syncRuntimeState, touchPresenter, updateNotebookMetadata, throttle, recordExport, refreshRuntimeOnRead: true, durable: true };
 
     async function membership(roomId, uid) {
         const room = await getRoom(roomId);
@@ -544,85 +656,196 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         return { room, slot };
     }
 
-    async function readPages(roomId, uid) {
-        const snap = await db.collection(COLLECTIONS.notebookPages).get();
-        return cloneValue(snap.docs.map(doc => doc.data()).filter(page => page.roomId === roomId && page.uid === uid).sort((a, b) => a.id.localeCompare(b.id)));
-    }
-    async function readNotebookMeta(roomId, uid) {
-        const snap = await notebookRef(roomId, uid).get();
-        return snap.exists ? cloneValue(snap.data()) : { roomId, uid, pageIds: [], revision: 0 };
-    }
     const visible = pages => (pages || []).filter(page => page.deleted !== true);
-    const revision = (pages, meta = null) => Math.max(Number(meta?.revision) || 0, ...(pages || []).map(page => Number(page.version) || 0));
+    const revision = (pages, meta = null) => Number(meta?.revision) || (pages || []).reduce((sum, page) => sum + (Number(page.version) || 0), 0);
 
+    async function snapshotNotebooks(input, roomId, targetUids) {
+        const identity = input ? assertActiveIdentity(input) : null;
+        return db.runTransaction(async tx => {
+            const roomSnap = await tx.get(roomRef(roomId));
+            if (!roomSnap.exists) fail('ROOM_NOT_FOUND');
+            const room = roomSnap.data();
+            const viewer = identity && Object.values(room.slots).find(slot => slot.uid === identity.uid);
+            if (identity) assertRoomActor(identity, viewer && { uid: viewer.uid, seatId: viewer.slotId, role: viewer.role });
+            const uids = [...new Set(targetUids.map(raw => room.slots[raw]?.uid || raw))];
+            for (const uid of uids) {
+                if (!Object.values(room.slots).some(slot => slot.uid === uid)) fail('NOTE_FORBIDDEN');
+                if (identity && uid !== identity.uid && (viewer.role !== 'presenter' || !identity.isAdmin)) fail('NOTE_FORBIDDEN');
+            }
+            const metas = uids.length ? await tx.getAll(...uids.map(uid => notebookRef(roomId, uid))) : [];
+            const notebooks = {};
+            for (let i = 0; i < uids.length; i++) {
+                const uid = uids[i], meta = metas[i].exists ? metas[i].data() : { pageIds: [], revision: 0 };
+                const refs = (meta.pageIds || []).map(id => notebookPageRef(roomId, uid, id));
+                const documents = refs.length ? await tx.getAll(...refs) : [];
+                const pages = documents.filter(snap => snap.exists).map(snap => snap.data()).sort((a, b) => a.id.localeCompare(b.id));
+                notebooks[uid] = { roomId, uid, notebookRevision: revision(pages, meta), pages: visible(pages) };
+            }
+            return { room, notebooks };
+        }, { readOnly: true });
+    }
+
+    async function commitNote(input, roomId, targetUid, page, deleting) {
+        const identity = assertActiveIdentity(input);
+        if (String(targetUid || identity.uid) !== identity.uid) fail('NOTE_AUTHOR_ONLY');
+        if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0
+            || (!deleting && (typeof page.title !== 'string' || page.title.length > 200 || typeof page.body !== 'string' || page.body.length > 50000))
+            || (page.operationId !== undefined && !/^[A-Za-z0-9:_-]{1,128}$/.test(page.operationId))) fail('NOTE_INVALID');
+        const ref = roomRef(roomId), notesRef = notebookRef(roomId, identity.uid), pageRef = notebookPageRef(roomId, identity.uid, page.pageId);
+        const receiptRef = page.operationId ? operationRef('note', operationHash([roomId, identity.uid, page.operationId])) : null;
+        const inputHash = operationHash([deleting, page.pageId, page.expectedVersion, page.title, page.body]);
+        const now = clock();
+        const saved = await db.runTransaction(async tx => {
+            const roomSnap = await tx.get(ref);
+            const room = roomSnap.exists ? roomSnap.data() : null;
+            if (!room) fail('ROOM_NOT_FOUND');
+            const member = Object.values(room.slots).find(slot => slot.uid === identity.uid);
+            assertRoomActor(identity, member && { uid: member.uid, seatId: member.slotId, role: member.role });
+            const receiptSnap = receiptRef && await tx.get(receiptRef);
+            if (receiptSnap?.exists && receiptSnap.data().status !== 'staged') {
+                const receipt = receiptSnap.data();
+                if (receipt.status === 'failed') fail(receipt.error.code, receipt.error.message);
+                if (receipt.inputHash !== inputHash) fail('OPERATION_ID_REUSED');
+                return deleting ? receipt.result : { roomId, uid: identity.uid, id: page.pageId, title: page.title, body: page.body, ...receipt.result };
+            }
+            // The canonical effect reference was accepted before the End fence.
+            // End drains it before freezing the notebook, even after termination.
+            const notesSnap = await tx.get(notesRef), pageSnap = await tx.get(pageRef);
+            const meta = notesSnap.exists ? notesSnap.data() : { pageIds: [], revision: 0, activeCount: 0 };
+            const current = pageSnap.exists ? pageSnap.data() : null, currentVersion = current?.version || 0;
+            if (currentVersion !== page.expectedVersion || (deleting && (!current || current.deleted))) fail('NOTE_CONFLICT');
+            let activeCount = meta.activeCount;
+            if (!Number.isSafeInteger(activeCount)) {
+                const refs = (meta.pageIds || []).map(id => notebookPageRef(roomId, identity.uid, id));
+                const oldPages = refs.length ? await tx.getAll(...refs) : [];
+                activeCount = oldPages.filter(snap => snap.exists && !snap.data().deleted).length;
+            }
+            if (!deleting && (!current || current.deleted) && activeCount >= MAX_PAGES) fail('NOTE_PAGE_LIMIT');
+            if (!current && (meta.pageIds || []).length >= 1000) fail('NOTE_PAGE_LIMIT');
+            const value = deleting ? { roomId, uid: identity.uid, id: current.id, version: currentVersion + 1, deleted: true, deletedAt: now, deletedBy: identity.uid }
+                : { roomId, uid: identity.uid, id: page.pageId, title: page.title, body: page.body, version: currentVersion + 1, updatedAt: now, updatedBy: identity.uid };
+            const pageIds = current ? [...(meta.pageIds || [])] : [...(meta.pageIds || []), page.pageId];
+            const nextRevision = (Number(meta.revision) || 0) + 1;
+            tx.set(pageRef, value);
+            tx.set(notesRef, { roomId, uid: identity.uid, pageIds, revision: nextRevision, activeCount: activeCount + (deleting ? -1 : !current || current.deleted ? 1 : 0), updatedAt: now });
+            room.slots[member.slotId].notes = []; room.slots[member.slotId].notesRevision = nextRevision;
+            if (identity.uid === room.presenterUid) { room.lastPresenterActivityAt = now; room.expiresAt = now + DAY_MS; }
+            tx.set(ref, room);
+            const result = deleting ? { deleted: true, pageId: page.pageId, pages: [] } : value;
+            if (receiptRef) tx.set(receiptRef, { inputHash, roomId, status: 'complete', result: deleting ? result : { version: value.version, updatedAt: now, updatedBy: identity.uid }, completedAt: now });
+            return result;
+        });
+        // No post-commit mutation can turn a successful save into ROOM_ENDED.
+        // The owner also reconciles the directory at its next mirror pass.
+        if (identity.isAdmin) {
+            const snap = await roomRef(roomId).get().catch(() => null);
+            if (snap?.exists && snap.data().presenterUid === identity.uid) await mirrorCanonicalRoom(snap.data()).catch(() => {});
+        }
+        return cloneValue(saved);
+    }
+    const effectDrains = new Map();
+    async function removeNoteEffect(roomId, id) {
+        await authorityStore.transact(roomId, room => {
+            if (!room?._effects?.[id]) return undefined;
+            delete room._effects[id]; return room;
+        });
+    }
+    async function processNoteEffect(roomId, id, inputPage = null) {
+        const ref = operationRef('note', id), snap = await ref.get();
+        if (!snap.exists) fail('OUTCOME_UNKNOWN', 'The accepted note effect is temporarily unavailable.');
+        const operation = snap.data();
+        if (operation.status === 'complete' || operation.status === 'failed') {
+            await removeNoteEffect(roomId, id);
+            if (operation.status === 'failed') fail(operation.error.code, operation.error.message);
+            return inputPage && !operation.result.deleted ? { id: inputPage.pageId, title: inputPage.title, body: inputPage.body, ...operation.result } : operation.result;
+        }
+        try {
+            const result = await commitNote(operation.identity, roomId, operation.identity.uid, operation.page, operation.deleting);
+            await removeNoteEffect(roomId, id).catch(() => {});
+            return result;
+        } catch (error) {
+            if (['NOTE_CONFLICT', 'NOTE_PAGE_LIMIT', 'NOTE_INVALID'].includes(error.code)) {
+                await ref.set({ inputHash: operation.inputHash, status: 'failed', error: { code: error.code, message: error.message }, completedAt: clock(), roomId });
+                await removeNoteEffect(roomId, id).catch(() => {});
+            }
+            throw error;
+        }
+    }
+    async function drainNoteEffects(roomId) {
+        if (effectDrains.has(roomId)) return effectDrains.get(roomId);
+        const pending = (async () => {
+            const room = await authorityStore.read(roomId);
+            for (const id of Object.keys(room?._effects || {})) {
+                try { await processNoteEffect(roomId, id); }
+                catch (error) { if (!['NOTE_CONFLICT', 'NOTE_PAGE_LIMIT', 'NOTE_INVALID'].includes(error.code)) throw error; }
+            }
+        })().finally(() => effectDrains.delete(roomId));
+        effectDrains.set(roomId, pending); return pending;
+    }
+    async function stageNote(input, roomId, targetUid, inputPage, deleting = false) {
+        const identity = assertActiveIdentity(input);
+        if (String(targetUid || identity.uid) !== identity.uid) fail('NOTE_AUTHOR_ONLY');
+        const page = { ...inputPage, operationId: inputPage?.operationId || crypto.randomUUID() };
+        if (!/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.operationId) || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0
+            || (!deleting && (typeof page.title !== 'string' || page.title.length > 200 || typeof page.body !== 'string' || page.body.length > 50000))) fail('NOTE_INVALID');
+        const id = operationHash([roomId, identity.uid, page.operationId]), ref = operationRef('note', id);
+        const inputHash = operationHash([deleting, page.pageId, page.expectedVersion, page.title, page.body]);
+        const member = await membership(roomId, identity.uid);
+        assertRoomActor(identity, { uid: identity.uid, seatId: member.slot.slotId, role: member.slot.role });
+        const original = await db.runTransaction(async tx => {
+            const snap = await tx.get(ref);
+            if (snap.exists) {
+                const current = snap.data();
+                if (current.inputHash !== inputHash) fail('OPERATION_ID_REUSED');
+                return current;
+            }
+            const staged = { inputHash, status: 'staged', roomId, identity: { uid: identity.uid, accountStatus: 'active', isAdmin: identity.isAdmin, isTeacher: identity.isTeacher }, page, deleting, stagedAt: clock(), expiresAt: clock() + 86400000 };
+            tx.set(ref, staged); return staged;
+        });
+        if (original.status === 'failed') fail(original.error.code, original.error.message);
+        if (original.status === 'complete') return { id, result: deleting ? original.result : { roomId, uid: identity.uid, id: page.pageId, title: page.title, body: page.body, ...original.result } };
+        let rejected = null;
+        await authorityStore.transact(roomId, room => {
+            rejected = null;
+            if (room?._effects?.[id]) return undefined;
+            try {
+                assertCurrentRoom(room);
+                const slot = Object.values(room.slots).find(slot => slot.uid === identity.uid);
+                assertRoomActor(identity, slot && { uid: slot.uid, seatId: slot.slotId, role: slot.role });
+                room._effects ||= {};
+                if (Object.keys(room._effects).length >= 32) fail('RATE_LIMITED');
+                room._effects[id] = { kind: 'note', acceptedAt: clock() };
+                return room;
+            } catch (error) { rejected = error; return undefined; }
+        });
+        if (rejected) {
+            // A worker can finish and remove the effect between staging and
+            // this transaction. Its committed receipt still wins over End.
+            const receipt = (await ref.get()).data();
+            if (receipt?.status === 'complete' && receipt.inputHash === inputHash) return { id, result: deleting ? receipt.result : { roomId, uid: identity.uid, id: page.pageId, title: page.title, body: page.body, ...receipt.result } };
+            throw rejected;
+        }
+        return { id, accepted: true };
+    }
+    async function mutateNote(input, roomId, targetUid, page, deleting) {
+        const staged = await stageNote(input, roomId, targetUid, page, deleting);
+        if (staged.result) return staged.result;
+        return processNoteEffect(roomId, staged.id, page);
+    }
     const notes = {
+        snapshotNotebooks, stageNote, drainNoteEffects,
         async readNotebook(input, roomId, targetUid) {
             const identity = assertActiveIdentity(input);
-            const { room, slot } = await membership(roomId, identity.uid);
-            const target = String(targetUid || identity.uid);
-            if (target !== identity.uid && (slot.role !== 'presenter' || identity.isAdmin !== true)) fail('NOTE_FORBIDDEN');
-            await membership(roomId, target);
-            const pages = await readPages(roomId, target);
-            const meta = await readNotebookMeta(roomId, target);
-            return { roomId, uid: target, notebookRevision: revision(pages, meta), pages: visible(pages) };
+            return Object.values((await snapshotNotebooks(identity, roomId, [targetUid || identity.uid])).notebooks)[0];
         },
         async readNotebookByUid(inputOrRoomId, roomIdOrUid, maybeUid) {
             const hasActor = inputOrRoomId && typeof inputOrRoomId === 'object';
             const identity = hasActor ? assertActiveIdentity(inputOrRoomId) : null;
-            const roomId = hasActor ? roomIdOrUid : inputOrRoomId;
-            const uid = hasActor ? maybeUid : roomIdOrUid;
-            const { room, slot } = await membership(roomId, hasActor ? identity.uid : uid);
-            if (hasActor && uid !== identity.uid && (slot.role !== 'presenter' || identity.isAdmin !== true)) fail('NOTE_FORBIDDEN');
-            const target = Object.values(room.slots).find(candidate => candidate.uid === uid);
-            if (!target) fail('NOTE_FORBIDDEN');
-            const pages = await readPages(roomId, uid);
-            const meta = await readNotebookMeta(roomId, uid);
-            return { roomId, uid, notebookRevision: revision(pages, meta), pages: visible(pages) };
+            const roomId = hasActor ? roomIdOrUid : inputOrRoomId, uid = hasActor ? maybeUid : roomIdOrUid;
+            return Object.values((await snapshotNotebooks(identity, roomId, [uid])).notebooks)[0];
         },
-        async savePage(input, roomId, targetUid, page) {
-            const identity = assertActiveIdentity(input);
-            if (String(targetUid || identity.uid) !== identity.uid) fail('NOTE_AUTHOR_ONLY');
-            if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || typeof page.title !== 'string' || page.title.length > 200 || typeof page.body !== 'string' || page.body.length > 50000 || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0) fail('NOTE_INVALID');
-            const roomRefValue = roomRef(roomId); const notesRef = notebookRef(roomId, identity.uid); const pageRef = notebookPageRef(roomId, identity.uid, page.pageId);
-            const saved = await db.runTransaction(async tx => {
-                const roomSnap = await tx.get(roomRefValue); const notesSnap = await tx.get(notesRef); const pageSnap = await tx.get(pageRef);
-                const room = roomSnap.exists ? roomSnap.data() : null; assertCurrentRoomInTransaction(tx, roomRefValue, room);
-                const member = Object.values(room.slots).find(slot => slot.uid === identity.uid); assertRoomActor(identity, member && { uid: member.uid, seatId: member.slotId, role: member.role });
-                const meta = notesSnap.exists ? notesSnap.data() : { pageIds: [], revision: 0 }; const current = pageSnap.exists ? pageSnap.data() : null; const currentVersion = current?.version || 0;
-                if (currentVersion !== page.expectedVersion) fail('NOTE_CONFLICT');
-                if (!current && (meta.pageIds || []).length >= MAX_PAGES) fail('NOTE_PAGE_LIMIT');
-                const value = { roomId, uid: identity.uid, id: page.pageId, title: page.title, body: page.body, version: currentVersion + 1, updatedAt: clock(), updatedBy: identity.uid };
-                const pageIds = current ? [...(meta.pageIds || [])] : [...(meta.pageIds || []), page.pageId];
-                const nextRevision = (Number(meta.revision) || 0) + 1;
-                tx.set(pageRef, value);
-                tx.set(notesRef, { roomId, uid: identity.uid, pageIds, revision: nextRevision, updatedAt: clock() });
-                const slot = room.slots[member.slotId]; slot.notes = []; slot.notesRevision = nextRevision; room.revision += 1; tx.set(roomRefValue, room);
-                return value;
-            });
-            if (identity.uid === (await getRoom(roomId)).presenterUid) await touchPresenter(identity, roomId);
-            return cloneValue(saved);
-        },
-        async deletePage(input, roomId, targetUid, page) {
-            const identity = assertActiveIdentity(input);
-            if (String(targetUid || identity.uid) !== identity.uid) fail('NOTE_AUTHOR_ONLY');
-            if (!page || !/^[A-Za-z0-9:_-]{1,128}$/.test(page.pageId || '') || !Number.isSafeInteger(page.expectedVersion) || page.expectedVersion < 0) fail('NOTE_INVALID');
-            const roomRefValue = roomRef(roomId); const notesRef = notebookRef(roomId, identity.uid); const pageRef = notebookPageRef(roomId, identity.uid, page.pageId);
-            const result = await db.runTransaction(async tx => {
-                const roomSnap = await tx.get(roomRefValue); const notesSnap = await tx.get(notesRef); const pageSnap = await tx.get(pageRef);
-                const room = roomSnap.exists ? roomSnap.data() : null; assertCurrentRoomInTransaction(tx, roomRefValue, room);
-                const member = Object.values(room.slots).find(slot => slot.uid === identity.uid); assertRoomActor(identity, member && { uid: member.uid, seatId: member.slotId, role: member.role });
-                const meta = notesSnap.exists ? notesSnap.data() : { pageIds: [], revision: 0 }; const current = pageSnap.exists ? pageSnap.data() : null;
-                if (!current || current.version !== page.expectedVersion || current.deleted === true) fail('NOTE_CONFLICT');
-                const nextRevision = (Number(meta.revision) || 0) + 1;
-                tx.set(pageRef, { ...current, version: current.version + 1, deleted: true, deletedAt: clock(), deletedBy: identity.uid, updatedAt: clock() });
-                tx.set(notesRef, { roomId, uid: identity.uid, pageIds: [...(meta.pageIds || [])], revision: nextRevision, updatedAt: clock() });
-                room.slots[member.slotId].notes = []; room.slots[member.slotId].notesRevision = nextRevision; room.revision += 1; tx.set(roomRefValue, room);
-                return { deleted: true, pageId: page.pageId, pages: [] };
-            });
-            result.pages = visible(await readPages(roomId, identity.uid));
-            if (identity.uid === (await getRoom(roomId)).presenterUid) await touchPresenter(identity, roomId);
-            return cloneValue(result);
-        }
+        savePage: (input, roomId, targetUid, page) => mutateNote(input, roomId, targetUid, page, false),
+        deletePage: (input, roomId, targetUid, page) => mutateNote(input, roomId, targetUid, page, true)
     };
 
     function archiveChecksum(value) { return crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
@@ -631,12 +854,13 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             const hasActor = inputOrRoomId && typeof inputOrRoomId === 'object';
             const identity = hasActor ? assertPresenter(inputOrRoomId) : null;
             const roomId = hasActor ? maybeRoomId : inputOrRoomId;
+            await drainNoteEffects(roomId);
             const ref = roomRef(roomId); const started = await db.runTransaction(async tx => {
                 const roomSnap = await tx.get(ref); if (!roomSnap.exists || roomSnap.data().lifecycle !== 'ended') fail('ROOM_NOT_TERMINAL');
                 const room = roomSnap.data(); if (identity && room.presenterUid !== identity.uid) fail('PRESENTER_ONLY');
                 const existingSnap = await tx.get(archiveRef(roomId)); if (existingSnap.exists && existingSnap.data().status === 'archived') return existingSnap.data();
                 const members = Object.values(room.slots).filter(slot => slot.uid).map(slot => ({ uid: slot.uid, seatId: slot.slotId, role: slot.role, displayName: slot.displayName, joinedAt: slot.joinedAt }));
-                const value = { archiveId: roomId, roomId, status: 'pending', createdAt: clock(), sourceRevision: room.revision, members };
+                const value = { archiveId: roomId, roomId, status: 'pending', createdAt: clock(), sourceRevision: room.revision, members, gameplay: room.gameplay, deck: room.deck };
                 if (existingSnap.exists) tx.set(archiveRef(roomId), value); else tx.create(archiveRef(roomId), value);
                 room.archiveStatus = 'pending'; tx.set(ref, room); return value;
             });
@@ -647,7 +871,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 notebooks[member.uid] = { notebookRevision: notebook.notebookRevision, pages: notebook.pages };
                 for (const page of notebook.pages) await archivePageRef(roomId, member.uid, page.id).set({ ...page, roomId, uid: member.uid });
             }
-            const payload = { roomId, sourceRevision: started.sourceRevision, members: started.members, notebooks };
+            const payload = { roomId, sourceRevision: started.sourceRevision, members: started.members, notebooks, gameplay: started.gameplay, deck: started.deck };
             const archive = await db.runTransaction(async tx => {
                 const snap = await tx.get(archiveRef(roomId)); const roomSnap = await tx.get(ref); if (!snap.exists) fail('ARCHIVE_NOT_FOUND');
                 const value = snap.data(); if (value.status === 'archived') return value;
@@ -660,7 +884,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             const identity = assertActiveIdentity(input); const room = await getRoom(roomId); const current = room && Object.values(room.slots).find(value => value.uid === identity.uid); assertRoomActor(identity, current && { uid: current.uid, seatId: current.slotId, role: current.role });
             const snap = await archiveRef(roomId).get(); if (!snap.exists || snap.data().status !== 'archived') fail('ARCHIVE_NOT_FOUND');
             const archive = snap.data(); const member = archive.members.find(value => value.uid === identity.uid); if (!member) fail('EXPORT_FORBIDDEN');
-            const pageSnap = await db.collection(COLLECTIONS.archivePages).get(); const targetMembers = member.role === 'presenter' ? archive.members : [member]; const notebooks = {};
+            const pageSnap = await db.collection(COLLECTIONS.archivePages).where('roomId', '==', roomId).get(); const targetMembers = member.role === 'presenter' ? archive.members : [member]; const notebooks = {};
             for (const target of targetMembers) {
                 const pages = pageSnap.docs.map(doc => doc.data()).filter(page => page.roomId === roomId && page.uid === target.uid).sort((a, b) => a.id.localeCompare(b.id));
                 notebooks[target.uid] = { notebookRevision: archive.notebookRevisions?.[target.uid] || revision(pages), pages: cloneValue(pages) };

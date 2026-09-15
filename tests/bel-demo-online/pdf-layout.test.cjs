@@ -13,7 +13,7 @@ test('active PDF export uses a Unicode-capable embedded font and stable page lay
     const notes = createNotebookService({ roomService });
     const archives = createArchiveService({ roomService, notesService: notes, stores });
     await notes.savePage(admin, room.roomId, 'p0', { pageId: 'unicode', title: 'Tiếng Việt', body: `${'dài hợp tác — '.repeat(700)}kết thúc`, expectedVersion: 0 });
-    const pdf = await createPdfService({ archives, roomService, notesService: notes }).exportPdf(admin, room.roomId);
+    const pdf = await createPdfService({ archives, roomService, notesService: notes }).exportPdf(admin, room.roomId, 'own');
     const source = pdf.toString('latin1');
     assert.match(source, /\/Subtype \/Type0/);
     assert.match(source, /\/Encoding \/Identity-H/);

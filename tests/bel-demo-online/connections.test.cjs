@@ -39,6 +39,35 @@ test('goodbye is generation-bound and does not end or pause the room', async () 
     assert.equal(current.slots.p1.connected, false);
 });
 
+test('ticket consumption is single-use across gateway instances', async () => {
+    const { roomService, connections, room } = await setup();
+    const other = createConnectionService({ roomService, clock: () => 1000 });
+    try {
+        const ticket = await roomService.issueTicket(user, room.roomId);
+        const results = await Promise.allSettled([connections.open(user, ticket), other.open(user, ticket)]);
+        assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+        assert.equal((await roomService.getRoom(room.roomId)).slots.p1.connectionGeneration, 1);
+    } finally { await connections.shutdown(); await other.shutdown(); }
+});
+
+test('same operation retries after takeover without resetting the permanent action cursor', async () => {
+    const { roomService, connections, room } = await setup();
+    try {
+        const first = await connections.open(user, await roomService.issueTicket(user, room.roomId));
+        const command = { type: 'profile', seq: 1, name: 'Game identity', appearance: { hat: 'none', glasses: false, shirt: 'teal' } };
+        const committed = await connections.input(first, command, user, { commandId: 'durable-profile' });
+        const replacement = await connections.open(user, await roomService.issueTicket(user, room.roomId), { replaceExisting: true });
+        assert.equal(replacement.snapshot.acceptedSequence.command, 1);
+        const replay = await connections.input(replacement, command, user, { commandId: 'durable-profile' });
+        assert.equal(replay.revision, committed.revision);
+        await assert.rejects(connections.input(replacement, command, user, { commandId: 'new-id-old-sequence' }), { code: 'ALREADY_APPLIED_RESYNC' });
+        await assert.rejects(connections.input(replacement, { ...command, seq: 3 }, user, { commandId: 'gap' }), { code: 'SEQUENCE_GAP' });
+        await connections.input(replacement, { type: 'move', seq: 88, dx: 0, dy: 1 });
+        await connections.input(replacement, { ...command, seq: 2, name: 'Second identity' });
+        assert.equal((await roomService.getRoom(room.roomId)).lastCommandSeq.p1, 2);
+    } finally { await connections.shutdown(); }
+});
+
 test('per-room serialization prevents an older heartbeat snapshot from fencing a newer input', async () => {
     const { roomService, connections, room } = await setup();
     const ticket = await roomService.issueTicket(user, room.roomId);
@@ -49,5 +78,5 @@ test('per-room serialization prevents an older heartbeat snapshot from fencing a
         connections.heartbeat(context)
     ]);
     assert.equal(results[1].accepted, true);
-    assert.equal((await roomService.getRoom(room.roomId)).lastCommandSeq.p1, 1);
+    assert.equal((await roomService.getRoom(room.roomId)).lastInputSeq.p1, 1);
 });

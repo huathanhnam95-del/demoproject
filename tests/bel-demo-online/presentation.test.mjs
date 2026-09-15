@@ -9,7 +9,8 @@ test('generated online deck keeps authored resources and online frame adapter', 
   assert.match(html, /\/prototypes\/bel-working-as-equals-demo\/native\/support\.js/);
   assert.match(html, /\/prototypes\/bel-working-as-equals-demo\/native\/images\/cover\.jpg/);
   assert.match(html, /\/prototypes\/bel-working-as-equals-demo\/_ds\//);
-  assert.match(html, /\/prototypes\/bel-working-as-equals-demo\/presentation\/frame\.mjs/);
+  assert.match(html, /\/js\/presentation-demo\/presentation\/frame\.mjs/);
+  assert.match(html, /from="\/prototypes\/bel-working-as-equals-demo\/native\/deck-stage\.js"/);
   assert.match(html, /Our First Month Together/);
 });
 
@@ -23,4 +24,24 @@ test('host frame messages require same origin, room source and room identity', (
 
 test('ETA uses server time so client clock skew does not change the deadline', () => {
   assert.equal(etaForServerTime({ etaOrigin: 120000, serverNow: 60000, clientNow: 3600000 }), 3660000);
+});
+
+test('an export clicked at End waits for the archive without retrying forbidden reads', async () => {
+  const previous = globalThis.window;
+  globalThis.window = { location: { origin: 'http://127.0.0.1', search: '' }, setTimeout };
+  try {
+    const { PresentationTransport } = await import('../../public/js/presentation-demo/transport.mjs');
+    const transport = new PresentationTransport({ uid: 'reader', local: true });
+    const pdf = new Blob(['%PDF-1.7'], { type: 'application/pdf' });
+    let exports = 0, reads = 0;
+    transport.request = async path => {
+      if (!path.endsWith('/export.pdf')) { reads++; return { lifecycle: 'ended' }; }
+      if (++exports === 1) throw Object.assign(new Error('pending archive'), { code: 'ARCHIVE_NOT_FOUND' });
+      return pdf;
+    };
+    assert.equal(await transport.exportPdf('ending-room'), pdf);
+    assert.equal(exports, 2); assert.equal(reads, 1);
+    transport.request = async () => { throw Object.assign(new Error('forbidden'), { code: 'EXPORT_FORBIDDEN' }); };
+    await assert.rejects(transport.exportPdf('other-room'), { code: 'EXPORT_FORBIDDEN' });
+  } finally { if (previous === undefined) delete globalThis.window; else globalThis.window = previous; }
 });

@@ -22,6 +22,51 @@ function setup() {
     return { handlers, roomService };
 }
 
+test('rollback gates stop admission and saves while retaining permitted private reads', async () => {
+    const keys = ['PRESENTATION_DEMO_ADMISSION_ENABLED', 'PRESENTATION_DEMO_MUTATIONS_ENABLED', 'PRESENTATION_DEMO_ARCHIVED_ACCESS_ENABLED'];
+    const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+    const { handlers } = setup(), user = { uid: 'admin', accountStatus: 'active', isAdmin: true };
+    try {
+        const created = response(); await handlers.create({ user, body: {} }, created);
+        const roomId = created.body.data.roomId;
+        process.env.PRESENTATION_DEMO_ADMISSION_ENABLED = '0';
+        const blocked = response(); await handlers.create({ user, body: {} }, blocked);
+        assert.equal(blocked.statusCode, 503);
+        process.env.PRESENTATION_DEMO_MUTATIONS_ENABLED = '0';
+        const save = response(); await handlers.saveNote({ user, params: { roomId }, body: { pageId: 'blocked', title: 'x', body: 'x', expectedVersion: 0 } }, save);
+        assert.equal(save.body.error.code, 'SERVICE_RECOVERY');
+        const read = response(); await handlers.readNotes({ user, params: { roomId } }, read);
+        assert.equal(read.statusCode, 200); assert.equal(read.body.data.pages.length, 0);
+        process.env.PRESENTATION_DEMO_ARCHIVED_ACCESS_ENABLED = '0';
+        const denied = response(); await handlers.readNotes({ user, params: { roomId } }, denied);
+        assert.equal(denied.statusCode, 503);
+    } finally { for (const key of keys) if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key]; }
+});
+
+test('provider failures return retryable service errors without internal details', async () => {
+    const { handlers, roomService } = setup();
+    roomService.getRoom = async () => { throw Object.assign(new Error('private provider path and request data'), { code: 14 }); };
+    const result = response();
+    await handlers.room({ user: { uid: 'admin', accountStatus: 'active', isAdmin: true }, params: { roomId: 'room-route' } }, result);
+    assert.equal(result.statusCode, 503);
+    assert.equal(result.body.error.code, 'OUTCOME_UNKNOWN');
+    assert.doesNotMatch(JSON.stringify(result.body), /private provider/);
+});
+
+test('capabilities expose only an operator-configured exact HTTPS realtime origin', async () => {
+    const before = process.env.PRESENTATION_DEMO_REALTIME_ORIGIN;
+    const { handlers } = setup(), req = { user: { uid: 'admin', accountStatus: 'active', isAdmin: true } };
+    try {
+        process.env.PRESENTATION_DEMO_REALTIME_ORIGIN = 'https://bel-gateway.example';
+        const valid = response(); await handlers.capabilities(req, valid);
+        assert.equal(valid.body.data.realtimeOrigin, 'https://bel-gateway.example');
+        process.env.PRESENTATION_DEMO_REALTIME_ORIGIN = 'https://bel-gateway.example/?token=bad';
+        const invalid = response(); await handlers.capabilities(req, invalid);
+        assert.equal(invalid.statusCode, 503);
+        assert.doesNotMatch(JSON.stringify(invalid.body), /token=bad/);
+    } finally { if (before === undefined) delete process.env.PRESENTATION_DEMO_REALTIME_ORIGIN; else process.env.PRESENTATION_DEMO_REALTIME_ORIGIN = before; }
+});
+
 test('HTTP handlers enforce current identity and presenter-only create/end', async () => {
     const { handlers } = setup();
     const denied = response();

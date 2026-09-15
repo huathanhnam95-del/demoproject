@@ -114,50 +114,61 @@ test('full route mechanics reject direct jumps, self matches and unearned activi
     let now = 1000;
     const room = populatedRoom(now);
     room.lifecycle = 'playing';
-    for (const slot of Object.values(room.slots)) {
-        if (slot.uid) { slot.connected = true; slot.connectionGeneration = 1; slot.scene = 'J'; slot.instanceId = 'J'; slot.lastSeenAt = now; }
-    }
-    room.slots.p0.scene = 'reception'; room.slots.p0.instanceId = 'reception';
+    for (const slot of Object.values(room.slots)) if (slot.uid) Object.assign(slot, { connected: true, connectionGeneration: 1, scene: 'J', instanceId: 'J', lastSeenAt: now });
     const runtime = new AuthoritativeRuntime(room, { clock: () => now });
-    assert.throws(() => runtime.command('p0', 1, { type: 'slide', seq: 1, room: 'J', slide: 21 }, now), error => error.code === 'PROGRESSION_REQUIRED');
-    runtime.command('p1', 1, { type: 'activity', seq: 1, action: 'cubes', payload: { op: 'claim', cubeIndex: 0 } }, now);
-    assert.throws(() => runtime.command('p1', 1, { type: 'activity', seq: 2, action: 'cubes', payload: { op: 'match', otherSeat: 'p1' } }, now), error => error.code === 'CUBE_PAIR_INVALID');
+    assert.throws(() => runtime.command('p0', 1, { type: 'slide', seq: 1, room: 'J', slide: 21 }), { code: 'PROGRESSION_REQUIRED' });
+    const world = runtime.room.gameplay;
+    // Place a unit fixture beside the real cube target; the command must
+    // claim that object through the same proximity reducer as the browser.
+    Object.assign(world.players.p1, { x: 430, y: 190 });
+    runtime.command('p1', 1, { type: 'world', seq: 1, action: 'interact', payload: { instance: 'J', target: 'cube-0' } });
+    assert.equal(world.cubes.cubes[0].owner, 'p1');
+    assert.throws(() => runtime.command('p1', 1, { type: 'world', seq: 2, action: 'interact', payload: { instance: 'J', target: 'p1' } }), /Walk closer/);
+    assert.deepEqual(world.cubes.pairs, [false, false, false]);
 
-    const bridgeRoom = populatedRoom(now);
-    bridgeRoom.lifecycle = 'playing';
-    for (const slot of Object.values(bridgeRoom.slots)) {
-        if (slot.uid) { slot.connected = true; slot.connectionGeneration = 1; slot.scene = 'F'; slot.instanceId = 'F'; slot.lastSeenAt = now; slot.activity.ready = true; }
-    }
-    const bridge = new AuthoritativeRuntime(bridgeRoom, { clock: () => now });
-    bridge.command('p0', 1, { type: 'activity', seq: 1, action: 'bridge', payload: { op: 'start' } }, now);
-    assert.throws(() => bridge.command('p1', 1, { type: 'activity', seq: 1, action: 'bridge', payload: { op: 'place', plankIndex: 0 } }, now), error => error.code === 'BRIDGE_NOT_IN_ATTEMPT');
+    for (const slot of Object.values(room.slots)) { slot.scene = 'F'; slot.instanceId = 'F'; slot.activity.ready = true; }
+    const bridge = new AuthoritativeRuntime(room, { clock: () => now });
+    bridge.command('p0', 1, { type: 'world', seq: 1, action: 'activity', payload: { instance: 'F', generation: 0, action: 'start' } });
+    assert.throws(() => bridge.command('p1', 1, { type: 'world', seq: 1, action: 'interact', payload: { instance: 'F', generation: 0, target: 'bridge-next' } }), /Walk closer/);
     now += 60000;
     for (const slot of Object.values(bridge.room.slots)) if (slot.uid) slot.lastSeenAt = now;
     bridge.tick(now);
-    assert.throws(() => bridge.command('p1', 1, { type: 'activity', seq: 2, action: 'bridge', payload: { op: 'place', plankIndex: 0 } }, now), error => error.code === 'BRIDGE_NOT_AT_TARGET');
-    bridge.room.slots.p1.position = { x: 500, y: 233 };
-    bridge.command('p1', 1, { type: 'activity', seq: 2, action: 'bridge', payload: { op: 'place', plankIndex: 0 } }, now);
-    assert.throws(() => bridge.command('p1', 1, { type: 'activity', seq: 3, action: 'bridge', payload: { op: 'place', plankIndex: 2 } }, now), error => error.code === 'ACTIVITY_INTENTION_INVALID');
+    assert.equal(bridge.room.gameplay.bridge.phase, 'attempt');
+    Object.assign(bridge.room.gameplay.players.p1, { x: 500, y: 260 });
+    assert.throws(() => bridge.command('p1', 1, { type: 'world', seq: 1, action: 'interact', payload: { instance: 'F', generation: 0, target: 'bridge-next' } }), /Bring a plank/);
+    assert.equal(bridge.room.gameplay.bridge.placed, 0);
+    const w = bridge.room.gameplay;
+    Object.assign(w.players.p1, { x: 500, y: 260, carry: 'plank-0' }); w.bridge.planks[0].owner = 'p1';
+    bridge.command('p1', 1, { type: 'world', seq: 1, action: 'interact', payload: { instance: 'F', generation: 0, target: 'bridge-next' } });
+    assert.equal(w.bridge.placed, 1);
+    w.players.p1.carry = 'plank-2'; w.bridge.planks[2].owner = 'p1';
+    assert.throws(() => bridge.command('p1', 1, { type: 'world', seq: 2, action: 'interact', payload: { instance: 'F', generation: 0, target: 'bridge-next' } }), /elsewhere/);
+    assert.equal(w.players.p1.carry, 'plank-2');
     now += 120000;
     for (const slot of Object.values(bridge.room.slots)) if (slot.uid) slot.lastSeenAt = now;
     bridge.tick(now);
-    assert.notEqual(bridge.snapshot().gameplay.reversal.phase, 'choice');
+    assert.equal(w.reversal.phase, 'gathering');
 });
 
 test('runtime rejects expiry and follows the authored deck and timed activity progression', () => {
     let now = 1000;
     const room = populatedRoom(now);
-    room.lifecycle = 'playing';
-    room.startedAt = now;
+    room.lifecycle = 'playing'; room.startedAt = now;
+    room.slots.p0.scene = 'A'; room.slots.p0.instanceId = 'A';
     const runtime = new AuthoritativeRuntime(room, { clock: () => now });
-    runtime.connect('p0', null, { now });
-    runtime.command('p0', 1, { type: 'slide', seq: 1, room: 'A', slide: 1 }, now);
-    runtime.command('p0', 1, { type: 'slide', seq: 2, room: 'A', slide: 2 }, now);
-    runtime.command('p0', 1, { type: 'slide', seq: 3, room: 'A', slide: 3 }, now);
-    for (const slot of Object.values(runtime.room.slots)) if (slot.uid) { slot.connected = true; slot.connectionGeneration = slot.slotId === 'p0' ? 1 : 1; slot.lastSeenAt = now; slot.scene = 'F'; slot.instanceId = 'F'; slot.distanceSinceScene = 0; }
-    runtime.command('p0', 1, { type: 'activity', seq: 4, action: 'bridge', payload: { op: 'start' } }, now);
-    now += 1000;
-    runtime.tick(now);
+    runtime.connect('p0', null, { now }); runtime.room.slots.p0.activity.ready = true;
+    Object.assign(runtime.room.gameplay.players.p0, { x: 631, y: 175 });
+    runtime.command('p0', 1, { type: 'presentation', seq: 1, action: 'open' });
+    runtime.command('p0', 1, { type: 'slide', seq: 2, room: 'A', slide: 2 });
+    runtime.command('p0', 1, { type: 'slide', seq: 3, room: 'A', slide: 3 });
+    runtime.command('p0', 1, { type: 'presentation', seq: 4, action: 'close' });
+    assert.equal(runtime.room.gameplay.unlocked.A, true);
+    for (const slot of Object.values(runtime.room.slots)) if (slot.uid) {
+        Object.assign(slot, { connected: true, connectionGeneration: 1, lastSeenAt: now, scene: 'F', instanceId: 'F' }); slot.activity.ready = true;
+        Object.assign(runtime.room.gameplay.players[slot.slotId], { scene: 'F', instance: 'F', x: 350 + Number(slot.slotId[1]) * 68, y: 375 });
+    }
+    runtime.command('p0', 1, { type: 'activity', seq: 5, action: 'bridge', payload: { op: 'start', instance: 'F', generation: 0 } });
+    now += 1000; runtime.tick(now);
     assert.equal(runtime.snapshot().gameplay.bridge.remaining, 59000);
     const expired = new AuthoritativeRuntime({ ...runtime.rawState(), expiresAt: now - 1 }, { clock: () => now });
     assert.throws(() => expired.connect('p0', null, { now }), error => error.code === 'ROOM_EXPIRED');

@@ -313,6 +313,7 @@ async function main() {
     const consoleErrorRecords = [];
     const pageErrors = [];
     const network = [];
+    const annotationResponses = [];
     const injectedConflictUrls = new Set();
     const expectedConsoleRecord = (entry) => {
         if (injectedConflictUrls.has(entry.url) && /status of 409/i.test(entry.text)) return true;
@@ -321,6 +322,10 @@ async function main() {
         return (pathname === '/api/admin/status' || pathname === '/api/teacher/status') && /status of 404/i.test(entry.text);
     };
     const capturePage = (page) => {
+        page.on('response', (response) => {
+            if (!response.url().includes('/css/entrance-test-ui-annotations.css')) return;
+            annotationResponses.push({ url: response.url(), status: response.status(), contentType: response.headers()['content-type'] || '' });
+        });
         page.on('console', (message) => {
             if (message.type() !== 'error') return;
             const location = message.location?.() || {};
@@ -978,6 +983,13 @@ async function main() {
         assert.deepStrictEqual(pageErrors, [], `Chrome page errors: ${pageErrors.join('; ')}`);
         assert.deepStrictEqual(unexpectedConsoleErrors, [], `Chrome console errors: ${unexpectedConsoleErrors.map((entry) => entry.text).join('; ')}`);
         assert.ok(network.some((entry) => entry.method === 'GET' && entry.url.includes('/api/projects/')));
+        const annotationResponse = annotationResponses.find((entry) => entry.status === 200 && /text\/css/i.test(entry.contentType));
+        assert.ok(annotationResponse, `Chrome must load the entrance annotation stylesheet as text/css: ${JSON.stringify(annotationResponses)}`);
+        const loadedAnnotationCss = await ownerPage.evaluate(() => [...document.styleSheets].flatMap((sheet) => {
+            try { return [...sheet.cssRules].map((rule) => rule.cssText); } catch (_) { return []; }
+        }).join('\n'));
+        assert.match(loadedAnnotationCss, /\.et-annotation-overlay/);
+        assert.match(loadedAnnotationCss, /\.et-annotation-capture-layer/);
         process.stdout.write('crm projects Phase4 discussions/recovery real Chrome persisted UI matrix passed\n');
     } catch (error) {
         console.error('Phase4 Chrome original failure:', error.stack || error.message);

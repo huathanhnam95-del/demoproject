@@ -60,7 +60,19 @@ function equalState(left, right) {
 
 function nowValue(now) {
     const value = typeof now === 'function' ? now() : now;
-    return Number(value ?? Date.now());
+    return Number(value ?? (Date.now() / 1000));
+}
+
+function assertSha(value, label) {
+    const result = asNonEmptyString(value, label);
+    if (!/^[0-9a-f]{40}$/.test(result)) throw new TypeError(`${label} must be a full lowercase SHA-1 revision`);
+    return result;
+}
+
+function assertSha256(value, label) {
+    const result = asNonEmptyString(value, label);
+    if (!/^[0-9a-f]{64}$/.test(result)) throw new TypeError(`${label} must be a full lowercase SHA-256 hash`);
+    return result;
 }
 
 function validateActions(actions) {
@@ -120,8 +132,14 @@ function assertReviewedBaseline(baseline, { candidateSha, scope, scopeHash }) {
 
 function assertLease(lease, { candidateSha, scope, scopeHash, now }) {
     if (!lease || typeof lease !== 'object') throw new ReleaseGateError('LEASE_INVALID', 'Lease provider returned no lease.');
+    if (lease.schemaVersion !== 1 || lease.expiryUnit !== 'epoch-seconds') throw new ReleaseGateError('LEASE_INVALID', 'Externally backed lease must use schemaVersion 1 and epoch-seconds expiry.');
+    asNonEmptyString(lease.operationId, 'lease.operationId');
+    if (lease.operationState !== 'pending' || lease.state !== 'ACTIVE') throw new ReleaseGateError('LEASE_UNRESOLVED', 'Externally backed lease is not an active pending operation.');
     asNonEmptyString(lease.leaseId, 'lease.leaseId');
     asNonEmptyString(lease.owner, 'lease.owner');
+    assertSha(lease.candidateSha, 'lease.candidateSha');
+    assertSha(lease.baseSha, 'lease.baseSha');
+    assertSha256(lease.scopeHash, 'lease.scopeHash');
     if (lease.candidateSha !== candidateSha || lease.baseSha !== scope.baseSha || lease.scopeHash !== scopeHash) {
         throw new ReleaseGateError('LEASE_SCOPE_MISMATCH', 'Externally backed lease does not match the candidate, base SHA, and exact scope.');
     }
@@ -134,6 +152,7 @@ function assertLease(lease, { candidateSha, scope, scopeHash, now }) {
 
 function assertApproval(approval, lease, { candidateSha, scope, scopeHash, now, actions }) {
     if (!approval || typeof approval !== 'object') throw new ReleaseGateError('APPROVAL_REQUIRED', 'Execution requires explicit approval.');
+    if (approval.schemaVersion !== 1 || approval.expiryUnit !== 'epoch-seconds') throw new ReleaseGateError('APPROVAL_SCOPE_MISMATCH', 'Approval must use schemaVersion 1 and epoch-seconds expiry.');
     if (approval.owner !== lease.owner || approval.leaseId !== lease.leaseId) {
         throw new ReleaseGateError('APPROVAL_SCOPE_MISMATCH', 'Approval does not identify the acquired lease owner and lease ID.');
     }
@@ -141,8 +160,14 @@ function assertApproval(approval, lease, { candidateSha, scope, scopeHash, now, 
     if (!Number.isFinite(approvalExpiry) || approvalExpiry <= nowValue(now)) {
         throw new ReleaseGateError('APPROVAL_EXPIRED', 'Release approval has expired or has no valid expiry.');
     }
+    assertSha(approval.candidateSha, 'approval.candidateSha');
+    assertSha(approval.baseSha, 'approval.baseSha');
+    assertSha256(approval.scopeHash, 'approval.scopeHash');
     if (approval.candidateSha !== candidateSha || approval.baseSha !== scope.baseSha || approval.scopeHash !== scopeHash) {
         throw new ReleaseGateError('APPROVAL_SCOPE_MISMATCH', 'Approval does not match the candidate SHA, base SHA and exact scope.');
+    }
+    if (!Array.isArray(approval.resources) || !approval.resources.length || actions.some(action => !approval.resources.includes(action.resource))) {
+        throw new ReleaseGateError('APPROVAL_SCOPE_MISMATCH', 'Approval resources do not cover the requested release.');
     }
     const expectedActions = actionNames(actions);
     if (!Array.isArray(approval.actions) || stableJson(approval.actions) !== stableJson(expectedActions)) {
@@ -150,77 +175,149 @@ function assertApproval(approval, lease, { candidateSha, scope, scopeHash, now, 
     }
 }
 
-function createFileLeaseProvider({ path: leasePath, now = () => Date.now(), ttlMs = 60_000 } = {}) {
+function createFileLeaseProvider({ path: leasePath, now = () => Date.now() / 1000, ttlSeconds = 60 } = {}) {
     const target = leasePath && path.resolve ? path.resolve(leasePath) : leasePath;
     if (!target || typeof target !== 'string') throw new TypeError('lease provider path is required');
-    const ttl = Number(ttlMs);
-    if (!Number.isFinite(ttl) || ttl <= 0) throw new TypeError('lease provider ttlMs must be positive');
+    const ttl = Number(ttlSeconds);
+    if (!Number.isFinite(ttl) || ttl <= 0) throw new TypeError('lease provider ttlSeconds must be positive');
+    const lockPath = `${target}.lock`;
 
     function readLease() {
         try { return JSON.parse(fs.readFileSync(target, 'utf8')); }
         catch (error) {
             if (error.code === 'ENOENT') return null;
-            throw error;
+            throw new ReleaseGateError('LEASE_INVALID', `External publisher lease is not valid JSON: ${error.message || error}`);
         }
     }
 
-    function writeNewLease(lease) {
+    function atomicWrite(value) {
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        const descriptor = fs.openSync(target, 'wx');
-        try { fs.writeFileSync(descriptor, `${JSON.stringify(lease)}\n`, 'utf8'); }
-        finally { fs.closeSync(descriptor); }
+        const temporary = `${target}.${process.pid}.${crypto.randomUUID()}.tmp`;
+        fs.writeFileSync(temporary, `${JSON.stringify(value)}\n`, { encoding: 'utf8', flag: 'wx' });
+        try {
+            try { fs.renameSync(temporary, target); }
+            catch (error) {
+                // Windows refuses to replace an existing file with rename. The
+                // exclusive lock still makes this fallback single-writer; the
+                // normal path remains an atomic temp-file replacement.
+                if (!['EEXIST', 'EPERM', 'EACCES'].includes(error.code)) throw error;
+                try { fs.unlinkSync(target); } catch (removeError) { if (removeError.code !== 'ENOENT') throw removeError; }
+                fs.renameSync(temporary, target);
+            }
+        } finally {
+            if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+        }
+    }
+
+    function withLock(callback) {
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        let descriptor;
+        try { descriptor = fs.openSync(lockPath, 'wx'); }
+        catch (error) {
+            if (error.code === 'EEXIST') throw new ReleaseGateError('LEASE_BUSY', 'Another publisher lease operation is in flight.');
+            throw error;
+        }
+        try { return callback(); }
+        finally {
+            fs.closeSync(descriptor);
+            if (fs.existsSync(lockPath)) fs.unlinkSync(lockPath);
+        }
+    }
+
+    function sameLease(left, right) {
+        return Boolean(left && right && left.leaseId === right.leaseId && left.operationId === right.operationId && left.owner === right.owner);
     }
 
     async function acquire(request = {}) {
-        const currentTime = nowValue(now);
-        const existing = readLease();
-        if (existing && Number(existing.expiresAt) > currentTime) {
-            throw new ReleaseGateError('LEASE_BUSY', 'Another externally backed publisher lease is active.');
-        }
-        if (existing) {
-            try { fs.unlinkSync(target); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-        }
-        const lease = {
-            leaseId: request.requestedLeaseId || crypto.randomUUID(),
-            owner: asNonEmptyString(request.owner, 'lease request owner'),
-            candidateSha: asNonEmptyString(request.candidateSha, 'lease request candidateSha'),
-            baseSha: asNonEmptyString(request.baseSha, 'lease request baseSha'),
-            scopeHash: asNonEmptyString(request.scopeHash, 'lease request scopeHash'),
-            resources: [...new Set(request.resources || [])].map(item => asNonEmptyString(item, 'lease resource')),
-            acquiredAt: currentTime,
-            expiresAt: currentTime + ttl
-        };
-        try { writeNewLease(lease); }
-        catch (error) {
-            if (error.code === 'EEXIST') throw new ReleaseGateError('LEASE_BUSY', 'Another externally backed publisher lease was acquired concurrently.');
-            throw error;
-        }
-        return lease;
+        return withLock(() => {
+            const currentTime = nowValue(now);
+            const existing = readLease();
+            if (existing && (existing.operationState === 'pending' || existing.operationState === 'uncertain' || existing.state === 'HOLD')) {
+                throw new ReleaseGateError('LEASE_BUSY', 'A pending or unresolved publisher operation retains the external hold.');
+            }
+            if (existing && Number(existing.expiresAt) > currentTime) {
+                throw new ReleaseGateError('LEASE_BUSY', 'Another externally backed publisher lease is active.');
+            }
+            if (existing) {
+                try { fs.unlinkSync(target); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+            }
+            const resources = [...new Set(request.resources || [])].map(item => asNonEmptyString(item, 'lease resource'));
+            if (!resources.length) throw new TypeError('lease request resources are required');
+            const lease = {
+                schemaVersion: 1,
+                expiryUnit: 'epoch-seconds',
+                operationId: request.operationId || crypto.randomUUID(),
+                operationState: 'pending',
+                state: 'ACTIVE',
+                status: 'ACTIVE',
+                leaseId: request.requestedLeaseId || crypto.randomUUID(),
+                owner: asNonEmptyString(request.owner, 'lease request owner'),
+                candidateSha: assertSha(request.candidateSha, 'lease request candidateSha'),
+                baseSha: assertSha(request.baseSha, 'lease request baseSha'),
+                scopeHash: assertSha256(request.scopeHash, 'lease request scopeHash'),
+                resources,
+                acquiredAt: currentTime,
+                expiresAt: currentTime + ttl
+            };
+            atomicWrite(lease);
+            return lease;
+        });
     }
 
     async function renew(lease) {
-        const current = readLease();
-        const currentTime = nowValue(now);
-        if (!current || current.leaseId !== lease?.leaseId) throw new ReleaseGateError('LEASE_LOST', 'External publisher lease is no longer held.');
-        if (Number(current.expiresAt) <= currentTime) throw new ReleaseGateError('LEASE_EXPIRED', 'External publisher lease expired before renewal.');
-        const renewed = { ...current, expiresAt: currentTime + ttl };
-        fs.writeFileSync(target, `${JSON.stringify(renewed)}\n`, 'utf8');
-        return renewed;
+        return withLock(() => {
+            const currentTime = nowValue(now);
+            const current = readLease();
+            if (!sameLease(current, lease)) throw new ReleaseGateError('LEASE_LOST', 'External publisher lease is no longer held.');
+            if (current.operationState !== 'pending' || current.state !== 'ACTIVE') throw new ReleaseGateError('LEASE_UNRESOLVED', 'External publisher lease is held for unresolved completion.');
+            const renewed = { ...current, renewedAt: currentTime, expiresAt: currentTime + ttl };
+            atomicWrite(renewed);
+            return renewed;
+        });
+    }
+
+    async function markUnresolved(lease, details = {}) {
+        return withLock(() => {
+            const current = readLease();
+            if (!sameLease(current, lease)) throw new ReleaseGateError('LEASE_LOST', 'Cannot retain an external lease that is no longer owned.');
+            const unresolved = { ...current, operationState: 'uncertain', state: 'HOLD', status: 'HOLD', unresolvedAt: nowValue(now), failure: clone(details) };
+            atomicWrite(unresolved);
+            return unresolved;
+        });
+    }
+
+    async function resolveUnresolved(lease, { release = true, resolution = 'manual' } = {}) {
+        return withLock(() => {
+            const current = readLease();
+            if (!sameLease(current, lease)) throw new ReleaseGateError('LEASE_LOST', 'Cannot resolve an external lease that is no longer owned.');
+            if (current.operationState !== 'uncertain' || current.state !== 'HOLD') throw new ReleaseGateError('LEASE_INVALID', 'External lease is not unresolved.');
+            if (release) {
+                fs.unlinkSync(target);
+                return { ...current, resolution };
+            }
+            const resolved = { ...current, operationState: 'pending', state: 'ACTIVE', status: 'ACTIVE', resolvedAt: nowValue(now), resolution, expiresAt: nowValue(now) + ttl };
+            atomicWrite(resolved);
+            return resolved;
+        });
     }
 
     async function release(lease) {
-        const current = readLease();
-        if (!current || current.leaseId !== lease?.leaseId) return;
-        fs.unlinkSync(target);
+        return withLock(() => {
+            const current = readLease();
+            if (!current || !sameLease(current, lease)) return;
+            if (current.operationState !== 'pending' || current.state !== 'ACTIVE') throw new ReleaseGateError('LEASE_UNRESOLVED', 'Unresolved external lease requires explicit reconciliation before release.');
+            fs.unlinkSync(target);
+        });
     }
 
-    return { acquire, renew, release, path: target };
+    return { acquire, renew, markUnresolved, resolveUnresolved, release, path: target, lockPath };
 }
 
 function createDryRunPublisherAdapter({ leaseProvider = null } = {}) {
     return {
         acquire: (...args) => leaseProvider?.acquire?.(...args),
         renew: (...args) => leaseProvider?.renew?.(...args),
+        markUnresolved: (...args) => leaseProvider?.markUnresolved?.(...args),
         release: (...args) => leaseProvider?.release?.(...args),
         async publish() {
             throw new ReleaseGateError('PROVIDER_REQUIRED', 'Dry-run publisher cannot publish; configure a reviewed production provider adapter first.');
@@ -235,17 +332,19 @@ function createReleaseDriver(options = {}) {
     validateActions(actions);
     const execute = options.execute === true;
     const evidenceDir = options.evidenceDir ? assertExternalEvidenceDir(options.evidenceDir) : null;
-    const candidateSha = asNonEmptyString(options.candidateSha, 'candidateSha');
+    const candidateSha = assertSha(options.candidateSha, 'candidateSha');
     const scope = options.scope && typeof options.scope === 'object' ? clone(options.scope) : null;
     if (!scope) throw new TypeError('scope is required');
+    scope.baseSha = assertSha(scope.baseSha, 'scope.baseSha');
     const scopeHash = stableHash(scope);
-    const now = options.now || (() => Date.now());
+    const now = options.now || (() => Date.now() / 1000);
     let expectedState = options.expectedState === undefined ? undefined : clone(options.expectedState);
 
     function assertExecutableConfiguration() {
         assertProviderMethod(options.leaseProvider, 'acquire', 'lease provider');
         assertProviderMethod(options.leaseProvider, 'renew', 'lease provider');
         assertProviderMethod(options.leaseProvider, 'release', 'lease provider');
+        assertProviderMethod(options.leaseProvider, 'markUnresolved', 'lease provider');
         assertProviderMethod(options.publisher, 'publish', 'publisher');
         assertReviewedBaseline(options.reviewedBaseline, { candidateSha, scope, scopeHash });
         for (const action of actions) {
@@ -271,6 +370,7 @@ function createReleaseDriver(options = {}) {
         };
         let activeLease = null;
         let pendingFailure = null;
+        let retainLeaseForReconciliation = false;
         try {
             if (execute) {
                 assertExecutableConfiguration();
@@ -282,7 +382,7 @@ function createReleaseDriver(options = {}) {
                     baseSha: scope.baseSha,
                     scopeHash,
                     resources: actions.map(action => action.resource),
-                    ttlMs: options.leaseTtlMs
+                    ttlSeconds: options.leaseTtlSeconds
                 });
                 assertLease(activeLease, { candidateSha, scope, scopeHash, now });
                 assertApproval(approval, activeLease, { candidateSha, scope, scopeHash, now, actions });
@@ -290,14 +390,40 @@ function createReleaseDriver(options = {}) {
                 report.leaseIdFingerprint = stableHash(activeLease.leaseId).slice(0, 16);
             }
 
-            async function renewLease(action, index, boundary) {
+            const renewLease = async function renewLease(action, index, boundary) {
                 if (!execute) return;
                 const approval = options.approval;
                 activeLease = await options.leaseProvider.renew(activeLease, { phase: action.name, actionIndex: index, boundary });
                 assertLease(activeLease, { candidateSha, scope, scopeHash, now });
                 assertApproval(approval, activeLease, { candidateSha, scope, scopeHash, now, actions });
                 assertResourceLease(action, activeLease);
-            }
+            };
+
+            const publishWithHeartbeat = async function publishWithHeartbeat(action, index, payload) {
+                const intervalMs = Math.max(10, Number(options.leaseHeartbeatMs || 1_000));
+                let heartbeatError = null;
+                let heartbeatQueue = Promise.resolve();
+                let stopped = false;
+                const beat = () => {
+                    heartbeatQueue = heartbeatQueue.then(async () => {
+                        if (stopped || heartbeatError) return;
+                        try { await renewLease(action, index, 'heartbeat'); }
+                        catch (error) { heartbeatError = error; }
+                    });
+                };
+                const timer = setInterval(beat, intervalMs);
+                timer.unref?.();
+                try {
+                    const result = await options.publisher.publish(payload);
+                    await heartbeatQueue;
+                    if (heartbeatError) throw heartbeatError;
+                    return result;
+                } finally {
+                    stopped = true;
+                    clearInterval(timer);
+                    await heartbeatQueue;
+                }
+            };
 
             for (let index = 0; index < actions.length; index += 1) {
                 const action = actions[index];
@@ -326,9 +452,11 @@ function createReleaseDriver(options = {}) {
                     continue;
                 }
                 const entry = { name: action.name, resource: action.resource, status: 'started', baselineStateHash: stableHash(current) };
+                let publishStarted = false;
                 try {
                     await renewLease(action, index, 'before-publish');
-                    const result = await options.publisher.publish({
+                    publishStarted = true;
+                    const result = await publishWithHeartbeat(action, index, {
                         action,
                         phase: action.name,
                         actionIndex: index,
@@ -367,6 +495,19 @@ function createReleaseDriver(options = {}) {
                     });
                     report.failure = failure;
                     pendingFailure = error;
+                    if (publishStarted) {
+                        retainLeaseForReconciliation = true;
+                        try {
+                            activeLease = await options.leaseProvider.markUnresolved(activeLease, failure);
+                            report.unresolvedOperation = {
+                                operationId: activeLease.operationId,
+                                state: activeLease.state,
+                                operationState: activeLease.operationState
+                            };
+                        } catch (holdError) {
+                            failure.leaseRetentionError = holdError.message || String(holdError);
+                        }
+                    }
                     try { report.failureEvidence = writeJson(evidenceDir, 'release-online-failure.json', failure); } catch (_) { /* preserve the original failure */ }
                     throw error;
                 }
@@ -374,7 +515,7 @@ function createReleaseDriver(options = {}) {
             if (evidenceDir) report.evidence = writeJson(evidenceDir, 'release-online-report.json', report);
             return report;
         } finally {
-            if (execute && activeLease) {
+            if (execute && activeLease && !retainLeaseForReconciliation) {
                 try {
                     await options.leaseProvider.release(activeLease);
                 } catch (error) {

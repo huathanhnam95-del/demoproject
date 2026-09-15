@@ -155,6 +155,16 @@ function verifyLocal(manifest, evidence) {
   assert.equal(sha256(Buffer.from(stripBelHtml(fs.readFileSync(repoPath('public/crm-admin.html'))))), sha256(Buffer.from(normalize(htmlBase))), 'CRM HTML contains a non-BEL delta from live');
   assert.equal(sha256(Buffer.from(stripBelScript(fs.readFileSync(repoPath('public/crm-admin.js'))))), sha256(Buffer.from(normalize(scriptBase))), 'CRM script contains a non-BEL delta from live');
 
+  const annotationBaseline = manifest.hostingOverlay.liveBaselineFiles?.['public/css/entrance-test-ui-annotations.css'];
+  const liveAnnotationPath = path.join(evidence, 'live-entrance-test-ui-annotations.css');
+  assert.ok(annotationBaseline, 'the exact live annotation stylesheet baseline must be declared');
+  assert.ok(fs.existsSync(liveAnnotationPath), 'the exact live annotation stylesheet must be preserved in external evidence');
+  const liveAnnotation = fs.readFileSync(liveAnnotationPath);
+  const candidateAnnotation = fs.readFileSync(repoPath('public/css/entrance-test-ui-annotations.css'));
+  assert.equal(liveAnnotation.length, annotationBaseline.rawBytes, 'live annotation baseline byte count changed');
+  assert.equal(sha256(liveAnnotation), annotationBaseline.rawSha256, 'live annotation baseline hash changed');
+  assert.deepEqual(candidateAnnotation.subarray(0, liveAnnotation.length), liveAnnotation, 'candidate annotation stylesheet deleted or reordered live rules');
+
   return {
     node: process.version,
     firestoreNormalizedSha256: normalizedSha256(repoPath('firestore.rules')),
@@ -167,7 +177,8 @@ function verifyLocal(manifest, evidence) {
       expectedNormalizedSha256: override.expectedNormalizedSha256,
       liveNormalizedSha256: override.liveNormalizedSha256
     }])),
-    crmSharedHashes: Object.fromEntries(Object.keys(manifest.hostingOverlay.liveSharedBases).map(relative => [relative, sha256(fs.readFileSync(repoPath(relative)))]))
+    crmSharedHashes: Object.fromEntries(Object.keys(manifest.hostingOverlay.liveSharedBases).map(relative => [relative, sha256(fs.readFileSync(repoPath(relative)))])),
+    annotationCss: { liveBytes: liveAnnotation.length, liveRawSha256: sha256(liveAnnotation), candidateBytes: candidateAnnotation.length, candidateRawSha256: sha256(candidateAnnotation), candidateRetainsLivePrefix: true }
   };
 }
 

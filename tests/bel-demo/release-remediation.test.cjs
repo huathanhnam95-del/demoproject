@@ -39,6 +39,14 @@ test('gateway image has an exact small Docker context contract', () => {
   assert.ok(manifest.gatewayContext.includeTrees.includes('public/prototypes/bel-working-as-equals-demo'));
   assert.ok(manifest.gatewayContext.excludeFiles.includes('public/prototypes/bel-working-as-equals-demo/README.md'));
   assert.ok(manifest.gatewayContext.forbiddenPrefixes.includes('public/database/'));
+  assert.deepEqual(manifest.hostingOverlay.liveBaselineFiles['public/css/entrance-test-ui-annotations.css'], {
+    liveUrl: 'https://listening-tasks-3ae34.web.app/css/entrance-test-ui-annotations.css',
+    rawBytes: 2951,
+    rawSha256: '55dda6ea2afbe04d34a83256371ddf1eba3f4f9135a5bec5831a75a47341524e',
+    preservationRule: 'candidate must retain these exact bytes as a prefix and append only the approved additive rule'
+  });
+  assert.equal(manifest.releaseControl.expiryUnit, 'epoch-seconds');
+  assert.match(manifest.releaseControl.ambiguousPublication, /state HOLD/);
 
   const dockerfile = read('backend/presentation-demo/Dockerfile');
   assert.doesNotMatch(dockerfile, /^COPY public \/app\/public$/m);
@@ -122,6 +130,8 @@ test('release verifier is present and read-only by default', () => {
   assert.match(verifier, /process\.env\.ComSpec/, 'Windows gcloud invocation must use the command processor');
   assert.match(verifier, /intentionalDependencyOverrides/);
   assert.match(verifier, /multerLock/);
+  assert.match(verifier, /live-entrance-test-ui-annotations\.css/);
+  assert.match(verifier, /candidateAnnotation\.subarray/);
   assert.doesNotMatch(verifier, /execFileSync\(gcloud,/, 'Node cannot execute gcloud.cmd directly on Windows');
   assert.doesNotMatch(verifier, /firebase\s+deploy|gcloud\s+run\s+deploy|populateFiles/);
 });
@@ -130,4 +140,34 @@ test('final browser gate includes the entrance stylesheet and does not suppress 
   assert.ok(fs.existsSync(path.join(ROOT, 'public/css/entrance-test-ui-annotations.css')));
   const browser = read('tests/browser/crm-projects/phase4-discussions-recovery-browser-check.js');
   assert.doesNotMatch(browser, /entrance-test-ui-annotations\.css[\s\S]*MIME type[\s\S]*return true/);
+});
+
+test('candidate entrance annotations retain every live toolbar and capture-layer affordance', () => {
+  const css = read('public/css/entrance-test-ui-annotations.css');
+  for (const marker of [
+    '.et-annotation-toolbar',
+    '.et-annotation-actions',
+    '.et-annotation-overlay',
+    '.et-annotation-capture-layer',
+    '.et-annotation-dialog',
+    '.et-annotation-picker',
+    '.et-annotation-list',
+    '@media(max-width:600px)',
+    '@media(prefers-reduced-motion:reduce)',
+    'pointer-events:none',
+    'touch-action:none',
+    'max-height:calc(100dvh - 24px)',
+    'box-shadow'
+  ]) assert.ok(css.includes(marker), `candidate stylesheet lost live annotation marker: ${marker}`);
+  assert.ok(Buffer.byteLength(css, 'utf8') >= 2951, 'candidate stylesheet must not be a placeholder smaller than the reviewed live baseline');
+});
+
+test('Chrome browser gate treats the annotation stylesheet as a real response and checks its loaded rules', () => {
+  const browser = read('tests/browser/crm-projects/phase4-discussions-recovery-browser-check.js');
+  assert.match(browser, /entrance-test-ui-annotations\.css/);
+  assert.match(browser, /content-type/i);
+  assert.match(browser, /text\/css/);
+  assert.match(browser, /et-annotation-overlay/);
+  assert.match(browser, /et-annotation-capture-layer/);
+  assert.doesNotMatch(browser, /MIME type[\s\S]*return true/);
 });

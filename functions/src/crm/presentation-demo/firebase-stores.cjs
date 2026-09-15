@@ -43,13 +43,62 @@ function archivePageDocumentId(roomId, uid, pageId) {
 function decodeArchivePageDocumentId(id) {
     const value = String(id || '');
     if (!value.startsWith('v2_')) return null;
-    const tuple = JSON.parse(Buffer.from(value.slice(3), 'base64url').toString('utf8'));
-    if (!Array.isArray(tuple) || tuple.length !== 3 || tuple.some(item => typeof item !== 'string')) return null;
-    return tuple;
+    try {
+        const tuple = JSON.parse(Buffer.from(value.slice(3), 'base64url').toString('utf8'));
+        if (!Array.isArray(tuple) || tuple.length !== 3 || tuple.some(item => typeof item !== 'string')) return null;
+        return tuple;
+    } catch (_) { return null; }
 }
 function legacyArchivePageDocumentId(roomId, uid, pageId) { return `${roomId}:${uid}:${pageId}`; }
 function archivePageDocumentIdCandidates(roomId, uid, pageId) {
     return [archivePageDocumentId(roomId, uid, pageId), legacyArchivePageDocumentId(roomId, uid, pageId)];
+}
+function archivePageSemanticValue(page) {
+    return Object.fromEntries(['roomId', 'uid', 'id', 'title', 'body', 'version', 'deleted'].map(key => [key, page?.[key] ?? null]));
+}
+function archivePageRecordId(record) { return String(record?.id ?? record?.documentId ?? ''); }
+function archivePageRecordData(record) { return record?.data && typeof record.data === 'object' ? record.data : record; }
+function resolveArchivePageRecords(records, { roomId, uid } = {}) {
+    if (!Array.isArray(records)) throw new TypeError('archive page records must be an array');
+    const groups = new Map();
+    for (const record of records) {
+        const documentId = archivePageRecordId(record);
+        const page = archivePageRecordData(record);
+        if (!documentId || !page || typeof page !== 'object') continue;
+        const tuple = archiveTuple(page.roomId, page.uid, page.id);
+        if ((roomId !== undefined && tuple[0] !== String(roomId)) || (uid !== undefined && tuple[1] !== String(uid))) continue;
+        const [v2Id, legacyId] = archivePageDocumentIdCandidates(...tuple);
+        const storageVersion = documentId === v2Id ? 'v2' : documentId === legacyId ? 'legacy' : null;
+        if (!storageVersion) continue;
+        const item = { documentId, storageVersion, page: cloneValue(page), semanticHash: operationHash(archivePageSemanticValue(page)), v2Id, legacyId };
+        const existing = groups.get(tuple.join('\u0000')) || [];
+        existing.push(item); groups.set(tuple.join('\u0000'), existing);
+    }
+    const resolved = [];
+    for (const items of groups.values()) {
+        const semanticHashes = new Set(items.map(item => item.semanticHash));
+        if (semanticHashes.size !== 1) fail('ARCHIVE_PAGE_CONFLICT');
+        const v2 = items.filter(item => item.storageVersion === 'v2');
+        const legacy = items.filter(item => item.storageVersion === 'legacy');
+        if (v2.length > 1 || legacy.length > 1) fail('ARCHIVE_PAGE_CONFLICT');
+        const selected = v2[0] || legacy[0];
+        resolved.push({ ...selected, id: selected.page.id, storageVersion: v2[0] ? 'v2' : 'legacy' });
+    }
+    return resolved.sort((left, right) => String(left.page.id).localeCompare(String(right.page.id)));
+}
+async function migrateArchivePageRecord(records, { roomId, uid, writeV2, deleteLegacy, removeLegacy = true } = {}) {
+    const resolved = resolveArchivePageRecords(records, { roomId, uid });
+    if (!resolved.length) return null;
+    if (resolved.length !== 1) throw Object.assign(new Error('archive migration expects one page tuple'), { code: 'ARCHIVE_PAGE_CONFLICT' });
+    const item = resolved[0];
+    if (item.storageVersion === 'legacy') {
+        if (typeof writeV2 !== 'function') throw new TypeError('writeV2 is required for legacy archive page migration');
+        await writeV2(item.v2Id, cloneValue(item.page));
+    }
+    if (removeLegacy && typeof deleteLegacy === 'function' && (item.storageVersion === 'legacy' || records.some(record => archivePageRecordId(record) === item.legacyId))) {
+        await deleteLegacy(item.legacyId);
+    }
+    return { ...item, storageVersion: 'v2', documentId: item.v2Id };
 }
 function cloneValue(value) { return value === undefined ? undefined : clone(value); }
 
@@ -927,13 +976,13 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
             const snap = await archiveRef(roomId).get(); if (!snap.exists || snap.data().status !== 'archived') fail('ARCHIVE_NOT_FOUND');
             const archive = snap.data(); const member = archive.members.find(value => value.uid === identity.uid); if (!member) fail('EXPORT_FORBIDDEN');
             // Reads stay field-based so v1 colon-joined archive pages remain
-            // compatible during migration. New writes use only v2 IDs; a
-            // backfill can copy each verified v1 page to its v2 ID and remove
-            // the old document after the archive checksum is unchanged.
+            // compatible during migration. The resolver chooses one verified
+            // page per tuple, prefers v2 when mixed storage is identical, and
+            // fails closed on a conflicting legacy/v2 pair.
             const pageSnap = await db.collection(COLLECTIONS.archivePages).where('roomId', '==', roomId).get(); const targetMembers = member.role === 'presenter' ? archive.members : [member]; const notebooks = {};
             for (const target of targetMembers) {
-                const pages = pageSnap.docs.map(doc => doc.data()).filter(page => page.roomId === roomId && page.uid === target.uid).sort((a, b) => a.id.localeCompare(b.id));
-                notebooks[target.uid] = { notebookRevision: archive.notebookRevisions?.[target.uid] || revision(pages), pages: cloneValue(pages) };
+                const pages = resolveArchivePageRecords(pageSnap.docs.map(doc => ({ id: doc.id, data: doc.data() })), { roomId, uid: target.uid });
+                notebooks[target.uid] = { notebookRevision: archive.notebookRevisions?.[target.uid] || revision(pages.map(item => item.page)), pages: pages.map(item => cloneValue(item.page)) };
             }
             return { archiveId: archive.archiveId, roomId: archive.roomId, status: archive.status, checksum: archive.checksum, members: cloneValue(archive.members), notebooks };
         }
@@ -946,9 +995,12 @@ module.exports = {
     COLLECTIONS,
     archivePageDocumentId,
     archivePageDocumentIdCandidates,
+    archivePageSemanticValue,
     createFirebasePresentationDemoServices,
     decodeArchivePageDocumentId,
     legacyArchivePageDocumentId,
+    migrateArchivePageRecord,
     notebookId,
+    resolveArchivePageRecords,
     ticketId
 };

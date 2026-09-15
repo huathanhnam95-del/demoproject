@@ -6,7 +6,14 @@ import { acceptFrameMessage, createFrameMessage } from '../../public/js/presenta
 import { etaForServerTime } from '../../public/js/presentation-demo/presentation/final.mjs';
 
 const require = createRequire(import.meta.url);
-const { archivePageDocumentId, archivePageDocumentIdCandidates, decodeArchivePageDocumentId } = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');
+const {
+  archivePageDocumentId,
+  archivePageDocumentIdCandidates,
+  decodeArchivePageDocumentId,
+  legacyArchivePageDocumentId,
+  resolveArchivePageRecords,
+  migrateArchivePageRecord
+} = require('../../functions/src/crm/presentation-demo/firebase-stores.cjs');
 
 test('generated online deck keeps authored resources and online frame adapter', () => {
   const html = fs.readFileSync('public/presentation-demo/native/deck.html', 'utf8');
@@ -60,4 +67,54 @@ test('archive page IDs encode the complete room, uid, and page tuple without del
   assert.notEqual(firstId, secondId);
   assert.deepEqual(decodeArchivePageDocumentId(firstId), first);
   assert.deepEqual(archivePageDocumentIdCandidates(...first), [firstId, 'room:one:uid:page:page:two']);
+});
+
+test('archive resolver returns exactly one page for legacy-only, v2-only, and identical mixed records', () => {
+  const tuple = ['room-1', 'uid-1', 'main'];
+  const page = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'Ghi chú', body: 'Nội dung', version: 2, updatedAt: 123, updatedBy: 'uid-1' };
+  const v2 = archivePageDocumentId(...tuple);
+  const legacy = legacyArchivePageDocumentId(...tuple);
+  for (const [records, expectedVersion] of [
+    [[{ id: legacy, data: page }], 'legacy'],
+    [[{ id: v2, data: page }], 'v2'],
+    [[{ id: legacy, data: page }, { id: v2, data: { ...page } }], 'v2']
+  ]) {
+    const resolved = resolveArchivePageRecords(records, { roomId: tuple[0], uid: tuple[1] });
+    assert.equal(resolved.length, 1);
+    assert.equal(resolved[0].id, tuple[2]);
+    assert.equal(resolved[0].storageVersion, expectedVersion);
+    assert.deepEqual(resolved[0].page, page);
+  }
+});
+
+test('archive resolver fails closed on conflicting mixed versions and migration retries idempotently', async () => {
+  const tuple = ['room-2', 'uid-2', 'page-1'];
+  const legacy = legacyArchivePageDocumentId(...tuple);
+  const v2 = archivePageDocumentId(...tuple);
+  const first = { roomId: tuple[0], uid: tuple[1], id: tuple[2], title: 'one', body: 'same', version: 1 };
+  const second = { ...first, title: 'two' };
+  assert.throws(
+    () => resolveArchivePageRecords([{ id: legacy, data: first }, { id: v2, data: second }], { roomId: tuple[0], uid: tuple[1] }),
+    error => error.code === 'ARCHIVE_PAGE_CONFLICT'
+  );
+
+  const writes = [];
+  let deleteAttempts = 0;
+  await assert.rejects(
+    migrateArchivePageRecord([{ id: legacy, data: first }], {
+      roomId: tuple[0], uid: tuple[1],
+      writeV2: async (id, data) => writes.push([id, data]),
+      deleteLegacy: async () => { deleteAttempts += 1; throw new Error('interrupted cleanup'); }
+    }),
+    /interrupted cleanup/
+  );
+  assert.deepEqual(writes.map(([id]) => id), [v2]);
+  const retry = await migrateArchivePageRecord([{ id: legacy, data: first }, { id: v2, data: first }], {
+    roomId: tuple[0], uid: tuple[1],
+    writeV2: async (id) => writes.push([id]),
+    deleteLegacy: async () => { deleteAttempts += 1; }
+  });
+  assert.equal(retry.storageVersion, 'v2');
+  assert.equal(writes.length, 1, 'interrupted migration retry must not duplicate the v2 write');
+  assert.equal(deleteAttempts, 2);
 });

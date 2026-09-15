@@ -112,6 +112,14 @@
   },
   "hostingOverlay": {
     "site": "listening-tasks-3ae34",
+    "liveBaselineFiles": {
+      "public/css/entrance-test-ui-annotations.css": {
+        "liveUrl": "https://listening-tasks-3ae34.web.app/css/entrance-test-ui-annotations.css",
+        "rawBytes": 2951,
+        "rawSha256": "55dda6ea2afbe04d34a83256371ddf1eba3f4f9135a5bec5831a75a47341524e",
+        "preservationRule": "candidate must retain these exact bytes as a prefix and append only the approved additive rule"
+      }
+    },
     "candidatePaths": [
       "public/crm-admin.html",
       "public/crm-admin.js",
@@ -218,5 +226,12 @@
         "data-cal-nav"
       ]
     }
+  },
+  "releaseControl": {
+    "leaseSchemaVersion": 1,
+    "expiryUnit": "epoch-seconds",
+    "pendingOperationHold": "expired pending or uncertain operations cannot be taken over automatically",
+    "ambiguousPublication": "retain state HOLD and operationState uncertain; require explicit reconciliation before retry",
+    "candidateBinding": "full 40-character revision SHA plus raw SHA-256 for every listed candidate byte"
   }
 }

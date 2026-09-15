@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import ipaddress
 import json
+import math
 import re
 import sys
 import time
@@ -28,6 +29,10 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 LIVE_PROJECT_ID = "listening-tasks-3ae34"
 ROLES = ("presenter", "p1", "p2", "p3", "negative")
 EMULATOR_MARKERS = ("emulator", "localhost", "127.0.0.1", "::1", ".invalid", "dev:")
+FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+EXPIRY_UNIT = "epoch-seconds"
+IDENTITY_MAX_AGE_SECONDS = 300
 
 
 class RehearsalError(RuntimeError):
@@ -51,6 +56,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--approval-file", help="External approval JSON for live actions.")
     parser.add_argument("--lease-file", help="External active publisher-lease JSON, reread before every live scenario.")
     parser.add_argument("--candidate-manifest", help="External final candidate manifest binding the browser evidence to a SHA and file hashes.")
+    parser.add_argument("--deployed-identities", help="External fresh readback of the deployed identities and state hash.")
     parser.add_argument("--candidate-sha")
     parser.add_argument("--base-sha")
     parser.add_argument("--scope-hash")
@@ -131,6 +137,28 @@ def nonempty(value: object, label: str) -> str:
     if not result:
         raise RehearsalError(f"{label} is required")
     return result
+
+
+def full_sha(value: object, label: str) -> str:
+    result = nonempty(value, label)
+    if not FULL_SHA_RE.fullmatch(result):
+        raise RehearsalError(f"{label} must be a full lowercase 40-character revision SHA")
+    return result
+
+
+def finite_epoch(value: object, label: str, *, future: bool = False) -> float:
+    try:
+        result = float(value)
+    except (TypeError, ValueError) as error:
+        raise RehearsalError(f"{label} must be a finite epoch-seconds timestamp") from error
+    if not math.isfinite(result) or (future and result <= time.time()):
+        raise RehearsalError(f"{label} must be a finite future epoch-seconds timestamp")
+    return result
+
+
+def stable_hash(value: object) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def validate_account(account: object, label: str) -> dict[str, str]:
@@ -248,20 +276,27 @@ def validate_action_scope(args: argparse.Namespace) -> None:
         raise RehearsalError("live actions require an external --lease-file")
     if args.four_player and not args.candidate_manifest:
         raise RehearsalError("--four-player requires an external --candidate-manifest")
+    if not args.deployed_identities:
+        raise RehearsalError("live actions require an external --deployed-identities readback")
 
 
 def validate_approval(args: argparse.Namespace, approval_path: Path) -> None:
     approval = read_json(approval_path, "approval file")
-    if approval.get("mode") != "production-approved" or approval.get("owner") in (None, ""):
-        raise RehearsalError("approval file must declare mode=production-approved and an owner")
-    try:
-        expires_at = float(approval.get("expiresAt"))
-    except (TypeError, ValueError) as error:
-        raise RehearsalError("approval.expiresAt must be a Unix timestamp") from error
-    if expires_at <= time.time():
-        raise RehearsalError("approval file has expired")
+    if approval.get("schemaVersion") != 1 or approval.get("expiryUnit") != EXPIRY_UNIT:
+        raise RehearsalError("approval file must use schemaVersion 1 and epoch-seconds expiry")
+    if approval.get("mode") != "production-approved" or approval.get("owner") in (None, "") or approval.get("leaseId") in (None, ""):
+        raise RehearsalError("approval file must declare mode=production-approved, owner, and leaseId")
+    finite_epoch(approval.get("expiresAt"), "approval.expiresAt", future=True)
+    if not isinstance(approval.get("resources"), list) or not approval["resources"]:
+        raise RehearsalError("approval.resources must be a non-empty list")
+    full_sha(approval.get("candidateSha"), "approval.candidateSha")
+    full_sha(approval.get("baseSha"), "approval.baseSha")
     if approval.get("candidateSha") != args.candidate_sha or approval.get("baseSha") != args.base_sha or approval.get("scopeHash") != args.scope_hash:
         raise RehearsalError("approval does not match the candidate SHA, base SHA, or scope hash")
+    full_sha(args.candidate_sha, "--candidate-sha")
+    full_sha(args.base_sha, "--base-sha")
+    if not SHA256_RE.fullmatch(str(args.scope_hash or "")):
+        raise RehearsalError("--scope-hash must be a full SHA-256 hash")
     expected_actions = requested_actions(args)
     if approval.get("actions") != expected_actions:
         raise RehearsalError("approval action sequence does not match this rehearsal client")
@@ -273,6 +308,46 @@ def validate_approval(args: argparse.Namespace, approval_path: Path) -> None:
             entry = scenarios.get(scenario)
             if not isinstance(entry, dict) or entry.get("action") != scenario:
                 raise RehearsalError(f"approval.scenarios.{scenario} is required and must identify its action")
+            if entry.get("schemaVersion") != 1 or entry.get("expiryUnit") != EXPIRY_UNIT:
+                raise RehearsalError(f"approval.scenarios.{scenario} must use schemaVersion 1 and epoch-seconds expiry")
+            if entry.get("owner") != approval.get("owner") or entry.get("leaseId") != approval.get("leaseId") or entry.get("operationId") in (None, ""):
+                raise RehearsalError(f"approval.scenarios.{scenario} must retain the approved owner, lease, and operation")
+            if entry.get("resources") != approval.get("resources"):
+                raise RehearsalError(f"approval.scenarios.{scenario}.resources do not match the approved resource set")
+            full_sha(entry.get("candidateSha"), f"approval.scenarios.{scenario}.candidateSha")
+            full_sha(entry.get("baseSha"), f"approval.scenarios.{scenario}.baseSha")
+            finite_epoch(entry.get("expiresAt"), f"approval.scenarios.{scenario}.expiresAt", future=True)
+
+
+def validate_deployed_identities(args: argparse.Namespace, identity_path: Path, approval: dict[str, object], scenario: str | None = None) -> dict[str, object]:
+    identity = read_json(identity_path, "deployed identities readback")
+    if identity.get("schemaVersion") != 1 or identity.get("expiryUnit") != EXPIRY_UNIT:
+        raise RehearsalError("deployed identities must use schemaVersion 1 and epoch-seconds")
+    if identity.get("owner") != approval.get("owner"):
+        raise RehearsalError("deployed identities owner no longer matches the approved publisher")
+    if identity.get("resources") != approval.get("resources"):
+        raise RehearsalError("deployed identities resources no longer match the approved resources")
+    for key in ("candidateSha", "baseSha"):
+        full_sha(identity.get(key), f"deployed identities {key}")
+        if identity.get(key) != approval.get(key):
+            raise RehearsalError(f"deployed identities {key} no longer matches the approved candidate")
+    if identity.get("scopeHash") != approval.get("scopeHash"):
+        raise RehearsalError("deployed identities scope hash no longer matches approval")
+    try:
+        read_at = float(identity.get("readAt"))
+    except (TypeError, ValueError) as error:
+        raise RehearsalError("deployed identities readAt must be a finite epoch-seconds timestamp") from error
+    if not math.isfinite(read_at) or read_at > time.time() + 5 or time.time() - read_at > IDENTITY_MAX_AGE_SECONDS:
+        raise RehearsalError("deployed identities readback is stale or has an invalid timestamp")
+    if not isinstance(identity.get("state"), dict) or not SHA256_RE.fullmatch(str(identity.get("stateHash") or "")):
+        raise RehearsalError("deployed identities must contain a state object and full stateHash")
+    if identity["stateHash"] != stable_hash(identity["state"]):
+        raise RehearsalError("deployed identities stateHash does not match the state readback")
+    if scenario:
+        expected = approval.get("scenarios", {}).get(scenario, {}).get("expectedStateHash")
+        if not SHA256_RE.fullmatch(str(expected or "")) or expected != identity["stateHash"]:
+            raise RehearsalError(f"scenario {scenario} expected state does not match the fresh deployed identity readback")
+    return identity
 
 
 def validate_scenario_approval(args: argparse.Namespace, approval_path: Path, scenario: str) -> None:
@@ -280,42 +355,92 @@ def validate_scenario_approval(args: argparse.Namespace, approval_path: Path, sc
     approval = read_json(approval_path, "approval file")
     lease_path = assert_external(resolved_path(args.lease_file, "--lease-file"), "--lease-file")
     lease = read_json(lease_path, "publisher lease file")
+    identity_path = assert_external(resolved_path(args.deployed_identities, "--deployed-identities"), "--deployed-identities")
     scenario_approval = approval.get("scenarios", {}).get(scenario)
     if not isinstance(scenario_approval, dict):
         raise RehearsalError(f"approval.scenarios.{scenario} is required")
     if scenario_approval.get("action") != scenario:
         raise RehearsalError(f"approval.scenarios.{scenario}.action does not match the requested scenario")
-    for key, expected in (("candidateSha", args.candidate_sha), ("baseSha", args.base_sha), ("scopeHash", args.scope_hash)):
+    if scenario_approval.get("schemaVersion") != 1 or scenario_approval.get("expiryUnit") != EXPIRY_UNIT:
+        raise RehearsalError(f"scenario {scenario} approval has an invalid schema or expiry unit")
+    approval_owner = approval.get("owner")
+    if scenario_approval.get("owner") != approval_owner or scenario_approval.get("operationId") in (None, ""):
+        raise RehearsalError(f"scenario {scenario} approval owner or operation identity changed")
+    for key, expected in (("candidateSha", args.candidate_sha), ("baseSha", args.base_sha), ("scopeHash", args.scope_hash), ("owner", approval_owner), ("leaseId", approval.get("leaseId")), ("operationId", scenario_approval.get("operationId"))):
         if scenario_approval.get(key) != expected or lease.get(key) != expected:
             raise RehearsalError(f"scenario {scenario} or publisher lease does not match {key}")
-    if scenario_approval.get("leaseId") != lease.get("leaseId"):
-        raise RehearsalError(f"scenario {scenario} does not hold the current external publisher lease")
-    try:
-        scenario_expiry = float(scenario_approval.get("expiresAt"))
-        lease_expiry = float(lease.get("expiresAt"))
-    except (TypeError, ValueError) as error:
-        raise RehearsalError(f"scenario {scenario} and publisher lease expiry must be Unix timestamps") from error
-    if lease.get("state") != "ACTIVE" or min(scenario_expiry, lease_expiry) <= time.time():
+    if scenario_approval.get("resources") != approval.get("resources") or lease.get("resources") != approval.get("resources"):
+        raise RehearsalError(f"scenario {scenario} resource ownership no longer matches approval")
+    if lease.get("schemaVersion") != 1 or lease.get("expiryUnit") != EXPIRY_UNIT or lease.get("operationState") != "pending" or lease.get("state") != "ACTIVE":
+        raise RehearsalError(f"scenario {scenario} publisher lease is expired or inactive")
+    scenario_expiry = finite_epoch(scenario_approval.get("expiresAt"), f"scenario {scenario}.expiresAt", future=True)
+    lease_expiry = finite_epoch(lease.get("expiresAt"), f"scenario {scenario} lease.expiresAt", future=True)
+    if min(scenario_expiry, lease_expiry) <= time.time():
         raise RehearsalError(f"scenario {scenario} approval or publisher lease is expired or inactive")
+    validate_deployed_identities(args, identity_path, approval, scenario)
 
 
 def validate_candidate_manifest(args: argparse.Namespace, manifest_path: Path) -> dict[str, object]:
     manifest = read_json(manifest_path, "candidate manifest")
-    if manifest.get("revision") != args.candidate_sha:
+    full_sha(args.candidate_sha, "--candidate-sha")
+    if not FULL_SHA_RE.fullmatch(str(manifest.get("revision") or "")) or manifest.get("revision") != args.candidate_sha:
         raise RehearsalError("candidate manifest revision does not match --candidate-sha")
+    if manifest.get("fullRevision", manifest["revision"]) != args.candidate_sha:
+        raise RehearsalError("candidate manifest fullRevision does not match --candidate-sha")
+    if "baseSha" in manifest and manifest["baseSha"] != args.base_sha:
+        raise RehearsalError("candidate manifest baseSha does not match --base-sha")
     files = manifest.get("files")
     if not isinstance(files, dict) or not files:
         raise RehearsalError("candidate manifest must contain a non-empty files map")
-    for relative, digest in files.items():
-        if not isinstance(relative, str) or not relative or not re.fullmatch(r"[0-9a-f]{64}", str(digest)):
+    verification_files = manifest.get("verificationFiles", {})
+    if not isinstance(verification_files, dict):
+        raise RehearsalError("candidate manifest verificationFiles must be an object when present")
+    bound_files = {**files, **verification_files}
+    for relative, digest in bound_files.items():
+        if not isinstance(relative, str) or not relative or not SHA256_RE.fullmatch(str(digest)):
             raise RehearsalError(f"candidate manifest has an invalid SHA-256 for {relative}")
-    return {"revision": manifest["revision"], "files": dict(files)}
+        candidate_path = (REPO_ROOT / relative).resolve()
+        try:
+            candidate_path.relative_to(REPO_ROOT)
+        except ValueError as error:
+            raise RehearsalError(f"candidate manifest path escapes the repository: {relative}") from error
+        if Path(relative).is_absolute() or ".." in Path(relative).parts or not candidate_path.is_file():
+            raise RehearsalError(f"candidate manifest path does not identify a repository file: {relative}")
+        actual = hashlib.sha256(candidate_path.read_bytes()).hexdigest()
+        if actual != digest:
+            raise RehearsalError(f"candidate manifest digest does not match candidate bytes for {relative}")
+    return {"revision": manifest["revision"], "fullRevision": manifest.get("fullRevision", manifest["revision"]), "baseSha": manifest.get("baseSha"), "files": dict(files), "verificationFiles": dict(verification_files), "boundToLocalBytes": True}
 
 
 def safe_failure(error: BaseException) -> dict[str, str]:
     message = str(error)
     message = re.sub(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", "[redacted-email]", message, flags=re.IGNORECASE)
     return {"type": type(error).__name__, "message": message[:500]}
+
+
+def extract_pdf_text(pdf_path: Path) -> str:
+    try:
+        from pypdf import PdfReader
+        return "\n".join(page.extract_text() or "" for page in PdfReader(str(pdf_path)).pages)
+    except ImportError:
+        try:
+            import pdfplumber
+            with pdfplumber.open(str(pdf_path)) as document:
+                return "\n".join(page.extract_text() or "" for page in document.pages)
+        except ImportError as error:
+            raise RehearsalError("PDF text extraction requires pypdf or pdfplumber") from error
+
+
+def save_and_inspect_pdf(download, pdf_path: Path) -> dict[str, object]:
+    pdf_path.parent.mkdir(parents=True, exist_ok=True)
+    download.save_as(str(pdf_path))
+    pdf_bytes = pdf_path.read_bytes()
+    if not pdf_bytes.startswith(b"%PDF-"):
+        raise RehearsalError("PDF export did not produce a PDF payload")
+    text = extract_pdf_text(pdf_path)
+    if not text.strip():
+        raise RehearsalError("PDF export contained no extractable text")
+    return {"path": str(pdf_path), "sha256": hashlib.sha256(pdf_bytes).hexdigest(), "bytes": len(pdf_bytes), "text": text}
 
 
 def wait_for_text(page, selector: str, text: str, timeout: int = 30000) -> None:
@@ -384,10 +509,12 @@ def open_authenticated_lobby(browser, base_url: str, account: dict[str, str], ro
     more = crm.locator('[data-label="More"]')
     more.wait_for(state="visible", timeout=30000)
     more.click()
-    demo_link = crm.locator('.crm-nav-more-dropdown [data-main="presentation-demo"]')
-    demo_link.wait_for(state="visible", timeout=10000)
+    panel = crm.locator("#crm-presentation-demo-workspace")
+    panel.wait_for(state="visible", timeout=15000)
+    open_button = crm.locator("#crm-presentation-demo-open")
+    open_button.wait_for(state="visible", timeout=15000)
     with crm.expect_popup(timeout=15000) as popup_info:
-        demo_link.click()
+        open_button.click()
     lobby = popup_info.value
     attach_page_diagnostics(lobby, diagnostics, role, "lobby")
     lobby.set_default_timeout(30000)
@@ -475,25 +602,53 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
 
             validate_scenario_approval(args, approval_path, "reconnect")
             reconnect_client = clients["p2"]
+            reconnect_game = reconnect_client["game"]
+            reconnect_snapshot = {
+                "roomCode": reconnect_game.locator("#pd-game-code").inner_text().strip(),
+                "scene": reconnect_game.locator("body").get_attribute("data-scene"),
+                "slots": reconnect_game.locator("#pd-game-slots").inner_text().strip(),
+            }
             reconnect_client["context"].set_offline(True)
-            reconnect_client["game"].wait_for_function(
+            reconnect_game.wait_for_function(
                 "() => /Reconnecting|Disconnected/.test(document.querySelector('#pd-connection-status')?.textContent || '')",
                 timeout=15000,
             )
             reconnect_bucket = diagnostics["p2"]["game"]
             reconnect_bucket["allowedRequestFailures"] = len(reconnect_bucket["requestFailures"])
             reconnect_client["context"].set_offline(False)
-            wait_for_text(reconnect_client["game"], "#pd-connection-status", "Connected", timeout=45000)
+            wait_for_text(reconnect_game, "#pd-connection-status", "Connected", timeout=45000)
+            reconnect_after = {
+                "roomCode": reconnect_game.locator("#pd-game-code").inner_text().strip(),
+                "scene": reconnect_game.locator("body").get_attribute("data-scene"),
+                "slots": reconnect_game.locator("#pd-game-slots").inner_text().strip(),
+            }
+            if reconnect_after != reconnect_snapshot:
+                raise RehearsalError(f"p2 reconnect changed room identity or state: before={reconnect_snapshot} after={reconnect_after}")
+            result["reconnect"] = {"before": reconnect_snapshot, "after": reconnect_after}
             result["assertions"].append("p2-reconnect-restored")
 
+            note_values = {
+                "p1": ("Ghi chú P1", "Đồng hành cùng nhau trong tháng đầu tiên."),
+                "p2": ("Ghi chú P2", "Lắng nghe và xây dựng niềm tin."),
+                "p3": ("Ghi chú P3", "Cùng nhau làm việc như những người đồng đẳng."),
+            }
+            readback = {}
             for role in ("p1", "p2", "p3"):
                 validate_scenario_approval(args, approval_path, f"notes-{role}")
                 game = clients[role]["game"]
-                game.locator("#pd-note-title").fill(f"Production {role} checkpoint")
-                game.locator("#pd-note-body").fill(f"Saved note from {role} during the online progression rehearsal.")
+                title, body = note_values[role]
+                game.locator("#pd-note-title").fill(title)
+                game.locator("#pd-note-body").fill(body)
                 game.locator("#pd-save-note").click()
                 wait_for_text(game, "#pd-note-status", "Saved", timeout=30000)
-            result["assertions"].append("three-participant-notes-saved")
+                game.reload(wait_until="domcontentloaded")
+                wait_for_text(game, "#pd-connection-status", "Connected", timeout=45000)
+                game.locator("#pd-note-title").wait_for(state="visible", timeout=30000)
+                if game.locator("#pd-note-title").input_value() != title or game.locator("#pd-note-body").input_value() != body:
+                    raise RehearsalError(f"persisted Vietnamese note readback failed for {role}")
+                readback[role] = {"title": title, "body": body, "version": "server-readback"}
+            result["notes"] = readback
+            result["assertions"].extend(["three-participant-vietnamese-notes-saved", "three-participant-notes-read-back-after-reload"])
 
             validate_scenario_approval(args, approval_path, "end-room")
             presenter_game.once("dialog", lambda dialog: dialog.accept())
@@ -503,18 +658,30 @@ def run_four_player_scenario(args: argparse.Namespace, base_url: str, accounts: 
             result["assertions"].append("room-ended-without-cleanup-delete")
 
             validate_scenario_approval(args, approval_path, "pdf-export")
+            presenter_game = clients["presenter"]["game"]
+            with presenter_game.expect_download(timeout=60000) as presenter_download_info:
+                presenter_game.locator("#pd-export-pdf").click()
+            presenter_pdf = save_and_inspect_pdf(presenter_download_info.value, evidence / "four-player-presenter-participants-export.pdf")
             participant_game = clients["p1"]["game"]
             with participant_game.expect_download(timeout=60000) as download_info:
                 participant_game.locator("#pd-export-pdf").click()
-            download = download_info.value
-            pdf_path = evidence / "four-player-p1-export.pdf"
-            evidence.mkdir(parents=True, exist_ok=True)
-            download.save_as(str(pdf_path))
-            pdf_bytes = pdf_path.read_bytes()
-            if not pdf_bytes.startswith(b"%PDF-"):
-                raise RehearsalError("four-player PDF export did not produce a PDF payload")
-            result["pdf"] = {"path": str(pdf_path), "sha256": hashlib.sha256(pdf_bytes).hexdigest(), "bytes": len(pdf_bytes)}
-            result["assertions"].append("participant-pdf-export-verified")
+            participant_pdf = save_and_inspect_pdf(download_info.value, evidence / "four-player-p1-export.pdf")
+            for role, values in note_values.items():
+                for token in values:
+                    if token not in presenter_pdf["text"]:
+                        raise RehearsalError(f"presenter PDF is missing persisted {role} note text")
+            for role in ("p2", "p3"):
+                if note_values[role][0] in participant_pdf["text"] or note_values[role][1] in participant_pdf["text"]:
+                    raise RehearsalError(f"participant PDF leaked {role} note text")
+            if note_values["p1"][0] not in participant_pdf["text"] or note_values["p1"][1] not in participant_pdf["text"]:
+                raise RehearsalError("participant PDF is missing its own persisted note text")
+            result["pdf"] = {
+                "presenterParticipants": {key: value for key, value in presenter_pdf.items() if key != "text"},
+                "participantOwn": {key: value for key, value in participant_pdf.items() if key != "text"},
+                "presenterIncludesAllParticipantNotes": True,
+                "participantExcludesOtherNotes": True,
+            }
+            result["assertions"].extend(["presenter-participant-pdf-text-verified", "participant-pdf-privacy-verified"])
             if args.screenshot:
                 for role, client in clients.items():
                     client["lobby"].screenshot(path=str(evidence / f"four-player-lobby-{role}.png"), full_page=True)
@@ -589,9 +756,11 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
                 if args.allow_live_writes:
                     validate_scenario_approval(args, approval_path, "open-presentation-demo")
                 more.click()
-                demo_link = page.locator('.crm-nav-more-dropdown [data-main="presentation-demo"]')
+                panel = page.locator("#crm-presentation-demo-workspace")
+                open_button = page.locator("#crm-presentation-demo-open")
                 try:
-                    demo_link.wait_for(state="visible", timeout=10000)
+                    panel.wait_for(state="visible", timeout=15000)
+                    open_button.wait_for(state="visible", timeout=15000)
                 except PlaywrightTimeoutError:
                     if args.role != "negative":
                         raise
@@ -599,11 +768,6 @@ def launch_and_check(args: argparse.Namespace, base_url: str, account: dict[str,
                     page.goto(f"{base_url}/presentation-demo/index.html", wait_until="domcontentloaded")
                     open_button = None
                 else:
-                    demo_link.click()
-                    panel = page.locator('[data-panel="presentation-demo"]')
-                    panel.wait_for(state="visible", timeout=15000)
-                    open_button = page.locator("#crm-presentation-demo-open")
-                    open_button.wait_for(state="visible", timeout=15000)
                     result["assertions"].append("normal-crm-more-presentation-demo-launch")
 
             if open_button is not None:

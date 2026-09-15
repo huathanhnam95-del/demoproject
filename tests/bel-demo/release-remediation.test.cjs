@@ -92,10 +92,34 @@ test('API candidate preserves deployed deltas and verified Projects behavior', (
   assert.match(commands, /structureRevision:\s*structureBefore/);
 });
 
+test('Functions dependency lineage pins the reviewed Multer security upgrade', () => {
+  const packageJson = JSON.parse(read('functions/package.json'));
+  const packageLock = JSON.parse(read('functions/package-lock.json'));
+  const multerLock = packageLock.packages['node_modules/multer'];
+  const manifest = JSON.parse(read('scripts/bel-demo/release-remediation-manifest.json'));
+  const override = manifest.apiLineage.intentionalDependencyOverrides;
+
+  assert.equal(packageJson.dependencies.multer, '2.3.0');
+  assert.equal(packageLock.packages[''].dependencies.multer, '2.3.0');
+  assert.equal(multerLock.version, '2.3.0');
+  assert.equal(multerLock.resolved, 'https://registry.npmjs.org/multer/-/multer-2.3.0.tgz');
+  assert.equal(multerLock.integrity, 'sha512-cjNbm3sttszgZeGfJR124D+jFEfkXCVAsoPBmFn9X7UxmDSFHWqE2CoEj0vrmSpuAFnqWR1Szcm9QTsiHr60Xw==');
+  assert.ok(override, 'the intentional security override must be declared');
+  for (const relative of ['functions/package.json', 'functions/package-lock.json']) {
+    assert.ok(override[relative], `missing dependency override for ${relative}`);
+    assert.equal(override[relative].expectedNormalizedSha256, normalizedSha256(relative));
+    assert.ok(override[relative].liveNormalizedSha256);
+  }
+  assert.equal(manifest.apiLineage.deployedNormalizedHashes['functions/package.json'], undefined);
+  assert.equal(manifest.apiLineage.deployedNormalizedHashes['functions/package-lock.json'], undefined);
+});
+
 test('release verifier is present and read-only by default', () => {
   const verifier = read('scripts/bel-demo/verify-release-remediation.cjs');
   assert.match(verifier, /--evidence/);
   assert.match(verifier, /process\.env\.ComSpec/, 'Windows gcloud invocation must use the command processor');
+  assert.match(verifier, /intentionalDependencyOverrides/);
+  assert.match(verifier, /multerLock/);
   assert.doesNotMatch(verifier, /execFileSync\(gcloud,/, 'Node cannot execute gcloud.cmd directly on Windows');
   assert.doesNotMatch(verifier, /firebase\s+deploy|gcloud\s+run\s+deploy|populateFiles/);
 });

@@ -118,6 +118,26 @@ function verifyLocal(manifest, evidence) {
   for (const [relative, expected] of Object.entries(api.verifiedNewerNormalizedHashes)) {
     assert.equal(normalizedSha256(repoPath(relative)), expected, `verified newer API source changed: ${relative}`);
   }
+  const dependencyOverrides = api.intentionalDependencyOverrides || {};
+  const packageOverride = dependencyOverrides['functions/package.json'];
+  const lockOverride = dependencyOverrides['functions/package-lock.json'];
+  assert.ok(packageOverride && lockOverride, 'Multer security upgrade overrides must be declared for package and lock files');
+  assert.equal(packageOverride.package, 'multer');
+  assert.equal(lockOverride.package, 'multer');
+  assert.equal(packageOverride.version, '2.3.0');
+  assert.equal(lockOverride.version, '2.3.0');
+  assert.equal(normalizedSha256(repoPath('functions/package.json')), packageOverride.expectedNormalizedSha256, 'candidate package hash differs from declared security override');
+  assert.equal(normalizedSha256(repoPath('functions/package-lock.json')), lockOverride.expectedNormalizedSha256, 'candidate lock hash differs from declared security override');
+  assert.notEqual(packageOverride.liveNormalizedSha256, packageOverride.expectedNormalizedSha256, 'package security override must differ from deployed lineage');
+  assert.notEqual(lockOverride.liveNormalizedSha256, lockOverride.expectedNormalizedSha256, 'lock security override must differ from deployed lineage');
+  const packageJson = JSON.parse(fs.readFileSync(repoPath('functions/package.json'), 'utf8'));
+  const packageLock = JSON.parse(fs.readFileSync(repoPath('functions/package-lock.json'), 'utf8'));
+  const multerLock = packageLock.packages?.['node_modules/multer'];
+  assert.equal(packageJson.dependencies?.multer, packageOverride.version, 'package.json Multer version is not pinned');
+  assert.equal(packageLock.packages?.['']?.dependencies?.multer, lockOverride.version, 'package-lock root Multer version is not pinned');
+  assert.equal(multerLock?.version, lockOverride.version, 'package-lock Multer entry is not pinned');
+  assert.equal(multerLock?.resolved, lockOverride.resolved, 'package-lock Multer tarball differs from manifest');
+  assert.equal(multerLock?.integrity, lockOverride.integrity, 'package-lock Multer integrity differs from manifest');
   for (const [source, output] of Object.entries(api.generatedSourcePairs)) {
     assert.deepEqual(fs.readFileSync(repoPath(source)), fs.readFileSync(repoPath(output)), `${output} differs from canonical ${source}`);
   }
@@ -140,7 +160,13 @@ function verifyLocal(manifest, evidence) {
     firestoreNormalizedSha256: normalizedSha256(repoPath('firestore.rules')),
     governanceException: exceptions[0],
     gatewayContext: verifyGatewayContext(manifest),
-    apiHashes: Object.fromEntries(Object.keys({ ...api.deployedNormalizedHashes, ...api.verifiedNewerNormalizedHashes }).map(relative => [relative, normalizedSha256(repoPath(relative))])),
+    apiHashes: Object.fromEntries(Object.keys({ ...api.deployedNormalizedHashes, ...api.verifiedNewerNormalizedHashes, ...dependencyOverrides }).map(relative => [relative, normalizedSha256(repoPath(relative))])),
+    dependencyOverrides: Object.fromEntries(Object.entries(dependencyOverrides).map(([relative, override]) => [relative, {
+      package: override.package,
+      version: override.version,
+      expectedNormalizedSha256: override.expectedNormalizedSha256,
+      liveNormalizedSha256: override.liveNormalizedSha256
+    }])),
     crmSharedHashes: Object.fromEntries(Object.keys(manifest.hostingOverlay.liveSharedBases).map(relative => [relative, sha256(fs.readFileSync(repoPath(relative)))]))
   };
 }

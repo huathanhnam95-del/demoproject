@@ -71,7 +71,7 @@ test('links reject forged labels and use canonical name without legacy byte expo
     assert.throws(() => normalizeLinks([{ type: '__proto__', recordId: 'a' }]));
     assert.throws(() => normalizeLinks([{ type: 'student', recordId: '../a' }]));
     assert.throws(() => normalizeLinks([{ type: 'lead', recordId: 'a' }, { type: 'lead', recordId: 'a' }]));
-    assert.deepEqual(safeRecord('lead', { id: 'a', exists: true, data: () => ({ name: 'Canonical name', secret: 'private' }) }), { type: 'lead', recordId: 'a', label: 'Canonical name', href: '/crm-admin.html#enquiry' });
+    assert.deepEqual(safeRecord('lead', { id: 'a', exists: true, data: () => ({ name: 'Canonical name', secret: 'private' }) }), { type: 'lead', recordId: 'a', label: 'Canonical name', href: '/crm-admin#enquiry' });
     assert.equal(safeRecord('lead', { id: 'a', exists: true, data: () => ({ name: 'Deleted', deletedAt: 'today' }) }), null);
 });
 test('shared interval filter includes spanning tasks and excludes undated tasks', () => {

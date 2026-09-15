@@ -67,13 +67,29 @@
     "sourceObject": "gs://gcf-v2-sources-737872673808-us-central1/api/function-source.zip#1789442285319127",
     "sourceZipSha256": "774ae1326936c82c60376df91a6ec4f16793c4e6f742435170c1da34d7084950",
     "deployedNormalizedHashes": {
-      "functions/package.json": "f3f91878b090e3cf564e3e9f4a178873193d36c66548e3f3b8970a49d26a0c93",
-      "functions/package-lock.json": "2d13148698996c78bf2765ceabfa2a346f470ebfc39ed55fc8e825fa961dc370",
       "functions/src/crm/data-input/command-service.js": "5089844283aa4716b65e67f7e0ccccc1c4dc938337a98fb8213a38e2c362305d",
       "functions/src/crm/projects/domain/command-service.js": "8f570d4782a0851decd1b5d202d56b7ed4d17fd6cbdbe3faf647476a9d598f83",
       "functions/src/crm/projects/task-links-service.js": "43b912145ad6422e2ebf1f4d28df55d2150d79dae215d53f4c4d1b212a789fe7",
       "functions/src/data/read-aloud-connected-speech-index.json": "594e9393f15912e7e50d0a20b3a9b548e663bd7d4856ef9b90c90d05179ee8c0"
     },
+  "intentionalDependencyOverrides": {
+    "functions/package.json": {
+      "package": "multer",
+      "version": "2.3.0",
+      "reason": "Reviewed security upgrade retained over the deployed pre-2.3.0 package lineage.",
+      "liveNormalizedSha256": "f3f91878b090e3cf564e3e9f4a178873193d36c66548e3f3b8970a49d26a0c93",
+      "expectedNormalizedSha256": "1c5670104e2eead8fed64eae507be56eb67b9648f75bcc365d417be22c632d9f"
+    },
+    "functions/package-lock.json": {
+      "package": "multer",
+      "version": "2.3.0",
+      "resolved": "https://registry.npmjs.org/multer/-/multer-2.3.0.tgz",
+      "integrity": "sha512-cjNbm3sttszgZeGfJR124D+jFEfkXCVAsoPBmFn9X7UxmDSFHWqE2CoEj0vrmSpuAFnqWR1Szcm9QTsiHr60Xw==",
+      "reason": "Reviewed security upgrade retained over the deployed pre-2.3.0 package lineage.",
+      "liveNormalizedSha256": "2d13148698996c78bf2765ceabfa2a346f470ebfc39ed55fc8e825fa961dc370",
+      "expectedNormalizedSha256": "65916d6c2820a1c37b760d49b3e1eb1d628899cf38845eb67d625d6c804ed915"
+    }
+  },
     "generatedSourcePairs": {
       "public/database/RA/connected-speech-index.json": "functions/src/data/read-aloud-connected-speech-index.json"
     },

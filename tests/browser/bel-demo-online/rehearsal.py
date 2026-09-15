@@ -691,6 +691,18 @@ def main() -> int:
             games[presenter].once("dialog", lambda dialog: dialog.accept())
             games[presenter].locator("#pd-end-room").click()
             wait_for_text(games[presenter], "#pd-gate", "ended", timeout=15000)
+            for uid in active_uids:
+                try:
+                    games[uid].wait_for_function(
+                        "() => window.belOnlineDebug.snapshot().room.lifecycle === 'ended'",
+                        timeout=30000,
+                    )
+                except PlaywrightTimeoutError:
+                    terminal_state = games[uid].evaluate(
+                        "() => ({ gate: document.querySelector('#pd-gate')?.textContent || '', message: document.querySelector('#pd-game-message')?.textContent || '', snapshot: window.belOnlineDebug.snapshot() })"
+                    )
+                    result['exportDiagnostics'] = {'uid': uid, 'message': 'terminal snapshot did not reach client', 'state': terminal_state}
+                    raise AssertionError(f"Terminal room state did not reach {uid} before export: {terminal_state}")
             result["assertions"].append("explicit-end-left-terminal-room")
 
             for uid in [presenter, participants[0]]:

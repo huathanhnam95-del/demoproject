@@ -18,7 +18,9 @@ const {
 async function main() {
     const context = await bootPhase4({ projectId: 'phase4-api-contract' });
     try {
-        const fixture = await createDeepFixture(context, { depth: 6 });
+        // Option B caps persisted ancestry at five levels; this fixture exercises
+        // the deepest valid discussion target rather than an invalid sixth level.
+        const fixture = await createDeepFixture(context, { depth: 5 });
         const ownerToken = await context.token('owner');
         const editorToken = await context.token('editor');
         const viewerToken = await context.token('viewer');

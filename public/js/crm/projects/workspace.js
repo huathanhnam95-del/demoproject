@@ -175,6 +175,11 @@
                 if (!utilityRail) return;
                 utilityRail.classList.remove('collapsed');
                 utilityRail.dataset.userToggled = 'true';
+                const utilityWorkspace = byId('projects-utility-workspace');
+                if (utilityWorkspace && current()) {
+                    utilityWorkspace.hidden = false;
+                    if (!utilityWorkspace.open) utilityWorkspace.showModal();
+                }
                 const ucollapse = byId('ucollapse');
                 if (ucollapse) {
                     ucollapse.textContent = '»';

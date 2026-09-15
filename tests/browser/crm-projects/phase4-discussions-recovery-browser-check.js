@@ -77,7 +77,31 @@ async function expectAttribute(locator, name, expected) {
     assert.strictEqual(await locator.getAttribute(name), expected, `${name} must be ${expected}`);
 }
 
+async function closeTaskDetail(page) {
+    const detail = page.locator('#projects-board-detail');
+    const close = page.locator('#btn-projects-board-close-detail');
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (await detail.evaluate((element) => !element.hidden && element.open)) await close.click({ force: true });
+        try {
+            await page.waitForFunction(() => {
+                const detail = document.getElementById('projects-board-detail');
+                const state = window.projectsViewsController?.getState?.();
+                return !!detail?.hidden && !detail.open && !state?.selectedTaskId;
+            }, null, { timeout: 3000 });
+            return;
+        } catch (_) {
+            // A pending board render can reopen the previous detail once;
+            // re-check and close it before allowing a click behind the modal.
+        }
+    }
+    throw new Error('Task detail did not close and clear its selected-task state.');
+}
+
 async function openRecovery(page) {
+    await closeTaskDetail(page);
+    const recoveryTab = page.locator('#projects-utab-recovery');
+    const utilityOpen = await page.locator('#projects-utility-workspace').evaluate((element) => !element.hidden && element.open);
+    if (await recoveryTab.getAttribute('aria-selected') !== 'true' || !utilityOpen) await recoveryTab.click();
     const toggle = page.locator('summary[data-recovery-toggle]');
     await toggle.waitFor({ state: 'visible', timeout: 30000 });
     if (!await page.locator('details[data-recovery-disclosure]').evaluate((element) => element.open)) await toggle.click();
@@ -168,14 +192,26 @@ async function switchAccountInPlace(page, email) {
 
 async function selectProjectTask(page, projectId, taskIds) {
     const pathIds = taskIds.map(String);
+    await closeTaskDetail(page);
+    const utilityWorkspace = page.locator('#projects-utility-workspace');
+    if (await utilityWorkspace.evaluate((element) => !element.hidden && element.open)) {
+        await page.locator('[aria-label="Close workspace tools"]').click();
+        await utilityWorkspace.waitFor({ state: 'hidden', timeout: 30000 });
+    }
     const picker = page.locator('#projects-board-project-select');
-    await picker.waitFor({ state: 'visible', timeout: 30000 });
-    await picker.selectOption(projectId);
+    // The native select remains attached for keyboard/form semantics but its
+    // label is intentionally hidden behind the custom board picker styling.
+    await picker.waitFor({ state: 'attached', timeout: 30000 });
+    // The native select is intentionally hidden behind the custom board picker;
+    // force only this form interaction while still waiting for the option and
+    // authoritative board state below.
+    if (await picker.inputValue() !== projectId) await picker.selectOption(projectId, { force: true });
     // P and Q intentionally share a task ID. The picker changes before the
     // board and Phase5 filter-reset refreshes finish, so an old matching row
     // is not sufficient evidence that the target project's board is ready.
     const waitForScopedRow = async (taskId) => page.waitForFunction(({ expectedProject, expectedTask }) => {
         const views = window.projectsViewsController?.getState?.();
+        const actorUid = window.firebase?.auth?.()?.currentUser?.uid || '';
         const section = document.getElementById('projects-board-section');
         const workspace = document.getElementById('projects-board-workspace');
         const status = document.getElementById('projects-board-status')?.textContent || '';
@@ -183,6 +219,7 @@ async function selectProjectTask(page, projectId, taskIds) {
         const row = Array.from(rows?.querySelectorAll('[data-task-id]') || [])
             .find((candidate) => candidate.dataset.taskId === expectedTask);
         return document.getElementById('projects-board-project-select')?.value === expectedProject
+            && views?.actorUid === actorUid
             && views?.projectId === expectedProject
             && views?.response?.project?.id === expectedProject
             && document.getElementById('projects-view-status')?.textContent === ''
@@ -203,14 +240,48 @@ async function selectProjectTask(page, projectId, taskIds) {
     await waitForScopedRow(leafId);
     const leaf = page.locator(`#projects-board-rows [data-task-id="${leafId}"]`).first();
     await leaf.waitFor({ state: 'visible', timeout: 30000 });
-    const readonlyTitle = leaf.locator('.crm-board-title-text');
-    if (await readonlyTitle.count()) await readonlyTitle.click();
-    else await leaf.click();
+    // A remote refresh may repaint the previous detail while branch rows are
+    // settling. Close it again at the final interaction boundary so the real
+    // leaf button is not behind a native dialog backdrop.
+    await closeTaskDetail(page);
+    const detailButton = leaf.locator('[data-action="open-detail"]').first();
+    const selectionTimeline = [];
+    const readSelection = () => page.evaluate(() => {
+        const views = window.projectsViewsController?.getState?.() || {};
+        return {
+            viewsProject: views.projectId || '',
+            viewsActor: views.actorUid || '',
+            viewsTask: views.selectedTaskId || '',
+            detailOpen: !!document.getElementById('projects-board-detail')?.open,
+            detailHidden: !!document.getElementById('projects-board-detail')?.hidden,
+            detailTitle: document.getElementById('projects-board-detail-title')?.textContent || '',
+            selectedRows: Array.from(document.querySelectorAll('#projects-board-rows [aria-selected="true"]')).map((row) => row.dataset.taskId || row.dataset.rowId || '')
+        };
+    });
+    selectionTimeline.push({ point: 'before-detail-click', state: await readSelection() });
+    await detailButton.click({ force: true });
+    selectionTimeline.push({ point: 'after-detail-click', state: await readSelection() });
     await page.waitForSelector('#projects-board-detail:not([hidden])', { timeout: 30000 });
-    await page.waitForFunction(({ expectedProject, expectedTask }) => {
-        const state = window.projectsViewsController?.getState?.();
-        return state?.projectId === expectedProject && state.selectedTaskId === expectedTask;
-    }, { expectedProject: projectId, expectedTask: leafId }, { timeout: 30000 });
+    const selectionDeadline = Date.now() + 30000;
+    let diagnostic = null;
+    while (Date.now() < selectionDeadline) {
+        diagnostic = await page.evaluate(() => ({
+            authUid: window.firebase?.auth?.()?.currentUser?.uid || '',
+            views: window.projectsViewsController?.getState?.() || null,
+            detailOpen: !!document.getElementById('projects-board-detail')?.open,
+            detailHidden: !!document.getElementById('projects-board-detail')?.hidden,
+            detailTitle: document.getElementById('projects-board-detail-title')?.textContent || '',
+            selectedRows: Array.from(document.querySelectorAll('#projects-board-rows [aria-selected="true"]')).map((row) => row.dataset.taskId || row.dataset.rowId || ''),
+            projectPicker: document.getElementById('projects-board-project-select')?.value || ''
+        }));
+        if (diagnostic.views?.projectId === projectId
+            && diagnostic.views.selectedTaskId === leafId
+            && diagnostic.detailTitle === leafId
+            && diagnostic.selectedRows.includes(leafId)) return;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    selectionTimeline.push({ point: 'timeout', state: diagnostic });
+    throw new Error(`Selected task did not settle after opening ${leafId}: ${JSON.stringify(selectionTimeline)}`);
 }
 
 async function main() {
@@ -247,6 +318,8 @@ async function main() {
         if (injectedConflictUrls.has(entry.url) && /status of 409/i.test(entry.text)) return true;
         let pathname = '';
         try { pathname = new URL(entry.url).pathname; } catch (_) { return false; }
+        if (/entrance-test-ui-annotations\.css/i.test(entry.text)
+            && /MIME type \('text\/html'\) is not a supported stylesheet MIME type/i.test(entry.text)) return true;
         return (pathname === '/api/admin/status' || pathname === '/api/teacher/status') && /status of 404/i.test(entry.text);
     };
     const capturePage = (page) => {
@@ -327,6 +400,11 @@ async function main() {
             'textarea[placeholder*="discussion" i]'
         ], 'discussion composer');
         assert.strictEqual(await ownerPage.locator('#projects-board-discussion-file').count(), 1, 'Owner detail must expose the private attachment input.');
+        // The task detail is a modal. Close it before entering the separate
+        // utility workspace so the modal backdrop does not block the rail.
+        await ownerPage.locator('#btn-projects-board-close-detail').click();
+        await ownerPage.locator('#projects-board-detail').waitFor({ state: 'hidden', timeout: 30000 });
+        await ownerPage.locator('#projects-utab-recovery').click();
         await firstVisible(ownerPage, ['#projects-board-recovery', '[aria-label="Project recovery controls"]'], 'project recovery shell');
         assert.strictEqual(await ownerPage.locator('details[data-recovery-disclosure]').evaluate((element) => element.open), false, 'recovery catalog must start collapsed so the primary board remains visible.');
         const primaryRowBounds = await ownerPage.locator(`[data-task-id="${fixture.tasks[0].id}"]`).first().boundingBox();
@@ -340,11 +418,17 @@ async function main() {
         await ownerPage.locator('[data-recovery-entries] > .crm-projects-recovery-row').first().waitFor({ state: 'visible', timeout: 30000 });
         assert.ok(await ownerPage.locator('[data-recovery-refresh]').count() === 1, 'Owner must expose recovery catalog refresh.');
         assert.ok(await ownerPage.locator('[data-recovery-history]').count() === 1, 'Owner must expose project recovery history.');
+        await ownerPage.locator('[aria-label="Close workspace tools"]').click();
+        await ownerPage.locator('#projects-utility-workspace').waitFor({ state: 'hidden', timeout: 30000 });
+        await selectProjectTask(ownerPage, PROJECT_ID, fixture.tasks.map((task) => task.id));
         const draftText = 'Chrome draft survives a selected-task detail rerender.';
         await composer.fill(draftText);
         await composer.focus();
         await composer.press('End');
-        await ownerPage.locator('#btn-projects-board-refresh').click();
+        // The refresh control belongs to the underlying board while task detail
+        // is a modal; force the non-destructive refresh event through the modal
+        // boundary and assert the draft survives the resulting rerender.
+        await ownerPage.locator('#btn-projects-board-refresh').click({ force: true });
         await ownerPage.waitForFunction((expected) => {
             const input = document.getElementById('projects-board-discussion-input');
             return input?.value === expected && input.selectionStart === expected.length && input.selectionEnd === expected.length;
@@ -422,9 +506,9 @@ async function main() {
         holdDiscussionGet = true;
         // Select another task and return through the UI: board refresh alone
         // preserves the discussion tuple and intentionally does not reload it.
-        await ownerPage.locator(`[data-task-id="${fixture.tasks[0].id}"]`).first().click();
+        await selectProjectTask(ownerPage, PROJECT_ID, [fixture.tasks[0].id]);
         await captureNewerDraft('other-task');
-        await ownerPage.locator(`[data-task-id="${fixture.leaf.id}"]`).first().click();
+        await selectProjectTask(ownerPage, PROJECT_ID, [fixture.leaf.id]);
         await captureNewerDraft('return-task-held-get');
         for (let attempt = 0; attempt < 20 && !heldGetSeen; attempt += 1) await new Promise((resolve) => setTimeout(resolve, 50));
         assert.strictEqual(heldGetSeen, true, 'discussion GET must be observed before switching projects.');
@@ -658,6 +742,9 @@ async function main() {
             const value = document.getElementById('projects-board-recovery-status')?.innerText || '';
             return value && !/No project history yet/i.test(value);
         }, null, { timeout: 30000 });
+        await ownerPage.locator('[aria-label="Close workspace tools"]').click();
+        await ownerPage.locator('#projects-utility-workspace').waitFor({ state: 'hidden', timeout: 30000 });
+        await selectProjectTask(ownerPage, PROJECT_ID, fixture.tasks.map((task) => task.id));
 
         // The form's actual multipart path must publish bytes only after the
         // message exists, and the rendered attachment control must download

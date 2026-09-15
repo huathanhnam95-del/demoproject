@@ -3,16 +3,53 @@ kind: Service
 metadata:
   name: bel-presentation-demo
   annotations:
-    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+    # Direct browser HTTPS/WSS ingress is required by the production contract.
+    # Keep the exact Origin allowlist below; do not replace it with a wildcard.
+    run.googleapis.com/ingress: all
 spec:
   template:
     metadata:
       annotations:
+        autoscaling.knative.dev/minScale: "2"
         autoscaling.knative.dev/maxScale: "4"
+        run.googleapis.com/cpu-throttling: "false"
     spec:
+      serviceAccountName: bel-presentation-demo@listening-tasks-3ae34.iam.gserviceaccount.com
       containerConcurrency: 80
       timeoutSeconds: 3600
       containers:
-        - image: REGION-docker.pkg.dev/PROJECT/bel/presentation-demo:TAG
+        - image: asia-southeast1-docker.pkg.dev/listening-tasks-3ae34/bel/presentation-demo@sha256:REPLACE_WITH_APPROVED_IMAGE_DIGEST
           ports:
             - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: FIREBASE_PROJECT_ID
+              value: listening-tasks-3ae34
+            - name: FIREBASE_DATABASE_URL
+              value: https://REPLACE_AFTER_RTDB_SELECTION
+            - name: PRESENTATION_DEMO_REALTIME_ORIGIN
+              value: https://REPLACE_AFTER_GATEWAY_PROVISIONING
+            - name: PRESENTATION_DEMO_ALLOWED_ORIGINS
+              value: "https://betterenglishlearning.com,https://listening-tasks-3ae34.web.app,https://listening-tasks-3ae34.firebaseapp.com"
+            - name: PRESENTATION_DEMO_DURABLE_READY
+              value: "0"
+            - name: PRESENTATION_DEMO_ONLINE_ENABLED
+              value: "0"
+            - name: PRESENTATION_DEMO_ADMISSION_ENABLED
+              value: "0"
+            - name: PRESENTATION_DEMO_MUTATIONS_ENABLED
+              value: "0"
+            - name: PRESENTATION_DEMO_ARCHIVED_ACCESS_ENABLED
+              value: "1"

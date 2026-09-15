@@ -86,6 +86,9 @@ function fixture() {
     const status = filters.append(new Element('select', { name: 'status' }));
     const filterDetails = filters.append(new Element('details'));
     const utility = panel.append(new Element('details'));
+    const utilityRail = add('projects-utility-rail', 'aside');
+    const utilityTab = add('projects-utab-recovery', 'button', utilityRail, { 'data-u': 'recovery' });
+    const utilityWorkspace = add('projects-utility-workspace', 'dialog', utilityRail, { 'data-projects-dialog': '', hidden: '' });
     const recovery = add('projects-board-recovery', 'section', utility, { hidden: '' });
     const automations = add('projects-automations', 'section', utility, { hidden: '' });
     const notifications = add('projects-notifications', 'section', utility, { hidden: '' });
@@ -101,7 +104,7 @@ function fixture() {
     function flush() { let iterations = 0; while (pendingObservers.size) { assert.ok(++iterations < 30, 'observer loop must settle'); const batch = [...pendingObservers]; pendingObservers.clear(); batch.forEach(observer => { if (observer.target) observer.callback(); }); } }
     function tick() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(callback => callback()); flush(); }
     const summary = (grant, admin = false) => ({ identity: { uid, moduleGrants: { projects: grant } }, canManagePeople: admin });
-    return { controller, nodes, panel, rail, projectNav, toggle, settings, settingsClose, opener, tabs, sections, detail, detailCancel, create, createCancel, filters, title, status, filterDetails, utility, recovery, automations, notifications, selected, managed, document, timers, observers, flush, tick, summary, Element, setActor(value) { uid = value; } };
+    return { controller, nodes, panel, rail, projectNav, toggle, settings, settingsClose, opener, tabs, sections, detail, detailCancel, create, createCancel, filters, title, status, filterDetails, utility, utilityRail, utilityTab, utilityWorkspace, recovery, automations, notifications, selected, managed, document, timers, observers, flush, tick, summary, Element, setActor(value) { uid = value; } };
 }
 
 test('access onboarding distinguishes module grant, actionable admin access and another actor summary', () => {
@@ -216,4 +219,13 @@ test('recovery and notification startup stay collapsed; explicit automation reve
     const f = fixture(); f.notifications.hidden = false; f.flush(); assert.equal(f.utility.open, false);
     f.recovery.hidden = false; f.flush(); assert.equal(f.utility.open, false, 'recovery visibility on board load must not open the utility');
     f.utility.open = false; f.automations.hidden = false; f.flush(); assert.equal(f.utility.open, true);
+});
+
+test('utility tab selection opens the workspace dialog before activating its pane', () => {
+    const f = fixture();
+    f.utilityTab.click(); f.flush();
+    assert.equal(f.utilityWorkspace.hidden, false);
+    assert.equal(f.utilityWorkspace.open, true);
+    assert.equal(f.utilityWorkspace.modalCalls, 1);
+    assert.equal(f.utilityTab.getAttribute('aria-selected'), 'true');
 });

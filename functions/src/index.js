@@ -138,7 +138,7 @@ module.exports = {
     scoreSWT,
     scoreSST,
     scoreRTS,
-    presentationDemoMaintenanceRunner: onSchedule({ region: 'us-central1', schedule: 'every 5 minutes', timeoutSeconds: 300, memory: '256MiB', maxInstances: 1 }, async () => {
+    presentationDemoMaintenanceRunner: onSchedule({ region: 'us-central1', schedule: 'every 5 minutes', timeoutSeconds: 300, memory: '256MiB', maxInstances: 1, serviceAccount: 'bel-presentation-maintenance@listening-tasks-3ae34.iam.gserviceaccount.com' }, async () => {
         if (String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() !== '1') return;
         if (String(process.env.PRESENTATION_DEMO_DURABLE_READY || '').trim() !== '1') throw new Error('Presentation Demo maintenance requires durable Firebase state.');
         const { db } = require('./utils/firebase_admin_init');
@@ -151,7 +151,8 @@ module.exports = {
         region: 'us-central1',
         memory: '1GiB',
         timeoutSeconds: 300,
-        secrets: ['AZURE_SPEECH_KEY']
+        secrets: ['AZURE_SPEECH_KEY'],
+        serviceAccount: 'crm-api-runtime@listening-tasks-3ae34.iam.gserviceaccount.com'
     }, apiApp),
     crmProjectsAutomationProcessor: onSchedule({ region: 'us-central1', schedule: 'every 1 minutes', timeoutSeconds: 300 }, async () => {
         const { getAuth } = require('firebase-admin/auth');

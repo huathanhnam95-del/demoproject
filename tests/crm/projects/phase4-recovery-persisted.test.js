@@ -40,7 +40,9 @@ function changeHeadSequences(snapshot) {
 async function main() {
     const context = await bootPhase4({ projectId: 'phase4-persisted-recovery' });
     try {
-        const fixture = await createDeepFixture(context, { depth: 8 });
+        // Option B caps persisted ancestry at five levels; retain the deepest
+        // valid chain so recovery is tested at the supported boundary.
+        const fixture = await createDeepFixture(context, { depth: 5 });
         const ownerToken = await context.token('owner');
         const editorToken = await context.token('editor');
         const viewerToken = await context.token('viewer');

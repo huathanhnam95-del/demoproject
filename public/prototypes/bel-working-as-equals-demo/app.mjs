@@ -26,8 +26,11 @@ async function boot(invite,initialBundle){
     worldHost=createWorldHost(host);
   }
   client=createClient({...invite,hostTimeoutMs:45000,commandTimeoutMs:60000});worldClient=createWorldClient(invite,client);
-  const [v,source]=await Promise.all([createView({canvas:$('#world')}),loadSource()]);view=v;
+  const [v,source]=await Promise.all([createView({canvas:$('#world'),onFault:()=>applyRenderMode()}),loadSource()]);view=v;
   $('#launcher').hidden=true;$('#game').hidden=false;
+  // The 3D stage re-frames itself to any viewport, so let it fill the play area
+  // edge to edge. The 2D fallback still paints a fixed 1000x480 board.
+  const applyRenderMode=()=>{$('#world-wrap')?.classList.toggle('mode-3d',view?.mode==='3d');updateSize();};
   const updateSize=()=>{
     const canvas=$('#world');
     if(!canvas||!view)return;
@@ -39,7 +42,7 @@ async function boot(invite,initialBundle){
       view.resize({cssWidth:w,cssHeight:h,devicePixelRatio:dpr});
     }
   };
-  updateSize();
+  applyRenderMode();
   window.addEventListener('resize',updateSize);
   if(typeof ResizeObserver!=='undefined'){$('#world-wrap')&&new ResizeObserver(updateSize).observe($('#world-wrap'));}
   const focus=()=>{input?.clear();$('#world').focus();};

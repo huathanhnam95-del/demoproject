@@ -77,9 +77,88 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
   scene.background = new THREE.Color('#efe7d9');
 
   // Isometric-style perspective camera
-  const camera = new THREE.PerspectiveCamera(40, 1000 / 480, 0.1, 120);
+  const camera = new THREE.PerspectiveCamera(40, 1000 / 480, 0.1, 160);
   camera.position.set(0, 15, 18);
   camera.lookAt(0, 0, 1.5);
+
+  // --- Adaptive room framing -------------------------------------------------
+  // The room is a fixed 1000 x 480 logical stage (20 x 9.6 world units). A fixed
+  // camera distance leaves that stage floating in empty background on wide
+  // viewports, because a PerspectiveCamera holds its vertical FOV and simply
+  // reveals more world horizontally. Instead, dolly the camera along its own
+  // view axis until the room's bounding box exactly fills the current frustum.
+  const FRAME_DIRECTION = new THREE.Vector3(0, 15, 16.5).normalize(); // target -> camera
+  const FRAME_PADDING = 1.04;       // breathing room around the stage
+  const FRAME_MIN_DISTANCE = 6;
+  const FRAME_TARGET_HEIGHT = 0.34; // lift the look-at point off the floor
+  // Clamp to the authored play area so an oversized ground plane (street) or a
+  // stray collider cannot pull the framing back out again.
+  const FRAME_CLAMP = { x: 10.8, y: 3.8, z: 5.4 };
+
+  const frameBox = new THREE.Box3();
+  const frameTarget = new THREE.Vector3();
+  const frameRight = new THREE.Vector3();
+  const frameUp = new THREE.Vector3();
+  const frameCorner = new THREE.Vector3();
+  const FRAME_WORLD_UP = new THREE.Vector3(0, 1, 0);
+  let frameReady = false;
+
+  function measureRoomBounds() {
+    frameBox.setFromObject(roomGroup);
+    if (frameBox.isEmpty() || !Number.isFinite(frameBox.min.x) || !Number.isFinite(frameBox.max.x)) {
+      frameBox.set(
+        new THREE.Vector3(-FRAME_CLAMP.x, 0, -FRAME_CLAMP.z),
+        new THREE.Vector3(FRAME_CLAMP.x, 2.6, FRAME_CLAMP.z)
+      );
+    } else {
+      frameBox.min.x = Math.max(frameBox.min.x, -FRAME_CLAMP.x);
+      frameBox.max.x = Math.min(frameBox.max.x, FRAME_CLAMP.x);
+      frameBox.min.z = Math.max(frameBox.min.z, -FRAME_CLAMP.z);
+      frameBox.max.z = Math.min(frameBox.max.z, FRAME_CLAMP.z);
+      frameBox.min.y = Math.max(frameBox.min.y, 0);
+      frameBox.max.y = Math.min(Math.max(frameBox.max.y, 1.8), FRAME_CLAMP.y);
+    }
+    frameReady = true;
+  }
+
+  function frameRoom() {
+    if (!frameReady) return;
+    const min = frameBox.min;
+    const max = frameBox.max;
+    frameTarget.set(
+      (min.x + max.x) / 2,
+      min.y + (max.y - min.y) * FRAME_TARGET_HEIGHT,
+      (min.z + max.z) / 2
+    );
+
+    // Camera basis for the fixed viewing angle (Three.js cameras look down -Z).
+    frameRight.crossVectors(FRAME_WORLD_UP, FRAME_DIRECTION).normalize();
+    frameUp.crossVectors(FRAME_DIRECTION, frameRight).normalize();
+
+    const tanV = Math.tan((camera.fov * Math.PI) / 360);
+    const tanH = tanV * Math.max(camera.aspect, 0.0001);
+
+    // A corner at camera-space (a, b, c) stays inside the frustum once the
+    // camera distance is >= c + |a| / tanH and >= c + |b| / tanV.
+    let distance = FRAME_MIN_DISTANCE;
+    for (let i = 0; i < 8; i++) {
+      frameCorner.set(
+        i & 1 ? max.x : min.x,
+        i & 2 ? max.y : min.y,
+        i & 4 ? max.z : min.z
+      ).sub(frameTarget);
+      const a = Math.abs(frameCorner.dot(frameRight)) * FRAME_PADDING;
+      const b = Math.abs(frameCorner.dot(frameUp)) * FRAME_PADDING;
+      const c = frameCorner.dot(FRAME_DIRECTION);
+      distance = Math.max(distance, c + a / tanH, c + b / tanV);
+    }
+
+    camera.position.copy(FRAME_DIRECTION).multiplyScalar(distance).add(frameTarget);
+    camera.near = Math.max(0.1, distance * 0.02);
+    camera.far = distance * 3 + 40;
+    camera.lookAt(frameTarget);
+    camera.updateProjectionMatrix();
+  }
 
   // BEL-ART-01 Lighting passes (L0 neutral, L1 main directional, L2 fill)
   const ambient = new THREE.AmbientLight(0xfff5e6, 0.82);
@@ -174,7 +253,16 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
       mixer,
       actions,
       currentAnim: 'Idle',
-      lastPos: { x: 0, y: 0 },
+      targetRotation: 0,
+      targetWorld: new THREE.Vector3(),
+      prevWorld: new THREE.Vector3(),
+      simTime: 0,
+      simDuration: 0.033,
+      simProgress: 1.0,
+      lastSimX: undefined,
+      lastSimY: undefined,
+      lastMoveTime: 0,
+      initialized: false,
       dispose: asset.dispose
     };
 
@@ -365,6 +453,10 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
     }
 
     currentSceneId = sceneId;
+
+    // Re-fit the camera: every room has its own footprint and wall height.
+    measureRoomBounds();
+    frameRoom();
   }
 
   let lastTime = performance.now();
@@ -551,18 +643,66 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
         const av = ensureAvatar(id, baseP?.appearance);
         av.root.visible = true;
 
-        // Position
-        const worldPos = logicalToWorld(p.x, p.y, 0);
-        av.root.position.set(worldPos.x, worldPos.y, worldPos.z);
+        const targetWorld = logicalToWorld(p.x, p.y, 0);
 
-        // Rotation facing direction
-        const dx = p.x - av.lastPos.x;
-        const dy = p.y - av.lastPos.y;
-        const speed = Math.hypot(dx, dy);
-        const isMoving = speed > 0.4;
+        // First frame initialization or teleport guard
+        if (!av.initialized || av.root.position.distanceTo(targetWorld) > 2.0) {
+          av.root.position.set(targetWorld.x, targetWorld.y, targetWorld.z);
+          av.targetWorld.copy(av.root.position);
+          av.prevWorld.copy(av.root.position);
+          av.simTime = now;
+          av.simDuration = 0.033;
+          av.simProgress = 1.0;
+          av.lastSimX = p.x;
+          av.lastSimY = p.y;
+          av.initialized = true;
+        }
 
-        if (isMoving) {
-          av.root.rotation.y = Math.atan2(dx, dy);
+        // Detect simulation position update (new tick from host)
+        const simChanged = (av.lastSimX !== p.x || av.lastSimY !== p.y);
+        if (simChanged) {
+          av.prevWorld.copy(av.root.position);
+          av.targetWorld.set(targetWorld.x, targetWorld.y, targetWorld.z);
+          if (av.simTime > 0) {
+            const dtTick = (now - av.simTime) / 1000;
+            av.simDuration = Math.max(0.016, Math.min(dtTick, 0.08));
+          }
+          av.simTime = now;
+          av.simProgress = 0;
+
+          const simDx = p.x - (av.lastSimX ?? p.x);
+          const simDy = p.y - (av.lastSimY ?? p.y);
+          if (Math.hypot(simDx, simDy) > 0.1) {
+            av.targetRotation = Math.atan2(simDx, simDy);
+            av.lastMoveTime = now;
+          }
+          av.lastSimX = p.x;
+          av.lastSimY = p.y;
+        }
+
+        // Smoothly interpolate between ticks at constant velocity
+        av.simProgress += dt / av.simDuration;
+        const alpha = Math.min(av.simProgress, 1.0);
+        av.root.position.lerpVectors(av.prevWorld, av.targetWorld, alpha);
+
+        // Reliable movement detection: carrying pose in simulation is sticky, so check recent move
+        const isCarrying = Boolean(p.carry);
+        const isRiding = Boolean(p.ride);
+        const isMoving = (p.pose === 'walking') ||
+          (isRiding && (p.pose === 'riding' || (now - av.lastMoveTime < 100))) ||
+          (isCarrying && (now - av.lastMoveTime < 120)) ||
+          (now - av.lastMoveTime < 80);
+
+        // Smooth rotation towards target direction
+        const facingAngles = { down: 0, up: Math.PI, right: Math.PI / 2, left: -Math.PI / 2 };
+        if (!isMoving && facingAngles[p.facing] !== undefined) {
+          av.targetRotation = facingAngles[p.facing];
+        }
+        if (av.targetRotation !== undefined) {
+          let diff = av.targetRotation - av.root.rotation.y;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          av.root.rotation.y += diff * Math.min(dt * 20, 1);
         }
 
         // Determine target animation across full clip suite
@@ -579,7 +719,7 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
           targetAnim = isMoving ? 'HandholdWalk_L' : 'HandholdIdle_L';
         } else if (p.leader) {
           targetAnim = isMoving ? 'HandholdWalk_R' : 'HandholdIdle_R';
-        } else if (p.carry) {
+        } else if (isCarrying) {
           targetAnim = isMoving ? 'CarryWalk' : 'CarryIdle';
         } else if (isMoving) {
           targetAnim = 'Walk';
@@ -587,19 +727,29 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
           targetAnim = 'Idle';
         }
 
+        // Smoothly transition animations without clipping or resetting in-flight clips
         if (av.currentAnim !== targetAnim) {
           const prev = av.actions[av.currentAnim] || (av.currentAnim === 'Idle' ? (av.actions.Idle || av.actions.idle) : (av.currentAnim === 'Walk' ? (av.actions.Walk || av.actions.walk) : null));
           const next = av.actions[targetAnim] || (targetAnim === 'Idle' ? (av.actions.Idle || av.actions.idle) : (targetAnim === 'Walk' ? (av.actions.Walk || av.actions.walk) : null));
           if (next) {
+            const crossFadeDuration = (targetAnim === 'Idle' || targetAnim === 'CarryIdle' || targetAnim.includes('Idle')) ? 0.1 : 0.08;
             if (prev && prev !== next) {
-              prev.fadeOut(0.15);
+              prev.fadeOut(crossFadeDuration);
             }
-            next.reset().fadeIn(0.15).play();
+            if (!next.isRunning()) {
+              next.reset();
+            }
+            next.fadeIn(crossFadeDuration).play();
             av.currentAnim = targetAnim;
           }
         }
 
-        av.lastPos = { x: p.x, y: p.y };
+        // Sync walk animation timeScale with nominal speed per CLIP_INFO specifications
+        const activeAction = av.actions[av.currentAnim];
+        if (activeAction) {
+          activeAction.setEffectiveTimeScale(1.0);
+        }
+
         av.mixer.update(dt);
       }
 
@@ -617,6 +767,8 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
       camera.updateProjectionMatrix();
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
       renderer.setSize(cssWidth, cssHeight, false);
+      // The stage must keep filling the frame at any viewport shape.
+      frameRoom();
     },
 
     dispose() {

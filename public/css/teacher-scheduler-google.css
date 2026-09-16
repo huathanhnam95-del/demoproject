@@ -1,0 +1,1467 @@
+/* ==========================================================================
+   Teacher Schedule: Google Calendar Design & Focus Mode Stylesheet
+   Source: bel-google-calendar-prototype.html & bel-google-calendar-implementation.md
+   ========================================================================== */
+
+:root {
+  --ts-shell: #f8fafd;
+  --ts-paper: #ffffff;
+  --ts-ink: #1f1f1f;
+  --ts-muted: #444746;
+  --ts-line: #dadce0;
+  --ts-blue: #0b57d0;
+  --ts-hover: #e8edf5;
+  --ts-rail: 212px;
+  --ts-tools: 48px;
+  --ts-gutter: 58px;
+  --ts-hour: 50px;
+  --ts-days: 7;
+  --ts-scrollbar: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Calendar Focus Mode: full-viewport workspace, hide CRM navigation chrome
+   -------------------------------------------------------------------------- */
+body.crm-focus-mode {
+  overflow: hidden !important;
+  background: var(--ts-shell) !important;
+}
+
+body.crm-focus-mode #crm-sidebar,
+body.crm-focus-mode .crm-sidebar,
+body.crm-focus-mode #crm-topbar,
+body.crm-focus-mode .crm-topbar,
+body.crm-focus-mode .crm-header,
+body.crm-focus-mode #crm-header,
+body.crm-focus-mode .crm-nav,
+body.crm-focus-mode > header,
+body.crm-focus-mode .site-header,
+body.crm-focus-mode > .crm-app-header {
+  display: none !important;
+}
+
+body.crm-focus-mode .crm-layout,
+body.crm-focus-mode .crm-container,
+body.crm-focus-mode .crm-main,
+body.crm-focus-mode #crm-main,
+body.crm-focus-mode main {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: var(--ts-shell) !important;
+  overflow: hidden !important;
+}
+
+body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-panel-header {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Google Calendar UI Components: Typography & Base Primitives
+   -------------------------------------------------------------------------- */
+.teacher-scheduler-google {
+  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ts-ink);
+  background: var(--ts-shell);
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.teacher-scheduler-google *,
+.teacher-scheduler-google *::before,
+.teacher-scheduler-google *::after {
+  box-sizing: border-box;
+}
+
+.teacher-scheduler-google button,
+.teacher-scheduler-google input,
+.teacher-scheduler-google select,
+.teacher-scheduler-google textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.teacher-scheduler-google button {
+  cursor: pointer;
+  touch-action: manipulation;
+  border: 0;
+  background: none;
+}
+
+.teacher-scheduler-google button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.teacher-scheduler-google button:focus-visible,
+.teacher-scheduler-google input:focus-visible,
+.teacher-scheduler-google select:focus-visible,
+.teacher-scheduler-google textarea:focus-visible {
+  outline: 2px solid var(--ts-blue);
+  outline-offset: 2px;
+}
+
+/* Icon helper */
+.ts-icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ts-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--ts-muted);
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+}
+
+.ts-icon-btn:hover {
+  background: var(--ts-hover);
+}
+
+.ts-pill-btn {
+  height: 36px;
+  border: 1px solid #858987;
+  border-radius: 24px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ts-ink);
+  transition: background-color 0.15s;
+}
+
+.ts-pill-btn:hover {
+  background: var(--ts-hover);
+}
+
+.ts-blue-btn {
+  color: #ffffff !important;
+  background: var(--ts-blue) !important;
+  border: 0 !important;
+  font-weight: 600;
+}
+
+.ts-blue-btn:hover {
+  background: #0848b4 !important;
+}
+
+.ts-text-btn {
+  color: var(--ts-blue);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ts-text-btn:hover {
+  background: #eaf1fc;
+}
+
+/* --------------------------------------------------------------------------
+   Top Bar: 56px Google Calendar Navigation Row
+   -------------------------------------------------------------------------- */
+.ts-topbar {
+  height: 56px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px 0 8px;
+  white-space: nowrap;
+  background: var(--ts-shell);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+
+.ts-brand {
+  width: var(--ts-rail);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.ts-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: #18764a;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.ts-brand-title {
+  font-size: 21px;
+  font-weight: 400;
+  color: var(--ts-ink);
+  letter-spacing: -0.2px;
+}
+
+.ts-back-crm-btn {
+  font-size: 12px;
+  color: #157a3b;
+  border-color: #a7d7b9;
+  height: 32px;
+  padding: 0 12px;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.ts-back-crm-btn:hover {
+  background: #e8f5ed;
+  border-color: #18764a;
+}
+
+.ts-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 8px 0 12px;
+}
+
+.ts-nav-group .ts-icon-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.ts-month-button {
+  font-size: 20px;
+  font-weight: 400;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--ts-ink);
+  letter-spacing: -0.2px;
+}
+
+.ts-month-button:hover {
+  background: var(--ts-hover);
+}
+
+.ts-top-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-view-picker {
+  margin: 0 4px;
+  padding: 0 14px;
+  font-size: 13px;
+  height: 36px;
+}
+
+.ts-switch {
+  display: flex;
+  border: 1px solid #858987;
+  border-radius: 24px;
+  height: 36px;
+  overflow: hidden;
+  margin: 0 4px;
+}
+
+.ts-switch button {
+  width: 42px;
+  display: grid;
+  place-items: center;
+  border-right: 1px solid #858987;
+  color: var(--ts-muted);
+}
+
+.ts-switch button:last-child {
+  border-right: 0;
+}
+
+.ts-switch button.active {
+  background: #c2e7ff;
+  color: #004a77;
+}
+
+.ts-avatar {
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  background: #dce9e1;
+  color: #22523b;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.ts-searchbar {
+  height: 38px;
+  background: #e9eef6;
+  max-width: 480px;
+  flex: 1;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 16px;
+  margin: 0 16px;
+}
+
+.ts-searchbar input {
+  border: 0;
+  background: none;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+  font-size: 14px;
+  color: var(--ts-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Main Workspace Shell: 3-Column Layout (Sidebar, Calendar, Tools)
+   -------------------------------------------------------------------------- */
+.ts-shell {
+  height: calc(100dvh - 56px);
+  display: grid;
+  grid-template-columns: var(--ts-rail) minmax(0, 1fr) var(--ts-tools);
+  overflow: hidden;
+  position: relative;
+}
+
+.ts-shell.sidebar-hidden {
+  grid-template-columns: 0 minmax(0, 1fr) var(--ts-tools);
+}
+
+.ts-shell.sidebar-hidden .ts-sidebar {
+  visibility: hidden;
+}
+
+/* Left Sidebar */
+.ts-sidebar {
+  grid-column: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+  background: var(--ts-shell);
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 2;
+}
+
+.ts-create-wrap {
+  padding: 12px 14px 18px;
+}
+
+.ts-create-btn {
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3), 0 1px 2px rgba(60, 64, 67, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ts-ink);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.ts-create-btn:hover {
+  background: #edf3fa;
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.3);
+}
+
+/* Mini Calendar */
+.ts-mini-calendar {
+  padding: 0 18px 12px;
+}
+
+.ts-mini-heading {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ts-ink);
+}
+
+.ts-mini-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.ts-mini-nav .ts-icon-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.ts-mini-weekdays,
+.ts-mini-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.ts-mini-weekdays {
+  margin: 6px 0 4px;
+}
+
+.ts-mini-weekdays span {
+  height: 20px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: var(--ts-muted);
+  font-weight: 600;
+}
+
+.ts-mini-days button {
+  font-size: 10.5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  padding: 0;
+  justify-self: center;
+  font-variant-numeric: tabular-nums;
+  display: grid;
+  place-items: center;
+  color: var(--ts-ink);
+  transition: background-color 0.1s;
+}
+
+.ts-mini-days button:hover {
+  background: var(--ts-hover);
+}
+
+.ts-mini-days button.outside {
+  color: #9aa0a6;
+}
+
+.ts-mini-days button.selected {
+  background: #c2e7ff;
+  color: #004a77;
+  font-weight: 700;
+}
+
+.ts-mini-days button.today {
+  background: var(--ts-blue);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Sidebar Search & Sections */
+.ts-sidebar-search {
+  background: #e9eef6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 2px 16px 12px;
+  padding: 0 10px;
+  color: var(--ts-muted);
+}
+
+.ts-sidebar-search input {
+  border: 0;
+  background: none;
+  font-size: 12px;
+  width: 100%;
+  min-width: 0;
+  outline: none;
+  color: var(--ts-ink);
+}
+
+.ts-side-section {
+  padding: 0 12px 8px;
+}
+
+.ts-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  min-height: 32px;
+  padding: 0 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ts-muted);
+  border-radius: 6px;
+}
+
+.ts-section-toggle:hover {
+  background: var(--ts-hover);
+}
+
+.ts-check-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 30px;
+  padding: 0 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.ts-check-row:hover {
+  background: var(--ts-hover);
+}
+
+.ts-check-row input[type="checkbox"] {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--color, #5f6368);
+  border-radius: 3px;
+  margin: 0;
+  position: relative;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.ts-check-row input[type="checkbox"]:checked {
+  background: var(--color, #0b57d0);
+  border-color: var(--color, #0b57d0);
+}
+
+.ts-check-row input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ts-check-row .teacher-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ts-ink);
+}
+
+.ts-class-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.ts-class-row:hover {
+  background: var(--ts-hover);
+}
+
+.ts-class-row.active {
+  background: #d3e3fd;
+  color: #0842a0;
+  font-weight: 600;
+}
+
+.ts-class-dot {
+  height: 9px;
+  width: 9px;
+  border-radius: 2px;
+  background: var(--color, #5f6368);
+  flex-shrink: 0;
+}
+
+.ts-class-row .name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ts-class-row small {
+  color: #5f6368;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.ts-side-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  width: 100%;
+  min-height: 36px;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--ts-ink);
+}
+
+.ts-side-link:hover {
+  background: var(--ts-hover);
+}
+
+.ts-sidebar-foot {
+  margin-top: auto;
+  padding: 16px 18px 0;
+  font-size: 11px;
+  color: #727776;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Calendar Surface: White, 28px Rounded Corners, Full-Height Grid
+   -------------------------------------------------------------------------- */
+.ts-calendar-surface {
+  grid-column: 2;
+  border-radius: 28px 28px 0 0;
+  background: #ffffff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+}
+
+/* Week/Date Header (70px) */
+.ts-calendar-head {
+  display: grid;
+  grid-template-columns: var(--ts-gutter) repeat(var(--ts-days), minmax(0, 1fr));
+  height: 70px;
+  min-height: 70px;
+  padding-right: var(--ts-scrollbar);
+  background: #ffffff;
+  border-bottom: 1px solid var(--ts-line);
+  z-index: 3;
+}
+
+.ts-gutter-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  font-size: 10px;
+  color: #3c4043;
+  font-weight: 500;
+}
+
+.ts-day-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-top: 6px;
+  position: relative;
+}
+
+.ts-day-head::after {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 1px;
+  background: #e0e3e7;
+  bottom: 0;
+  left: 0;
+}
+
+.ts-day-label {
+  font-size: 10px;
+  line-height: 16px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--ts-muted);
+  font-weight: 500;
+}
+
+.ts-day-date {
+  height: 38px;
+  width: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  color: var(--ts-ink);
+  transition: background-color 0.1s;
+}
+
+.ts-day-date:hover {
+  background: #f0f4f9;
+}
+
+.ts-day-head.today .ts-day-label {
+  color: var(--ts-blue);
+  font-weight: 700;
+}
+
+.ts-day-head.today .ts-day-date {
+  color: #ffffff;
+  background: var(--ts-blue);
+  font-weight: 600;
+}
+
+/* Timeline Scroll Area */
+.ts-calendar-scroll {
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.teacher-scheduler-workspace #teacher-scheduler-calendar,
+#teacher-scheduler-calendar {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-color: #dadce0 transparent;
+  scrollbar-width: thin;
+}
+
+#teacher-scheduler-calendar::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+}
+
+#teacher-scheduler-calendar::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 8px;
+  border: 2px solid #ffffff;
+}
+
+#teacher-scheduler-calendar::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot {
+  position: relative;
+  z-index: 1;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
+  position: absolute;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
+  z-index: 20;
+}
+
+.ts-timeline {
+  display: grid;
+  grid-template-columns: var(--ts-gutter) repeat(var(--ts-days), minmax(0, 1fr));
+  height: calc(var(--ts-hour) * 24);
+  min-height: calc(var(--ts-hour) * 24);
+  position: relative;
+}
+
+/* Time Gutter (58px) */
+.ts-time-axis {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  border-right: 1px solid #eef2f7;
+}
+
+.ts-hour-label {
+  position: absolute;
+  right: 12px;
+  color: #3c4043;
+  font-size: 9.5px;
+  line-height: 12px;
+  transform: translateY(-50%);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Day Columns */
+.ts-day-column {
+  position: relative;
+  border-left: 1px solid #dfe3e9;
+  background: repeating-linear-gradient(
+    to bottom,
+    #dfe3e9 0px,
+    #dfe3e9 1px,
+    transparent 1px,
+    transparent var(--ts-hour)
+  );
+  min-width: 0;
+}
+
+/* Half-hour interactive slot */
+.ts-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--ts-hour) / 2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  width: 100%;
+}
+
+.ts-slot:hover {
+  background: rgba(232, 240, 254, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   Events / Sessions (Google Calendar style: near full-width, 4px radius)
+   -------------------------------------------------------------------------- */
+.ts-session {
+  position: absolute;
+  z-index: 1;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  background: var(--color, #0b57d0);
+  text-align: left;
+  padding: 4px 6px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1px;
+  user-select: none;
+  touch-action: none;
+  min-width: 0;
+  transition: box-shadow 0.12s;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.15);
+}
+
+.ts-session:hover {
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.35);
+  z-index: 4;
+}
+
+.ts-session:focus-visible {
+  outline: 2px solid #202124;
+  outline-offset: 1px;
+  z-index: 5;
+}
+
+.ts-session.selected {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #5f6368;
+  z-index: 5;
+}
+
+.ts-session.drag-origin {
+  opacity: 0.32;
+}
+
+.ts-session-title {
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.ts-session-time {
+  font-size: 11px;
+  line-height: 13px;
+  white-space: nowrap;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.95;
+}
+
+.ts-session.tiny {
+  padding: 2px 5px;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+}
+
+.ts-session.tiny .ts-session-title {
+  -webkit-line-clamp: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.ts-session.tiny .ts-session-time {
+  display: none;
+}
+
+/* Resize Handle on bottom edge */
+.ts-resize-handle {
+  position: absolute;
+  height: 8px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  cursor: ns-resize;
+}
+
+.ts-resize-handle::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.65);
+  left: calc(50% - 8px);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ts-session:hover .ts-resize-handle::after {
+  opacity: 1;
+}
+
+/* Red Current Time Line */
+.ts-now-line {
+  height: 2px;
+  background: #ea4335;
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.ts-now-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  background: #ea4335;
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+
+/* Drag Ghost & Drop Preview */
+.ts-drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  border: 1px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(32, 33, 36, 0.25);
+  border-radius: 4px;
+  padding: 5px 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 14px;
+  color: #ffffff;
+  background: var(--color, #0b57d0);
+}
+
+.ts-drop-preview {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(211, 227, 253, 0.8);
+  border: 1px dashed #0b57d0;
+  border-radius: 4px;
+  z-index: 1;
+  left: 1px;
+  right: 1px;
+  color: #0842a0;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+/* --------------------------------------------------------------------------
+   Pastel & Color Palette System
+   -------------------------------------------------------------------------- */
+.ts-session.is-pastel-sky { --color: #0284c7; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.ts-session.is-pastel-lavender { --color: #7c3aed; background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+.ts-session.is-pastel-sage { --color: #16a34a; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+.ts-session.is-pastel-peach { --color: #ea580c; background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+.ts-session.is-pastel-rose { --color: #e11d48; background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
+.ts-session.is-pastel-teal { --color: #0d9488; background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+.ts-session.is-pastel-coral { --color: #db2777; background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
+.ts-session.is-pastel-indigo { --color: #4f46e5; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+
+.ts-session.is-completed {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.ts-session.is-completed .ts-session-title {
+  text-decoration: line-through;
+  opacity: 0.85;
+}
+
+/* --------------------------------------------------------------------------
+   Right Tools Rail (48px)
+   -------------------------------------------------------------------------- */
+.ts-tools {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 10px;
+  gap: 12px;
+  border-left: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--ts-shell);
+}
+
+.ts-tools hr {
+  width: 24px;
+  border: 0;
+  border-top: 1px solid #dadce0;
+  margin: 2px 0;
+}
+
+.ts-tools .last-tool {
+  margin-top: auto;
+  margin-bottom: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Floating Details Popover & Dialogs
+   -------------------------------------------------------------------------- */
+.ts-floating-dialog {
+  position: fixed;
+  margin: 0;
+  border: 0;
+  border-radius: 12px;
+  padding: 0;
+  background: #ffffff;
+  color: var(--ts-ink);
+  box-shadow: 0 8px 28px rgba(60, 64, 67, 0.3), 0 2px 8px rgba(60, 64, 67, 0.18);
+  width: 420px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  z-index: 50;
+}
+
+.ts-floating-dialog::backdrop {
+  background: transparent;
+}
+
+.ts-popover-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 8px 10px 0;
+  min-height: 44px;
+}
+
+.ts-popover-content {
+  padding: 4px 24px 22px;
+}
+
+.ts-info-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin: 14px 0;
+}
+
+.ts-info-row .ts-icon {
+  width: 18px;
+  height: 18px;
+  color: #5f6368;
+  margin-top: 3px;
+}
+
+.ts-info-row .square-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--color, #0b57d0);
+  margin-top: 6px;
+}
+
+.ts-event-title-display {
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.3;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+  color: var(--ts-ink);
+}
+
+.ts-event-date-display {
+  font-size: 13px;
+  color: #3c4043;
+  line-height: 1.6;
+}
+
+.ts-info-detail {
+  font-size: 13px;
+  color: #3c4043;
+  line-height: 1.6;
+}
+
+.ts-info-detail small {
+  display: block;
+  font-size: 11.5px;
+  color: #5f6368;
+}
+
+.ts-popover-actions {
+  margin: 18px 0 0 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Full Editor Dialog */
+.ts-modal-dialog {
+  border: 0;
+  border-radius: 16px;
+  width: 580px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  color: var(--ts-ink);
+  background: #ffffff;
+  box-shadow: 0 12px 35px rgba(32, 33, 36, 0.25);
+  z-index: 60;
+}
+
+.ts-modal-dialog::backdrop {
+  background: rgba(32, 33, 36, 0.35);
+}
+
+.ts-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e3e6eb;
+}
+
+.ts-dialog-header h2 {
+  font-size: 19px;
+  font-weight: 400;
+  flex: 1;
+  margin: 0;
+}
+
+.ts-dialog-body {
+  padding: 18px 24px 24px;
+  max-height: calc(100dvh - 160px);
+  overflow-y: auto;
+}
+
+.ts-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e3e6eb;
+  padding: 14px 24px;
+}
+
+.ts-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.ts-form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444746;
+}
+
+.ts-form-field input,
+.ts-form-field select,
+.ts-form-field textarea {
+  border: 0;
+  border-bottom: 1px solid #9aa0a6;
+  background: #f1f3f4;
+  padding: 9px 12px;
+  border-radius: 4px 4px 0 0;
+  width: 100%;
+  font-size: 13px;
+  min-height: 38px;
+  transition: border-bottom-color 0.15s;
+}
+
+.ts-form-field input:focus,
+.ts-form-field select:focus,
+.ts-form-field textarea:focus {
+  border-bottom: 2px solid var(--ts-blue);
+  outline: none;
+}
+
+.ts-form-field textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.ts-form-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 12px;
+}
+
+/* Toast Notification */
+.ts-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #323232;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(32, 33, 36, 0.25);
+  border-radius: 6px;
+  padding: 12px 20px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  font-size: 13px;
+  z-index: 100;
+  max-width: calc(100vw - 24px);
+}
+
+.ts-toast button {
+  color: #8ab4f8;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0;
+}
+
+/* Placement Toast */
+.ts-placement-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #e8f0fe;
+  color: #174ea6;
+  box-shadow: 0 2px 8px rgba(32, 33, 36, 0.2);
+  border-radius: 8px;
+  font-size: 12.5px;
+  max-width: 90%;
+  white-space: nowrap;
+}
+
+.ts-placement-toast button {
+  font-weight: 700;
+  color: var(--ts-blue);
+}
+
+/* Schedule List View */
+.ts-schedule-list {
+  overflow-y: auto;
+  padding: 12px 24px 36px;
+  flex: 1;
+}
+
+.ts-schedule-day {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  padding: 16px 0;
+  border-bottom: 1px solid #e0e3e7;
+}
+
+.ts-schedule-day-title {
+  font-size: 12px;
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: start;
+}
+
+.ts-schedule-day-title b {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ts-ink);
+}
+
+.ts-schedule-row {
+  display: grid;
+  grid-template-columns: 12px 140px minmax(0, 1fr) 180px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  text-align: left;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ts-schedule-row:hover {
+  background: #f1f3f4;
+}
+
+.ts-schedule-row .event-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color, #0b57d0);
+}
+
+.ts-schedule-row .schedule-teacher {
+  color: #5f6368;
+  font-size: 11.5px;
+}
+
+/* --------------------------------------------------------------------------
+   Class cards in left sidebar
+   -------------------------------------------------------------------------- */
+.teacher-scheduler-workspace .scheduler-class-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #dfe3e9;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.teacher-scheduler-workspace .scheduler-class-card:hover {
+  background: var(--ts-hover);
+  border-color: #c2e7ff;
+}
+
+.teacher-scheduler-workspace .scheduler-class-card.is-armed {
+  border: 2px solid var(--ts-blue);
+  background: #edf3fa;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Media Queries
+   -------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  :root {
+    --ts-rail: 195px;
+    --ts-gutter: 48px;
+  }
+  .ts-brand {
+    gap: 8px;
+    padding: 0 8px;
+  }
+  .ts-month-button {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --ts-tools: 0px;
+    --ts-gutter: 48px;
+  }
+  .ts-topbar {
+    padding-right: 8px;
+    gap: 4px;
+  }
+  .ts-brand {
+    width: auto;
+    padding: 0 4px;
+  }
+  .ts-brand-title {
+    display: none;
+  }
+  .ts-brand-mark {
+    display: none;
+  }
+  .ts-top-actions .ts-switch {
+    display: none;
+  }
+  .ts-shell {
+    grid-template-columns: 0 minmax(0, 1fr) 0;
+  }
+  .ts-sidebar {
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    width: 220px;
+    background: var(--ts-shell);
+    z-index: 20;
+    box-shadow: 4px 0 20px rgba(32, 33, 36, 0.2);
+    visibility: visible;
+  }
+  .ts-shell.sidebar-hidden .ts-sidebar {
+    display: none;
+  }
+  .ts-calendar-surface {
+    border-radius: 20px 20px 0 0;
+  }
+  .ts-tools {
+    display: none;
+  }
+}

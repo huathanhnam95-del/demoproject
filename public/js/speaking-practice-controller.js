@@ -1554,7 +1554,12 @@
     // longer costs a row of its own.
     panel.insertBefore(dom.controller, panel.firstChild);
     if (steps?.element) {
-      dom.slotSteps.appendChild(steps.element);
+      const customStepsHost = typeof config.stepsHost === 'function' ? config.stepsHost(state) : null;
+      const targetStepsHost = customStepsHost || dom.slotSteps;
+      targetStepsHost.appendChild(steps.element);
+      if (customStepsHost) {
+        dom.slotSteps.style.display = 'none';
+      }
     }
     panel.appendChild(dom.footer);
 

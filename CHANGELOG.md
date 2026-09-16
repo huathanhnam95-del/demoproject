@@ -1,3 +1,22 @@
+## [V2.0.9] - 2026-09-17
+
+### Added & Enhanced
+- **Read Aloud Practice Mode Workspace V2 UX Redesign (`public/read-aloud-mode.js`, `public/css/read-aloud-workspace.css`, `public/js/read-aloud-workspace-*.js`, `public/index.html`)**:
+  - Implemented modern V2 Read Aloud workspace architecture decoupled into model, view, controller, and configuration modules.
+  - Added deterministic prompt deduplication ensuring "Next Question" in random mode never serves immediate consecutive duplicate prompts when pool size allows.
+  - Streamlined audio recording and syllable-level pronunciation scoring visualizer with Oxford American IPA phoneme alignment.
+  - Added comprehensive unit and browser test coverage (`tests/read-aloud-workspace-model.test.cjs`, `tests/browser/read-aloud-workspace-browser-check.js`).
+- **Teacher Schedule Google Calendar UI Redesign & Focus Mode (`public/js/crm/teacher-scheduler-workspace.js`, `public/css/teacher-scheduler-google.css`)**:
+  - Overhauled Google-Calendar-style week view and focus mode with streamlined navigation, responsive layout, and conflict prevention.
+  - Added dedicated styling for multi-session timelines, teacher workload summaries, and inline session reschedule flows.
+- **CRM Projects Subtasks 0ms Creation & Gantt Chart View (`public/js/crm/projects/*`, `public/css/crm-projects.css`)**:
+  - Instantaneous 0ms subtask creation with optimistic client-side updates and non-blocking background Firestore sync.
+  - Enhanced Monday-style status pill full fills, responsive Gantt timeline visualization, and custom dependency management.
+- **Firestore Composite Indexes & API Multi-Region Support (`firestore.indexes.json`, `firebase.json`, `functions/src/index.js`)**:
+  - Added composite index on `user_notifications` (`uid ASC, createdAt DESC`) for fast query execution in the student notification center.
+  - Pruned redundant composite index entries rejected by Firestore CLI.
+  - Configured Cloud Functions `api` service with multi-region presence (`asia-southeast1` and `us-central1`) and routed Firebase Hosting `/api/**` rewrites to `asia-southeast1` for low latency.
+
 ## [V2.0.8] - 2026-09-16
 
 ### Added & Enhanced

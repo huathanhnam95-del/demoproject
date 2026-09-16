@@ -10,14 +10,6 @@
       ]
     },
     {
-      "collectionGroup": "crmAiBudgetReservations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "__name__", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "pronunciationSegmentationStudyTasks",
       "queryScope": "COLLECTION",
       "fields": [
@@ -578,14 +570,6 @@
       ]
     },
     {
-      "collectionGroup": "crmProjectAutomationRules",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {"fieldPath": "projectId", "order": "ASCENDING"},
-        {"fieldPath": "__name__", "order": "ASCENDING"}
-      ]
-    },
-    {
       "collectionGroup": "crmProjectAutomationVersions",
       "queryScope": "COLLECTION",
       "fields": [
@@ -600,14 +584,6 @@
       "fields": [
         {"fieldPath": "projectId", "order": "ASCENDING"},
         {"fieldPath": "ruleId", "order": "ASCENDING"},
-        {"fieldPath": "__name__", "order": "ASCENDING"}
-      ]
-    },
-    {
-      "collectionGroup": "crmProjectAutomationRuns",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {"fieldPath": "state", "order": "ASCENDING"},
         {"fieldPath": "__name__", "order": "ASCENDING"}
       ]
     },

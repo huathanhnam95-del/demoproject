@@ -377,8 +377,18 @@
     // There is no separate Read phase: startPrepTimer() fires as soon as a prompt
     // loads, and reading silently *is* the prep activity.
     steps: ['Prep', 'Record', 'Results'],
+    stepsHost: (state) =>
+      window.ReadAloudWorkspaceConfig?.enabled
+        ? document.getElementById('ra-workspace-steps-host')
+        : null,
     getStepIndex: () => {
-      switch (window.ReadAloudMode?.state) {
+      const modeState = window.ReadAloudMode?.state;
+      if (window.ReadAloudWorkspaceConfig?.enabled) {
+        if (modeState === 'RESULTS' || modeState === 'RECORDED') return 2;
+        if (modeState === 'REQUESTING_MIC' || modeState === 'RECORDING' || modeState === 'STOPPING_RECORDING') return 1;
+        return 0;
+      }
+      switch (modeState) {
         case 'RESULTS': return 2;
         case 'REQUESTING_MIC':
         case 'RECORDING':

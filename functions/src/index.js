@@ -132,7 +132,7 @@ module.exports = {
     scoreSST,
     scoreRTS,
     api: onRequest({
-        region: 'us-central1',
+        region: ['asia-southeast1', 'us-central1'],
         memory: '1GiB',
         timeoutSeconds: 300,
         secrets: ['AZURE_SPEECH_KEY']
@@ -150,6 +150,7 @@ module.exports = {
             maxPages: 10,
             budgetMs: 30000
         });
+        // eslint-disable-next-line no-console
         console.info('crmProjectsAutomationProcessor', { metrics: result.metrics, paused: result.paused || false });
     }),
     crmAutomationRunner: onSchedule({ region: 'us-central1', schedule: 'every 24 hours' }, async () => {

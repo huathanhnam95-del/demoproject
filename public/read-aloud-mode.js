@@ -41,6 +41,10 @@ class ReadAloudMode {
     this.currentTranscript = '';
     this.hasLoadedDatabase = false;
     this.supportMessage = 'Microphone recording is not supported in this browser. Please use Chrome or Edge.';
+    this.assessmentOutcome = { kind: 'none' };
+    this.promptLoadError = null;
+    this.captureError = null;
+    this.workspaceView = null;
 
     // Prompt guides state.
     // connectedSpeechModes is the source of truth — several guides can be active
@@ -1094,6 +1098,11 @@ class ReadAloudMode {
     this.announceLinkingStatus('Prompt guides reset.');
     this.observePromptStage();
 
+    if (window.ReadAloudWorkspaceConfig?.enabled && window.ReadAloudWorkspaceView) {
+      this.workspaceView = window.ReadAloudWorkspaceView.createView(this);
+      this.workspaceView.mount();
+    }
+
     // Initialize Settings sheet — moves inline controls into side panel.
     // Deferred to next frame because SPC.activate() runs AFTER onEnter() in switchToMode(),
     // so .spc-row--primary doesn't exist until after this method returns.
@@ -1110,6 +1119,8 @@ class ReadAloudMode {
   }
 
   onExit() {
+    this.workspaceView?.unmount?.();
+    this.workspaceView = null;
     this.activePromptRenderToken += 1;
     this.promptLifecycleToken += 1;
     this.isActive = false;
@@ -1743,7 +1754,19 @@ class ReadAloudMode {
     this.applyPromptRow(pool[nextIndex], promptLoadToken ?? this.beginPromptLoad());
   }
 
-  loadPreviousPrompt() {
+  confirmDiscardAttempt() {
+    if (this.pendingBlob && !this.hasAssessmentResult) {
+      if (typeof window.confirm === 'function') {
+        return window.confirm('You have an unsubmitted recording for this question. Do you want to discard it and leave?');
+      }
+    }
+    return true;
+  }
+
+  loadPreviousPrompt(options = {}) {
+    const { force = false } = options;
+    if (!force && !this.confirmDiscardAttempt()) return;
+
     if (this.promptOrderMode === 'sequential' && this.hasLoadedDatabase) {
       const anchorRow = this.currentPromptRow || this.lastPromptRow;
       this.stepThroughOrderedPool(-1, null, anchorRow);
@@ -1752,12 +1775,14 @@ class ReadAloudMode {
     if (this.lastPromptRow) {
       this.applyPromptRow(this.lastPromptRow, this.beginPromptLoad(), { rememberPrompt: false });
     } else {
-      this.loadNextPrompt();
+      this.loadNextPrompt({ force: true });
     }
   }
 
   async loadNextPrompt(options = {}) {
-    const { rememberPrompt = true } = options;
+    const { rememberPrompt = true, force = false } = options;
+    if (!force && !this.confirmDiscardAttempt()) return;
+
     // Captured before beginPromptLoad() clears it — sequential mode needs to
     // know where it currently is.
     const anchorRow = this.currentPromptRow || this.lastPromptRow;
@@ -1787,21 +1812,29 @@ class ReadAloudMode {
     }
 
     const candidatePool = this.getFeaturedPromptPool(filteredDb);
+    const unrepeatedPool = candidatePool.filter((row) => String(row.ID) !== String(this.currentQuestionId));
+    const pool = unrepeatedPool.length > 0 ? unrepeatedPool : candidatePool;
     let randomRow;
     if (this.sampleAudioFilter === 'all' && this.audioManifest && Object.keys(this.audioManifest).length > 0 && (!this.firstLoadDone || Math.random() < 0.2)) {
       const audioIds = Object.keys(this.audioManifest);
       const randomId = audioIds[Math.floor(Math.random() * audioIds.length)];
-      randomRow = candidatePool.find((row) => String(row.ID) === randomId) || candidatePool[Math.floor(Math.random() * candidatePool.length)];
+      randomRow = pool.find((row) => String(row.ID) === randomId) || pool[Math.floor(Math.random() * pool.length)];
       this.firstLoadDone = true;
     } else {
-      randomRow = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+      randomRow = pool[Math.floor(Math.random() * pool.length)];
       this.firstLoadDone = true;
     }
 
     this.applyPromptRow(randomRow, promptLoadToken, { rememberPrompt });
   }
 
-  async loadSpecificPrompt(index) {
+  async loadSpecificPrompt(index, options = {}) {
+    const { force = false } = options;
+    if (!force && !this.confirmDiscardAttempt()) {
+      this.syncQuestionSelectValue();
+      return;
+    }
+
     const promptLoadToken = this.beginPromptLoad();
 
     if (!this.hasLoadedDatabase) {
@@ -2005,6 +2038,9 @@ class ReadAloudMode {
     this.cleanup();
     this.resetPromptContext();
     this.state = 'PREP';
+    this.assessmentOutcome = { kind: 'none' };
+    this.promptLoadError = null;
+    this.captureError = null;
     this.currentTranscript = '';
     this.clearPromptVisualState();
     this.clearConnectedSpeechResults();
@@ -2018,6 +2054,7 @@ class ReadAloudMode {
 
   finishPromptLoadWithoutPrompt(message) {
     this.resetPromptContext();
+    this.promptLoadError = message;
     this.setPromptText(message);
     this.currentPromptReady = true;
   }
@@ -2720,6 +2757,29 @@ class ReadAloudMode {
     };
   }
 
+  getWorkspaceSnapshot() {
+    return {
+      state: this.state,
+      currentPromptReady: Boolean(this.currentPromptReady),
+
+      recordingSupported: Boolean(
+        this.getRecordingSupportState().supported
+      ),
+
+      isSubmitInFlight: Boolean(this.isSubmitInFlight),
+
+      canSubmitPendingAttempt: Boolean(
+        this.pendingBlob &&
+        this.pendingSession &&
+        this.shouldApplyAssessment(this.pendingSession)
+      ),
+
+      assessmentOutcome: this.assessmentOutcome || { kind: 'none' },
+      promptLoadError: this.promptLoadError || null,
+      captureError: this.captureError || null
+    };
+  }
+
   applyUnsupportedState() {
     const statusMsg = document.getElementById('ra-status-message');
     const recordBtn = document.getElementById('ra-record-btn');
@@ -2743,10 +2803,9 @@ class ReadAloudMode {
       message = 'Microphone access was blocked. Allow microphone access and try again.';
     } else if (errorName === 'NotFoundError') {
       message = 'A microphone is unavailable right now. Check your device and try again.';
-    } else if (errorName === 'NotReadableError' || errorName === 'AbortError') {
-      message = 'A microphone is unavailable right now. Check your device and try again.';
     }
 
+    this.captureError = message;
     this.state = 'PREP';
     this.updateUIForState();
 
@@ -2854,6 +2913,8 @@ class ReadAloudMode {
     this.invalidateSpeechCoachResultRender();
     this.stopTimer();
     this.state = 'PREP';
+    this.assessmentOutcome = { kind: 'none' };
+    this.captureError = null;
     this.resetAssessmentDisplay();
     this.clearRecordedAudio();
     this.renderPromptForCurrentView();
@@ -3514,6 +3575,34 @@ class ReadAloudMode {
       window.SpeakingPracticeController.setViewToggleDisabled(isRecordingActive);
     }
 
+    if (window.ReadAloudWorkspaceConfig?.enabled && window.ReadAloudWorkspaceView) {
+      if (!this.workspaceView) {
+        this.workspaceView = window.ReadAloudWorkspaceView.createView(this);
+      }
+      if (!this.workspaceView.active) {
+        this.workspaceView.mount();
+      }
+      const snapshot = this.getWorkspaceSnapshot();
+      const model = window.ReadAloudWorkspaceModel.derive(snapshot);
+      this.workspaceView.render(model, snapshot);
+
+      const resultBox = document.getElementById('ra-result-box');
+      if (resultBox) {
+        resultBox.style.display = (this.state === 'RESULTS' && this.hasAssessmentResult) ? 'block' : 'none';
+      }
+      const statusMsg = document.getElementById('ra-status-message');
+      if (statusMsg && this.state === 'RESULTS') {
+        statusMsg.textContent = this.assessmentStatusMessage
+          || (this.hasAssessmentResult ? 'Analysis complete.' : 'Analysis failed.');
+      }
+      if (this.state === 'PREP') {
+        this.updateTimerDisplay('ra-prep-time', this.prepSeconds);
+        this.updateTimerDisplay('ra-record-time', this.recordSeconds);
+      }
+      this.updateRecordedAudioControl();
+      return;
+    }
+
     if (this.state === 'PREP') {
       this.setTimerEmphasis('prep');
       if (nextBtn) {
@@ -3724,6 +3813,8 @@ class ReadAloudMode {
   async startRecording() {
     this.cleanup();
     this.resetAssessmentDisplay();
+    this.captureError = null;
+    this.assessmentOutcome = { kind: 'none' };
     const recordingSession = {
       id: this.recordingRequestId + 1,
       disposition: 'submit',
@@ -3938,6 +4029,7 @@ class ReadAloudMode {
       }
 
       await this.processAzureResults(payload, recordingSession);
+      this.assessmentOutcome = { kind: 'success' };
       return true;
     } catch (err) {
       console.error('Azure assessment error:', err);
@@ -3962,6 +4054,15 @@ class ReadAloudMode {
         failureStatus = 'Assessment failed. Please try again.';
       }
       this.setAssessmentStatusMessage(failureStatus);
+      const isRetryable = !(
+        err?.code === 'INVALID_AUDIO' &&
+        (err?.reason === 'no_speech' || err?.reason === 'too_short' || err?.reason === 'clipped' || err?.reason === 'too_long')
+      );
+      this.assessmentOutcome = {
+        kind: 'error',
+        retryable: isRetryable,
+        message: failureStatus
+      };
       if (accuracyElement) accuracyElement.textContent = '--';
       if (feedbackElement) {
         const fallbackText = err?.code === 'INVALID_AUDIO' && err?.reason === 'too_long'
@@ -6333,6 +6434,9 @@ class ReadAloudMode {
           : '0 1px 2px rgba(180, 83, 9, 0.12)';
       }
     });
+    if (this.workspaceView?.active) {
+      this.workspaceView.renderSpeakingTipsSummary();
+    }
   }
 
   clearSoundChangeTooltipAssociations(stage = document.getElementById('ra-prompt-stage')) {

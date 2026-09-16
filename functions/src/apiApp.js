@@ -25,6 +25,8 @@ const pronunciationTestRoutes = require('./routes/pronunciation-test');
 const pronunciationComparisonRoutes = require('./routes/pronunciation-comparison');
 const createPronunciationReferenceAudioRouter = require('./routes/pronunciation-reference-audio');
 const { createPresentationDemoRouter } = require('./routes/admin/presentation-demo');
+const { createDeployedIdentitiesRoute } = require('./routes/admin/deployed-identities');
+const { createDeployedIdentitiesProvider, DeployedIdentitiesError } = require('./services/deployed-identities-provider.cjs');
 const { createMemoryRoomStores, createRoomService } = require('./crm/presentation-demo/room-service.cjs');
 const { createConnectionService } = require('./crm/presentation-demo/connection-service.cjs');
 const { createNotebookService } = require('./crm/presentation-demo/notes-service.cjs');
@@ -450,6 +452,14 @@ const presentationDemoRouter = createPresentationDemoRouter({
     }
 });
 
+const deployedIdentitiesProvider = (process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.FIREBASE_PROJECT_ID)
+    ? createDeployedIdentitiesProvider({
+        projectId: process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.FIREBASE_PROJECT_ID,
+        region: 'us-central1'
+    })
+    : { read: async () => { throw new DeployedIdentitiesError('IDENTITY_CONFIG_INVALID', 'Deployment identity provider is not configured.'); } };
+const deployedIdentitiesRoute = createDeployedIdentitiesRoute({ provider: deployedIdentitiesProvider });
+
 const studentClassroomsRouter = createStudentClassroomsRouter({
     db,
     authMiddleware,
@@ -463,6 +473,7 @@ app.use('/admin', crmRouter);
 app.use('/api/admin', crmRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/admin/projects', projectsRouter);
+app.get('/api/release/deployed-identities', deployedIdentitiesRoute);
 app.use('/api/presentation-demo', (req, res, next) => {
     if (String(process.env.PRESENTATION_DEMO_ONLINE_ENABLED || '').trim() !== '1') {
         return sendError(res, 404, 'FEATURE_DISABLED', 'Online Presentation Demo is not enabled.');

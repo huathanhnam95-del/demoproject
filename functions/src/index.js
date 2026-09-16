@@ -151,7 +151,7 @@ module.exports = {
         region: 'us-central1',
         memory: '1GiB',
         timeoutSeconds: 300,
-        secrets: ['AZURE_SPEECH_KEY'],
+        secrets: ['AZURE_SPEECH_KEY', 'BEL_DEPLOYED_IDENTITIES_TOKEN'],
         serviceAccount: 'crm-api-runtime@listening-tasks-3ae34.iam.gserviceaccount.com'
     }, apiApp),
     crmProjectsAutomationProcessor: onSchedule({ region: 'us-central1', schedule: 'every 1 minutes', timeoutSeconds: 300 }, async () => {

@@ -13,6 +13,7 @@ const {
     createDryRunPublisherAdapter,
     createFileLeaseProvider,
     createRollbackManifest,
+    formatReleaseIdentityMessage,
     ReleaseGateError,
     stableHash
 } = require('../../scripts/bel-demo/release-online.cjs');
@@ -21,6 +22,23 @@ const CANDIDATE_SHA = 'a'.repeat(40);
 const BASE_SHA = 'b'.repeat(40);
 const SCOPE_HASH = 'c'.repeat(64);
 const clone = value => JSON.parse(JSON.stringify(value));
+
+test('release identity message binds the exact candidate, base, scope, owner and resources', () => {
+    assert.equal(formatReleaseIdentityMessage({
+        candidateSha: CANDIDATE_SHA,
+        baseSha: BASE_SHA,
+        scopeHash: SCOPE_HASH,
+        owner: 'release-owner',
+        resources: ['hosting', 'functions']
+    }), `BEL-RELEASE schema=1 candidate=${CANDIDATE_SHA} base=${BASE_SHA} scope=${SCOPE_HASH} owner=release-owner resources=hosting,functions`);
+    assert.throws(() => formatReleaseIdentityMessage({
+        candidateSha: CANDIDATE_SHA,
+        baseSha: BASE_SHA,
+        scopeHash: SCOPE_HASH,
+        owner: 'release owner',
+        resources: ['hosting']
+    }), /owner/);
+});
 
 function approvedOptions({ readState, actions, execute = true, now = 1_000, expectedState } = {}) {
     const scope = {

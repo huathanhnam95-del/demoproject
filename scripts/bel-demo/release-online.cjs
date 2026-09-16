@@ -22,6 +22,18 @@ function stableHash(value) {
     return crypto.createHash('sha256').update(stableJson(value)).digest('hex');
 }
 
+function formatReleaseIdentityMessage({ candidateSha, baseSha, scopeHash, owner, resources } = {}) {
+    const candidate = assertSha(candidateSha, 'candidateSha');
+    const base = assertSha(baseSha, 'baseSha');
+    const scope = assertSha256(scopeHash, 'scopeHash');
+    const releaseOwner = asNonEmptyString(owner, 'owner');
+    if (!/^[A-Za-z0-9._-]{1,80}$/.test(releaseOwner)) throw new TypeError('owner contains unsupported characters');
+    if (!Array.isArray(resources) || !resources.length || new Set(resources).size !== resources.length || resources.some(resource => !/^[a-z][a-z0-9-]*$/.test(resource))) {
+        throw new TypeError('resources must be a non-empty list of unique lowercase resource names');
+    }
+    return `BEL-RELEASE schema=1 candidate=${candidate} base=${base} scope=${scope} owner=${releaseOwner} resources=${resources.join(',')}`;
+}
+
 class ReleaseGateError extends Error {
     constructor(code, message, details = {}) {
         super(message);
@@ -603,6 +615,7 @@ module.exports = {
     createReleaseDriver,
     ReleaseGateError,
     createRollbackManifest,
+    formatReleaseIdentityMessage,
     stableHash,
     stableJson,
     parseArgs

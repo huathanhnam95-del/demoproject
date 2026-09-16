@@ -1,0 +1,11 @@
+{
+  "name": "bel-3d-claude-batch-3-v1",
+  "version": "0.0.0-batch-3-v1",
+  "private": true,
+  "type": "module",
+  "description": "Working as Equals at BEL - Claude Batch 3 block-built Home / Street / Reception, the greeting, holding hands and the two rides, completing all fourteen reference rooms (asset handoff; not an application).",
+  "scripts": {
+    "test": "node --test tests/asset-contract.test.mjs",
+    "serve": "node tests/static-server.mjs"
+  }
+}

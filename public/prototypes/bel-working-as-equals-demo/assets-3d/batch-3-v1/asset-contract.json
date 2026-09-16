@@ -1,0 +1,750 @@
+{
+  "schema": "bel-3d-asset-contract/1",
+  "status": "PROPOSED by the producer — freeze with Gemini at Batch 0 intake (Gemini plan §4.6)",
+  "pack": "batch-3-v1",
+  "engine": {
+    "three": "0.186.0",
+    "revision": "186",
+    "injection": "createAsset({ THREE }) — the application passes its pinned namespace; the pack imports no engine and throws on any other revision"
+  },
+  "entry": {
+    "module": "runtime/index.mjs",
+    "export": "createAsset",
+    "helpers": [
+      "createResourceCache",
+      "PACK",
+      "ASSET_CATALOG"
+    ]
+  },
+  "call": "createAsset({ THREE, assetId, variant, seed, resources })",
+  "returns": {
+    "root": "THREE.Group, unparented, at identity; root.userData.belAsset = { assetId, variant, packVersion } for stable picking IDs",
+    "clips": "AnimationClip[] (immutable, shareable); [] for props",
+    "sockets": "{ name: Object3D }",
+    "bounds": "{ min, max, size } in root space, visible meshes, bind pose",
+    "applyAppearance": "avatar: (appearance) => resolved appearance; props: no-op",
+    "dispose": "() => boolean; idempotent",
+    "metadata": "dimensions, triangles, joints, sockets, clip metadata, material slots",
+    "extras": [
+      "joints (avatar)",
+      "appearance getter (avatar)",
+      "disposed getter",
+      "assetId",
+      "variant",
+      "seed"
+    ]
+  },
+  "assetIds": [
+    {
+      "assetId": "avatar.participant",
+      "role": "batch-0-compatibility-sample",
+      "variant": "{ actor: p0|p1|p2|p3, appearance?: { shirt, hat, glasses } }",
+      "actors": [
+        "p0",
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "appearance": {
+        "shirt": [
+          "teal",
+          "cream",
+          "amber",
+          "red"
+        ],
+        "hat": [
+          "none",
+          "straw",
+          "cap"
+        ],
+        "glasses": [
+          false,
+          true
+        ]
+      },
+      "defaultAppearance": {
+        "hat": "none",
+        "glasses": false,
+        "shirt": "default"
+      },
+      "clips": [
+        "Idle",
+        "Walk",
+        "CarryIdle",
+        "CarryWalk",
+        "SeatedIdle",
+        "Wave",
+        "HandholdIdle_L",
+        "HandholdIdle_R",
+        "HandholdWalk_L",
+        "HandholdWalk_R",
+        "ScooterIdle",
+        "ScooterRide",
+        "SkateboardIdle",
+        "SkateboardRide"
+      ]
+    },
+    {
+      "assetId": "prop.bridge-plank",
+      "role": "batch-0-compatibility-sample",
+      "variant": "plank-0 … plank-5",
+      "variants": [
+        "plank-0",
+        "plank-1",
+        "plank-2",
+        "plank-3",
+        "plank-4",
+        "plank-5"
+      ]
+    },
+    {
+      "assetId": "room.floor-platform",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "room.gap-trough",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "room.rail",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "room.wall",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "room.door",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.plant",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.picture",
+      "role": "room kit (Room F / studios)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "studio.chair",
+      "role": "studio kit (A/C/E/G)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "studio.monitor",
+      "role": "studio kit (A/C/E/G)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "studio.console",
+      "role": "studio kit (A/C/E/G)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "studio.carpet",
+      "role": "studio kit (A/C/E/G)",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.activity-cube",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "variant": "identity id or size, from the baseline activity data"
+    },
+    {
+      "assetId": "prop.route-shape",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "variant": "identity id or size, from the baseline activity data"
+    },
+    {
+      "assetId": "prop.pedestal",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "variant": "identity id or size, from the baseline activity data"
+    },
+    {
+      "assetId": "prop.choice-region",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "variant": "identity id or size, from the baseline activity data"
+    },
+    {
+      "assetId": "prop.gallery-frame",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "variant": "identity id or size, from the baseline activity data"
+    },
+    {
+      "assetId": "studio.table",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "variant": "identity id or size, from the baseline activity data"
+    },
+    {
+      "assetId": "prop.scooter",
+      "role": "Home / Street / Reception kit",
+      "variant": "{ stand?: boolean }"
+    },
+    {
+      "assetId": "prop.skateboard",
+      "role": "Home / Street / Reception kit",
+      "variant": "{ stand?: boolean }"
+    },
+    {
+      "assetId": "prop.wardrobe",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.bookcase",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.side-table",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.reception-counter",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.waiting-bench",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.sign-board",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "street.building",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "street.road",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "street.crossing",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.car",
+      "role": "Home / Street / Reception kit",
+      "variant": "car-0 | car-1 (#b65339, #3475ad)"
+    },
+    {
+      "assetId": "prop.house",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.street-bench",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "prop.hedge",
+      "role": "Home / Street / Reception kit",
+      "variant": "sized by the caller from the baseline logical rectangles"
+    },
+    {
+      "assetId": "fx.sun-patch",
+      "role": "optional atmosphere (off by default)",
+      "variant": "{ width, depth, skew }"
+    },
+    {
+      "assetId": "fx.dust-motes",
+      "role": "optional atmosphere (off by default, reduced-motion aware)",
+      "variant": "{ clusters, motesPerCluster, size, volume }"
+    },
+    {
+      "assetId": "ref.meter",
+      "role": "preview-reference",
+      "variant": "none"
+    },
+    {
+      "assetId": "ref.material-samples",
+      "role": "preview-reference",
+      "variant": "none"
+    }
+  ],
+  "coordinates": {
+    "transform": "X = (logical_x - 500) * 0.02; Z = (logical_y - 240) * 0.02; Y = visual height",
+    "unit": "1 world unit = 50 logical px",
+    "scaleIsVisualOnly": true,
+    "authoringConversion": "none — authored directly in the runtime frame; no import rotation or rescale"
+  },
+  "orientation": {
+    "avatarForward": "+Z at rotation.y = 0",
+    "characterLeft": "+X",
+    "suggestedYawForLogicalFacing": {
+      "down": 0,
+      "up": 3.141592653589793,
+      "right": 1.5707963267948966,
+      "left": -1.5707963267948966
+    },
+    "note": "logical facing values come from world/simulation.mjs; mapping and turning are the integration owner's"
+  },
+  "pivots": {
+    "avatar": "floor, between the feet",
+    "plank": "bottom-centre (top surface at y = 0.09; socket_top)",
+    "heldProps": "plank socket_grip at the plank centre attaches to avatar socket_held"
+  },
+  "animation": {
+    "rootMotion": "none — the asset root is never keyed; J_hips has vertical bob only (x = z = 0)",
+    "walkSpeedMatching": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 108 px/s host speed)",
+    "clips": [
+      {
+        "name": "Idle",
+        "duration": 3.2,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "notes": "Grounded breathing/weight loop. Feet solved to fixed floor positions; no world displacement."
+      },
+      {
+        "name": "Walk",
+        "duration": 0.4,
+        "fps": 60,
+        "loop": true,
+        "rootMotion": false,
+        "travelPerCycle": 0.864,
+        "travelPerCycleLogical": 43.2,
+        "nominalSpeed": 2.16,
+        "nominalSpeedLogical": 108,
+        "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 108 px/s host speed)",
+        "stanceFraction": 0.5,
+        "footContacts": {
+          "left": [
+            {
+              "plant": 0,
+              "lift": 0.2
+            }
+          ],
+          "right": [
+            {
+              "plant": 0.2,
+              "lift": 0.4
+            }
+          ]
+        },
+        "notes": "In place. During stance the planted ankle moves backwards relative to the root at exactly nominalSpeed, so the foot is stationary on the floor when the host moves the avatar at 108 px/s."
+      },
+      {
+        "name": "CarryIdle",
+        "duration": 3.2,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "carries": [
+          "prop.bridge-plank",
+          "prop.activity-cube",
+          "prop.route-shape"
+        ],
+        "notes": "Idle with both arms forward at socket_held. The hands sit at the carried object; nothing is welded to the avatar."
+      },
+      {
+        "name": "CarryWalk",
+        "duration": 0.4,
+        "fps": 60,
+        "loop": true,
+        "rootMotion": false,
+        "travelPerCycle": 0.864,
+        "travelPerCycleLogical": 43.2,
+        "nominalSpeed": 2.16,
+        "nominalSpeedLogical": 108,
+        "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed; carrying never changes the host speed",
+        "stanceFraction": 0.5,
+        "footContacts": {
+          "left": [
+            {
+              "plant": 0,
+              "lift": 0.2
+            }
+          ],
+          "right": [
+            {
+              "plant": 0.2,
+              "lift": 0.4
+            }
+          ]
+        },
+        "carries": [
+          "prop.bridge-plank",
+          "prop.activity-cube",
+          "prop.route-shape"
+        ],
+        "notes": "Walk legs with the carry arms held steady. Same travel per cycle as Walk: carrying is not slower."
+      },
+      {
+        "name": "SeatedIdle",
+        "duration": 3.6,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "seatHeight": 0.36,
+        "placement": "Place the avatar root at the seat centre on the floor. The clip lifts the hips onto the cushion and folds the legs; the hips never move horizontally.",
+        "notes": "Feet rest flat on the floor in front of the chair; the back does not pass through the chair back."
+      },
+      {
+        "name": "Wave",
+        "duration": 2.2,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": false,
+        "sourceMs": 2200,
+        "arm": "character-right",
+        "placement": "Play once on top of / after Idle. The first and last frames are exactly the Idle frame at t = 0, so it blends back without a pop.",
+        "notes": "Greeting only. The name label the 2D renderer draws while waving stays in the host HUD; the clip carries no text."
+      },
+      {
+        "name": "HandholdIdle_L",
+        "duration": 3.2,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "partnerSide": "character-left (+X)",
+        "partnerGap": 0.64,
+        "partnerGapLogical": 32,
+        "joinPoint": [
+          0.32,
+          0.7,
+          0
+        ],
+        "notes": "Standing, the character-left hand held out to the join point half way to the partner. Pair the leader _L with the follower _R."
+      },
+      {
+        "name": "HandholdIdle_R",
+        "duration": 3.2,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "partnerSide": "character-right (-X)",
+        "partnerGap": 0.64,
+        "partnerGapLogical": 32,
+        "joinPoint": [
+          -0.32,
+          0.7,
+          0
+        ],
+        "notes": "Mirror of HandholdIdle_L."
+      },
+      {
+        "name": "HandholdWalk_L",
+        "duration": 0.4,
+        "fps": 60,
+        "loop": true,
+        "rootMotion": false,
+        "travelPerCycle": 0.864,
+        "travelPerCycleLogical": 43.2,
+        "nominalSpeed": 2.16,
+        "nominalSpeedLogical": 108,
+        "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed; holding hands never changes the host speed",
+        "stanceFraction": 0.5,
+        "footContacts": {
+          "left": [
+            {
+              "plant": 0,
+              "lift": 0.2
+            }
+          ],
+          "right": [
+            {
+              "plant": 0.2,
+              "lift": 0.4
+            }
+          ]
+        },
+        "partnerSide": "character-left (+X)",
+        "joinPoint": [
+          0.32,
+          0.7,
+          0
+        ],
+        "notes": "Walk legs; the held hand stays on the join point while the free arm swings. Same travel per cycle as Walk."
+      },
+      {
+        "name": "HandholdWalk_R",
+        "duration": 0.4,
+        "fps": 60,
+        "loop": true,
+        "rootMotion": false,
+        "travelPerCycle": 0.864,
+        "travelPerCycleLogical": 43.2,
+        "nominalSpeed": 2.16,
+        "nominalSpeedLogical": 108,
+        "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed; holding hands never changes the host speed",
+        "stanceFraction": 0.5,
+        "footContacts": {
+          "left": [
+            {
+              "plant": 0,
+              "lift": 0.2
+            }
+          ],
+          "right": [
+            {
+              "plant": 0.2,
+              "lift": 0.4
+            }
+          ]
+        },
+        "partnerSide": "character-right (-X)",
+        "joinPoint": [
+          -0.32,
+          0.7,
+          0
+        ],
+        "notes": "Mirror of HandholdWalk_L."
+      },
+      {
+        "name": "ScooterIdle",
+        "duration": 3,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "rides": "prop.scooter",
+        "standHeight": 0.12,
+        "grip": [
+          0,
+          0.98,
+          0.4
+        ],
+        "contact": "both feet on the deck; the object rolls, so no foot carries the motion",
+        "notes": "The coasting pose (simulation.mjs pose \"coasting\"). Both hands on the handlebar, knees softly flexed."
+      },
+      {
+        "name": "ScooterRide",
+        "duration": 0.9,
+        "fps": 60,
+        "loop": true,
+        "rootMotion": false,
+        "rides": "prop.scooter",
+        "standHeight": 0.12,
+        "grip": [
+          0,
+          0.98,
+          0.4
+        ],
+        "nominalSpeed": 3.3,
+        "nominalSpeedLogical": 165,
+        "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 165 px/s ride speed)",
+        "contact": "both feet on the deck; the object rolls, so no foot carries the motion and the clip claims no planted stride",
+        "notes": "Moving pose (simulation.mjs pose \"riding\"): forward lean, a sway and a knee cycle. Following the 2D renderer, riding changes the arms and the lean, not the stride."
+      },
+      {
+        "name": "SkateboardIdle",
+        "duration": 3,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": false,
+        "rides": "prop.skateboard",
+        "standHeight": 0.12,
+        "grip": null,
+        "contact": "both feet on the deck; the object rolls, so no foot carries the motion",
+        "notes": "The coasting pose. Arms out a little for balance, no handlebar."
+      },
+      {
+        "name": "SkateboardRide",
+        "duration": 0.9,
+        "fps": 60,
+        "loop": true,
+        "rootMotion": false,
+        "rides": "prop.skateboard",
+        "standHeight": 0.12,
+        "grip": null,
+        "nominalSpeed": 3.3,
+        "nominalSpeedLogical": 165,
+        "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 165 px/s ride speed)",
+        "contact": "both feet on the deck; the object rolls, so no foot carries the motion and the clip claims no planted stride",
+        "notes": "Moving pose: lean, sway and a knee cycle, arms counterbalancing."
+      }
+    ],
+    "instancing": "one createAsset() per actor; one AnimationMixer per root; clips may be shared; clothing material is per instance",
+    "poseMapping": {
+      "idle": "Idle",
+      "walking": "Walk",
+      "carrying": "MISSING (Batch 1: CarryIdle/CarryWalk)",
+      "seated": "MISSING (Batch 1: SeatedIdle)",
+      "riding": "MISSING (Batch 3)",
+      "coasting": "MISSING (Batch 3)",
+      "mounting": "MISSING (Batch 3, optional cosmetic)",
+      "wave": "MISSING (Batch 3)",
+      "handhold": "MISSING (Batch 3)"
+    }
+  },
+  "resources": {
+    "cache": "createResourceCache(THREE) — one per window recommended; reference-counted",
+    "sharedReadOnly": "geometries, materials (except clothing), clips",
+    "perInstance": "avatar clothing material, all Object3D nodes",
+    "disposal": "dispose() releases this instance only; a shared value is disposed when its last holder releases it"
+  },
+  "sideEffects": "none at import; construction creates Three.js objects only — no renderer, RAF, timers, DOM, listeners, storage, network, BroadcastChannel or game state",
+  "determinism": "fixed inputs give identical geometry, materials and clips; seed recorded only (no cosmetic randomness in Batch 0). Object uuids are Three.js-generated and not part of identity.",
+  "artDirection": {
+    "id": "BEL-ART-01 v1.0",
+    "geometry": "chamfered cuboids (chamfer <= 0.012 and <= 10% of the smallest dimension); no spheres, capsules or lathes in avatar or prop geometry",
+    "detail": "stepped hair/hat masses, torso yoke and hem, knee and cuff steps, 9x9 pixel-mask plank marks, per-board vertex tonal cells",
+    "materialFamilies": [
+      {
+        "family": "wall",
+        "hex": "#fef4e9",
+        "surface": "matteWall",
+        "source": "plaster / painted wall (F.png, C.png)"
+      },
+      {
+        "family": "timber",
+        "hex": "#f3ceac",
+        "surface": "paintedWood",
+        "source": "timber floor and platform boards (F.png)"
+      },
+      {
+        "family": "paintedProp",
+        "hex": "#0098a9",
+        "surface": "paintedWood",
+        "source": "painted activity props, e.g. plank-0 (F-complete.png)"
+      },
+      {
+        "family": "fabric",
+        "hex": "#228a71",
+        "surface": "fabric",
+        "source": "studio chair upholstery (C.png)"
+      },
+      {
+        "family": "carpet",
+        "hex": "#9aaf94",
+        "surface": "fabric",
+        "source": "studio carpet (C.png)"
+      },
+      {
+        "family": "darkWood",
+        "hex": "#955a2e",
+        "surface": "paintedWood",
+        "source": "console / door timber (C.png)"
+      },
+      {
+        "family": "metal",
+        "hex": "#f2b440",
+        "surface": "brass",
+        "source": "small metal details, e.g. plank nails (F-complete.png)"
+      },
+      {
+        "family": "screen",
+        "hex": "#98afd2",
+        "surface": "matteWall",
+        "source": "monitor surface (C.png) — a neutral prop surface, never slide content"
+      }
+    ],
+    "lightingPasses": "L0 neutral review and L1-L4 room light are both delivered as preview presets; see referenceRendering"
+  },
+  "materials": {
+    "model": "MeshStandardMaterial, metallic/roughness",
+    "colourSpace": "hex values are sRGB; THREE.Color converts to linear working space",
+    "roughnessValues": {
+      "skin": {
+        "roughness": 0.62,
+        "metalness": 0
+      },
+      "cloth": {
+        "roughness": 0.86,
+        "metalness": 0
+      },
+      "denim": {
+        "roughness": 0.9,
+        "metalness": 0
+      },
+      "hair": {
+        "roughness": 0.55,
+        "metalness": 0
+      },
+      "leather": {
+        "roughness": 0.5,
+        "metalness": 0
+      },
+      "straw": {
+        "roughness": 0.92,
+        "metalness": 0
+      },
+      "frame": {
+        "roughness": 0.35,
+        "metalness": 0.15
+      },
+      "lens": {
+        "roughness": 0.3,
+        "metalness": 0,
+        "transparent": true,
+        "opacity": 0.22,
+        "depthWrite": false
+      },
+      "paintedWood": {
+        "roughness": 0.7,
+        "metalness": 0
+      },
+      "timber": {
+        "roughness": 0.66,
+        "metalness": 0
+      },
+      "plaster": {
+        "roughness": 0.9,
+        "metalness": 0
+      },
+      "fabric": {
+        "roughness": 0.95,
+        "metalness": 0
+      },
+      "leaf": {
+        "roughness": 0.78,
+        "metalness": 0
+      },
+      "screen": {
+        "roughness": 0.28,
+        "metalness": 0
+      },
+      "paint": {
+        "roughness": 0.6,
+        "metalness": 0
+      },
+      "brass": {
+        "roughness": 0.35,
+        "metalness": 0.7
+      },
+      "matte": {
+        "roughness": 1,
+        "metalness": 0
+      },
+      "rubber": {
+        "roughness": 0.95,
+        "metalness": 0
+      },
+      "asphalt": {
+        "roughness": 0.97,
+        "metalness": 0
+      },
+      "stone": {
+        "roughness": 0.88,
+        "metalness": 0
+      },
+      "carPaint": {
+        "roughness": 0.42,
+        "metalness": 0.08
+      },
+      "glass": {
+        "roughness": 0.18,
+        "metalness": 0.05
+      }
+    },
+    "roughnessProvenance": "authoring choice (no source value exists)"
+  },
+  "referenceRendering": "NOT_RUN",
+  "shadows": "meshes set castShadow (lens/eyes/mouth excluded); plank body receiveShadow; enabling shadows is the renderer owner's choice"
+}

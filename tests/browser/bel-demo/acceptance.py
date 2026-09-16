@@ -406,9 +406,9 @@ def run_self_test(args) -> int:
         print("\n[Self-Test 5/8] Verifying cases.json Section 7 Catalogue...")
         catalog = load_cases()
         cases = catalog.get('cases', [])
-        assert len(cases) == 55, f"Expected 55 Section 7 cases, found {len(cases)}"
+        assert len(cases) == 68, f"Expected 68 Section 7 cases, found {len(cases)}"
 
-        required_prefixes = ['ENV', 'CON', 'MOD', 'MOV', 'REN', 'F', 'I', 'J', 'FIN', 'AUTH', 'NOTE', 'REC', 'A11Y', 'PERF']
+        required_prefixes = ['ENV', 'CON', 'MOD', 'MOV', 'REN', 'F', 'I', 'J', 'FIN', 'AUTH', 'NOTE', 'REC', 'A11Y', 'PERF', 'STU', 'ROUTE', 'GALLERY', 'LIFE', 'E2E']
         found_prefixes = {c['category'] for c in cases}
         for pref in required_prefixes:
             assert pref in found_prefixes, f"Missing category {pref} in cases.json"
@@ -421,7 +421,7 @@ def run_self_test(args) -> int:
             assert isinstance(c.get('prerequisites'), list), f"Invalid prerequisites in {c['id']}"
             assert isinstance(c.get('stageAvailability'), list) and len(c['stageAvailability']) > 0, f"Invalid stageAvailability in {c['id']}"
 
-        print(f"  --> PASS: All 55 cases validated against schema across {len(required_prefixes)} categories.")
+        print(f"  --> PASS: All 68 cases validated against schema across {len(required_prefixes)} categories.")
 
         # 6. Evidence files pre-creation check
         print("\n[Self-Test 6/8] Verifying Evidence Log Pre-Creation...")

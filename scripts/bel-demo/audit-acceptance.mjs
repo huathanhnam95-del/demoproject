@@ -17,7 +17,7 @@ const EXPECTED_FAMILIES = {
   MOD: ['MOD-01', 'MOD-02', 'MOD-03', 'MOD-04'],
   MOV: ['MOV-01', 'MOV-02', 'MOV-03', 'MOV-04', 'MOV-05'],
   REN: ['REN-01', 'REN-02', 'REN-03', 'REN-04', 'REN-05', 'REN-06'],
-  F: ['F-01', 'F-02', 'F-03', 'F-04', 'F-05', 'F-06'],
+  F: ['F-01', 'F-02', 'F-03', 'F-04', 'F-05', 'F-06', 'F-07'],
   I: ['I-01', 'I-02', 'I-03', 'I-04'],
   J: ['J-01', 'J-02', 'J-03', 'J-04'],
   FIN: ['FIN-01', 'FIN-02'],
@@ -25,7 +25,12 @@ const EXPECTED_FAMILIES = {
   NOTE: ['NOTE-01', 'NOTE-02', 'NOTE-03'],
   REC: ['REC-01', 'REC-02', 'REC-03', 'REC-04'],
   A11Y: ['A11Y-01', 'A11Y-02', 'A11Y-03'],
-  PERF: ['PERF-01', 'PERF-02', 'PERF-03']
+  PERF: ['PERF-01', 'PERF-02', 'PERF-03'],
+  STU: ['STU-01', 'STU-02'],
+  ROUTE: ['ROUTE-01', 'ROUTE-02'],
+  GALLERY: ['GALLERY-01'],
+  LIFE: ['LIFE-01', 'LIFE-02', 'LIFE-03'],
+  E2E: ['E2E-01', 'E2E-02', 'E2E-03', 'E2E-04']
 };
 
 const VALID_VARIANTS = new Set(['B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7']);

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "description": "BEL Working as Equals Browser Acceptance Cases Catalogue (Section 7)",
-  "total": 55,
+  "total": 68,
   "variants": {
     "B0": "Current 2D baseline, four windows, normal motion",
     "B1": "Candidate 2D, four windows, normal motion",
@@ -275,6 +275,15 @@
       "stageAvailability": ["F"]
     },
     {
+      "id": "F-07",
+      "category": "F",
+      "title": "Bridge plank resting height, continuous channel span, and bank overlap geometry",
+      "description": "Inspect placed bridge planks in Room F 3D assembly. Verify planks rest at y = 0 without sinking into the floor or clipping platform banks. Verify six planks span the 1.60m channel continuously with zero gap and an end plank overlap exceeding 0.1m, matching BEL-ART-01 physical assembly requirements.",
+      "requiredVariants": ["B2"],
+      "prerequisites": ["bridge-completed"],
+      "stageAvailability": ["F"]
+    },
+    {
       "id": "I-01",
       "category": "I",
       "title": "Six-statement sequence, timing phases, and HUD legibility",
@@ -507,6 +516,115 @@
       "requiredVariants": ["B2", "B6", "B7"],
       "prerequisites": ["soak-cycle-enabled"],
       "stageAvailability": ["all"]
+    },
+    {
+      "id": "STU-01",
+      "category": "STU",
+      "title": "Studio presentation gating, presenter screen proximity, and slide advancement",
+      "description": "In Studios A, C, E, and G, require the presenter to stand at the presentation monitor while all four actors are gathered. Participant cannot start presentation. Presenter steps through native presentation slides and authorial reveals. Synchronize slide state across all four viewports with zero text rendered in 3D canvas.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["studio-entered"],
+      "stageAvailability": ["A", "C", "E", "G"]
+    },
+    {
+      "id": "STU-02",
+      "category": "STU",
+      "title": "Studio slide reveal cycles, participant note taking, and presentation completion",
+      "description": "Exercise multi-step interactive reveals on slides 2, 4, 5, and 6 in Studios A and C. Verify participant notes during active presentation remain isolated without leaking credentials or drafts. Verify presenter end presentation unlocks room exit doors for progression.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["presentation-active"],
+      "stageAvailability": ["A", "C", "E", "G"]
+    },
+    {
+      "id": "ROUTE-01",
+      "category": "ROUTE",
+      "title": "B-Route shape pickup, pedestal matching, and reading modal disclosure",
+      "description": "In routes B1, B2, and B3, actors navigate to shapes, pick them up, and carry them to matching pedestals. Correct shape match opens the authoritative screen-space educational reading modal. Wrong shape match triggers refusal toast and retains carry without state corruption.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["route-entered"],
+      "stageAvailability": ["B"]
+    },
+    {
+      "id": "ROUTE-02",
+      "category": "ROUTE",
+      "title": "Route isolation, peer placement visibility, and forward progression to Studio C",
+      "description": "Complete all three pedestal placements in each B-route. Verify route state isolation between B1, B2, and B3. Confirm presenter and peers can inspect placed pedestal texts individually in screen space, and forward exit doors unlock to allow gathering in Studio C.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["shapes-placed"],
+      "stageAvailability": ["B"]
+    },
+    {
+      "id": "GALLERY-01",
+      "category": "GALLERY",
+      "title": "Gallery D portrait examination, verbatim quotation modals, and threshold gating",
+      "description": "In Gallery D, interact with all five historic portrait stands (Chet Faliszek, Josh Weier, Mike Morasky, Erik Wolpaw, Rich Geldreich). Verify exact attribution and quote matching the canonical deck oracle in screen-space dialogs. Verify onward threshold door unlocks when all five portraits are inspected.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["gallery-entered"],
+      "stageAvailability": ["D"]
+    },
+    {
+      "id": "LIFE-01",
+      "category": "LIFE",
+      "title": "Home private spawn, character profile customization, and lower floor movement",
+      "description": "Spawn all four actors in private Home scenes. Verify character customization (name, shirt color, hat, glasses) updates local and peer views. Test WASD movement, diagonal normalization, thin-wall collision bounds, and stairs navigation to the lower floor exit.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["home-spawned"],
+      "stageAvailability": ["arrival"]
+    },
+    {
+      "id": "LIFE-02",
+      "category": "LIFE",
+      "title": "Ride vehicle mounting, dismounting, and street traffic crossing",
+      "description": "Mount and dismount scooter (p2) and skateboard (p3) at Home. Verify ride speed (165 px/s), coasting vs riding animations, and deck/grip alignments. Navigate onto the Street, observe clock-driven traffic lanes from carsAt(), wait at the curb, and cross safely to the Reception entrance.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["street-entered"],
+      "stageAvailability": ["arrival"]
+    },
+    {
+      "id": "LIFE-03",
+      "category": "LIFE",
+      "title": "Reception social interactions: greeting wave, handholding consent, and peer notebook view",
+      "description": "In Reception, trigger wave animation (2.2s single-play loop:false). Send handholding invite, decline, and accept; test linked movement where leader controls heading and follower tracks 32px to the side. Open, write, and save peer notebook pages with ink persistence.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["reception-entered"],
+      "stageAvailability": ["reception"]
+    },
+    {
+      "id": "E2E-01",
+      "category": "E2E",
+      "title": "Full four-window journey: Arrival through Reception and Studio A",
+      "description": "Execute four-window orchestrated test from private Home spawns, through Street crossing and Reception social interactions, to Studio A presentation completion. Verify synchronized state transitions, host locks, and error-free browser execution across all four clients.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["managed-launch"],
+      "stageAvailability": ["arrival", "reception", "A"]
+    },
+    {
+      "id": "E2E-02",
+      "category": "E2E",
+      "title": "Full four-window journey: Route B branch exploration and Studio C gathering",
+      "description": "From Studio A, dispatch actors into B1, B2, and B3 routes. Complete all nine pedestal placements, verify individual source text modal reading, and reconvene the entire group at Studio C for presentation slide review.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["A-completed"],
+      "stageAvailability": ["B", "C"]
+    },
+    {
+      "id": "E2E-03",
+      "category": "E2E",
+      "title": "Full four-window journey: Gallery D inspection, Studio E, and Room F bridge crossing",
+      "description": "Navigate through Gallery D portraits, complete Studio E presentation, and execute the Room F bridge building sequence. Verify 60s prep, 30s team attempt, 6-plank placement, physical channel crossing, and entrance into Studio G.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["C-completed"],
+      "stageAvailability": ["D", "E", "F", "G"]
+    },
+    {
+      "id": "E2E-04",
+      "category": "E2E",
+      "title": "Full four-window journey: Room I reversal, Room J cube matching, and demo conclusion",
+      "description": "Complete Room I six-statement floor choice reversals with timing constraints. Navigate to Room J, complete two-carrier cube matches, unlock all three final objectives, and verify final session conclusion and clean disconnect.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["G-completed"],
+      "stageAvailability": ["I", "J", "FIN"]
     }
+
   ]
 }

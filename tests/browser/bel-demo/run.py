@@ -4,8 +4,16 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 from driver import Driver
 
-parser=argparse.ArgumentParser();parser.add_argument('--url',default='http://127.0.0.1:4178');parser.add_argument('--cdp',default='http://127.0.0.1:9228');parser.add_argument('--evidence',required=True);parser.add_argument('--stage',choices=['arrival','reception','A','B','C','D','E','G','recovery'],required=True);args=parser.parse_args()
-expected=json.loads((Path(__file__).parents[2]/'fixtures/bel-demo/expected-content.json').read_text(encoding='utf-8'))
+def load_expected():
+    fixture_path = Path(__file__).resolve().parents[2] / 'fixtures' / 'bel-demo' / 'expected-content.json'
+    if fixture_path.exists():
+        return json.loads(fixture_path.read_text(encoding='utf-8'))
+    alt_path = Path('tests/fixtures/bel-demo/expected-content.json')
+    if alt_path.exists():
+        return json.loads(alt_path.read_text(encoding='utf-8'))
+    return {}
+
+expected = load_expected()
 
 def arrival(d):
     for i in range(4):
@@ -121,20 +129,37 @@ def gallery(d):
     d.path('p0',(200,403),(200,205),(810,205),(824,195));d.interact('p0',(824,178));d.shot('p0','D-onward-threshold');d.close_panel('p0');d.checkpoint('D')
 
 
-with sync_playwright() as p:
-    b=p.chromium.connect_over_cdp(args.cdp);d=Driver(b,args.evidence)
-    try:
-        if args.stage=='arrival':arrival(d)
-        elif args.stage=='reception':reception(d)
-        elif args.stage=='A':studio(d,'A')
-        elif args.stage=='B':routes(d)
-        elif args.stage=='C':studio(d,'C')
-        elif args.stage=='D':gallery(d)
-        elif args.stage in ['E','G']:studio(d,args.stage)
-        else:
-            before=d.snap('p2');d.pages['p2'].reload();d.wait('p2','window.belDebug && document.body.dataset.ready === "true"');after=d.snap('p2');assert before['session']['id']==after['session']['id'];assert before['session']['players']['p2']['notes']==after['session']['players']['p2']['notes'];d.checkpoint('recovery')
-        assert not d.errors,d.errors
-    except Exception as e:
-        d.log('FAIL',stage=args.stage,error=str(e));d.checkpoint(args.stage+'-failed')
-        for a in d.pages:d.shot(a,args.stage+'-failure-'+a)
-        raise
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--url', default='http://127.0.0.1:4178')
+    parser.add_argument('--cdp', default='http://127.0.0.1:9228')
+    parser.add_argument('--evidence', required=True)
+    parser.add_argument('--stage', choices=['arrival', 'reception', 'A', 'B', 'C', 'D', 'E', 'G', 'recovery'], required=True)
+    args = parser.parse_args()
+
+    with sync_playwright() as p:
+        b = p.chromium.connect_over_cdp(args.cdp)
+        d = Driver(b, args.evidence)
+        try:
+            if args.stage == 'arrival': arrival(d)
+            elif args.stage == 'reception': reception(d)
+            elif args.stage == 'A': studio(d, 'A')
+            elif args.stage == 'B': routes(d)
+            elif args.stage == 'C': studio(d, 'C')
+            elif args.stage == 'D': gallery(d)
+            elif args.stage in ['E', 'G']: studio(d, args.stage)
+            else:
+                before = d.snap('p2')
+                d.pages['p2'].reload()
+                d.wait('p2', 'window.belDebug && document.body.dataset.ready === "true"')
+                after = d.snap('p2')
+                assert before['session']['id'] == after['session']['id']
+                assert before['session']['players']['p2']['notes'] == after['session']['players']['p2']['notes']
+                d.checkpoint('recovery')
+            assert not d.errors, d.errors
+        except Exception as e:
+            d.log('FAIL', stage=args.stage, error=str(e))
+            d.checkpoint(args.stage + '-failed')
+            for a in d.pages:
+                d.shot(a, args.stage + '-failure-' + a)
+            raise

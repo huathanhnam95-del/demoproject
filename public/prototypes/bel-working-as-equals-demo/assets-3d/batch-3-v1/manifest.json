@@ -1,0 +1,4007 @@
+{
+  "schema": "bel-3d-claude-manifest/1",
+  "pack": {
+    "id": "bel-3d-claude",
+    "batch": 3,
+    "version": "batch-3-v1",
+    "artDirection": "BEL-ART-01 v1.0 (block-built, pixel-inspired)",
+    "supersedes": "batch-2-v1 (poses + activity props; kept for rollback)",
+    "representation": "THREE_MODULE",
+    "three": {
+      "version": "0.186.0",
+      "revision": "186"
+    },
+    "units": "1 world unit = 50 logical px (s = 0.02). X = (logical_x - 500) * s, Z = (logical_y - 240) * s, Y = visual height.",
+    "axes": "+Y up; +Z toward the viewer / larger logical y; an avatar faces +Z at rotation.y = 0; character-left = +X."
+  },
+  "createdBy": "Claude (Anthropic) — asset producer role in BEL_3D_Asset_Brief_v2_Claude_ThreeJS.md",
+  "generatedBy": "tools/build-manifest.mjs",
+  "baseline": {
+    "repository": "huathanhnam95-del/demoproject",
+    "branch": "codex/bel-demo-production-20260914",
+    "commit": "249a8fc86b5a293f82008b0db07c64aeca4ad2bd",
+    "featureRoot": "public/prototypes/bel-working-as-equals-demo/"
+  },
+  "artDirection": {
+    "id": "BEL-ART-01",
+    "version": "1.0",
+    "style": "block-built, pixel-inspired translation of the existing BEL theme",
+    "referenceUse": "Vesper screenshot studied for block construction, material response and lighting only; no theme, character, or asset from it is used"
+  },
+  "interfaceChangelog": [
+    {
+      "version": "batch-3-v1",
+      "change": "added nine clips (Wave, HandholdIdle_L/R, HandholdWalk_L/R, ScooterIdle/Ride, SkateboardIdle/Ride) and the Home / Street / Reception kit (15 ids)",
+      "impact": "additive: no existing id, pivot, socket, clip, bound or appearance rule changed. Wave is the first clip with loop = false, so a caller must read CLIP_INFO[name].loop instead of assuming LoopRepeat."
+    },
+    {
+      "version": "batch-2-v1",
+      "change": "Batch 1 completed with the CarryIdle, CarryWalk and SeatedIdle clips; studio.chair seat height fitted to SeatedIdle (0.42 -> 0.36); added the Batch 2 activity props (6 ids)",
+      "impact": "additive for asset ids; the three new clips join the existing two on the same rig and bindings; the chair seat height is a visual dimension the caller can still override"
+    },
+    {
+      "version": "batch-1-v1",
+      "change": "added the room kit (7 ids), studio kit (4 ids) and two optional atmosphere ids; added LIGHTING_REFERENCE as exported data",
+      "impact": "additive only: no existing id, pivot, socket, clip or appearance rule changed"
+    },
+    {
+      "version": "batch-0-v2",
+      "change": "socket_hat moved to [0, 0.33, 0] and socket_glasses to [0, 0.235, 0.172] in J_head space, because the head is now a cuboid",
+      "impact": "avatar-internal; hats and glasses are owned by the avatar, so no integration code changes"
+    },
+    {
+      "version": "batch-0-v2",
+      "change": "new preview-only asset id ref.material-samples",
+      "impact": "additive; never placed in the game"
+    },
+    {
+      "version": "batch-0-v2",
+      "change": "avatar and plank geometry rebuilt as chamfered cuboids; plank body and shoe materials now use vertexColors",
+      "impact": "visual only: pivots, units, facing, bounds envelope, clips, bindings, asset ids and appearance semantics unchanged"
+    }
+  ],
+  "representation": "THREE_MODULE",
+  "entry": {
+    "path": "runtime/index.mjs",
+    "exports": [
+      "createAsset",
+      "createResourceCache",
+      "PACK",
+      "ASSET_CATALOG"
+    ]
+  },
+  "engine": {
+    "name": "three",
+    "version": "0.186.0",
+    "revision": "186",
+    "npmTarballShasum": "08f70ce80dffa9247a567b421165bec630e86f8d",
+    "npmIntegrity": "sha512-cr/fIM2ddMSVbYVgkfD4jLJv7Fh/8ZTjvo+7gQeSVGUZHxpx9FDwoL5iC7hUz/LiRA8wMbqfnb90xKfm1/HHkQ==",
+    "injected": true,
+    "bundledInRuntime": false,
+    "addonsUsedByRuntime": []
+  },
+  "runtime": {
+    "files": [
+      {
+        "path": "runtime/activity-props.mjs",
+        "bytes": 13522,
+        "sha256": "f0d52c7e48824aed541bc239534cda54df40e177e6c0ec66c979236d94869c39",
+        "imports": [
+          "runtime/identity.mjs",
+          "runtime/bridge-props.mjs",
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/avatar-clips.mjs",
+        "bytes": 20526,
+        "sha256": "04641c0073e74ab561b7c7ae8e3b8863cd3130a2157c49d9f1034ea47b5f3336",
+        "imports": [
+          "runtime/avatar-rig.mjs",
+          "runtime/identity.mjs"
+        ]
+      },
+      {
+        "path": "runtime/avatar-rig.mjs",
+        "bytes": 7444,
+        "sha256": "90fa98d9c5cce29d2ee5dda9d9191d508ae62bd6365c3348a3bbccab622404e3",
+        "imports": []
+      },
+      {
+        "path": "runtime/avatar.mjs",
+        "bytes": 14748,
+        "sha256": "4444c7ee5d388c7b9e49ec485e1a6b11060a348eddf1d5ce139818fa5e204a9e",
+        "imports": [
+          "runtime/identity.mjs",
+          "runtime/materials.mjs",
+          "runtime/avatar-rig.mjs",
+          "runtime/avatar-clips.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/bridge-props.mjs",
+        "bytes": 6270,
+        "sha256": "0ae70a86290f186384d4d3ced20ab32ac0f62af93343a00913cab03836e7625b",
+        "imports": [
+          "runtime/identity.mjs",
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/fx.mjs",
+        "bytes": 6851,
+        "sha256": "5afb3c2dc6279ddc1b2a1904dd0090dca51ca98024ac69120a5dc37ccac4f5ca",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/geometry.mjs",
+        "bytes": 7752,
+        "sha256": "ba9b85ba7016f1758faa7131277c0f52cc947791fc2c018ea1f7b0f795356f57",
+        "imports": []
+      },
+      {
+        "path": "runtime/home-street-kit.mjs",
+        "bytes": 34074,
+        "sha256": "8e0306e9aed5ebf52427397de596bb04ba76b7566f02723ea9b17a18678794af",
+        "imports": [
+          "runtime/identity.mjs",
+          "runtime/avatar-rig.mjs",
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/identity.mjs",
+        "bytes": 5163,
+        "sha256": "728acb405040539a2b8340c2648e33349560fd638965a58e196ceabde0844197",
+        "imports": []
+      },
+      {
+        "path": "runtime/index.mjs",
+        "bytes": 8290,
+        "sha256": "758ff03a4ec0c0b2cfdb0632ffca4f365169fe7161889b7ac27778aa464375d6",
+        "imports": [
+          "runtime/resources.mjs",
+          "runtime/identity.mjs",
+          "runtime/avatar.mjs",
+          "runtime/bridge-props.mjs",
+          "runtime/reference-meter.mjs",
+          "runtime/reference-materials.mjs",
+          "runtime/room-kit.mjs",
+          "runtime/studio-kit.mjs",
+          "runtime/fx.mjs",
+          "runtime/activity-props.mjs",
+          "runtime/home-street-kit.mjs",
+          "runtime/lighting.mjs",
+          "runtime/avatar-clips.mjs"
+        ]
+      },
+      {
+        "path": "runtime/lighting.mjs",
+        "bytes": 6324,
+        "sha256": "ce1980cefa30fd95cdae1a863bd95b1e905bb777c318256a4b32a71641fe56e5",
+        "imports": []
+      },
+      {
+        "path": "runtime/materials.mjs",
+        "bytes": 6736,
+        "sha256": "4d87f0069e8f21046be49840fbeaee37ad066b595c73db127a13db2f974535e8",
+        "imports": []
+      },
+      {
+        "path": "runtime/reference-materials.mjs",
+        "bytes": 3631,
+        "sha256": "ef036f981c3a8404afebc56b8095328051b4748befe0b524065267ff5efd3f4d",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/reference-meter.mjs",
+        "bytes": 3266,
+        "sha256": "328f8afe724db6cfa2b970bd27b620ea8f4207f8313b41322ee6b43bf3101671",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/resources.mjs",
+        "bytes": 2630,
+        "sha256": "acb9b049c737c69c48dbea7afd956aa3cb835d4bca7600fd566c1fd59a09c49b",
+        "imports": []
+      },
+      {
+        "path": "runtime/room-kit.mjs",
+        "bytes": 17709,
+        "sha256": "604f9eedba1bb6f514dfa9e2b153e7b95de09ff57c0b524391566bef2dba53ef",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/studio-kit.mjs",
+        "bytes": 8251,
+        "sha256": "2a17fb377a06c417a8cbf5493bda38ce82590389ce0069f6f28a9f1e1e6e608d",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      }
+    ],
+    "dependencyClosureFrom": "runtime/index.mjs",
+    "closureSha256": "25a3542d835b07bb12cfa7283759d135aa4e5a97ad884e3cffce4e64da56330e",
+    "textures": [],
+    "binaries": []
+  },
+  "provenance": {
+    "creator": "Claude (Anthropic model) authoring procedural Three.js code for the user in this handoff",
+    "license": "UNRESOLVED — to be assigned by the project owner. \"AI-assisted\" does not establish a third-party licence. No third-party art, fonts, textures or models are included; preview/vendor holds three.js (MIT) for the preview only.",
+    "sources": [
+      "Colours: evidence/source-palette.json (median samples of baseline art at the pinned commit)",
+      "Identities/options: evidence/source-fidelity.json (baseline code at the pinned commit)"
+    ],
+    "modificationHistory": [
+      {
+        "version": "batch-3-v1",
+        "change": "initial Batch 0 compatibility sample"
+      }
+    ]
+  },
+  "assets": [
+    {
+      "assetId": "avatar.participant",
+      "type": "THREE_MODULE",
+      "role": "batch-0-compatibility-sample",
+      "entry": "runtime/index.mjs#createAsset",
+      "factory": "runtime/avatar.mjs#createAvatar",
+      "variants": {
+        "actor": [
+          "p0",
+          "p1",
+          "p2",
+          "p3"
+        ],
+        "appearance": {
+          "shirt": [
+            "teal",
+            "cream",
+            "amber",
+            "red"
+          ],
+          "hat": [
+            "none",
+            "straw",
+            "cap"
+          ],
+          "glasses": [
+            false,
+            true
+          ]
+        },
+        "defaultAppearance": {
+          "hat": "none",
+          "glasses": false,
+          "shirt": "default"
+        }
+      },
+      "units": "1 world unit = 50 logical px (s = 0.02). X = (logical_x - 500) * s, Z = (logical_y - 240) * s, Y = visual height.",
+      "axes": "+Y up; +Z toward the viewer / larger logical y; an avatar faces +Z at rotation.y = 0; character-left = +X.",
+      "pivot": "root on the floor between the feet; never animated",
+      "dimensions": {
+        "height": 1.54,
+        "head": {
+          "w": 0.34,
+          "h": 0.36,
+          "d": 0.32,
+          "y": 0.2
+        },
+        "thigh": 0.28,
+        "shin": 0.27,
+        "ankleHeight": 0.065,
+        "hipsHeight": 0.635,
+        "thighOffset": [
+          0.085,
+          -0.02,
+          0
+        ],
+        "upperArm": 0.2,
+        "foreArm": 0.18,
+        "collisionRadiusLogical": 10,
+        "collisionRadius": 0.2
+      },
+      "measured": [
+        {
+          "variant": {
+            "actor": "p0"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.193
+            ],
+            "max": [
+              0.3148,
+              1.5345,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.5345,
+              0.3785
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.28
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.56
+            ]
+          },
+          "triangles": {
+            "base": 2400,
+            "allAccessories": 3420
+          },
+          "meshesIncludingHiddenAccessories": 28,
+          "trianglesIncludingHiddenAccessories": 3600,
+          "vertices": 10800,
+          "uniqueGeometries": 22,
+          "uniqueMaterials": 14,
+          "textures": 0,
+          "style": {
+            "build": "male",
+            "sleeves": "long",
+            "hair": "short",
+            "ears": true,
+            "undershirt": true
+          }
+        },
+        {
+          "variant": {
+            "actor": "p1"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.37
+            ],
+            "max": [
+              0.3148,
+              1.528,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.528,
+              0.5555
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.37
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.65
+            ]
+          },
+          "triangles": {
+            "base": 2460,
+            "allAccessories": 3480
+          },
+          "meshesIncludingHiddenAccessories": 29,
+          "trianglesIncludingHiddenAccessories": 3660,
+          "vertices": 10980,
+          "uniqueGeometries": 22,
+          "uniqueMaterials": 14,
+          "textures": 0,
+          "style": {
+            "build": "female",
+            "sleeves": "short",
+            "hair": "ponytail",
+            "ears": false,
+            "undershirt": false
+          }
+        },
+        {
+          "variant": {
+            "actor": "p2"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.2
+            ],
+            "max": [
+              0.3148,
+              1.528,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.528,
+              0.3855
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.28
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.56
+            ]
+          },
+          "triangles": {
+            "base": 2340,
+            "allAccessories": 3360
+          },
+          "meshesIncludingHiddenAccessories": 26,
+          "trianglesIncludingHiddenAccessories": 3540,
+          "vertices": 10620,
+          "uniqueGeometries": 20,
+          "uniqueMaterials": 13,
+          "textures": 0,
+          "style": {
+            "build": "female",
+            "sleeves": "long",
+            "hair": "shoulder",
+            "ears": false,
+            "undershirt": false
+          }
+        },
+        {
+          "variant": {
+            "actor": "p3"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.2
+            ],
+            "max": [
+              0.3148,
+              1.528,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.528,
+              0.3855
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.28
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.56
+            ]
+          },
+          "triangles": {
+            "base": 2340,
+            "allAccessories": 3360
+          },
+          "meshesIncludingHiddenAccessories": 28,
+          "trianglesIncludingHiddenAccessories": 3540,
+          "vertices": 10620,
+          "uniqueGeometries": 21,
+          "uniqueMaterials": 13,
+          "textures": 0,
+          "style": {
+            "build": "female",
+            "sleeves": "short",
+            "hair": "long",
+            "ears": false,
+            "undershirt": false
+          }
+        }
+      ],
+      "measuredMotion": {
+        "Idle": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0,
+          "soleMaxY": 0.00027,
+          "hipsY": [
+            0.629,
+            0.635
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "Walk": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.000234,
+          "plantedFootSlipLogicalPx": 0.0117,
+          "soleMinY": -0.00057,
+          "soleMaxY": 0.085,
+          "hipsY": [
+            0.5848,
+            0.6094
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root translated at nominalSpeed along +Z (the facing direction) at timeScale 1"
+        },
+        "CarryIdle": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0,
+          "soleMaxY": 0.00027,
+          "hipsY": [
+            0.63,
+            0.635
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "CarryWalk": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.432,
+          "plantedFootSlipLogicalPx": 21.6,
+          "soleMinY": -0.00057,
+          "soleMaxY": 0.085,
+          "hipsY": [
+            0.5848,
+            0.6094
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "SeatedIdle": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0,
+          "soleMaxY": 0,
+          "hipsY": [
+            0.446,
+            0.454
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "Wave": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.000002,
+          "plantedFootSlipLogicalPx": 0.0001,
+          "soleMinY": -0.00047,
+          "soleMaxY": 0.00027,
+          "hipsY": [
+            0.629,
+            0.635
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "HandholdIdle_L": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0,
+          "soleMaxY": 0.00027,
+          "hipsY": [
+            0.629,
+            0.635
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "HandholdIdle_R": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0,
+          "soleMaxY": 0.00027,
+          "hipsY": [
+            0.629,
+            0.635
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "HandholdWalk_L": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.432,
+          "plantedFootSlipLogicalPx": 21.6,
+          "soleMinY": -0.00057,
+          "soleMaxY": 0.085,
+          "hipsY": [
+            0.5848,
+            0.6094
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "HandholdWalk_R": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.432,
+          "plantedFootSlipLogicalPx": 21.6,
+          "soleMinY": -0.00057,
+          "soleMaxY": 0.085,
+          "hipsY": [
+            0.5848,
+            0.6094
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "ScooterIdle": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0.12,
+          "soleMaxY": 0.12,
+          "hipsY": [
+            0.677,
+            0.693
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "ScooterRide": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.000003,
+          "plantedFootSlipLogicalPx": 0.0001,
+          "soleMinY": 0.12,
+          "soleMaxY": 0.12,
+          "hipsY": [
+            0.65,
+            0.69
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "SkateboardIdle": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0.12,
+          "soleMaxY": 0.12,
+          "hipsY": [
+            0.677,
+            0.693
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "SkateboardRide": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.000004,
+          "plantedFootSlipLogicalPx": 0.0002,
+          "soleMinY": 0.11999,
+          "soleMaxY": 0.12,
+          "hipsY": [
+            0.65,
+            0.69
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        }
+      },
+      "clips": [
+        {
+          "name": "Idle",
+          "duration": 3.2,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "notes": "Grounded breathing/weight loop. Feet solved to fixed floor positions; no world displacement.",
+          "tracks": 17,
+          "keyframes": 97,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "Walk",
+          "duration": 0.4,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "travelPerCycle": 0.864,
+          "travelPerCycleLogical": 43.2,
+          "nominalSpeed": 2.16,
+          "nominalSpeedLogical": 108,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 108 px/s host speed)",
+          "stanceFraction": 0.5,
+          "footContacts": {
+            "left": [
+              {
+                "plant": 0,
+                "lift": 0.2
+              }
+            ],
+            "right": [
+              {
+                "plant": 0.2,
+                "lift": 0.4
+              }
+            ]
+          },
+          "notes": "In place. During stance the planted ankle moves backwards relative to the root at exactly nominalSpeed, so the foot is stationary on the floor when the host moves the avatar at 108 px/s.",
+          "tracks": 17,
+          "keyframes": 25,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "CarryIdle",
+          "duration": 3.2,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "carries": [
+            "prop.bridge-plank",
+            "prop.activity-cube",
+            "prop.route-shape"
+          ],
+          "notes": "Idle with both arms forward at socket_held. The hands sit at the carried object; nothing is welded to the avatar.",
+          "tracks": 17,
+          "keyframes": 97,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "CarryWalk",
+          "duration": 0.4,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "travelPerCycle": 0.864,
+          "travelPerCycleLogical": 43.2,
+          "nominalSpeed": 2.16,
+          "nominalSpeedLogical": 108,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed; carrying never changes the host speed",
+          "stanceFraction": 0.5,
+          "footContacts": {
+            "left": [
+              {
+                "plant": 0,
+                "lift": 0.2
+              }
+            ],
+            "right": [
+              {
+                "plant": 0.2,
+                "lift": 0.4
+              }
+            ]
+          },
+          "carries": [
+            "prop.bridge-plank",
+            "prop.activity-cube",
+            "prop.route-shape"
+          ],
+          "notes": "Walk legs with the carry arms held steady. Same travel per cycle as Walk: carrying is not slower.",
+          "tracks": 17,
+          "keyframes": 25,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "SeatedIdle",
+          "duration": 3.6,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "seatHeight": 0.36,
+          "placement": "Place the avatar root at the seat centre on the floor. The clip lifts the hips onto the cushion and folds the legs; the hips never move horizontally.",
+          "notes": "Feet rest flat on the floor in front of the chair; the back does not pass through the chair back.",
+          "tracks": 17,
+          "keyframes": 109,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "Wave",
+          "duration": 2.2,
+          "fps": 30,
+          "loop": false,
+          "rootMotion": false,
+          "sourceMs": 2200,
+          "arm": "character-right",
+          "placement": "Play once on top of / after Idle. The first and last frames are exactly the Idle frame at t = 0, so it blends back without a pop.",
+          "notes": "Greeting only. The name label the 2D renderer draws while waving stays in the host HUD; the clip carries no text.",
+          "tracks": 17,
+          "keyframes": 67,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "HandholdIdle_L",
+          "duration": 3.2,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "partnerSide": "character-left (+X)",
+          "partnerGap": 0.64,
+          "partnerGapLogical": 32,
+          "joinPoint": [
+            0.32,
+            0.7,
+            0
+          ],
+          "notes": "Standing, the character-left hand held out to the join point half way to the partner. Pair the leader _L with the follower _R.",
+          "tracks": 17,
+          "keyframes": 97,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "HandholdIdle_R",
+          "duration": 3.2,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "partnerSide": "character-right (-X)",
+          "partnerGap": 0.64,
+          "partnerGapLogical": 32,
+          "joinPoint": [
+            -0.32,
+            0.7,
+            0
+          ],
+          "notes": "Mirror of HandholdIdle_L.",
+          "tracks": 17,
+          "keyframes": 97,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "HandholdWalk_L",
+          "duration": 0.4,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "travelPerCycle": 0.864,
+          "travelPerCycleLogical": 43.2,
+          "nominalSpeed": 2.16,
+          "nominalSpeedLogical": 108,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed; holding hands never changes the host speed",
+          "stanceFraction": 0.5,
+          "footContacts": {
+            "left": [
+              {
+                "plant": 0,
+                "lift": 0.2
+              }
+            ],
+            "right": [
+              {
+                "plant": 0.2,
+                "lift": 0.4
+              }
+            ]
+          },
+          "partnerSide": "character-left (+X)",
+          "joinPoint": [
+            0.32,
+            0.7,
+            0
+          ],
+          "notes": "Walk legs; the held hand stays on the join point while the free arm swings. Same travel per cycle as Walk.",
+          "tracks": 17,
+          "keyframes": 25,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "HandholdWalk_R",
+          "duration": 0.4,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "travelPerCycle": 0.864,
+          "travelPerCycleLogical": 43.2,
+          "nominalSpeed": 2.16,
+          "nominalSpeedLogical": 108,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed; holding hands never changes the host speed",
+          "stanceFraction": 0.5,
+          "footContacts": {
+            "left": [
+              {
+                "plant": 0,
+                "lift": 0.2
+              }
+            ],
+            "right": [
+              {
+                "plant": 0.2,
+                "lift": 0.4
+              }
+            ]
+          },
+          "partnerSide": "character-right (-X)",
+          "joinPoint": [
+            -0.32,
+            0.7,
+            0
+          ],
+          "notes": "Mirror of HandholdWalk_L.",
+          "tracks": 17,
+          "keyframes": 25,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "ScooterIdle",
+          "duration": 3,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "rides": "prop.scooter",
+          "standHeight": 0.12,
+          "grip": [
+            0,
+            0.98,
+            0.4
+          ],
+          "contact": "both feet on the deck; the object rolls, so no foot carries the motion",
+          "notes": "The coasting pose (simulation.mjs pose \"coasting\"). Both hands on the handlebar, knees softly flexed.",
+          "tracks": 17,
+          "keyframes": 91,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "ScooterRide",
+          "duration": 0.9,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "rides": "prop.scooter",
+          "standHeight": 0.12,
+          "grip": [
+            0,
+            0.98,
+            0.4
+          ],
+          "nominalSpeed": 3.3,
+          "nominalSpeedLogical": 165,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 165 px/s ride speed)",
+          "contact": "both feet on the deck; the object rolls, so no foot carries the motion and the clip claims no planted stride",
+          "notes": "Moving pose (simulation.mjs pose \"riding\"): forward lean, a sway and a knee cycle. Following the 2D renderer, riding changes the arms and the lean, not the stride.",
+          "tracks": 17,
+          "keyframes": 55,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "SkateboardIdle",
+          "duration": 3,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "rides": "prop.skateboard",
+          "standHeight": 0.12,
+          "grip": null,
+          "contact": "both feet on the deck; the object rolls, so no foot carries the motion",
+          "notes": "The coasting pose. Arms out a little for balance, no handlebar.",
+          "tracks": 17,
+          "keyframes": 91,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "SkateboardRide",
+          "duration": 0.9,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "rides": "prop.skateboard",
+          "standHeight": 0.12,
+          "grip": null,
+          "nominalSpeed": 3.3,
+          "nominalSpeedLogical": 165,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 165 px/s ride speed)",
+          "contact": "both feet on the deck; the object rolls, so no foot carries the motion and the clip claims no planted stride",
+          "notes": "Moving pose: lean, sway and a knee cycle, arms counterbalancing.",
+          "tracks": 17,
+          "keyframes": 55,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        }
+      ],
+      "sockets": [
+        {
+          "name": "socket_hand_L",
+          "parent": "J_hand_L",
+          "position": [
+            0,
+            -0.045,
+            0.01
+          ],
+          "purpose": "character-left hand grip point"
+        },
+        {
+          "name": "socket_hand_R",
+          "parent": "J_hand_R",
+          "position": [
+            0,
+            -0.045,
+            0.01
+          ],
+          "purpose": "character-right hand grip point"
+        },
+        {
+          "name": "socket_held",
+          "parent": "J_spine",
+          "position": [
+            0,
+            0.06,
+            0.24
+          ],
+          "purpose": "provisional held-object anchor in front of the torso (0.75 above the floor at rest); Batch 1 carry clips refine the grip"
+        },
+        {
+          "name": "socket_hat",
+          "parent": "J_head",
+          "position": [
+            0,
+            0.33,
+            0
+          ],
+          "purpose": "hat seat on the block head (top of the head cuboid is 0.38); straw hat and cap are children"
+        },
+        {
+          "name": "socket_glasses",
+          "parent": "J_head",
+          "position": [
+            0,
+            0.235,
+            0.172
+          ],
+          "purpose": "glasses bridge point on the front face of the block head"
+        }
+      ],
+      "joints": [
+        {
+          "name": "J_hips",
+          "parent": null,
+          "position": [
+            0,
+            0.635,
+            0
+          ]
+        },
+        {
+          "name": "J_spine",
+          "parent": "J_hips",
+          "position": [
+            0,
+            0.055,
+            0
+          ]
+        },
+        {
+          "name": "J_neck",
+          "parent": "J_spine",
+          "position": [
+            0,
+            0.33,
+            0
+          ]
+        },
+        {
+          "name": "J_head",
+          "parent": "J_neck",
+          "position": [
+            0,
+            0.04,
+            0
+          ]
+        },
+        {
+          "name": "J_upperArm_L",
+          "parent": "J_spine",
+          "position": [
+            0.2,
+            0.27,
+            0
+          ]
+        },
+        {
+          "name": "J_foreArm_L",
+          "parent": "J_upperArm_L",
+          "position": [
+            0,
+            -0.2,
+            0
+          ]
+        },
+        {
+          "name": "J_hand_L",
+          "parent": "J_foreArm_L",
+          "position": [
+            0,
+            -0.18,
+            0
+          ]
+        },
+        {
+          "name": "J_upperArm_R",
+          "parent": "J_spine",
+          "position": [
+            -0.2,
+            0.27,
+            0
+          ]
+        },
+        {
+          "name": "J_foreArm_R",
+          "parent": "J_upperArm_R",
+          "position": [
+            0,
+            -0.2,
+            0
+          ]
+        },
+        {
+          "name": "J_hand_R",
+          "parent": "J_foreArm_R",
+          "position": [
+            0,
+            -0.18,
+            0
+          ]
+        },
+        {
+          "name": "J_thigh_L",
+          "parent": "J_hips",
+          "position": [
+            0.085,
+            -0.02,
+            0
+          ]
+        },
+        {
+          "name": "J_shin_L",
+          "parent": "J_thigh_L",
+          "position": [
+            0,
+            -0.28,
+            0
+          ]
+        },
+        {
+          "name": "J_foot_L",
+          "parent": "J_shin_L",
+          "position": [
+            0,
+            -0.27,
+            0
+          ]
+        },
+        {
+          "name": "J_thigh_R",
+          "parent": "J_hips",
+          "position": [
+            -0.085,
+            -0.02,
+            0
+          ]
+        },
+        {
+          "name": "J_shin_R",
+          "parent": "J_thigh_R",
+          "position": [
+            0,
+            -0.28,
+            0
+          ]
+        },
+        {
+          "name": "J_foot_R",
+          "parent": "J_shin_R",
+          "position": [
+            0,
+            -0.27,
+            0
+          ]
+        }
+      ],
+      "seedPolicy": "seed recorded; no cosmetic randomness",
+      "disposal": "idempotent; releases shared cache keys, disposes the per-instance clothing material"
+    },
+    {
+      "assetId": "prop.bridge-plank",
+      "type": "THREE_MODULE",
+      "role": "batch-0-compatibility-sample",
+      "entry": "runtime/index.mjs#createAsset",
+      "factory": "runtime/bridge-props.mjs#createPlank",
+      "variants": [
+        "plank-0",
+        "plank-1",
+        "plank-2",
+        "plank-3",
+        "plank-4",
+        "plank-5"
+      ],
+      "dimensions": {
+        "length": 1.64,
+        "depth": 0.32,
+        "thickness": 0.09,
+        "lengthLogical": 82,
+        "depthLogical": 16,
+        "boards": 3,
+        "markCell": 0.024,
+        "markGrid": 9
+      },
+      "pivot": "bottom-centre; long axis X; mark on the -X end of the top face",
+      "sockets": [
+        "socket_grip",
+        "socket_top"
+      ],
+      "measured": [
+        {
+          "variant": "plank-0",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 528,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 528,
+          "vertices": 1584,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-1",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 636,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 636,
+          "vertices": 1908,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-2",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 564,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 564,
+          "vertices": 1692,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-3",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 528,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 528,
+          "vertices": 1584,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-4",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 528,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 528,
+          "vertices": 1584,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-5",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 528,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 528,
+          "vertices": 1584,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        }
+      ],
+      "clips": []
+    },
+    {
+      "assetId": "ref.meter",
+      "type": "THREE_MODULE",
+      "role": "preview-reference (not a gameplay object)",
+      "factory": "runtime/reference-meter.mjs#createMeterReference",
+      "measured": {
+        "bounds": {
+          "min": [
+            -0.65,
+            0,
+            -0.2
+          ],
+          "max": [
+            1.25,
+            2.004,
+            0.63
+          ],
+          "size": [
+            1.9,
+            2.004,
+            0.83
+          ]
+        },
+        "triangles": 408,
+        "meshesIncludingHiddenAccessories": 5,
+        "trianglesIncludingHiddenAccessories": 416,
+        "vertices": 1058,
+        "uniqueGeometries": 5,
+        "uniqueMaterials": 3,
+        "textures": 0
+      }
+    },
+    {
+      "assetId": "ref.material-samples",
+      "type": "THREE_MODULE",
+      "role": "preview-reference (material board; not a gameplay object)",
+      "factory": "runtime/reference-materials.mjs#createMaterialSamples",
+      "measured": {
+        "bounds": {
+          "min": [
+            -2.3,
+            -0.06,
+            -0.3
+          ],
+          "max": [
+            2.3,
+            0.4,
+            0.3
+          ],
+          "size": [
+            4.6,
+            0.46,
+            0.6
+          ]
+        },
+        "triangles": 1020,
+        "families": [
+          {
+            "family": "wall",
+            "hex": "#fef4e9",
+            "surface": {
+              "roughness": 0.88,
+              "metalness": 0
+            },
+            "source": "plaster / painted wall (F.png, C.png)"
+          },
+          {
+            "family": "timber",
+            "hex": "#f3ceac",
+            "surface": {
+              "roughness": 0.7,
+              "metalness": 0
+            },
+            "source": "timber floor and platform boards (F.png)"
+          },
+          {
+            "family": "paintedProp",
+            "hex": "#0098a9",
+            "surface": {
+              "roughness": 0.7,
+              "metalness": 0
+            },
+            "source": "painted activity props, e.g. plank-0 (F-complete.png)"
+          },
+          {
+            "family": "fabric",
+            "hex": "#228a71",
+            "surface": {
+              "roughness": 0.95,
+              "metalness": 0
+            },
+            "source": "studio chair upholstery (C.png)"
+          },
+          {
+            "family": "carpet",
+            "hex": "#9aaf94",
+            "surface": {
+              "roughness": 0.95,
+              "metalness": 0
+            },
+            "source": "studio carpet (C.png)"
+          },
+          {
+            "family": "darkWood",
+            "hex": "#955a2e",
+            "surface": {
+              "roughness": 0.7,
+              "metalness": 0
+            },
+            "source": "console / door timber (C.png)"
+          },
+          {
+            "family": "metal",
+            "hex": "#f2b440",
+            "surface": {
+              "roughness": 0.35,
+              "metalness": 0.7
+            },
+            "source": "small metal details, e.g. plank nails (F-complete.png)"
+          },
+          {
+            "family": "screen",
+            "hex": "#98afd2",
+            "surface": {
+              "roughness": 0.88,
+              "metalness": 0
+            },
+            "source": "monitor surface (C.png) — a neutral prop surface, never slide content"
+          }
+        ],
+        "meshesIncludingHiddenAccessories": 9,
+        "trianglesIncludingHiddenAccessories": 1020,
+        "vertices": 3060,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 9,
+        "textures": 0
+      }
+    },
+    {
+      "assetId": "room.floor-platform",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "room.floor-platform",
+        "sampleVariant": {
+          "width": 17.6,
+          "depth": 3.1
+        },
+        "bounds": {
+          "min": [
+            -8.8,
+            -0.3,
+            -1.55
+          ],
+          "max": [
+            8.8,
+            0,
+            1.55
+          ],
+          "size": [
+            17.6,
+            0.3,
+            3.1
+          ]
+        },
+        "triangles": 420,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 420,
+        "vertices": 1260,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "room.gap-trough",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "room.gap-trough",
+        "sampleVariant": {
+          "width": 17.6,
+          "depth": 1.6
+        },
+        "bounds": {
+          "min": [
+            -8.8,
+            -1.01,
+            -0.8
+          ],
+          "max": [
+            8.8,
+            0.015,
+            0.8
+          ],
+          "size": [
+            17.6,
+            1.025,
+            1.6
+          ]
+        },
+        "triangles": 900,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 900,
+        "vertices": 2700,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "room.rail",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "room.rail",
+        "sampleVariant": {
+          "length": 6
+        },
+        "bounds": {
+          "min": [
+            -3.09,
+            0,
+            -0.09
+          ],
+          "max": [
+            3.09,
+            0.565,
+            0.09
+          ],
+          "size": [
+            6.18,
+            0.565,
+            0.18
+          ]
+        },
+        "triangles": 600,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 600,
+        "vertices": 1800,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "room.wall",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "room.wall",
+        "sampleVariant": {
+          "length": 17.9,
+          "height": 2.6
+        },
+        "bounds": {
+          "min": [
+            -8.95,
+            0,
+            -0.16
+          ],
+          "max": [
+            8.95,
+            2.73,
+            0.16
+          ],
+          "size": [
+            17.9,
+            2.73,
+            0.32
+          ]
+        },
+        "triangles": 180,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 180,
+        "vertices": 540,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 3,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "room.door",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "room.door",
+        "sampleVariant": {
+          "width": 1.3,
+          "height": 2.1
+        },
+        "bounds": {
+          "min": [
+            -0.75,
+            0,
+            -0.09
+          ],
+          "max": [
+            0.75,
+            2.2,
+            0.115
+          ],
+          "size": [
+            1.5,
+            2.2,
+            0.205
+          ]
+        },
+        "triangles": 420,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 420,
+        "vertices": 1260,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 3,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.plant",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.plant",
+        "sampleVariant": {
+          "scale": 1
+        },
+        "bounds": {
+          "min": [
+            -0.5643,
+            0,
+            -0.4631
+          ],
+          "max": [
+            0.5643,
+            1.025,
+            0.4895
+          ],
+          "size": [
+            1.1286,
+            1.025,
+            0.9526
+          ]
+        },
+        "triangles": 1020,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 1020,
+        "vertices": 3060,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 3,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.picture",
+      "type": "THREE_MODULE",
+      "role": "room kit (Room F / studios)",
+      "factory": "runtime/room-kit.mjs#createRoomComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.picture",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.22,
+            -0.29,
+            -0.03
+          ],
+          "max": [
+            0.22,
+            0.29,
+            0.06
+          ],
+          "size": [
+            0.44,
+            0.58,
+            0.09
+          ]
+        },
+        "triangles": 240,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 240,
+        "vertices": 720,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 3,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "studio.chair",
+      "type": "THREE_MODULE",
+      "role": "studio kit (A/C/E/G)",
+      "factory": "runtime/studio-kit.mjs#createStudioComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "studio.chair",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.42,
+            0,
+            -0.25
+          ],
+          "max": [
+            0.42,
+            0.88,
+            0.25
+          ],
+          "size": [
+            0.84,
+            0.88,
+            0.5
+          ]
+        },
+        "triangles": 480,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 480,
+        "vertices": 1440,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "studio.monitor",
+      "type": "THREE_MODULE",
+      "role": "studio kit (A/C/E/G)",
+      "factory": "runtime/studio-kit.mjs#createStudioComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "studio.monitor",
+        "sampleVariant": {
+          "glow": true
+        },
+        "bounds": {
+          "min": [
+            -2.14,
+            -1.12,
+            -0.24
+          ],
+          "max": [
+            2.14,
+            1.05,
+            0.14
+          ],
+          "size": [
+            4.28,
+            2.17,
+            0.38
+          ]
+        },
+        "triangles": 240,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 240,
+        "vertices": 720,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "studio.console",
+      "type": "THREE_MODULE",
+      "role": "studio kit (A/C/E/G)",
+      "factory": "runtime/studio-kit.mjs#createStudioComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "studio.console",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.45,
+            0,
+            -0.33
+          ],
+          "max": [
+            0.45,
+            1.3535,
+            0.33
+          ],
+          "size": [
+            0.9,
+            1.3535,
+            0.66
+          ]
+        },
+        "triangles": 180,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 180,
+        "vertices": 540,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "studio.carpet",
+      "type": "THREE_MODULE",
+      "role": "studio kit (A/C/E/G)",
+      "factory": "runtime/studio-kit.mjs#createStudioComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "studio.carpet",
+        "sampleVariant": {
+          "width": 7,
+          "depth": 3.4
+        },
+        "bounds": {
+          "min": [
+            -3.5,
+            0,
+            -1.7
+          ],
+          "max": [
+            3.5,
+            0.03,
+            1.7
+          ],
+          "size": [
+            7,
+            0.03,
+            3.4
+          ]
+        },
+        "triangles": 300,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 300,
+        "vertices": 900,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.activity-cube",
+      "type": "THREE_MODULE",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "factory": "runtime/activity-props.mjs#createActivityProp",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.activity-cube",
+        "sampleVariant": "cube-0",
+        "bounds": {
+          "min": [
+            -0.3,
+            0,
+            -0.3
+          ],
+          "max": [
+            0.3,
+            0.59,
+            0.3
+          ],
+          "size": [
+            0.6,
+            0.59,
+            0.6
+          ]
+        },
+        "triangles": 660,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 660,
+        "vertices": 1980,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.route-shape",
+      "type": "THREE_MODULE",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "factory": "runtime/activity-props.mjs#createActivityProp",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.route-shape",
+        "sampleVariant": "circle",
+        "bounds": {
+          "min": [
+            -0.38,
+            0,
+            -0.38
+          ],
+          "max": [
+            0.38,
+            0.2584,
+            0.38
+          ],
+          "size": [
+            0.76,
+            0.2584,
+            0.76
+          ]
+        },
+        "triangles": 108,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 108,
+        "vertices": 324,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.pedestal",
+      "type": "THREE_MODULE",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "factory": "runtime/activity-props.mjs#createActivityProp",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.pedestal",
+        "sampleVariant": {
+          "width": 2.14,
+          "depth": 1.24
+        },
+        "bounds": {
+          "min": [
+            -1.07,
+            0,
+            -0.62
+          ],
+          "max": [
+            1.07,
+            0.78,
+            0.62
+          ],
+          "size": [
+            2.14,
+            0.78,
+            1.24
+          ]
+        },
+        "triangles": 180,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 180,
+        "vertices": 540,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.choice-region",
+      "type": "THREE_MODULE",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "factory": "runtime/activity-props.mjs#createActivityProp",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.choice-region",
+        "sampleVariant": "do",
+        "bounds": {
+          "min": [
+            -2.85,
+            0,
+            -1.65
+          ],
+          "max": [
+            2.85,
+            0.04,
+            1.65
+          ],
+          "size": [
+            5.7,
+            0.04,
+            3.3
+          ]
+        },
+        "triangles": 456,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 456,
+        "vertices": 1368,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.gallery-frame",
+      "type": "THREE_MODULE",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "factory": "runtime/activity-props.mjs#createActivityProp",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.gallery-frame",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.525,
+            -0.675,
+            -0.045
+          ],
+          "max": [
+            0.525,
+            0.675,
+            0.067
+          ],
+          "size": [
+            1.05,
+            1.35,
+            0.112
+          ]
+        },
+        "triangles": 180,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 180,
+        "vertices": 540,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "studio.table",
+      "type": "THREE_MODULE",
+      "role": "activity props (B routes, Gallery D, Room I, Room J)",
+      "factory": "runtime/activity-props.mjs#createActivityProp",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "studio.table",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.93,
+            0,
+            -0.49
+          ],
+          "max": [
+            1.93,
+            0.72,
+            0.49
+          ],
+          "size": [
+            3.86,
+            0.72,
+            0.98
+          ]
+        },
+        "triangles": 360,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 360,
+        "vertices": 1080,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.scooter",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.scooter",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.22,
+            0,
+            -0.56
+          ],
+          "max": [
+            0.22,
+            1.005,
+            0.56
+          ],
+          "size": [
+            0.44,
+            1.005,
+            1.12
+          ]
+        },
+        "triangles": 408,
+        "meshesIncludingHiddenAccessories": 5,
+        "trianglesIncludingHiddenAccessories": 408,
+        "vertices": 1212,
+        "uniqueGeometries": 5,
+        "uniqueMaterials": 5,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.skateboard",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.skateboard",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.14,
+            0,
+            -0.57
+          ],
+          "max": [
+            0.14,
+            0.14,
+            0.57
+          ],
+          "size": [
+            0.28,
+            0.14,
+            1.14
+          ]
+        },
+        "triangles": 516,
+        "meshesIncludingHiddenAccessories": 5,
+        "trianglesIncludingHiddenAccessories": 516,
+        "vertices": 1536,
+        "uniqueGeometries": 5,
+        "uniqueMaterials": 5,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.wardrobe",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.wardrobe",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.605,
+            0,
+            -0.335
+          ],
+          "max": [
+            0.605,
+            2,
+            0.335
+          ],
+          "size": [
+            1.21,
+            2,
+            0.67
+          ]
+        },
+        "triangles": 312,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 312,
+        "vertices": 936,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.bookcase",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.bookcase",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.71,
+            0,
+            -0.28
+          ],
+          "max": [
+            1.71,
+            1.9,
+            0.28
+          ],
+          "size": [
+            3.42,
+            1.9,
+            0.56
+          ]
+        },
+        "triangles": 2760,
+        "meshesIncludingHiddenAccessories": 5,
+        "trianglesIncludingHiddenAccessories": 2760,
+        "vertices": 8280,
+        "uniqueGeometries": 5,
+        "uniqueMaterials": 5,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.side-table",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.side-table",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.4,
+            0,
+            -0.44
+          ],
+          "max": [
+            0.4,
+            0.62,
+            0.44
+          ],
+          "size": [
+            0.8,
+            0.62,
+            0.88
+          ]
+        },
+        "triangles": 300,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 300,
+        "vertices": 900,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.reception-counter",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.reception-counter",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.915,
+            0,
+            -1.415
+          ],
+          "max": [
+            0.915,
+            1.66,
+            1.415
+          ],
+          "size": [
+            1.83,
+            1.66,
+            2.83
+          ]
+        },
+        "triangles": 444,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 444,
+        "vertices": 1332,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.waiting-bench",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.waiting-bench",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.67,
+            0,
+            -1.18
+          ],
+          "max": [
+            0.67,
+            0.92,
+            1.18
+          ],
+          "size": [
+            1.34,
+            0.92,
+            2.36
+          ]
+        },
+        "triangles": 720,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 720,
+        "vertices": 2160,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.sign-board",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.sign-board",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.485,
+            -0.585,
+            -0.04
+          ],
+          "max": [
+            1.485,
+            0.585,
+            0.035
+          ],
+          "size": [
+            2.97,
+            1.17,
+            0.075
+          ]
+        },
+        "triangles": 120,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 120,
+        "vertices": 360,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "street.building",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "street.building",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -9.56,
+            0,
+            -0.51
+          ],
+          "max": [
+            9.56,
+            3.4,
+            0.51
+          ],
+          "size": [
+            19.12,
+            3.4,
+            1.02
+          ]
+        },
+        "triangles": 720,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 720,
+        "vertices": 2160,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "street.road",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "street.road",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -9.5,
+            0,
+            -1.67
+          ],
+          "max": [
+            9.5,
+            0.13,
+            1.67
+          ],
+          "size": [
+            19,
+            0.13,
+            3.34
+          ]
+        },
+        "triangles": 324,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 324,
+        "vertices": 972,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 3,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "street.crossing",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "street.crossing",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.28,
+            0.041,
+            -1.3568
+          ],
+          "max": [
+            1.28,
+            0.055,
+            1.3568
+          ],
+          "size": [
+            2.56,
+            0.014,
+            2.7136
+          ]
+        },
+        "triangles": 84,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 84,
+        "vertices": 252,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.car",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.car",
+        "sampleVariant": "car-0",
+        "bounds": {
+          "min": [
+            -1.29,
+            0,
+            -0.45
+          ],
+          "max": [
+            1.28,
+            0.86,
+            0.45
+          ],
+          "size": [
+            2.57,
+            0.86,
+            0.9
+          ]
+        },
+        "triangles": 660,
+        "meshesIncludingHiddenAccessories": 4,
+        "trianglesIncludingHiddenAccessories": 660,
+        "vertices": 1980,
+        "uniqueGeometries": 4,
+        "uniqueMaterials": 4,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.house",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.house",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.68,
+            0,
+            -1.14
+          ],
+          "max": [
+            1.68,
+            2.34,
+            1.14
+          ],
+          "size": [
+            3.36,
+            2.34,
+            2.28
+          ]
+        },
+        "triangles": 240,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 240,
+        "vertices": 720,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.street-bench",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.street-bench",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.7,
+            0,
+            -0.24
+          ],
+          "max": [
+            0.7,
+            0.94,
+            0.21
+          ],
+          "size": [
+            1.4,
+            0.94,
+            0.45
+          ]
+        },
+        "triangles": 600,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 600,
+        "vertices": 1800,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "prop.hedge",
+      "type": "THREE_MODULE",
+      "role": "Home / Street / Reception kit",
+      "factory": "runtime/home-street-kit.mjs#createHomeStreetComponent",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "prop.hedge",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.5,
+            0,
+            -0.25
+          ],
+          "max": [
+            1.5,
+            0.62,
+            0.25
+          ],
+          "size": [
+            3,
+            0.62,
+            0.5
+          ]
+        },
+        "triangles": 600,
+        "meshesIncludingHiddenAccessories": 2,
+        "trianglesIncludingHiddenAccessories": 600,
+        "vertices": 1800,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 2,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "fx.sun-patch",
+      "type": "THREE_MODULE",
+      "role": "optional atmosphere (off by default)",
+      "factory": "runtime/fx.mjs",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "fx.sun-patch",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -0.885,
+            0,
+            -0.5
+          ],
+          "max": [
+            0.885,
+            0,
+            0.5
+          ],
+          "size": [
+            1.77,
+            0,
+            1
+          ]
+        },
+        "triangles": 200,
+        "meshesIncludingHiddenAccessories": 1,
+        "trianglesIncludingHiddenAccessories": 200,
+        "vertices": 121,
+        "uniqueGeometries": 1,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": []
+      }
+    },
+    {
+      "assetId": "fx.dust-motes",
+      "type": "THREE_MODULE",
+      "role": "optional atmosphere (off by default)",
+      "factory": "runtime/fx.mjs",
+      "variants": "sized by the caller from the baseline logical rectangles",
+      "measured": {
+        "assetId": "fx.dust-motes",
+        "sampleVariant": {},
+        "bounds": {
+          "min": [
+            -1.6042,
+            -0.6482,
+            -0.9893
+          ],
+          "max": [
+            1.0275,
+            0.6991,
+            0.8578
+          ],
+          "size": [
+            2.6317,
+            1.3473,
+            1.8471
+          ]
+        },
+        "triangles": 1800,
+        "meshesIncludingHiddenAccessories": 3,
+        "trianglesIncludingHiddenAccessories": 1800,
+        "vertices": 5400,
+        "uniqueGeometries": 3,
+        "uniqueMaterials": 1,
+        "textures": 0,
+        "clips": [
+          "DustDrift_0",
+          "DustDrift_1",
+          "DustDrift_2"
+        ]
+      }
+    }
+  ],
+  "animation": {
+    "delivered": [
+      "Idle",
+      "Walk",
+      "CarryIdle",
+      "CarryWalk",
+      "SeatedIdle",
+      "Wave",
+      "HandholdIdle_L",
+      "HandholdIdle_R",
+      "HandholdWalk_L",
+      "HandholdWalk_R",
+      "ScooterIdle",
+      "ScooterRide",
+      "SkateboardIdle",
+      "SkateboardRide"
+    ],
+    "missing": [],
+    "carryProfiles": {
+      "prop.bridge-plank": {
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "note": "plank centre at socket_held; the hands meet its top face"
+      },
+      "prop.activity-cube": {
+        "offset": [
+          0,
+          -0.12,
+          0.02
+        ],
+        "note": "cube centre just below socket_held, clear of the chin, as the 2D sprite draws it"
+      },
+      "prop.route-shape": {
+        "offset": [
+          0,
+          -0.08,
+          0.01
+        ],
+        "note": "shape carried at chest height"
+      },
+      "default": {
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "note": "attach the object socket_grip to socket_held"
+      }
+    },
+    "rideProfiles": {
+      "scooter": {
+        "standHeight": 0.12,
+        "deckLength": 1.12,
+        "axleHalfSpacing": 0.46,
+        "grip": [
+          0,
+          0.98,
+          0.4
+        ],
+        "frontFootZ": 0.12,
+        "backFootZ": -0.16,
+        "pushFootZ": -0.46,
+        "note": "One foot forward on the deck, one behind it; the pushing foot leaves the deck and touches the floor."
+      },
+      "skateboard": {
+        "standHeight": 0.12,
+        "deckLength": 1.12,
+        "axleHalfSpacing": 0.46,
+        "grip": null,
+        "frontFootZ": 0.16,
+        "backFootZ": -0.2,
+        "pushFootZ": -0.5,
+        "note": "Both feet on the deck while coasting; the back foot reaches the floor to push."
+      }
+    },
+    "holdProfile": {
+      "partnerGap": 0.64,
+      "partnerGapLogical": 32,
+      "joinHeight": 0.7,
+      "joinForward": 0,
+      "note": "The _L clips reach with the character-left hand to a join point half way to the partner (x = +0.32, y = 0.70, in the frontal plane); _R mirrors them. The pair relation itself stays with the host."
+    },
+    "social": {
+      "waveMs": 2200,
+      "holdGapLogical": 32,
+      "holdFollowMinLogical": 31,
+      "holdBreakLogical": 62
+    }
+  },
+  "homeStreetKit": {
+    "ids": [
+      "prop.scooter",
+      "prop.skateboard",
+      "prop.wardrobe",
+      "prop.bookcase",
+      "prop.side-table",
+      "prop.reception-counter",
+      "prop.waiting-bench",
+      "prop.sign-board",
+      "street.building",
+      "street.road",
+      "street.crossing",
+      "prop.car",
+      "prop.house",
+      "prop.street-bench",
+      "prop.hedge"
+    ],
+    "authoredDefaults": {
+      "wardrobe": {
+        "width": 1.16,
+        "depth": 0.62,
+        "height": 2
+      },
+      "bookcase": {
+        "width": 3.42,
+        "depth": 0.56,
+        "height": 1.9,
+        "shelves": 4
+      },
+      "sideTable": {
+        "width": 0.8,
+        "depth": 0.88,
+        "height": 0.62
+      },
+      "counter": {
+        "width": 1.74,
+        "depth": 2.74,
+        "height": 1.06
+      },
+      "waitingBench": {
+        "width": 1.34,
+        "depth": 2.36,
+        "seatHeight": 0.42,
+        "seats": 3
+      },
+      "signBoard": {
+        "width": 2.9,
+        "height": 1.1
+      },
+      "building": {
+        "height": 3.4,
+        "depth": 0.9
+      },
+      "house": {
+        "width": 3.22,
+        "depth": 2.14,
+        "height": 2.2
+      },
+      "hedge": {
+        "height": 0.62,
+        "depth": 0.5
+      },
+      "carHeight": 0.86,
+      "roadKerb": 0.13
+    },
+    "rides": [
+      {
+        "id": "scooter",
+        "targetLogical": {
+          "x": 380,
+          "y": 365
+        },
+        "parkedLogical": {
+          "x": 352,
+          "y": 352,
+          "w": 56,
+          "h": 14
+        }
+      },
+      {
+        "id": "skateboard",
+        "targetLogical": {
+          "x": 622,
+          "y": 365
+        },
+        "parkedLogical": {
+          "x": 594,
+          "y": 352,
+          "w": 56,
+          "h": 14
+        }
+      }
+    ],
+    "cars": [
+      {
+        "id": "car-0",
+        "index": 0,
+        "color": "#b65339",
+        "widthLogical": 128,
+        "depthLogical": 43,
+        "laneLogicalY": 207,
+        "direction": -1
+      },
+      {
+        "id": "car-1",
+        "index": 1,
+        "color": "#3475ad",
+        "widthLogical": 142,
+        "depthLogical": 45,
+        "laneLogicalY": 280,
+        "direction": 1
+      }
+    ],
+    "note": "Sizes come from the baseline logical rectangles; heights and depths that the 2D projection folds into one rectangle are authored and declared per placement."
+  },
+  "activityIdentities": {
+    "cubes": [
+      {
+        "id": "cube-0",
+        "index": 0,
+        "color": "teal",
+        "mark": "diamond"
+      },
+      {
+        "id": "cube-1",
+        "index": 1,
+        "color": "red",
+        "mark": "circle"
+      },
+      {
+        "id": "cube-2",
+        "index": 2,
+        "color": "amber",
+        "mark": "triangle"
+      },
+      {
+        "id": "cube-3",
+        "index": 3,
+        "color": "blue",
+        "mark": "cross"
+      },
+      {
+        "id": "cube-4",
+        "index": 4,
+        "color": "violet",
+        "mark": "two bars"
+      },
+      {
+        "id": "cube-5",
+        "index": 5,
+        "color": "rose",
+        "mark": "star"
+      }
+    ],
+    "note": "cube words, objectives and pair indexes are deliberately absent from the pack"
+  },
+  "outstanding": {
+    "assetIds": [],
+    "clips": [],
+    "rooms": [],
+    "notModelledByDesign": [
+      "the presentation deck, slide text, activity wording, cube pairings and portrait photographs (they stay with the host)",
+      "the lettering painted on the reception welcome board and the BEL frontage (both ship as blank panels)",
+      "Home has no plant solid in scenes.mjs, so the pack places no plant there even though the painting shows one"
+    ],
+    "handoff": [
+      "Gemini intake (pin, interface, scale, sockets)",
+      "application integration ART-09 / ART-10",
+      "human visual approval",
+      "licence"
+    ]
+  },
+  "lighting": {
+    "reference": "runtime/lighting.mjs",
+    "defaultPreset": "L4",
+    "passes": [
+      "L0",
+      "L1",
+      "L2",
+      "L3",
+      "L4",
+      "L5"
+    ],
+    "shadowCastingLights": 1,
+    "colorPipeline": {
+      "outputColorSpace": "SRGBColorSpace",
+      "toneMapping": "NeutralToneMapping",
+      "toneMappingExposure": 1.05,
+      "note": "Source hexes are sRGB; THREE.Color converts them to the working space. Neutral tone mapping keeps the warm key from clipping the cream walls while leaving the activity colours where the source put them. Audit this before adding more light."
+    },
+    "optionalAtmosphere": [
+      "sunPatches",
+      "dustMotes",
+      "screenGlow"
+    ],
+    "note": "data only: Gemini owns the live renderer and applies these numbers"
+  },
+  "assembly": {
+    "files": [
+      "assembly/room-f.mjs",
+      "assembly/studio-g.mjs",
+      "assembly/b1.mjs",
+      "assembly/gallery-d.mjs",
+      "assembly/room-i.mjs",
+      "assembly/room-j.mjs",
+      "assembly/home.mjs",
+      "assembly/street.mjs",
+      "assembly/reception.mjs",
+      "assembly/studio-a.mjs",
+      "assembly/studio-c.mjs",
+      "assembly/studio-e.mjs",
+      "assembly/b2.mjs",
+      "assembly/b3.mjs"
+    ],
+    "generatedBy": "tools/build-assembly.mjs",
+    "baselineCommit": "249a8fc86b5a293f82008b0db07c64aeca4ad2bd",
+    "rooms": {
+      "B1": {
+        "components": 20,
+        "derivedFromSource": 18,
+        "authored": 5
+      },
+      "D": {
+        "components": 19,
+        "derivedFromSource": 17,
+        "authored": 10
+      },
+      "I": {
+        "components": 17,
+        "derivedFromSource": 15,
+        "authored": 6
+      },
+      "J": {
+        "components": 21,
+        "derivedFromSource": 19,
+        "authored": 6
+      },
+      "home": {
+        "components": 14,
+        "derivedFromSource": 12,
+        "authored": 8
+      },
+      "street": {
+        "components": 12,
+        "derivedFromSource": 12,
+        "authored": 7
+      },
+      "reception": {
+        "components": 16,
+        "derivedFromSource": 14,
+        "authored": 9
+      },
+      "A": {
+        "components": 23,
+        "derivedFromSource": 23,
+        "authored": 6
+      },
+      "C": {
+        "components": 21,
+        "derivedFromSource": 19,
+        "authored": 6
+      },
+      "E": {
+        "components": 21,
+        "derivedFromSource": 19,
+        "authored": 6
+      },
+      "B2": {
+        "components": 20,
+        "derivedFromSource": 18,
+        "authored": 5
+      },
+      "B3": {
+        "components": 20,
+        "derivedFromSource": 18,
+        "authored": 5
+      }
+    },
+    "roomF": {
+      "components": 23,
+      "optional": 3,
+      "derivedFromSource": 18,
+      "authored": 9
+    },
+    "studioG": {
+      "components": 21,
+      "derivedFromSource": 19,
+      "authored": 6
+    },
+    "note": "reference placement only; Gemini owns real placement, collision and state"
+  },
+  "validation": {
+    "gateA_sourceFidelity": {
+      "status": "PASS",
+      "evidence": "evidence/source-fidelity.json",
+      "checks": 83
+    },
+    "gateA_palette": {
+      "status": "PASS",
+      "evidence": "evidence/source-palette.json",
+      "note": "extraction ran; values asserted equal by the contract tests"
+    },
+    "gateB_moduleContract": {
+      "status": "PASS",
+      "evidence": "evidence/module-validation.json",
+      "tests": 46,
+      "pass": 46,
+      "fail": 0
+    },
+    "gateB_negativeControls": {
+      "status": "PASS",
+      "evidence": "evidence/mutation-check.json"
+    },
+    "gateB_gltfValidator": {
+      "status": "NOT_APPLICABLE",
+      "reason": "THREE_MODULE pack; no GLB delivered"
+    },
+    "gateC_chromePreview": {
+      "status": "PASS",
+      "evidence": "evidence/chrome-preview/results.json",
+      "browser": {
+        "channel": "chrome",
+        "headless": false,
+        "version": "153.0.8010.48"
+      },
+      "checks": 22
+    },
+    "gateD_gameIntegration": {
+      "status": "BLOCKED",
+      "reason": "Owned by Gemini: application adapter, four-window Chrome tests and state mapping are outside this pack."
+    },
+    "gateE_humanVisualApproval": {
+      "status": "NOT_RUN",
+      "reason": "Requires the user/reviewer; producer self-review is not approval."
+    }
+  },
+  "supportingFiles": [
+    {
+      "path": "README.md",
+      "bytes": 9100,
+      "sha256": "5a573f0529d0db00e30067a435566e9ef951235f2b8c68bdd804cf0de9bfedaa",
+      "role": "README.md"
+    },
+    {
+      "path": "assembly/b1.mjs",
+      "bytes": 8990,
+      "sha256": "b00b74b1e2affbe92ed0d43a8719ef1585840d24e1615741a0b03b8e8036fb0c",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/b2.mjs",
+      "bytes": 8990,
+      "sha256": "0da423e3cfc9c520ae855a4a1f7b5245f27ae781d2858483711eac72d67dede2",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/b3.mjs",
+      "bytes": 8990,
+      "sha256": "ff36373fbb8898f830a8a0529e9fa834d54c2fe41cec2d91bd84f04af1cca095",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/gallery-d.mjs",
+      "bytes": 9595,
+      "sha256": "14a8bc6166464a5769450bf395495f0df4c4d446bb543adca0ba7ea7e6e95914",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/home.mjs",
+      "bytes": 6922,
+      "sha256": "04d40ec02735dd1748f14797075f04b170b3e72a6485b4c135f283a6e2fd80c9",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/reception.mjs",
+      "bytes": 7435,
+      "sha256": "617f15c182f57dc980dd18594a9315e93ca3a51bda8abd50286582366ccaf409",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/room-f.mjs",
+      "bytes": 12063,
+      "sha256": "ea91cdbff15103378737a05469b3ee38753895d14242ca1a2c6af3a40ae56fb8",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/room-i.mjs",
+      "bytes": 9368,
+      "sha256": "4f26759d59c970d99e8868a366139fa9db409b2dcd482dd5fc5b8f29bd9e90ff",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/room-j.mjs",
+      "bytes": 8854,
+      "sha256": "1ed991c3341c061d2f63595078c842528ce250714faca93d1d3e862ff143eb1c",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/street.mjs",
+      "bytes": 5762,
+      "sha256": "d7ae31eecc2a14c54043002b522c8617059c547f8ea1ef0d0453a81cdf339713",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/studio-a.mjs",
+      "bytes": 11152,
+      "sha256": "a678cde5da267e2517a152b51c60679eb4b5d087d6506f34f8e49329459f707c",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/studio-c.mjs",
+      "bytes": 10134,
+      "sha256": "1417c77b28c2fefe77b07420a1f8b1c37cb9b017968b311d302141d06257ba97",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/studio-e.mjs",
+      "bytes": 10134,
+      "sha256": "04a4c75875f7b1d1d828b77e593b26fe996aa35678925806126a0091957aa9dd",
+      "role": "assembly"
+    },
+    {
+      "path": "assembly/studio-g.mjs",
+      "bytes": 10187,
+      "sha256": "afc9f0ebd28eee74c6f72413abd8d541ba7c51dc961803c987771f1e2245ceea",
+      "role": "assembly"
+    },
+    {
+      "path": "asset-contract.json",
+      "bytes": 23421,
+      "sha256": "078e9f8edafbfa3e15ff056d78d1d49edaa2b9ee48334b797b3c571a8bb85ac7",
+      "role": "asset-contract.json"
+    },
+    {
+      "path": "evidence/asset-audit.md",
+      "bytes": 12917,
+      "sha256": "093b2584b63f3844fe2d12cc61d0190972d3b7308c7c1f3a8c20488852d30517",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/motion-contact-sheet.png",
+      "bytes": 511468,
+      "sha256": "36ee017415b4b8d5ef852822eb7faea7e86b259bb89e2a3957cdf90191302356",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/motion-root.webm",
+      "bytes": 5171080,
+      "sha256": "0f05ee1623499a7d6d79a17785e9a180b0dd7a29722f2152bef0f19b433277f3",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/nested-room-f.png",
+      "bytes": 134162,
+      "sha256": "0df6a41d14d4c2ab14b663b0167cfd008559a595ab37df18d0cf606b645c3d8e",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/results.json",
+      "bytes": 23111,
+      "sha256": "c98c32543613ea45cca78b659b8606a5bd19c8772f580a0761bf9f2680a8efb3",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-bridge-complete-close.png",
+      "bytes": 242764,
+      "sha256": "2015e1fe8aa8a2bcad1e38a1cb0c268335db77812f29df041f426e9bf412f36b",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-bridge-complete.png",
+      "bytes": 133165,
+      "sha256": "78a05d70c5d236a0e8d191a5ad34913f3e9e2a70e0ebc2f48292cd44e220bac0",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-bridge-empty.png",
+      "bytes": 141032,
+      "sha256": "56cb6a5adbf8faa5381f8a3c59d11674c29db9db6ca23c6664cf4521f0f9beaf",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-bridge-partial.png",
+      "bytes": 137783,
+      "sha256": "8b444a36144a7cc2bd3839b08b9f61037c09298db85956edbe18d46c206785dc",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-matched-L0-room-f.png",
+      "bytes": 98012,
+      "sha256": "06376d34e816d2206041d6ecd1b82ff6c2918b02eed5fe9016c50587822d08dc",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-matched-L5-room-f.png",
+      "bytes": 137982,
+      "sha256": "1a69fe81455373b201c62f549fa81e4a40ca03d2d09642071e85c24556f842e4",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L0-room-f.png",
+      "bytes": 98505,
+      "sha256": "ad6547a7d76e69b299a82a26db185dc51bdc6659ce1b783813391664d83b00e4",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L1-room-f.png",
+      "bytes": 97519,
+      "sha256": "4f7e65e823b0059ac5f4ee0659ca02fe56fd47da0d4200a8545707f21192e28f",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L2-room-f.png",
+      "bytes": 97725,
+      "sha256": "7eafc1083e8bb0f3741028ad8e3b555655090eeaefa32f77aae1279a94510efd",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L3-room-f.png",
+      "bytes": 135127,
+      "sha256": "2c9bf0dfb83733b1961e5c8379e558e2a4a47fc0356ff1196e6c73084cbcc1a3",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L4-room-f.png",
+      "bytes": 133043,
+      "sha256": "fec53603abe724a0a23da49b048c79c65cee33c9cd497a32afced8893171c74b",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L5-reduced-motion.png",
+      "bytes": 137491,
+      "sha256": "7e95690ad3bd1c1635234a1667a376e3a3bb2091aa9f5f431669673d341b4412",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pass-L5-room-f.png",
+      "bytes": 137904,
+      "sha256": "4ce6cffee371b3ac4f09473c4a47c715d645c185e5f405c08ba980bdda89b9ee",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pose-carry.png",
+      "bytes": 124737,
+      "sha256": "301752720832176a980dcafc425208161ccbc896fbb5c43c57850e85617aa73d",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pose-handhold-street.png",
+      "bytes": 156291,
+      "sha256": "2a4681043895a407895d763d655bddaa0199c5bce1e9750ef69f38ac104e1c22",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pose-ride-home.png",
+      "bytes": 244030,
+      "sha256": "15bf3e3279841d53b94e2f5107c9bb0f61dd932c2e644ea29bf9420785b18bbd",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pose-seated.png",
+      "bytes": 77890,
+      "sha256": "c40fed1f60617a3404968c8f8ec6071c63deba21bd9496cbb6811c86131fdaa7",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-pose-wave-reception.png",
+      "bytes": 166069,
+      "sha256": "500f7f0187adb0b4852bbbe16f35004b7fc39a4d1746fb78768fb2fd0bc96c85",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-A-game.png",
+      "bytes": 120947,
+      "sha256": "a743cf180b62d07bd1823afeeed0ec8e1706c3c944e6b2eaf2df880f7a780f8e",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-B1-game.png",
+      "bytes": 112661,
+      "sha256": "cf8b223a15e288a9f9b65ace3357504e9138059ebfa716a1ffad7e749c377326",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-B2-game.png",
+      "bytes": 112304,
+      "sha256": "13b6e000448a3a74c79621175ce059876a6d68fcfa0a9a0784e72e4156728018",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-B3-game.png",
+      "bytes": 113305,
+      "sha256": "31137fee8f8cbfab8fe6c9f961a4c7eba7f82a07c42c7206cdc25559d491b737",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-C-game.png",
+      "bytes": 120237,
+      "sha256": "6484c6b773239b845aa56b05a359a1b9cbd31a2ac5bf0b05d9b7dc936928c571",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-D-game.png",
+      "bytes": 105403,
+      "sha256": "7ef0cd3a4de38caba550f207b9972a8521e1957863b4ebde9131d50bab1da78a",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-E-game.png",
+      "bytes": 120338,
+      "sha256": "156fdd902db609be33006191dc0097d77ca2e370c67f308b9b076eb10d72c121",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-F-game.png",
+      "bytes": 134432,
+      "sha256": "c4c52464a38904fe11ec463d9061cba4bb086bd5f76f7f4d1cb2a7b239a52f54",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-G-game.png",
+      "bytes": 120151,
+      "sha256": "8128ff0c1d95436b3f98dc4f9c73bd56ded500bba1d8a19b2bc50a7afcaf1e00",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-I-game.png",
+      "bytes": 108448,
+      "sha256": "6333a2fd9a406698548111f0ee04dcec547f15ac754cd7a559dd20bcfe1c4261",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-J-game.png",
+      "bytes": 120021,
+      "sha256": "f22eb5ecd3f9fe0ce91ffdb61335f895ba8d675a40d2b8503019079f5a567049",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-home-game.png",
+      "bytes": 108638,
+      "sha256": "00a584387d38bf407d13950ab9c7cfae471f4a5222c931d6aeb1eb4f45b3c403",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-reception-game.png",
+      "bytes": 108058,
+      "sha256": "5c6970827a898a4215438d7763f6a666c40faf0b4ea293d558226712ae800a4b",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-street-game-cast.png",
+      "bytes": 122465,
+      "sha256": "ce23c3a0a383782d8e6a7eefeb99c6f9fd9f93a97d923d0b6b08dfed9e1401df",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-street-game.png",
+      "bytes": 122537,
+      "sha256": "8bf301dddb2ac505f0b090fc923fd2e5ed7f58042457463adc67349c85e9afad",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-view-cast.png",
+      "bytes": 142953,
+      "sha256": "1cf7bea95589cb3f48ac319bb185d3c9a8f7406b1328dec03c4a99f8b95fdccb",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-view-close.png",
+      "bytes": 227744,
+      "sha256": "52673583b58fe83841c9806aa7c9f28fc758d9ec707e3d8c5f998fa011097cfa",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-view-faces.png",
+      "bytes": 85884,
+      "sha256": "34c21981a7f1abf9610f87b37d27f1d038db8913b7c6ab104f3d55471d1d225a",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-view-game.png",
+      "bytes": 138362,
+      "sha256": "978ff187db4319c3b105441c725be7f9ad5abe0eeeb936773235742a8471ca30",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/module-validation.json",
+      "bytes": 6387,
+      "sha256": "ce8d14281aff6d7027965f95218576caf0323a1ed9bcb1ac391e5058a485c268",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/module-validation.tap",
+      "bytes": 10640,
+      "sha256": "819bef1e7feb303dcef01cfb3d3dc1a2a53dcacdd737b23fd85a8bd21b5bd04b",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/mutation-check.json",
+      "bytes": 9793,
+      "sha256": "c37df27ff0b55a5aad636feb3337e2e1ef851122908a2d9c16dcb3b1bdbb31ac",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/source-fidelity.json",
+      "bytes": 17294,
+      "sha256": "f38cf76423fd8565d90de357eb7737ca78ee4f1d12bbf62bb5e1b82e7f2ce631",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/source-palette.json",
+      "bytes": 22315,
+      "sha256": "2a5e5cb25761f5a24bf39f2adcc11422e8cc4d486851b76d8a621aabdb9ebcd4",
+      "role": "evidence"
+    },
+    {
+      "path": "open-preview.bat",
+      "bytes": 321,
+      "sha256": "11fbb04a87857a3502e0b81eac636a5e9cc0d167dc356bdc7de5e7de9d857faf",
+      "role": "open-preview.bat"
+    },
+    {
+      "path": "package.json",
+      "bytes": 458,
+      "sha256": "1b72e09c9b01019752c9645bb5ef7aa4ec3e7938cb8647b09441e2c82aa629f8",
+      "role": "package.json"
+    },
+    {
+      "path": "preview/index.html",
+      "bytes": 3680,
+      "sha256": "774a557d3d70e8bdac7ffe5d46d1bd13cab4e8ef1ab50f87f1db15ab46f185f5",
+      "role": "preview"
+    },
+    {
+      "path": "preview/preview.mjs",
+      "bytes": 30639,
+      "sha256": "43ec4f63fdffd8b379b4b2aa30b35331d7da1eb5b4a30f416d6e86c41d616c76",
+      "role": "preview"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/LICENSE",
+      "bytes": 1081,
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/build/three.core.js",
+      "bytes": 1458113,
+      "sha256": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/build/three.module.js",
+      "bytes": 662772,
+      "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/examples/jsm/controls/OrbitControls.js",
+      "bytes": 40755,
+      "sha256": "3d79d07ecb686b4e5d93232eedab255331c1beef711e13164eaa1f68655a5f2b",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "semantic-map.json",
+      "bytes": 4651,
+      "sha256": "9827a4701ac41aa5d2c4b78db76baaeec66b6b720ada04b07f69eca6ab410145",
+      "role": "semantic-map.json"
+    },
+    {
+      "path": "tests/asset-contract.test.mjs",
+      "bytes": 64965,
+      "sha256": "ccffc1c2d4ae26924e86f2d65ca76381a05aaf7c6e338764679bcdbf305b9e9a",
+      "role": "tests"
+    },
+    {
+      "path": "tests/chrome_preview.py",
+      "bytes": 19944,
+      "sha256": "c21418f0585d49137414628ecce99b56417aa82f88f59e3dd297fd68897569b3",
+      "role": "tests"
+    },
+    {
+      "path": "tests/side-effect-probe.mjs",
+      "bytes": 3389,
+      "sha256": "ca97e5f637ea4cbe1ee167d1abe65259b486e563192a2f23cea55d4446bb1e74",
+      "role": "tests"
+    },
+    {
+      "path": "tests/static-server.mjs",
+      "bytes": 2345,
+      "sha256": "01e7f5d483086be6e0077773f0bd1c5e994dfbcf4b15889309f305b9448e4d81",
+      "role": "tests"
+    },
+    {
+      "path": "tools/build-assembly.mjs",
+      "bytes": 32876,
+      "sha256": "3ddc438c5793f812619137f522a4f1ef7ad8fd9ddd57cba32ff794006b7b0471",
+      "role": "tools"
+    },
+    {
+      "path": "tools/build-manifest.mjs",
+      "bytes": 25607,
+      "sha256": "9844694f88e2223fd1ea4ec79de680727deaacb51359a2926681e3bed7cfbb6b",
+      "role": "tools"
+    },
+    {
+      "path": "tools/check-source-identity.mjs",
+      "bytes": 24831,
+      "sha256": "c690af56b1a1b074f2511e5faa96b3b859efa0bc5c1cb346bf0a42d22f501611",
+      "role": "tools"
+    },
+    {
+      "path": "tools/extract-source-palette.py",
+      "bytes": 8156,
+      "sha256": "06299feef247c812176dee9e8bf8a33b9b5c8ed9c2ffe91f295dc2ddff944a45",
+      "role": "tools"
+    },
+    {
+      "path": "tools/mutation-check.mjs",
+      "bytes": 12184,
+      "sha256": "f70904e1bed78ac52521492ab9fdcff623b07ff18a1d5087d70c5b7ad418300d",
+      "role": "tools"
+    },
+    {
+      "path": "tools/run-evidence.mjs",
+      "bytes": 5714,
+      "sha256": "32c3e95a5d2cf4a44ffd463a3ac99482e8146f4867f951563e234c1c41fb0285",
+      "role": "tools"
+    }
+  ],
+  "notIncludedInThisManifest": [
+    "manifest.json (self)",
+    "evidence/commands.jsonl (live log)",
+    "SHA256SUMS.txt (covers everything, written last)"
+  ]
+}

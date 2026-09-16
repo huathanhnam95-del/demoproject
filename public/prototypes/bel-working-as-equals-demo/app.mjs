@@ -42,7 +42,10 @@ async function boot(invite,initialBundle){
   input=installInput($('#world'),{blocked,escape(){if(modal?.open)modal.close();panels.close();if(!$('#notebook').hidden)notebook.close();},release:()=>act('release'),
     async interact(point){
       const w=worldClient.state;if(!w)return;const p=w.players[actor];let t;
-      if(point)t=targets(w,actor).filter(t=>distance(t,point)<37&&distance(t,p)<=48).sort((a,b)=>distance(a,point)-distance(b,point))[0];
+      if(point){
+        if(view&&typeof view.pick==='function'){const hit=view.pick(point);if(hit&&hit.targetId)t=targets(w,actor).find(x=>x.id===hit.targetId&&distance(x,p)<=48);}
+        if(!t)t=targets(w,actor).filter(t=>distance(t,point)<37&&distance(t,p)<=48).sort((a,b)=>distance(a,point)-distance(b,point))[0];
+      }
       else t=nearest(w,actor);
       if(!t){if(point)toast('Walk closer, then press F or click.');else if(p.ride)act('dismount');else if(p.carry)act('drop');return;}
       const r=await act('interact',{target:t.id});if(r)panels.show(r);

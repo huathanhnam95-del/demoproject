@@ -2144,10 +2144,13 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1149,2026-09-16,Fix entrance test speaking pronunciation scoring and Azure forced alignment fallback,Done,2026-09-16
 1150,2026-09-16,Deploy V2.0.7 release and rescore entrance test speaking accuracy in production,Done,2026-09-16
 1151,2026-09-16,Deploy V2.0.8 release with pastel teacher schedule calendar pills to production,Done,2026-09-16
-1152,2026-09-16,Teacher Schedule Google Calendar UI redesign and focus mode integration,In Progress,
+1152,2026-09-16,Teacher Schedule Google Calendar UI redesign and focus mode integration,Done,2026-09-17
 1153,2026-09-16,Read Aloud practice mode workspace v2 UX redesign and state-aware architecture,Done,2026-09-17
 1154,2026-09-17,Push BEL 3D upgrade commits and prepare merge candidate,Done,2026-09-17
 1155,2026-09-17,Deploy uid and createdAt DESC Firestore composite index for notification center,Done,2026-09-17
 1156,2026-09-17,Benchmark and verify CRM loading time performance improvements,Done,2026-09-17
 1157,2026-09-17,Audit merge candidate between BEL movement fixes and production branch,Done,2026-09-17
 1158,2026-09-17,Commit and push CRM Projects subtasks and Gantt overhaul to branch feat/projects-subtasks-people,Done,2026-09-17
+1159,2026-09-17,Deploy Cloud Functions api with entrance test Azure forced alignment scoring to production,Done,2026-09-17
+1160,2026-09-17,Benchmark CRM admin access checking and permission validation latency,In Progress,
+1161,2026-09-17,Deploy Release V2.0.9 with Read Aloud Workspace V2 and Teacher Scheduler Google Calendar overhaul,Done,2026-09-17

@@ -13,7 +13,7 @@ import { QUESTIONS } from './core/activities/reversal.mjs';
 
 const $ = id => document.getElementById(id);
 const els = {
-  entry: $('pd-entry'), room: $('pd-room'), game: $('pd-game'), authStatus: $('pd-auth-status'), authMessage: $('pd-auth-message'), presenterTools: $('pd-presenter-tools'), roomHistory: $('pd-room-history'), create: $('pd-create-room'), joinForm: $('pd-join-form'), codeInput: $('pd-room-code'), joinError: $('pd-join-error'), roomCode: $('pd-room-code-display'), roomStatus: $('pd-room-status'), slots: $('pd-slot-list'), copy: $('pd-copy-code'), openGame: $('pd-open-game'), receptionContinue: $('pd-reception-continue'), receptionHint: $('pd-reception-hint'), gameCode: $('pd-game-code'), connection: $('pd-connection-status'), canvas: $('pd-world'), gate: $('pd-gate'), gameSlots: $('pd-game-slots'), deck: $('pd-deck'), deckStatus: $('pd-deck-status'), start: $('pd-start-room'), replace: $('pd-replace-connection'), skip: $('pd-skip-activity'), end: $('pd-end-room'), gameMessage: $('pd-game-message'), title: $('pd-note-title'), body: $('pd-note-body'), saveNote: $('pd-save-note'), noteStatus: $('pd-note-status'), previous: $('pd-slide-previous'), next: $('pd-slide-next'), export: $('pd-export-pdf')
+  entry: $('pd-entry'), room: $('pd-room'), game: $('pd-game'), authStatus: $('pd-auth-status'), authMessage: $('pd-auth-message'), presenterTools: $('pd-presenter-tools'), roomHistory: $('pd-room-history'), create: $('pd-create-room'), joinForm: $('pd-join-form'), codeInput: $('pd-room-code'), nameInput: $('pd-participant-name'), joinError: $('pd-join-error'), roomCode: $('pd-room-code-display'), roomStatus: $('pd-room-status'), slots: $('pd-slot-list'), copy: $('pd-copy-code'), copyLink: $('pd-copy-link'), openGame: $('pd-open-game'), receptionContinue: $('pd-reception-continue'), receptionHint: $('pd-reception-hint'), receptionEnd: $('pd-reception-end'), gameCode: $('pd-game-code'), connection: $('pd-connection-status'), canvas: $('pd-world'), gate: $('pd-gate'), gameSlots: $('pd-game-slots'), deck: $('pd-deck'), deckStatus: $('pd-deck-status'), start: $('pd-start-room'), replace: $('pd-replace-connection'), skip: $('pd-skip-activity'), end: $('pd-end-room'), gameMessage: $('pd-game-message'), title: $('pd-note-title'), body: $('pd-note-body'), saveNote: $('pd-save-note'), noteStatus: $('pd-note-status'), previous: $('pd-slide-previous'), next: $('pd-slide-next'), export: $('pd-export-pdf')
 };
 
 let identity = null;
@@ -70,6 +70,25 @@ function renderRoomHistory(rooms = []) {
       } else await loadRoomIntoLobby(value);
     });
     actions.append(open);
+    if (value.lifecycle !== 'ended' && (identity?.isAdmin || value.presenterUid === identity?.uid)) {
+      const endBtn = document.createElement('button');
+      endBtn.type = 'button';
+      endBtn.className = 'pd-button pd-button-danger';
+      endBtn.textContent = 'End room';
+      endBtn.addEventListener('click', async () => {
+        if (!window.confirm(`End room ${value.code}?`)) return;
+        endBtn.disabled = true;
+        try {
+          await transport.endRoom(value.roomId);
+          await loadRoomHistory();
+        } catch (error) {
+          alert(errorText(error));
+        } finally {
+          endBtn.disabled = false;
+        }
+      });
+      actions.append(endBtn);
+    }
     if (value.lifecycle === 'ended') {
       const exportButton = document.createElement('button'); exportButton.type = 'button'; exportButton.className = 'pd-button pd-button-secondary'; exportButton.textContent = archivePending(value) ? 'Export when ready' : 'Export PDF';
       exportButton.addEventListener('click', async () => {
@@ -103,6 +122,7 @@ function renderRoom(currentRoom) {
   const presenter = currentRoom.presenterUid === identity.uid;
   els.receptionContinue.disabled = !currentRoom.allParticipantsJoinedAt || !presenter || currentRoom.lifecycle === 'ended';
   els.receptionHint.textContent = !joined ? 'All three participants must join before Reception can open.' : !currentRoom.allParticipantsJoinedAt ? 'Each participant must open the game once to complete the authenticated bootstrap.' : (presenter ? 'All participant seats are ready. Continue when the group is ready.' : 'The presenter will open the game when everyone is ready.');
+  if (els.receptionEnd) show(els.receptionEnd, presenter && currentRoom.lifecycle !== 'ended');
 }
 
 async function refreshRoom() {
@@ -253,9 +273,23 @@ async function loadRoomHistory() {
 }
 
 async function joinRoom(event) {
-  event.preventDefault();
+  if (event?.preventDefault) event.preventDefault();
   els.joinError.hidden = true;
-  try { await loadRoomIntoLobby((await transport.join(els.codeInput.value)).snapshot); } catch (error) { els.joinError.textContent = errorText(error); els.joinError.hidden = false; }
+  const code = (els.codeInput.value || '').trim();
+  const displayName = els.nameInput?.value?.trim() || undefined;
+  if (!code) return;
+  if (!transport) {
+    els.joinError.textContent = 'Connecting to service, please wait a moment…';
+    els.joinError.hidden = false;
+    return;
+  }
+  try {
+    const result = await transport.join(code, displayName);
+    await loadRoomIntoLobby(result.snapshot);
+  } catch (error) {
+    els.joinError.textContent = errorText(error);
+    els.joinError.hidden = false;
+  }
 }
 
 async function saveAndDownload() {
@@ -363,10 +397,34 @@ function bindEvents() {
   els.create.addEventListener('click', createRoom);
   els.joinForm.addEventListener('submit', joinRoom);
   els.copy.addEventListener('click', async () => { if (room) { await navigator.clipboard?.writeText(room.code); els.copy.textContent = 'Copied'; window.setTimeout(() => { els.copy.textContent = 'Copy code'; }, 1200); } });
+  els.copyLink?.addEventListener('click', async () => {
+    if (room) {
+      const url = `${window.location.origin}/presentation-demo/index.html?code=${encodeURIComponent(room.code)}`;
+      await navigator.clipboard?.writeText(url);
+      els.copyLink.textContent = 'Link copied!';
+      window.setTimeout(() => { els.copyLink.textContent = 'Copy invite link'; }, 1500);
+    }
+  });
   els.openGame.addEventListener('click', openGame);
   els.receptionContinue.addEventListener('click', openGame);
   els.start.addEventListener('click', () => model.command('transition', { to: 'playing' }).then(() => transport.room(room.roomId)).then(renderGame).catch(error => message(errorText(error), 'error')));
   els.replace.addEventListener('click', () => connectGame(true));
+  els.receptionEnd?.addEventListener('click', async () => {
+    if (!window.confirm('End this room and return to the lobby?')) return;
+    try {
+      els.receptionEnd.disabled = true;
+      els.roomStatus.textContent = 'Ending room…';
+      await transport.endRoom(room.roomId);
+      show(els.room, false);
+      show(els.entry, true);
+      window.history.replaceState(null, '', '/presentation-demo/index.html');
+      await loadRoomHistory();
+    } catch (error) {
+      alert(errorText(error));
+    } finally {
+      if (els.receptionEnd) els.receptionEnd.disabled = false;
+    }
+  });
   els.end.addEventListener('click', async () => { if (!window.confirm('End this room and finalize the retained notes?')) return; try { await notebook?.save(); message('Ending room and finalizing saved notes…'); const ended = await transport.endRoom(room.roomId); renderGame(ended); message(archivePending(ended) ? 'Room ended. Finalizing saved notes; export will wait for the retained PDF.' : 'Room ended by the presenter. Saved notes are ready to export.'); } catch (error) { message(errorText(error), 'error'); } });
   els.skip.addEventListener('click', () => worldAction(ownPlayer()?.scene === 'F' ? 'activity' : 'skip', ownPlayer()?.scene === 'F' ? { action: 'skip' } : {}));
   els.previous.addEventListener('click', () => presentation.previous(room.deck.room || 'A', room.deck.slide).catch(error => message(errorText(error), 'error')));
@@ -392,7 +450,7 @@ function bindEvents() {
 async function boot() {
   bindEvents();
   identity = await bootAuth();
-  if (!identity) { els.authStatus.textContent = 'Sign-in required'; els.authMessage.innerHTML = `Sign in through the CRM before joining this room. <a href="${signInUrl()}">Go to sign in</a>`; return; }
+  if (!identity) { els.authStatus.textContent = 'Service unavailable'; els.authMessage.innerHTML = `Could not connect to session service. <a href="${signInUrl()}">Go to sign in</a>`; return; }
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
   transport = new PresentationTransport(identity, { failoverOrigins: local ? window.__BEL_PRESENTATION_FAILOVER_ORIGINS || [] : [] });
   transport.onState = state => {
@@ -408,8 +466,9 @@ async function boot() {
   };
   transport.onSnapshot = snapshot => { if (model) renderGame(snapshot); };
   transport.onReconnect = async connection => { if (model) { model.connection = connection; model.setRoom(connection.snapshot); } if (room) renderGame(await transport.room(room.roomId)); message('Room connection restored.'); };
-  els.authStatus.textContent = identity.local ? `Local rehearsal · ${identity.uid}` : `Signed in · ${identity.email || identity.uid}`; els.authMessage.textContent = 'Your account identity is checked by the server for every room action.';
-  if (!identity.local) window.firebase.auth().onAuthStateChanged(user => {
+  els.authStatus.textContent = identity.local ? `Local rehearsal · ${identity.uid}` : identity.isAnonymous ? 'Guest participant' : `Signed in · ${identity.email || identity.uid}`;
+  els.authMessage.innerHTML = identity.isAnonymous ? `Joined as a guest participant. Enter your room code to start. <a href="${signInUrl()}">CRM admin sign-in</a>` : 'Your account identity is checked by the server for every room action.';
+  if (!identity.local && !identity.isAnonymous) window.firebase.auth().onAuthStateChanged(user => {
     if (user?.uid === identity.uid) return;
     transport?.close(); notebook?.close(); input?.clear(); clearInterval(inputTimer); clearInterval(heartbeatTimer); clearInterval(pollTimer);
     room = null; if (model) { model.room = null; model.connection = null; }
@@ -417,8 +476,20 @@ async function boot() {
   });
   [nativeRenderer, source] = await Promise.all([createNativeRenderer(els.canvas), loadSource()]);
   show(els.presenterTools, identity.isAdmin); await loadRoomHistory();
-  const params = new URLSearchParams(window.location.search); const roomId = params.get('room');
-  if (roomId) { try { room = await transport.room(roomId); if (params.get('game') === '1') await openGameView(); else await loadRoomIntoLobby(room); } catch (error) { els.authMessage.textContent = errorText(error); } }
+  const params = new URLSearchParams(window.location.search);
+  const roomId = params.get('room');
+  if (roomId) {
+    try { room = await transport.room(roomId); if (params.get('game') === '1') await openGameView(); else await loadRoomIntoLobby(room); }
+    catch (error) { els.authMessage.textContent = errorText(error); }
+  } else {
+    const codeParam = (params.get('code') || params.get('join') || '').trim();
+    const nameParam = (params.get('name') || '').trim();
+    if (nameParam && els.nameInput) els.nameInput.value = nameParam;
+    if (codeParam) {
+      els.codeInput.value = codeParam;
+      await joinRoom();
+    }
+  }
 }
 
 boot().catch(error => { els.authMessage.textContent = errorText(error); });

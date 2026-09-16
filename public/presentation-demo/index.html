@@ -24,12 +24,12 @@
     <section id="pd-entry" class="pd-panel" aria-labelledby="pd-entry-title">
       <div class="pd-panel-heading">
         <div>
-          <p class="pd-kicker">Authenticated room access</p>
+          <p class="pd-kicker">Online presentation room</p>
           <h2 id="pd-entry-title">Start or join a session</h2>
         </div>
-        <span id="pd-auth-status" class="pd-status">Checking sign-in…</span>
+        <span id="pd-auth-status" class="pd-status">Connecting…</span>
       </div>
-      <p id="pd-auth-message" class="pd-muted">Your CRM account controls your room membership and presenter permissions.</p>
+      <p id="pd-auth-message" class="pd-muted">Participants can join directly with a room code. CRM Administrators can create and host rooms.</p>
       <div class="pd-entry-grid">
         <article id="pd-presenter-tools" class="pd-entry-card" hidden>
           <p class="pd-kicker">Admin presenter</p>
@@ -40,6 +40,8 @@
         <form id="pd-join-form" class="pd-entry-card">
           <p class="pd-kicker">Participant</p>
           <h3>Join with a room code</h3>
+          <label for="pd-participant-name">Your name (optional)</label>
+          <input id="pd-participant-name" name="name" type="text" maxlength="40" placeholder="e.g. Alex" autocomplete="nickname">
           <label for="pd-room-code">Six-character code</label>
           <div class="pd-code-row">
             <input id="pd-room-code" name="code" inputmode="text" autocomplete="off" maxlength="7" pattern="[\-A-Za-z0-9 ]{6,7}" placeholder="ABCD23" required>
@@ -59,7 +61,9 @@
         </div>
         <div class="pd-actions">
           <button id="pd-copy-code" class="pd-button pd-button-secondary" type="button">Copy code</button>
+          <button id="pd-copy-link" class="pd-button pd-button-secondary" type="button">Copy invite link</button>
           <button id="pd-open-game" class="pd-button pd-button-primary" type="button">Open game in new tab</button>
+          <button id="pd-reception-end" class="pd-button pd-button-danger" type="button" hidden>End room</button>
         </div>
       </div>
       <p id="pd-room-status" class="pd-muted" aria-live="polite"></p>

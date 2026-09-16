@@ -25,15 +25,27 @@ export async function bootAuth() {
     return new Promise(resolve => {
       const unsubscribe = auth.onAuthStateChanged(async user => {
         unsubscribe();
-        if (!user) return resolve(null);
-        const identity = { uid: user.uid, email: user.email || null, accountStatus: 'active', isAdmin: false, user, local: false };
+        let currentUser = user;
+        if (!currentUser) {
+          try {
+            const cred = await auth.signInAnonymously();
+            currentUser = cred.user;
+          } catch (err) {
+            console.warn('[presentation-demo] anonymous sign-in failed', err);
+            return resolve(null);
+          }
+        }
+        if (!currentUser) return resolve(null);
+        const isAnonymous = currentUser.isAnonymous === true;
+        const identity = { uid: currentUser.uid, email: currentUser.email || null, accountStatus: 'active', isAdmin: false, user: currentUser, local: false, isAnonymous };
         try {
-          const token = await user.getIdToken();
+          const token = await currentUser.getIdToken();
           const capabilityResponse = await fetch('/api/presentation-demo/capabilities', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
           const capability = await capabilityResponse.json();
-          if (!capabilityResponse.ok || capability.success === false) return resolve(null);
-          Object.assign(identity, capability.data || {});
-        } catch (_) { return resolve(null); }
+          if (capabilityResponse.ok && capability.success !== false && capability.data) {
+            Object.assign(identity, capability.data);
+          }
+        } catch (_) { /* capability fallback */ }
         resolve(identity);
       });
     });
@@ -54,5 +66,5 @@ export async function authToken(identity) {
 }
 
 export function signInUrl() {
-  return `/index.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+  return `/crm-admin.html?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
 }

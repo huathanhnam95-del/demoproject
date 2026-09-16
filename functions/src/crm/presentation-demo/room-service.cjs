@@ -133,7 +133,7 @@ function createRoomService({
         return room;
     }
 
-    async function join(input, codeOrId, { operationId = null } = {}) {
+    async function join(input, codeOrId, { operationId = null, displayName = null } = {}) {
         const identity = assertActiveIdentity(input);
         return withLock(async () => stores.operations.run('join', operationId, { uid: identity.uid, room: String(codeOrId) }, async () => {
             const room = await resolveRoom(codeOrId);
@@ -144,11 +144,15 @@ function createRoomService({
                 slot = PARTICIPANT_SLOT_IDS.map(slotId => room.slots[slotId]).find(candidate => !candidate.uid);
                 if (!slot) fail('ROOM_FULL', 'All three participant slots are already reserved.');
                 slot.uid = identity.uid;
-                slot.displayName = identity.email ? identity.email.split('@')[0].slice(0, 80) : `Participant ${slot.slotId.slice(1)}`;
+                const cleanName = typeof displayName === 'string' ? displayName.trim().slice(0, 40) : '';
+                slot.displayName = cleanName || (identity.email ? identity.email.split('@')[0].slice(0, 80) : `Participant ${slot.slotId.slice(1)}`);
                 slot.originalRole = identity.isTeacher ? 'teacher' : 'participant';
                 slot.joinedAt = clock();
                 // Membership is part of the authoritative domain revision so
                 // a runtime cached before a late join cannot overwrite it.
+                room.revision += 1;
+            } else if (typeof displayName === 'string' && displayName.trim()) {
+                slot.displayName = displayName.trim().slice(0, 40);
                 room.revision += 1;
             }
             await saveRoom(room);

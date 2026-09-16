@@ -24,6 +24,7 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
         return origin.origin;
     }
     function failResponse(res, error) {
+        console.error('[presentation-demo error]', error);
         const known = typeof error?.code === 'string' && /^[A-Z][A-Z0-9_]+$/.test(error.code);
         const code = known ? error.code : 'OUTCOME_UNKNOWN';
         if (code === 'SERVICE_RECOVERY') return res.status(503).json({ success: false, error: { code, message: error.message } });
@@ -56,7 +57,7 @@ function createPresentationDemoHandlers({ roomService, connections, notes, archi
             return ok(res, require('../../crm/presentation-demo/contracts.cjs').publicRoomSnapshot(room, current.uid));
         }),
         create: handler(async (req, res) => { const current = await identity(req); await roomService.throttle?.(current, 'create', 10); return ok(res, await roomService.createOrResume(current, { operationId: req.body?.operationId })); }),
-        join: handler(async (req, res) => { const current = await identity(req); await roomService.throttle?.(current, 'join', 20); return ok(res, await roomService.join(current, req.body?.code || req.body?.roomId, { operationId: req.body?.operationId })); }),
+        join: handler(async (req, res) => { const current = await identity(req); await roomService.throttle?.(current, 'join', 20); return ok(res, await roomService.join(current, req.body?.code || req.body?.roomId, { operationId: req.body?.operationId, displayName: req.body?.displayName })); }),
         bootstrap: handler(async (req, res) => ok(res, await roomService.markBootstrap(await identity(req), req.params.roomId))),
         ticket: handler(async (req, res) => { const current = await identity(req); await roomService.throttle?.(current, 'ticket', 60); return ok(res, await roomService.issueTicket(current, req.params.roomId)); }),
         connect: handler(async (req, res) => ok(res, await connections.open(await identity(req), req.body?.ticket, { replaceExisting: req.body?.replaceExisting === true }))),

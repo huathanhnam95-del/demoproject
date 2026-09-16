@@ -191,3 +191,131 @@ test('empty authoritative server notebook does not resurrect a matching local dr
     }
   }
 });
+
+test('PresentationTransport disconnect cleans up visibility listener and prevents phantom reconnects', async () => {
+  const docListeners = {};
+  const fakeDoc = {
+    visibilityState: 'hidden',
+    addEventListener: (type, fn) => { (docListeners[type] ??= new Set()).add(fn); },
+    removeEventListener: (type, fn) => { docListeners[type]?.delete(fn); }
+  };
+  const origDoc = globalThis.document;
+  const origWin = globalThis.window;
+  globalThis.document = fakeDoc;
+  globalThis.window = { location: { origin: 'http://localhost:8080' } };
+
+  try {
+    const { PresentationTransport } = await import('../../public/js/presentation-demo/transport.mjs');
+    const transport = new PresentationTransport({ uid: 'p1', local: true });
+    assert.equal(docListeners.visibilitychange?.size, 1, 'visibility listener attached in constructor');
+
+    // Simulate active connection
+    transport.socketRoomId = 'room-1';
+    transport.connection = { connectionId: 'conn-1' };
+    transport.state = 'connected';
+
+    // Disconnect transport
+    transport.request = async () => ({ accepted: true });
+    await transport.disconnect();
+    assert.equal(transport.state, 'disconnected');
+    assert.equal(transport.connection, null);
+    assert.equal(transport.intentionalClose, true);
+    assert.equal(docListeners.visibilitychange?.size, 0, 'visibility listener detached on disconnect');
+
+    // Switching tabs to visible must NOT trigger reconnect
+    let reconnected = false;
+    transport.reconnectWithLock = async () => { reconnected = true; };
+    fakeDoc.visibilityState = 'visible';
+    for (const fn of docListeners.visibilitychange || []) fn();
+    assert.equal(reconnected, false, 'tab switch after disconnect must not trigger reconnect');
+  } finally {
+    globalThis.document = origDoc;
+    globalThis.window = origWin;
+  }
+});
+
+test('PresentationTransport dispose cleanly closes socket and detaches visibility listener', async () => {
+  const docListeners = {};
+  const fakeDoc = {
+    visibilityState: 'hidden',
+    addEventListener: (type, fn) => { (docListeners[type] ??= new Set()).add(fn); },
+    removeEventListener: (type, fn) => { docListeners[type]?.delete(fn); }
+  };
+  const origDoc = globalThis.document;
+  const origWin = globalThis.window;
+  globalThis.document = fakeDoc;
+  globalThis.window = { location: { origin: 'http://localhost:8080' } };
+
+  try {
+    const { PresentationTransport } = await import('../../public/js/presentation-demo/transport.mjs');
+    const transport = new PresentationTransport({ uid: 'p1', local: true });
+    assert.equal(docListeners.visibilitychange?.size, 1);
+
+    let socketClosed = false;
+    transport.socket = { close: () => { socketClosed = true; } };
+    transport.dispose();
+
+    assert.equal(socketClosed, true);
+    assert.equal(transport.socket, null);
+    assert.equal(transport.connection, null);
+    assert.equal(transport.state, 'disconnected');
+    assert.equal(docListeners.visibilitychange?.size, 0);
+  } finally {
+    globalThis.document = origDoc;
+    globalThis.window = origWin;
+  }
+});
+
+test('PresentationTransport handleSocketClose ignores unestablished connections', async () => {
+  const { PresentationTransport } = await import('../../public/js/presentation-demo/transport.mjs');
+  const transport = new PresentationTransport({ uid: 'p1' });
+  transport.socketRoomId = 'room-1';
+  transport.intentionalClose = false;
+  transport.connection = null; // Never successfully connected
+
+  let reconnected = false;
+  transport.reconnectWithLock = () => { reconnected = true; };
+
+  const fakeSocket = {};
+  transport.socket = fakeSocket;
+  transport.handleSocketClose(fakeSocket);
+
+  assert.equal(reconnected, false, 'must not trigger auto-reconnect if connection was never established');
+  assert.equal(transport.state, 'disconnected');
+});
+
+test('PresentationTransport handleVisibilityChange sends heartbeat in local mode when connection active', async () => {
+  const docListeners = {};
+  const fakeDoc = {
+    visibilityState: 'hidden',
+    addEventListener: (type, fn) => { (docListeners[type] ??= new Set()).add(fn); },
+    removeEventListener: (type, fn) => { docListeners[type]?.delete(fn); }
+  };
+  const origDoc = globalThis.document;
+  const origWin = globalThis.window;
+  globalThis.document = fakeDoc;
+  globalThis.window = { location: { origin: 'http://localhost:8080' } };
+
+  try {
+    const { PresentationTransport } = await import('../../public/js/presentation-demo/transport.mjs');
+    const transport = new PresentationTransport({ uid: 'p1', local: true });
+    transport.socketRoomId = 'room-1';
+    transport.connection = { connectionId: 'conn-local-1' };
+
+    let heartbeatSent = false;
+    let reconnected = false;
+    transport.heartbeat = async id => {
+      if (id === 'conn-local-1') heartbeatSent = true;
+    };
+    transport.reconnectWithLock = async () => { reconnected = true; };
+
+    fakeDoc.visibilityState = 'visible';
+    for (const fn of docListeners.visibilitychange || []) fn();
+
+    assert.equal(heartbeatSent, true, 'local mode sends heartbeat on visible tab switch');
+    assert.equal(reconnected, false, 'local mode must not trigger reconnect when connection is active');
+  } finally {
+    globalThis.document = origDoc;
+    globalThis.window = origWin;
+  }
+});

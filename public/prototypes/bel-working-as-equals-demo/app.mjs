@@ -20,10 +20,10 @@ async function boot(invite,initialBundle){
   const {sessionId,actorId:actor}=invite;
   createResumeStore(sessionStorage,sessionId).save(invite);
   if(actor==='p0'){
-    host=await createHost({sessionId,initialBundle,ownerToken:invite.token,store:createHostStore(localStorage,sessionId)});
+    host=await createHost({sessionId,initialBundle,ownerToken:invite.token,store:createHostStore(localStorage,sessionId),leaseMs:45000});
     worldHost=createWorldHost(host);
   }
-  client=createClient(invite);worldClient=createWorldClient(invite,client);
+  client=createClient({...invite,hostTimeoutMs:45000,commandTimeoutMs:60000});worldClient=createWorldClient(invite,client);
   const [renderer,source]=await Promise.all([createRenderer($('#world')),loadSource()]);
   $('#launcher').hidden=true;$('#game').hidden=false;
   const focus=()=>{input?.clear();$('#world').focus();};
@@ -36,6 +36,7 @@ async function boot(invite,initialBundle){
   panels=createPanels($('#panel'),{source,act,base:()=>client.state,world:()=>worldClient.state,actor,notes:id=>notebook.openFor(id),command,toast,focus});
   const blocked=()=>client.paused||!worldClient.available||panels.open||notebook.open;
   input=installInput($('#world'),{blocked,escape(){panels.close();if(!$('#notebook').hidden)notebook.close();},release:()=>act('release'),
+    onChange(){if(input&&!disposed)worldClient.input(input.keys,blocked());},
     async interact(point){
       const w=worldClient.state;if(!w)return;const p=w.players[actor];let t;
       if(point)t=targets(w,actor).filter(t=>distance(t,point)<37&&distance(t,p)<=48).sort((a,b)=>distance(a,point)-distance(b,point))[0];

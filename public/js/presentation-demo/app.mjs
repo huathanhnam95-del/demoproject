@@ -157,7 +157,26 @@ function drawGame() {
     const before = previousWorld?.players?.[id];
     if (id !== player.id && before?.instance === current.instance && distance(before, current) < 45 && !current.seat && !current.leader && !current.follower) {
       const fraction = Math.min(1, elapsed / 100);
-      Object.assign(visual.players[id], move(before, (current.x - before.x) * fraction, (current.y - before.y) * fraction, SCENES[current.scene], solidsFor(world, id), current.ride ? 15 : 10));
+      const moved = move(before, (current.x - before.x) * fraction, (current.y - before.y) * fraction, SCENES[current.scene], solidsFor(world, id), current.ride ? 15 : 10);
+      const traveled = distance(before, moved);
+      const hasDeltaX = Math.abs(current.x - before.x) > 0.1;
+      const hasDeltaY = Math.abs(current.y - before.y) > 0.1;
+      const movedFacing = (hasDeltaX || hasDeltaY)
+        ? (Math.abs(current.x - before.x) >= Math.abs(current.y - before.y)
+            ? (current.x > before.x ? 'right' : 'left')
+            : (current.y > before.y ? 'down' : 'up'))
+        : current.facing;
+      const fallbackDir = (current.facingDir === -1 || current.facingDir === 1)
+        ? current.facingDir
+        : ((before.facingDir === -1 || before.facingDir === 1) ? before.facingDir : (movedFacing === 'left' ? -1 : 1));
+      const movedFacingDir = hasDeltaX ? (current.x > before.x ? 1 : -1) : fallbackDir;
+      const isMoving = distance(before, current) > 0.5;
+      Object.assign(visual.players[id], moved, {
+        distance: (before.distance || current.distance || 0) + traveled,
+        pose: isMoving ? (current.ride ? 'riding' : current.carry ? 'carrying' : 'walking') : current.pose,
+        facing: isMoving ? movedFacing : current.facing,
+        facingDir: movedFacingDir
+      });
     }
   }
   const blocked = !model?.connection || room.lifecycle === 'ended' || world.paused || world.presentation.active || !els.panel.hidden || !!document.activeElement?.closest?.('input,textarea,select,[contenteditable="true"]');
@@ -204,7 +223,7 @@ function renderGame(currentRoom) {
   if (!player) return;
   if (panelInstance !== player.instance) { closeWorldPanel(); panelInstance = player.instance; }
   const target = nearest(world, player.id);
-  els.prompt.textContent = active ? 'Presentation in progress · your notebook remains available.' : world.paused ? 'World paused by the presenter.' : player.leader ? 'Following ' + room.slots[player.leader].displayName + ' · E to let go' : player.seat ? 'F · Stand' : target ? 'F · ' + (target.type === 'person' ? room.slots[target.id].displayName : target.label) : player.carry ? 'Carry your object to its match · Put down is available.' : 'WASD to walk · approach an object or colleague, then press F.';
+  els.prompt.textContent = active ? 'Presentation in progress · your notebook remains available.' : world.paused ? 'World paused by the presenter.' : player.leader ? 'Following ' + room.slots[player.leader].displayName + ' · E to let go' : player.seat ? 'F · Stand' : target ? 'F · ' + (target.type === 'person' ? room.slots[target.id].displayName : target.label) : player.carry ? 'Carry your object to its match · Put down is available.' : 'WASD or Arrow keys to walk · approach an object or colleague, then press F.';
   show(els.release, !!player.leader || !!player.follower); show(els.drop, !!player.carry); show(els.dismount, !!player.ride);
   const activity = player.scene === 'F' ? world.bridge : player.scene === 'I' ? world.reversal : null;
   show(els.activity, !!activity || player.scene === 'J');
@@ -241,7 +260,7 @@ async function connectGame(replaceExisting = false) {
     renderGame(await transport.room(room.roomId));
     if (!notebook) notebook = bindNotebook({ transport, roomId: room.roomId, identity, elements: { title: els.title, body: els.body, save: els.saveNote, status: els.noteStatus } });
     await notebook.load();
-    message('Connected. Explore with WASD; press F near an object or colleague.');
+    message('Connected. Explore with WASD or Arrow keys; press F near an object or colleague.');
     window.clearInterval(heartbeatTimer);
     heartbeatTimer = window.setInterval(() => model.connection && transport.heartbeat(model.connection.connectionId).catch(() => {}), 5000);
   } catch (error) {
@@ -372,18 +391,43 @@ async function interactWorld(point) {
 function installWorldControls() {
   if (input) return;
   const blocked = () => room?.lifecycle === 'ended' || room?.gameplay?.paused || room?.gameplay?.presentation?.active || !els.panel.hidden || !!document.activeElement?.closest?.('input,textarea,select,[contenteditable="true"]');
-  input = installInput(els.canvas, { blocked, interact: interactWorld, escape: closeWorldPanel, release: () => worldAction('release') });
-  let last = '', pending = false;
-  inputTimer = window.setInterval(async () => {
-    if (!model?.connection || pending || room.lifecycle === 'ended') return;
-    if (blocked()) input.clear();
-    const dx = Number(input.keys.d) - Number(input.keys.a), dy = Number(input.keys.s) - Number(input.keys.w);
+  let last = '', pending = false, queued = null;
+  const sendMove = async () => {
+    if (!model?.connection || room?.lifecycle === 'ended') return;
+    if (blocked()) input?.clear();
+    const dx = Number(input?.keys?.d) - Number(input?.keys?.a);
+    const dy = Number(input?.keys?.s) - Number(input?.keys?.w);
     const key = `${dx}:${dy}`;
+    if (pending) {
+      queued = { dx, dy, key };
+      return;
+    }
     if (!dx && !dy && key === last) return;
-    pending = true; last = key;
-    try { await model.command('move', { dx, dy }); } catch (error) { message(errorText(error), 'error'); }
-    finally { pending = false; }
-  }, 100);
+    pending = true;
+    last = key;
+    try {
+      await model.command('move', { dx, dy });
+    } catch (error) {
+      message(errorText(error), 'error');
+    } finally {
+      pending = false;
+      if (queued) {
+        const next = queued;
+        queued = null;
+        if (next.key !== last || next.dx !== 0 || next.dy !== 0) {
+          sendMove();
+        }
+      }
+    }
+  };
+  input = installInput(els.canvas, {
+    blocked,
+    interact: interactWorld,
+    escape: closeWorldPanel,
+    release: () => worldAction('release'),
+    onChange: () => sendMove()
+  });
+  inputTimer = window.setInterval(sendMove, 100);
   els.interact.onclick = () => interactWorld(); els.profile.onclick = () => showWorldPanel({ kind: 'profile' });
   els.release.onclick = () => worldAction('release'); els.drop.onclick = () => worldAction('drop'); els.dismount.onclick = () => worldAction('dismount');
   els.activityStart.onclick = () => worldAction('activity', { action: ownPlayer()?.scene === 'J' ? 'assist' : 'start' });

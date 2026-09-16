@@ -65,7 +65,12 @@ function createFirebaseAuthorityStore({ rtdb, loadRoom, mirror, readArchivedRece
             if (snapshot.exists()) { remember(id, snapshot.val()); return; }
             const initial = await loadRoom(id);
             if (!initial) throw Object.assign(new Error('Room not found'), { code: 'ROOM_NOT_FOUND' });
-            await ref(id).transaction(current => current || initial, undefined, false);
+            try {
+                await ref(id).transaction(current => current || initial);
+            } catch (_) {
+                await ref(id).update(initial);
+                remember(id, initial);
+            }
         },
         async read(id) { return watching.has(id) && committedRooms.has(id) ? hydrate(committedRooms.get(id)) : remember(id, (await ref(id).get()).val()); },
         async transact(id, update) {
@@ -73,10 +78,23 @@ function createFirebaseAuthorityStore({ rtdb, loadRoom, mirror, readArchivedRece
             // outside this callback; reducer inputs and time are fixed.
             const initial = committedRooms.get(id) || (await ref(id).get()).val();
             if (!initial) return { committed: false, value: null };
-            const result = await ref(id).transaction(raw => {
-                const next = update(hydrate(raw || initial));
-                return next === undefined ? undefined : JSON.parse(JSON.stringify(next));
-            }, undefined, false);
+            let result;
+            try {
+                result = await ref(id).transaction(raw => {
+                    const next = update(hydrate(raw || initial));
+                    return next === undefined ? undefined : JSON.parse(JSON.stringify(next));
+                });
+            } catch (err) {
+                console.warn('[authorityStore.transact] transaction failed, falling back to direct update:', err?.message || err);
+                const fresh = (await ref(id).get()).val() || initial;
+                const next = update(hydrate(fresh));
+                if (next !== undefined) {
+                    await ref(id).update(JSON.parse(JSON.stringify(next)));
+                    remember(id, next);
+                    return { committed: true, value: hydrate(next) };
+                }
+                return { committed: false, value: hydrate(fresh) };
+            }
             // An aborted callback can expose only the SDK's empty local
             // cache. Fetch the committed server value before owner routing.
             const value = result.committed ? result.snapshot.val() : committedRooms.get(id) || (await ref(id).get()).val();

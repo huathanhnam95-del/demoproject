@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const {
     ACTIVE_LIFECYCLES,
     PARTICIPANT_SLOT_IDS,
+    SLOT_IDS,
     clone,
     createRoomState,
     fail,
@@ -148,31 +149,62 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
     async function mirrorCanonicalRoom(room) {
         const ref = liveRoomRef(room.roomId);
         const initial = (await ref.get()).val();
-        await ref.transaction(current => {
-            current ||= initial;
-            if (!current) return cloneValue(room);
-            const next = hydrate(current);
-            let membershipChanged = false;
-            for (const slotId of Object.keys(room.slots || {})) {
-                const incoming = room.slots[slotId]; const target = next.slots?.[slotId];
-                if (!incoming?.uid || !target || target.uid === incoming.uid) continue;
-                Object.assign(target, { uid: incoming.uid, displayName: incoming.displayName, originalRole: incoming.originalRole, joinedAt: incoming.joinedAt, bootstrapAt: incoming.bootstrapAt || target.bootstrapAt });
-                membershipChanged = true;
+        if (!initial) {
+            await ref.set(cloneValue(room));
+            return cloneValue(room);
+        }
+        try {
+            await ref.transaction(current => {
+                current ||= initial;
+                if (!current) return cloneValue(room);
+                const next = hydrate(current);
+                let membershipChanged = false;
+                for (const slotId of Object.keys(room.slots || {})) {
+                    const incoming = room.slots[slotId]; const target = next.slots?.[slotId];
+                    if (!incoming?.uid || !target || target.uid === incoming.uid) continue;
+                    Object.assign(target, { uid: incoming.uid, displayName: incoming.displayName, originalRole: incoming.originalRole, joinedAt: incoming.joinedAt, bootstrapAt: incoming.bootstrapAt || target.bootstrapAt });
+                    membershipChanged = true;
+                }
+                // Firestore owns admission and notebook metadata, never physics.
+                // Its revision cannot authorize replacing a newer live world.
+                for (const [slotId, incoming] of Object.entries(room.slots)) {
+                    const target = next.slots[slotId];
+                    target.bootstrapAt = Math.max(target.bootstrapAt || 0, incoming.bootstrapAt || 0) || null;
+                    target.notesRevision = Math.max(target.notesRevision || 0, incoming.notesRevision || 0);
+                }
+                next.allParticipantsJoinedAt ||= room.allParticipantsJoinedAt || null;
+                next.lastPresenterActivityAt = Math.max(next.lastPresenterActivityAt, room.lastPresenterActivityAt);
+                next.expiresAt = Math.max(next.expiresAt, room.expiresAt);
+                if (room.lifecycle === 'ended') Object.assign(next, { lifecycle: 'ended', endedAt: room.endedAt, endReason: room.endReason, archiveStatus: room.archiveStatus });
+                if (membershipChanged || JSON.stringify(next) !== JSON.stringify(hydrate(current))) next.revision = Number(current.revision) + 1;
+                return next;
+            });
+        } catch (error) {
+            console.warn('[mirrorCanonicalRoom] ref.transaction failed, falling back to direct update:', error?.message || error);
+            const patch = {};
+            for (const [slotId, incoming] of Object.entries(room.slots || {})) {
+                if (incoming?.uid) {
+                    patch[`slots/${slotId}/uid`] = incoming.uid;
+                    patch[`slots/${slotId}/displayName`] = incoming.displayName || `Participant ${slotId.slice(1)}`;
+                    patch[`slots/${slotId}/originalRole`] = incoming.originalRole || 'participant';
+                    patch[`slots/${slotId}/joinedAt`] = incoming.joinedAt;
+                    if (incoming.bootstrapAt) patch[`slots/${slotId}/bootstrapAt`] = incoming.bootstrapAt;
+                }
+                if (incoming?.notesRevision) {
+                    patch[`slots/${slotId}/notesRevision`] = incoming.notesRevision;
+                }
             }
-            // Firestore owns admission and notebook metadata, never physics.
-            // Its revision cannot authorize replacing a newer live world.
-            for (const [slotId, incoming] of Object.entries(room.slots)) {
-                const target = next.slots[slotId];
-                target.bootstrapAt = Math.max(target.bootstrapAt || 0, incoming.bootstrapAt || 0) || null;
-                target.notesRevision = Math.max(target.notesRevision || 0, incoming.notesRevision || 0);
+            if (room.allParticipantsJoinedAt) patch['allParticipantsJoinedAt'] = room.allParticipantsJoinedAt;
+            patch['lastPresenterActivityAt'] = room.lastPresenterActivityAt;
+            patch['expiresAt'] = room.expiresAt;
+            if (room.lifecycle === 'ended') {
+                patch['lifecycle'] = 'ended';
+                patch['endedAt'] = room.endedAt;
+                patch['endReason'] = room.endReason;
+                patch['archiveStatus'] = room.archiveStatus;
             }
-            next.allParticipantsJoinedAt ||= room.allParticipantsJoinedAt || null;
-            next.lastPresenterActivityAt = Math.max(next.lastPresenterActivityAt, room.lastPresenterActivityAt);
-            next.expiresAt = Math.max(next.expiresAt, room.expiresAt);
-            if (room.lifecycle === 'ended') Object.assign(next, { lifecycle: 'ended', endedAt: room.endedAt, endReason: room.endReason, archiveStatus: room.archiveStatus });
-            if (membershipChanged || JSON.stringify(next) !== JSON.stringify(hydrate(current))) next.revision = Number(current.revision) + 1;
-            return next;
-        }, undefined, false);
+            await ref.update(patch);
+        }
         return cloneValue(room);
     }
 
@@ -302,8 +334,8 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         const merged = liveRoom
             ? { ...firestoreRoom, ...liveRoom }
             : { ...firestoreRoom };
-        const slots = Object.fromEntries(Object.keys(firestoreRoom.slots || {}).map(slotId => {
-            const firestoreSlot = firestoreRoom.slots[slotId] || {};
+        const slots = Object.fromEntries(SLOT_IDS.map(slotId => {
+            const firestoreSlot = firestoreRoom.slots?.[slotId] || {};
             const liveSlot = liveRoom?.slots?.[slotId] || {};
             return [slotId, {
                 ...firestoreSlot,
@@ -412,7 +444,7 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         }));
     }
 
-    async function join(input, codeOrId, { operationId = null } = {}) {
+    async function join(input, codeOrId, { operationId = null, displayName = null } = {}) {
         const identity = assertActiveIdentity(input);
         return runSerial(`room:${String(codeOrId)}`, () => idempotent('join', operationId, { uid: identity.uid, room: String(codeOrId) }, async () => {
             const resolved = await resolveRoom(codeOrId);
@@ -428,9 +460,13 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
                 if (!slot) fail('ROOM_FULL', 'All three participant slots are already reserved.');
                 if (!existing) {
                     slot.uid = identity.uid;
-                    slot.displayName = identity.email ? identity.email.split('@')[0].slice(0, 80) : `Participant ${slot.slotId.slice(1)}`;
+                    const cleanName = typeof displayName === 'string' ? displayName.trim().slice(0, 40) : '';
+                    slot.displayName = cleanName || (identity.email ? identity.email.split('@')[0].slice(0, 80) : `Participant ${slot.slotId.slice(1)}`);
                     slot.originalRole = identity.isTeacher ? 'teacher' : 'participant';
                     slot.joinedAt = clock();
+                    room.revision += 1;
+                } else if (typeof displayName === 'string' && displayName.trim()) {
+                    slot.displayName = displayName.trim().slice(0, 40);
                     room.revision += 1;
                 }
                 tx.set(ref, room);
@@ -530,14 +566,31 @@ function createFirebasePresentationDemoServices({ db, rtdb, clock = () => Date.n
         const ref = roomRef(roomId);
         let denied = null;
         await authorityStore.ensure(roomId);
-        await authorityStore.transact(roomId, current => {
-            denied = null;
-            if (current.presenterUid !== identity.uid) { denied = true; return undefined; }
-            if (current.lifecycle === 'ended') return undefined;
-            Object.assign(current, { lifecycle: 'ended', endedAt: clock(), endReason: reason, archiveStatus: 'pending', revision: current.revision + 1 });
-            if (current.gameplay) current.gameplay.inputs = {};
-            return current;
-        });
+        try {
+            await authorityStore.transact(roomId, current => {
+                denied = null;
+                if (current.presenterUid !== identity.uid) { denied = true; return undefined; }
+                if (current.lifecycle === 'ended') return undefined;
+                Object.assign(current, { lifecycle: 'ended', endedAt: clock(), endReason: reason, archiveStatus: 'pending', revision: current.revision + 1 });
+                if (current.gameplay) current.gameplay.inputs = {};
+                return current;
+            });
+        } catch (err) {
+            console.error('[end] authorityStore.transact failed, falling back to direct update:', err);
+            const live = liveRoomRef(roomId);
+            const liveSnap = await live.get();
+            if (liveSnap.exists()) {
+                const cur = liveSnap.val();
+                if (cur.presenterUid !== identity.uid) fail('ACTOR_MISMATCH');
+                await live.update({
+                    lifecycle: 'ended',
+                    endedAt: clock(),
+                    endReason: reason,
+                    archiveStatus: 'pending',
+                    revision: Number(cur.revision || 0) + 1
+                });
+            }
+        }
         if (denied) fail('ACTOR_MISMATCH');
         await drainNoteEffects(roomId);
         const room = await db.runTransaction(async tx => {

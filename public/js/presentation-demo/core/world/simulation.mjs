@@ -9,7 +9,7 @@ export function createWorld(session){
   return {version:1,sessionId:session.id,revision:0,unlocked:{A:false,C:false,E:false,G:false,I:false},cStarted:false,gStarted:false,bridge:createBridge(),reversal:createReversal(),cubes:createCubes(),
     presentationWas:null,deck:{room:null,slide:1,steps:{2:1,4:1,5:1,6:1},finalPage:'determine',etaOrigin:null,properties:{showQuotes:true,showFolio:true,photoTreatment:'Black and white'}},
     players:Object.fromEntries(Object.values(session.players).map(p=>[p.id,{id:p.id,scene:p.location.sceneId,instance:p.location.instanceId,
-      ...SCENES[p.location.sceneId].spawn,facing:'down',pose:'idle',ride:null,selectedRide:null,seat:null,carry:null,
+      ...SCENES[p.location.sceneId].spawn,facing:'down',facingDir:1,pose:'idle',ride:null,selectedRide:null,seat:null,carry:null,
       leader:null,follower:null,request:null,waveUntil:0,resetUntil:0,lastRoute:'B1',distance:0}])),
     routes:Object.fromEntries(['B1','B2','B3'].map(id=>[id,SHAPES.map((shape,i)=>({id:`shape-${i}`,shape,index:i,...SCENES[id].shapeSpawns[i],owner:null,placed:false}))]))};
 }
@@ -88,11 +88,14 @@ export function stepWorld(w,base,inputs,dt,now){
     const before={x:p.x,y:p.y};const next=move(p,v.x*speed*dt,v.y*speed*dt,SCENES[p.scene],solidsFor(w,p.id),p.ride?15:10);
     if(p.follower && distance(next,w.players[p.follower])>62){p.pose='idle';continue;}
     Object.assign(p,next);const traveled=distance(before,p);p.distance+=traveled;
-    if(v.x||v.y) p.facing=Math.abs(v.x)>Math.abs(v.y)?(v.x>0?'right':'left'):(v.y>0?'down':'up');
+    if(v.x||v.y){
+      if(Math.abs(v.x)>=Math.abs(v.y)&&v.x!==0){p.facing=v.x>0?'right':'left';p.facingDir=v.x>0?1:-1;}
+      else if(v.y!==0){p.facing=v.y>0?'down':'up';if(v.x!==0)p.facingDir=v.x>0?1:-1;}
+    }
     p.pose=p.ride?(traveled>.1?'riding':'coasting'):p.carry?'carrying':traveled>.1?'walking':'idle';
     if(p.follower&&traveled>.01){
       const follower=w.players[p.follower],d=distance(p,follower);
-      if(d>31){const m=Math.min(speed*dt,d-31);Object.assign(follower,move(follower,(p.x-follower.x)/d*m,(p.y-follower.y)/d*m,SCENES[p.scene],solidsFor(w,follower.id)));follower.pose='walking';follower.facing=p.facing;follower.distance+=m;}
+      if(d>31){const m=Math.min(speed*dt,d-31);Object.assign(follower,move(follower,(p.x-follower.x)/d*m,(p.y-follower.y)/d*m,SCENES[p.scene],solidsFor(w,follower.id)));follower.pose='walking';follower.facing=p.facing;follower.facingDir=p.facingDir;follower.distance+=m;}
     }
   }
   if(!globallyPaused) for(const p of Object.values(w.players)) if(p.connected!==false&&p.scene==='street'&&now>p.resetUntil){

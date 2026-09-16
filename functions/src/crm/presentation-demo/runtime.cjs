@@ -113,12 +113,12 @@ class AuthoritativeRuntime {
         return this.snapshot(slot.uid);
     }
 
-    requireGeneration(slotId, generation) {
-        this.assertNotExpired(this.clock());
+    requireGeneration(slotId, generation, now = this.clock()) {
+        this.assertNotExpired(now);
         const slot = this.room.slots[slotId];
         if (!slot || !slot.uid) runtimeFail('SEAT_INVALID');
         if (!slot.connected || slot.connectionGeneration !== generation) runtimeFail('STALE_CONNECTION');
-        if (!Number.isFinite(slot.lastSeenAt) || this.clock() - slot.lastSeenAt > PRESENCE_LEASE_MS) runtimeFail('STALE_CONNECTION');
+        if (!Number.isFinite(slot.lastSeenAt) || now - slot.lastSeenAt > PRESENCE_LEASE_MS) runtimeFail('STALE_CONNECTION');
         return slot;
     }
 
@@ -146,9 +146,10 @@ class AuthoritativeRuntime {
 
     command(slotId, generation, command, now = this.clock()) {
         this.assertNotExpired(now);
-        const slot = this.requireGeneration(slotId, generation);
+        const slot = this.requireGeneration(slotId, generation, now);
         let safeCommand;
         try { safeCommand = validateClientCommand(command); } catch (error) { runtimeFail(error.code || 'COMMAND_INVALID', error.message); }
+        slot.lastSeenAt = now;
         const movement = safeCommand.type === 'move';
         const previousSeq = (movement ? this.room.lastInputSeq[slotId] : this.commandSeq[slotId]) || 0;
         const cacheKey = `${slotId}:${movement ? 'input' : 'command'}:${safeCommand.seq}`;
@@ -181,7 +182,7 @@ class AuthoritativeRuntime {
     }
 
     heartbeat(slotId, generation, now = this.clock()) {
-        const slot = this.requireGeneration(slotId, generation);
+        const slot = this.requireGeneration(slotId, generation, now);
         slot.lastSeenAt = now;
         this.room.revision += 1;
         return { accepted: true, generation, revision: this.room.revision, snapshot: this.snapshot(slot.uid) };

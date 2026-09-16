@@ -61,6 +61,10 @@ async function firebaseIdentity(token) {
   const decoded = await auth.verifyIdToken(String(token || ''), true);
   const authUser = await auth.getUser(decoded.uid);
   if (authUser.disabled === true) { const error = new Error('Account is disabled.'); error.code = 'ACCOUNT_DISABLED'; throw error; }
+  const isAnonymous = decoded.firebase?.sign_in_provider === 'anonymous' || decoded.provider_id === 'anonymous';
+  if (isAnonymous) {
+    return serverIdentityFromAuth({ decodedToken: decoded, authUser, profile: null, workforce: null });
+  }
   const [profileSnap, workforceSnap] = await Promise.all([
     db.collection('users').doc(decoded.uid).get(),
     db.collection('crmWorkforceAccounts').doc(decoded.uid).get()

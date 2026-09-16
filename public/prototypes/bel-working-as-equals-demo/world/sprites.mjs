@@ -48,46 +48,76 @@ export function createSpriteAtlas(images){
 }
 export function avatar(ctx,p,profile,now,local=false,atlas=null){
   if(atlas){
-    const sprite=atlas(profile),height=77,width=height*sprite.width/sprite.height,walking=p.pose==='walking'||p.pose==='carrying',step=walking?Math.sin(p.distance*.17)*2:0;
-    ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));const dir=p.facing==='left'?-1:1;
-    ctx.fillStyle='#48342044';ctx.beginPath();ctx.ellipse(0,2,p.ride?32:15,5,0,0,7);ctx.fill();
+    const sprite=atlas(profile),height=77,width=height*sprite.width/sprite.height,walking=p.pose==='walking'||p.pose==='carrying';
+    const strideFreq=(Math.PI*2)/60,phase=(p.distance||0)*strideFreq;
+    const isVertical=p.facing==='up'||p.facing==='down';
+    const maxStride=isVertical?0.12:0.28;
+    const strideAngle=walking?Math.sin(phase)*maxStride:0;
+    const hipBob=walking?-Math.abs(Math.sin(phase))*1.5:0;
+    const lift1=walking?Math.max(0,Math.cos(phase))*2.6:0;
+    const lift2=walking?Math.max(0,-Math.cos(phase))*2.6:0;
+    ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));
+    const dir=(p.facingDir===-1||p.facingDir===1)?p.facingDir:(p.facing==='left'?-1:1);
+    const shadowW=p.ride?32:(15+(walking?Math.abs(Math.sin(phase))*3:0));
+    ctx.fillStyle='#48342044';ctx.beginPath();ctx.ellipse(0,2,shadowW,5,0,0,7);ctx.fill();
     if(local){ctx.strokeStyle='#efc775';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,3,p.ride?35:18,7,0,0,7);ctx.stroke();}
     if(p.ride)ride(ctx,p.ride,0,0,dir);
-    ctx.scale(dir,1);const legs=Math.round(sprite.height*.73),top=height*.73,bob=walking?Math.abs(step):0;
+    ctx.scale(dir,1);const legs=Math.round(sprite.height*.73),top=height*.73;
     const overSrc=walking?10:0,overDst=overSrc*height/sprite.height;
-    ctx.drawImage(sprite,0,0,sprite.width,legs+overSrc,-width/2,-height-bob-(p.ride?6:0),width,top+overDst);
+    const torsoLean=walking&&!p.ride?(isVertical?0.015:0.04):0;
+    const hipY=-height+top+hipBob;
     if(p.seat||p.ride){
       // Bend the thighs forward, lower legs to a grounded foot/board anchor.
       for(const [sx,off]of [[0,-5],[sprite.width/2,5]]){ctx.save();ctx.translate(off,-height+top-2);ctx.rotate(-.5);ctx.drawImage(sprite,sx,legs,sprite.width/2,sprite.height-legs,-width/4,0,width/2,height-top);ctx.restore();}
       if(p.ride==='scooter'){ctx.strokeStyle='#d8af7d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(8,-47);ctx.lineTo(19,-46);ctx.stroke();}
+    }else if(walking){
+      // Grounded stance leg stays planted on the floor; swing leg lifts during forward swing
+      ctx.save();ctx.translate(-width*0.22,hipY);ctx.rotate(strideAngle);
+      ctx.drawImage(sprite,0,legs,sprite.width/2,sprite.height-legs,-width/4,-lift1,width/2,height-top);ctx.restore();
+      ctx.save();ctx.translate(width*0.22,hipY);ctx.rotate(-strideAngle);
+      ctx.drawImage(sprite,sprite.width/2,legs,sprite.width/2,sprite.height-legs,-width/4,-lift2,width/2,height-top);ctx.restore();
     }else{
-      ctx.drawImage(sprite,0,legs,sprite.width/2,sprite.height-legs,-width/2,-height+top+step,width/2,height-top);
-      ctx.drawImage(sprite,sprite.width/2,legs,sprite.width/2,sprite.height-legs,0,-height+top-step,width/2,height-top);
+      ctx.drawImage(sprite,0,legs,sprite.width/2,sprite.height-legs,-width/2,-height+top,width/2,height-top);
+      ctx.drawImage(sprite,sprite.width/2,legs,sprite.width/2,sprite.height-legs,0,-height+top,width/2,height-top);
     }
+    // Upper body and accessories lean and bob together
+    ctx.save();
+    ctx.translate(0,hipBob);
+    if(torsoLean){ctx.translate(0,-height+top);ctx.rotate(torsoLean);ctx.translate(0,height-top);}
+    ctx.drawImage(sprite,0,0,sprite.width,legs+overSrc,-width/2,-height-(p.ride?6:0),width,top+overDst);
     if(profile.appearance.hat==='cap'){ctx.fillStyle='#3b6972';ctx.fillRect(-10,-height-2,22,7);ctx.fillRect(8,-height+4,10,3);}
     if(profile.appearance.hat==='straw'&&profile.id!=='p3'){ctx.fillStyle='#dac190';ctx.fillRect(-9,-height-4,18,7);ctx.fillRect(-15,-height+2,31,4);}
     if(profile.appearance.glasses&&profile.id!=='p1'){ctx.strokeStyle='#183b3d';ctx.lineWidth=1.5;ctx.strokeRect(-7,-height+14,7,5);ctx.strokeRect(1,-height+14,7,5);ctx.fillStyle='#183b3d';ctx.fillRect(-1,-height+16,2,1);}
     if(p.carry?.startsWith('shape-'))shape(ctx,['triangle','square','circle'][Number(p.carry.split('-')[1])],9,-28,13);
     if(p.carry?.startsWith('plank-')){ctx.strokeStyle='#ddb07d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-12,-38);ctx.lineTo(-21,-27);ctx.moveTo(12,-38);ctx.lineTo(21,-27);ctx.stroke();}
     if(p.waveUntil>now){ctx.strokeStyle='#d4a474';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(14,-36);ctx.lineTo(24,-50-Math.sin(now/90)*5);ctx.stroke();}
+    ctx.restore();
     ctx.restore();ctx.save();ctx.font='600 10px system-ui';ctx.textAlign='center';const name=profile.name+(p.waveUntil>now?' · Hi!':'');const n=ctx.measureText(name).width+12;const labelY=p.y-96-(Number(profile.id[1])%2)*14;ctx.fillStyle='#fff7e6ef';ctx.fillRect(p.x-n/2,labelY,n,15);ctx.fillStyle='#30433f';ctx.fillText(name,p.x,labelY+11);ctx.restore();return;
   }
-  const riding=!!p.ride,side=p.facing==='left'||p.facing==='right',direction=p.facing==='left'?-1:1;
-  const phase=Math.sin(p.distance*.17),walking=['walking','carrying'].includes(p.pose),seated=p.pose==='seated';
+  const riding=!!p.ride,side=p.facing==='left'||p.facing==='right',direction=(p.facingDir===-1||p.facingDir===1)?p.facingDir:(p.facing==='left'?-1:1);
+  const strideFreq=(Math.PI*2)/60,phase=(p.distance||0)*strideFreq;
+  const isVertical=p.facing==='up'||p.facing==='down';
+  const walking=['walking','carrying'].includes(p.pose),seated=p.pose==='seated';
   ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));
-  ctx.fillStyle='#34261940';ctx.beginPath();ctx.ellipse(0,2,riding?32:15,5,0,0,Math.PI*2);ctx.fill();
+  const shadowW=riding?32:(15+(walking?Math.abs(Math.sin(phase))*3:0));
+  ctx.fillStyle='#34261940';ctx.beginPath();ctx.ellipse(0,2,shadowW,5,0,0,Math.PI*2);ctx.fill();
   if(local){ctx.strokeStyle='#e7b766';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,3,riding?35:18,7,0,0,7);ctx.stroke();}
   if(riding)ride(ctx,p.ride,0,0,direction,phase);
   ctx.scale(direction*1.35,1.35);if(riding)ctx.translate(-3,-6);
-  const bob=walking?Math.round(Math.abs(phase)):0;
+  const bob=walking?Math.abs(Math.sin(phase))*1.5:0;
   const rect=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y-bob),w,h);};
   const outline=(x,y,w,h,c)=>{rect(x-1,y-1,w+2,h+2,'#252623');rect(x,y,w,h,c);};
   const shirt={teal:'#268e8c',cream:'#eee4cb',amber:'#b77534',red:'#a94630',default:profile.gender==='male'?'#a94630':'#268e8c'}[profile.appearance.shirt]||'#268e8c';
   const skin='#deb17d',hair=profile.id==='p2'?'#8a4d21':'#38271d';
-  const stride=walking?phase*3:0;
+  const stride=walking?(isVertical?Math.sin(phase)*1.5:Math.sin(phase)*3.5):0;
+  const lift1=walking?Math.max(0,-Math.cos(phase))*2.2:0;
+  const lift2=walking?Math.max(0,Math.cos(phase))*2.2:0;
   if(seated){outline(-7,-16,9,5,'#285369');outline(1,-14,10,5,'#21465b');outline(7,-9,5,7,'#22455a');outline(-3,-11,5,7,'#316078');outline(7,-2,8,3,'#664324');outline(-3,-3,8,3,'#664324');}
   else if(riding){outline(-8,-19,7,9,'#285369');outline(-10,-10,6,7,'#316078');outline(1,-19,6,12,'#21465b');outline(-11,-4,9,3,'#78502c');outline(1,-4,9,3,'#78502c');}
-  else{outline(-7,-17,6,14+stride,'#2a5670');outline(1,-17,6,14-stride,'#204255');outline(-8,-3+stride,8,3,'#775230');outline(1,-3-stride,8,3,'#775230');}
+  else{
+    outline(-7-stride,-17+bob-lift1,6,14,'#2a5670');outline(1+stride,-17+bob-lift2,6,14,'#204255');
+    outline(-8-stride,-3+bob-lift1,8,3,'#775230');outline(1+stride,-3+bob-lift2,8,3,'#775230');
+  }
   outline(-8,-34,17,19,shirt);rect(-6,-32,4,13,'#ffffff18');rect(5,-29,3,12,'#0002');
   const waving=p.waveUntil>now;
   const carrying=!!p.carry;

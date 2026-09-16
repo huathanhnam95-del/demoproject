@@ -23,7 +23,7 @@ export function safeAnchor(preferred,scene,solids=scene.solids,radius=RADIUS){
   }
   throw Error('No safe floor anchor');
 }
-export function vector(keys){
-  const x=Number(keys.d)-Number(keys.a),y=Number(keys.s)-Number(keys.w),m=Math.hypot(x,y)||1;
+export function vector(keys = {}){
+  const x=Number(Boolean(keys?.d))-Number(Boolean(keys?.a)),y=Number(Boolean(keys?.s))-Number(Boolean(keys?.w)),m=Math.hypot(x,y)||1;
   return {x:x/m,y:y/m};
 }

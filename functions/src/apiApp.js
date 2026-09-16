@@ -435,6 +435,11 @@ const presentationDemoRouter = createPresentationDemoRouter({
     pdf: presentationDemoPdf,
     authMiddleware,
     resolveIdentity: async req => {
+        const isAnonymous = req.user?.firebase?.sign_in_provider === 'anonymous' || req.user?.provider_id === 'anonymous';
+        if (isAnonymous) {
+            const { serverIdentityFromAuth } = require('./crm/presentation-demo/identity.cjs');
+            return serverIdentityFromAuth({ decodedToken: req.user, profile: null, workforce: null, authUser: req.authUser });
+        }
         let profile = null;
         let workforce = null;
         try {
@@ -455,7 +460,7 @@ const presentationDemoRouter = createPresentationDemoRouter({
 const deployedIdentitiesProvider = (process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.FIREBASE_PROJECT_ID)
     ? createDeployedIdentitiesProvider({
         projectId: process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.FIREBASE_PROJECT_ID,
-        region: 'us-central1',
+        region: 'asia-southeast1',
         gatewayService: 'bel-presentation-demo',
         gatewayRegion: 'asia-southeast1'
     })

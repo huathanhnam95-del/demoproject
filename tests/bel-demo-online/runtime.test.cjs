@@ -48,3 +48,94 @@ test('initial reception latch requires all three participant joins and bootstrap
     runtime.command('p0', 1, { type: 'transition', seq: 1, to: 'playing' });
     assert.ok(runtime.snapshot().allParticipantsJoinedAt);
 });
+
+test('commands refresh presence lease and prevent stale presence sweep while moving', () => {
+    let now = 1000;
+    const runtime = new AuthoritativeRuntime(room(), { clock: () => now });
+    const connection = runtime.connect('p1', 1, { now });
+    assert.equal(runtime.snapshot().slots.p1.connected, true);
+
+    // Advance 15 seconds (within lease)
+    now += 15000;
+    const move1 = runtime.command('p1', connection.generation, { type: 'move', seq: 1, dx: 1, dy: 0 }, now);
+    assert.equal(move1.type, 'move');
+
+    // Advance 10 seconds (25s total since connect, but only 10s since last command)
+    now += 10000;
+    // Without command lastSeenAt refresh, 25s would have expired the 20s lease!
+    runtime.tick(now);
+    assert.equal(runtime.snapshot().slots.p1.connected, true);
+
+    // Advance 15 more seconds (25s since last command, exceeding 20s lease)
+    now += 15000;
+    runtime.tick(now);
+    assert.equal(runtime.snapshot().slots.p1.connected, false);
+});
+
+test('invalid command does not refresh lease and explicit now is honored', () => {
+    let now = 1000;
+    const runtime = new AuthoritativeRuntime(room(), { clock: () => now });
+    const connection = runtime.connect('p1', 1, { now });
+
+    // Advance 15 seconds
+    now += 15000;
+    // Malformed command (invalid type) throws COMMAND_TYPE_FORBIDDEN
+    assert.throws(
+        () => runtime.command('p1', connection.generation, { type: 'not-a-valid-command' }, now),
+        error => error instanceof RuntimeError && error.code === 'COMMAND_TYPE_FORBIDDEN'
+    );
+    // Malformed movement command (invalid seq) throws COMMAND_INVALID_SEQ
+    assert.throws(
+        () => runtime.command('p1', connection.generation, { type: 'move', seq: 'bad', dx: 1, dy: 0 }, now),
+        error => error instanceof RuntimeError && error.code === 'COMMAND_INVALID_SEQ'
+    );
+
+    // Because commands were invalid, lastSeenAt was not refreshed to 16000; it remains 1000.
+    // Advancing 6 more seconds (total 21s > 20s lease from connect) will expire the slot on tick.
+    now += 6000;
+    runtime.tick(now);
+    assert.equal(runtime.snapshot().slots.p1.connected, false);
+});
+
+test('replay command refreshes lease and expired slot cannot heartbeat or command', () => {
+    let now = 1000;
+    const runtime = new AuthoritativeRuntime(room(), { clock: () => now });
+    const connection = runtime.connect('p1', 1, { now });
+
+    // Send valid command at t=10000
+    now += 9000;
+    const cmd1 = { type: 'move', seq: 1, dx: 1, dy: 0 };
+    const res1 = runtime.command('p1', connection.generation, cmd1, now);
+    assert.equal(res1.type, 'move');
+
+    // Advance 15s to t=25000 (15s since cmd1, lease still active)
+    now += 15000;
+    // Resend exact same command (idempotent replay)
+    const resReplay = runtime.command('p1', connection.generation, cmd1, now);
+    assert.deepEqual(resReplay, res1);
+
+    // Advance 10s to t=35000 (total 25s since cmd1, but 10s since replay)
+    now += 10000;
+    runtime.tick(now);
+    // Replay refreshed lastSeenAt, so slot is still connected
+    assert.equal(runtime.snapshot().slots.p1.connected, true);
+
+    // Heartbeat at t=45000 (10s since tick)
+    now += 10000;
+    const hb = runtime.heartbeat('p1', connection.generation, now);
+    assert.equal(hb.accepted, true);
+
+    // Advance 21s to t=66000 (exceeding 20s lease from heartbeat)
+    now += 21000;
+    // Command or heartbeat from expired slot must throw STALE_CONNECTION
+    assert.throws(
+        () => runtime.heartbeat('p1', connection.generation, now),
+        error => error instanceof RuntimeError && error.code === 'STALE_CONNECTION'
+    );
+    assert.throws(
+        () => runtime.command('p1', connection.generation, { type: 'move', seq: 2, dx: 0, dy: 1 }, now),
+        error => error instanceof RuntimeError && error.code === 'STALE_CONNECTION'
+    );
+});
+
+

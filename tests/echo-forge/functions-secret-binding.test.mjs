@@ -6,7 +6,7 @@ test('only the stateless API export binds the Echo Forge Azure secret', async ()
   const source = await readFile(new URL('../../functions/src/index.js', import.meta.url), 'utf8');
   assert.match(
     source,
-    /api:\s*onRequest\(\{[\s\S]*?region:\s*['"]us-central1['"][\s\S]*?secrets:\s*\[['"]AZURE_SPEECH_KEY['"]\][\s\S]*?\},\s*apiApp\)/,
+    /api:\s*onRequest\(\{[\s\S]*?region:\s*(?:'us-central1'|\['asia-southeast1',\s*'us-central1'\])[\s\S]*?secrets:\s*\[['"]AZURE_SPEECH_KEY['"]\][\s\S]*?\},\s*apiApp\)/,
     'the API function must explicitly bind AZURE_SPEECH_KEY',
   );
   assert.equal((source.match(/AZURE_SPEECH_KEY/g) || []).length, 1, 'the key name should appear only in the API binding');

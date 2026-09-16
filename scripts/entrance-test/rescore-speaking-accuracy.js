@@ -124,6 +124,12 @@ async function runRescore(specificTestId = null) {
                             newAcc = words.accuracyScore != null ? words.accuracyScore : computeWordAcousticAverage(words);
                             updates[`speaking.${qId}.words`] = words;
                             updates[`speaking.${qId}.wordsAlignedAt`] = admin.firestore.FieldValue.serverTimestamp();
+                            if (!qData.transcript) {
+                                updates[`speaking.${qId}.transcript`] = words.recognizedText || alignTarget;
+                            }
+                            if (qData.asrError) {
+                                updates[`speaking.${qId}.asrError`] = null;
+                            }
                         }
                     } catch (alignErr) {
                         console.warn(`  - ${qId} Azure alignment failed:`, alignErr.message);

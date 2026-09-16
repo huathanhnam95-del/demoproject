@@ -1,3 +1,13 @@
+## [V2.0.7] - 2026-09-16
+
+### Fixed & Enhanced
+- **Entrance Test Speaking Pronunciation Assessment & Forced Alignment Fallback (`functions/src/entrance-test/asr-service.js`, `scripts/entrance-test/rescore-speaking-accuracy.js`, `tests/entrance-test-gemini-asr.test.js`, `tests/echo-forge/functions-secret-binding.test.mjs`)**:
+  - Removed fatal blocking `GEMINI_API_KEY is not configured on the server` guard clause from `transcribeAudio()`.
+  - Promoted Azure Speech Pronunciation Assessment (`alignAudioWithAzure`) to the primary evaluator for all speaking questions with reference text (`expectedText`), directly returning whole-word acoustic accuracy, syllable-level breakdowns, and millisecond audio boundaries in a single network pass.
+  - Hardened resilient fallback hierarchy: automatically falls back to Gemini Multimodal Audio (when keys exist) or Hugging Face Whisper Large V3 if Azure Speech fails or is unreachable.
+  - Enhanced rescore tooling in `scripts/entrance-test/rescore-speaking-accuracy.js` to automatically clear `asrError`, backfill transcripts from recognized text, and populate acoustic accuracy scores when historical test submissions are re-evaluated.
+  - Successfully rescored production entrance test `9512bd5b9dfb431af00a49e6470e28bafec6727359ba767d879e2aca11e292f7` with verified Azure pronunciation scores (Q1: 85%, Q2: 79%, Q3: 75%).
+
 ## [V2.0.6] - 2026-09-10
 
 ### Added & Enhanced

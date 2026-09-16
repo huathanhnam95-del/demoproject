@@ -282,6 +282,8 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
         }
 
         words.accuracyScore = accuracyScore;
+        const recognizedText = String(nbest?.Display || resJson.DisplayText || cleanRef || '').trim();
+        words.recognizedText = recognizedText;
         return words;
 
     } catch (err) {
@@ -293,8 +295,8 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
 }
 
 /**
- * Transcribe entrance test audio using Gemini Multimodal Audio
- * with multi-model fallback and silence loop protection.
+ * Transcribe entrance test audio using Azure Speech Pronunciation Assessment (when expectedText is provided)
+ * with Gemini Multimodal Audio and Hugging Face Whisper fallbacks.
  *
  * @param {Buffer} audioBuffer - Binary audio buffer
  * @param {string} contentType - Audio MIME type (e.g. 'audio/webm; codecs=opus')
@@ -304,123 +306,145 @@ async function alignAudioWithAzure(audioBuffer, referenceText, contentType) {
  * @returns {Promise<string>} Cleaned English transcript
  */
 async function transcribeAudio(audioBuffer, contentType, options = {}) {
-    const apiKeys = getGeminiApiKeys();
-    if (apiKeys.length === 0) {
-        throw new Error('GEMINI_API_KEY is not configured on the server.');
-    }
-
     if (!audioBuffer || !Buffer.isBuffer(audioBuffer) || audioBuffer.length === 0) {
         throw new Error('Audio buffer is empty or invalid.');
     }
 
-    const mimeType = resolveGeminiAudioMimeType(contentType);
-    const base64Data = audioBuffer.toString('base64');
-    const timeoutMs = options.timeoutMs || 15000;
-
-    const primaryModel = process.env.ENTRANCE_TEST_ASR_MODEL || 'gemini-3.8-flash';
-    const candidateModels = [
-        primaryModel,
-        'gemini-3.6-flash',
-        'gemini-3.5-flash',
-        'gemini-3-flash-preview',
-        'gemini-3.5-transcribe'
-    ].filter((val, idx, self) => self.indexOf(val) === idx);
-
     const expectedText = options.expectedText ? String(options.expectedText).trim() : '';
-    const prompt = expectedText
-        ? `You are an accurate English speech-to-text transcriber for an English proficiency entrance test.\nThe candidate was asked to read the following reference passage:\n"${expectedText}"\n\nListen to the audio and transcribe what the candidate actually spoke in English verbatim.\n- Transcribe their actual spoken English words, reflecting their spoken speech even if words were omitted, mispronounced, or substituted.\n- Do NOT hallucinate words or repeat loops during silent intervals or pauses.\n- Output ONLY the plain transcription text with no commentary, no markdown code blocks, and no quotation marks.`
-        : `You are an accurate English speech-to-text transcriber. Listen to the audio and transcribe what the candidate spoke in English verbatim. Do NOT hallucinate words or repeat loops during silence. Output ONLY the plain transcription text with no commentary, no markdown code blocks, and no quotation marks.`;
 
+    // Primary path for reading passages:
+    // When expectedText is present, perform direct forced alignment and acoustic assessment using Azure Speech.
+    // This returns millisecond word/syllable timings, phoneme coaching, and accuracy scores in a single step.
+    if (expectedText) {
+        try {
+            const azureWords = await alignAudioWithAzure(audioBuffer, expectedText, contentType);
+            if (azureWords && azureWords.length > 0) {
+                const text = azureWords.recognizedText || expectedText;
+                return Object.assign(new String(text), {
+                    text,
+                    words: azureWords,
+                    accuracyScore: azureWords.accuracyScore ?? null
+                });
+            }
+        } catch (azureErr) {
+            console.warn('[EntranceTest ASR] Primary Azure assessment failed, falling back:', azureErr?.message || azureErr);
+        }
+    }
+
+    // Secondary path: Gemini Multimodal Audio (if configured)
+    const apiKeys = getGeminiApiKeys();
     let lastError = null;
 
-    for (let keyIdx = 0; keyIdx < apiKeys.length; keyIdx += 1) {
-        const apiKey = apiKeys[keyIdx];
-        const genAI = new GoogleGenerativeAI(apiKey.trim());
+    if (apiKeys.length > 0) {
+        const mimeType = resolveGeminiAudioMimeType(contentType);
+        const base64Data = audioBuffer.toString('base64');
+        const timeoutMs = options.timeoutMs || 15000;
 
-        for (const modelName of candidateModels) {
-            try {
-                const model = genAI.getGenerativeModel({
-                    model: modelName,
-                    generationConfig: {
-                        temperature: 0.0
-                    }
-                });
+        const primaryModel = process.env.ENTRANCE_TEST_ASR_MODEL || 'gemini-3.8-flash';
+        const candidateModels = [
+            primaryModel,
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'gemini-3-flash-preview',
+            'gemini-3.5-transcribe'
+        ].filter((val, idx, self) => self.indexOf(val) === idx);
 
-                const generatePromise = model.generateContent([
-                    {
-                        inlineData: {
-                            mimeType,
-                            data: base64Data
+        const prompt = expectedText
+            ? `You are an accurate English speech-to-text transcriber for an English proficiency entrance test.\nThe candidate was asked to read the following reference passage:\n"${expectedText}"\n\nListen to the audio and transcribe what the candidate actually spoke in English verbatim.\n- Transcribe their actual spoken English words, reflecting their spoken speech even if words were omitted, mispronounced, or substituted.\n- Do NOT hallucinate words or repeat loops during silent intervals or pauses.\n- Output ONLY the plain transcription text with no commentary, no markdown code blocks, and no quotation marks.`
+            : `You are an accurate English speech-to-text transcriber. Listen to the audio and transcribe what the candidate spoke in English verbatim. Do NOT hallucinate words or repeat loops during silence. Output ONLY the plain transcription text with no commentary, no markdown code blocks, and no quotation marks.`;
+
+        for (let keyIdx = 0; keyIdx < apiKeys.length; keyIdx += 1) {
+            const apiKey = apiKeys[keyIdx];
+            const genAI = new GoogleGenerativeAI(apiKey.trim());
+
+            for (const modelName of candidateModels) {
+                try {
+                    const model = genAI.getGenerativeModel({
+                        model: modelName,
+                        generationConfig: {
+                            temperature: 0.0
                         }
-                    },
-                    prompt
-                ]);
-
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error(`ASR timeout after ${timeoutMs}ms for ${modelName}`)), timeoutMs);
-                });
-
-                const res = await Promise.race([generatePromise, timeoutPromise]);
-                const rawText = res?.response?.text() || '';
-                const cleaned = cleanHallucinatedLoops(rawText);
-
-                if (cleaned) {
-                    let words = null;
-                    try {
-                        const trimmedExpected = options.expectedText ? String(options.expectedText).trim() : '';
-                        const targetText = trimmedExpected || cleaned;
-                        words = await alignAudioWithAzure(audioBuffer, targetText, contentType);
-                    } catch (alignErr) {
-                        console.warn('[EntranceTest ASR] Azure alignment attempt failed:', alignErr?.message || alignErr);
-                    }
-
-                    // Fallback to Whisper for word timestamps if Azure alignment yielded no words
-                    if (!words || words.length === 0) {
-                        try {
-                            const hfRes = await transcribeWithHuggingFace(audioBuffer, contentType);
-                            if (Array.isArray(hfRes?.words) && hfRes.words.length > 0) {
-                                words = hfRes.words;
-                            }
-                        } catch (_) {
-                            // Non-blocking fallback
-                        }
-                    }
-
-                    return Object.assign(new String(cleaned), {
-                        text: cleaned,
-                        words: words && words.length > 0 ? words : null,
-                        accuracyScore: words?.accuracyScore ?? null
                     });
-                }
-            } catch (err) {
-                lastError = err;
-                const errMsg = err?.message || String(err);
-                console.warn(`[EntranceTest ASR] Key #${keyIdx + 1} with model ${modelName} failed:`, errMsg);
 
-                // If error is auth or quota exhaustion, jump immediately to the backup key
-                const isKeyFailure = /API_KEY_INVALID|API key not valid|RESOURCE_EXHAUSTED|429|403|400|quota/i.test(errMsg);
-                if (isKeyFailure && keyIdx < apiKeys.length - 1) {
-                    console.warn(`[EntranceTest ASR] API key #${keyIdx + 1} encountered auth/quota error. Failing over to backup key #${keyIdx + 2}...`);
-                    break;
+                    const generatePromise = model.generateContent([
+                        {
+                            inlineData: {
+                                mimeType,
+                                data: base64Data
+                            }
+                        },
+                        prompt
+                    ]);
+
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error(`ASR timeout after ${timeoutMs}ms for ${modelName}`)), timeoutMs);
+                    });
+
+                    const res = await Promise.race([generatePromise, timeoutPromise]);
+                    const rawText = res?.response?.text() || '';
+                    const cleaned = cleanHallucinatedLoops(rawText);
+
+                    if (cleaned) {
+                        let words = null;
+                        try {
+                            const targetText = expectedText || cleaned;
+                            words = await alignAudioWithAzure(audioBuffer, targetText, contentType);
+                        } catch (alignErr) {
+                            console.warn('[EntranceTest ASR] Azure alignment attempt failed:', alignErr?.message || alignErr);
+                        }
+
+                        // Fallback to Whisper for word timestamps if Azure alignment yielded no words
+                        if (!words || words.length === 0) {
+                            try {
+                                const hfRes = await transcribeWithHuggingFace(audioBuffer, contentType);
+                                if (Array.isArray(hfRes?.words) && hfRes.words.length > 0) {
+                                    words = hfRes.words;
+                                }
+                            } catch (_) {
+                                // Non-blocking fallback
+                            }
+                        }
+
+                        return Object.assign(new String(cleaned), {
+                            text: cleaned,
+                            words: words && words.length > 0 ? words : null,
+                            accuracyScore: words?.accuracyScore ?? null
+                        });
+                    }
+                } catch (err) {
+                    lastError = err;
+                    const errMsg = err?.message || String(err);
+                    console.warn(`[EntranceTest ASR] Key #${keyIdx + 1} with model ${modelName} failed:`, errMsg);
+
+                    // If error is auth or quota exhaustion, jump immediately to the backup key
+                    const isKeyFailure = /API_KEY_INVALID|API key not valid|RESOURCE_EXHAUSTED|429|403|400|quota/i.test(errMsg);
+                    if (isKeyFailure && keyIdx < apiKeys.length - 1) {
+                        console.warn(`[EntranceTest ASR] API key #${keyIdx + 1} encountered auth/quota error. Failing over to backup key #${keyIdx + 2}...`);
+                        break;
+                    }
                 }
             }
         }
     }
 
-    // Safety Net: If all Gemini keys and models failed, invoke hardened Hugging Face Whisper
-    console.warn('[EntranceTest ASR] All Gemini keys/models exhausted. Falling back to hardened Hugging Face safety net...');
-    try {
-        const hfTranscript = await transcribeWithHuggingFace(audioBuffer, contentType);
-        if (hfTranscript) {
-            /* eslint-disable-next-line no-console */
-            console.log('[EntranceTest ASR] Transcribed successfully using Hugging Face safety net.');
-            return hfTranscript;
+    // Tertiary Safety Net: Hugging Face Whisper ASR
+    const hfKey = getHuggingFaceApiKey();
+    if (hfKey) {
+        console.warn('[EntranceTest ASR] Falling back to hardened Hugging Face safety net...');
+        try {
+            const hfTranscript = await transcribeWithHuggingFace(audioBuffer, contentType);
+            if (hfTranscript) {
+                /* eslint-disable-next-line no-console */
+                console.log('[EntranceTest ASR] Transcribed successfully using Hugging Face safety net.');
+                return hfTranscript;
+            }
+        } catch (hfErr) {
+            console.warn('[EntranceTest ASR] Hugging Face safety net failed:', hfErr?.message || hfErr);
+            lastError = hfErr;
         }
-    } catch (hfErr) {
-        console.warn('[EntranceTest ASR] Hugging Face safety net failed:', hfErr?.message || hfErr);
     }
 
-    throw lastError || new Error('All ASR providers (Gemini and Hugging Face) failed to transcribe audio.');
+    throw lastError || new Error('All ASR providers (Azure, Gemini, and Hugging Face) failed to transcribe audio. Please verify server API credentials.');
 }
 
 /**

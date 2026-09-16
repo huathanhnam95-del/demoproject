@@ -2099,3 +2099,47 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1104,2026-09-12,Compile comprehensive Entrance Test UI ratings and feedback analysis report into docs/entrance-test-ui-analysis.md,Done,2026-09-12
 1105,2026-09-13,Investigate Google Cloud Gemini API billing cost activities,Done,2026-09-13
 1106,2026-09-13,CRM Projects font and interface size control execution,Done,2026-09-13
+1107,2026-09-13,Gather and verify all presentation references and links with 3 local LLM audit,Done,2026-09-13
+1108,2026-09-13,Generate bilingual PEEL essay idea prep docx for 38 questions with 3 local LLM audit,Done,2026-09-13
+1109,2026-09-13,Strip bilingual header/title translations and expand prompt and reason paraphrasing vocabulary in essay handbook,Done,2026-09-13
+1110,2026-09-13,Document comprehensive context and background of flat structure teacher presentation into markdown file,Done,2026-09-13
+1111,2026-09-13,Research pros and cons of traditional hierarchy for 2-minute narrative video script,Done,2026-09-13
+1112,2026-09-13,Scan and refine phrasings across narrative video script and presenter text for natural tone,Done,2026-09-13
+1113,2026-09-13,Refine script and visuals to eradicate jargon and unnatural phrasing with 3 local LLM audit,Done,2026-09-13
+1114,2026-09-14,Audit sprites and animation in Working as Equals demo mini game for clipping and misplaced elements,Done,2026-09-14
+1115,2026-09-14,CRM cold-start access delay fix and auth bootstrap optimization,Done,2026-09-14
+1116,2026-09-14,Fix sprite rendering defects in Working as Equals demo (p0 facing + p3 hat + walk gap + seating + glasses + entry overlap),Done,2026-09-14
+1117,2026-09-14,Fix CRM clean URL routing for crm-admin and static HTML rewrites,Done,2026-09-14
+1118,2026-09-15,Align CRM clean URLs across server redirects and UI links with local and prod audit,Done,2026-09-15
+1119,2026-09-15,Fix CRM Projects sub-item creation latency and leaf task arrow affordance,Done,2026-09-15
+1120,2026-09-15,Fix CRM Projects status pill styling and instant color update,Done,2026-09-15
+1121,2026-09-15,Remove unnecessary calendar header clutter and collapse holiday provenance,Done,2026-09-15
+1122,2026-09-15,Align CRM Projects calendar design and UI layout with Teacher Schedule,Done,2026-09-15
+1123,2026-09-15,Analyze and optimize section saving editing deleting interactions and latency,Done,2026-09-15
+1124,2026-09-15,Refactor Timeline into Gantt chart with empty data suppression and proper filters,Done,2026-09-15
+1125,2026-09-15,Comprehensive audit of all CRM Projects changes in session,Done,2026-09-15
+1126,2026-09-16,BEL 3D asset brief v2: Claude Batch 0 Three.js module pack (avatar idle/walk + plank + meter ref) with Chrome preview and evidence,Done,2026-09-16
+1127,2026-09-16,BEL 3D upgrade Phase 00 baseline audit and Phase 01 reproducible launch and packaging,Done,2026-09-16
+1128,2026-09-16,Execute production bootstrap and publication sequence for BEL Presentation Demo release,Done,2026-09-16
+1129,2026-09-16,BEL 3D upgrade Phase 02 executable content behavior and state parity contracts,Done,2026-09-16
+1130,2026-09-16,BEL blocky 3D art direction (BEL-ART-01) S1: rebuild Batch 0 assets as block-built avatar/planks/material board with neutral+room lighting evidence,Done,2026-09-16
+1131,2026-09-16,Enable code-only participant joining with anonymous auth display name and direct link,Done,2026-09-16
+1132,2026-09-16,BEL 3D upgrade Phase 03 four-window harness Phase 04 modal UI and Phase 05 Three.js adapter,Done,2026-09-16
+1133,2026-09-16,BEL blocky art direction S2: Room F and studio G block kit with L0-L5 lighting reference and optional atmosphere,Done,2026-09-16
+1134,2026-09-16,Fix RTDB transaction maxretry contention on join and room lifecycle,Done,2026-09-16
+1135,2026-09-16,BEL art direction S4 start: complete Batch 1 carry/seated poses and deliver Batch 2 activity props and rooms B1/D/I/J,Done,2026-09-16
+1136,2026-09-16,Deep skeptical audit of BEL 3D upgrade contracts test harness and asset intake readiness,Done,2026-09-16
+1137,2026-09-16,Diagnose and fix BEL split room player movement freeze and disconnect bug,Done,2026-09-16
+1138,2026-09-16,Audit movement and motion mechanics in BEL demo game,Done,2026-09-16
+1139,2026-09-16,Update teacher schedule calendar session pills to pastel color system,Done,2026-09-16
+1140,2026-09-16,Implement responsive movement and motion fixes in BEL demo game,Done,2026-09-16
+1141,2026-09-16,BEL 3D Batch 3: Home/Street/Reception rooms plus Wave handhold and scooter/skateboard ride clips; all 14 reference rooms assemble,Done,2026-09-16
+1142,2026-09-16,Review debug and refactor BEL split room multiplayer freeze and disconnect fixes,Done,2026-09-16
+1143,2026-09-16,Audit debug and refactor BEL movement and locomotion fixes,Done,2026-09-16
+1144,2026-09-16,Check all recent changes for BEL demo game and push to production,Done,2026-09-16
+1145,2026-09-16,Production browser test plan and execution for BEL demo game,Done,2026-09-16
+1146,2026-09-16,Verify Claude Batch 3 deliverable contents and intake readiness for BEL 3D upgrade,Done,2026-09-16
+1147,2026-09-16,Intake Claude Batch 3 asset pack wire 3D renderer and fix test harness gaps,Done,2026-09-16
+1148,2026-09-16,Execute Phase 07 four-window live acceptance verification and package BEL 3D upgrade,In Progress,
+1149,2026-09-16,Fix entrance test speaking pronunciation scoring and Azure forced alignment fallback,Done,2026-09-16
+1150,2026-09-16,Deploy V2.0.7 release and rescore entrance test speaking accuracy in production,In Progress,

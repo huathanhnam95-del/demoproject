@@ -6,7 +6,8 @@ const {
     resolveGeminiAudioMimeType,
     cleanHallucinatedLoops,
     getGeminiApiKeys,
-    getHuggingFaceApiKey
+    getHuggingFaceApiKey,
+    transcribeAudio
 } = require(path.resolve(__dirname, '..', 'functions', 'src', 'entrance-test', 'asr-service'));
 
 test('resolveGeminiAudioMimeType maps various audio headers correctly', () => {
@@ -60,6 +61,26 @@ test('getHuggingFaceApiKey discovers HF key from environment', () => {
     const key = getHuggingFaceApiKey();
     assert.ok(typeof key === 'string' && key.length > 0, 'HF key should be defined');
     assert.ok(key.startsWith('hf_'), 'HF key should start with hf_');
+});
+
+test('transcribeAudio rejects empty audio buffer', async () => {
+    await assert.rejects(
+        () => transcribeAudio(Buffer.alloc(0), 'audio/webm'),
+        /Audio buffer is empty or invalid/
+    );
+});
+
+test('transcribeAudio does not throw GEMINI_API_KEY is not configured when expectedText is provided', async () => {
+    // Pass a fake buffer to trigger Azure / fallback pipeline.
+    // Even if Azure returns error due to dummy audio, it should never throw "GEMINI_API_KEY is not configured".
+    const dummyBuffer = Buffer.from('RIFF....WAVEfmt ....data....');
+    try {
+        await transcribeAudio(dummyBuffer, 'audio/wav', {
+            expectedText: 'Scientists make observations, make assumptions, and do experiments.'
+        });
+    } catch (err) {
+        assert.doesNotMatch(err.message, /GEMINI_API_KEY is not configured on the server/);
+    }
 });
 
 

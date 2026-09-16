@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "Dictation practice app",
   "scripts": {
     "check:structure": "node scripts/structure/check.cjs check",
@@ -12,6 +12,7 @@
     "emulators": "node scripts/emulators-start.js",
     "seed:admin-emulator": "node scripts/seed-emulator-admin.js",
     "dev": "start-emulators.bat",
+    "dev:server": "node scripts/start-dev-server.cjs",
     "setup": "node setup-https.js",
     "update-db": "node update-database.js",
     "sync-rules": "node sync-points-rules.js points-rules.csv",

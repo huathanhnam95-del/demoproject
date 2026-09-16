@@ -53,7 +53,11 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
       alpha: false,
       powerPreference: 'high-performance'
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2);
+    renderer.setPixelRatio(dpr);
+    const initialWidth = canvas?.clientWidth || (canvas?.width ? canvas.width / dpr : 1000);
+    const initialHeight = canvas?.clientHeight || (canvas?.height ? canvas.height / dpr : 480);
+    renderer.setSize(initialWidth, initialHeight, false);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   } catch (err) {
@@ -611,8 +615,8 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
       if (!renderer || !camera) return;
       camera.aspect = cssWidth / cssHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(cssWidth, cssHeight, false);
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(cssWidth, cssHeight, false);
     },
 
     dispose() {

@@ -28,6 +28,20 @@ async function boot(invite,initialBundle){
   client=createClient({...invite,hostTimeoutMs:45000,commandTimeoutMs:60000});worldClient=createWorldClient(invite,client);
   const [v,source]=await Promise.all([createView({canvas:$('#world')}),loadSource()]);view=v;
   $('#launcher').hidden=true;$('#game').hidden=false;
+  const updateSize=()=>{
+    const canvas=$('#world');
+    if(!canvas||!view)return;
+    const rect=canvas.getBoundingClientRect();
+    const w=Math.round(rect.width||canvas.clientWidth||1000);
+    const h=Math.round(rect.height||canvas.clientHeight||480);
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    if(w>0&&h>0&&typeof view.resize==='function'){
+      view.resize({cssWidth:w,cssHeight:h,devicePixelRatio:dpr});
+    }
+  };
+  updateSize();
+  window.addEventListener('resize',updateSize);
+  if(typeof ResizeObserver!=='undefined'){$('#world-wrap')&&new ResizeObserver(updateSize).observe($('#world-wrap'));}
   const focus=()=>{input?.clear();$('#world').focus();};
   const command=(type,payload)=>client.command(type,payload);
   async function act(type,payload={}){

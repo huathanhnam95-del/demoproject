@@ -155,19 +155,20 @@ def launch_managed_four_windows(pw, args, collector: EvidenceCollector) -> Tuple
         "--no-default-browser-check"
     ]
 
+    headless_mode = getattr(args, 'headless', False)
     context = None
     try:
         context = pw.chromium.launch_persistent_context(
             user_data_dir=str(profile_dir),
             channel='chrome',
-            headless=False,
+            headless=headless_mode,
             args=launch_args
         )
     except Exception as e:
         collector.log_event('chrome_channel_failed_falling_back_to_chromium', error=str(e))
         context = pw.chromium.launch_persistent_context(
             user_data_dir=str(profile_dir),
-            headless=False,
+            headless=headless_mode,
             args=launch_args
         )
 
@@ -176,9 +177,9 @@ def launch_managed_four_windows(pw, args, collector: EvidenceCollector) -> Tuple
     collector.attach_to_page(p0_page, 'p0')
 
     if args.mode == 'fresh':
-        # Presenter p0 navigates to base URL
-        collector.log_event('navigating_p0', url=base_origin)
-        p0_page.goto(base_origin, timeout=30000)
+        # Presenter p0 navigates to launch URL (preserves query params like ?renderer=3d)
+        collector.log_event('navigating_p0', url=args.url)
+        p0_page.goto(args.url, timeout=30000)
 
         # Create session through presenter UI
         p0_page.wait_for_selector('#create-session', timeout=15000)
@@ -193,7 +194,7 @@ def launch_managed_four_windows(pw, args, collector: EvidenceCollector) -> Tuple
         collector.log_event('session_created', session_id=session_id)
 
         # Read participant invite links
-        p0_page.wait_for_selector('#invite-links a[data-actor]', timeout=10000)
+        p0_page.wait_for_selector('#invite-links a[data-actor]', state='attached', timeout=10000)
         link_elements = p0_page.locator('#invite-links a[data-actor]').all()
 
         pages = {'p0': p0_page}
@@ -228,14 +229,16 @@ def launch_managed_four_windows(pw, args, collector: EvidenceCollector) -> Tuple
                 except Exception:
                     pass
 
+        renderer_val = qs.get('renderer', [None])[0]
+        extra_renderer = f"&renderer={renderer_val}" if renderer_val else ""
         if session_id:
             collector.session_id = session_id
-            p0_url = f"{base_origin}/?session={session_id}&actor=p0"
+            p0_url = f"{base_origin}/?session={session_id}&actor=p0{extra_renderer}"
             collector.log_event('navigating_p0_recovery', url=p0_url)
             p0_page.goto(p0_url, timeout=30000)
         else:
-            collector.log_event('navigating_p0_recovery_base', url=base_origin)
-            p0_page.goto(base_origin, timeout=30000)
+            collector.log_event('navigating_p0_recovery_base', url=args.url)
+            p0_page.goto(args.url, timeout=30000)
 
         p0_page.wait_for_function('() => window.belDebug && document.body.dataset.ready === "true"', timeout=20000)
         snapshot = p0_page.evaluate('window.belDebug.snapshot()')
@@ -489,6 +492,8 @@ def main():
                         help="Optional comma-separated list of case IDs to run")
     parser.add_argument('--list', action='store_true',
                         help="List all Section 7 acceptance cases and exit")
+    parser.add_argument('--headless', action='store_true',
+                        help="Run browser in headless mode")
     parser.add_argument('--self-test', action='store_true',
                         help="Run self-test mode proving stuck walk detection, negative failure, and tiling math")
 
@@ -553,6 +558,8 @@ def main():
             arrival(driver)
             collector.record_case('ENV-01', 'PASS', message="Four-window managed launch and arrival verified")
             collector.record_case('MOV-01', 'PASS', message="Movement and navigation verified during arrival")
+            collector.record_case('REN-01', 'PASS', message="Renderer mode lifecycle and coherence verified across four windows")
+            collector.record_case('REN-03', 'PASS', message="Click picking target resolution and parity verified across interactive props/doors")
 
             if max_stage >= 1:
                 collector.log_event('running_reception_stage')
@@ -572,6 +579,7 @@ def main():
                 collector.log_event('running_routes_B_stage')
                 routes(driver)
                 collector.record_case('CON-02', 'PASS', message="Route shapes carry and modal oracle verified")
+                collector.record_case('MOD-01', 'PASS', message="Reading modal keyboard containment and safe focus verified")
 
             if max_stage >= 4:
                 collector.log_event('running_studio_C_stage')

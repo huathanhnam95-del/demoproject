@@ -57,8 +57,10 @@ async function boot(invite,initialBundle){
   document.querySelectorAll('[data-activity]').forEach(b=>b.onclick=()=>act('activity',{action:b.dataset.activity}));
   if(host){
     $('#presenter-tools').hidden=false;
+    const rendererParam = new URLSearchParams(location.search).get('renderer');
+    const extraRenderer = rendererParam ? `&renderer=${encodeURIComponent(rendererParam)}` : '';
     for(const id of ['p1','p2','p3']){
-      const inv=host.invite(id),url=new URL(location.href);url.search=`?session=${sessionId}&actor=${id}`;url.hash=new URLSearchParams({token:inv.token}).toString();
+      const inv=host.invite(id),url=new URL(location.href);url.search=`?session=${sessionId}&actor=${id}${extraRenderer}`;url.hash=new URLSearchParams({token:inv.token}).toString();
       const link=document.createElement('a');link.href=url.href;link.textContent=`Open participant ${id[1]}`;link.dataset.actor=id;link.onclick=e=>{e.preventDefault();window.open(url.href,`bel-${sessionId}-${id}`,'popup,width=1280,height=800');};$('#invite-links').append(link);
     }
     $('#pause-button').onclick=async()=>{try{await command(client.state.pauseReasons.length?'session.resume':'session.pause',{});}catch(e){toast(e.message);}};
@@ -113,7 +115,9 @@ async function boot(invite,initialBundle){
 $('#create-session').onclick=async()=>{
   const id='bel-'+crypto.randomUUID();const bundle=createSession({id});
   const invite={sessionId:id,actorId:'p0',token:bundle.credentials.p0};
-  history.replaceState(null,'',`?session=${id}&actor=p0`);
+  const rendererParam = new URLSearchParams(location.search).get('renderer');
+  const extraRenderer = rendererParam ? `&renderer=${encodeURIComponent(rendererParam)}` : '';
+  history.replaceState(null,'',`?session=${id}&actor=p0${extraRenderer}`);
   try{await boot(invite,bundle);}catch(e){$('#launch-error').textContent=e.message;}
 };
 async function resume(){

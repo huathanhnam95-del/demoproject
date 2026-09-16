@@ -9,18 +9,34 @@ export async function createView({ canvas, mode = 'auto', onFault } = {}) {
 
   // Allow explicit '3d' or '2d' via URL query, otherwise default to 2d until final release
   let use3D = requestedMode === '3d' || mode === '3d';
-
   let view = null;
+  let activeMode = use3D ? '3d' : '2d';
+
+  async function fallbackTo2D(err) {
+    if (activeMode === '2d') return;
+    console.warn('3D WebGL fault, transitioning to 2D canvas fallback:', err);
+    try {
+      if (view && typeof view.dispose === 'function') {
+        view.dispose();
+      }
+    } catch (e) {
+      console.warn('Error disposing 3D view during fallback:', e);
+    }
+    const { createRenderer } = await import('./renderer.mjs');
+    view = await createRenderer(canvas);
+    activeMode = '2d';
+    if (typeof onFault === 'function') onFault(err);
+  }
 
   if (use3D) {
     try {
       const { createRenderer3D } = await import('./renderer3d.mjs');
       view = await createRenderer3D(canvas, {
         onFault: (err) => {
-          console.warn('3D renderer fault, transitioning to 2D fallback:', err);
-          if (typeof onFault === 'function') onFault(err);
+          fallbackTo2D(err);
         }
       });
+      activeMode = '3d';
     } catch (err) {
       console.warn('3D WebGL renderer unavailable, activating 2D fallback:', err);
       use3D = false;
@@ -30,11 +46,12 @@ export async function createView({ canvas, mode = 'auto', onFault } = {}) {
   if (!use3D || !view) {
     const { createRenderer } = await import('./renderer.mjs');
     view = await createRenderer(canvas);
+    activeMode = '2d';
   }
 
   return {
     get mode() {
-      return view.mode || (use3D ? '3d' : '2d');
+      return activeMode;
     },
     draw(world, session, actor, now, source) {
       view.draw(world, session, actor, now, source);

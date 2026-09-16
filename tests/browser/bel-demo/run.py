@@ -19,10 +19,10 @@ def arrival(d):
     for i in range(4):
         a=f'p{i}';p=d.pages[a];p.locator('#profile-button').click();p.locator('[name=name]').fill(['Minh','Lan','Mai','An'][i]);p.locator('[name=shirt]').select_option(['red','teal','cream','amber'][i]);p.locator('[name=hat]').select_option('straw' if i==3 else 'none');p.locator('[name=glasses]').set_checked(i==1);p.get_by_role('button',name='Save character').click()
     d.keys('p1',['d'],.35);d.keys('p1',['w','a'],.35);d.keys('p1',['s'],.4);d.keys('p1',['a'],.3);d.keys('p1',['d','s'],.3);d.keys('p1',['w'],.3);d.keys('p1',['a','s'],.25);d.keys('p1',['d','w'],.25)
-    d.path('p1',(500,340),(500,378));assert d.player('p1')['y']>369;d.shot('p1','home-lower-floor')
+    d.path('p1',(500,315),(500,378));assert d.player('p1')['y']>369;d.shot('p1','home-lower-floor')
     before=d.player('p1');d.interact('p1',(800,180));assert abs(d.player('p1')['x']-before['x'])<1
     d.path('p1',(720,320),(635,150));d.keys('p1',['w'],.7);assert d.player('p1')['y']>=138
-    d.path('p1',(710,300),(500,375))
+    d.path('p1',(710,300),(500,300),(500,375))
     for a,ride,x in [('p2','scooter',380),('p3','skateboard',622)]:
         d.path(a,(x,315),(x,331));d.interact(a,(x,365) if a=='p3' else None);assert d.player(a)['ride']==ride
         d.keys(a,['a'],.35);d.keys(a,['d','w'],.35);d.keys(a,['s'],.2);d.shot(a,'home-'+ride+'-pose')
@@ -53,7 +53,7 @@ def reception(d):
     d.interact('p1',(d.player('p2')['x'],d.player('p2')['y']));d.pages['p1'].get_by_role('button',name='View notes',exact=True).click();assert 'We can begin together.' in d.pages['p1'].locator('.ink').inner_text();d.pages['p1'].locator('[data-n=close]').click()
     d.checkpoint('reception')
     for a in ['p0','p1','p2']:
-        d.path(a,(d.player(a)['x'],270),(720,270),(720,190),(633,178));d.enter(a,'A');d.path(a,(260+int(a[1])*45,355))
+        d.path(a,(d.player(a)['x'],240),(720,240),(720,190),(633,178));d.enter(a,'A');d.path(a,(260+int(a[1])*45,355))
 
 def studio(d,room):
     active=d.snap('p0')['session']['presentation']['active']
@@ -64,7 +64,7 @@ def studio(d,room):
         d.path('p2',(350,299),(220,299))
         d.path('p1',(445,365),(445,291),(400,290));d.interact('p1',(400,260));assert d.player('p1')['seat']=='seat-0-0';d.shot('p1','A-seated');d.interact('p1');assert d.player('p1')['seat'] is None;d.path('p1',(445,291),(445,365),(300,365))
         d.path('p2',(200,350),(130,249));d.interact('p2',(99,249));assert 'Locked' in d.pages['p2'].locator('#toast').inner_text();assert d.pages['p2'].locator('#panel').is_hidden();d.path('p2',(220,330))
-    elif room in ['C','E','G'] and not active:d.path('p0',(d.player('p0')['x'],370),(240,370),(240,185),(580,185),(631,183))
+    elif room in ['C','E','G'] and not active:d.path('p0',(720,370),(720,185),(631,183))
     if not active:
         d.interact('p0',(631,175));d.pages['p0'].get_by_role('button',name='Start presentation',exact=True).click()
     for a in d.pages:d.wait(a,'window.belDebug.snapshot().frameReady === true',timeout=35000)
@@ -91,7 +91,7 @@ def routes(d):
         if d.player(a)['scene']=='C' and all(o['placed'] for o in d.snap(a)['world']['routes'][route]):continue
         if d.player(a)['scene']!=route:
             if route=='B1':d.path(a,(260,180),(180,249),(130,249));d.enter(a,route,(99,249))
-            elif route=='B2':d.path(a,(270,205),(710,205),(740,180));d.enter(a,route,(747,148))
+            elif route=='B2':d.path(a,(270,225),(710,225),(740,180));d.enter(a,route,(747,148))
             else:d.path(a,(730,350),(867,249));d.enter(a,route,(900,249))
         if a=='p0':d.path(a,(165,300),(158,345));continue
         for i,(pick,place) in enumerate([((275,294),(230,267)),((453,277),(486,186)),((617,247),(716,227))]):
@@ -103,30 +103,32 @@ def routes(d):
                 d.path(a,(380,277),(400,186),(486,186));d.interact(a,(486,179));assert d.player(a)['carry']=='shape-0';assert 'does not fit' in d.pages[a].locator('#toast').inner_text();d.path(a,(380,270))
             if i==1:d.path(a,(390,277),(399,186),place)
             else:d.path(a,(place[0],270),place)
-            d.interact(a,(place[0],place[1]-10));assert d.pages[a].locator('.source-text').inner_text()==expected[route][i];d.shot(a,route+'-source-'+str(i));d.close_panel(a)
+            d.interact(a,(place[0],place[1]-10));assert d.pages[a].locator('.source-text').first.inner_text()==expected[route][i];d.shot(a,route+'-source-'+str(i));d.close_panel(a)
         d.path(a,(815,270),(866,189));d.enter(a,'C',(883,165));d.path(a,(260+int(a[1])*43,354))
     # Presenter sees the same-route matches, each panel still opens individually.
     if d.player('p0')['scene']=='B1':
-        d.path('p0',(230,270));d.interact('p0',(230,256));assert d.pages['p0'].locator('.source-text').inner_text()==expected['B1'][0];d.close_panel('p0');d.path('p0',(815,270),(866,189));d.enter('p0','C',(883,165))
+        d.path('p0',(230,270));d.interact('p0',(230,256));assert d.pages['p0'].locator('.source-text').first.inner_text()==expected['B1'][0];d.close_panel('p0');d.path('p0',(815,270),(866,189));d.enter('p0','C',(883,165))
     d.checkpoint('B')
 
 def gallery(d):
     walk=d.walk
     d.walk=lambda a,x,y,**kw:walk(a,x,y,tolerance=2,**kw)
-    for a in ['p1','p2','p3','p0']:
+    for a in ['p0','p3','p2','p1']:
         if d.player(a)['scene']!='D':
-            d.path(a,(d.player(a)['x'],370),(220,370),(220,215),(710,215),(748,176));d.enter(a,'D',(747,148))
-            d.path(a,(d.player(a)['x'],423),(260+int(a[1])*80,423))
-    points=[(149,283),(294,197),(483,197),(669,197),(851,283)]
+            if a=='p0':d.path('p0',(740,180))
+            else:d.path(a,(d.player(a)['x'],370),(720,370),(720,180),(748,176))
+            d.enter(a,'D',(747,148))
+            d.path(a,(260+int(a[1])*80,393),(260+int(a[1])*80,423))
+    points=[(149,283),(294,197),(483,197),(669,197),(845,283)]
     names=['Chet Faliszek','Josh Weier','Mike Morasky','Erik Wolpaw','Rich Geldreich']
     for i,(x,y) in enumerate(points):
         a=f'p{(i%3)+1}';side=300 if x<500 else 730
-        d.path(a,(d.player(a)['x'],403),(side,403),(side,205),(x,y));d.interact(a,(x,y))
+        d.path(a,(d.player(a)['x'],370),(side,370),(side,205),(x,y));d.interact(a,(x,y))
         assert names[i] in d.pages[a].locator('#panel h2').inner_text()
         exact=d.pages[a].evaluate("""async n=>{const doc=new DOMParser().parseFromString(await(await fetch('/native/deck.html')).text(),'text/html');return doc.querySelector('section[data-screen-label="'+n+'"] blockquote').textContent.replace(/\\s+/g,' ').trim()}""",str(10+i))
         assert d.pages[a].locator('#panel blockquote').inner_text()==exact
-        d.shot(a,'D-'+names[i].split()[0]);d.close_panel(a);d.path(a,(side,205),(side,403),(260+int(a[1])*80,403),(260+int(a[1])*80,423))
-    d.path('p0',(200,403),(200,205),(810,205),(824,195));d.interact('p0',(824,178));d.shot('p0','D-onward-threshold');d.close_panel('p0');d.checkpoint('D')
+        d.shot(a,'D-'+names[i].split()[0]);d.close_panel(a);d.path(a,(side,205),(side,370),(260+int(a[1])*80,370),(260+int(a[1])*80,423))
+    d.path('p0',(200,370),(200,205),(810,205),(824,195));d.interact('p0',(824,178));d.shot('p0','D-onward-threshold');d.close_panel('p0');d.checkpoint('D')
 
 
 if __name__ == '__main__':

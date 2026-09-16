@@ -67,7 +67,10 @@ export function stepWorld(w,base,inputs,dt,now){
   const active=base.presentation.active?base.presentation.roomId:null;
   if(active!==w.presentationWas){
     if(active){w.deck.room=active;w.deck.slide=GROUPS[active]?.[0]||1;if(active==='C')w.cStarted=true;if(active==='G')w.gStarted=true;for(const p of Object.values(w.players))p.request=null;}
-    else if(w.presentationWas){if(w.presentationWas!=='I'||(w.reversal.phase==='complete'&&w.deck.slide===20))w.unlocked[w.presentationWas]=true;w.unlockAt=now;}
+    else if(w.presentationWas){
+      const finished=w.deck.slide===GROUPS[w.presentationWas]?.[1]&&(w.presentationWas!=='I'||w.reversal.phase==='complete');
+      if(finished){w.unlocked[w.presentationWas]=true;w.unlockAt=now;}
+    }
     w.presentationWas=active;
   }
   tickBridge(w,base,elapsed,globallyPaused);

@@ -86,12 +86,12 @@
         <div class="pd-canvas-wrap">
           <canvas id="pd-world" width="1000" height="480" tabindex="0" aria-label="Online BEL game world"></canvas>
           <div id="pd-gate" class="pd-gate" role="status"></div>
-        </div>
+        <div class="pd-world-hud">
         <p id="pd-world-prompt" aria-live="polite"></p>
         <p id="pd-activity-status" role="status" hidden></p>
         <div id="pd-world-panel" class="pd-world-panel" role="dialog" aria-label="World interaction" hidden></div>
         <div id="pd-pair-request" class="pd-actions" hidden></div>
-        <div class="pd-actions">
+        <div class="pd-actions" id="pd-world-controls">
           <button id="pd-interact" class="pd-button pd-button-secondary" type="button">Interact · F</button>
           <button id="pd-profile" class="pd-button pd-button-secondary" type="button">Character</button>
           <button id="pd-release" class="pd-button pd-button-secondary" type="button" hidden>Let go · E</button>
@@ -100,10 +100,25 @@
           <button id="pd-activity-start" class="pd-button pd-button-primary" type="button" hidden>Start activity</button>
           <button id="pd-activity-reset" class="pd-button pd-button-secondary" type="button" hidden>Reset bridge</button>
           <button id="pd-pause" class="pd-button pd-button-secondary" type="button" hidden>Pause</button>
-          <button id="pd-close-presentation" class="pd-button pd-button-secondary" type="button" hidden>Return to room</button>
         </div>
-        <div class="pd-deck-wrap">
-          <div class="pd-deck-heading"><span class="pd-kicker">Authored deck</span><span id="pd-deck-status" class="pd-muted">Loading presentation…</span></div>
+        </div>
+        <div class="pd-deck-wrap" hidden>
+          <div class="pd-deck-heading">
+            <span id="pd-deck-status" class="pd-muted" role="status">Loading presentation…</span>
+            <div class="pd-slide-actions">
+              <button id="pd-slide-previous" class="pd-button pd-button-secondary" type="button" hidden>Previous</button>
+              <button id="pd-slide-next" class="pd-button pd-button-secondary" type="button" hidden>Next slide</button>
+              <button id="pd-reveal" class="pd-button pd-button-secondary" type="button" hidden>Reveal next point</button>
+              <details id="pd-display-options" hidden>
+                <summary>Presentation display</summary>
+                <label><input id="pd-show-quotes" type="checkbox" checked> Show quotes</label>
+                <label><input id="pd-show-folio" type="checkbox" checked> Show page numbers</label>
+                <label for="pd-photo-treatment">Photos</label>
+                <select id="pd-photo-treatment"><option>Black and white</option><option>Full colour</option></select>
+              </details>
+              <button id="pd-close-presentation" class="pd-button pd-button-danger" type="button" hidden>Stop presentation</button>
+            </div>
+          </div>
           <iframe id="pd-deck" title="Working as Equals authored presentation" loading="lazy" referrerpolicy="same-origin"></iframe>
         </div>
         <div class="pd-game-toolbar">
@@ -114,6 +129,7 @@
           <button id="pd-end-room" class="pd-button pd-button-danger" type="button" hidden>End room</button>
         </div>
         <p id="pd-game-message" class="pd-muted" aria-live="polite"></p>
+        </div>
       </div>
       <aside class="pd-game-side">
         <section class="pd-panel pd-side-section">
@@ -130,20 +146,7 @@
           <span id="pd-note-status" class="pd-muted" role="status"></span>
         </section>
         <section class="pd-panel pd-side-section">
-          <p class="pd-kicker">Presentation</p>
-          <div class="pd-slide-actions">
-            <button id="pd-slide-previous" class="pd-button pd-button-secondary" type="button" hidden>Previous</button>
-            <button id="pd-slide-next" class="pd-button pd-button-secondary" type="button" hidden>Next slide</button>
-          </div>
           <button id="pd-export-pdf" class="pd-button pd-button-secondary" type="button">Export my notes</button>
-          <button id="pd-reveal" class="pd-button pd-button-secondary" type="button" hidden>Reveal next point</button>
-          <details id="pd-display-options" hidden>
-            <summary>Presentation display</summary>
-            <label><input id="pd-show-quotes" type="checkbox" checked> Show quotes</label>
-            <label><input id="pd-show-folio" type="checkbox" checked> Show page numbers</label>
-            <label for="pd-photo-treatment">Photos</label>
-            <select id="pd-photo-treatment"><option>Black and white</option><option>Full colour</option></select>
-          </details>
         </section>
       </aside>
     </section>

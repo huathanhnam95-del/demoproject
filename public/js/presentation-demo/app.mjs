@@ -1,6 +1,7 @@
 import { bootAuth, signInUrl } from './auth.mjs';
 import { PresentationTransport } from './transport.mjs';
 import { PresentationViewModel } from './view-model.mjs';
+import { LocalMovement } from './movement.mjs';
 import { bindNotebook } from './notebook.mjs';
 import { createPresentationAdapter } from './presentation/adapter.mjs';
 import { SCENES } from './core/world/scenes.mjs';
@@ -25,6 +26,7 @@ let pollTimer = null;
 let heartbeatTimer = null;
 let room = null;
 let previousWorld = null, receivedAt = performance.now();
+const localMovement = new LocalMovement();
 let nativeRenderer = null;
 let source = null, input = null, inputTimer = null, animation = null, readyPending = false, exportInFlight = false, panelInstance = null;
 const worldElements = { prompt: 'pd-world-prompt', activity: 'pd-activity-status', panel: 'pd-world-panel', pair: 'pd-pair-request', interact: 'pd-interact', profile: 'pd-profile', release: 'pd-release', drop: 'pd-drop', dismount: 'pd-dismount', activityStart: 'pd-activity-start', activityReset: 'pd-activity-reset', pause: 'pd-pause', closePresentation: 'pd-close-presentation' };
@@ -158,17 +160,13 @@ function drawGame() {
       Object.assign(visual.players[id], move(before, (current.x - before.x) * fraction, (current.y - before.y) * fraction, SCENES[current.scene], solidsFor(world, id), current.ride ? 15 : 10));
     }
   }
-  if (input && !world.paused && !world.presentation.active && !player.seat && !player.leader && !player.follower && els.panel.hidden && !document.activeElement?.closest?.('input,textarea,select')) {
-    let dx = Number(input.keys.d) - Number(input.keys.a), dy = Number(input.keys.s) - Number(input.keys.w);
-    if (player.scene === 'I' && world.reversal.debuffs[player.id] > 0) { dx *= -1; dy *= -1; }
-    const magnitude = Math.hypot(dx, dy) || 1, seconds = elapsed / 1000, speed = player.ride ? 165 : 108;
-    Object.assign(visual.players[player.id], move(player, dx / magnitude * speed * seconds, dy / magnitude * speed * seconds, SCENES[player.scene], solidsFor(world, player.id), player.ride ? 15 : 10));
-  }
+  const blocked = !model?.connection || room.lifecycle === 'ended' || world.paused || world.presentation.active || !els.panel.hidden || !!document.activeElement?.closest?.('input,textarea,select,[contenteditable="true"]');
+  visual.players[player.id] = localMovement.sample(world, player.id, input?.keys || {}, performance.now(), blocked);
   nativeRenderer.draw(visual, worldBase(), player.id, (world.tickAt || Date.now()) + elapsed, source);
 }
 function sendDeckState(currentRoom = room) {
   if (!currentRoom || !els.deck?.contentWindow) return;
-  els.deck.contentWindow.postMessage({ belApp: true, contentVersion: 'bel-working-as-equals-1', roomId: currentRoom.roomId, revision: currentRoom.revision, serverNow: currentRoom.gameplay?.tickAt, deck: currentRoom.deck }, window.location.origin);
+  els.deck.contentWindow.postMessage({ belApp: true, contentVersion: 'bel-working-as-equals-1', roomId: currentRoom.roomId, revision: currentRoom.revision, serverNow: currentRoom.gameplay?.tickAt, canControl: model?.isPresenter() && currentRoom.gameplay?.presentation?.active && !currentRoom.gameplay?.paused, deck: currentRoom.deck }, window.location.origin);
 }
 function renderGame(currentRoom) {
   if (room?.roomId === currentRoom.roomId && currentRoom.revision < room.revision) return;
@@ -179,6 +177,7 @@ function renderGame(currentRoom) {
   els.gameCode.textContent = currentRoom.code;
   renderSlots(els.gameSlots, currentRoom);
   const player = ownPlayer(), world = room.gameplay, presenter = model?.isPresenter(), active = world?.presentation?.active;
+  document.body.classList.toggle('pd-presenting', active === true);
   els.gate.textContent = archivePending(room) ? 'Room ended · Finalizing saved notes' : room.lifecycle === 'ended' ? 'This room has ended' : player ? SCENES[player.scene].title : 'Connecting to the room';
   els.gate.dataset.deckRoom = currentRoom.deck?.room || 'reception';
   els.gate.dataset.deckSlide = String(currentRoom.deck?.slide || 0);
@@ -188,6 +187,9 @@ function renderGame(currentRoom) {
   show(els.end, presenter && room.lifecycle !== 'ended');
   show(els.start, presenter && room.lifecycle === 'reception' && !!room.allParticipantsJoinedAt);
   show(els.previous, presenter && active); show(els.next, presenter && active);
+  const range = GROUPS[room.deck.room];
+  els.previous.disabled = world?.paused || (room.deck.room !== 'J' && room.deck.slide <= range?.[0]);
+  els.next.disabled = world?.paused || (room.deck.room === 'J' ? room.deck.finalPage === 'eta' : room.deck.slide >= range?.[1]) || (room.deck.room === 'I' && world.reversal.phase !== 'complete');
   show($('pd-reveal'), presenter && active && [2, 4, 5, 6].includes(room.deck.slide));
   show($('pd-display-options'), presenter && active);
   $('pd-show-quotes').checked = room.deck.properties.showQuotes;
@@ -256,6 +258,7 @@ function startPolling() {
 }
 
 async function openGameView() {
+  document.body.classList.add('pd-playing');
   show(els.entry, false); show(els.room, false); show(els.game, true);
   model = new PresentationViewModel({ transport, identity }); model.setRoom(room); presentation = createPresentationAdapter({ model });
   await connectGame(false); startPolling(); installWorldControls();
@@ -441,6 +444,8 @@ function bindEvents() {
       if (event.data.kind === 'ready') { els.deckStatus.textContent = 'Synchronized with the server-authorized slide state.'; sendDeckState(); return; }
       if (event.data.kind === 'error') { els.deckStatus.textContent = `Presentation could not synchronize: ${event.data.message || 'Reload the presentation.'}`; return; }
     if (event.data.kind !== 'action' || !presentation || event.data.roomId !== room.roomId || event.data.contentVersion !== 'bel-working-as-equals-1') return;
+    if (!model?.isPresenter() || !room.gameplay?.presentation?.active) return;
+    if (event.data.action === 'close') { presentationAction('close'); return; }
     const roomName = room.deck.room || 'A';
     if (['next', 'previous', 'reveal', 'reset-view', 'properties'].includes(event.data.action)) worldAction('slide', { action: event.data.action, ...(event.data.values ? { values: event.data.values } : {}) });
   });
@@ -461,7 +466,7 @@ async function boot() {
       message('This seat is now active on another device. Choose Continue here to return.', 'warning');
       return;
     }
-    if (state !== 'connected') input?.clear();
+    if (state !== 'connected') { input?.clear(); localMovement.reset(); }
     if (els.connection) els.connection.textContent = state === 'reconnecting' ? 'Reconnecting…' : state === 'connecting' ? 'Connecting…' : state === 'connected' && model?.connection && transport?.connection && transport?.socket?.readyState === WebSocket.OPEN ? `Connected · ${model.connection.seatId}` : 'Disconnected';
   };
   transport.onSnapshot = snapshot => { if (model) renderGame(snapshot); };

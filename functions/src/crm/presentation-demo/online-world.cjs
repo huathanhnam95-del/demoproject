@@ -185,11 +185,11 @@ function worldCommand(room, slot, command, now) {
             world.presentation = { active: true, roomId: scene };
         } else {
             if (!world.presentation.active) fail('PRESENTATION_NOT_STARTED');
-            const [, last] = GROUPS[world.presentation.roomId];
-            // Slide 19 introduces the floor activity. Returning to the room
-            // permits its timer; the I exit stays locked until slide 20.
-            if (world.presentation.roomId !== 'I' && world.deck.slide !== last) fail('PROGRESSION_REQUIRED', 'Finish the current presentation before leaving.');
             world.presentation = { active: false, roomId: null };
+            // Stopping resumes everyone immediately. Completion/unlocking is
+            // still decided by the shared simulation, not by this control.
+            world.paused = false;
+            world.inputs = {};
         }
         stepWorld(world, baseState(room), {}, 0, now);
         syncSlots(room);

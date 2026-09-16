@@ -1,0 +1,512 @@
+{
+  "version": "1.0.0",
+  "description": "BEL Working as Equals Browser Acceptance Cases Catalogue (Section 7)",
+  "total": 55,
+  "variants": {
+    "B0": "Current 2D baseline, four windows, normal motion",
+    "B1": "Candidate 2D, four windows, normal motion",
+    "B2": "Candidate 3D, four windows, normal motion",
+    "B3": "Mixed 2D/3D views in the same session",
+    "B4": "Candidate 3D, four windows, reduced motion",
+    "B5": "Packaged site served at a nested path, four windows",
+    "B6": "Recovery/fault runs for both renderer modes",
+    "B7": "Actual target hardware, single and four-window measurements"
+  },
+  "cases": [
+    {
+      "id": "ENV-01",
+      "category": "ENV",
+      "title": "Four-window launcher, session creation, and profile movement",
+      "description": "Launch the selected candidate. Create a new p0 session through the UI; open p1–p3 from presenter links. Tile four windows. Change one profile and move one actor. Correct application title/root; one session, four distinct actors, private Homes, p0-only presenter tools, accepted ready states, no unexpected errors, profile/movement reflected correctly. Capture window bounds and visibility rather than merely four Page objects.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["none"],
+      "stageAvailability": ["arrival"]
+    },
+    {
+      "id": "ENV-02",
+      "category": "ENV",
+      "title": "Portable site delivery at root and nested paths",
+      "description": "Build the portable site. Serve once at root, then under a nested path. From each packaged launcher create/rejoin a managed test session and open all four links. Enter a native presentation and a 3D room. Correct relative URLs, MIME types, asset module/import closure, optional models/decoders, images/iframe imports, renderer propagation, notes within the same intended origin, and native frame acknowledgments. No reliance on the repository dev server or private absolute aliases.",
+      "requiredVariants": ["B5"],
+      "prerequisites": ["package-built"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "ENV-03",
+      "category": "ENV",
+      "title": "Honest fault handling on missing assets or invalid traversal",
+      "description": "In disposable runs, fail one original source fetch, one 3D module/import/texture (or model/decoder if supplied), and a native external dependency. Request disallowed private/traversal paths through the test client. Each failure has an honest visible state and logged error. No invented slide/asset, silent verifier bypass or unsafe path serving. 3D failure falls back when possible; original deck dependency failure is reported, not disguised as offline support. Deliberate network errors are matched exactly to the injected faults.",
+      "requiredVariants": ["B6"],
+      "prerequisites": ["fault-injection-enabled"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "CON-01",
+      "category": "CON",
+      "title": "Native source slides, authored reveals, and frozen oracle parity",
+      "description": "Visit each native source slide through its legal studio, including every authored reveal on slides 2 and 4–6. Compare visible text/headings and original images with the frozen oracle. All native content/ranges/reveal states match; no edits to wording, spelling, names or attribution; original frame controls work. Compare source bytes and visible state separately. Record each reveal, not only a final fully expanded slide.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["studio-entered"],
+      "stageAvailability": ["A", "C", "E", "G"]
+    },
+    {
+      "id": "CON-02",
+      "category": "CON",
+      "title": "B1/B2/B3 pedestal placement, reading modals, and route isolation",
+      "description": "In B1/B2/B3, carry each correct shape to its pedestal, read/close the resulting modal, and reopen an already-placed pedestal. Try a wrong shape. All nine passages and headings match exactly. Only the entitled section appears. Wrong match retains carry. Another actor in the same route can open the already-earned section locally; other routes do not inherit placement.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["A-completed"],
+      "stageAvailability": ["B"]
+    },
+    {
+      "id": "CON-03",
+      "category": "CON",
+      "title": "Gallery portrait sequence, modal content, and attribution",
+      "description": "Visit all five Gallery portraits in their actual order/positions and open each modal. Scroll every entry to the end. Correct photograph/name, exact quotation, attribution, paragraphs and source slide ID. No substitute biography or cropped-away text. Modal is readable and closes without triggering another world interaction.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["C-completed"],
+      "stageAvailability": ["D"]
+    },
+    {
+      "id": "CON-04",
+      "category": "CON",
+      "title": "Operational terms, F review groups, and I phase timing",
+      "description": "Inspect/carry F planks and J cubes, earn each F review group, and observe all I phases. Exact original short operational terms and symbols; review modals reveal only earned content; no source paragraphs on world surfaces. I opening/full/feedback exposure matches phase timing; activity HUD remains usable without a blocking auto-modal.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["activity-entered"],
+      "stageAvailability": ["F", "I", "J"]
+    },
+    {
+      "id": "CON-05",
+      "category": "CON",
+      "title": "J objective disclosure progression and slide 21 gating",
+      "description": "Match J objectives one at a time; open available objective content before and after each match; later start native slide 21 legally. Zero/one/two/three matched states expose only entitled objective text, retaining original spelling. Unmatched objectives do not leak. Native slide 21 is not made available early through a generic modal 'next' control.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["I-completed"],
+      "stageAvailability": ["J"]
+    },
+    {
+      "id": "MOD-01",
+      "category": "MOD",
+      "title": "Reading modal keyboard containment, text selection, and safe focus",
+      "description": "Open each individual reading-modal type with F and with a nearby pointer click. Tab/Shift+Tab through it, select text, scroll, close with the visible control and Escape, then reopen. Meaningful label, correct initial focus, keyboard containment, inert world, full text available, no click-through and safe focus return. Reopening does not alter progression or source selection.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["interactive-modal-available"],
+      "stageAvailability": ["reception", "B", "D", "final"]
+    },
+    {
+      "id": "MOD-02",
+      "category": "MOD",
+      "title": "Movement neutral transmission during modal focus and typing",
+      "description": "Hold a movement key, open a reading/door/profile panel, release the key while blocked, type WASD/F/E into a field where appropriate, then close. Repeat during resize and renderer fallback. Neutral input is transmitted; no stuck movement, F interaction, E release, accidental door entry, or unintended actions. Text entry stays text. World receives input only after legitimate focus restoration.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["panel-openable"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "MOD-03",
+      "category": "MOD",
+      "title": "Notebook persistence, concurrent slide presentation, and rejoin",
+      "description": "While p0 presents, p1 opens/edits/saves its notebook; p0 changes slides and reveal steps. Reload p1, rejoin and resume under original rules. Draft/saved text and versions persist; native source remains readable beside notes; no lost selection from per-frame rerender; typing does not navigate slides or move players; all views apply accepted slide state.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["presentation-active"],
+      "stageAvailability": ["A", "C", "E", "G", "final"]
+    },
+    {
+      "id": "MOD-04",
+      "category": "MOD",
+      "title": "Local modal priority vs presenter shared presentation authority",
+      "description": "Open local reading content while the presenter begins a legal shared presentation. On p1 try Escape, native controls, and toolbar actions; on p0 use legal navigation/end. Local modal priority is coherent, drafts preserved, no duplicate dialogs, p1 cannot issue shared navigation/end, and p0 retains authority. Closing a local content modal never closes or advances the global deck.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["p0-presenting"],
+      "stageAvailability": ["A", "C", "E", "G"]
+    },
+    {
+      "id": "MOV-01",
+      "category": "MOV",
+      "title": "Eight-way walking, speed normalization, footprint, and collision",
+      "description": "Walk eight directions; stop/reverse; approach each representative thin wall, seat, plant, route pedestal and F gap. Repeat while carrying and riding where allowed. Original logical speed, normalized diagonals, footprint and no tunneling. Visible feet/props align with valid floor and solids. Record actual travel and visual motion rather than infer behavior from the animation clip.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["room-loaded"],
+      "stageAvailability": ["arrival", "reception", "A", "B", "street"]
+    },
+    {
+      "id": "MOV-02",
+      "category": "MOV",
+      "title": "Focus loss, blur, panel transition, and delayed keyup input clearing",
+      "description": "Hold movement while blurring/minimizing a view, opening/closing panels, switching focus to another popup and returning. Test delayed keyup and key repeat. No continued input after clearing; original stale-input policy retained; no duplicate F/E actions or page scroll from consumed movement keys. Handholding is not silently broken by a text field.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["movement-enabled"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "MOV-03",
+      "category": "MOV",
+      "title": "Authoritative vs local position timing during I choice and F placement",
+      "description": "During I's choice windows approach region edges at controlled times; also approach F placement range during an attempt. Compare local displayed position/selection indicator against host position. No systematic visual 'inside' while authoritative 'outside'; original eligibility and deadlines unchanged. Log display error and input response. Unit boundary tests complement but do not substitute for real timing observations.",
+      "requiredVariants": ["B1", "B2"],
+      "prerequisites": ["activity-active"],
+      "stageAvailability": ["F", "I"]
+    },
+    {
+      "id": "MOV-04",
+      "category": "MOV",
+      "title": "Discontinuity snapping, curb reset, and scene transition interpolation",
+      "description": "Enter doors, reset F, trigger a Street curb reset, reload/rejoin and switch renderer during a delayed scene load. Interpolation snaps/resets across discontinuities; no gliding through walls, old-room ghosts, stale picking or wrong readiness. Scene/instance and host epoch agree after recovery.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["scene-transition-available"],
+      "stageAvailability": ["street", "reception", "F"]
+    },
+    {
+      "id": "MOV-05",
+      "category": "MOV",
+      "title": "Handholding consent, linked movement, and obstacle traversal",
+      "description": "Invite/accept/decline a handhold, walk around obstacles, pass a legal door, release from either end, and try carrying/sitting/riding while linked. Original acceptance/proximity/exclusions and linked traversal remain; displayed hands/avatars follow consistent snapshots; no forced link or overstretched pair crossing solids.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["reception-entered"],
+      "stageAvailability": ["reception", "A"]
+    },
+    {
+      "id": "REN-01",
+      "category": "REN",
+      "title": "Renderer mode lifecycle, persistent profile, and invitation coherence",
+      "description": "Start each renderer mode; create invitations; reload and rejoin; exercise a mode change where exposed. Mode selection survives without a new session or read-marker loss; exactly one active canvas/context, loop and input binding; same actor identity and authoritative rules. Unrecognized mode values fail safely to the documented default.",
+      "requiredVariants": ["B1", "B2", "B3"],
+      "prerequisites": ["managed-session"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REN-02",
+      "category": "REN",
+      "title": "Context-loss and WebGL creation failure fallback to 2D",
+      "description": "Fail WebGL creation/model loading/decoder loading and force a context-loss condition in a disposable test. Continue via the 2D fallback, including a content modal and legal interaction. Fresh compatible canvas, truthful fault, same session/progress/notes/ETA, no second host/client, no false readiness or indefinite spinner. Complete at least one genuine action after fallback.",
+      "requiredVariants": ["B6"],
+      "prerequisites": ["fallback-enabled"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REN-03",
+      "category": "REN",
+      "title": "Click picking target resolution vs keyboard interaction parity",
+      "description": "Click visible doors, props and actors from near/far positions at multiple sizes/zoom levels. Click child meshes, empty floor and decorative items. Compare with keyboard F. Correct stable target ID, same instance, host proximity/ownership checks, no click-to-move, no decorative target, no keyboard regression and no stale pick after transition.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["interactive-scene"],
+      "stageAvailability": ["arrival", "reception", "A", "B", "D"]
+    },
+    {
+      "id": "REN-04",
+      "category": "REN",
+      "title": "Asynchronous scene asset delay and missing texture handling",
+      "description": "Delay one room's assets; transition/reload/fallback before they finish. Fail a required texture and then retry legitimately. Late promises cannot replace the current scene or mark the wrong revision ready; partial resources cleaned; host readiness truthful; no wrong content or lost connection.",
+      "requiredVariants": ["B2", "B6"],
+      "prerequisites": ["asset-loader-active"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REN-05",
+      "category": "REN",
+      "title": "Resource bounds, disposal, and listener leak audit across scene switches",
+      "description": "Repeat room and avatar loads and renderer switches; open/close native presentations; observe resources/listeners before/after. Bounded caches/history, no monotonic GPU/resource/listener/RAF growth, no shared asset prematurely disposed, and all subsequent interactions remain functional.",
+      "requiredVariants": ["B1", "B2", "B7"],
+      "prerequisites": ["resource-tracking-active"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REN-06",
+      "category": "REN",
+      "title": "Scene layout, camera obscuration, and debug overlay correspondence",
+      "description": "For every scene, compare normal view with observation-only target/floor/solid overlays at actual tiled sizes. Walk every required path. Visible geometry matches logical affordances, all required objects are identifiable, cameras do not obscure choices/participants, and no new obstacle or source paragraph appears. Save reference and debug captures separately.",
+      "requiredVariants": ["B1", "B2"],
+      "prerequisites": ["debug-overlay-available"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "F-01",
+      "category": "F",
+      "title": "Bridge readiness gating and 60-second preparation inspection",
+      "description": "Enter F as all four people. Try starting before everyone is ready; gather and let p0 start. Inspect planks through the real preparation. Original readiness and 60-second preparation, no early carrying behavior change, exact inspection labels, zero unearned review groups, no premature crossing. Record phase transitions with host remaining time.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["E-completed"],
+      "stageAvailability": ["F"]
+    },
+    {
+      "id": "F-02",
+      "category": "F",
+      "title": "Normal 30-second attempt with 6-plank build and physical crossing",
+      "description": "Complete a normal 30-second attempt with six correct placements in order, then physically walk every actor across and enter G. Exactly six accepted placements, no skipped/duplicated planks, assisted false, supporting geometry visible as placed, legal crossing and original entry/readiness into G. Continuous real-input evidence is mandatory.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["F-prepared"],
+      "stageAvailability": ["F"]
+    },
+    {
+      "id": "F-03",
+      "category": "F",
+      "title": "Wrong plank placement, timeout expiration, review, and retry reset",
+      "description": "Intentionally bring a wrong plank; let an attempt expire short of completion; observe review and retry. Wrong plank remains held; original 10-second review, reset/retry behavior, generation, carry cleanup and phase timing. No success effect or hidden auto-completion on failure.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["F-attempt-started"],
+      "stageAvailability": ["F"]
+    },
+    {
+      "id": "F-04",
+      "category": "F",
+      "title": "Presenter Skip authorization, assisted bridge build, and participant denial",
+      "description": "In separate genuine pre-G runs, use p0 Skip in each supported activity phase; try the same as a participant and try general Continue at F. Only legal presenter Skip succeeds, assisted state/label retained, bridge built but actors not teleported; general Continue does not bypass F; participants denied. Physically cross after assisted completion.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["F-active"],
+      "stageAvailability": ["F"]
+    },
+    {
+      "id": "F-05",
+      "category": "F",
+      "title": "Reset carrying cleanup, generation bump, and post-G reset denial",
+      "description": "Reset while carrying/linked and from supported F/G pre-presentation states; later start G and attempt Reset again. Exact original repositioning/cleanup/generation, stale old-attempt commands rejected, accepted links handled as baseline, and post-G Reset denied. Do not reuse a completed-G fixture for a pre-G claim.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["F-or-G-active"],
+      "stageAvailability": ["F", "G"]
+    },
+    {
+      "id": "F-06",
+      "category": "F",
+      "title": "Plank carrier disconnection, safe drop, and presenter reload recovery",
+      "description": "Close/rejoin a plank carrier and reload/recover p0 at representative activity checkpoints. No duplicated/lost plank; original safe-drop and group-pause/rejoin policy; preserved progress/generation/notes and no timer-origin invention.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["F-carrying"],
+      "stageAvailability": ["F"]
+    },
+    {
+      "id": "I-01",
+      "category": "I",
+      "title": "Six-statement sequence, timing phases, and HUD legibility",
+      "description": "Start I legally and observe all six opening/choice/interval sequences. Read the HUD and move normally. Exact statement order, opening-half treatment, full choice text, answer/feedback exposure and 3/5/10-second phase values. No content hidden behind an automatic modal during movement.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["G-completed"],
+      "stageAvailability": ["I"]
+    },
+    {
+      "id": "I-02",
+      "category": "I",
+      "title": "Do / Don't / neutral boundary choice evaluation and follower semantics",
+      "description": "Choose Do, Don't and neutral/absent positions; test a linked follower. Test actual edge approaches near deadlines; use unit tests for exact inclusive boundary coordinates. Original authoritative choiceAt() eligibility, original answer key, null/linked semantics and no expanded region or extra grace. HUD/camera legibility does not misrepresent where the player stands.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["I-choice-phase"],
+      "stageAvailability": ["I"]
+    },
+    {
+      "id": "I-03",
+      "category": "I",
+      "title": "Reversed WASD debuff duration, non-stacking rule, and motion toggle",
+      "description": "Produce a wrong answer, exercise reversed WASD, overlap later questions, then complete or leave as allowed. Repeat reduced motion. Original 20-second non-stacking condition and decrement/clear behavior; no alternative penalty; readable status; reduced motion removes decorative motion only.",
+      "requiredVariants": ["B0", "B1", "B2", "B4"],
+      "prerequisites": ["I-statement-failed"],
+      "stageAvailability": ["I"]
+    },
+    {
+      "id": "I-04",
+      "category": "I",
+      "title": "Slide 19 recap, slide 20 gating, and pause/recovery preservation",
+      "description": "Try source 20 early, use allowed source 19 recap, complete the activity, then proceed. Pause/reload/rejoin in a separate run. Original slide gates, readiness and progress; source 20 only after completion; no double results, restarted question, or changed feedback after renderer/scene recovery.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["I-completed"],
+      "stageAvailability": ["I"]
+    },
+    {
+      "id": "J-01",
+      "category": "J",
+      "title": "Two-carrier cube pickup, social matching, and objective reveal",
+      "description": "Two different nearby carriers complete all three original pairs in a permitted order via real pickup/social interaction. Exact terms/pair IDs, one owner per cube, correct placements and one objective reveal per pair; no render callback grants a second match.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["I-completed"],
+      "stageAvailability": ["J"]
+    },
+    {
+      "id": "J-02",
+      "category": "J",
+      "title": "Wrong cube pair, distant interaction, and single-carrier denial",
+      "description": "Attempt wrong pairs, distant interaction, missing second carrier, repeat matched pair and stale previous-room action. Both wrong cubes stay held, no incorrect objective reveal, original denial/feedback and no false match effect. Precise malformed command tests are labeled contract/fault tests separately.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["J-cubes-held"],
+      "stageAvailability": ["J"]
+    },
+    {
+      "id": "J-03",
+      "category": "J",
+      "title": "Cube carrier reload, safe floor recovery, and match completion",
+      "description": "Reload/rejoin a cube carrier, reclaim from its safe floor location, and finish the match. Original safe drop/recovery, preserved session/notes, no phantom attachment/ownership and no auto-match on reload.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["J-carrying"],
+      "stageAvailability": ["J"]
+    },
+    {
+      "id": "J-04",
+      "category": "J",
+      "title": "Cumulative objective disclosure, monitor start gating, and slide 21 launch",
+      "description": "Observe 0/1/2/3 completed objectives, open each allowed modal, try early final monitor start, then gather and start legally. Exact currently earned objective details only; all-three completion does not auto-start; p0 monitor/proximity and group-ready requirements enforced; no full slide 21 leak early.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["J-three-pairs-matched"],
+      "stageAvailability": ["J"]
+    },
+    {
+      "id": "FIN-01",
+      "category": "FIN",
+      "title": "Determine to ETA navigation, first-origin timestamp, and frame agreement",
+      "description": "From legal J completion, use original Determine → Reveal/Next → ETA → Previous/R/reset-view → ETA navigation. Exact native content and handlers, shared origin assigned only at first reveal and retained on subsequent navigation; four native frame states agree within the declared display tolerance.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["J-completed"],
+      "stageAvailability": ["final"]
+    },
+    {
+      "id": "FIN-02",
+      "category": "FIN",
+      "title": "ETA origin resilience across reload, resize, and quality switch",
+      "description": "At ETA, reload a participant, recover p0 separately, resize/open notes/change renderer quality or fallback, then revisit Determine/ETA. Origin preserved in authoritative state/persistence; no animation-driven countdown restart, stale native state, lost note, or new session.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["ETA-revealed"],
+      "stageAvailability": ["final"]
+    },
+    {
+      "id": "AUTH-01",
+      "category": "AUTH",
+      "title": "Host lock exclusivity, duplicate seat prevention, and token isolation",
+      "description": "Attempt a second presenter host and duplicate occupied participant connection; use original invitation/rejoin flows and wrong-session tokens in isolated tests. Host lock, seat exclusivity and invitation validation retained; no renderer-created extra seat/host and no credential exposure.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["session-active"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "AUTH-02",
+      "category": "AUTH",
+      "title": "Participant privilege restriction on slide navigation and activity controls",
+      "description": "As p1–p3 attempt shared slide navigation/end, activity start/Skip/Reset and early final presentation; p0 executes corresponding valid controls. UI and authoritative validation reject participant privilege changes; all original valid p0 paths still work. Frame origin/source validation is exercised separately with harmless synthetic messages.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["session-active"],
+      "stageAvailability": ["A", "C", "E", "F", "G", "final"]
+    },
+    {
+      "id": "AUTH-03",
+      "category": "AUTH",
+      "title": "Stale epoch, duplicate command ID rejection, and token-free log evidence",
+      "description": "Exercise old host epoch, stale connection, duplicate IDs and changed-payload reuse through controlled test infrastructure; reconnect correctly afterward. Stale/invalid packets cannot mutate accepted state or overwrite new visual history; legitimate reconnect continues. Keep raw tokens out of exported evidence.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["session-active"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "NOTE-01",
+      "category": "NOTE",
+      "title": "Notebook CRUD lifecycle, confirmation dialogs, and presentation editing",
+      "description": "Create/edit/save/reopen/delete a synthetic note with confirmation; preserve a separate unsaved draft across close/reload. Write during presentation. Original note IDs/versions, confirmation, draft privacy/recovery, exact content and no auto-save/auto-delete introduced by modal lifecycle.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["notebook-openable"],
+      "stageAvailability": ["reception", "A", "final"]
+    },
+    {
+      "id": "NOTE-02",
+      "category": "NOTE",
+      "title": "Peer saved notebook read-only access and private draft isolation",
+      "description": "Read another nearby person's saved pages, attempt editing through available controls, and compare against their unsaved draft. Other saved notes are read-only; unsaved private writing is absent; original proximity/social permissions stay intact.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["two-actors-nearby"],
+      "stageAvailability": ["reception"]
+    },
+    {
+      "id": "NOTE-03",
+      "category": "NOTE",
+      "title": "Notebook save version conflict handling and retry receipt",
+      "description": "In a disposable fault run, create a version conflict or unknown save outcome, retry according to original policy, and inspect resulting pages. Draft retained, original conflict feedback, no duplicate save/page, no false success or silently overwritten newer version.",
+      "requiredVariants": ["B6"],
+      "prerequisites": ["note-version-conflict-simulated"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REC-01",
+      "category": "REC",
+      "title": "Presenter reload, host re-election, and state preservation",
+      "description": "Reload/close the presenter at a representative normal room, timed activity and native presentation, then rejoin/resume using the original workflow. Same saved session, exclusive new host, correct epoch/readiness/clock policy, consistent four-view state, notes and ETA preservation; no stale renderer freeze.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["session-active"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REC-02",
+      "category": "REC",
+      "title": "Participant disconnection, neutral input snap, and safe item drop",
+      "description": "Reload/close one participant while moving, carrying, reading or taking notes. Rejoin via original window/link. Original neutral-input, safe drop, ready/pause behavior, personal draft/save recovery and same actor identity; no unintended automatic resume beyond baseline.",
+      "requiredVariants": ["B0", "B1", "B2", "B6"],
+      "prerequisites": ["actor-carrying-or-moving"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "REC-03",
+      "category": "REC",
+      "title": "Corrupt or unavailable storage fault handling in disposable profile",
+      "description": "Provide corrupt or unavailable storage in a disposable profile and attempt launch/save/recovery. Explicit baseline-compatible error, no silent session reseed, user-data clearing, fake success or exposure of raw content. Restore only the controlled test fixture.",
+      "requiredVariants": ["B6"],
+      "prerequisites": ["storage-fault-injected"],
+      "stageAvailability": ["arrival"]
+    },
+    {
+      "id": "REC-04",
+      "category": "REC",
+      "title": "Save failure replay receipts and idempotent state processing",
+      "description": "Simulate save failures/unknown outcomes and inspect retry receipts with synthetic note/world actions. Original replay/idempotency policy, no duplicated side effect, lost progress or changed-payload reuse accepted. Fault injection is recorded separately from normal UX proof.",
+      "requiredVariants": ["B6"],
+      "prerequisites": ["save-failure-simulated"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "A11Y-01",
+      "category": "A11Y",
+      "title": "Keyboard navigation, 200% zoom, and compact viewport readability",
+      "description": "Keyboard-operate required modals/controls; use 200% zoom and compact tiled viewports; inspect all text through its end. Visible focus, correct modal ownership, usable controls, readable/selectable/scrollable complete content, no clipped source or critical overlap.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["zoom-or-tiled"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "A11Y-02",
+      "category": "A11Y",
+      "title": "Reduced motion preference parity across F, I, and J activities",
+      "description": "Enable reduced motion and complete F, I and J with the normal rules. Reduced camera/bob/flash effects only; identical input, timing, reversal, answers, progression and content; no activity that depends on an effect being visible.",
+      "requiredVariants": ["B4"],
+      "prerequisites": ["reduced-motion-enabled"],
+      "stageAvailability": ["F", "I", "J"]
+    },
+    {
+      "id": "A11Y-03",
+      "category": "A11Y",
+      "title": "Color/symbol differentiation, contrast, and non-visual status cues",
+      "description": "Inspect color/symbol differentiation, contrast, names, statuses and muted audio behavior; conduct an available screen-reader smoke on modal content without claiming whole-game conformance. Essential information is not color/sound-only; modal text has a usable reading order; no invented spoken educational content or changed wording. Record any assistive-technology coverage limitation.",
+      "requiredVariants": ["B0", "B1", "B2"],
+      "prerequisites": ["accessibility-inspection"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "PERF-01",
+      "category": "PERF",
+      "title": "Cold start frame interval, interaction latency, and GPU draw budget",
+      "description": "On target GPU hardware, measure a single 3D window cold load and representative movement/carry/modal/presentation interactions at the declared size. Raw frame intervals, latency and resource counters meet the selected profile; distinguish draw frequency and hardware measurement. Record shader/asset first-use stalls and capture overhead.",
+      "requiredVariants": ["B2", "B7"],
+      "prerequisites": ["gpu-hardware"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "PERF-02",
+      "category": "PERF",
+      "title": "Four-window tiled rendering pacing, concurrent actions, and clock stability",
+      "description": "Tile all four views, exercise shared F/I/J actions and native notes/slides, repeat mixed modes and presentation-obscured rendering. Per-window pacing/latency and host timing remain within declared budgets; no disguised hidden-window or timer-throttling bypass. Do not sum per-window FPS into a single score.",
+      "requiredVariants": ["B2", "B3", "B7"],
+      "prerequisites": ["four-windows-tiled"],
+      "stageAvailability": ["all"]
+    },
+    {
+      "id": "PERF-03",
+      "category": "PERF",
+      "title": "Soak test stability, repeated scene lifecycle, and memory bounds",
+      "description": "Run the declared soak and repeated load/switch cycles, including a reconnect and fallback. Bounded resources/listeners/cache/history, no progressive latency or increasing faults; successful interactions at the end, not merely survival of the process.",
+      "requiredVariants": ["B2", "B6", "B7"],
+      "prerequisites": ["soak-cycle-enabled"],
+      "stageAvailability": ["all"]
+    }
+  ]
+}

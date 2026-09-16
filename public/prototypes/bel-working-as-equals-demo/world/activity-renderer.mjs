@@ -24,8 +24,8 @@ export function drawBridge(c,w,base,actor,images){
     const x=230+i*128;c.drawImage(images['F-complete'],378+i*211,74,210,130,x,20,126,78);
     // The source panel image is preserved; crisp source text at game scale sits
     // on the same cream face, with no extra nested container.
-    c.fillStyle='#fff7e8';c.fillRect(x+6,28,115,65);c.fillStyle='#102347';c.textAlign='center';c.font='bold 10px system-ui';c.fillText(PHASES[i],x+62,42);
-    c.font='9px system-ui';let y=54;y=wrap(c,PLANKS[i*2][2],x+62,y,104,11);wrap(c,PLANKS[i*2+1][2],x+62,y+1,104,11);
+    c.fillStyle='#fff7e8';c.fillRect(x+6,28,115,65);c.fillStyle='#102347';c.textAlign='center';c.font='bold 10px system-ui';c.fillText(PHASES[i],x+62,54);
+    c.font='9px system-ui';c.fillText('Review unlocked',x+62,70);
   }
 }
 export function drawBridgeActors(c,w,actor,images){
@@ -38,6 +38,7 @@ export function drawBridgeActors(c,w,actor,images){
 }
 export function prepareChoicesBackground(c,original,studio){
   c.drawImage(original,700,106,29,26,583,106,29,26);c.fillStyle='#192e3b';c.fillRect(575,107,9,21);
+  c.drawImage(original,540,128,30,20,610,128,30,20);
   const tile=document.createElement('canvas');tile.width=80;tile.height=60;tile.getContext('2d').drawImage(original,451,160,80,60,0,0,80,60);
   c.fillStyle=c.createPattern(tile,'repeat');c.beginPath();for(const [i,[x,y]]of [[149,130],[850,130],[940,265],[940,390],[60,390],[60,265]].entries())i?c.lineTo(x,y):c.moveTo(x,y);c.closePath();c.fill();
   for(const [x,y,w,h]of [[270,61,49,70],[659,61,38,74],[614,101,40,65],[61,275,50,85],[887,275,53,85]])c.drawImage(original,x,y,w,h,x,y,w,h);
@@ -59,7 +60,7 @@ export function prepareCubeBackground(c,original){
 }
 export function drawCubes(c,w,source,images,now){
   const state=w.cubes;c.fillStyle='#c3d5f0';c.fillRect(344,34,311,99);c.fillStyle='#172e49';c.textAlign='center';c.font='bold 13px system-ui';c.fillText(state.pairs.every(Boolean)?'Three pairs complete':'Match the cubes',500,48);
-  state.pairs.forEach((done,i)=>{const y=62+i*26;if(done){const o=source.objectives[i];c.font='bold 10px system-ui';c.fillText(o.title,500,y,300);c.font='9px system-ui';c.fillText(o.detail,500,y+12,301);}else{c.font='bold 18px system-ui';c.fillText('?',500,y+7);}});
+  state.pairs.forEach((done,i)=>{const y=62+i*26;if(done){const o=source.objectives[i];c.font='bold 10px system-ui';c.fillText(o.title,500,y+7,300);}else{c.font='bold 18px system-ui';c.fillText('?',500,y+7);}});
   state.cubes.filter(o=>!o.owner).forEach(o=>{cube(c,images.J,o.index,o.x,o.y);if(o.placed&&now-state.matchedAt[o.pair]<1800){c.strokeStyle='#ffdf8d';c.lineWidth=3;c.strokeRect(o.x-16,o.y-16,32,32);}});
 }
 export function drawCubeActors(c,w,actor,images,now){

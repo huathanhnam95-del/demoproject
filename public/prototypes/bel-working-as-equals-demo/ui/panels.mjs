@@ -1,11 +1,11 @@
 import {HEADINGS,GROUPS} from '../content/source.mjs';
 export const escapeHtml=text=>String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export function createPanels(el,{source,act,base,world,actor,notes,command,toast,focus}){
-  const close=()=>{el.hidden=true;el.className='';focus();};
+export function createPanels(el,{source,act,base,world,actor,notes,command,toast,focus,modal}){
+  const close=()=>{el.hidden=true;el.className='';if(modal?.open)modal.close();focus();};
   const show=(html,radial=false)=>{el.hidden=false;el.className=radial?'radial':'';el.innerHTML=html;};
   const closeButton=()=>{el.querySelector('[data-close]').onclick=close;};
   const actions='<div class="actions"><button data-close>Close · Esc</button></div>';
-  return {get open(){return !el.hidden;},close,
+  return {get open(){return !el.hidden||Boolean(modal?.open);},close,
     show(result){
       if(result.kind==='toast'){toast(result.text);return;}
       if(result.kind==='notes'){close();notes(result.owner);return;}
@@ -15,10 +15,14 @@ export function createPanels(el,{source,act,base,world,actor,notes,command,toast
       }
       if(result.kind==='reflection'){
         const s=source.routes[result.route],i=result.index;show(`<h2>${escapeHtml(s.title)}</h2><h3>${HEADINGS[i]}</h3><p class="source-text ${i===2?'shift':''}">${escapeHtml(s.sections[i])}</p><p class="small">Slide ${String(s.slide).padStart(2,'0')} · ${result.route}</p>${actions}`);
-        el.className='reflection';localStorage.setItem(`bel-read:${location.search}:${actor}:${result.route}:${i}`,'read');closeButton();return;
+        el.className='reflection';localStorage.setItem(`bel-read:${location.search}:${actor}:${result.route}:${i}`,'read');closeButton();
+        if(modal)modal.showReflection({title:s.title,heading:HEADINGS[i],text:s.sections[i],slide:s.slide,route:result.route,onClose:close});
+        return;
       }
       if(result.kind==='portrait'){
-        const s=source.gallery[result.index];show(`<div class="portrait-head"><img src="${s.image}" alt="${s.name}"><h2>${s.name}</h2></div><p class="attribution">${escapeHtml(s.attribution)}</p><blockquote>${escapeHtml(s.quote)}</blockquote>${s.paragraphs.map(p=>`<p>${escapeHtml(p)}</p>`).join('')}<p class="small">Attributed content from original slide ${s.slide}</p>${actions}`);closeButton();return;
+        const s=source.gallery[result.index];show(`<div class="portrait-head"><img src="${s.image}" alt="${s.name}"><h2>${s.name}</h2></div><p class="attribution">${escapeHtml(s.attribution)}</p><blockquote>${escapeHtml(s.quote)}</blockquote>${s.paragraphs.map(p=>`<p>${escapeHtml(p)}</p>`).join('')}<p class="small">Attributed content from original slide ${s.slide}</p>${actions}`);closeButton();
+        if(modal)modal.showPortrait({name:s.name,image:s.image,attribution:s.attribution,quote:s.quote,paragraphs:s.paragraphs,slide:s.slide,onClose:close});
+        return;
       }
       if(result.kind==='door'){
         const route=source.routes[result.to];const title=route?.title||({street:'Street · Better English Learning',home:'Your Home',reception:'Reception',A:'Studio A',C:'Studio C',D:'Gallery D',E:'Studio E',F:'Bridge room',G:'Studio G',I:'Room I',J:'Cube matching / J'}[result.to]);

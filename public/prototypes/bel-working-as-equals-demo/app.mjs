@@ -2,29 +2,31 @@ import {createSession} from './state/session.mjs';
 import {createHost,createClient} from './state/protocol.mjs';
 import {createHostStore,createResumeStore} from './state/storage.mjs';
 import {createWorldHost,createWorldClient} from './world/network.mjs';
-import {createRenderer} from './world/renderer.mjs';
+import {createView} from './world/view-adapter.mjs';
 import {installInput} from './world/input.mjs';
 import {nearest,targets} from './world/simulation.mjs';
 import {SCENES} from './world/scenes.mjs';
 import {distance} from './world/geometry.mjs';
 import {createPanels,escapeHtml} from './ui/panels.mjs';
 import {createNotebook} from './ui/notebook.mjs';
+import {createReadingModal} from './ui/modal.mjs';
+import {createActivityHud} from './ui/activity-hud.mjs';
 import {loadSource} from './content/source.mjs';
 import {createPresentation} from './presentation/adapter.mjs';
 import {QUESTIONS} from './activities/reversal.mjs';
 const $=s=>document.querySelector(s);
-let client,host,worldHost,worldClient,input,notebook,panels,presentation,timer,animation,disposed=false;
+let client,host,worldHost,worldClient,input,notebook,panels,modal,hud,presentation,view,timer,animation,disposed=false;
 let toastTimer;
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function boot(invite,initialBundle){
   const {sessionId,actorId:actor}=invite;
   createResumeStore(sessionStorage,sessionId).save(invite);
   if(actor==='p0'){
-    host=await createHost({sessionId,initialBundle,ownerToken:invite.token,store:createHostStore(localStorage,sessionId)});
+    host=await createHost({sessionId,initialBundle,ownerToken:invite.token,store:createHostStore(localStorage,sessionId),leaseMs:45000});
     worldHost=createWorldHost(host);
   }
-  client=createClient(invite);worldClient=createWorldClient(invite,client);
-  const [renderer,source]=await Promise.all([createRenderer($('#world')),loadSource()]);
+  client=createClient({...invite,hostTimeoutMs:45000,commandTimeoutMs:60000});worldClient=createWorldClient(invite,client);
+  const [v,source]=await Promise.all([createView({canvas:$('#world')}),loadSource()]);view=v;
   $('#launcher').hidden=true;$('#game').hidden=false;
   const focus=()=>{input?.clear();$('#world').focus();};
   const command=(type,payload)=>client.command(type,payload);
@@ -32,10 +34,12 @@ async function boot(invite,initialBundle){
     try{const w=worldClient.state,me=w?.players[actor];const result=await worldClient.action(type,{instance:me?.instance,generation:me?.scene==='F'?w.bridge.generation:undefined,...payload});if(result.kind==='toast')toast(result.text);return result;}
     catch(e){toast(e.message);return null;}
   }
+  modal=createReadingModal($('#world-wrap'),{onFocusReturn:focus});
+  hud=createActivityHud($('#world-wrap'));
   notebook=createNotebook($('#notebook'),{sessionId,actor,client,toast,focus});
-  panels=createPanels($('#panel'),{source,act,base:()=>client.state,world:()=>worldClient.state,actor,notes:id=>notebook.openFor(id),command,toast,focus});
-  const blocked=()=>client.paused||!worldClient.available||panels.open||notebook.open;
-  input=installInput($('#world'),{blocked,escape(){panels.close();if(!$('#notebook').hidden)notebook.close();},release:()=>act('release'),
+  panels=createPanels($('#panel'),{source,act,base:()=>client.state,world:()=>worldClient.state,actor,notes:id=>notebook.openFor(id),command,toast,focus,modal});
+  const blocked=()=>client.paused||!worldClient.available||panels.open||notebook.open||Boolean(modal?.open);
+  input=installInput($('#world'),{blocked,escape(){if(modal?.open)modal.close();panels.close();if(!$('#notebook').hidden)notebook.close();},release:()=>act('release'),
     async interact(point){
       const w=worldClient.state;if(!w)return;const p=w.players[actor];let t;
       if(point)t=targets(w,actor).filter(t=>distance(t,point)<37&&distance(t,p)<=48).sort((a,b)=>distance(a,point)-distance(b,point))[0];
@@ -95,11 +99,12 @@ async function boot(invite,initialBundle){
     if(request!==me.request){request=me.request;const box=$('#pair-request');box.hidden=!request;if(request){box.innerHTML=`<p>${escapeHtml(base.players[request].name)} would like to hold hands.</p><button data-accept>Accept</button> <button data-decline>Decline</button>`;box.querySelector('[data-accept]').onclick=()=>act('accept');box.querySelector('[data-decline]').onclick=()=>act('decline');}}
     presentation.update(base,w);if(base.presentation.active){input.clear();notebook.compact();}
     $('#presentation').classList.toggle('with-notes',base.presentation.active&&notebook.open);
+    hud?.update({world:w,base,actor});
     document.body.dataset.scene=me.scene;document.body.dataset.ready=String(self.ready);document.body.dataset.actor=actor;
   },60);
-  function draw(){if(disposed)return;const w=worldClient.state,base=client.state;if(w&&base)renderer.draw(w,base,actor,Date.now(),source);animation=requestAnimationFrame(draw);}draw();
+  function draw(){if(disposed)return;const w=worldClient.state,base=client.state;if(w&&base)view.draw(w,base,actor,Date.now(),source);animation=requestAnimationFrame(draw);}draw();
   // Observation-only surface for local acceptance: every call returns a copy.
-  Object.defineProperty(window,'belDebug',{configurable:true,value:Object.freeze({snapshot:()=>structuredClone({session:client.state,world:worldClient.state,status:client.status,paused:client.paused,actor,deck:presentation.applied,frameReady:presentation.ready,target:worldClient.state?nearest(worldClient.state,actor):null})})});
+  Object.defineProperty(window,'belDebug',{configurable:true,value:Object.freeze({snapshot:()=>structuredClone({session:client.state,world:worldClient.state,status:client.status,paused:client.paused,actor,deck:presentation.applied,frameReady:presentation.ready,target:worldClient.state?nearest(worldClient.state,actor):null,viewMode:view?.mode||'2d'})})});
   focus();
 }
 $('#create-session').onclick=async()=>{
@@ -116,5 +121,5 @@ async function resume(){
   try{await boot(invite);}catch(e){$('#launch-error').textContent=e.message;}
 }
 resume();
-function dispose(){if(disposed)return;disposed=true;clearInterval(timer);cancelAnimationFrame(animation);notebook?.dispose();input?.close();presentation?.close();worldClient?.close();client?.close();worldHost?.close();host?.close();}
+function dispose(){if(disposed)return;disposed=true;clearInterval(timer);cancelAnimationFrame(animation);modal?.close();hud?.clear();notebook?.dispose();input?.close();presentation?.close();worldClient?.close();client?.close();worldHost?.close();host?.close();view?.dispose();}
 window.addEventListener('pagehide',dispose);window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});

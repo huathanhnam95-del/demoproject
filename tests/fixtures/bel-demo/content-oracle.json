@@ -1,0 +1,649 @@
+{
+  "B1": [
+    "Who is going to tell me what to do next? Can I just rewrite this dialogue, or do I need someone to sign off on it?",
+    "In a traditional job the coordinator hands you the task instructions, the deadlines and the format. Here, that authority simply isn't there, and the first weeks of silence feels like a delay.",
+    "It isn't a delay. If you see something that will help our students learn better, you already have permission. Find a colleague and start."
+  ],
+  "B2": [
+    "Did I do enough today? Does anyone know how hard I worked?",
+    "Phantom guilt fills the space praise and deadlines used to occupy. Some of us answered messages at midnight to prove our dedication.",
+    "Working late does not make you a hero. Good pronunciation material comes from clear, well-rested minds. Trust that your work speaks for itself."
+  ],
+  "B3": [
+    "Their ideas confuse me — but I don't want to hurt anyone's feelings or sound critical.",
+    "Polite silence leaves a teammate alone with a weak lesson — and the confusion lands on a student weeks later.",
+    "Kindness is honest feedback, early: warm about the person, straight about the draft. We critique the work together so the class gets our best."
+  ],
+  "meta": {
+    "extractedAt": "2026-09-16T03:51:00.000Z",
+    "deckSha256": "0ce2ce4370c2cfa2cc79d4dd90e63d5335698cc07ed9202d2f111243d03ca81f",
+    "totalSlides": 21
+  },
+  "slides": [
+    {
+      "screenLabel": "01",
+      "label": "Cover",
+      "headings": [
+        "Working as Equals"
+      ],
+      "paragraphs": [
+        "A look back at Month 1&nbsp;— freedom comes at a price"
+      ],
+      "blockquotes": [],
+      "images": [
+        {
+          "src": "images/cover.jpg",
+          "alt": ""
+        }
+      ]
+    },
+    {
+      "screenLabel": "02",
+      "label": "Where we are today",
+      "headings": [
+        "TRANSITION PHASE #1: Reflecting and prepraring",
+        "What we got",
+        "What we should start",
+        "What we will aim for"
+      ],
+      "paragraphs": [],
+      "blockquotes": [],
+      "images": [
+        {
+          "src": "images/threshold.jpg",
+          "alt": ""
+        }
+      ]
+    },
+    {
+      "screenLabel": "03",
+      "label": "Part one · Month 1 reflection",
+      "headings": [
+        "Three Hurdles We All Felt"
+      ],
+      "paragraphs": [
+        "The habit of waiting for instruction",
+        "Wondering if we were doing enough",
+        "Holding back to stay polite"
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "04",
+      "label": "Hurdle 1 — permission",
+      "headings": [
+        "Hurdle 1: The Habit of Waiting for Instruction"
+      ],
+      "paragraphs": [
+        "Who is going to tell me what to do next? Can I just rewrite this dialogue, or do I need someone to sign off on it?",
+        "In a traditional job the coordinator hands you the task instructions, the deadlines and the format. Here, that authority simply isn't there, and the first weeks of silence feels like a delay.",
+        "It isn't a delay. If you see something that will help our students learn better, you already have permission. Find a colleague and start.",
+        "\"I sat down on the Monday and waited for a syllabus that was never coming.\""
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "05",
+      "label": "Hurdle 2 — doing enough",
+      "headings": [
+        "Hurdle 2: Wondering If We're Doing Enough"
+      ],
+      "paragraphs": [
+        "Did I do enough today? Does anyone know how hard I worked?",
+        "Phantom guilt fills the space praise and deadlines used to occupy. Some of us answered messages at midnight to prove our dedication.",
+        "Working late does not make you a hero. Good pronunciation material comes from clear, well-rested minds. Trust that your work speaks for itself.",
+        "\"Nobody asked me for hours, so I kept working to be safe.\""
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "06",
+      "label": "Hurdle 3 — politeness",
+      "headings": [
+        "Hurdle 3: Holding Back to Be Polite"
+      ],
+      "paragraphs": [
+        "Their ideas confuse me — but I don't want to hurt anyone's feelings or sound critical.",
+        "Polite silence leaves a teammate alone with a weak lesson — and the confusion lands on a student weeks later.",
+        "Kindness is honest feedback, early: warm about the person, straight about the draft. We critique the work together so the class gets our best.",
+        "\"I noticed the problem on day one. I said it on day nine.\""
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "07",
+      "label": "The way forward",
+      "headings": [
+        "There Is a Way Through All Three"
+      ],
+      "paragraphs": [
+        "Waiting for instruction",
+        "Wondering if it was enough",
+        "Holding back to be polite",
+        "If you see it, you own it.",
+        "The work speaks, not the hours.",
+        "Say it early, say it warmly.",
+        "None of this is theory. A studio has worked exactly this way, with no managers at all, since 1996."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "08",
+      "label": "Welcome to Flatland",
+      "headings": [
+        "Welcome to Flatland: How Valve Works Without Bosses",
+        "Zero managers",
+        "Teaming Up Where Needed",
+        "User-centered"
+      ],
+      "paragraphs": [
+        "Every creator is treated as a trusted adult with direct ownership. Spot an issue, step up, solve it.",
+        "Nobody gives you a daily task list. We form quick small groups around real problems, build the solutions together, and move on.",
+        "Success is not a supervisor's approval. It comes from the person using what you made — for us, the student learning to speak.",
+        "We aren't building video games. Yet, teaching needs the same creative trust — and freedom only works when we share early and stay connected."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "09",
+      "label": "Gabe Newell's ideology",
+      "headings": [
+        "Gabe Newell's Ideology: Why Hierarchies Destroy Creative Value",
+        "Why pyramids existed",
+        "Why it breaks creative work",
+        "Nobody to manage up to"
+      ],
+      "paragraphs": [
+        "Ronald Coase, 1937: hierarchy was the cheapest way to coordinate repetitive factory work.",
+        "Lesson design is not repetitive. The same layers add friction, delay and distortion instead of order.",
+        "With no supervisor to impress, the whole team's attention points outward — at the learner."
+      ],
+      "blockquotes": [
+        "If you hire smart, creative people and then tell them what to do, you destroy most of their value. You want people who figure out what is valuable and just go do it."
+      ],
+      "images": [
+        {
+          "src": "images/gabe.jpg",
+          "alt": "Gabe Newell"
+        }
+      ]
+    },
+    {
+      "screenLabel": "10",
+      "label": "Chet Faliszek",
+      "headings": [],
+      "paragraphs": [
+        "Don’t wait to be asked. If you notice an exercise explanation isn’t clicking with learners, step forward, pull in a colleague, and refine it right away."
+      ],
+      "blockquotes": [
+        "Nobody is going to hand you a daily to-do list. When you see something confusing or broken, act like it’s your company. Don’t wait for permission. Grab a teammate, try a fix, and see if it works."
+      ],
+      "images": [
+        {
+          "src": "images/chet.jpg",
+          "alt": "Chet Faliszek"
+        }
+      ]
+    },
+    {
+      "screenLabel": "11",
+      "label": "Josh Weier",
+      "headings": [],
+      "paragraphs": [
+        "Four or five hours of energized, focused teamwork beats twelve hours of exhausted, late-night grinding every time. High-quality pronunciation curriculum requires fresh, well-rested minds."
+      ],
+      "blockquotes": [
+        "If someone is answering emails at 2 AM, nobody thinks they’re a hero. We think the workflow is broken. Great teams protect their rest so they stay creative."
+      ],
+      "images": [
+        {
+          "src": "images/josh.jpg",
+          "alt": "Josh Weier"
+        }
+      ]
+    },
+    {
+      "screenLabel": "12",
+      "label": "Mike Morasky",
+      "headings": [],
+      "paragraphs": [
+        "Stop emailing drafts back and forth over three weeks. Jump on a shared document or short call for 90 minutes to co-create, test audio samples, and polish the lesson together."
+      ],
+      "blockquotes": [
+        "Collaboration isn’t an email thread or a boring meeting. It’s sitting together, trying an idea, and reacting in real-time. You build off each other’s energy."
+      ],
+      "images": [
+        {
+          "src": "images/mike.jpg",
+          "alt": "Mike Morasky"
+        }
+      ]
+    },
+    {
+      "screenLabel": "13",
+      "label": "Erik Wolpaw",
+      "headings": [],
+      "paragraphs": [
+        "Don’t fall in love with your first draft. When students struggle with a tongue-placement diagram or audio cue, take it as friendly learning data and iterate as a team."
+      ],
+      "blockquotes": [
+        "Every creative project goes through three stages: enthusiasm, despair, and then being sad and ready to ship. When playtesters don’t get your joke, it’s not their fault—it’s your writing.",
+        "Leave your ego outside the room. If you create an exercise and students get confused or bored, don’t get defensive. Laugh, adjust it, and make it better together."
+      ],
+      "images": [
+        {
+          "src": "images/erik.jpg",
+          "alt": "Erik Wolpaw"
+        }
+      ]
+    },
+    {
+      "screenLabel": "14",
+      "label": "Rich Geldreich",
+      "headings": [],
+      "paragraphs": [
+        "Protect team evenings and weekends. Close laptops on time with zero guilt."
+      ],
+      "blockquotes": [
+        "In a flat company where there are no formal hours, people secretly work 70-hour weeks because they suffer from phantom guilt and fear looking unproductive to their peers. It burns people out from the inside."
+      ],
+      "images": [
+        {
+          "src": "images/rich.jpg",
+          "alt": "Rich Geldreich"
+        }
+      ]
+    },
+    {
+      "screenLabel": "15",
+      "label": "Three habits",
+      "headings": [
+        "Three Great Teamwork Habits We Learn from Valve",
+        "See a need, take the lead",
+        "Build live together",
+        "Let learning settle debates"
+      ],
+      "paragraphs": [
+        "No committee meeting required to start improving a lesson.",
+        "Thirty minutes on a shared doc beats five emails over three days.",
+        "Two approaches, no agreement? Test both on real students."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "16",
+      "label": "Small working hubs",
+      "headings": [
+        "How We Work Better: Scheduled Live Hubs",
+        "Preparation",
+        "Action",
+        "Review & revision"
+      ],
+      "paragraphs": [
+        "We are all online, so we book the time instead of waiting for replies. Three teachers, one shared document, sixty minutes on the calendar.",
+        "Prepare your questions",
+        "Discuss your opinions and approaches",
+        "Review discussions",
+        "Define action plan",
+        "Update on progress + Q&A",
+        "Revise action plan"
+      ],
+      "blockquotes": [],
+      "images": [
+        {
+          "src": "images/hub.jpg",
+          "alt": ""
+        }
+      ]
+    },
+    {
+      "screenLabel": "17",
+      "label": "The advice process",
+      "headings": [
+        "How We Make Decisions: The Advice Process",
+        "You spot the call",
+        "Ask the experienced",
+        "Ask the affected",
+        "Decide and own it"
+      ],
+      "paragraphs": [
+        "Anyone can make any operational decision. Noticing it makes it yours.",
+        "Talk to teammates who know that area — phonetics, recording, assessment.",
+        "Talk to whoever will teach, record or mark the thing you are changing. Listen properly.",
+        "Make the call, explain your reasons, carry the result.",
+        "Advice is required. Agreement is not."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "18",
+      "label": "When we disagree",
+      "headings": [
+        "When We Disagree: How We Choose the Best Way",
+        "The advice call",
+        "The student pilot",
+        "A friendly third peer"
+      ],
+      "paragraphs": [
+        "No long debates where people wear each other down. Three pathways, in this order.",
+        "The person doing the work makes the final call, after hearing the people with experience and the people affected.",
+        "If both ideas have merit, run both with a handful of real learners. Student clarity decides, not seniority.",
+        "If it feels stuck or personal, ask a trusted colleague to sit in on a fifteen-minute coffee chat so everyone is heard."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "19",
+      "label": "Mutual commitments",
+      "headings": [
+        "Dos and Don'ts",
+        "Freedom to contribute your way",
+        "Wait for permission",
+        "Direct, caring feedback",
+        "Complain in side channels",
+        "Respect for your rest",
+        "Perform late nights"
+      ],
+      "paragraphs": [
+        "You choose where your teaching strength does the most good.",
+        "No approval gates on work that clearly helps a student.",
+        "Straight about the draft, warm about the person, early enough to matter.",
+        "Concerns go to the person, not around them.",
+        "Evenings and weekends are yours. Nobody is counting your hours.",
+        "The 11pm messages earn no credit here."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "20",
+      "label": "Our team creed",
+      "headings": [],
+      "paragraphs": [
+        "You're not working without a boss.You are the boss of your own work.",
+        "Probably :D I ran out of ideas here."
+      ],
+      "blockquotes": [],
+      "images": []
+    },
+    {
+      "screenLabel": "21",
+      "label": "Rhythm for Month 2",
+      "headings": [
+        "PHASE 2 OBJECTIVES",
+        "LEARNING NEEDS",
+        "STAKEHOLDERS' OPINIONS",
+        "LITERATURE REVIEW",
+        "TEACHING METHODOLY & TEACHING CONTENT"
+      ],
+      "paragraphs": [
+        "POV of teachers AND students if possible",
+        "List out possible stakeholders, conduct surveys",
+        "Support your approach with theoretical and empirical evidence",
+        "Choose WHAT and HOW you want to teach"
+      ],
+      "blockquotes": [],
+      "images": [
+        {
+          "src": "images/close.jpg",
+          "alt": "A learner and a teacher side by side at a laptop in daylight"
+        }
+      ]
+    }
+  ],
+  "routes": {
+    "B1": [
+      "Who is going to tell me what to do next? Can I just rewrite this dialogue, or do I need someone to sign off on it?",
+      "In a traditional job the coordinator hands you the task instructions, the deadlines and the format. Here, that authority simply isn't there, and the first weeks of silence feels like a delay.",
+      "It isn't a delay. If you see something that will help our students learn better, you already have permission. Find a colleague and start."
+    ],
+    "B2": [
+      "Did I do enough today? Does anyone know how hard I worked?",
+      "Phantom guilt fills the space praise and deadlines used to occupy. Some of us answered messages at midnight to prove our dedication.",
+      "Working late does not make you a hero. Good pronunciation material comes from clear, well-rested minds. Trust that your work speaks for itself."
+    ],
+    "B3": [
+      "Their ideas confuse me — but I don't want to hurt anyone's feelings or sound critical.",
+      "Polite silence leaves a teammate alone with a weak lesson — and the confusion lands on a student weeks later.",
+      "Kindness is honest feedback, early: warm about the person, straight about the draft. We critique the work together so the class gets our best."
+    ]
+  },
+  "gallery": [
+    {
+      "name": "Chet Faliszek",
+      "slide": 10,
+      "screenLabel": "10",
+      "image": "images/chet.jpg",
+      "alt": "Chet Faliszek",
+      "quote": "Nobody is going to hand you a daily to-do list. When you see something confusing or broken, act like it’s your company. Don’t wait for permission. Grab a teammate, try a fix, and see if it works.",
+      "paragraphs": [
+        "Don’t wait to be asked. If you notice an exercise explanation isn’t clicking with learners, step forward, pull in a colleague, and refine it right away."
+      ],
+      "attribution": "Chet Faliszek"
+    },
+    {
+      "name": "Josh Weier",
+      "slide": 11,
+      "screenLabel": "11",
+      "image": "images/josh.jpg",
+      "alt": "Josh Weier",
+      "quote": "If someone is answering emails at 2 AM, nobody thinks they’re a hero. We think the workflow is broken. Great teams protect their rest so they stay creative.",
+      "paragraphs": [
+        "Four or five hours of energized, focused teamwork beats twelve hours of exhausted, late-night grinding every time. High-quality pronunciation curriculum requires fresh, well-rested minds."
+      ],
+      "attribution": "Josh Weier"
+    },
+    {
+      "name": "Mike Morasky",
+      "slide": 12,
+      "screenLabel": "12",
+      "image": "images/mike.jpg",
+      "alt": "Mike Morasky",
+      "quote": "Collaboration isn’t an email thread or a boring meeting. It’s sitting together, trying an idea, and reacting in real-time. You build off each other’s energy.",
+      "paragraphs": [
+        "Stop emailing drafts back and forth over three weeks. Jump on a shared document or short call for 90 minutes to co-create, test audio samples, and polish the lesson together."
+      ],
+      "attribution": "Mike Morasky"
+    },
+    {
+      "name": "Erik Wolpaw",
+      "slide": 13,
+      "screenLabel": "13",
+      "image": "images/erik.jpg",
+      "alt": "Erik Wolpaw",
+      "quote": "Every creative project goes through three stages: enthusiasm, despair, and then being sad and ready to ship. When playtesters don’t get your joke, it’s not their fault—it’s your writing.",
+      "paragraphs": [
+        "Don’t fall in love with your first draft. When students struggle with a tongue-placement diagram or audio cue, take it as friendly learning data and iterate as a team."
+      ],
+      "attribution": "Erik Wolpaw"
+    },
+    {
+      "name": "Rich Geldreich",
+      "slide": 14,
+      "screenLabel": "14",
+      "image": "images/rich.jpg",
+      "alt": "Rich Geldreich",
+      "quote": "In a flat company where there are no formal hours, people secretly work 70-hour weeks because they suffer from phantom guilt and fear looking unproductive to their peers. It burns people out from the inside.",
+      "paragraphs": [
+        "Protect team evenings and weekends. Close laptops on time with zero guilt."
+      ],
+      "attribution": "Rich Geldreich"
+    }
+  ],
+  "objectives": [
+    {
+      "pair": 0,
+      "title": "LEARNING NEEDS",
+      "detail": "POV of teachers AND students if possible"
+    },
+    {
+      "pair": 1,
+      "title": "STAKEHOLDERS' OPINIONS",
+      "detail": "List out possible stakeholders, conduct surveys"
+    },
+    {
+      "pair": 2,
+      "title": "LITERATURE REVIEW",
+      "detail": "Support your approach with theoretical and empirical evidence"
+    }
+  ],
+  "bridge": {
+    "phases": [
+      "Preparation",
+      "Action",
+      "Review & revision"
+    ],
+    "planks": [
+      [
+        "teal",
+        "diamond",
+        "Prepare your questions",
+        650,
+        351
+      ],
+      [
+        "violet",
+        "two bars",
+        "Discuss your opinions and approaches",
+        210,
+        337
+      ],
+      [
+        "rose",
+        "star",
+        "Review discussions",
+        363,
+        361
+      ],
+      [
+        "red",
+        "circle",
+        "Define action plan",
+        319,
+        286
+      ],
+      [
+        "blue",
+        "cross",
+        "Update on progress + Q&A",
+        795,
+        361
+      ],
+      [
+        "amber",
+        "triangle",
+        "Revise action plan",
+        682,
+        274
+      ]
+    ]
+  },
+  "reversal": {
+    "questions": [
+      [
+        "I choose work that fits my teaching strengths,",
+        "and I take responsibility for moving it forward.",
+        "Do",
+        "Freedom and ownership go together."
+      ],
+      [
+        "I ask a colleague for advice,",
+        "but I stop ordinary helpful work until they give me permission.",
+        "Don't",
+        "Advice is useful; ordinary helpful work does not need an approval gate."
+      ],
+      [
+        "I want my colleague to feel respected,",
+        "so I discuss the draft directly and suggest an improvement.",
+        "Do",
+        "Be direct about the work and caring toward the person."
+      ],
+      [
+        "I want to avoid an awkward conversation,",
+        "so I complain about the draft to everyone except its author.",
+        "Don't",
+        "Bring concerns to the person, not around them."
+      ],
+      [
+        "I prefer working late,",
+        "but my colleagues are free to reply tomorrow.",
+        "Do",
+        "Your chosen schedule respects colleagues' rest."
+      ],
+      [
+        "I prefer working late,",
+        "so I expect my colleagues to stay online with me.",
+        "Don't",
+        "A personal preference should not impose on others."
+      ]
+    ]
+  },
+  "cubes": {
+    "items": [
+      [
+        "teal",
+        "diamond",
+        "Conduct",
+        2,
+        430,
+        214
+      ],
+      [
+        "red",
+        "circle",
+        "Identify",
+        0,
+        500,
+        214
+      ],
+      [
+        "amber",
+        "triangle",
+        "Gather",
+        1,
+        568,
+        214
+      ],
+      [
+        "blue",
+        "cross",
+        "Learning needs",
+        0,
+        428,
+        254
+      ],
+      [
+        "violet",
+        "two bars",
+        "Literature review",
+        2,
+        500,
+        254
+      ],
+      [
+        "rose",
+        "star",
+        "Stakeholders' opinions",
+        1,
+        570,
+        254
+      ]
+    ]
+  },
+  "final": {
+    "etaInitialMs": 15552000000,
+    "modes": [
+      "determine",
+      "eta"
+    ]
+  }
+}

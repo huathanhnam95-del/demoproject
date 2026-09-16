@@ -38,6 +38,7 @@
   <script src="/js/ui-continuity.js?v=20260916-v2.0.8" defer></script>
   <link rel="stylesheet" href="css/crm-projects.css?v=20260916-v2.0.8&phase=9" />
   <link rel="stylesheet" href="css/crm-data-input.css?v=20260916-v2.0.8&input=20260908-2" />
+  <link rel="stylesheet" href="css/teacher-scheduler-google.css?v=20260916-v2.0.8" />
 </head>
 
 <body>
@@ -598,91 +599,331 @@
       </section>
 
       <section class="crm-panel" data-panel="courses/teacher-schedule">
-        <div class="crm-panel-header">
+        <div class="crm-panel-header" style="display:none;">
           <div>
             <h2>Teacher Schedule</h2>
             <p>Drag sessions to reschedule. Use Weekly pattern to place a recurring week.</p>
           </div>
           <div class="crm-inline-fields">
-            <button id="btn-teacher-scheduler-refresh" class="crm-btn-secondary" type="button">Refresh</button>
+            <button id="btn-teacher-scheduler-refresh-legacy" class="crm-btn-secondary" type="button">Refresh</button>
           </div>
         </div>
-        <div id="teacher-scheduler-workspace" class="scheduler-workspace teacher-scheduler-workspace">
-          <aside class="scheduler-rail">
-            <div class="scheduler-rail-header">
-              <div id="teacher-scheduler-admin-filter-group" class="crm-form-group teacher-scheduler-admin-filter-group" style="display:none; margin-bottom:14px;">
-                <label for="teacher-scheduler-teacher-select" style="font-weight:600; font-size:0.82rem; color:var(--crm-text-muted); display:block; margin-bottom:6px;">Select Teacher</label>
-                <select id="teacher-scheduler-teacher-select" class="crm-input" style="width:100%;">
+
+        <div class="teacher-scheduler-google" id="teacher-scheduler-google-root">
+          <!-- 56px Google Calendar Top Navigation Bar -->
+          <header class="ts-topbar" id="teacher-scheduler-topbar">
+            <div class="ts-brand">
+              <button class="ts-icon-btn" id="btn-ts-sidebar-toggle" type="button" aria-label="Main menu" aria-expanded="true" title="Toggle sidebar">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+              </button>
+              <span class="ts-brand-mark" title="BEL">BEL</span>
+              <span class="ts-brand-title">Calendar</span>
+            </div>
+            <button class="ts-pill-btn ts-back-crm-btn" id="btn-ts-back-crm" type="button" title="Return to CRM Dashboard">
+              &larr; Back to CRM
+            </button>
+            <button class="ts-pill-btn" id="btn-teacher-scheduler-today" type="button">Today</button>
+            <div class="ts-nav-group">
+              <button class="ts-icon-btn" id="btn-teacher-scheduler-prev-week" type="button" aria-label="Previous date range" title="Previous">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"></path></svg>
+              </button>
+              <button class="ts-icon-btn" id="btn-teacher-scheduler-next-week" type="button" aria-label="Next date range" title="Next">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"></path></svg>
+              </button>
+            </div>
+            <button class="ts-month-button" id="teacher-scheduler-month-label" type="button" title="Jump to date">September 2026</button>
+
+            <label class="ts-searchbar" id="ts-searchbar" style="display:none;">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0"></path></svg>
+              <input id="ts-event-search" type="search" placeholder="Search sessions in this date range" aria-label="Search sessions">
+              <button class="ts-icon-btn" id="btn-ts-close-search" type="button" aria-label="Close search">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"></path></svg>
+              </button>
+            </label>
+
+            <div class="ts-top-actions">
+              <button class="ts-icon-btn" id="btn-ts-search" type="button" aria-label="Search" title="Search sessions">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0"></path></svg>
+              </button>
+              <button class="ts-icon-btn" id="btn-ts-settings" type="button" aria-label="Settings" title="Display settings">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="m9 3 1-2h4l1 2 2 1 2-1 2 3-1 2v3l1 2-2 3-2-1-2 1-1 3h-4l-1-3-2-1-2 1-2-3 1-2V8L3 6l2-3 2 1 2-1M16 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0"></path></svg>
+              </button>
+              <button class="ts-pill-btn ts-view-picker" id="btn-ts-view-picker" type="button" aria-haspopup="menu">
+                <span id="ts-view-label">Week</span>
+                <svg class="ts-icon" style="width:14px;height:14px;margin-left:4px;" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"></path></svg>
+              </button>
+              <div class="ts-switch" aria-label="Calendar display">
+                <button class="active" id="btn-ts-view-grid" type="button" aria-label="Calendar grid" title="Calendar grid">
+                  <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2M3 9h18M8 2v4M16 2v4"></path></svg>
+                </button>
+                <button id="btn-ts-view-list" type="button" aria-label="Schedule agenda" title="Schedule agenda">
+                  <svg class="ts-icon" viewBox="0 0 24 24"><path d="M20 7a9 9 0 1 1-5-4M8 11l4 4L21 4"></path></svg>
+                </button>
+              </div>
+              <button id="btn-teacher-scheduler-refresh" class="ts-icon-btn" type="button" title="Refresh Schedule">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              </button>
+              <button class="ts-avatar" id="btn-ts-account" type="button" title="Account">BEL</button>
+            </div>
+          </header>
+
+          <!-- 3-Column Google Calendar Shell (Sidebar, Calendar, Tools) -->
+          <main class="ts-shell" id="teacher-scheduler-shell">
+            <!-- Left Sidebar (~212px) -->
+            <aside class="ts-sidebar" id="teacher-scheduler-sidebar" aria-label="Calendar navigation and filters">
+              <div class="ts-create-wrap">
+                <button class="ts-create-btn" id="btn-ts-create" type="button" aria-haspopup="menu">
+                  <svg class="ts-icon" style="width:20px;height:20px;color:var(--ts-blue);" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                  <span>Create</span>
+                  <svg class="ts-icon" style="width:14px;height:14px;margin-left:auto;color:var(--ts-muted);" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"></path></svg>
+                </button>
+              </div>
+
+              <!-- Mini-calendar -->
+              <section class="ts-mini-calendar" aria-label="Date picker">
+                <div id="teacher-scheduler-mini-calendar" class="teacher-scheduler-mini-calendar"></div>
+              </section>
+
+              <!-- Custom Date Range Controls -->
+              <div class="ts-side-section" id="teacher-scheduler-range-control" style="padding: 0 12px 6px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="date" id="teacher-scheduler-from-date" class="crm-input" style="font-size:11px;padding:3px 4px;border-radius:4px;width:50%;" title="From date">
+                  <span style="font-size:11px;color:var(--ts-muted);">&ndash;</span>
+                  <input type="date" id="teacher-scheduler-to-date" class="crm-input" style="font-size:11px;padding:3px 4px;border-radius:4px;width:50%;" title="To date">
+                </div>
+              </div>
+
+              <!-- Admin Teacher Selector & Multi-Teacher Checkboxes -->
+              <div id="teacher-scheduler-admin-filter-group" class="ts-side-section" style="display:none;">
+                <label for="teacher-scheduler-teacher-select" style="font-size:11px;font-weight:600;color:var(--ts-muted);display:block;margin-bottom:4px;">Filter Teacher</label>
+                <select id="teacher-scheduler-teacher-select" class="crm-input" style="width:100%;font-size:12px;padding:4px 8px;border-radius:4px;">
                   <option value="all">All Teachers</option>
                 </select>
               </div>
-              <div id="teacher-scheduler-mini-calendar" class="teacher-scheduler-mini-calendar" aria-label="Mini Calendar"></div>
-              <h3 id="teacher-scheduler-rail-title">Your Classes</h3>
-              <p id="teacher-scheduler-rail-desc">Click a class to arm placement mode, then click slots to place sessions.</p>
-            </div>
-            <div id="teacher-scheduler-class-list" class="scheduler-class-list">
-              <div class="crm-muted">No classes loaded yet.</div>
-            </div>
-          </aside>
-          <section class="scheduler-center">
-            <div class="teacher-scheduler-header-strip">
-              <div class="scheduler-toolbar">
-                <button id="btn-teacher-scheduler-prev-week" class="ts-nav-btn" type="button"
-                  aria-label="Previous week" title="Previous week">&lsaquo;</button>
-                <button id="btn-teacher-scheduler-today" class="ts-today-btn" type="button">Today</button>
-                <button id="btn-teacher-scheduler-next-week" class="ts-nav-btn" type="button"
-                  aria-label="Next week" title="Next week">&rsaquo;</button>
-                <span class="ts-toolbar-divider" aria-hidden="true"></span>
-                <div class="crm-form-group">
-                  <label for="teacher-scheduler-from-date">From</label>
-                  <input type="date" id="teacher-scheduler-from-date" class="crm-input">
-                </div>
-                <div class="crm-form-group">
-                  <label for="teacher-scheduler-to-date">To</label>
-                  <input type="date" id="teacher-scheduler-to-date" class="crm-input">
-                </div>
-              </div>
-              <div class="ts-toolbar-actions">
-                <details class="teacher-scheduler-pattern-card">
-                  <summary><strong>Weekly pattern</strong></summary>
-                  <div class="teacher-scheduler-pattern-panel">
-                    <p class="teacher-scheduler-pattern-steps">
-                      <span class="teacher-scheduler-step-badge">1</span> Place this week
-                      <span class="teacher-scheduler-step-divider">&rarr;</span>
-                      <span class="teacher-scheduler-step-badge">2</span> Activate recurrences
-                    </p>
-                    <div class="teacher-scheduler-pattern-row">
-                      <div class="crm-form-group pattern-group-class">
-                        <label for="teacher-scheduler-pattern-class">Classroom</label>
-                        <select id="teacher-scheduler-pattern-class" class="crm-input"></select>
-                      </div>
-                      <div class="crm-form-group pattern-group-days">
-                        <label>Days</label>
-                        <div id="teacher-scheduler-pattern-days" class="teacher-scheduler-day-chip-row"></div>
-                      </div>
-                      <div class="crm-form-group pattern-group-time">
-                        <label for="teacher-scheduler-pattern-time">Start time</label>
-                        <input id="teacher-scheduler-pattern-time" type="time" class="crm-input" value="18:00">
-                      </div>
-                      <div class="crm-form-group pattern-group-btn">
-                        <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button">Place this week</button>
-                      </div>
-                    </div>
-                    <div id="teacher-scheduler-pattern-summary" class="crm-muted"></div>
-                  </div>
-                </details>
-                <button id="btn-teacher-scheduler-activate-recurrences" class="crm-btn-secondary" type="button">Activate recurrences</button>
-              </div>
-            </div>
-            <div id="teacher-scheduler-activation-summary" class="teacher-scheduler-activation-summary"
-              style="display:none;"></div>
-            <div id="teacher-scheduler-calendar" class="scheduler-calendar">
-              <div class="crm-muted">Teacher scheduler calendar will appear here.</div>
-            </div>
 
-          </section>
+              <div class="ts-sidebar-search">
+                <svg class="ts-icon" style="width:15px;height:15px;" viewBox="0 0 24 24"><path d="M16 21v-2a5 5 0 0 0-10 0v2M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0"></path></svg>
+                <input id="teacher-scheduler-teacher-search" type="search" placeholder="Filter teachers" aria-label="Search teachers">
+              </div>
+
+              <section class="ts-side-section">
+                <button class="ts-section-toggle" id="teacher-scheduler-teachers-toggle" type="button" aria-expanded="true">
+                  <span>Teachers</span>
+                  <svg class="ts-icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg>
+                </button>
+                <div id="teacher-scheduler-teacher-list"></div>
+              </section>
+
+              <!-- Classes List -->
+              <section class="ts-side-section">
+                <button class="ts-section-toggle" id="teacher-scheduler-classes-toggle" type="button" aria-expanded="true">
+                  <span id="teacher-scheduler-rail-title">Your Classes</span>
+                  <svg class="ts-icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"></path></svg>
+                </button>
+                <p id="teacher-scheduler-rail-desc" style="font-size:10.5px;color:#5f6368;margin:2px 8px 6px;">Click a class to arm placement mode.</p>
+                <div id="teacher-scheduler-class-list" class="scheduler-class-list">
+                  <div class="crm-muted" style="padding:6px 8px;font-size:11px;">No classes loaded yet.</div>
+                </div>
+              </section>
+
+              <!-- Weekly Pattern Card -->
+              <details class="teacher-scheduler-pattern-card" id="teacher-scheduler-pattern-card" style="margin: 4px 12px 8px; font-size: 12px;">
+                <summary style="cursor:pointer; font-weight:600; padding:6px 0; color:var(--ts-ink);">Weekly pattern</summary>
+                <div class="teacher-scheduler-pattern-panel" style="padding: 6px 0;">
+                  <p class="teacher-scheduler-pattern-steps" style="font-size:11px;color:var(--ts-muted);margin:0 0 8px;">
+                    <span class="teacher-scheduler-step-badge">1</span> Place week &rarr;
+                    <span class="teacher-scheduler-step-badge">2</span> Activate
+                  </p>
+                  <div class="crm-form-group" style="margin-bottom:8px;">
+                    <label for="teacher-scheduler-pattern-class" style="font-size:11px;display:block;margin-bottom:2px;">Classroom</label>
+                    <select id="teacher-scheduler-pattern-class" class="crm-input" style="font-size:12px;padding:4px 6px;width:100%;"></select>
+                  </div>
+                  <div class="crm-form-group" style="margin-bottom:8px;">
+                    <label style="font-size:11px;display:block;margin-bottom:2px;">Days</label>
+                    <div id="teacher-scheduler-pattern-days" class="teacher-scheduler-day-chip-row" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+                  </div>
+                  <div class="crm-form-group" style="margin-bottom:8px;">
+                    <label for="teacher-scheduler-pattern-time" style="font-size:11px;display:block;margin-bottom:2px;">Start time</label>
+                    <input id="teacher-scheduler-pattern-time" type="time" class="crm-input" value="18:00" style="font-size:12px;padding:4px 6px;width:100%;">
+                  </div>
+                  <div style="margin-bottom:8px;">
+                    <button id="btn-teacher-scheduler-place-week" class="crm-btn-primary" type="button" style="width:100%;padding:5px 8px;font-size:12px;">Place this week</button>
+                  </div>
+                  <div id="teacher-scheduler-pattern-summary" class="crm-muted" style="font-size:11px;margin-bottom:8px;"></div>
+                  <button id="btn-teacher-scheduler-activate-recurrences" class="crm-btn-secondary" type="button" style="width:100%;padding:5px 8px;font-size:12px;">Activate recurrences</button>
+                  <div id="teacher-scheduler-activation-summary" class="teacher-scheduler-activation-summary" style="display:none;margin-top:6px;font-size:11px;"></div>
+                </div>
+              </details>
+
+              <button class="ts-side-link" id="btn-ts-appearance" type="button">
+                <svg class="ts-icon" style="width:17px;height:17px;color:#5f6368;" viewBox="0 0 24 24"><path d="M4 7h7M15 7h5M4 17h3M11 17h9M11 4v6M7 14v6"></path></svg>
+                <span>Display settings</span>
+              </button>
+
+              <div class="ts-sidebar-foot">
+                BEL Teacher Scheduling<br>
+                <small style="color:#80868b;">Google Calendar focus mode</small>
+              </div>
+            </aside>
+
+            <!-- Main White Calendar Surface with 28px Rounded Top Corners -->
+            <section class="ts-calendar-surface" id="teacher-scheduler-surface" aria-label="Teaching calendar">
+              <div class="ts-calendar-head" id="teacher-scheduler-calendar-head"></div>
+              <div class="ts-calendar-scroll" id="teacher-scheduler-calendar-scroll">
+                <div class="ts-timeline" id="teacher-scheduler-timeline">
+                  <div id="teacher-scheduler-calendar" class="scheduler-calendar" style="width:100%;height:100%;position:relative;">
+                    <div class="crm-muted" style="padding:20px;">Loading schedule calendar...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ts-schedule-list" id="teacher-scheduler-schedule-list" style="display:none;"></div>
+              <div class="ts-placement-toast" id="teacher-scheduler-placement-toast" style="display:none;">
+                <span id="teacher-scheduler-placement-text">Placement mode active: click a time slot to place session</span>
+                <button id="btn-ts-stop-placement" class="ts-pill-btn ts-blue-btn" type="button">Done</button>
+              </div>
+            </section>
+
+            <!-- Right Tools Rail (48px) -->
+            <aside class="ts-tools" id="teacher-scheduler-tools" aria-label="Quick tools">
+              <button class="ts-icon-btn" id="btn-ts-tool-notes" title="Class Notes" aria-label="Session notes">
+                <svg class="ts-icon" style="color:#b77906;" viewBox="0 0 24 24"><path d="M5 3h14v14l-4 4H5zM15 21v-5h4M8 7h8M8 11h8"></path></svg>
+              </button>
+              <button class="ts-icon-btn" id="btn-ts-tool-classes" title="Classes to schedule" aria-label="Classes">
+                <svg class="ts-icon" style="color:#1a73e8;" viewBox="0 0 24 24"><path d="M16 21v-2a5 5 0 0 0-10 0v2M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0"></path></svg>
+              </button>
+              <button class="ts-icon-btn" id="btn-ts-tool-repeat" title="Weekly patterns" aria-label="Patterns">
+                <svg class="ts-icon" style="color:#8430ce;" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4M21 13v3a2 2 0 0 1-2 2H3"></path></svg>
+              </button>
+              <hr>
+              <button class="ts-icon-btn" id="btn-ts-tool-add" title="Quick Add Session" aria-label="New session">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+              </button>
+              <button class="ts-icon-btn last-tool" id="btn-ts-tool-back" title="Back to CRM" aria-label="Return to CRM">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>
+              </button>
+            </aside>
+          </main>
+
+          <!-- Hidden compatibility element for teacher-scheduler-workspace ID -->
+          <div id="teacher-scheduler-workspace" class="teacher-scheduler-workspace" style="display:none;"></div>
+
+
+          <!-- Dropdown Menus -->
+          <div class="menu" id="ts-create-menu" role="menu" style="display:none;">
+            <button role="menuitem" id="btn-ts-create-session">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2M3 9h18M8 2v4M16 2v4"></path></svg>
+              <span>Session</span>
+            </button>
+            <button role="menuitem" id="btn-ts-create-repeat">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4M21 13v3a2 2 0 0 1-2 2H3"></path></svg>
+              <span>Repeating sessions</span>
+            </button>
+          </div>
+
+          <div class="menu" id="ts-view-menu" role="menu" style="display:none;">
+            <button role="menuitem" data-ts-view="day">Day <small style="margin-left:auto;color:#5f6368;">D</small></button>
+            <button role="menuitem" data-ts-view="week">Week <small style="margin-left:auto;color:#5f6368;">W</small></button>
+            <button role="menuitem" data-ts-view="schedule">Schedule <small style="margin-left:auto;color:#5f6368;">A</small></button>
+          </div>
+
+          <!-- Display Settings Dialog -->
+          <dialog class="ts-modal-dialog" id="teacher-scheduler-settings-dialog" style="display:none;width:420px;">
+            <div class="ts-dialog-header">
+              <h2>Display Settings</h2>
+              <button class="ts-icon-btn" id="btn-ts-close-settings" type="button" aria-label="Close settings">
+                <svg class="ts-icon" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"></path></svg>
+              </button>
+            </div>
+            <div class="ts-dialog-body">
+              <div class="ts-form-field">
+                <label for="ts-setting-week-start">Start week on</label>
+                <select id="ts-setting-week-start">
+                  <option value="0">Sunday · Google reference</option>
+                  <option value="1" selected>Monday · Vietnam standard</option>
+                </select>
+              </div>
+              <div class="ts-form-field">
+                <label for="ts-setting-time-format">Time format</label>
+                <select id="ts-setting-time-format">
+                  <option value="12">12-hour (am/pm)</option>
+                  <option value="24" selected>24-hour (18:00)</option>
+                </select>
+              </div>
+              <div class="ts-form-field">
+                <label for="ts-setting-density">Density</label>
+                <select id="ts-setting-density">
+                  <option value="50" selected>Compact · 50px/hour</option>
+                  <option value="60">Comfortable · 60px/hour</option>
+                </select>
+              </div>
+              <div class="ts-form-field">
+                <label for="ts-setting-appearance">Event appearance</label>
+                <select id="ts-setting-appearance">
+                  <option value="pastel" selected>Pastel · modern BEL</option>
+                  <option value="solid">Solid · white text</option>
+                </select>
+              </div>
+            </div>
+            <div class="ts-dialog-footer">
+              <button class="ts-pill-btn ts-blue-btn" id="btn-ts-save-settings" type="button">Done</button>
+            </div>
+          </dialog>
+
+          <!-- Toast Notification with Undo -->
+          <div class="ts-toast" id="teacher-scheduler-toast" role="status" aria-live="polite" style="display:none;">
+            <span id="teacher-scheduler-toast-text"></span>
+            <button id="btn-ts-undo" type="button" style="display:none;">Undo</button>
+          </div>
         </div>
 
+        <!-- Google Calendar Anchored Details Popover (#teacher-scheduler-event-popover) -->
+        <dialog class="ts-floating-dialog" id="teacher-scheduler-event-popover" style="display:none;">
+          <div class="ts-popover-toolbar">
+            <button class="ts-icon-btn" id="btn-ts-popover-edit" aria-label="Edit session" title="Edit session">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="m4 15 12-12 5 5-12 12-6 1 1-6M13 6l5 5"></path></svg>
+            </button>
+            <button class="ts-icon-btn" id="btn-ts-popover-delete" aria-label="Cancel session" title="Cancel session">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V3h8v3M5 6l1 15h12l1-15M10 10v7M14 10v7"></path></svg>
+            </button>
+            <button class="ts-icon-btn" id="btn-ts-popover-duplicate" aria-label="Duplicate session" title="Duplicate session">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M9 9h12v12H9zM5 15H3V3h12v2"></path></svg>
+            </button>
+            <button class="ts-icon-btn" id="btn-ts-popover-close" aria-label="Close details" title="Close">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"></path></svg>
+            </button>
+          </div>
+          <div class="ts-popover-content">
+            <div class="ts-info-row">
+              <span class="square-dot" id="ts-popover-color-dot"></span>
+              <div>
+                <h2 class="ts-event-title-display" id="ts-popover-title">Class Title</h2>
+                <div class="ts-event-date-display" id="ts-popover-datetime">Wednesday, Sep 16 · 18:00–20:00</div>
+              </div>
+            </div>
+            <div class="ts-info-row">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M16 21v-2a5 5 0 0 0-10 0v2M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0"></path></svg>
+              <div class="ts-info-detail" id="ts-popover-teacher">Assigned Teacher</div>
+            </div>
+            <div class="ts-info-row">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2M3 9h18"></path></svg>
+              <div class="ts-info-detail" id="ts-popover-course">Course info</div>
+            </div>
+            <div class="ts-info-row" id="ts-popover-status-row">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M20 7a9 9 0 1 1-5-4M8 11l4 4L21 4"></path></svg>
+              <div class="ts-info-detail"><span class="status-chip" id="ts-popover-status">Scheduled</span></div>
+            </div>
+            <div class="ts-info-row" id="ts-popover-notes-row" style="display:none;">
+              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 3h14v14l-4 4H5zM15 21v-5h4M8 7h8M8 11h8"></path></svg>
+              <div class="ts-info-detail" id="ts-popover-notes"></div>
+            </div>
+            <div class="ts-popover-actions">
+              <button class="ts-text-btn" id="btn-ts-popover-record-attendance" type="button">Record attendance</button>
+              <button class="ts-text-btn" id="btn-ts-popover-add-notes" type="button">Add notes</button>
+            </div>
+          </div>
+        </dialog>
+
+        <!-- Quick Add Popover / Dialog -->
         <div id="teacher-scheduler-quick-add" class="teacher-scheduler-popover" aria-hidden="true"
           style="display:none;">
           <div class="teacher-scheduler-popover-title">Quick add session</div>
@@ -712,6 +953,7 @@
           </div>
         </div>
 
+        <!-- Session Popover / Dialog with attendance, dictation, inline reschedule -->
         <div id="teacher-scheduler-session-bubble" class="teacher-scheduler-popover teacher-scheduler-session-bubble"
           role="dialog" aria-modal="false" aria-hidden="true" style="display:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;">

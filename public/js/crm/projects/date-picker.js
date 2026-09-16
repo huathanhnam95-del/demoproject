@@ -60,6 +60,7 @@
 
     function commit(value) {
         if (!field) return;
+        if (!field.isConnected || field.disabled || field.readOnly) { close(); return; }
         const target = field;
         // Respect the field's own bounds rather than silently writing past them.
         if (value && target.min && value < target.min) return;
@@ -68,7 +69,8 @@
         target.dispatchEvent(new Event('input', { bubbles: true }));
         target.dispatchEvent(new Event('change', { bubbles: true }));
         close();
-        try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+        const trigger = target.closest('.crm-board-date-control')?.querySelector('button') || target;
+        try { trigger.focus({ preventScroll: true }); } catch (_) { trigger.focus(); }
     }
 
     function gridMarkup() {
@@ -121,21 +123,34 @@
             </div>`;
     }
 
+    function getScale() {
+        const p = host();
+        if (!p || p === document.body) return 1;
+        const zoom = globalScope.getComputedStyle ? globalScope.getComputedStyle(p).zoom : 1;
+        const n = parseFloat(zoom);
+        return Number.isFinite(n) && n > 0 ? n : 1;
+    }
+
     function place(target) {
-        const box = target.getBoundingClientRect();
+        const box = (target.closest('.crm-board-date-control') || target).getBoundingClientRect();
         const viewportW = globalScope.innerWidth || 1024;
         const viewportH = globalScope.innerHeight || 768;
-        const left = Math.max(8, Math.min(box.left, viewportW - WIDTH - 8));
+        const scale = getScale();
+        const visualWidth = WIDTH * scale;
+        const left = Math.max(8, Math.min(box.left, viewportW - visualWidth - 8));
         popover.style.width = `${WIDTH}px`;
-        popover.style.left = `${left}px`;
+        popover.style.left = `${left / scale}px`;
         // Flip above the field when there is not enough room beneath it.
         const height = popover.offsetHeight || 300;
-        popover.style.top = box.bottom + 6 + height > viewportH && box.top - 6 - height > 0
-            ? `${box.top - 6 - height}px`
-            : `${box.bottom + 6}px`;
+        const visualHeight = height * scale;
+        const top = box.bottom + 6 + visualHeight > viewportH && box.top - 6 - visualHeight > 0
+            ? box.top - 6 - visualHeight
+            : box.bottom + 6;
+        popover.style.top = `${top / scale}px`;
     }
 
     function open(target) {
+        if (!isPickerField(target)) return;
         close();
         field = target;
         const parsed = parseIso(target.value) || parseIso(todayIso());
@@ -208,7 +223,7 @@
                 event.stopPropagation();
                 const target = field;
                 close();
-                target?.focus();
+                (target?.closest('.crm-board-date-control')?.querySelector('button') || target)?.focus();
                 return;
             }
             if (!popover.contains(event.target)) return;
@@ -230,7 +245,7 @@
         globalScope.addEventListener?.('resize', () => { if (field) (field.isConnected ? place(field) : close()); });
     }
 
-    globalScope.CrmProjectsDatePicker = { init, close };
+    globalScope.CrmProjectsDatePicker = { init, close, open };
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
         else init();

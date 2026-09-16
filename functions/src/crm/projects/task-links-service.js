@@ -18,7 +18,7 @@ function safeRecord(type, snapshot) {
     if (data.deleted === true || data.isDeleted === true || data.archived === true || data.deletedAt || ['deleted', 'trashed', 'archived'].includes(data.lifecycle || data.status)) return null;
     const label = String(data.name || data.fullName || data.displayName || data.title || '').trim().slice(0, 200);
     if (!label) return null;
-    return { type, recordId: snapshot.id, label, href: `/crm-admin.html#${{ lead: 'enquiry', student: 'students', classroom: 'courses/class-management' }[type]}` };
+    return { type, recordId: snapshot.id, label, href: `/crm-admin#${{ lead: 'enquiry', student: 'students', classroom: 'courses/class-management' }[type]}` };
 }
 function createTaskLinksService({ db, accessService, commandService, authorizeCrmIdentity, now = () => new Date() }) {
     async function canManage(identity, transaction) { return typeof authorizeCrmIdentity === 'function' && await authorizeCrmIdentity({ identity, transaction }) === true; }

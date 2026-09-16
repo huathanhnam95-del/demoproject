@@ -163,7 +163,7 @@
             const statMarkup = total > 0 ? `<span class="crm-detail-progress-stat ${done === total ? 'is-complete' : ''}"><b>${escape(done)}/${escape(total)}</b> complete (${pct}%)</span>` : '';
             return `<div class="crm-projects-derived crm-detail-progress-card"><div class="crm-detail-progress-head"><span class="crm-detail-progress-label"><span class="crm-progress-icon">${PJ_ICON.subtask}</span> Subtasks rollup</span>${statMarkup}</div>${total > 0 ? trackMarkup : ''}<div class="crm-detail-progress-foot"><span class="crm-detail-span-badge"><span class="crm-chip-icon">${PJ_ICON.calendar}</span> Descendant span: ${spanText}</span></div></div>`;
         }
-        function taskButton(t) { return `<button type="button" class="crm-projects-task-open" data-task-open="${escape(t.id)}">${escape(t.title || 'Untitled task')}</button>`; }
+        function taskButton(t) { return `<button type="button" class="crm-projects-task-open" data-task-open="${escape(t.id)}" data-status="${escape(t.status || 'not_started')}">${escape(t.title || 'Untitled task')}</button>`; }
         function taskRow(t, statusEditor = false) {
             return `<article class="crm-projects-view-row" data-view-task="${escape(t.id)}">${taskButton(t)}<span>${escape(array(t.ancestorTitles).join(' → '))}</span>${statusEditor ? `<label>Status <select data-task-status="${escape(t.id)}" class="crm-input"${canWrite() && !mutation ? '' : ' disabled'}>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${t.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select></label>` : `<span>${escape(STATUSES[t.status] || t.status)}</span>`}<span>Stored dates: ${escape(t.startDate || 'undated')} → ${escape(t.dueDate || 'undated')}</span>${derived(t)}${warningList(t.dependencyWarnings)}${warningList(t.calendarWarnings)}</article>`;
         }
@@ -278,10 +278,12 @@
         }
         // Switching views used to be a hard cut. Fade the outgoing surface out and
         // the incoming one in on the shared motion curve; reduced-motion zeroes it.
+        const isGantt = (v) => v === 'timeline' || v === 'gantt';
         let lastRenderedView = null;
         function animateViewSwap() {
-            if (lastRenderedView === view) return;
-            lastRenderedView = view;
+            const canonical = isGantt(view) ? 'gantt' : view;
+            if (lastRenderedView === canonical) return;
+            lastRenderedView = canonical;
             const surfaces = [el('projects-view-content'), el('projects-board-table-wrap')].filter(Boolean);
             surfaces.forEach((node) => node.classList?.add?.('is-view-entering'));
             const settle = () => surfaces.forEach((node) => node.classList?.remove?.('is-view-entering'));
@@ -293,23 +295,44 @@
             animateViewSwap();
             fillFilters();
             renderFilterChips();
-            document.querySelectorAll('#projects-view-tabs [data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
+            document.querySelectorAll('#projects-view-tabs [data-view]').forEach((button) => {
+                const bView = button.dataset.view;
+                const active = isGantt(view) ? isGantt(bView) : bView === view;
+                button.setAttribute('aria-pressed', String(active));
+            });
             el('projects-board-table-wrap').hidden = view !== 'board';
             el('projects-view-content').hidden = view === 'board';
             el('projects-view-paging').hidden = view === 'board' || view === 'charts';
             el('projects-view-previous').disabled = loading || !previous.length;
             el('projects-view-more').disabled = loading || !response?.hasMore;
             const rows = array(response?.tasks), a = response?.aggregates;
-            el('projects-view-summary').textContent = response ? `${response.matchingTaskCount} matching tasks ${view === 'calendar' ? `overlapping ${calendarMonth} with the shared filters` : 'in the full project'}. Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page. Active-leaf completion: ${a?.completedLeafTaskCount ?? 0}/${a?.activeLeafTaskCount ?? 0} (${a?.completionPercent ?? 0}%). Context ancestors are excluded from matching totals.` : '';
+            const fullSummary = response ? `${response.matchingTaskCount} matching tasks ${view === 'calendar' ? `overlapping ${calendarMonth} with the shared filters` : 'in the full project'}. Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page. Active-leaf completion: ${a?.completedLeafTaskCount ?? 0}/${a?.activeLeafTaskCount ?? 0} (${a?.completionPercent ?? 0}%). Context ancestors are excluded from matching totals.` : '';
+            const summary = el('projects-view-summary');
+            summary.textContent = response ? `${response.matchingTaskCount} matching tasks${view === 'calendar' ? ` overlapping ${calendarMonth}` : ''} · ${a?.completionPercent ?? 0}% complete${rows.length < response.matchingTaskCount ? ` · Showing ${rows.length ? pageIndex * 200 + 1 : 0}–${pageIndex * 200 + rows.length} in this ${view === 'calendar' ? 'month' : 'view'} page` : ''}` : '';
+            summary.title = fullSummary;
+            summary.setAttribute?.('aria-label', fullSummary);
             if (view === 'board') return;
             if (!response && view === 'calendar') { renderCalendar([]); return; }
             if (!response) { el('projects-view-content').innerHTML = '<p class="crm-muted">Choose a project or refresh the view.</p>'; return; }
             if (view === 'kanban') {
                 el('projects-view-content').innerHTML = `<div class="crm-projects-kanban">${Object.entries(STATUSES).map(([key, label]) => kanbanColumn(key, response.project?.statusLabels?.[key] || label, rows)).join('')}</div>`;
-            } else if (view === 'timeline') {
-                const hasInterval = (t) => t.startDate || t.dueDate || (hasDerivedTimelineSpan(t, rows) && (t.derived.startDate || t.derived.dueDate));
+            } else if (isGantt(view)) {
+                const hasActiveFilters = Boolean(filters.title || filters.status || filters.sectionId || filters.ownerUid || filters.assigneeUid || filters.fromDate || filters.toDate);
+                if (!rows.length) {
+                    if (!hasActiveFilters) {
+                        el('projects-view-content').innerHTML = '';
+                        return;
+                    }
+                    el('projects-view-content').innerHTML = `${ganttToolsMarkup()}<p class="crm-muted">No tasks match the active filters.</p>`;
+                    return;
+                }
+                const hasInterval = (t) => t.startDate || t.dueDate || (hasDerivedTimelineSpan(t, rows) && (t.derived?.startDate || t.derived?.dueDate));
                 const dated = rows.filter(hasInterval).sort((a, b) => String(a.startDate || a.dueDate || a.derived?.startDate || a.derived?.dueDate).localeCompare(String(b.startDate || b.dueDate || b.derived?.startDate || b.derived?.dueDate)));
-                el('projects-view-content').innerHTML = timelineMarkup(dated) + `<h4>Undated tasks</h4>${rows.filter((t) => !hasInterval(t)).map((t) => taskRow(t)).join('')}`;
+                const undated = rows.filter((t) => !hasInterval(t));
+                const tools = ganttToolsMarkup();
+                const chart = ganttMarkup(dated);
+                const undatedMarkup = undated.length ? `<h4>Undated tasks</h4>${undated.map((t) => taskRow(t)).join('')}` : '';
+                el('projects-view-content').innerHTML = `${tools}${chart}${undatedMarkup}`;
             } else if (view === 'calendar') renderCalendar(rows);
             else if (view === 'charts') {
                 const totalActive = Math.max(1, Number(a?.activeLeafTaskCount || 0));
@@ -341,7 +364,14 @@
         function hasDerivedTimelineSpan(t, rows) {
             return !!t.derived && (Number(t.activeChildCount) > 0 || (Number(t.derived.activeLeafCount) > 0 && rows.some((child) => child.id !== t.id && (child.parentTaskId === t.id || array(child.pathIds).includes(t.id)))));
         }
-        function timelineMarkup(rows) {
+        const hasDerivedGanttSpan = hasDerivedTimelineSpan;
+        function ganttToolsMarkup() {
+            const hasActiveFilters = Boolean(filters.title || filters.status || filters.sectionId || filters.ownerUid || filters.assigneeUid || filters.fromDate || filters.toDate);
+            const sections = array(board?.getState()?.sections);
+            const members = array(board?.getState()?.members);
+            return `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;"><div style="display:flex;align-items:center;gap:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Months</button></div></div><div class="crm-projects-gantt-filter-cluster" role="group" aria-label="Gantt chart filters" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><input type="search" class="crm-input crm-input-sm" data-gantt-filter="title" placeholder="Search tasks…" value="${escape(filters.title || '')}" aria-label="Search Gantt tasks" style="width:130px;"><select class="crm-input crm-input-sm" data-gantt-filter="status" aria-label="Filter by status"><option value="">All statuses</option>${Object.entries(STATUSES).map(([key, label]) => `<option value="${key}"${filters.status === key ? ' selected' : ''}>${escape(response?.project?.statusLabels?.[key] || label)}</option>`).join('')}</select><select class="crm-input crm-input-sm" data-gantt-filter="sectionId" aria-label="Filter by section"><option value="">All sections</option>${sections.map((s) => `<option value="${escape(s.id)}"${String(filters.sectionId || '') === String(s.id) ? ' selected' : ''}>${escape(s.title)}</option>`).join('')}</select><select class="crm-input crm-input-sm" data-gantt-filter="ownerUid" aria-label="Filter by owner"><option value="">All owners</option>${members.map((m) => `<option value="${escape(m.uid || m.id)}"${String(filters.ownerUid || '') === String(m.uid || m.id) ? ' selected' : ''}>${escape(m.displayName || m.name || m.email || m.uid || m.id)}</option>`).join('')}</select><select class="crm-input crm-input-sm" data-gantt-filter="assigneeUid" aria-label="Filter by assignee"><option value="">All assignees</option>${members.map((m) => `<option value="${escape(m.uid || m.id)}"${String(filters.assigneeUid || '') === String(m.uid || m.id) ? ' selected' : ''}>${escape(m.displayName || m.name || m.email || m.uid || m.id)}</option>`).join('')}</select><label class="crm-gantt-date-label" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--pj-muted);">From<input type="date" class="crm-input crm-input-sm" data-gantt-filter="fromDate" value="${escape(filters.fromDate || '')}" aria-label="Gantt start date" style="padding:2px 4px;font-size:11px;"></label><label class="crm-gantt-date-label" style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--pj-muted);">To<input type="date" class="crm-input crm-input-sm" data-gantt-filter="toDate" value="${escape(filters.toDate || '')}" aria-label="Gantt due date" style="padding:2px 4px;font-size:11px;"></label>${hasActiveFilters ? '<button type="button" class="crm-btn-secondary crm-btn-sm" data-gantt-action="clear-filters" style="font-size:11px;padding:3px 8px;">Reset filters</button>' : ''}</div></div>`;
+        }
+        function ganttMarkup(rows) {
             const hasDerivedSpan = (t) => hasDerivedTimelineSpan(t, rows);
             const day = (value) => Date.parse(`${value}T00:00:00Z`) / 86400000;
             const safeDay = (value) => {
@@ -349,8 +379,8 @@
                 const n = day(value);
                 return Number.isFinite(n) ? n : null;
             };
-            const dates = rows.flatMap((t) => [t.startDate, t.dueDate, ...(hasDerivedSpan(t) ? [t.derived.startDate, t.derived.dueDate] : [])]).map(safeDay).filter((v) => v !== null);
-            if (!rows.length || !dates.length) return '<p>No dated tasks on this page.</p>';
+            const dates = rows.flatMap((t) => [t.startDate, t.dueDate, ...(hasDerivedSpan(t) ? [t.derived?.startDate, t.derived?.dueDate] : [])]).map(safeDay).filter((v) => v !== null);
+            if (!rows.length || !dates.length) return '<p class="crm-muted">No dated tasks on this page.</p>';
             const start = Math.min(...dates), end = Math.max(...dates), span = Math.max(1, end - start + 1);
             const dateLabel = (offset) => new Date((start + offset) * 86400000).toISOString().slice(0, 10);
             const bar = (from, to, derivedBar) => {
@@ -364,7 +394,6 @@
                 const label = `${derivedBar ? 'Derived descendant span' : 'Stored interval'}: ${from || to} through ${to || from}`;
                 return `<span class="crm-projects-gantt-bar${derivedBar ? ' is-derived' : ''}" role="img" aria-label="${escape(label)}" style="left:${left.toFixed(2)}%;width:${Math.min(100 - left, width).toFixed(2)}%" title="${escape(label)}"></span>`;
             };
-            const zoomBar = `<div class="crm-projects-gantt-tools" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div class="seg" role="group" aria-label="Gantt zoom"><button type="button" class="crm-btn-secondary${ganttZoom === 'days' ? ' is-active' : ''}" data-gantt-zoom="days"${ganttZoom === 'days' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Days</button><button type="button" class="crm-btn-secondary${ganttZoom === 'weeks' ? ' is-active' : ''}" data-gantt-zoom="weeks"${ganttZoom === 'weeks' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Weeks</button><button type="button" class="crm-btn-secondary${ganttZoom === 'months' ? ' is-active' : ''}" data-gantt-zoom="months"${ganttZoom === 'months' ? ' aria-pressed="true"' : ' aria-pressed="false"'}>Months</button></div></div>`;
             const zoomWidths = { days: '2200px', weeks: '1200px', months: '850px' };
             const minW = zoomWidths[ganttZoom] || '1200px';
 
@@ -401,10 +430,27 @@
                 return '';
             };
 
+            const depConnectors = (t) => {
+                return array(t.predecessorTaskIds).map((predId) => {
+                    const pred = rows.find((r) => r.id === predId);
+                    if (!pred) return '';
+                    const pEnd = safeDay(pred.dueDate || pred.startDate);
+                    const tStart = safeDay(t.startDate || t.dueDate);
+                    if (pEnd === null || tStart === null) return '';
+                    const fromDay = Math.min(pEnd, tStart);
+                    const toDay = Math.max(pEnd, tStart);
+                    const dLeft = Math.max(0, ((fromDay - start) / span) * 100);
+                    const dWidth = Math.max(0.5, ((toDay - fromDay) / span) * 100);
+                    const title = `Dependency: ${escape(pred.title || predId)} → ${escape(t.title || t.id)}`;
+                    return `<span class="crm-projects-gantt-dep-line" style="left:${dLeft.toFixed(2)}%;width:${dWidth.toFixed(2)}%;" title="${title}"></span>`;
+                }).join('');
+            };
+
             const legend = `<div class="crm-projects-gantt-legend"><span><i style="background:var(--pj-accent)"></i>Stored interval</span><span><i class="crm-projects-gantt-key-derived"></i>Derived descendant span</span><span><i class="crm-projects-gantt-key-dep"></i>Dependency</span><span><i class="crm-projects-gantt-key-milestone"></i>Milestone</span><span><i class="crm-projects-gantt-key-today"></i>Today</span></div>`;
 
-            return `${zoomBar}<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}${todayMarker}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived.startDate, t.derived.dueDate, true) : ''}</div></div>`).join('')}</div>${legend}`;
+            return `<p class="crm-muted">Blue bars show stored dates. Dashed gray bars show derived descendant spans. Open a task to preview a date change.</p><div class="crm-projects-gantt" style="min-width:${minW};"><div class="crm-projects-gantt-axis" style="min-width:${minW};"><span>Task</span><div>${Array.from({ length: 5 }, (_, i) => `<time style="left:${i * 25}%">${dateLabel(Math.floor((span - 1) * i / 4))}</time>`).join('')}${todayMarker}</div></div>${rows.map((t) => `<div class="crm-projects-gantt-row" style="min-width:${minW};" data-view-task="${escape(t.id)}"><div>${taskButton(t)}<small>Stored: ${t.startDate || t.dueDate ? `${escape(t.startDate || t.dueDate)} → ${escape(t.dueDate || t.startDate)}` : 'undated'}</small>${hasDerivedSpan(t) ? derived(t) : ''}</div><div class="crm-projects-gantt-track${hasDerivedSpan(t) ? ' has-derived-span' : ''}">${weekendBands}${todayMarker}${milestone(t)}${depConnectors(t)}${bar(t.startDate, t.dueDate, false)}${hasDerivedSpan(t) ? bar(t.derived?.startDate, t.derived?.dueDate, true) : ''}</div></div>`).join('')}</div>${legend}`;
         }
+        const timelineMarkup = (rows) => (rows && rows.length ? ganttMarkup(rows) : '');
         function memberName(id) {
             const m = array(board?.getState()?.members).find((m) => (m.uid || m.id) === id);
             return m?.displayName || m?.name || m?.email || 'Project member';
@@ -415,7 +461,7 @@
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             const monthTitle = `${monthNames[month - 1] || ''} ${year}`;
             const todayIso = new Date().toISOString().slice(0, 10);
-            el('projects-view-content').innerHTML = `<div class="crm-projects-calendar-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><button type="button" class="crm-btn-secondary" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary" data-cal-nav="1" aria-label="Next month">›</button><h3 style="margin:0;font-size:16px;">${escape(monthTitle)}</h3><button type="button" class="crm-btn-secondary" data-cal-nav="today">Today</button><label style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;">Visible calendar month <input id="projects-view-month" type="month" class="crm-input" value="${escape(calendarMonth)}"></label></div><p id="projects-calendar-view-provenance" class="crm-muted"></p><div id="projects-calendar-availability"></div><div class="crm-projects-calendar-grid">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((name) => `<strong>${name}</strong>`).join('')}${'<span aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
+            el('projects-view-content').innerHTML = `<div class="crm-projects-calendar-bar"><div class="crm-cal-nav-cluster"><div class="crm-cal-nav-group"><button type="button" class="crm-btn-secondary crm-cal-nav-btn" data-cal-nav="-1" aria-label="Previous month">‹</button><button type="button" class="crm-btn-secondary crm-cal-nav-btn is-today-btn" data-cal-nav="today">Today</button><button type="button" class="crm-btn-secondary crm-cal-nav-btn" data-cal-nav="1" aria-label="Next month">›</button></div><h3 class="crm-cal-month-title">${escape(monthTitle)}</h3><span id="projects-calendar-view-provenance" class="crm-cal-provenance-tag">Vietnam calendar</span></div><label class="crm-cal-month-picker-label">Visible calendar month <input id="projects-view-month" type="month" class="crm-input crm-cal-month-input" value="${escape(calendarMonth)}"></label></div><div class="crm-projects-calendar-grid">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((name) => `<strong>${name}</strong>`).join('')}${'<span class="crm-cal-empty-slot" aria-hidden="true"></span>'.repeat((new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7)}${Array.from({ length: days }, (_, i) => {
                 const date = `${calendarMonth}-${String(i + 1).padStart(2, '0')}`;
                 const cur = new Date(Date.UTC(year, month - 1, i + 1));
                 const dow = cur.getUTCDay();
@@ -427,8 +473,8 @@
                     const dueVal = t.startDate && t.dueDate ? (t.startDate <= t.dueDate ? t.dueDate : t.startDate) : (t.dueDate || t.startDate);
                     return startVal <= date && dueVal >= date;
                 });
-                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}${isToday ? ' is-today' : ''}"><h5>${escape(date)}</h5>${matches.slice(0, 5).map(taskButton).join('')}${matches.length > 5 ? `<span>${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
-            }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}`;
+                return `<section class="crm-projects-calendar-day${isWeekend ? ' off' : ''}${isToday ? ' is-today' : ''}"><div class="crm-cal-day-header"><span class="crm-cal-day-num">${String(i + 1).padStart(2, '0')}</span><h5>${escape(date)}</h5></div><div class="crm-cal-day-tasks">${matches.slice(0, 5).map(taskButton).join('')}</div>${matches.length > 5 ? `<span class="crm-cal-more-badge">${matches.length - 5} more on this date; use the dated list below.</span>` : ''}</section>`;
+            }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}<details class="crm-calendar-tech-drawer" style="margin-top:24px;border-top:1px solid var(--pj-line, #e2e8f0);padding-top:12px;"><summary class="crm-muted" style="cursor:pointer;font-size:12px;font-weight:500;">Vietnam calendar details &amp; holiday rules</summary><div id="projects-calendar-details" class="crm-muted" style="margin-top:8px;font-size:12px;line-height:1.6;"></div><div id="projects-calendar-availability" style="margin-top:8px;"></div></details>`;
             if (response) loadCalendar(`${calendarMonth}-01`, `${calendarMonth}-${days}`);
         }
         async function loadCalendar(fromDate, toDate) {
@@ -437,8 +483,18 @@
                 const result = await api(`${base()}/calendar?${new URLSearchParams({ fromDate, toDate })}`);
                 if (!current(s) || sequence !== calendarSequence || view !== 'calendar') return;
                 const c = result.calendar;
-                el('projects-calendar-view-provenance').innerHTML = `${escape(calendarCoverage(c))} ${sourceLinks(c.coverage?.sourceUrls)}<br>Accountable-owner availability governs scheduling; other assignees generate warnings.`;
-                el('projects-calendar-availability').innerHTML = `<details><summary>Availability and reason provenance for this month</summary>${array(c.days).map((day) => `<p><strong>${escape(day.date)}</strong>: organization ${day.organization?.working ? 'working' : 'nonworking'}${array(day.organization?.reasons).length ? ` — ${escape(day.organization.reasons.map(warningText).join('; '))}` : ''}${day.workingSwap ? ' · explicitly adopted working swap' : ''}${array(day.members).filter((m) => m.reasons?.some((r) => r.code === 'personal_leave')).map((m) => `<br>${escape(memberName(m.uid))}: personal leave`).join('')}</p>`).join('')}</details>`;
+                const prov = el('projects-calendar-view-provenance');
+                if (prov) {
+                    prov.textContent = `Vietnam calendar${c?.coverage?.status === 'verified' ? ' · Verified' : ''}`;
+                }
+                const details = el('projects-calendar-details');
+                if (details) {
+                    details.innerHTML = `${escape(calendarCoverage(c))} ${sourceLinks(c.coverage?.sourceUrls)}<br>Accountable-owner availability governs scheduling; other assignees generate warnings.`;
+                }
+                const avail = el('projects-calendar-availability');
+                if (avail) {
+                    avail.innerHTML = `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;">Availability and reason provenance for this month</summary>${array(c.days).map((day) => `<p style="margin:4px 0;"><strong>${escape(day.date)}</strong>: organization ${day.organization?.working ? 'working' : 'nonworking'}${array(day.organization?.reasons).length ? ` — ${escape(day.organization.reasons.map(warningText).join('; '))}` : ''}${day.workingSwap ? ' · explicitly adopted working swap' : ''}${array(day.members).filter((m) => m.reasons?.some((r) => r.code === 'personal_leave')).map((m) => `<br>${escape(memberName(m.uid))}: personal leave`).join('')}</p>`).join('')}</details>`;
+                }
             } catch (error) { if (current(s) && sequence === calendarSequence) status(error.message || 'Calendar could not be loaded.'); }
         }
         function calendarQuery() {
@@ -754,7 +810,22 @@
             el('projects-project-links')?.addEventListener('input', projectLookupChanged);
             el('projects-project-links')?.addEventListener('change', projectLookupChanged);
             el('projects-project-links')?.addEventListener('click', (event) => { if (event.target.dataset?.projectStudentLink !== undefined) openStudentLink(Number(event.target.dataset.projectStudentLink), true); if (event.target.dataset?.projectLinkRemove !== undefined) saveProjectLinks(projectLinks.filter((_, i) => i !== Number(event.target.dataset.projectLinkRemove))); });
-            el('projects-view-tabs')?.addEventListener('click', (event) => { const button = event.target.closest('[data-view]'); if (button && button.dataset.view !== view) { const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar'; view = button.dataset.view; if (monthScopeChanged) resetViewPage(); else render(); } });
+            el('projects-view-tabs')?.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-view]');
+                if (button && button.dataset.view !== view) {
+                    const wasGantt = isGantt(view);
+                    const willBeGantt = isGantt(button.dataset.view);
+                    if (wasGantt && willBeGantt) {
+                        view = button.dataset.view;
+                        render();
+                        return;
+                    }
+                    const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar';
+                    view = button.dataset.view;
+                    if (monthScopeChanged) resetViewPage();
+                    else render();
+                }
+            });
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };
             el('projects-view-filters')?.addEventListener('click', (event) => {
                 const chip = event.target.closest?.('[data-chip-value]');
@@ -767,8 +838,20 @@
             });
             el('projects-view-filters')?.addEventListener('input', captureFilterDraft);
             el('projects-view-filters')?.addEventListener('change', captureFilterDraft);
-            el('projects-view-filters')?.addEventListener('submit', (event) => { event.preventDefault(); filterDrafts = Object.fromEntries(new FormData(event.target)); filters = Object.fromEntries(Object.entries(filterDrafts).filter(([, value]) => value !== '')); syncFilterBadge(); board?.setFilters(filters); refresh(); });
-            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; syncFilterBadge(); setTimeout(renderFilterChips, 0); if (projectId) { board?.setFilters(filters); refresh(); } });
+            el('projects-view-filters')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                filterDrafts = Object.fromEntries(new FormData(event.target));
+                if (filterDrafts.fromDate && filterDrafts.toDate && filterDrafts.fromDate > filterDrafts.toDate) {
+                    filterDrafts.toDate = filterDrafts.fromDate;
+                    const toInput = event.target.querySelector?.('[name="toDate"]');
+                    if (toInput) toInput.value = filterDrafts.toDate;
+                }
+                filters = Object.fromEntries(Object.entries(filterDrafts).filter(([, value]) => value !== ''));
+                syncFilterBadge();
+                board?.setFilters(filters);
+                refresh();
+            });
+            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; syncFilterBadge(); if (typeof setTimeout === 'function') setTimeout(renderFilterChips, 0); else renderFilterChips(); if (projectId) { board?.setFilters(filters); refresh(); } });
             el('projects-view-more')?.addEventListener('click', () => { if (!loading && response?.hasMore) refresh(response.nextCursor, [...previous, cursor], pageIndex + 1); });
             el('projects-view-previous')?.addEventListener('click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
             el('projects-view-retry')?.addEventListener('click', () => refresh());
@@ -778,6 +861,21 @@
                 if (zoomBtn) {
                     ganttZoom = zoomBtn.dataset.ganttZoom;
                     render();
+                    return;
+                }
+                const clearFiltersBtn = event.target.closest('[data-gantt-action="clear-filters"]');
+                if (clearFiltersBtn) {
+                    filters = {};
+                    filterDrafts = {};
+                    const form = el('projects-view-filters');
+                    form?.reset();
+                    syncFilterBadge();
+                    if (typeof setTimeout === 'function') setTimeout(renderFilterChips, 0);
+                    else renderFilterChips();
+                    if (projectId) {
+                        board?.setFilters(filters);
+                        refresh();
+                    }
                     return;
                 }
                 const calNavBtn = event.target.closest('[data-cal-nav]');
@@ -851,9 +949,81 @@
             });
             el('projects-view-content')?.addEventListener('change', async (event) => {
                 if (event.target.id === 'projects-view-month') { const next = event.target.value; if (view === 'calendar' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(next) && next !== calendarMonth) { calendarMonth = next; resetViewPage(); } return; }
+                const ganttFilterField = event.target.dataset?.ganttFilter;
+                if (ganttFilterField) {
+                    let val = event.target.value;
+                    if ((ganttFilterField === 'fromDate' || ganttFilterField === 'toDate') && val && !/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                        val = '';
+                        event.target.value = '';
+                    }
+                    if (ganttFilterField === 'fromDate' && val && filters.toDate && val > filters.toDate) {
+                        filters.toDate = val;
+                        filterDrafts.toDate = val;
+                        const toControl = el('projects-view-filters')?.elements?.namedItem('toDate');
+                        if (toControl) toControl.value = val;
+                        const ganttToInput = el('projects-view-content')?.querySelector?.('[data-gantt-filter="toDate"]');
+                        if (ganttToInput) ganttToInput.value = val;
+                    } else if (ganttFilterField === 'toDate' && val && filters.fromDate && val < filters.fromDate) {
+                        filters.fromDate = val;
+                        filterDrafts.fromDate = val;
+                        const fromControl = el('projects-view-filters')?.elements?.namedItem('fromDate');
+                        if (fromControl) fromControl.value = val;
+                        const ganttFromInput = el('projects-view-content')?.querySelector?.('[data-gantt-filter="fromDate"]');
+                        if (ganttFromInput) ganttFromInput.value = val;
+                    }
+                    const form = el('projects-view-filters');
+                    const control = form?.elements?.namedItem(ganttFilterField);
+                    if (control) {
+                        control.value = val;
+                        if (typeof Event === 'function') control.dispatchEvent(new Event('change', { bubbles: true }));
+                        else if (typeof control.dispatchEvent === 'function') control.dispatchEvent({ type: 'change', bubbles: true });
+                    }
+                    filterDrafts[ganttFilterField] = val;
+                    if (val) filters[ganttFilterField] = val;
+                    else delete filters[ganttFilterField];
+                    syncFilterBadge();
+                    renderFilterChips();
+                    board?.setFilters(filters);
+                    refresh();
+                    return;
+                }
                 const id = event.target.dataset.taskStatus;
                 if (id) {
                     await applyStatus(id, event.target.value);
+                }
+            });
+            el('projects-view-content')?.addEventListener('search', (event) => {
+                if (event.target.dataset?.ganttFilter === 'title') {
+                    const val = event.target.value;
+                    const form = el('projects-view-filters');
+                    const control = form?.elements?.namedItem('title');
+                    if (control) control.value = val;
+                    filterDrafts.title = val;
+                    if (val) filters.title = val;
+                    else delete filters.title;
+                    syncFilterBadge();
+                    board?.setFilters(filters);
+                    refresh();
+                }
+            });
+            el('projects-view-content')?.addEventListener('input', (event) => {
+                const ganttFilterField = event.target.dataset?.ganttFilter;
+                if (ganttFilterField) {
+                    filterDrafts[ganttFilterField] = event.target.value;
+                    const form = el('projects-view-filters');
+                    const control = form?.elements?.namedItem(ganttFilterField);
+                    if (control) control.value = event.target.value;
+                }
+            });
+            el('projects-view-content')?.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && event.target.dataset?.ganttFilter === 'title') {
+                    event.preventDefault();
+                    const val = event.target.value;
+                    if (val) filters.title = val;
+                    else delete filters.title;
+                    syncFilterBadge();
+                    board?.setFilters(filters);
+                    refresh();
                 }
             });
             el('projects-task-planning')?.addEventListener('submit', (event) => {

@@ -38,7 +38,7 @@ function harness() {
             }
             return snapshot(); }
         if (url.endsWith('/schedule-preview')) return heldPreview ? heldPreview.promise : { preview: { token: 'preview-token', canApply: true, before: {}, after: {}, warnings: [], nonWorkingDays: [] } };
-        if (url.endsWith('/links')) return { canManage: !denyLinks && !readOnly, links: denyLinks ? [] : (readOnly ? [{ type: 'lead', recordId: 'allowed-id', label: 'Visible authorized lead', href: '/crm-admin.html#enquiry' }] : []) };
+        if (url.endsWith('/links')) return { canManage: !denyLinks && !readOnly, links: denyLinks ? [] : (readOnly ? [{ type: 'lead', recordId: 'allowed-id', label: 'Visible authorized lead', href: '/crm-admin#enquiry' }] : []) };
         return { result: { task: { id: task.id, revision: 3 } } };
     } });
     controller.init();

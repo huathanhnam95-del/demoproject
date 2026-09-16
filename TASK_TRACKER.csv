@@ -2150,4 +2150,4 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1155,2026-09-17,Deploy uid and createdAt DESC Firestore composite index for notification center,Done,2026-09-17
 1156,2026-09-17,Benchmark and verify CRM loading time performance improvements,Done,2026-09-17
 1157,2026-09-17,Audit merge candidate between BEL movement fixes and production branch,Done,2026-09-17
-1158,2026-09-17,Commit and push CRM Projects subtasks and Gantt overhaul to branch feat/projects-subtasks-people,In Progress,
+1158,2026-09-17,Commit and push CRM Projects subtasks and Gantt overhaul to branch feat/projects-subtasks-people,Done,2026-09-17

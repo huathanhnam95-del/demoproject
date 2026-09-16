@@ -378,6 +378,29 @@ window.TeacherSchedulerWorkspace = (function () {
             return days;
         }
 
+        const PASTEL_THEMES = [
+            'is-pastel-sky',
+            'is-pastel-lavender',
+            'is-pastel-sage',
+            'is-pastel-peach',
+            'is-pastel-rose',
+            'is-pastel-teal',
+            'is-pastel-coral',
+            'is-pastel-indigo',
+        ];
+
+        function getClassPastelTheme(classId) {
+            const str = String(classId || '').trim();
+            if (!str) return PASTEL_THEMES[0];
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            const index = Math.abs(hash) % PASTEL_THEMES.length;
+            return PASTEL_THEMES[index];
+        }
+
         function getClassroomById(classId) {
             return state.classrooms.find((classroom) => String(classroom.classroomId || '') === String(classId || '').trim()) || null;
         }
@@ -422,13 +445,14 @@ window.TeacherSchedulerWorkspace = (function () {
                 const assigned = Number(summary.contractedAssignedCount ?? summary.contractedScheduledCount ?? 0);
                 const target = Number(summary.contractedTargetCount || 0);
                 const activeClass = state.placementClassroomId === classId ? 'is-armed' : '';
+                const themeClass = getClassPastelTheme(classId);
                 const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || classroom.primaryTeacherUid || '';
                 const teacherBadge = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
                     ? `<div class="scheduler-class-card-meta" style="color:var(--crm-primary,#157a3b);font-weight:600;">👤 ${escapeHtml(teacherName)}</div>`
                     : '';
                 return `
                     <button type="button" class="scheduler-class-card teacher-scheduler-class-card ${activeClass}" data-classroom-id="${escapeHtml(classId)}">
-                        <div class="scheduler-class-card-title">${escapeHtml(classroom.name || classId)}</div>
+                        <div class="scheduler-class-card-title"><span class="scheduler-class-card-pip ${themeClass}" aria-hidden="true"></span>${escapeHtml(classroom.name || classId)}</div>
                         ${teacherBadge}
                         <div class="scheduler-class-card-meta">${assigned}/${target} contracted scheduled</div>
                         <div class="scheduler-class-card-meta">${activeClass ? 'Placement mode active (Esc to exit)' : 'Click to arm placement mode'}</div>
@@ -670,7 +694,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         const locked = isLockedSession(session);
                         const teacherName = session.teacherName || state.teacherMap.get(session.teacherUid) || classroom?.primaryTeacherName || state.teacherMap.get(classroom?.primaryTeacherUid) || '';
                         const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
-                            ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
+                            ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
                             : '';
                         const layout = sessionLayoutMap.get(sessionId) || (totalSessions > 1 ? { col: idx, totalCols: totalSessions } : { col: 0, totalCols: 1 });
                         const col = layout.col;
@@ -684,9 +708,10 @@ window.TeacherSchedulerWorkspace = (function () {
                         } else {
                             layoutStyle += 'left:2px;right:2px;';
                         }
+                        const themeClass = isCompleted ? '' : getClassPastelTheme(session.classId);
                         const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
-                            + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? completedBadge : ''}</div>`
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${themeClass} ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
+                            + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? compactBadge : ''}</div>`
                             + (isCompact ? '' : teacherPill)
                             + (isCompact ? '' : `<div class="pill-meta-row"><span class="pill-time">${escapeHtml(timeRange)}</span>${completedBadge}</div>`)
                             + (locked ? '' : '<div class="scheduler-session-resize-handle is-top" data-resize="top" title="Drag to adjust start time"></div><div class="scheduler-session-resize-handle is-bottom" data-resize="bottom" title="Drag to adjust duration"></div>')

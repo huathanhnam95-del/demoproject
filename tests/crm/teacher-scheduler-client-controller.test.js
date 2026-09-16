@@ -980,7 +980,8 @@ async function runTests() {
         assert(calHtml.includes('--scheduler-day-count: 5'), 'Grid must specify --scheduler-day-count: 5');
         assert(calHtml.includes('is-compact'), '30-minute session pill must render with is-compact class');
         assert(calHtml.includes('pill-header'), 'Compact pill must contain pill-header');
-        assert(calHtml.includes('✓ Completed'), 'Completed badge must be present');
+        assert(calHtml.includes('pill-badge-compact'), 'Compact completed badge must be present');
+        assert(calHtml.includes('title="Completed"'), 'Compact completed badge title must be present');
 
         windowMock.ClassroomAPI = origAPI;
         console.log('✓ Dynamic --scheduler-day-count and compact pill layout (<40px two-line threshold) verified');
@@ -2222,6 +2223,117 @@ async function runTests() {
 
         windowMock.ClassroomAPI = origAPI;
         console.log('✓ Bidirectional upper and lower edge drag resizing verified');
+    }
+
+    // TEST 24: Pastel color system for sessions and classroom rail cards
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [
+                    { classroomId: 'class-huy', name: 'Trần Khắc Huy - PTE Academic 1-1 24h' },
+                    { classroomId: 'class-test', name: 'test - PTE Academic Tutoring' },
+                    { classroomId: 'class-rose', name: 'Lê Hoàng Rose - PTE Academic 30h' }
+                ],
+                sessions: [
+                    {
+                        sessionId: 's-pastel-1',
+                        classId: 'class-huy',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '09:00',
+                        durationMinutes: 120,
+                        status: 'scheduled',
+                        timezone: 'UTC'
+                    },
+                    {
+                        sessionId: 's-pastel-2',
+                        classId: 'class-test',
+                        teacherUid: 'teacher-2',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '14:00',
+                        durationMinutes: 60,
+                        status: 'completed',
+                        sessionOutcome: 'completed',
+                        timezone: 'UTC'
+                    },
+                    {
+                        sessionId: 's-pastel-3',
+                        classId: 'class-rose',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-09',
+                        scheduledLocalTime: '10:00',
+                        durationMinutes: 90,
+                        status: 'scheduled',
+                        timezone: 'UTC'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        const railHtml = testElements.teacherSchedulerClassList.innerHTML;
+
+        // 1. Verify active session pill renders with a pastel theme class
+        assert(/is-pastel-(sky|lavender|sage|peach|rose|teal|coral|indigo)/.test(calHtml), 'Calendar session pill must have a pastel theme class');
+        // 2. Verify completed session pill renders with is-completed class
+        assert(calHtml.includes('is-completed'), 'Completed session pill must retain is-completed class');
+        // 3. Verify class cards in rail render with scheduler-class-card-pip and pastel theme
+        assert(railHtml.includes('scheduler-class-card-pip'), 'Class rail must render color pip');
+        assert(/scheduler-class-card-pip is-pastel-/.test(railHtml), 'Class rail pip must have a pastel theme class');
+
+        // 4. Assert 1:1 matching between classroom rail pip and calendar session pill theme classes for distinct classrooms
+        const extractPipTheme = (classroomId) => {
+            const match = railHtml.match(new RegExp(`data-classroom-id="${classroomId}"[\\s\\S]*?scheduler-class-card-pip\\s+(is-pastel-[a-z]+)`));
+            return match ? match[1] : null;
+        };
+        const extractPillTheme = (sessionId) => {
+            const match = calHtml.match(new RegExp(`<button[^>]*class="[^"]*(is-pastel-[a-z]+)[^"]*"[^>]*data-session-id="${sessionId}"`));
+            return match ? match[1] : null;
+        };
+
+        const huyPipTheme = extractPipTheme('class-huy');
+        const huyPillTheme = extractPillTheme('s-pastel-1');
+        assert(huyPipTheme, 'class-huy rail card pip must have a pastel theme class');
+        assert(huyPillTheme, 's-pastel-1 session pill must have a pastel theme class');
+        assert.strictEqual(huyPillTheme, huyPipTheme, 's-pastel-1 calendar session pill theme must match class-huy rail pip theme 1:1');
+
+        const rosePipTheme = extractPipTheme('class-rose');
+        const rosePillTheme = extractPillTheme('s-pastel-3');
+        assert(rosePipTheme, 'class-rose rail card pip must have a pastel theme class');
+        assert(rosePillTheme, 's-pastel-3 session pill must have a pastel theme class');
+        assert.strictEqual(rosePillTheme, rosePipTheme, 's-pastel-3 calendar session pill theme must match class-rose rail pip theme 1:1');
+
+        // Confirm distinct classrooms hash to distinct themes
+        assert.notStrictEqual(huyPipTheme, rosePipTheme, 'class-huy and class-rose must hash to distinct pastel themes');
+        assert.strictEqual(huyPipTheme, 'is-pastel-lavender');
+        assert.strictEqual(rosePipTheme, 'is-pastel-rose');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Pastel color system for sessions and classroom rail cards verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');

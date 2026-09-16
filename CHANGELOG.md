@@ -1,3 +1,14 @@
+## [V2.0.8] - 2026-09-16
+
+### Added & Enhanced
+- **Teacher Schedule Accessible Pastel Color System & Layout Hardening (`public/crm-admin.css`, `public/js/crm/teacher-scheduler-workspace.js`, `tests/crm/teacher-scheduler-client-controller.test.js`)**:
+  - Replaced legacy solid electric blue and dark green calendar session pills with an accessible, modern pastel design system powered by CSS custom properties (`--pill-bg`, `--pill-border`, `--pill-accent`, `--pill-ink`, `--pill-meta`).
+  - Added 8 distinct, deterministic pastel themes (`sky`, `lavender`, `sage`, `peach`, `rose`, `teal`, `coral`, `indigo`) hashed by classroom ID to cleanly differentiate multi-cohort schedules.
+  - WCAG 2.1 AA contrast compliance across all themes: title ink ($7.97:1$ to $9.27:1$), teacher name and time metadata ($\ge 4.5:1$, hardened Sage theme to `#137333` at $5.24:1$), non-text accent borders ($\ge 3.0:1$), and completed badge ($7.01:1$ AAA contrast at `#0d5224`).
+  - Compact single-line slot layout fix: dynamically renders a crisp $13\times 13\text{px}$ circular checkmark icon badge instead of full text badge for slots $<40\text{px}$ / $\le 30\text{min}$, preventing title truncation and text clipping.
+  - Left rail "Your Classes" visual synchronization: added matching color pips (`.scheduler-class-card-pip`) to classroom cards for instantaneous 1:1 color correlation with calendar session pills.
+  - Drag-resizing and interactive states: styled upper/lower resize handles with pastel accent tokens on hover and preserved soft pastel green badge for completed sessions.
+
 ## [V2.0.7] - 2026-09-16
 
 ### Fixed & Enhanced

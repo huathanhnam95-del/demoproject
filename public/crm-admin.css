@@ -1030,6 +1030,10 @@ body {
    Loading / Gate
    ============================================ */
 
+html.crm-session-cached #crm-loading {
+  display: none !important;
+}
+
 .crm-loading-overlay {
   position: fixed;
   inset: 0;
@@ -2278,7 +2282,8 @@ body {
 
 .teacher-scheduler-workspace .scheduler-session-resize-handle:hover,
 .teacher-scheduler-workspace .scheduler-session-resize-handle.is-resizing {
-  background: rgba(26, 115, 232, 0.5);
+  background: var(--pill-accent, rgba(26, 115, 232, 0.5));
+  opacity: 0.65;
 }
 
 .teacher-scheduler-workspace.is-pointer-dragging {
@@ -17177,56 +17182,165 @@ body:has(#crm-student-modal[aria-hidden="false"]) #bel-chat-drawer {
   background: #ea4335;
 }
 
-/* V5 — solid-fill pills, no left rail, compositor-friendly hover. */
+/* --- Teacher scheduler: Pastel Session Pills Color System --- */
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
-  border-radius: 7px;
-  border: none;
-  border-left: none;
-  padding: 3px 7px;
-  background: #1a73e8;
-  color: #ffffff;
+  --pill-bg: #e8f0fe;
+  --pill-border: #bfdbfe;
+  --pill-accent: #1a73e8;
+  --pill-ink: #154589;
+  --pill-meta: #1967d2;
+
+  border-radius: 6px;
+  border: 1px solid var(--pill-border);
+  border-left: 3px solid var(--pill-accent);
+  padding: 3px 6px;
+  background: var(--pill-bg);
+  color: var(--pill-ink);
   font-size: 0.72rem;
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.14s ease, transform 0.14s ease;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-title {
-  font-weight: 500;
-  color: #ffffff;
+  font-weight: 600;
+  color: var(--pill-ink);
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-time,
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill .pill-teacher {
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--pill-meta);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px rgba(60, 64, 67, 0.15);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
   z-index: 5;
 }
 
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed {
-  background: #188038;
-  border-left: none;
-  color: #ffffff;
+/* Pastel Themes */
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-sky {
+  --pill-bg: #e8f0fe;
+  --pill-border: #bfdbfe;
+  --pill-accent: #1a73e8;
+  --pill-ink: #154589;
+  --pill-meta: #1967d2;
 }
 
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-title,
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-lavender {
+  --pill-bg: #f3e8ff;
+  --pill-border: #e9d5ff;
+  --pill-accent: #9333ea;
+  --pill-ink: #581c87;
+  --pill-meta: #7e22ce;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-sage {
+  --pill-bg: #e6f4ea;
+  --pill-border: #bbf7d0;
+  --pill-accent: #16a34a;
+  --pill-ink: #14532d;
+  --pill-meta: #137333;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-peach {
+  --pill-bg: #fef3c7;
+  --pill-border: #fed7aa;
+  --pill-accent: #d97706;
+  --pill-ink: #78350f;
+  --pill-meta: #92400e;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-rose {
+  --pill-bg: #fce7f3;
+  --pill-border: #fbcfe8;
+  --pill-accent: #e11d48;
+  --pill-ink: #831843;
+  --pill-meta: #9d174d;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-teal {
+  --pill-bg: #ccfbf1;
+  --pill-border: #99f6e4;
+  --pill-accent: #0d9488;
+  --pill-ink: #134e4a;
+  --pill-meta: #0f766e;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-coral {
+  --pill-bg: #ffe4e6;
+  --pill-border: #fecdd3;
+  --pill-accent: #f43f5e;
+  --pill-ink: #881337;
+  --pill-meta: #be123c;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-pastel-indigo {
+  --pill-bg: #e0e7ff;
+  --pill-border: #c7d2fe;
+  --pill-accent: #4f46e5;
+  --pill-ink: #312e81;
+  --pill-meta: #4338ca;
+}
+
+/* Completed sessions in soft pastel green */
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed {
+  --pill-bg: #e6f4ea;
+  --pill-border: #c6e7d1;
+  --pill-accent: #1e8e3e;
+  --pill-ink: #0d5224;
+  --pill-meta: #137333;
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  border-left: 3px solid var(--pill-accent);
+  color: var(--pill-ink);
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-title {
+  color: #0d5224;
+  font-weight: 600;
+}
+
 .teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-time {
-  color: #ffffff;
+  color: #137333;
   font-weight: 500;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-badge-completed {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.22);
+  color: #0d5224;
+  background: rgba(30, 142, 62, 0.14);
+  border: 1px solid rgba(30, 142, 62, 0.25);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.65rem;
+  font-weight: 600;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-compact .pill-header {
   line-height: 1.15;
 }
+
+/* Class card color pips in left rail */
+.scheduler-class-card-pip {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: #1a73e8;
+  flex-shrink: 0;
+}
+
+.scheduler-class-card-pip.is-pastel-sky { background: #1a73e8; }
+.scheduler-class-card-pip.is-pastel-lavender { background: #9333ea; }
+.scheduler-class-card-pip.is-pastel-sage { background: #16a34a; }
+.scheduler-class-card-pip.is-pastel-peach { background: #d97706; }
+.scheduler-class-card-pip.is-pastel-rose { background: #e11d48; }
+.scheduler-class-card-pip.is-pastel-teal { background: #0d9488; }
+.scheduler-class-card-pip.is-pastel-coral { background: #f43f5e; }
+.scheduler-class-card-pip.is-pastel-indigo { background: #4f46e5; }
 
 /* Drop target reads as a translucent placeholder, not a filled cell. */
 .teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-drop-target {

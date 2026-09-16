@@ -455,7 +455,9 @@ const presentationDemoRouter = createPresentationDemoRouter({
 const deployedIdentitiesProvider = (process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.FIREBASE_PROJECT_ID)
     ? createDeployedIdentitiesProvider({
         projectId: process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || process.env.FIREBASE_PROJECT_ID,
-        region: 'us-central1'
+        region: 'us-central1',
+        gatewayService: 'bel-presentation-demo',
+        gatewayRegion: 'asia-southeast1'
     })
     : { read: async () => { throw new DeployedIdentitiesError('IDENTITY_CONFIG_INVALID', 'Deployment identity provider is not configured.'); } };
 const deployedIdentitiesRoute = createDeployedIdentitiesRoute({ provider: deployedIdentitiesProvider });

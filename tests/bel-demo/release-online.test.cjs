@@ -644,7 +644,7 @@ test('production rehearsal binds every manifest digest to the exact local candid
     fs.writeFileSync(manifestPath, JSON.stringify({ revision: CANDIDATE_SHA, files: { 'public/crm-admin.html': '0'.repeat(64) } }));
     const script = `import importlib.util, sys\nfrom argparse import Namespace\nspec = importlib.util.spec_from_file_location('rehearsal', sys.argv[1])\nmodule = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(module)\ntry:\n    module.validate_candidate_manifest(Namespace(candidate_sha=sys.argv[3]), module.Path(sys.argv[2]))\nexcept module.RehearsalError as error:\n    print(error)\n    raise SystemExit(0)\nraise SystemExit(1)`;
     try {
-        const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), manifestPath, CANDIDATE_SHA], { encoding: 'utf8' });
+        const result = childProcess.spawnSync('python', ['-B', '-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), manifestPath, CANDIDATE_SHA], { encoding: 'utf8' });
         assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
         assert.match(result.stdout, /does not match candidate bytes/);
     } finally {
@@ -679,7 +679,7 @@ test('production rehearsal revalidates the full approval and fresh provider stat
         "    value = dict(provider_state)\n    value['requestNonce'] = 'callback-request'\n    value['_providerRequest'] = {'requestNonce': value['requestNonce'], 'requestStartedAt': time.time() - 0.01, 'requestCompletedAt': time.time() + 0.01}\n    value['readAt'] = time.time()"
     );
     try {
-        const result = childProcess.spawnSync('python', ['-c', adaptedScript, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
+        const result = childProcess.spawnSync('python', ['-B', '-c', adaptedScript, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
         assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
         for (const marker of ['drift', 'ownership-loss', 'scope-mismatch', 'revoked-approval', 'expired-approval', 'nan-expiry', 'infinity-expiry', 'provider-read-count=1', 'freshness-matrix-passed']) assert.match(result.stdout, new RegExp(marker));
     } finally {
@@ -735,7 +735,7 @@ def fake_urlopen(request, timeout):
     state = {'deployed': 'v1'}
     read_at = time.time() if mode == 'fresh' else time.time() - 240
     return Response({'schemaVersion': 1, 'expiryUnit': 'epoch-seconds', 'owner': 'owner', 'resources': ['hosting'], 'candidateSha': 'a' * 40, 'baseSha': 'b' * 40, 'scopeHash': 'c' * 64, 'requestNonce': nonce, 'readAt': read_at, 'state': state, 'stateHash': module.stable_hash(state)})
-module.urlopen = fake_urlopen
+module.build_opener = lambda *_: type('TestOpener', (), {'open': staticmethod(fake_urlopen)})()
 fresh = module.read_deployed_identities_provider(args, 'normal-crm-launch')
 module.validate_deployed_identities(args, fresh, approval, None, provider=True)
 assert fresh['_providerRequest']['requestNonce']
@@ -750,7 +750,7 @@ except module.RehearsalError as error:
 else:
     raise SystemExit('expected a pre-request cached provider sample to be rejected')
 print('provider-current-request-passed')`;
-    const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
+    const result = childProcess.spawnSync('python', ['-B', '-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
     assert.match(result.stdout, /provider-current-request-passed/);
 });
@@ -812,7 +812,7 @@ except module.RehearsalError as error:
 else:
     raise SystemExit('expected altered served bytes to be rejected')
 print('served-asset-mapping-passed')`;
-    const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
+    const result = childProcess.spawnSync('python', ['-B', '-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
     assert.match(result.stdout, /served-asset-mapping-passed/);
 });
@@ -830,7 +830,7 @@ class Page:
 notes = module.read_authoritative_notes(Page(), 'room-1', 'uid-1')
 assert notes['pages'][0]['body'] == 'Authoritative'
 print('authoritative-notes-readback-passed')`;
-    const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
+    const result = childProcess.spawnSync('python', ['-B', '-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py')], { encoding: 'utf8' });
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
     assert.match(result.stdout, /authoritative-notes-readback-passed/);
 });
@@ -879,7 +879,7 @@ def fake_urlopen(request, timeout):
     nonce = request.headers.get('X-bel-request-nonce')
     read_at = time.time()
     return Response({'schemaVersion': 1, 'expiryUnit': 'epoch-seconds', 'owner': 'owner', 'resources': ['hosting'], 'candidateSha': args.candidate_sha, 'baseSha': args.base_sha, 'scopeHash': args.scope_hash, 'requestNonce': nonce, 'readAt': read_at, 'state': dict(provider_state), 'stateHash': module.stable_hash(provider_state)})
-module.urlopen = fake_urlopen
+module.build_opener = lambda *_: type('TestOpener', (), {'open': staticmethod(fake_urlopen)})()
 module.validate_scenario_approval(args, approval_path, 'normal-crm-launch')
 mutation_count += 1
 provider_state['deployed'] = 'v2'
@@ -893,7 +893,7 @@ assert mutation_count == 1
 assert provider_calls == 2
 print('provider-drift-blocked-before-mutation')`;
     try {
-        const result = childProcess.spawnSync('python', ['-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
+        const result = childProcess.spawnSync('python', ['-B', '-c', script, path.resolve(__dirname, '../browser/bel-demo-online/production_rehearsal.py'), approvalPath, leasePath, candidateSha, candidateSha, baseSha, scopeHash], { encoding: 'utf8' });
         assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
         assert.match(result.stdout, /provider-drift-blocked-before-mutation/);
     } finally {
@@ -1011,4 +1011,10 @@ test('the Chrome J table-corridor planner reaches all three participant cube pai
     assert.ok(results.every(result => result.distance <= INTERACTION_RADIUS));
     assert.ok(results.every(result => result.steps <= 1200));
     assert.deepEqual(results.map(result => result.targetId), ['cube-1', 'cube-3', 'cube-2', 'cube-5', 'cube-0', 'cube-4']);
+});
+
+test('production provider rejects credential redirects without any network', () => {
+    const childProcess = require('node:child_process');
+    const result = childProcess.spawnSync('python', ['-B', path.resolve(__dirname, '../release/test_production_identity_transport.py')], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
 });

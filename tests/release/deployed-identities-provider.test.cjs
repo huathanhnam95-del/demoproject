@@ -64,8 +64,8 @@ function makeAuthoritativeFixtures() {
                 ingressSettings: 'ALLOW_ALL'
             }
         },
-        'https://run.googleapis.com/v2/projects/listening-tasks-3ae34/locations/us-central1/services/api': {
-            name: 'projects/listening-tasks-3ae34/locations/us-central1/services/api',
+        'https://run.googleapis.com/v2/projects/listening-tasks-3ae34/locations/asia-southeast1/services/bel-presentation-demo': {
+            name: 'projects/listening-tasks-3ae34/locations/asia-southeast1/services/bel-presentation-demo',
             uid: 'run-service-1',
             updateTime: '2026-09-16T00:00:02Z',
             latestReadyRevision: 'api-00001-abc',
@@ -98,6 +98,7 @@ function makeAuthoritativeFixtures() {
         'https://firestore.googleapis.com/v1/projects/listening-tasks-3ae34/databases/(default)/collectionGroups/-/indexes?pageSize=1000': {
             indexes: [{ name: 'projects/listening-tasks-3ae34/databases/(default)/indexes/index-1', queryScope: 'COLLECTION', fields: [{ fieldPath: 'createdAt', order: 'DESCENDING' }] }]
         },
+        'https://listening-tasks-3ae34-default-rtdb.asia-southeast1.firebasedatabase.app/.settings/rules.json': { rules: { '.read': false, '.write': false } },
         'https://firebasedatabase.googleapis.com/v1beta/projects/listening-tasks-3ae34/locations/-/instances?pageSize=100': {
             instances: [{ name: 'projects/listening-tasks-3ae34/locations/asia-southeast1/instances/default', state: 'ACTIVE', databaseUrl: 'https://listening-tasks-3ae34-default-rtdb.asia-southeast1.firebasedatabase.app' }]
         }
@@ -152,7 +153,9 @@ test('provider reads authoritative surfaces and omits secret material', async ()
     assert.equal(identity.state.realtime.instances[0].databaseUrlHash.length, 64);
     assert.equal(Object.prototype.hasOwnProperty.call(identity.state.api, 'environment'), false);
     assert.equal(Object.prototype.hasOwnProperty.call(identity.state, 'secrets'), false);
-    assert.equal(requested.length, 9);
+    assert.equal(requested.length, 10);
+    assert.equal(identity.state.gateway.name, 'projects/listening-tasks-3ae34/locations/asia-southeast1/services/bel-presentation-demo');
+    assert.equal(identity.state.realtime.instances[0].rules.sourceHash, stableHash({ rules: { '.read': false, '.write': false } }));
 });
 
 test('provider fails closed when current release provenance is absent', async () => {
@@ -182,6 +185,7 @@ test('Google API adapter uses GET with no-store headers and does not expose resp
     assert.deepEqual(requests, [{
         url: 'https://example.com/identity',
         method: 'GET',
+        maxRedirects: 0,
         headers: { Accept: 'application/json', 'Cache-Control': 'no-store' }
     }]);
 });
@@ -233,4 +237,93 @@ test('production API wiring declares the dedicated secret and HTTPS route', () =
     assert.match(apiSource, /createDeployedIdentitiesProvider/);
     assert.match(apiSource, /\/api\/release\/deployed-identities/);
     assert.match(indexSource, /secrets:\s*\[[^\]]*'BEL_DEPLOYED_IDENTITIES_TOKEN'/);
+});
+
+const rtdbUrl = 'https://firebasedatabase.googleapis.com/v1beta/projects/listening-tasks-3ae34/locations/-/instances?pageSize=100';
+const rulesUrl = 'https://listening-tasks-3ae34-default-rtdb.asia-southeast1.firebasedatabase.app/.settings/rules.json';
+const firestoreRulesUrl = 'https://firebaserules.googleapis.com/v1/projects/listening-tasks-3ae34/rulesets/ruleset-1';
+const functionUrl = 'https://cloudfunctions.googleapis.com/v2/projects/listening-tasks-3ae34/locations/us-central1/functions/api';
+const gatewayUrl = 'https://run.googleapis.com/v2/projects/listening-tasks-3ae34/locations/asia-southeast1/services/bel-presentation-demo';
+function fixtureProvider(fixtures, options = {}) {
+    return createDeployedIdentitiesProvider({
+        projectId: 'listening-tasks-3ae34',
+        readJson: async url => {
+            if (!fixtures[url]) throw new Error('authoritative read unavailable');
+            return fixtures[url];
+        }, ...options
+    });
+}
+const readIdentity = provider => provider.read({ requestNonce: 'nonce_1234567890' });
+
+test('independent gateway changes affect stateHash and a missing or wrong gateway fails closed', async () => {
+    const fixtures = makeAuthoritativeFixtures();
+    const first = await readIdentity(fixtureProvider(fixtures));
+    fixtures[gatewayUrl].template.containers[0].image = 'registry/bel@sha256:' + 'b'.repeat(64);
+    assert.notEqual((await readIdentity(fixtureProvider(fixtures))).stateHash, first.stateHash);
+    fixtures[gatewayUrl].name = 'projects/listening-tasks-3ae34/locations/us-central1/services/api';
+    await assert.rejects(readIdentity(fixtureProvider(fixtures)), /gateway.*identity/i);
+    delete fixtures[gatewayUrl];
+    await assert.rejects(readIdentity(fixtureProvider(fixtures)), /unavailable/);
+});
+
+test('gateway service and region are configured independently of the Function', async () => {
+    const fixtures = makeAuthoritativeFixtures();
+    const name = 'projects/listening-tasks-3ae34/locations/europe-west1/services/bel-canary';
+    fixtures['https://run.googleapis.com/v2/' + name] = { ...fixtures[gatewayUrl], name };
+    delete fixtures[gatewayUrl];
+    const identity = await readIdentity(fixtureProvider(fixtures, { gatewayService: 'bel-canary', gatewayRegion: 'europe-west1' }));
+    assert.equal(identity.state.gateway.name, name);
+});
+
+test('RTDB pagination includes every instance and rules-only changes affect stateHash', async () => {
+    const fixtures = makeAuthoritativeFixtures();
+    fixtures[rtdbUrl].nextPageToken = 'page/2';
+    const second = { ...fixtures[rtdbUrl].instances[0], name: 'projects/listening-tasks-3ae34/locations/us-central1/instances/second', databaseUrl: 'https://second.firebaseio.com' };
+    fixtures[rtdbUrl + '&pageToken=page%2F2'] = { instances: [second] };
+    fixtures['https://second.firebaseio.com/.settings/rules.json'] = { rules: { '.read': false } };
+    const first = await readIdentity(fixtureProvider(fixtures));
+    assert.equal(first.state.realtime.count, 2);
+    fixtures['https://second.firebaseio.com/.settings/rules.json'].rules['.read'] = true;
+    const changed = await readIdentity(fixtureProvider(fixtures));
+    assert.notEqual(changed.state.realtime.hash, first.state.realtime.hash);
+    assert.notEqual(changed.stateHash, first.stateHash);
+});
+
+test('RTDB rejects repeated pagination tokens, malformed lists, missing rules and unsafe rule origins', async () => {
+    for (const mutate of [
+        f => { f[rtdbUrl].nextPageToken = 'same'; f[rtdbUrl + '&pageToken=same'] = { nextPageToken: 'same' }; },
+        f => { f[rtdbUrl].instances = {}; },
+        f => { delete f[rulesUrl]; },
+        f => { f[rulesUrl] = {}; },
+        f => { f[rtdbUrl].instances[0].databaseUrl = 'http://second.firebaseio.com'; },
+        f => { f[rtdbUrl].instances[0].databaseUrl = 'https://attacker.example'; }
+    ]) {
+        const fixtures = makeAuthoritativeFixtures();
+        mutate(fixtures);
+        await assert.rejects(readIdentity(fixtureProvider(fixtures)));
+    }
+});
+
+test('Firestore requires nonempty valid rules source, never an empty identity', async () => {
+    for (const source of [undefined, {}, { files: [] }, { files: [{}] }, { files: [{ name: 'firestore.rules' }] }]) {
+        const fixtures = makeAuthoritativeFixtures();
+        fixtures[firestoreRulesUrl].source = source;
+        await assert.rejects(readIdentity(fixtureProvider(fixtures)), /rules.*(source|incomplete)/i);
+    }
+});
+
+test('Function uses documented resolved storage provenance before requested source', async () => {
+    const fixtures = makeAuthoritativeFixtures();
+    fixtures[functionUrl].buildConfig.sourceProvenance = { resolvedStorageSource: { bucket: 'resolved', object: 'resolved.zip', generation: '42' } };
+    fixtures[functionUrl].sourceProvenance = { resolvedStorageSource: { bucket: 'wrong', object: 'wrong.zip', generation: '999' } };
+    const identity = await readIdentity(fixtureProvider(fixtures));
+    assert.deepEqual(identity.state.api.source, { bucket: 'resolved', object: 'resolved.zip', storageGeneration: '42' });
+    delete fixtures[functionUrl].buildConfig.source.storageSource.generation;
+    assert.equal((await readIdentity(fixtureProvider(fixtures))).state.api.source.storageGeneration, '42');
+});
+
+test('incomplete resolved provenance cannot fall back to requested source', async () => {
+    const fixtures = makeAuthoritativeFixtures();
+    fixtures[functionUrl].buildConfig.sourceProvenance = { resolvedStorageSource: { generation: '42' } };
+    await assert.rejects(readIdentity(fixtureProvider(fixtures)), /Function identity is incomplete/);
 });

@@ -187,3 +187,11 @@ test('production rehearsal uses the real CRM More menu and binds live evidence t
   assert.match(rehearsal, /localDraftClearedBeforeReload/);
   assert.match(rehearsal, /progressionCoverage/);
 });
+
+test('gateway Node 22 engine contract agrees with its lockfile', () => {
+  const pkg = JSON.parse(read('backend/presentation-demo/package.json'));
+  const lock = JSON.parse(read('backend/presentation-demo/package-lock.json'));
+  assert.deepEqual(lock.packages[''].engines, pkg.engines);
+  assert.equal(JSON.parse(read('functions/package.json')).engines.node, '22');
+  assert.match(read('backend/presentation-demo/Dockerfile'), /^FROM node:22-slim/m);
+});

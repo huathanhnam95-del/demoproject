@@ -60,7 +60,11 @@ function createGoogleApiReader({ auth, authOptions = {}, request = null } = {}) 
     let clientPromise = null;
     const googleAuth = auth || new GoogleAuth({
         ...authOptions,
-        scopes: ['https://www.googleapis.com/auth/cloud-platform.read-only']
+        scopes: [
+            'https://www.googleapis.com/auth/cloud-platform.read-only',
+            'https://www.googleapis.com/auth/firebase.database',
+            'https://www.googleapis.com/auth/userinfo.email'
+        ]
     });
     return async function readJson(url) {
         try {
@@ -70,6 +74,7 @@ function createGoogleApiReader({ auth, authOptions = {}, request = null } = {}) 
             const response = await client.request({
                 url,
                 method: 'GET',
+                maxRedirects: 0,
                 headers: {
                     Accept: 'application/json',
                     'Cache-Control': 'no-store'
@@ -100,7 +105,7 @@ function parseRuntimeConfig(config, projectId) {
 }
 
 function storageSource(source) {
-    const value = source?.storageSource || {};
+    const value = source || {};
     return {
         bucket: value.bucket || null,
         object: value.object || null,
@@ -149,18 +154,57 @@ function normalizeIndex(index) {
     };
 }
 
-function normalizeRealtimeInstance(instance) {
-    return {
-        name: instance?.name || null,
-        state: instance?.state || null,
-        databaseUrlHash: instance?.databaseUrl ? stableHash(String(instance.databaseUrl)) : null
-    };
+async function readRealtimeInstances(readJson, url) {
+    const instances = [];
+    const seenTokens = new Set();
+    const seenNames = new Set();
+    let token = null;
+    do {
+        const page = requireObject(await readJson(token ? `${url}&pageToken=${encodeURIComponent(token)}` : url), 'Realtime Database instances');
+        if (page.instances !== undefined && !Array.isArray(page.instances)) {
+            throw new DeployedIdentitiesError('IDENTITY_SOURCE_INVALID', 'Realtime Database instance list is invalid.');
+        }
+        for (const instance of page.instances || []) {
+            if (!instance?.name || !instance.state || seenNames.has(instance.name)) {
+                throw new DeployedIdentitiesError('IDENTITY_SOURCE_INCOMPLETE', 'Realtime Database instance identity is incomplete or duplicated.');
+            }
+            seenNames.add(instance.name);
+            let databaseUrl;
+            try { databaseUrl = new URL(instance.databaseUrl); } catch (_) {
+                throw new DeployedIdentitiesError('IDENTITY_SOURCE_INVALID', 'Realtime Database rules origin is invalid.');
+            }
+            if (databaseUrl.protocol !== 'https:' || databaseUrl.username || databaseUrl.password ||
+                databaseUrl.port || databaseUrl.search || databaseUrl.hash || databaseUrl.pathname !== '/' ||
+                !/^[a-z0-9-]+(?:\.[a-z0-9-]+)?\.(?:firebaseio\.com|firebasedatabase\.app)$/.test(databaseUrl.hostname)) {
+                throw new DeployedIdentitiesError('IDENTITY_SOURCE_INVALID', 'Realtime Database rules origin is invalid.');
+            }
+            const policy = requireObject(await readJson(`${databaseUrl.origin}/.settings/rules.json`), 'Realtime Database policy');
+            requireObject(policy.rules, 'Realtime Database rules source');
+            instances.push({
+                name: instance.name,
+                state: instance.state,
+                databaseUrlHash: stableHash(String(instance.databaseUrl)),
+                rules: { sourceHash: stableHash(policy) }
+            });
+        }
+        token = page.nextPageToken || null;
+        if (token) {
+            if (typeof token !== 'string' || seenTokens.has(token)) {
+                throw new DeployedIdentitiesError('IDENTITY_SOURCE_INVALID', 'Realtime Database pagination did not advance.');
+            }
+            seenTokens.add(token);
+        }
+    } while (token);
+    return instances.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function createDeployedIdentitiesProvider(options = {}) {
     const projectId = String(options.projectId || process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT || '').trim();
     if (!projectId) throw new TypeError('projectId is required');
     const region = String(options.region || process.env.FUNCTION_REGION || 'us-central1');
+    const gatewayService = String(options.gatewayService || 'bel-presentation-demo');
+    const gatewayRegion = String(options.gatewayRegion || 'asia-southeast1');
+    const gatewayName = `projects/${projectId}/locations/${gatewayRegion}/services/${gatewayService}`;
     const hostingSite = String(options.hostingSite || projectId);
     const hostingChannel = String(options.hostingChannel || 'live');
     const functionName = String(options.functionName || 'api');
@@ -172,7 +216,7 @@ function createDeployedIdentitiesProvider(options = {}) {
     const urls = {
         hostingChannel: `https://firebasehosting.googleapis.com/v1beta1/sites/${encodeURIComponent(hostingSite)}/channels/${encodeURIComponent(hostingChannel)}`,
         functions: `https://cloudfunctions.googleapis.com/v2/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(region)}/functions/${encodeURIComponent(functionName)}`,
-        gateway: `https://run.googleapis.com/v2/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(region)}/services/${encodeURIComponent(functionName)}`,
+        gateway: `https://run.googleapis.com/v2/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(gatewayRegion)}/services/${encodeURIComponent(gatewayService)}`,
         rulesRelease: `https://firebaserules.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/releases/cloud.firestore`,
         firestoreDatabase: `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)`,
         indexes: `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/collectionGroups/-/indexes?pageSize=1000`,
@@ -187,7 +231,7 @@ function createDeployedIdentitiesProvider(options = {}) {
             readJson(urls.rulesRelease, 'Firestore rules release'),
             readJson(urls.firestoreDatabase, 'Firestore database'),
             readAllIndexes(readJson, urls.indexes),
-            readJson(urls.realtime, 'Realtime Database instances')
+            readRealtimeInstances(readJson, urls.realtime)
         ]);
 
         const release = requireObject(hostingChannelData.release, 'Hosting live channel release');
@@ -201,18 +245,23 @@ function createDeployedIdentitiesProvider(options = {}) {
         if (!rulesetName) throw new DeployedIdentitiesError('IDENTITY_SOURCE_INVALID', 'Firestore has no current ruleset identity.');
         const ruleset = await readJson(`https://firebaserules.googleapis.com/v1/${rulesetName}`, 'Firestore ruleset');
         const functionConfig = functionData.serviceConfig || {};
-        const functionSource = storageSource(functionData.sourceProvenance?.resolvedStorageSource || functionData.buildConfig?.source);
+        const functionSource = storageSource(functionData.buildConfig?.sourceProvenance?.resolvedStorageSource ?? functionData.buildConfig?.source?.storageSource);
         const gatewayTemplate = gatewayData.template || {};
         const gatewayContainer = Array.isArray(gatewayTemplate.containers) ? gatewayTemplate.containers[0] || {} : {};
-        if (!functionData.state || !functionData.buildConfig?.runtime || !functionSource.generation || !(functionData.serviceConfig?.revision || functionData.revision)) {
+        if (!functionData.state || !functionData.buildConfig?.runtime || !functionSource.bucket || !functionSource.object || !functionSource.generation || !(functionData.serviceConfig?.revision || functionData.revision)) {
             throw new DeployedIdentitiesError('IDENTITY_SOURCE_INCOMPLETE', 'Cloud Function identity is incomplete.');
         }
-        if (!gatewayData.latestReadyRevision && !gatewayData.latestCreatedRevision || !imageDigest(gatewayContainer.image)) {
+        if (gatewayData.name !== gatewayName || (!gatewayData.latestReadyRevision && !gatewayData.latestCreatedRevision) || !imageDigest(gatewayContainer.image)) {
             throw new DeployedIdentitiesError('IDENTITY_SOURCE_INCOMPLETE', 'Cloud Run gateway identity is incomplete.');
         }
-        const rulesFiles = Array.isArray(ruleset.source?.files) ? ruleset.source.files : [];
+        const rulesFiles = ruleset.source?.files;
+        if (!Array.isArray(rulesFiles) || !rulesFiles.length || rulesFiles.some(file =>
+            !file || typeof file.name !== 'string' || !file.name.trim() ||
+            typeof file.content !== 'string' || !file.content.trim())) {
+            throw new DeployedIdentitiesError('IDENTITY_SOURCE_INCOMPLETE', 'Firestore rules source is incomplete.');
+        }
         const normalizedIndexes = indexes.map(normalizeIndex);
-        const normalizedRealtime = Array.isArray(realtimeData.instances) ? realtimeData.instances.map(normalizeRealtimeInstance) : [];
+        const normalizedRealtime = realtimeData;
         const state = {
             projectId,
             provenance: {

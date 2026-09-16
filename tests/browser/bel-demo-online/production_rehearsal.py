@@ -26,7 +26,7 @@ import uuid
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urlparse, urlunparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -463,6 +463,13 @@ def normalized_identity_provider_url(value: str) -> str:
     return urlunparse(("https", parsed.netloc, parsed.path.rstrip("/"), "", "", ""))
 
 
+class RejectIdentityRedirects(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never construct a second request carrying the provider credential.
+        fp.close()
+        raise RehearsalError("deployed identities provider redirects are forbidden")
+
+
 def read_deployed_identities_provider(args: argparse.Namespace, scenario: str) -> dict[str, object]:
     url = normalized_identity_provider_url(args.deployed_identities_url)
     request_nonce = uuid.uuid4().hex
@@ -478,7 +485,7 @@ def read_deployed_identities_provider(args: argparse.Namespace, scenario: str) -
         headers["Authorization"] = f"Bearer {token}"
     request = Request(url, headers=headers, method="GET")
     try:
-        with urlopen(request, timeout=20) as response:
+        with build_opener(RejectIdentityRedirects()).open(request, timeout=20) as response:
             if response.status != 200:
                 raise RehearsalError(f"deployed identities provider returned HTTP {response.status}")
             body = response.read()

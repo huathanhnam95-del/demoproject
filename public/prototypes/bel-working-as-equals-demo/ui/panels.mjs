@@ -1,8 +1,12 @@
 import {HEADINGS,GROUPS} from '../content/source.mjs';
 export const escapeHtml=text=>String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createPanels(el,{source,act,base,world,actor,notes,command,toast,focus,modal}){
-  const close=()=>{el.hidden=true;el.className='';if(modal?.open)modal.close();focus();};
-  const show=(html,radial=false)=>{el.hidden=false;el.className=radial?'radial':'';el.innerHTML=html;};
+  // Popups are part of the world, not browser chrome: they live inside
+  // #world-wrap and dim the play area behind them like an in-game prompt.
+  const wrap=el.parentElement;
+  const dim=on=>wrap?.classList.toggle('dimmed',Boolean(on));
+  const close=()=>{el.hidden=true;el.className='';dim(false);if(modal?.open)modal.close();focus();};
+  const show=(html,variant='')=>{const cls=variant===true?'radial':(variant||'');el.hidden=false;el.className=cls;el.innerHTML=html;dim(cls==='');};
   const closeButton=()=>{el.querySelector('[data-close]').onclick=close;};
   const actions='<div class="actions"><button data-close>Close · Esc</button></div>';
   return {get open(){return !el.hidden||Boolean(modal?.open);},close,
@@ -15,7 +19,7 @@ export function createPanels(el,{source,act,base,world,actor,notes,command,toast
       }
       if(result.kind==='reflection'){
         const s=source.routes[result.route],i=result.index;show(`<h2>${escapeHtml(s.title)}</h2><h3>${HEADINGS[i]}</h3><p class="source-text ${i===2?'shift':''}">${escapeHtml(s.sections[i])}</p><p class="small">Slide ${String(s.slide).padStart(2,'0')} · ${result.route}</p>${actions}`);
-        el.className='reflection';localStorage.setItem(`bel-read:${location.search}:${actor}:${result.route}:${i}`,'read');closeButton();
+        el.className='reflection';dim(false);localStorage.setItem(`bel-read:${location.search}:${actor}:${result.route}:${i}`,'read');closeButton();
         if(modal)modal.showReflection({title:s.title,heading:HEADINGS[i],text:s.sections[i],slide:s.slide,route:result.route,onClose:close});
         return;
       }

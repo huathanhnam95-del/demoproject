@@ -105,7 +105,22 @@ const COMPONENTS = {
     const mesh = new THREE.Mesh(geo, sharedMaterial(THREE, scope, 'pedestalWood', PALETTE.studio.consoleWood, { ...SURFACE.timber, vertexColors: true }));
     mesh.name = 'M_pedestal'; mesh.castShadow = true; mesh.receiveShadow = true;
     const slot = new THREE.Object3D(); slot.name = 'socket_shape'; slot.position.set(0, height, 0);
-    return { meshes: [mesh], sockets: { socket_shape: slot }, info: { width, depth, height, note: 'socket_shape marks the existing pedestal top; the application decides the match' } };
+    const meshes = [mesh];
+    const shape = ROUTE_SHAPES.includes(variant?.shape) ? variant.shape : (ROUTE_SHAPES.includes(variant) ? variant : null);
+    if (shape) {
+      const emblemSize = 0.58;
+      const emblemGeo = scope.shared(`geometry:pedestal:emblem:${shape}:${emblemSize}`, () => {
+        const g = shapeGeometry(THREE, shape, emblemSize);
+        g.translate(0, height + 0.005, 0);
+        return g;
+      });
+      const emblemMesh = new THREE.Mesh(emblemGeo, sharedMaterial(THREE, scope, `pedestal_emblem_${shape}`, SHAPE_COLORS[shape], { ...SURFACE.paintedWood }));
+      emblemMesh.name = `M_pedestal_emblem_${shape}`;
+      emblemMesh.castShadow = true;
+      emblemMesh.receiveShadow = true;
+      meshes.push(emblemMesh);
+    }
+    return { meshes, sockets: { socket_shape: slot }, info: { width, depth, height, shape, note: 'socket_shape marks the existing pedestal top; the application decides the match' } };
   },
   // Room I floor choice region with its existing marker.
   'prop.choice-region': (THREE, scope, variant) => {

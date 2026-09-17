@@ -269,6 +269,9 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
     return avatars[actorId];
   }
 
+  const pedestalPositions = {};
+  const textureLoader = new THREE.TextureLoader();
+
   function buildRoom(sceneId) {
     // Dispose previous room parts
     for (const part of roomParts) {
@@ -283,6 +286,7 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
       else if (item.root) item.root.removeFromParent();
     }
     for (const key of Object.keys(activityProps)) delete activityProps[key];
+    for (const key of Object.keys(pedestalPositions)) delete pedestalPositions[key];
 
     // Clear room group
     while (roomGroup.children.length > 0) {
@@ -308,11 +312,19 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
 
     if (assembly && Array.isArray(assembly.components)) {
       for (const entry of assembly.components) {
+        // Skip dynamic activity items instantiated and animated by draw()
+        if (entry.assetId === 'prop.route-shape' || entry.assetId === 'prop.activity-cube' || entry.assetId === 'prop.bridge-plank') {
+          continue;
+        }
+
         try {
+          const variant = entry.assetId === 'prop.pedestal'
+            ? { ...(entry.variant || {}), shape: entry.shape || entry.variant?.shape }
+            : entry.variant;
           const asset = createAsset({
             THREE,
             assetId: entry.assetId,
-            variant: entry.variant,
+            variant,
             resources
           });
           if (entry.position) {
@@ -326,6 +338,41 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
           }
           if (entry.optional) {
             asset.root.visible = false;
+          }
+
+          // Record pedestal top position for placing shapes
+          if (entry.assetId === 'prop.pedestal' && entry.shape && entry.position) {
+            const h = entry.variant?.height || 2.0;
+            pedestalPositions[entry.shape] = {
+              x: entry.position[0],
+              y: (entry.position[1] || 0) + h,
+              z: entry.position[2]
+            };
+          }
+
+          // Map original portrait photos onto Gallery D 3D wall frames
+          if (sceneId === 'D' && entry.assetId === 'prop.gallery-frame') {
+            const m = entry.source?.match(/portrait-(\d+)/);
+            if (m) {
+              const portraitIndex = parseInt(m[1], 10);
+              const portraitFiles = ['chet.jpg', 'josh.jpg', 'mike.jpg', 'erik.jpg', 'rich.jpg'];
+              const fileName = portraitFiles[portraitIndex];
+              if (fileName) {
+                const texUrl = new URL(`../native/images/${fileName}`, import.meta.url).href;
+                const tex = textureLoader.load(texUrl);
+                tex.colorSpace = THREE.SRGBColorSpace;
+                const slotMesh = asset.root.getObjectByName('M_gallery_portrait_slot');
+                if (slotMesh) {
+                  const planeGeo = new THREE.PlaneGeometry(0.85, 1.15);
+                  const planeMat = new THREE.MeshBasicMaterial({ map: tex });
+                  const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+                  planeMesh.position.set(0, 0, 0.068);
+                  planeMesh.name = `M_portrait_photo_${portraitIndex}`;
+                  asset.root.add(planeMesh);
+                  slotMesh.visible = false;
+                }
+              }
+            }
           }
 
           // Match interactive target (skip structural walls, floors, ceilings, and fx)
@@ -461,11 +508,13 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
 
   let lastTime = performance.now();
 
-  return {
+  const rendererInstance = {
     get mode() { return '3d'; },
     get canvas() { return canvas; },
     get scene() { return scene; },
     get camera() { return camera; },
+    get activityProps() { return activityProps; },
+    get interactiveMeshes() { return interactiveMeshes; },
 
     draw(world, base, actorId, now, source) {
       const me = world?.players?.[actorId];
@@ -504,9 +553,17 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
           if (item) {
             if (o.owner) {
               const carrier = world.players[o.owner];
+              const av = avatars[o.owner];
               if (carrier) {
-                const cp = logicalToWorld(carrier.x, carrier.y, 0.75);
-                item.root.position.set(cp.x, cp.y, cp.z);
+                if (av?.root) {
+                  const fwdX = Math.sin(av.root.rotation.y) * 0.35;
+                  const fwdZ = Math.cos(av.root.rotation.y) * 0.35;
+                  item.root.position.set(av.root.position.x + fwdX, av.root.position.y + 0.65, av.root.position.z + fwdZ);
+                  item.root.rotation.y = av.root.rotation.y;
+                } else {
+                  const cp = logicalToWorld(carrier.x, carrier.y, 0.65);
+                  item.root.position.set(cp.x, cp.y, cp.z);
+                }
                 item.root.visible = true;
               } else {
                 item.root.visible = false;
@@ -546,9 +603,17 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
           if (item) {
             if (o.owner) {
               const carrier = world.players[o.owner];
+              const av = avatars[o.owner];
               if (carrier) {
-                const cp = logicalToWorld(carrier.x, carrier.y, 0.65);
-                item.root.position.set(cp.x, cp.y, cp.z);
+                if (av?.root) {
+                  const fwdX = Math.sin(av.root.rotation.y) * 0.35;
+                  const fwdZ = Math.cos(av.root.rotation.y) * 0.35;
+                  item.root.position.set(av.root.position.x + fwdX, av.root.position.y + 0.65, av.root.position.z + fwdZ);
+                  item.root.rotation.y = av.root.rotation.y;
+                } else {
+                  const cp = logicalToWorld(carrier.x, carrier.y, 0.65);
+                  item.root.position.set(cp.x, cp.y, cp.z);
+                }
                 item.root.visible = true;
               } else {
                 item.root.visible = false;
@@ -583,18 +648,31 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
           if (item) {
             if (o.owner) {
               const carrier = world.players[o.owner];
+              const av = avatars[o.owner];
               if (carrier) {
-                const cp = logicalToWorld(carrier.x, carrier.y, 0.65);
-                item.root.position.set(cp.x, cp.y, cp.z);
+                if (av?.root) {
+                  const fwdX = Math.sin(av.root.rotation.y) * 0.35;
+                  const fwdZ = Math.cos(av.root.rotation.y) * 0.35;
+                  item.root.position.set(av.root.position.x + fwdX, av.root.position.y + 0.65, av.root.position.z + fwdZ);
+                  item.root.rotation.y = av.root.rotation.y;
+                } else {
+                  const cp = logicalToWorld(carrier.x, carrier.y, 0.65);
+                  item.root.position.set(cp.x, cp.y, cp.z);
+                }
                 item.root.visible = true;
               } else {
                 item.root.visible = false;
               }
             } else if (o.placed) {
-              const sceneTargets = SCENES[me.scene]?.targets || [];
-              const ped = sceneTargets.find(t => t.type === 'pedestal' && t.index === o.index);
-              const wp = logicalToWorld(o.x, ped ? ped.topY : o.y, 0.4);
-              item.root.position.set(wp.x, wp.y, wp.z);
+              const pos = pedestalPositions[o.shape];
+              if (pos) {
+                item.root.position.set(pos.x, pos.y + 0.1, pos.z);
+              } else {
+                const sceneTargets = SCENES[me.scene]?.targets || [];
+                const ped = sceneTargets.find(t => t.type === 'pedestal' && t.index === o.index);
+                const wp = logicalToWorld(o.x, ped ? ped.topY : o.y, 2.05);
+                item.root.position.set(wp.x, wp.y, wp.z);
+              }
               item.root.visible = true;
             } else {
               const wp = logicalToWorld(o.x, o.y, 0.05);
@@ -789,4 +867,10 @@ export async function createRenderer3D(canvas, { onFault } = {}) {
       if (typeof resources.dispose === 'function') resources.dispose();
     }
   };
+
+  if (typeof window !== 'undefined') {
+    window._belRenderer3D = rendererInstance;
+  }
+
+  return rendererInstance;
 }

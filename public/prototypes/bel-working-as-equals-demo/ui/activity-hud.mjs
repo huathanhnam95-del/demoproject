@@ -43,11 +43,23 @@ export function createActivityHud(container) {
           ? ''
           : ` ${String(Math.floor(Math.ceil(bridge.remaining / 1000) / 60)).padStart(2, '0')}:${String(Math.ceil(bridge.remaining / 1000) % 60).padStart(2, '0')}`;
 
+        const inspectedPlank = bridge.planks?.find(p => p.id === (me.carry || me.inspect));
+
         content = `
           <div class="hud-bar bridge-hud">
-            <span class="hud-badge ${bridge.phase}">${phaseLabels[bridge.phase] || bridge.phase}${timeStr ? ' · ' + timeStr : ''}</span>
-            <span class="hud-placed">Planks: ${bridge.placed} / 6</span>
-            ${me.carry ? `<span class="hud-carry">Carrying ${me.carry}</span>` : ''}
+            <div class="hud-row">
+              <span class="hud-badge ${bridge.phase}">${phaseLabels[bridge.phase] || bridge.phase}${timeStr ? ' · ' + timeStr : ''}</span>
+              <span class="hud-placed">Planks: ${bridge.placed} / 6</span>
+              ${me.carry ? `<span class="hud-carry">Carrying plank</span>` : ''}
+            </div>
+            ${inspectedPlank ? `
+              <div class="hud-statement bridge-thought">
+                <span class="bel-chip" style="border: 2px solid ${inspectedPlank.color}; color: ${inspectedPlank.color}; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,0.05);">${inspectedPlank.mark.toUpperCase()}</span>
+                <span class="hud-thought-text" style="font-style: italic; font-weight: 600; margin-left: 8px;">“${inspectedPlank.text}”</span>
+              </div>
+            ` : bridge.phase === 'gathering' ? `
+              <div class="hud-statement bridge-hint" style="font-size: 13px; color: #5a6660;">Open Presenter tools to start preparation · Inspect planks to study their order.</div>
+            ` : ''}
           </div>
         `;
       }

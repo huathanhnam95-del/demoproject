@@ -11,10 +11,23 @@ export const PHASES=['Preparation','Action','Review & revision'];
 export const plankPosition=index=>({x:500,y:233-index*16});
 export function createBridge(generation=0){return {generation,phase:'gathering',remaining:60000,attempt:0,placed:0,assisted:false,lastPlaced:0,
   planks:PLANKS.map(([color,mark,text,x,y],index)=>({id:`plank-${index}`,index,color,mark,text,x,y,owner:null,placed:false}))};}
-export const bridgeReady=(w,b)=>Object.values(b.players).every(p=>p.connected&&p.ready&&w.players[p.id].scene==='F');
+export const bridgeReady=(w,b)=>{
+  const players=Object.values(b.players);
+  const connected=players.filter(p=>p.connected);
+  if(connected.length===1&&connected[0].id==='p0'){
+    return Boolean(connected[0].ready&&w.players.p0.scene==='F');
+  }
+  return players.every(p=>p.connected&&p.ready&&w.players[p.id].scene==='F');
+};
 export function resetBridge(w,b,{review=false}={}){
   const old=w.bridge,next=createBridge(old.generation+1);next.attempt=old.attempt;next.lastPlaced=old.placed;
-  next.phase=review?'review':Object.values(b.players).every(p=>p.connected&&p.ready&&['F','G'].includes(w.players[p.id].scene))?'preparation':'gathering';next.remaining=review?10000:60000;
+  const inBridgeScene=p=>['F','G'].includes(w.players[p.id].scene);
+  const players=Object.values(b.players);
+  const connected=players.filter(p=>p.connected);
+  const prepReady=connected.length===1&&connected[0].id==='p0'
+    ?Boolean(connected[0].ready&&inBridgeScene(connected[0]))
+    :players.every(p=>p.connected&&p.ready&&inBridgeScene(p));
+  next.phase=review?'review':prepReady?'preparation':'gathering';next.remaining=review?10000:60000;
   w.bridge=next;
   for(const p of Object.values(w.players))if(['F','G'].includes(p.scene)){
     p.scene='F';p.instance='F';p.x=350+Number(p.id[1])*68;p.y=375;p.carry=null;p.seat=null;p.pose='idle';p.inspect=null;

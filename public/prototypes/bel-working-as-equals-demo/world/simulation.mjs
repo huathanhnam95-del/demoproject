@@ -24,7 +24,7 @@ export function solidsFor(w,id,ignorePlayers=false){
 export function targets(w,id){
   const p=w.players[id];
   return [...SCENES[p.scene].targets,
-    ...(p.scene==='F'?[...w.bridge.planks.filter(o=>!o.placed&&!o.owner).map(o=>({...o,type:'plank',label:`Inspect ${o.color} / ${o.mark} plank`})),...(w.bridge.placed<6?[{id:'bridge-next',type:'bridge',...plankPosition(w.bridge.placed),label:'Place in the next open position'}]:[])]:[]),
+    ...(p.scene==='F'?[...w.bridge.planks.filter(o=>!o.placed&&!o.owner).map(o=>({...o,type:'plank',label:`${w.bridge.phase==='attempt'?'Pick up':'Inspect'} ${o.color} / ${o.mark} plank`})),...(w.bridge.placed<6?[{id:'bridge-next',type:'bridge',...plankPosition(w.bridge.placed),label:'Place in the next open position'}]:[])]:[]),
     ...(p.scene==='J'?w.cubes.cubes.filter(o=>!o.owner&&!o.placed).map(o=>({...o,type:'cube',label:`Pick up ${o.color} / ${o.mark} cube`})):[]),
     ...(w.routes[p.scene]||[]).filter(o=>!o.placed&&!o.owner).map(o=>({...o,type:'shape',label:`Pick up ${o.shape}`})),
     ...Object.values(w.players).filter(q=>q.id!==id&&q.instance===p.instance&&q.connected!==false).map(q=>({id:q.id,type:'person',x:q.x,y:q.y,label:'Interact with player'}))];

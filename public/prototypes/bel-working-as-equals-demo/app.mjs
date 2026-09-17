@@ -91,7 +91,9 @@ async function boot(invite,initialBundle){
     const bridge=w.bridge,bridgeView=me.scene==='F',canReset=host&&!w.gStarted&&['F','G'].includes(me.scene);
     $('#activity-controls').hidden=!canReset;
     $('#bridge-start').hidden=!bridgeView||bridge.phase!=='gathering';
-    $('#bridge-start').disabled=Object.values(base.players).some(p=>!p.connected||!p.ready||w.players[p.id].scene!=='F');
+    const connPlayers=Object.values(base.players).filter(p=>p.connected);
+    const solo=connPlayers.length===1&&connPlayers[0].id==='p0';
+    $('#bridge-start').disabled=solo?(!base.players.p0.ready||w.players.p0.scene!=='F'):Object.values(base.players).some(p=>!p.connected||!p.ready||w.players[p.id].scene!=='F');
     $('#bridge-skip').hidden=!bridgeView||!['preparation','attempt','review'].includes(bridge.phase);
     $('#activity-status').hidden=!bridgeView;
     if(bridgeView){const label={gathering:'Waiting for the group',preparation:'Preparation',attempt:'Team attempt',review:'Team review',complete:bridge.assisted?'Bridge complete · presenter assisted':'Bridge complete'}[bridge.phase];$('#activity-status').textContent=label+(['gathering','complete'].includes(bridge.phase)?'':`  ${String(Math.floor(Math.ceil(bridge.remaining/1000)/60)).padStart(2,'0')}:${String(Math.ceil(bridge.remaining/1000)%60).padStart(2,'0')}`);}

@@ -25,6 +25,7 @@
     "version:sync": "node scripts/sync-version.js",
     "deploy": "node scripts/release/firebase-release.cjs hosting",
     "deploy:full": "node scripts/release/firebase-release.cjs full",
+    "release:verify": "node scripts/release/firebase-release.cjs hosting --verify-only",
     "deploy:legacy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting",
     "deploy:full:legacy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting,functions:api,firestore:rules",
     "lint": "eslint .",

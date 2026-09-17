@@ -2152,5 +2152,14 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1157,2026-09-17,Audit merge candidate between BEL movement fixes and production branch,Done,2026-09-17
 1158,2026-09-17,Commit and push CRM Projects subtasks and Gantt overhaul to branch feat/projects-subtasks-people,Done,2026-09-17
 1159,2026-09-17,Deploy Cloud Functions api with entrance test Azure forced alignment scoring to production,Done,2026-09-17
-1160,2026-09-17,Benchmark CRM admin access checking and permission validation latency,In Progress,
+1160,2026-09-17,Benchmark CRM admin access checking and permission validation latency,Done,2026-09-17
 1161,2026-09-17,Deploy Release V2.0.9 with Read Aloud Workspace V2 and Teacher Scheduler Google Calendar overhaul,Done,2026-09-17
+1162,2026-09-17,Fix BEL 3D demo blurry graphics with high-DPI viewport sizing and resize observer,Done,2026-09-17
+1163,2026-09-17,Fix BEL 3D walking animation clipping and foot sliding with simulation pose and position lerp,Done,2026-09-17
+1164,2026-09-17,Teacher Schedule Google Calendar component refinement and motion polish pass,Done,2026-09-17
+1165,2026-09-17,BEL 3D demo: adaptive camera framing to fill viewport and in-game diegetic popup overlays,Done,2026-09-17
+1166,2026-09-17,Practice fluid layout architecture and full-width workspace implementation,Done,2026-09-17
+1167,2026-09-17,Remediate CRM admin access check latency and request bottlenecks,Done,2026-09-17
+1168,2026-09-17,Fix BEL 3D route shape duplication and pedestal indicators and gallery portraits and bridge plank pickup,Done,2026-09-17
+1169,2026-09-17,Teacher Schedule Google Calendar audit remediation refactor and test hardening,Done,2026-09-17
+1170,2026-09-17,Deploy 3 changes to production - CRM access check and Teacher Schedule UI and BEL 3D demo,Done,2026-09-17

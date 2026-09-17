@@ -2,8 +2,14 @@ const express = require('express');
 const {
     CRM_ENROLLMENTS,
     CRM_CLASSROOMS,
-    CRM_STUDENTS
+    CRM_STUDENTS,
+    CRM_SUBMISSIONS
 } = require('../../crm/collections');
+const {
+    buildHomeworkSubmissionDocId,
+    buildHomeworkSubmissionCreateData,
+    buildHomeworkSubmissionResubmissionPatch
+} = require('../../crm/homework-service');
 
 function uniqueStrings(values) {
     const out = [];
@@ -25,6 +31,127 @@ module.exports = function createStudentClassroomsRouter(deps = {}) {
     const sendError = deps.sendError || ((res, status = 500, error = 'INTERNAL_ERROR', msg = 'Request failed.', details = null) => res.status(status).json({ success: false, error, message: msg, ...(details ? { details } : {}) }));
 
     const requireAuthHandlers = Array.isArray(authMiddleware) ? authMiddleware : (authMiddleware ? [authMiddleware] : []);
+
+    router.post(['/classrooms/:classId/classwork/:workId/submissions', '/student/classrooms/:classId/classwork/:workId/submissions'], ...requireAuthHandlers, async (req, res) => {
+        try {
+            if (!db || typeof db.collection !== 'function') {
+                return sendError(res, 500, 'SERVER_CONFIG_ERROR', 'Firebase Admin not initialized.');
+            }
+
+            const uid = String(req.user?.uid || '').trim();
+            if (!uid) {
+                return sendError(res, 401, 'UNAUTHORIZED', 'Missing user context.');
+            }
+
+            const classId = String(req.params.classId || '').trim();
+            const workId = String(req.params.workId || '').trim();
+            if (!classId || !workId) {
+                return sendError(res, 400, 'VALIDATION_ERROR', 'classId and workId are required.');
+            }
+
+            const isAdmin = req.user?.isAdmin === true || String(req.user?.role || '').toLowerCase() === 'admin' || String(req.user?.crmRole || '').toLowerCase() === 'admin';
+
+            // Verify classroom exists
+            const classSnap = await db.collection(CRM_CLASSROOMS).doc(classId).get();
+            if (!classSnap.exists) {
+                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom does not exist.');
+            }
+
+            // Verify classwork exists
+            const workSnap = await db.collection(CRM_CLASSROOMS).doc(classId).collection('classwork').doc(workId).get();
+            if (!workSnap.exists) {
+                return sendError(res, 404, 'WORK_NOT_FOUND', 'Classwork assignment does not exist.');
+            }
+
+            // Verify membership if not admin
+            if (!isAdmin) {
+                const memberSnap = await db.collection(CRM_CLASSROOMS).doc(classId).collection('members').doc(uid).get();
+                let isMember = memberSnap.exists;
+                if (!isMember) {
+                    const [enrollmentSnap, linkedStudentsSnap] = await Promise.all([
+                        db.collection(CRM_ENROLLMENTS).where('classId', '==', classId).where('studentUid', '==', uid).get().catch(() => ({ docs: [] })),
+                        db.collection(CRM_STUDENTS).where('linked_user_ids', 'array-contains', uid).get().catch(() => ({ docs: [] }))
+                    ]);
+                    if (enrollmentSnap.docs.some((d) => String(d.data()?.status || 'active').toLowerCase() === 'active')) {
+                        isMember = true;
+                    } else if (linkedStudentsSnap.docs.length > 0) {
+                        const studentIds = linkedStudentsSnap.docs.map((d) => d.id);
+                        const extraSnap = await db.collection(CRM_ENROLLMENTS).where('classId', '==', classId).where('studentId', 'in', studentIds.slice(0, 10)).get().catch(() => ({ docs: [] }));
+                        if (extraSnap.docs.some((d) => String(d.data()?.status || 'active').toLowerCase() === 'active')) {
+                            isMember = true;
+                        }
+                    }
+                }
+                if (!isMember) {
+                    return sendError(res, 403, 'FORBIDDEN', 'User is not enrolled in this classroom.');
+                }
+            }
+
+            const body = req.body || {};
+            const audioData = body.audio && typeof body.audio === 'object' ? body.audio : null;
+
+            const submissionId = buildHomeworkSubmissionDocId({ classId, workId, studentUid: uid });
+            const docRef = db.collection(CRM_SUBMISSIONS).doc(submissionId);
+            let targetRef = docRef;
+            let targetSnap = await docRef.get();
+
+            if (!targetSnap.exists) {
+                const legacySnap = await db.collection(CRM_SUBMISSIONS)
+                    .where('classId', '==', classId)
+                    .where('workId', '==', workId)
+                    .where('studentUid', '==', uid)
+                    .limit(1)
+                    .get();
+                if (!legacySnap.empty) {
+                    targetRef = legacySnap.docs[0].ref;
+                    targetSnap = legacySnap.docs[0];
+                }
+            }
+
+            if (targetSnap.exists) {
+                const existingData = targetSnap.data() || {};
+                const currentStatus = String(existingData.status || '').toLowerCase();
+
+                if (currentStatus === 'graded') {
+                    return sendError(res, 400, 'SUBMISSION_LOCKED', 'Assignment has already been evaluated and cannot be modified.');
+                }
+
+                if (currentStatus === 'needs-revision') {
+                    const patch = buildHomeworkSubmissionResubmissionPatch(existingData, { audio: audioData }, {
+                        user: req.user,
+                        serverTimestamp: deps.serverTimestamp
+                    });
+                    await targetRef.update(patch);
+                    return sendSuccess(res, { submissionId: targetRef.id, status: 'turned-in' }, 'Assignment resubmitted successfully.');
+                }
+
+                const timestamp = typeof deps.serverTimestamp === 'function' ? deps.serverTimestamp() : new Date();
+                await targetRef.update({
+                    audio: audioData,
+                    status: 'turned-in',
+                    latestSubmittedAt: timestamp,
+                    updatedAt: timestamp
+                });
+                return sendSuccess(res, { submissionId: targetRef.id, status: 'turned-in' }, 'Assignment submission updated successfully.');
+            }
+
+            const submissionData = buildHomeworkSubmissionCreateData({
+                classId,
+                workId,
+                studentUid: uid,
+                studentEmail: req.user?.email || null,
+                audio: audioData
+            }, {
+                user: req.user,
+                serverTimestamp: deps.serverTimestamp
+            });
+
+            await docRef.set(submissionData);
+            return sendSuccess(res, { submissionId: docRef.id, status: 'turned-in' }, 'Assignment submitted successfully.');
+        } catch (error) {
+            return sendError(res, 500, 'SUBMISSION_ERROR', 'Failed to process assignment submission.', error?.message || error);
+        }
+    });
 
     router.get(['/classrooms', '/student/classrooms'], ...requireAuthHandlers, async (req, res) => {
         try {

@@ -1,3 +1,10 @@
+(() => {
+  'use strict';
+  if (window.initReadAloudMode) {
+    if (document.readyState !== 'loading') window.initReadAloudMode();
+    return;
+  }
+
 class ReadAloudMode {
   static KOKORO_VOICES = {
     male: [
@@ -225,10 +232,13 @@ class ReadAloudMode {
    * untouched, so switching to Advanced restores whatever they had picked.
    */
   getActiveConnectedSpeechModes() {
+    if (this.connectedSpeechModes && this.connectedSpeechModes.size > 0) {
+      return [...this.connectedSpeechModes];
+    }
     if (this.getCoachTier() === 'simple') {
       return [...this.getSimpleTierModes()];
     }
-    return [...(this.connectedSpeechModes || [])];
+    return [];
   }
 
   isConnectedSpeechModeActive(mode) {
@@ -1085,6 +1095,14 @@ class ReadAloudMode {
     if (this.isEntering || this.isActive) return;
     this.isEntering = true;
     this.isActive = true;
+    const panel = document.getElementById('mode-read-aloud');
+    if (panel) {
+      panel.dataset.perfReady = 'false';
+      panel.dataset.loadState = 'loading';
+    }
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.dataset.practiceLayout = 'fluid-v1';
+    }
     this.sessionChunkingEnabled = false;
     this.sessionConnectedSpeechModes = new Set();
     this.chunkingEnabled = false;
@@ -1112,13 +1130,56 @@ class ReadAloudMode {
 
     try {
       await this.loadManifest();
-      await this.loadNextPrompt();
+      if (!this.hasLoadedDatabase) {
+        await this.loadDatabase();
+      }
+      const initialRoute = window.PracticeRouter && typeof window.PracticeRouter.parseRoute === 'function'
+        ? window.PracticeRouter.parseRoute(window.location.pathname)
+        : null;
+      const targetQuestionId = this.pendingRouteQuestionId || (initialRoute?.mode === 'read-aloud' ? initialRoute.questionId : null);
+      this.pendingRouteQuestionId = null;
+
+      if (targetQuestionId && Array.isArray(this.database)) {
+        const idx = this.database.findIndex((row) => String(row.ID) === String(targetQuestionId));
+        if (idx >= 0) {
+          await this.loadSpecificPrompt(idx);
+        } else {
+          await this.loadNextPrompt();
+        }
+      } else {
+        await this.loadNextPrompt();
+      }
+    } catch (err) {
+      console.error('[RA] Failed to load on enter:', err);
+      const panel = document.getElementById('mode-read-aloud');
+      if (panel) {
+        panel.dataset.perfReady = 'false';
+        panel.dataset.loadState = 'error';
+      }
+      throw err;
     } finally {
       this.isEntering = false;
     }
   }
 
+  shouldConfirmExit() {
+    return Boolean(
+      (this.state === 'RECORDING' || this.state === 'STOPPING_RECORDING') ||
+      (this.state === 'RECORDED' &&
+        this.pendingBlob &&
+        !this.hasAssessmentResult &&
+        !this.isSubmitInFlight)
+    );
+  }
+
   onExit() {
+    if (typeof document !== 'undefined' && document.body && document.body.dataset.practiceLayout) {
+      delete document.body.dataset.practiceLayout;
+    }
+    const panel = document.getElementById('mode-read-aloud');
+    if (panel) {
+      panel.dataset.perfReady = 'false';
+    }
     this.workspaceView?.unmount?.();
     this.workspaceView = null;
     this.activePromptRenderToken += 1;
@@ -1138,6 +1199,7 @@ class ReadAloudMode {
     this.restorePlainTextVisibility();
     this.updatePromptGuideButtons();
     this.refreshFilterControls();
+    this.hideConnectedSpeechPanel();
     this.cleanup();
   }
 
@@ -1146,12 +1208,15 @@ class ReadAloudMode {
     if (!promptStage || this.resizeObserver || typeof ResizeObserver === 'undefined') return;
 
     this.lastPromptStageWidth = Math.round(promptStage.getBoundingClientRect().width);
-    this.resizeObserver = new ResizeObserver(() => {
+    this.resizeObserver = new ResizeObserver((entries) => {
       if (!this.isActive || !(this.chunkingEnabled || this.hasActiveCoachGuides()) || !this.currentPromptPlainText) return;
-      const newWidth = Math.round(promptStage.getBoundingClientRect().width);
+      const entry = entries && entries[0];
+      const newWidth = entry ? Math.round(entry.contentRect.width) : Math.round(promptStage.getBoundingClientRect().width);
       if (Number.isFinite(this.lastPromptStageWidth) && Math.abs(newWidth - this.lastPromptStageWidth) < 2) return;
       this.lastPromptStageWidth = newWidth;
-      this.renderPromptForCurrentView();
+      if (this.hasActiveCoachGuides()) {
+        this.hydrateLinkingView(this.activePromptKey, this.activePromptRenderToken);
+      }
       if (this.state === 'RESULTS') {
         this.renderRecognizedLinkingOverlay();
       }
@@ -1755,7 +1820,7 @@ class ReadAloudMode {
   }
 
   confirmDiscardAttempt() {
-    if (this.pendingBlob && !this.hasAssessmentResult) {
+    if (this.state === 'RECORDED' && this.pendingBlob && !this.hasAssessmentResult && !this.isSubmitInFlight) {
       if (typeof window.confirm === 'function') {
         return window.confirm('You have an unsubmitted recording for this question. Do you want to discard it and leave?');
       }
@@ -1892,6 +1957,12 @@ class ReadAloudMode {
     this.updatePromptGuideButtons();
     this.syncQuestionSelectValue(row);
     this.renderPromptForCurrentView();
+    this.currentPromptReady = true;
+    const panel = document.getElementById('mode-read-aloud');
+    if (panel) {
+      panel.dataset.perfReady = 'true';
+      panel.dataset.loadState = 'ready';
+    }
     this.updateUIForState();
 
     // Update URL with current question ID (replaceState — no history entry per question)
@@ -1908,7 +1979,6 @@ class ReadAloudMode {
     } else {
       this.applyUnsupportedState();
     }
-    this.currentPromptReady = true;
   }
 
   getPromptKey(promptText = this.currentPromptPlainText) {
@@ -2037,6 +2107,11 @@ class ReadAloudMode {
     const promptLoadToken = this.promptLifecycleToken;
     this.cleanup();
     this.resetPromptContext();
+    const panel = document.getElementById('mode-read-aloud');
+    if (panel) {
+      panel.dataset.perfReady = 'false';
+      panel.dataset.loadState = 'loading';
+    }
     this.state = 'PREP';
     this.assessmentOutcome = { kind: 'none' };
     this.promptLoadError = null;
@@ -2057,6 +2132,11 @@ class ReadAloudMode {
     this.promptLoadError = message;
     this.setPromptText(message);
     this.currentPromptReady = true;
+    const panel = document.getElementById('mode-read-aloud');
+    if (panel) {
+      panel.dataset.perfReady = 'false';
+      panel.dataset.loadState = 'error';
+    }
   }
 
   handlePromptGuideKeydown(event, guide) {
@@ -2427,7 +2507,7 @@ class ReadAloudMode {
     this.restorePlainTextVisibility();
     this.setPromptText(this.currentPromptPlainText, this.currentPromptChunkedText);
     this.updatePromptGuideButtons();
-    if (this.state !== 'RESULTS') {
+    if (this.state !== 'RESULTS' && this.connectedSpeechPanelMode === 'results') {
       this.clearConnectedSpeechResults();
     }
 
@@ -2526,7 +2606,9 @@ class ReadAloudMode {
       if (typeof window.ReadAloudLinking.applyTokenAnnotations === 'function') {
         window.ReadAloudLinking.applyTokenAnnotations(wordMap, filteredAnalysis, familyOptions);
       }
-      const summaryText = window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, familyOptions);
+      const summaryText = this.isConnectedSpeechEnabled()
+        ? window.ReadAloudLinking.buildAccessibleSummary(filteredAnalysis, familyOptions)
+        : '';
       summary.textContent = summaryText;
       this.renderPromptGuideExplanations(filteredAnalysis);
 
@@ -2738,6 +2820,8 @@ class ReadAloudMode {
 
     this.state = 'IDLE';
     this.isSubmitInFlight = false;
+    this.pendingBlob = null;
+    this.pendingSession = null;
   }
 
   stopMediaStream() {
@@ -2774,7 +2858,9 @@ class ReadAloudMode {
         this.shouldApplyAssessment(this.pendingSession)
       ),
 
-      assessmentOutcome: this.assessmentOutcome || { kind: 'none' },
+      assessmentOutcome: (this.assessmentOutcome && this.assessmentOutcome.kind !== 'none')
+        ? this.assessmentOutcome
+        : (this.hasAssessmentResult ? { kind: 'success' } : (this.assessmentOutcome || { kind: 'none' })),
       promptLoadError: this.promptLoadError || null,
       captureError: this.captureError || null
     };
@@ -2873,6 +2959,7 @@ class ReadAloudMode {
   async handleCheckResult() {
     const checkBtn = document.getElementById('ra-check-btn');
     const retryBtn = document.getElementById('ra-retry-btn');
+    const session = this.pendingSession;
     if (checkBtn) {
       checkBtn.disabled = true;
       checkBtn.textContent = 'Checking...';
@@ -2882,6 +2969,9 @@ class ReadAloudMode {
     }
     try {
       const success = await this.submitToAzure(this.pendingBlob, this.pendingSession);
+      if (!this.shouldApplyAssessment(session)) {
+        return;
+      }
       if (success) {
         this.pendingBlob = null;
         this.pendingSession = null;
@@ -2899,6 +2989,9 @@ class ReadAloudMode {
       }
     } catch (error) {
       console.error('Check failed:', error);
+      if (!this.shouldApplyAssessment(session)) {
+        return;
+      }
       if (checkBtn) {
         checkBtn.disabled = false;
         checkBtn.textContent = 'Check';
@@ -2952,7 +3045,7 @@ class ReadAloudMode {
         audioEl.style.position = 'absolute';
         audioEl.style.pointerEvents = 'none';
         audioEl.style.overflow = 'hidden';
-        audioEl.removeAttribute('controls');
+        audioEl.setAttribute('controls', '');
       }
 
       if (realPlayerWrapper) {
@@ -2984,6 +3077,7 @@ class ReadAloudMode {
         audioEl.style.position = '';
         audioEl.style.pointerEvents = '';
         audioEl.style.overflow = '';
+        audioEl.removeAttribute('controls');
       }
       if (realPlayerWrapper) {
         realPlayerWrapper.style.display = 'none';
@@ -3021,6 +3115,8 @@ class ReadAloudMode {
     }
     this.userRecordingUrl = null;
     if (!preserveAssessmentBuffer) this.assessmentAudioBuffer = null;
+    this.pendingBlob = null;
+    this.pendingSession = null;
     this.updateRecordedAudioControl();
   }
 
@@ -3591,16 +3687,47 @@ class ReadAloudMode {
         resultBox.style.display = (this.state === 'RESULTS' && this.hasAssessmentResult) ? 'block' : 'none';
       }
       const statusMsg = document.getElementById('ra-status-message');
-      if (statusMsg && this.state === 'RESULTS') {
-        statusMsg.textContent = this.assessmentStatusMessage
-          || (this.hasAssessmentResult ? 'Analysis complete.' : 'Analysis failed.');
+      if (statusMsg) {
+        if (this.state === 'STOPPING_RECORDING') {
+          statusMsg.textContent = 'Finishing recording...';
+        } else if (this.state === 'RECORDED') {
+          statusMsg.textContent = 'Recording captured. Click Check to submit or Retry to record again.';
+        } else if (this.state === 'RECORDING') {
+          statusMsg.textContent = 'Recording... Please read aloud.';
+        } else if (this.state === 'REQUESTING_MIC') {
+          statusMsg.textContent = 'Requesting microphone access...';
+        } else if (this.state === 'RESULTS') {
+          statusMsg.textContent = this.assessmentStatusMessage
+            || (this.hasAssessmentResult ? 'Analysis complete.' : 'Analysis failed.');
+        } else if (this.state === 'PREP') {
+          statusMsg.textContent = 'Read the text silently to prepare.';
+        }
+      }
+      const nextBtn = document.getElementById('ra-next-btn');
+      if (nextBtn) {
+        if (this.state === 'PREP' || this.state === 'REQUESTING_MIC' || this.state === 'RECORDED') {
+          nextBtn.style.display = '';
+          nextBtn.disabled = false;
+          nextBtn.textContent = 'Next prompt';
+        } else {
+          nextBtn.style.display = 'none';
+        }
       }
       if (this.state === 'PREP') {
+        const recordBtn = document.getElementById('ra-record-btn');
+        if (recordBtn) {
+          recordBtn.textContent = 'Start recording now';
+          recordBtn.disabled = false;
+          recordBtn.style.display = '';
+        }
         this.updateTimerDisplay('ra-prep-time', this.prepSeconds);
         this.updateTimerDisplay('ra-record-time', this.recordSeconds);
       }
       this.updateRecordedAudioControl();
       return;
+    } else if (this.workspaceView) {
+      this.workspaceView.unmount();
+      this.workspaceView = null;
     }
 
     if (this.state === 'PREP') {
@@ -3615,9 +3742,7 @@ class ReadAloudMode {
         recordBtn.disabled = false;
         recordBtn.style.display = '';
       }
-      // The guide instruction above the passage now carries the prep guidance
-      // (getBasicPhaseInstruction), so this line no longer repeats it.
-      if (statusMsg) statusMsg.textContent = '';
+      if (statusMsg) statusMsg.textContent = 'Read the text silently to prepare.';
       if (resultBox) resultBox.style.display = 'none';
       if (stopBtn) stopBtn.style.display = 'none';
       if (checkBtn) checkBtn.style.display = 'none';
@@ -3866,6 +3991,7 @@ class ReadAloudMode {
         }
         const rawBlob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
         recordingSession.rawBlob = rawBlob;
+        recordingSession.durationMs = recordingSession.startedAt ? Math.max(200, Date.now() - recordingSession.startedAt) : 1000;
         this.setRecordedAudio(rawBlob);
 
         this.pendingBlob = rawBlob;
@@ -3885,6 +4011,7 @@ class ReadAloudMode {
       this.audioStream = stream;
       this.mediaRecorder = activeRecorder;
       recordingSession.phase = 'recording';
+      recordingSession.startedAt = Date.now();
       this.state = 'RECORDING';
       this.updateUIForState();
 
@@ -3988,7 +4115,7 @@ class ReadAloudMode {
       const wavBlob = await this.prepareWavBlob(rawBlob);
       recordingSession.wavBlob = wavBlob;
       recordingSession.assessmentAudioBuffer = this.assessmentAudioBuffer;
-      if (this.assessmentAudioBuffer) {
+      if (this.assessmentAudioBuffer && !this.userRecordingUrl) {
         this.setRecordedAudio(wavBlob, { preserveAssessmentBuffer: true });
       }
       if (!this.shouldApplyAssessment(recordingSession)) return false;
@@ -4489,7 +4616,8 @@ class ReadAloudMode {
         slot: 'student',
         label: 'Student read aloud',
         blob: recordingSession.wavBlob,
-        contentType: 'audio/wav'
+        contentType: 'audio/wav',
+        clientReportedDurationMs: recordingSession.durationMs || 1000
       }] : []
     }).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
   }
@@ -4498,7 +4626,9 @@ class ReadAloudMode {
     this.lastRecognizedLinkingPairs = [];
     const overlay = document.querySelector('#ra-merged-recognized-transcript .ra-recognized-linking-overlay');
     if (overlay) overlay.replaceChildren();
-    this.hideConnectedSpeechPanel();
+    if (this.connectedSpeechPanelMode === 'results') {
+      this.hideConnectedSpeechPanel();
+    }
   }
 
   beginSpeechCoachResultRender() {
@@ -4619,6 +4749,9 @@ class ReadAloudMode {
   }
 
   renderPromptGuideExplanations(analysis) {
+    if (this.state === 'RESULTS' || this.connectedSpeechPanelMode === 'results') {
+      return;
+    }
     if (!window.ReadAloudLinking || typeof window.ReadAloudLinking.buildGuideExplanationItems !== 'function') {
       return;
     }
@@ -4682,6 +4815,9 @@ class ReadAloudMode {
   }
 
   renderConnectedSpeechGuidePanel() {
+    if (this.state === 'RESULTS' || this.connectedSpeechPanelMode === 'results') {
+      return;
+    }
     const box = document.getElementById('ra-connected-speech-box');
     const label = document.getElementById('ra-connected-speech-label');
     const list = document.getElementById('ra-connected-speech-list');
@@ -5842,7 +5978,7 @@ class ReadAloudMode {
       const accordionId = `sc-issue-acc-${idx}`;
 
       const card = document.createElement('div');
-      card.className = `sc-accordion-card ${borderCls}`;
+      card.className = `sc-accordion-card sc-issue-card ${borderCls}`;
       if (evIndex !== -1) {
         card.dataset.eventIndex = String(evIndex);
       }
@@ -5888,7 +6024,7 @@ class ReadAloudMode {
           <div class="sc-detail-label">
             Category: ${escapeHtml(categoryLabel)}
           </div>
-          <div class="sc-instance-feedback sc-instance-feedback--error">
+          <div class="sc-instance-feedback sc-instance-feedback--error sc-issue-feedback">
             ${escapeHtml(reasonExplanation.reason)}
           </div>
 
@@ -5948,11 +6084,13 @@ class ReadAloudMode {
 
       cardHeader.innerHTML = `
         <div class="sc-accordion-label" data-sc-accordion-toggle="${accordionId}">
-          <svg class="sc-check-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-          </svg>
-          <strong class="sc-word-title">${escapeHtml(phrase)}</strong>
-          <span class="sc-ipa-badge">${escapeHtml(ipaDetails.linkedIPA)}</span>
+          <span class="sc-success-pill">
+            <svg class="sc-check-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            <strong class="sc-word-title">${escapeHtml(phrase)}</strong>
+            <span class="sc-ipa-badge">${escapeHtml(ipaDetails.linkedIPA)}</span>
+          </span>
         </div>
         <div class="sc-accordion-controls">
           ${playButtonHtml}
@@ -6079,19 +6217,23 @@ class ReadAloudMode {
     const w1EndsInUW = /(o|oo|ow|ew|u|ue)$/i.test(cleanW1);
     const w2StartsWithVowel = /^[aeiou]/i.test(cleanW2);
 
-    let reason = event.feedbackText || `An unnatural pause or break was detected between "${w1}" and "${w2}" (${ipaDetails.formula}).`;
+    let reason = event.feedbackText;
     let tip = `Try pronouncing "${w1} ${w2}" in one continuous breath as ${ipaDetails.linkedIPA} without taking a pause.`;
 
-    if (w2StartsWithVowel) {
-      if (w1EndsInIY) {
-        reason = `Missed vowel-to-vowel link (${ipaDetails.formula}): "${w1}" ends in a vowel sound and "${w2}" opens with a vowel, but an unnatural break or glottal stop was detected.`;
-        tip = `Glide smoothly from "${w1}" to "${w2}" using a subtle /j/ transition: Target ${ipaDetails.linkedIPA}.`;
-      } else if (w1EndsInUW) {
-        reason = `Missed vowel-to-vowel link (${ipaDetails.formula}): "${w1}" ends in a rounded vowel sound and "${w2}" opens with a vowel, but speech was interrupted.`;
-        tip = `Glide smoothly from "${w1}" to "${w2}" using a subtle /w/ transition: Target ${ipaDetails.linkedIPA}.`;
+    if (!reason) {
+      if (w2StartsWithVowel) {
+        if (w1EndsInIY) {
+          reason = `Missed vowel-to-vowel link (${ipaDetails.formula}): "${w1}" ends in a vowel sound and "${w2}" opens with a vowel, but an unnatural break or glottal stop was detected.`;
+          tip = `Glide smoothly from "${w1}" to "${w2}" using a subtle /j/ transition: Target ${ipaDetails.linkedIPA}.`;
+        } else if (w1EndsInUW) {
+          reason = `Missed vowel-to-vowel link (${ipaDetails.formula}): "${w1}" ends in a rounded vowel sound and "${w2}" opens with a vowel, but speech was interrupted.`;
+          tip = `Glide smoothly from "${w1}" to "${w2}" using a subtle /w/ transition: Target ${ipaDetails.linkedIPA}.`;
+        } else {
+          reason = `Missed consonant-to-vowel link (${ipaDetails.formula}): Speech Coach detected a hesitation between the final sound of "${w1}" and opening vowel of "${w2}".`;
+          tip = `Attach the ending consonant of "${w1}" directly to "${w2}" to pronounce it smoothly as ${ipaDetails.linkedIPA}.`;
+        }
       } else {
-        reason = `Missed consonant-to-vowel link (${ipaDetails.formula}): Speech Coach detected a hesitation between the final sound of "${w1}" and opening vowel of "${w2}".`;
-        tip = `Attach the ending consonant of "${w1}" directly to "${w2}" to pronounce it smoothly as ${ipaDetails.linkedIPA}.`;
+        reason = `An unnatural pause or break was detected between "${w1}" and "${w2}" (${ipaDetails.formula}).`;
       }
     }
 
@@ -6802,19 +6944,25 @@ class ReadAloudMode {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.ReadAloudMode = new ReadAloudMode();
-
-  // Deep-link support: listen for PracticeRouter question navigation events
-  window.addEventListener('practice-route-question', (event) => {
-    const { mode, questionId } = event.detail || {};
-    if (mode !== 'read-aloud' || !questionId || !window.ReadAloudMode) return;
-    const ra = window.ReadAloudMode;
-    if (!ra.isActive || !ra.hasLoadedDatabase || !ra.database) return;
-    // Find the database index by question ID
-    const idx = ra.database.findIndex((row) => String(row.ID) === String(questionId));
-    if (idx >= 0) {
-      ra.loadSpecificPrompt(idx);
-    }
-  });
-});
+let readAloudRouteListenerInstalled = false;
+function initReadAloudMode() {
+  if (document.readyState === 'loading') return null;
+  if (!window.ReadAloudMode) window.ReadAloudMode = new ReadAloudMode();
+  if (!readAloudRouteListenerInstalled) {
+    window.addEventListener('practice-route-question', event => {
+      const { mode, questionId } = event.detail || {};
+      if (mode !== 'read-aloud' || !questionId) return;
+      const ra = window.ReadAloudMode;
+      if (!ra?.isActive || !ra.hasLoadedDatabase || !ra.database) return;
+      const index = ra.database.findIndex(row => String(row.ID) === String(questionId));
+      if (index >= 0) ra.loadSpecificPrompt(index);
+    });
+    readAloudRouteListenerInstalled = true;
+  }
+  return window.ReadAloudMode;
+}
+window.initReadAloudMode = initReadAloudMode;
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initReadAloudMode, { once: true });
+} else initReadAloudMode();
+})();

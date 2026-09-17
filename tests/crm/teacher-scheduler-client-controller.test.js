@@ -2644,6 +2644,361 @@ async function runTests() {
         console.log('✓ Style restoration on missing session (EDGE-2) verified');
     }
 
+    // TEST 34: Defect 1 - Class rail full-width title wrapping, teacher name, and separate progress line
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{
+                    classroomId: 'c-long-name',
+                    name: 'Super Long Classroom Name That Used To Squeeze Counter',
+                    primaryTeacherUid: 'teacher-1',
+                    primaryTeacherName: 'Teacher Alice',
+                    scheduleSummary: {
+                        contractedAssignedCount: 5,
+                        contractedTargetCount: 10,
+                        remainingToScheduleCount: 5
+                    }
+                }],
+                sessions: [],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        const railHtml = testElements.teacherSchedulerClassList.innerHTML;
+        assert(railHtml.includes('ts-repair-class-row'), 'Class rail card must have ts-repair-class-row class');
+        assert(railHtml.includes('ts-repair-class-title'), 'Class rail card must have ts-repair-class-title wrapper');
+        assert(railHtml.includes('ts-repair-class-teacher'), 'Class rail card must have ts-repair-class-teacher line');
+        assert(railHtml.includes('Teacher Alice'), 'Class rail card must render assigned teacher name');
+        assert(railHtml.includes('ts-repair-class-progress'), 'Class rail card must have separate ts-repair-class-progress line');
+        assert(railHtml.includes('5/10 scheduled · 5 remaining'), 'Class rail card must render scheduled/target progress text');
+        assert(railHtml.includes('Super Long Classroom Name That Used To Squeeze Counter'), 'Class title must be intact');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Defect 1: Class rail full-width title wrapping, teacher name, and separate progress line verified');
+    }
+
+    // TEST 35: Defect 3 - Authoritative teacher color resolution, appearance migration, and reset
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{
+                    classroomId: 'c-nam',
+                    name: 'Nam Class',
+                    primaryTeacherUid: 'JP0UmCufWpdDkKkZazh7Ajo4PfX2',
+                    primaryTeacherName: 'Teacher Nam'
+                }],
+                sessions: [{
+                    sessionId: 's-nam-1',
+                    classId: 'c-nam',
+                    teacherUid: 'JP0UmCufWpdDkKkZazh7Ajo4PfX2',
+                    teacherName: 'Teacher Nam',
+                    scheduledLocalDate: '2026-09-08',
+                    scheduledLocalTime: '08:00',
+                    durationMinutes: 60
+                }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        // 1. Authoritative UID resolution without teacherName
+        const namByUid = controller.resolveTeacherColor('JP0UmCufWpdDkKkZazh7Ajo4PfX2');
+        assert.strictEqual(namByUid.key, 'blue', 'Nam UID must resolve to blue');
+        assert.strictEqual(namByUid.fill, '#1A73E8', 'Nam UID must have #1A73E8 fill');
+
+        const shawnByUid = controller.resolveTeacherColor('eRrS6Ba3QfQ6R9SmPbcb3bYcOK83');
+        assert.strictEqual(shawnByUid.key, 'purple', 'Shawn UID must resolve to purple');
+        assert.strictEqual(shawnByUid.fill, '#8E24AA', 'Shawn UID must have #8E24AA fill');
+
+        const quynhByName = controller.resolveTeacherColor('usr-quynh', 'Phạm Bích Như Quỳnh');
+        assert.strictEqual(quynhByName.key, 'teal', 'Quynh name must resolve to teal');
+        assert.strictEqual(quynhByName.fill, '#00796B', 'Quynh name must have #00796B fill');
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('data-ts-color="blue"'), 'Session pill must have data-ts-color="blue"');
+        assert(calHtml.includes('--color: #1A73E8;'), 'Session pill must have --color: #1A73E8;');
+
+        // 2. Appearance toggling
+        controller.applyAppearance('solid');
+        assert.strictEqual(testElements.teacherSchedulerWorkspace.getAttribute('data-ts-appearance'), 'solid', 'Workspace must reflect solid appearance');
+        assert(testElements.teacherSchedulerWorkspace.classList.contains('ts-appearance-solid'), 'Workspace must have ts-appearance-solid class');
+
+        controller.applyAppearance('pastel');
+        assert.strictEqual(testElements.teacherSchedulerWorkspace.getAttribute('data-ts-appearance'), 'pastel', 'Workspace must reflect pastel appearance');
+        assert(testElements.teacherSchedulerWorkspace.classList.contains('ts-appearance-pastel'), 'Workspace must have ts-appearance-pastel class');
+
+        // 3. Reset appearance settings
+        controller.resetAppearanceSettings();
+        assert.strictEqual(controller.getState().appearance, 'solid', 'Reset must restore solid appearance');
+        assert(testElements.teacherSchedulerWorkspace.classList.contains('ts-appearance-solid'), 'Workspace must have solid class after reset');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Defect 3: Authoritative teacher color resolution, appearance migration, and reset verified');
+    }
+
+    // TEST 36: Defect 2 - CSS contract check for slot cell stacking context elimination and mini-calendar
+    {
+        const cssPath = path.join(__dirname, '../../public/css/teacher-scheduler-google.css');
+        const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+        // Check that slot cell sets z-index: auto and does not set z-index: 1
+        assert(cssContent.includes('.scheduler-calendar-cell.teacher-scheduler-slot'), 'CSS must include .scheduler-calendar-cell.teacher-scheduler-slot selector');
+        assert(!cssContent.match(/\.scheduler-calendar-cell\.teacher-scheduler-slot\s*\{[^}]*z-index:\s*1\s*;/), 'Slot cell must not have z-index: 1');
+        assert(cssContent.includes('z-index: auto'), 'CSS must specify z-index: auto for slot cells to prevent stacking context collision');
+        assert(cssContent.includes('.ts-appearance-solid .scheduler-session-pill'), 'CSS must provide solid styling for pills in solid mode');
+
+        // Check completed session styling in solid mode guarantees white text
+        assert(cssContent.includes('.scheduler-session-pill.is-completed .pill-title'), 'CSS must specify completed pill title rule');
+        assert(cssContent.includes('.scheduler-session-pill.is-completed .pill-time'), 'CSS must specify completed pill time rule');
+        assert(cssContent.match(/\.scheduler-session-pill\.is-completed \.pill-title[^}]*color:\s*#ffffff\s*!important/), 'Completed pill title must enforce white text with !important');
+
+        // Check mini-calendar actual DOM classes styling
+        assert(cssContent.includes('.teacher-scheduler-mini-calendar .mini-cal-header'), 'CSS must style actual DOM mini-cal-header');
+        assert(cssContent.includes('.teacher-scheduler-mini-calendar .mini-cal-month-title'), 'CSS must style actual DOM mini-cal-month-title');
+        assert(cssContent.includes('.teacher-scheduler-mini-calendar .mini-cal-nav'), 'CSS must style actual DOM mini-cal-nav');
+        assert(cssContent.includes('.teacher-scheduler-mini-calendar .mini-cal-nav-btn'), 'CSS must style actual DOM mini-cal-nav-btn');
+
+        console.log('✓ Defect 2: CSS contract for slot cell stacking context elimination and mini-calendar verified');
+    }
+
+    // TEST 37: Multi-hour session lower-half hit testing (clicks & drags target session, not underlying slot)
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerSessionBubble: doc.createElement('div'),
+            teacherSchedulerQuickAdd: doc.createElement('div')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{
+                    classroomId: 'c-2hr',
+                    name: '2-Hour Class',
+                    primaryTeacherUid: 'teacher-nam',
+                    primaryTeacherName: 'Teacher Nam'
+                }],
+                sessions: [{
+                    sessionId: 's-2hr',
+                    classId: 'c-2hr',
+                    teacherUid: 'teacher-nam',
+                    teacherName: 'Teacher Nam',
+                    scheduledLocalDate: '2026-09-08',
+                    scheduledLocalTime: '08:00',
+                    durationMinutes: 120
+                }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('data-session-id="s-2hr"'), '2-hour session pill must be rendered in HTML');
+        assert(calHtml.includes('height:98px;') || calHtml.includes('height: 98px;'), '2-hour session must have ~98px height');
+
+        // Click simulated on the pill (even when pointer is physically over the 09:00 slot region)
+        // closestTarget on pill must return the pill, opening bubble and NOT opening quick-add
+        const mockPill = new MockElement('BUTTON');
+        mockPill.classList.add('teacher-scheduler-session-pill');
+        mockPill.dataset.sessionId = 's-2hr';
+        mockPill.closest = (sel) => sel.includes('teacher-scheduler-session-pill') ? mockPill : null;
+
+        testElements.teacherSchedulerCalendar.dispatchEvent({
+            type: 'click',
+            target: mockPill,
+            button: 0,
+            bubbles: true,
+            preventDefault: () => {},
+            stopPropagation: () => {}
+        });
+
+        assert.strictEqual(testElements.teacherSchedulerSessionBubble.style.display, 'block', 'Session bubble must be displayed');
+        assert.strictEqual(controller.getState().sessionBubble?.sessionId, 's-2hr', 'Click on multi-hour pill must open session bubble for s-2hr');
+        assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display || 'none', 'none', 'Click on multi-hour pill must NOT trigger quick-add on underlying slot');
+        assert.strictEqual(controller.getState().quickAdd, null, 'Quick add state must remain null');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Multi-hour session lower-half hit testing verified');
+    }
+
+    // TEST 38: Short cards, compact layout thresholds, and dynamic repaintDayColumns synchronization
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerClassList: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{
+                    classroomId: 'c-pte',
+                    name: 'PTE Speaking Intensive',
+                    primaryTeacherUid: 'teacher-shawn',
+                    primaryTeacherName: 'Teacher Shawn'
+                }],
+                sessions: [
+                    {
+                        sessionId: 's-30m',
+                        classId: 'c-pte',
+                        teacherUid: 'teacher-shawn',
+                        teacherName: 'Teacher Shawn',
+                        scheduledLocalDate: '2026-09-07',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 30
+                    },
+                    {
+                        sessionId: 's-60m',
+                        classId: 'c-pte',
+                        teacherUid: 'teacher-shawn',
+                        teacherName: 'Teacher Shawn',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 60
+                    },
+                    {
+                        sessionId: 's-120m',
+                        classId: 'c-pte',
+                        teacherUid: 'teacher-shawn',
+                        teacherName: 'Teacher Shawn',
+                        scheduledLocalDate: '2026-09-09',
+                        scheduledLocalTime: '08:00',
+                        durationMinutes: 120
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+
+        // 1. 30m pill is compact: has is-compact class and combines title + time
+        assert(calHtml.includes('is-compact'), '30m pill (<40px) must have is-compact class');
+        assert(calHtml.includes('PTE Speaking Intensive · 8:00–8:30'), '30m compact pill must combine title and time in title element');
+
+        // 2. 60m pill (48px) is not compact: has separate time row, and includes teacher line in admin all view
+        assert(calHtml.includes('8:00–9:00'), '60m pill must have separate time range');
+        assert(calHtml.includes('Teacher Shawn'), '60m and 120m pills in admin all view must include teacher line');
+
+        // 3. 120m pill (98px) has title + time + teacher line (in admin all view)
+        assert(calHtml.includes('8:00–10:00'), '120m pill must have 2hr time range');
+
+        // 4. Dynamic sync via repaintDayColumns:
+        // Create mock pill element for querySelector
+        const pill60Mock = new MockElement('BUTTON');
+        pill60Mock.dataset.sessionId = 's-60m';
+        const titleEl = new MockElement('SPAN');
+        titleEl.classList.add('pill-title');
+        titleEl.textContent = 'PTE Speaking Intensive';
+        const timeEl = new MockElement('SPAN');
+        timeEl.classList.add('pill-time');
+        timeEl.textContent = '8:00–9:00';
+        pill60Mock.querySelector = (sel) => {
+            if (sel.includes('pill-title')) return titleEl;
+            if (sel.includes('pill-time')) return timeEl;
+            return null;
+        };
+
+        const targetSlot = new MockElement('DIV');
+        testElements.teacherSchedulerCalendar.querySelector = (sel) => {
+            if (sel.includes('s-60m')) return pill60Mock;
+            if (sel.includes('teacher-scheduler-slot')) return targetSlot;
+            return null;
+        };
+
+        // Update s-60m session duration to 30 min in state and repaint
+        const stateSession = controller.getState().sessions.find((s) => s.sessionId === 's-60m');
+        stateSession.durationMinutes = 30;
+        const repainted = controller.repaintDayColumns(['2026-09-08']);
+        assert.strictEqual(repainted, true, 'repaintDayColumns must return true');
+
+        // Pill must now be compact
+        assert(pill60Mock.classList.contains('is-compact'), 'Resized 60m->30m pill must dynamically gain is-compact class');
+        assert(titleEl.textContent.includes('8:00–8:30'), 'Resized pill must update title text with integrated time range');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Short cards, compact layout thresholds, and dynamic repaintDayColumns synchronization verified');
+    }
+
     console.log('All teacher scheduler client controller tests passed successfully!');
 }
 

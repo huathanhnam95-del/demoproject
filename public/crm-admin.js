@@ -284,19 +284,119 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  const STATIC_FIREBASE_CLIENT_CONFIG = {
+    apiKey: 'AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ',
+    authDomain: 'listening-tasks-3ae34.firebaseapp.com',
+    projectId: 'listening-tasks-3ae34',
+    storageBucket: 'listening-tasks-3ae34.firebasestorage.app',
+    messagingSenderId: '737872673808',
+    appId: '1:737872673808:web:4db57599aa22b4830fde95',
+    measurementId: 'G-1891MSSLXT'
+  };
+
+  function readCrmAuthSession() {
+    try {
+      let raw = null;
+      try {
+        raw = localStorage.getItem('crm_auth_session');
+      } catch (e1) {
+        /* ignore localStorage read error */
+      }
+      if (!raw) {
+        try {
+          raw = sessionStorage.getItem('crm_auth_session');
+        } catch (e2) {
+          /* ignore sessionStorage read error */
+        }
+      }
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      const maxAge = 30 * 60 * 1000;
+      if (s && s.uid && (s.adminOk || s.teacherOk || s.projectsAuthorized || s.accessMode === 'admin' || s.accessMode === 'teacher' || s.accessMode === 'projects') && (Date.now() - s.timestamp < maxAge)) {
+        return s;
+      }
+    } catch (e) {
+      /* ignore storage read error */
+    }
+    return null;
+  }
+
+  function writeCrmAuthSession(payload) {
+    try {
+      const raw = JSON.stringify(payload);
+      try {
+        localStorage.setItem('crm_auth_session', raw);
+      } catch (e1) {
+        /* ignore localStorage write error */
+      }
+      try {
+        sessionStorage.setItem('crm_auth_session', raw);
+      } catch (e2) {
+        /* ignore sessionStorage write error */
+      }
+    } catch (e) {
+      /* ignore storage write error */
+    }
+  }
+
+  function updateCrmAuthSession(updater) {
+    try {
+      let raw = null;
+      try {
+        raw = localStorage.getItem('crm_auth_session');
+      } catch (e1) {
+        /* ignore */
+      }
+      if (!raw) {
+        try {
+          raw = sessionStorage.getItem('crm_auth_session');
+        } catch (e2) {
+          /* ignore */
+        }
+      }
+      if (raw) {
+        const cur = JSON.parse(raw);
+        updater(cur);
+        writeCrmAuthSession(cur);
+      }
+    } catch (e) {
+      /* ignore storage update error */
+    }
+  }
+
+  function clearCrmAuthSession() {
+    try {
+      localStorage.removeItem('crm_auth_session');
+    } catch (e1) {
+      /* ignore storage removal error */
+    }
+    try {
+      sessionStorage.removeItem('crm_auth_session');
+    } catch (e2) {
+      /* ignore storage removal error */
+    }
+    try {
+      document.documentElement.classList.remove('crm-session-cached');
+    } catch (e3) {
+      /* ignore DOM class removal error */
+    }
+  }
+
+  function onReady() {
     cacheElements();
     bindBulkDeleteWarningModal();
     init().catch((e) => {
       console.error('[CRM Admin] Fatal init error:', e);
-      try {
-        sessionStorage.removeItem('crm_auth_session');
-      } catch (err) {
-        /* ignore storage cleanup error */
-      }
+      clearCrmAuthSession();
       showGateMessage('Initialization failed.', e?.message || 'Unknown error');
     });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
   window.addEventListener('pagehide', () => {
     dashboardController?.dispose?.();
   });
@@ -1232,22 +1332,10 @@
   /* ──────────────────────────────────────────────────────────── */
 
   async function init() {
-    let warmCached = null;
-    try {
-      const raw = sessionStorage.getItem('crm_auth_session');
-      if (raw) {
-        const s = JSON.parse(raw);
-        const maxAge = 30 * 60 * 1000;
-        if (s && s.uid && (s.adminOk || s.teacherOk || s.accessMode === 'admin' || s.accessMode === 'teacher' || s.accessMode === 'projects') && (Date.now() - s.timestamp < maxAge)) {
-          warmCached = s;
-        }
-      }
-    } catch (e) {
-      /* ignore storage read error */
-    }
+    let warmCached = readCrmAuthSession();
 
     if (warmCached) {
-      state.accessMode = warmCached.accessMode || (warmCached.adminOk ? 'admin' : (warmCached.teacherOk ? 'teacher' : 'unknown'));
+      state.accessMode = warmCached.accessMode || (warmCached.adminOk ? 'admin' : (warmCached.teacherOk ? 'teacher' : (warmCached.projectsAuthorized ? 'projects' : 'unknown')));
       if (warmCached.capabilities) {
         adminCapabilities = normalizeAdminCapabilities(warmCached.capabilities);
       }
@@ -1268,7 +1356,7 @@
     const cleanPath = (window.location.pathname || '').replace(/\.html$/i, '') || '/';
     const returnTo = encodeURIComponent(cleanPath + window.location.search + window.location.hash);
 
-    let user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 50 });
+    let user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
     const isLocal = authSessionGuard?.isLocalAuthHost?.() ?? false;
     if (!user && isLocal && typeof authSessionGuard.bootstrapCompatLocalAdmin === 'function') {
       if (!warmCached) {
@@ -1282,32 +1370,14 @@
     }
 
     if (!user) {
-      try {
-        sessionStorage.removeItem('crm_auth_session');
-      } catch (e) {
-        /* ignore storage removal error */
-      }
-      try {
-        document.documentElement.classList.remove('crm-session-cached');
-      } catch (e) {
-        /* ignore DOM class removal error */
-      }
+      clearCrmAuthSession();
       showGateMessage('Please log in first.', 'Taking you to sign in…');
       setTimeout(() => window.location.replace(`/?next=${returnTo}`), 1800);
       return;
     }
 
     if (warmCached && warmCached.uid && warmCached.uid !== user.uid) {
-      try {
-        sessionStorage.removeItem('crm_auth_session');
-      } catch (e) {
-        /* ignore storage removal error */
-      }
-      try {
-        document.documentElement.classList.remove('crm-session-cached');
-      } catch (e) {
-        /* ignore DOM class removal error */
-      }
+      clearCrmAuthSession();
       showGateMessage('Checking CRM permissions…', 'Validating access…');
     } else if (!warmCached) {
       showGateMessage('Checking CRM permissions…', 'Validating access…');
@@ -1325,20 +1395,16 @@
       setupScoreDecorations();
       setupMoneyInputs();
 
-      try {
-        sessionStorage.setItem('crm_auth_session', JSON.stringify({
-          uid: user.uid,
-          email: user.email || '',
-          accessMode: 'admin',
-          adminOk: true,
-          teacherOk: false,
-          capabilities: adminCapabilities,
-          projectsAuthorized: Boolean(state.projectsAuthorized || warmCached?.projectsAuthorized),
-          timestamp: Date.now()
-        }));
-      } catch (e) {
-        /* ignore storage write error */
-      }
+      writeCrmAuthSession({
+        uid: user.uid,
+        email: user.email || '',
+        accessMode: 'admin',
+        adminOk: true,
+        teacherOk: false,
+        capabilities: adminCapabilities,
+        projectsAuthorized: Boolean(state.projectsAuthorized || warmCached?.projectsAuthorized),
+        timestamp: Date.now()
+      });
 
       // Decouple projects check from admin gate - run asynchronously in the background
       fetchProjectsAccessSummary(user).then((summary) => {
@@ -1356,16 +1422,9 @@
         if (window.projectsBudgetController && typeof window.projectsBudgetController.setEligible === 'function') {
           window.projectsBudgetController.setEligible(projectsOk);
         }
-        try {
-          const curRaw = sessionStorage.getItem('crm_auth_session');
-          if (curRaw) {
-            const cur = JSON.parse(curRaw);
-            cur.projectsAuthorized = projectsOk;
-            sessionStorage.setItem('crm_auth_session', JSON.stringify(cur));
-          }
-        } catch (e) {
-          /* ignore storage update error */
-        }
+        updateCrmAuthSession((cur) => {
+          cur.projectsAuthorized = projectsOk;
+        });
       }).catch((err) => {
         console.warn('[CRM Admin] Background fetchProjectsAccessSummary error:', err);
       });
@@ -1380,16 +1439,7 @@
       state.projectsAccessSummary = projectsSummary;
       state.projectsEnabled = !!(projectsSummary && (projectsSummary.canManagePeople === true || projectsOk));
       if (!teacherOk && !projectsOk) {
-        try {
-          sessionStorage.removeItem('crm_auth_session');
-        } catch (e) {
-          /* ignore storage removal error */
-        }
-        try {
-          document.documentElement.classList.remove('crm-session-cached');
-        } catch (e) {
-          /* ignore DOM class removal error */
-        }
+        clearCrmAuthSession();
         showGateMessage('Access denied.', 'An active CRM, Teacher Schedule, or authorized Projects membership is required.');
         setTimeout(() => window.location.replace('/'), 2200);
         return;
@@ -1403,20 +1453,16 @@
       setupScoreDecorations();
       setupMoneyInputs();
 
-      try {
-        sessionStorage.setItem('crm_auth_session', JSON.stringify({
-          uid: user.uid,
-          email: user.email || '',
-          accessMode: state.accessMode,
-          adminOk: false,
-          teacherOk: Boolean(teacherOk),
-          capabilities: adminCapabilities,
-          projectsAuthorized: Boolean(projectsOk),
-          timestamp: Date.now()
-        }));
-      } catch (e) {
-        /* ignore storage write error */
-      }
+      writeCrmAuthSession({
+        uid: user.uid,
+        email: user.email || '',
+        accessMode: state.accessMode,
+        adminOk: false,
+        teacherOk: Boolean(teacherOk),
+        capabilities: adminCapabilities,
+        projectsAuthorized: Boolean(projectsOk),
+        timestamp: Date.now()
+      });
     }
 
     if (state.accessMode === 'admin') {
@@ -2076,16 +2122,7 @@
     firebase.auth().onAuthStateChanged((nextUser) => {
       if (projectsAccountInvalidated || String(nextUser?.uid || '') === projectsDocumentUid) return;
       projectsAccountInvalidated = true;
-      try {
-        sessionStorage.removeItem('crm_auth_session');
-      } catch (e) {
-        /* ignore storage removal error */
-      }
-      try {
-        document.documentElement.classList.remove('crm-session-cached');
-      } catch (e) {
-        /* ignore DOM class removal error */
-      }
+      clearCrmAuthSession();
       projectsWorkspaceController?.dispose?.();
       clearInterval(projectsAssistantTimer);
       window.projectsAssistantController?.dispose?.();
@@ -2159,8 +2196,25 @@
   }
 
   async function initFirebaseFromServer() {
+    if (Array.isArray(firebase.apps) && firebase.apps.length > 0) {
+      if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+        await authSessionGuard.ensureCompatLocalPersistence(firebase);
+      }
+      return;
+    }
+
+    const staticConfig = window.__FIREBASE_CONFIG__ || STATIC_FIREBASE_CLIENT_CONFIG;
     if (authSessionGuard && typeof authSessionGuard.ensureCompatFirebaseFromConfig === 'function') {
-      await authSessionGuard.ensureCompatFirebaseFromConfig(firebase);
+      await authSessionGuard.ensureCompatFirebaseFromConfig(firebase, { staticConfig });
+      return;
+    }
+
+    const isLocal = authSessionGuard?.isLocalAuthHost?.() ?? false;
+    if (!isLocal && staticConfig && staticConfig.apiKey) {
+      firebase.initializeApp(staticConfig);
+      if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+        await authSessionGuard.ensureCompatLocalPersistence(firebase);
+      }
       return;
     }
 
@@ -2168,11 +2222,13 @@
     const result = await res.json().catch(() => null);
 
     if (!res.ok || !result?.success || !result?.config?.apiKey) {
-      const msg = result?.message || 'Could not fetch /api/config. Ensure the server is running.';
-      throw new Error(msg);
-    }
-
-    if (!firebase.apps.length) {
+      if (staticConfig && staticConfig.apiKey) {
+        firebase.initializeApp(staticConfig);
+      } else {
+        const msg = result?.message || 'Could not fetch /api/config. Ensure the server is running.';
+        throw new Error(msg);
+      }
+    } else if (!firebase.apps.length) {
       firebase.initializeApp(result.config);
     }
     if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {

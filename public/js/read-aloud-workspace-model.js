@@ -99,7 +99,7 @@
           });
         }
         return view('prepare', 0, {
-          primary: action('ra-record-btn', s.captureError ? 'Try microphone again' : 'Start recording'),
+          primary: action('ra-record-btn', s.captureError ? 'Try microphone again' : 'Start recording now'),
           timer: s.captureError ? null : 'prep',
           notice: s.captureError ? String(s.captureError) : ''
         });
@@ -143,12 +143,12 @@
         });
       case 'RESULTS': {
         const outcome = s.assessmentOutcome || { kind: 'none' };
-        if (outcome.kind === 'success') {
+        if (outcome.kind === 'success' || outcome.kind === 'none') {
           return view('feedback', 2, {
             // Existing handleRecordClick() advances to the next prompt in RESULTS.
             primary: action('ra-record-btn', 'Next question'),
             secondary: action('ra-retry-btn', 'Try again'),
-            notice: 'Feedback is ready.'
+            notice: outcome.kind === 'success' ? 'Feedback is ready.' : 'Feedback ready.'
           });
         }
         if (outcome.kind === 'error') {
@@ -157,14 +157,14 @@
             primary: canRetry
               ? action('ra-check-btn', 'Retry analysis')
               : action('ra-retry-btn', 'Record again'),
-            secondary: canRetry ? action('ra-retry-btn', 'Record again') : null,
+            secondary: canRetry ? action('ra-retry-btn', 'Record again') : action('ra-record-btn', 'Next question'),
             questionChange: s.canSubmitPendingAttempt ? 'confirm-discard' : 'allow',
             notice: outcome.message || 'We could not assess this recording.'
           });
         }
-        // RESULTS/hasAssessmentResult alone cannot prove a successful assessment.
         return view('result-unavailable', 2, {
-          primary: action('ra-retry-btn', 'Record again'),
+          primary: action('ra-record-btn', 'Next question'),
+          secondary: action('ra-retry-btn', 'Record again'),
           questionChange: s.canSubmitPendingAttempt ? 'confirm-discard' : 'allow',
           notice: 'A confirmed assessment result is unavailable.'
         });

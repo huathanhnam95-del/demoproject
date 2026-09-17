@@ -125,6 +125,7 @@ async function setupFirebaseMocks(context) {
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: {} });
         export const sendPasswordResetEmail = () => Promise.resolve();
         export const sendEmailVerification = () => Promise.resolve();
+        export const signInWithCustomToken = () => Promise.resolve({ user: {} });
       `
     });
   });
@@ -398,6 +399,11 @@ async function retryAndAssertReset(page) {
     const explanationContent = await page.locator('#hiw-explanation-content').innerHTML();
     assert(explanationContent.length > 50, 'Explanation content should be populated');
     assert(!/<script|onerror=|onclick=/i.test(explanationContent), 'Explanation content should be sanitized');
+
+    const hasTable = await page.locator('#hiw-explanation-content .hiw-comparison-table').count();
+    assert(hasTable > 0, 'Expected .hiw-comparison-table to be rendered in explanation');
+    const hasCard = await page.locator('#hiw-explanation-content .hiw-explanation-text-card').count();
+    assert(hasCard > 0, 'Expected .hiw-explanation-text-card to be rendered in explanation');
 
     try {
       const successScreenshotPath = path.join(process.cwd(), 'tests', 'browser', 'hiw-success-screenshot.png');

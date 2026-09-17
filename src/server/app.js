@@ -256,9 +256,17 @@ function createApp(options = {}) {
 
   // Dev-only CSP override for CRM Admin so emulator connectivity is allowed locally.
   // In production hosting, crm-admin.html is served as a static file with its own CSP meta tag.
-  app.get('/crm-admin.html', (req, res, next) => {
+  app.get(['/crm-admin', '/crm-admin.html'], (req, res, next) => {
+    if (req.path === '/crm-admin/' || req.path === '/crm-admin.html') {
+      const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+      return res.redirect(301, `/crm-admin${query}`);
+    }
+
     const isProd = String(process.env.NODE_ENV || '').trim().toLowerCase() === 'production';
     if (isProd || !isLocalHostname(req.hostname)) {
+      if (req.path === '/crm-admin') {
+        return res.sendFile(path.join(publicDir, 'crm-admin.html'));
+      }
       return next();
     }
 
@@ -309,6 +317,7 @@ function createApp(options = {}) {
     etag: true,
     lastModified: true,
     maxAge: 0,
+    extensions: ['html'],
     setHeaders: (res, filePath) => {
       setStaticCacheHeaders(res, filePath);
     }

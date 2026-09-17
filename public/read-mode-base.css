@@ -155,6 +155,18 @@
   padding-inline: 0;
 }
 
+body[data-practice-layout="fluid-v1"] .rmcsa-container,
+body[data-practice-layout="fluid-v1"] .rmcma-container,
+body[data-practice-layout="fluid-v1"] .rop-container,
+body[data-practice-layout="fluid-v1"] .swt-container,
+body[data-practice-layout="fluid-v1"] .essay-container,
+body[data-practice-layout="fluid-v1"] .rfib-container,
+body[data-practice-layout="fluid-v1"] .dd-container {
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
+}
+
 /* --------------------------------------------------------------------------
    3. Header — the one elevated surface (Rule 2)
    -------------------------------------------------------------------------- */

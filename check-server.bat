@@ -36,6 +36,10 @@ if %errorlevel% equ 0 (
 echo.
 echo Starting server...
 echo ---------------------------------------------------
+if "%FIRESTORE_EMULATOR_HOST%"=="" set FIRESTORE_EMULATOR_HOST=localhost:8080
+if "%FIREBASE_AUTH_EMULATOR_HOST%"=="" set FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
+if "%FIREBASE_STORAGE_EMULATOR_HOST%"=="" set FIREBASE_STORAGE_EMULATOR_HOST=localhost:9199
+if "%STORAGE_EMULATOR_HOST%"=="" set STORAGE_EMULATOR_HOST=http://localhost:9199
 node server.js
 
 if %errorlevel% neq 0 (

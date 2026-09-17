@@ -19661,9 +19661,26 @@ body.readingjourney-active #readingjourney-root {
 }
 
 /* Short prompts used to leave a wide empty band under the text while the rail
-   overflowed beside it; capping the measure also keeps the line length readable. */
-.ra-stage .ra-prompt-stage {
+   overflowed beside it; fluid layout and v2 workspace expand to full width. */
+body:not([data-practice-layout="fluid-v1"]) #mode-read-aloud:not([data-ra-workspace="v2"]) .ra-stage .ra-prompt-stage {
   max-width: 62ch;
+}
+
+body[data-practice-layout="fluid-v1"] .ra-stage,
+body[data-practice-layout="fluid-v1"] .ra-stage .ra-prompt-stage {
+  max-width: none;
+}
+
+body[data-practice-layout="fluid-v1"] .ra-split:not(:has(.ra-rail:not([hidden]):not([style*="display: none"]):not([style*="display:none"]))) .ra-stage {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+@supports not (selector(:has(*))) {
+  body[data-practice-layout="fluid-v1"] .ra-split .ra-stage {
+    flex: 1 1 100%;
+    width: 100%;
+  }
 }
 
 .ra-prompt-stage {
@@ -20774,6 +20791,11 @@ body.readingjourney-active #readingjourney-root {
   box-shadow: var(--shadow-sm);
 }
 
+.sc-accordion-card.sc-issue-card {
+  padding: 0;
+  gap: 0;
+}
+
 .sc-issue-header {
   display: flex;
   align-items: center;
@@ -20823,6 +20845,18 @@ body.readingjourney-active #readingjourney-root {
 .sc-success-pill:hover {
   background: #d1fae5;
   box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
+}
+
+.sc-accordion-header .sc-success-pill {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.sc-accordion-header .sc-success-pill:hover {
+  background: transparent;
+  box-shadow: none;
 }
 
 .sc-check-icon {

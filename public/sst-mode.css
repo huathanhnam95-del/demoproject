@@ -22,6 +22,11 @@
   gap: 10px;
 }
 
+body[data-practice-layout="fluid-v1"] .sst-nav {
+  max-width: none;
+  width: 100%;
+}
+
 /* The prev/next controls carry .ra-v7-icon-btn, which is transparent by design:
    in the other modes it sits inside the .ra-v7-nav pill that supplies the chrome.
    SST lays its nav out on the page background, so the buttons need their own
@@ -60,6 +65,12 @@
   max-width: 1160px;
   margin: 0 auto;
   padding: 0 12px;
+}
+
+body[data-practice-layout="fluid-v1"] .sst-container {
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
 }
 
 .sst-instructions {

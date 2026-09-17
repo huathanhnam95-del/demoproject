@@ -96,6 +96,9 @@ self.addEventListener('fetch', (event) => {
       : supportPackStrategy(request));
     return;
   }
+  if (requestUrl.pathname.startsWith('/content/')) {
+    return; // Browser HTTP cache follows the verified Hosting headers above.
+  }
   if (requestUrl.pathname.startsWith('/api/') || requestUrl.pathname.startsWith('/database/')) {
     return;
   }

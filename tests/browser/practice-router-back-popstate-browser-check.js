@@ -209,7 +209,7 @@ async function clickByScript(page, selector) {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    await page.waitForFunction(() => window.location.pathname.includes('/practice') && window.location.pathname.includes('/read-aloud'), { timeout: 30000 });
+    await page.waitForFunction(() => /(practice|pte-practice)/.test(window.location.pathname) && window.location.pathname.includes('/read-aloud'), { timeout: 30000 });
 
     // Reset counters to measure only the browser back interaction.
     await page.evaluate(() => {

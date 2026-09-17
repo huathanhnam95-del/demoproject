@@ -246,15 +246,88 @@
     loadedModes.add('hcs');
   }
 
+  const stylesheetPromises = new Map();
+  function ensureStylesheet(href) {
+    const url = new URL(href, document.baseURI).href;
+    if (stylesheetPromises.has(url)) return stylesheetPromises.get(url);
+    let link = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find(node => node.href === url);
+    if (link?.sheet) return Promise.resolve();
+    if (link?.dataset.belCssFailed === 'true') {
+      if (link.dataset.belManagedStyle === 'true') link.remove();
+      link = null;
+    }
+    const created = !link;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = url;
+      link.dataset.belManagedStyle = 'true';
+    }
+    const element = link;
+    let timer;
+    const promise = new Promise((resolve, reject) => {
+      function cleanup() {
+        clearTimeout(timer);
+        element.removeEventListener('load', onLoad);
+        element.removeEventListener('error', onError);
+      }
+      function onLoad() { cleanup(); resolve(); }
+      function onError() {
+        cleanup();
+        element.dataset.belCssFailed = 'true';
+        if (element.dataset.belManagedStyle === 'true') element.remove();
+        reject(new Error(`Stylesheet failed: ${href}`));
+      }
+      element.addEventListener('load', onLoad, { once: true });
+      element.addEventListener('error', onError, { once: true });
+      timer = setTimeout(onError, 20000);
+      if (created) {
+        const anchor = document.querySelector('meta[name="bel-mode-styles-end"]');
+        if (!anchor) { onError(); return; }
+        anchor.before(element);
+      }
+    }).catch(error => { stylesheetPromises.delete(url); throw error; });
+    stylesheetPromises.set(url, promise);
+    return promise;
+  }
+
+  function whenDomReady() {
+    if (document.readyState !== 'loading') return Promise.resolve();
+    return new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+  }
+
+  async function ensureReadAloudModeLoaded() {
+    if (loadedModes.has('read-aloud') || window.ReadAloudMode) {
+      loadedModes.add('read-aloud');
+      return;
+    }
+    // First migration: keep the shared speaking helpers and v7 picker CSS eager.
+    // Moving the controller alone avoids guessing the shared dependency graph.
+    await loadScript('/read-aloud-mode.js?v=2.0.6');
+    await whenDomReady();
+    if (typeof window.initReadAloudMode !== 'function') throw new Error('Read Aloud initializer is missing.');
+    window.initReadAloudMode();
+    if (!window.ReadAloudMode) throw new Error('Read Aloud did not initialize.');
+    loadedModes.add('read-aloud');
+  }
+
   async function ensureRmcsaModeLoaded() {
+    await ensureStylesheet('/rmcsa-mode.css');
     if (loadedModes.has('rmcsa') || window.RMCSAMode) {
       loadedModes.add('rmcsa');
       return;
     }
-    await ensureXlsxLoaded();
-    await loadScript('rmcsa-mode.js');
+    await loadScript('/js/rmcsa-content.js');
+    await loadScript('/rmcsa-mode.js');
+    if (!window.RMCSAMode) throw new Error('RMCSA did not initialize.');
     loadedModes.add('rmcsa');
   }
+
+  const managedModes = new Set([
+    'watch', 'notes', 'rfib', 'dd', 'rmcma', 'lmcma', 'lmcsa', 'hcs',
+    'smw', 'sst', 'rmcsa', 'rop', 'hiw', 'read-aloud'
+  ]);
 
   async function ensureRopModeLoaded() {
     if (loadedModes.has('rop') || window.ROPMode) {
@@ -338,10 +411,15 @@
       await ensureHiwModeLoaded();
       return true;
     }
+    if (mode === 'read-aloud') {
+      await ensureReadAloudModeLoaded();
+      return true;
+    }
     return false;
   }
 
   window.BELLazyLoader = {
+    supportsMode: mode => managedModes.has(mode),
     ensureModeScripts,
     ensureWatchModeLoaded,
     ensureNotesModeLoaded,
@@ -356,6 +434,8 @@
     ensureRopModeLoaded,
     ensureHiwModeLoaded,
     ensureHcsModeLoaded,
-    ensureCompromiseLoaded
+    ensureCompromiseLoaded,
+    ensureReadAloudModeLoaded,
+    ensureStylesheet
   };
 })();

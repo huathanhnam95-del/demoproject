@@ -661,7 +661,7 @@
         // Key points
         if (el.diKeyPoints) {
             el.diKeyPoints.innerHTML = '';
-            const points = currentEntry.keyPoints || [];
+            const points = Array.isArray(currentEntry?.keyPoints) ? currentEntry.keyPoints : [];
             if (points.length > 0) {
                 points.forEach(p => {
                     const li = document.createElement('li');
@@ -729,7 +729,9 @@
 
         const title = currentEntry?.title || 'Unknown';
         const type = currentEntry?.type || 'image';
-        const keyPoints = (currentEntry?.keyPoints || []).join(', ') || 'N/A';
+        const keyPoints = Array.isArray(currentEntry?.keyPoints) && currentEntry.keyPoints.length > 0
+            ? currentEntry.keyPoints.join('; ')
+            : 'N/A';
 
         const payload = `Please review my PTE Describe Image response and provide detailed feedback:
 

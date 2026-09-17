@@ -223,7 +223,7 @@ test('student navigation survives immutable receipt replay and recovery', async 
     const f = await setup({}, [{ actionId: 'student', kind: 'createStudent', values: { name: 'Lan' } }]);
     const preview = await f.service.preview(f.request);
     const receipt = await f.service.commit(confirm(f, preview));
-    assert.equal(receipt.results.student.studentLink, '/crm-admin.html#students/a0001');
+    assert.equal(receipt.results.student.studentLink, '/crm-admin#students/a0001');
     assert.equal(f.state.rows.get(`crmStudents/${receipt.results.student.studentId}`).crmId, 'a0001');
     assert.deepEqual(await f.service.commit(confirm(f, preview)), receipt);
     assert.deepEqual((await f.service.status({ actorUid: 'staff1', draftId: f.draft.draftId })).receipt, receipt);

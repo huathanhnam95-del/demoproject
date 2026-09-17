@@ -44,7 +44,7 @@ function ok(label, pass, detail) {
     if (await guest.isVisible().catch(() => false)) await guest.click();
     await page.waitForTimeout(700);
     await page.evaluate(() => window.switchToMode('read-aloud'));
-    await page.waitForTimeout(1400);
+    await page.waitForFunction(() => window.ReadAloudMode && window.ReadAloudMode.isActive && window.ReadAloudMode.currentPromptReady, { timeout: 30000 });
     await page.evaluate(() => window.SpeakingPracticeController?.setPreferredView('advanced'));
     await page.waitForTimeout(400);
 
@@ -86,7 +86,7 @@ function ok(label, pass, detail) {
       mode.state = 'RESULTS';
       await new Promise((r) => setTimeout(r, 800));
 
-      await mode.renderConnectedSpeechResults(
+      const renderRes = await mode.renderConnectedSpeechResults(
         { status: 'complete', version: 'cs-v1', events, summary: { detectedCount: 1, notDetectedCount: 2, uncertainCount: 0 } },
         { transcriptText: text, words: [], metrics: {}, sessionViewMode: 'advanced' }
       );
@@ -101,6 +101,7 @@ function ok(label, pass, detail) {
       const stage = document.querySelector('.ra-stage');
       const inlineStyled = list ? list.querySelectorAll('[style*="#"]').length : -1;
       return {
+        renderRes,
         meta: document.getElementById('ra-connected-speech-meta')?.textContent?.trim(),
         cards: list ? list.querySelectorAll('.sc-accordion-card, .sc-single-card').length : 0,
         railBesideStage: !!(rail && stage)

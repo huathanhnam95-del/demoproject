@@ -116,10 +116,27 @@ async function buildProfileDropdown(user) {
 
     document.getElementById('dropdown-btn-logout').addEventListener('click', async () => {
         dropdown.style.display = 'none';
-        if (typeof window.authFunctions !== 'undefined') {
-            await window.authFunctions.signOut();
-            window.location.reload();
+        try {
+            localStorage.removeItem('crm_auth_session');
+        } catch (e) {
+            /* ignore storage cleanup error */
         }
+        try {
+            sessionStorage.removeItem('crm_auth_session');
+        } catch (e) {
+            /* ignore storage cleanup error */
+        }
+        try {
+            document.documentElement.classList.remove('crm-session-cached');
+        } catch (e) {
+            /* ignore DOM cleanup error */
+        }
+        if (typeof window.authFunctions !== 'undefined' && typeof window.authFunctions.signOut === 'function') {
+            try { await window.authFunctions.signOut(); } catch (e) { /* ignore signout error */ }
+        } else if (typeof window.firebase !== 'undefined' && typeof window.firebase.auth === 'function') {
+            try { await window.firebase.auth().signOut(); } catch (e) { /* ignore signout error */ }
+        }
+        window.location.reload();
     });
 
     // Fire off async fetch for workload metrics securely

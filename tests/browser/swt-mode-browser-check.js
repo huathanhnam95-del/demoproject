@@ -35,6 +35,7 @@ async function setupFirebaseMocks(context) {
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: { uid: 'swt-user' } });
         export const sendPasswordResetEmail = () => Promise.resolve();
         export const sendEmailVerification = () => Promise.resolve();
+        export const signInWithCustomToken = () => Promise.resolve({ user: mockUser });
       `
     });
   });

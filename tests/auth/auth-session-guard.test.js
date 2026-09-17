@@ -297,6 +297,48 @@ async function testBootstrapCompatLocalAdmin() {
   assert.strictEqual(reloadCalled, false, 'User reload should not be invoked after successful token sign-in');
 }
 
+async function testStaticConfigFastPath() {
+  let fetchCalled = false;
+  sandbox.fetch = async () => {
+    fetchCalled = true;
+    throw new Error('fetch should not be called when static config is provided on production');
+  };
+
+  const firebaseRef = {
+    apps: [],
+    initializeAppCalls: 0,
+    initializeApp(config) {
+      this.initializeAppCalls += 1;
+      this.apps.push(config);
+    },
+    auth() {
+      return {
+        currentUser: null,
+        setPersistence: async () => true,
+        onAuthStateChanged() { return () => {}; }
+      };
+    }
+  };
+  firebaseRef.auth.Auth = { Persistence: { LOCAL: 'local' } };
+
+  const staticConfig = { apiKey: 'static-key-prod', projectId: 'prod-proj' };
+  const config = await guard.ensureCompatFirebaseFromConfig(firebaseRef, {
+    hostname: 'betterenglishlearning.com',
+    staticConfig
+  });
+
+  assert.strictEqual(fetchCalled, false, 'Fetch should not be called when staticConfig is present on production host');
+  assert.strictEqual(config.apiKey, 'static-key-prod', 'Config returned should match staticConfig');
+  assert.strictEqual(firebaseRef.initializeAppCalls, 1, 'Firebase should be initialized once with staticConfig');
+
+  // Second call on already-initialized firebase should be immediate fast-pass
+  const config2 = await guard.ensureCompatFirebaseFromConfig(firebaseRef, {
+    hostname: 'betterenglishlearning.com',
+    staticConfig
+  });
+  assert.strictEqual(firebaseRef.initializeAppCalls, 1, 'Firebase should not be re-initialized');
+}
+
 (async () => {
   await testImmediateUser();
   await testDelayedUser();
@@ -307,6 +349,7 @@ async function testBootstrapCompatLocalAdmin() {
   await testValidatedEmulatorOverrides();
   await testIsLocalAuthHost();
   await testBootstrapCompatLocalAdmin();
+  await testStaticConfigFastPath();
   console.log('auth session guard passed');
 })().catch((error) => {
   console.error(error);

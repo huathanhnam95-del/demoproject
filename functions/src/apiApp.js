@@ -403,7 +403,8 @@ const studentClassroomsRouter = createStudentClassroomsRouter({
     db,
     authMiddleware,
     sendSuccess,
-    sendError
+    sendError,
+    serverTimestamp: () => FieldValue.serverTimestamp()
 });
 
 app.use('/api/admin/essay-ai', essayAiAdminRouter);

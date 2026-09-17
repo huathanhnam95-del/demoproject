@@ -27,6 +27,7 @@
   let hasAiScoreResult = false;
   let scoreSWTFn = null;
   let authStateRefreshBound = false;
+  let reviewController = null;
   const MAX_SWT_SECONDS = 600;
   // Navigation parity with the Reading tasks. The Random preference is shared
   // app-wide under this one localStorage key, so toggling it here follows the
@@ -68,7 +69,8 @@
       resultsContainer: $('swt-results-container'),
       retryBtn: $('swt-retry-btn'),
       aiScoreBtn: $('swt-ai-score-btn'),
-      aiScoreHint: $('swt-ai-score-hint')
+      aiScoreHint: $('swt-ai-score-hint'),
+      parallelReviewMount: $('swt-parallel-review-mount')
     };
   }
 
@@ -120,7 +122,10 @@
     const mainPoints = Array.isArray(q?.mainPoints)
       ? q.mainPoints.map(p => String(p || '').trim()).filter(Boolean)
       : [];
-    return { id, title, sourceText, mainPoints };
+    const answerAnalysis = q?.answerAnalysis && typeof q.answerAnalysis === 'object'
+      ? q.answerAnalysis
+      : null;
+    return { id, title, sourceText, mainPoints, answerAnalysis };
   }
 
   // ── Question Picker (v7 style) ──
@@ -247,6 +252,7 @@
     if (isWriting || index < 0 || index >= questions.length) return;
     if (recordHistory && randomMode && index !== currentIndex) navHistory.push(currentIndex);
     currentIndex = index;
+    destroyReview();
     renderPicker();
     renderSource();
     closePicker();
@@ -520,6 +526,7 @@
           </div>`;
       }
       if (d.aiScoreBtn) d.aiScoreBtn.style.display = 'none';
+      destroyReview();
       return;
     }
 
@@ -556,7 +563,58 @@
       form: formResult,
       wordCount
     }, { scoringSource: 'client-form' }));
+    mountReview(lastSubmittedQuestion);
     renderPicker();
+  }
+
+  function mountReview(q) {
+    if (!d || !d.parallelReviewMount) return;
+    const questionSnapshot = q || lastSubmittedQuestion || questions[currentIndex];
+    const analysis = questionSnapshot?.answerAnalysis;
+    if (!analysis || !questionSnapshot?.sourceText) {
+      destroyReview();
+      return;
+    }
+
+    const ControllerClass = (window.SWTReview && window.SWTReview.SWTReviewController) ||
+      (typeof SWTReviewController !== 'undefined' ? SWTReviewController : null);
+
+    if (!ControllerClass) {
+      console.warn('[SWT] SWTReviewController not available');
+      return;
+    }
+
+    if (!reviewController) {
+      reviewController = new ControllerClass();
+    }
+
+    try {
+      d.parallelReviewMount.style.display = 'block';
+      reviewController.mount({
+        container: d.parallelReviewMount,
+        question: questionSnapshot,
+        sourceText: questionSnapshot.sourceText,
+        answerAnalysis: analysis
+      });
+    } catch (err) {
+      console.error('[SWT] Failed to mount parallel review:', err);
+      d.parallelReviewMount.style.display = 'none';
+    }
+  }
+
+  function destroyReview() {
+    if (reviewController) {
+      try {
+        reviewController.destroy();
+      } catch (err) {
+        console.warn('[SWT] Error destroying reviewController:', err);
+      }
+      reviewController = null;
+    }
+    if (d?.parallelReviewMount) {
+      d.parallelReviewMount.innerHTML = '';
+      d.parallelReviewMount.style.display = 'none';
+    }
   }
 
   function isGuestMode() {
@@ -895,6 +953,7 @@
     lastSubmittedFormResult = null;
     lastSubmittedQuestion = null;
     hasAiScoreResult = false;
+    destroyReview();
     if (d.stepResults) d.stepResults.style.display = 'none';
     if (d.startBtn) d.startBtn.style.display = 'inline-flex';
     const toggleBtn = document.getElementById('swt-history-toggle');
@@ -1057,10 +1116,13 @@
     onEnter,
     onExit,
     shouldConfirmExit,
+    getReviewController: () => reviewController,
     __debug: {
       getWordCount,
       scoreForm,
-      formatTime
+      formatTime,
+      mountReview,
+      destroyReview
     }
   };
 

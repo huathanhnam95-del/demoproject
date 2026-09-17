@@ -255,6 +255,45 @@
       if (this.panel) {
         delete this.panel.dataset.raWorkspace;
       }
+      const removeHost = (el, id) => {
+        const node = el || document.getElementById(id);
+        if (node?.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      };
+      removeHost(this.headingEl, 'ra-workspace-heading');
+      this.headingEl = null;
+      removeHost(this.stepsHostEl, 'ra-workspace-steps-host');
+      this.stepsHostEl = null;
+      removeHost(this.instructionEl, 'ra-workspace-instruction');
+      this.instructionEl = null;
+      removeHost(this.coachHostEl, 'ra-workspace-coach-host');
+      this.coachHostEl = null;
+
+      for (const id of ACTION_IDS) {
+        const button = document.getElementById(id);
+        if (button) {
+          button.hidden = false;
+          delete button.dataset.raEmphasis;
+        }
+      }
+
+      const prepBox = document.getElementById('ra-prep-timer-box');
+      if (prepBox) {
+        delete prepBox.dataset.timerState;
+        prepBox.style.removeProperty('opacity');
+      }
+      const recordBox = document.getElementById('ra-record-timer-box');
+      if (recordBox) {
+        delete recordBox.dataset.timerState;
+        recordBox.style.removeProperty('opacity');
+      }
+
+      const coachBox = document.getElementById('ra-connected-speech-box');
+      if (coachBox && this.tipsExpanded) {
+        coachBox.style.display = 'none';
+      }
+      this.tipsExpanded = false;
       this.active = false;
     }
   }

@@ -139,8 +139,139 @@ window.TeacherSchedulerWorkspace = (function () {
             _hasScrolledToHour: false,
             _eventsBound: false,
             miniCalendar: null,
-            hourHeightPx: Number(deps.hourHeightPx || 50) || 50
+            hourHeightPx: Number(deps.hourHeightPx || 50) || 50,
+            teacherColorAssignments: new Map(),
+            appearance: 'solid'
         };
+
+        if (elements.teacherSchedulerWorkspace && typeof elements.teacherSchedulerWorkspace.setAttribute === 'function') {
+            elements.teacherSchedulerWorkspace.setAttribute('data-ts-render-repair', 'v1');
+        }
+
+        const SOLID_TEACHER_PALETTE = {
+            blue:   { key: 'blue',   fill: '#1A73E8', text: '#FFFFFF', name: 'Blue' },
+            purple: { key: 'purple', fill: '#8E24AA', text: '#FFFFFF', name: 'Purple' },
+            teal:   { key: 'teal',   fill: '#00796B', text: '#FFFFFF', name: 'Teal' },
+            green:  { key: 'green',  fill: '#1E8E3E', text: '#FFFFFF', name: 'Green' },
+            orange: { key: 'orange', fill: '#E37400', text: '#FFFFFF', name: 'Orange' },
+            red:    { key: 'red',    fill: '#D93025', text: '#FFFFFF', name: 'Red' },
+            indigo: { key: 'indigo', fill: '#3F51B5', text: '#FFFFFF', name: 'Indigo' },
+            coral:  { key: 'coral',  fill: '#C2185B', text: '#FFFFFF', name: 'Coral' }
+        };
+        const SOLID_PALETTE_KEYS = ['blue', 'purple', 'teal', 'green', 'orange', 'red', 'indigo', 'coral'];
+
+        function resolveTeacherColor(teacherUid, teacherName = '') {
+            const uid = String(teacherUid || '').trim();
+            let name = String(teacherName || '').trim();
+            if (!name && uid && state.teacherMap && state.teacherMap.has(uid)) {
+                name = String(state.teacherMap.get(uid) || '').trim();
+            }
+            if (uid && state.teacherColorAssignments && state.teacherColorAssignments.has(uid)) {
+                const key = state.teacherColorAssignments.get(uid);
+                if (SOLID_TEACHER_PALETTE[key]) return SOLID_TEACHER_PALETTE[key];
+            }
+            if (uid === 'JP0UmCufWpdDkKkZazh7Ajo4PfX2' || uid === 'teacher-nam' || uid === 'nam-uid') {
+                return SOLID_TEACHER_PALETTE.blue;
+            }
+            if (uid === 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83' || uid === 'teacher-shawn' || uid === 'shawn-uid') {
+                return SOLID_TEACHER_PALETTE.purple;
+            }
+            if (uid === 'teacher-quynh' || uid === 'quynh-uid') {
+                return SOLID_TEACHER_PALETTE.teal;
+            }
+            const norm = `${name} ${uid}`.toLowerCase();
+            if (norm.includes('nam') || norm.includes('hứa thanh nam')) {
+                return SOLID_TEACHER_PALETTE.blue;
+            }
+            if (norm.includes('shawn')) {
+                return SOLID_TEACHER_PALETTE.purple;
+            }
+            if (norm.includes('quỳnh') || norm.includes('quynh') || norm.includes('như quỳnh')) {
+                return SOLID_TEACHER_PALETTE.teal;
+            }
+            const str = uid || name || 'default';
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            const colorKey = SOLID_PALETTE_KEYS[Math.abs(hash) % SOLID_PALETTE_KEYS.length];
+            return SOLID_TEACHER_PALETTE[colorKey] || SOLID_TEACHER_PALETTE.blue;
+        }
+
+        function getEffectiveTeacherForSession(session) {
+            const classroom = getClassroomById(session?.classId);
+            const teacherUid = String(session?.teacherUid || classroom?.primaryTeacherUid || '').trim();
+            const directName = session?.teacherName || classroom?.primaryTeacherName || '';
+            const teacherName = resolveTeacherDisplayName(teacherUid, directName);
+            return { teacherUid, teacherName };
+        }
+
+        function getEffectiveTeacherForClassroom(classroom) {
+            const teacherUid = String(classroom?.primaryTeacherUid || '').trim();
+            const teacherName = resolveTeacherDisplayName(teacherUid, classroom?.primaryTeacherName || '');
+            return { teacherUid, teacherName };
+        }
+
+        const APPEARANCE_STORAGE_KEY = 'teacher_scheduler_appearance_v2';
+        const LEGACY_APPEARANCE_STORAGE_KEY = 'teacher_scheduler_appearance';
+        function initAppearanceSettings() {
+            let saved = null;
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    saved = localStorage.getItem(APPEARANCE_STORAGE_KEY);
+                    if (!saved) {
+                        const legacy = localStorage.getItem(LEGACY_APPEARANCE_STORAGE_KEY);
+                        if (legacy === 'solid') {
+                            saved = 'solid';
+                            localStorage.setItem(APPEARANCE_STORAGE_KEY, 'solid');
+                        }
+                    }
+                }
+            } catch (e) {
+                /* ignore storage error */
+            }
+
+            state.appearance = (saved === 'pastel' || saved === 'solid') ? saved : 'solid';
+            applyAppearance(state.appearance);
+
+            const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-appearance') : null;
+            if (select) select.value = state.appearance;
+        }
+
+        function resetAppearanceSettings() {
+            state.appearance = 'solid';
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.setItem(APPEARANCE_STORAGE_KEY, 'solid');
+                }
+            } catch (e) {
+                /* ignore storage error */
+            }
+            applyAppearance('solid');
+            const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-appearance') : null;
+            if (select) select.value = 'solid';
+            renderCalendarGrid();
+            renderClassRail();
+        }
+
+        function applyAppearance(appearance) {
+            state.appearance = appearance;
+            const isSolid = (appearance === 'solid');
+            const ws = elements.teacherSchedulerWorkspace;
+            const cal = elements.teacherSchedulerCalendar;
+
+            if (ws && ws.classList) {
+                ws.setAttribute?.('data-ts-appearance', appearance);
+                ws.classList.toggle('ts-appearance-solid', isSolid);
+                ws.classList.toggle('ts-appearance-pastel', !isSolid);
+            }
+            if (cal && cal.classList) {
+                cal.setAttribute?.('data-ts-appearance', appearance);
+                cal.classList.toggle('ts-appearance-solid', isSolid);
+                cal.classList.toggle('ts-appearance-pastel', !isSolid);
+            }
+        }
 
         function resolveTeacherDisplayName(uid, directName = '') {
             const cleanDirect = String(directName || '').trim();
@@ -224,14 +355,13 @@ window.TeacherSchedulerWorkspace = (function () {
                     }
                 });
 
-                const colors = ['#0b57d0', '#1a73e8', '#8430ce', '#188038', '#d93025', '#e37400', '#007b83', '#f29900'];
-                teacherListEl.innerHTML = teacherItems.map((t, idx) => {
-                    const color = colors[idx % colors.length];
+                teacherListEl.innerHTML = teacherItems.map((t) => {
+                    const teacherColor = resolveTeacherColor(t.uid, t.name);
                     const isChecked = state.selectedTeacherUid === 'all' || state.selectedTeacherUid === t.uid;
                     return `
-                        <label class="ts-checkbox-row" data-teacher-uid="${escapeHtml(t.uid)}" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;font-size:12px;border-radius:4px;">
-                            <input type="checkbox" class="ts-teacher-checkbox" value="${escapeHtml(t.uid)}" ${isChecked ? 'checked' : ''} style="accent-color:${color};width:15px;height:15px;cursor:pointer;">
-                            <span class="ts-color-swatch" style="width:10px;height:10px;border-radius:2px;background-color:${color};flex-shrink:0;"></span>
+                        <label class="ts-checkbox-row" data-teacher-uid="${escapeHtml(t.uid)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;font-size:12px;border-radius:4px;">
+                            <input type="checkbox" class="ts-teacher-checkbox" value="${escapeHtml(t.uid)}" ${isChecked ? 'checked' : ''} style="accent-color:${teacherColor.fill};width:15px;height:15px;cursor:pointer;">
+                            <span class="ts-color-swatch" data-ts-color="${escapeHtml(teacherColor.key)}" style="width:10px;height:10px;border-radius:2px;background-color:${teacherColor.fill};flex-shrink:0;"></span>
                             <span class="ts-checkbox-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ts-ink);">${escapeHtml(t.name)}</span>
                         </label>
                     `;
@@ -510,23 +640,24 @@ window.TeacherSchedulerWorkspace = (function () {
                 const summary = classroom.scheduleSummary || {};
                 const assigned = Number(summary.contractedAssignedCount ?? summary.contractedScheduledCount ?? 0);
                 const target = Number(summary.contractedTargetCount || 0);
-                const activeClass = state.placementClassroomId === classId ? 'is-armed' : '';
+                const remaining = target > 0 ? Math.max(0, target - assigned) : Number(summary.remainingToScheduleCount || 0);
+                const isArmed = state.placementClassroomId === classId;
+                const activeClass = isArmed ? 'is-armed' : '';
                 const themeClass = getClassPastelTheme(classId);
-                const teacherName = resolveTeacherDisplayName(classroom.primaryTeacherUid, classroom.primaryTeacherName);
-                const teacherBadge = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
-                    ? `<div class="ts-class-teacher">${escapeHtml(teacherName)}</div>`
+                const { teacherUid, teacherName } = getEffectiveTeacherForClassroom(classroom);
+                const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                const teacherBadge = teacherName
+                    ? `<span class="ts-repair-class-teacher ts-class-teacher">${escapeHtml(teacherName)}</span>`
                     : '';
-                const countText = target > 0 ? `${assigned}/${target} scheduled` : `${assigned} scheduled`;
+                const countText = target > 0 ? `${assigned}/${target} scheduled · ${remaining} remaining` : `${assigned} scheduled`;
                 return `
-                    <button type="button" class="scheduler-class-card teacher-scheduler-class-card ts-class-row ${activeClass}" data-classroom-id="${escapeHtml(classId)}" title="${escapeHtml(classroom.name || classId)}">
-                        <span class="scheduler-class-card-pip ${themeClass} ts-class-dot" aria-hidden="true"></span>
-                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
-                            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-                                <span class="name" style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(classroom.name || classId)}</span>
-                                <small style="color:var(--ts-muted);font-size:10.5px;flex-shrink:0;">${countText}</small>
-                            </div>
+                    <button type="button" class="scheduler-class-card teacher-scheduler-class-card ts-repair-class-row ts-class-row ${activeClass}" data-classroom-id="${escapeHtml(classId)}" data-ts-color="${escapeHtml(teacherColor.key)}" aria-pressed="${isArmed ? 'true' : 'false'}" title="${escapeHtml(classroom.name || classId)}">
+                        <span class="scheduler-class-card-pip ${themeClass} ts-class-dot ts-repair-color-dot" aria-hidden="true" data-ts-color="${escapeHtml(teacherColor.key)}" style="--dot-color: ${teacherColor.fill};"></span>
+                        <span class="ts-repair-class-body">
+                            <span class="ts-repair-class-title name">${escapeHtml(classroom.name || classId)}</span>
                             ${teacherBadge}
-                        </div>
+                            <span class="ts-repair-class-progress">${escapeHtml(countText)}</span>
+                        </span>
                     </button>
                 `;
             }).join('');
@@ -707,14 +838,44 @@ window.TeacherSchedulerWorkspace = (function () {
 
                     const duration = Number(session.durationMinutes || 0) || 60;
                     const geo = pillLayoutStyle(duration, layoutMap.get(sessionId));
+                    const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
+                    const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                    if (pill.setAttribute) {
+                        pill.setAttribute('data-ts-color', teacherColor.key);
+                    }
                     if (pill.style) {
                         pill.style.top = '0';
                         pill.style.height = `${geo.heightPx}px`;
                         pill.style.left = geo.left;
                         pill.style.width = geo.width;
                         pill.style.right = geo.right;
+                        pill.style.setProperty('--color', teacherColor.fill);
                     }
                     pill.classList?.toggle?.('is-saving', state.pendingSessionIds.has(sessionId));
+
+                    const isCompact = geo.heightPx < PILL_TWO_LINE_MIN_PX;
+                    pill.classList?.toggle?.('is-compact', isCompact);
+
+                    const classroom = getClassroomById(session.classId);
+                    const title = classroom?.name || session.classId || 'Class';
+                    const timeRange = formatTimeRange(timeStr, duration);
+                    const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
+
+                    const titleEl = pill.querySelector?.('.pill-title');
+                    if (titleEl) titleEl.textContent = displayTitle;
+
+                    const timeEl = pill.querySelector?.('.pill-time');
+                    if (timeEl) timeEl.textContent = timeRange;
+
+                    const metaRowEl = pill.querySelector?.('.pill-meta-row');
+                    if (metaRowEl) metaRowEl.style.display = isCompact ? 'none' : '';
+
+                    const showTeacherLine = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName);
+                    const teacherEl = pill.querySelector?.('.pill-teacher');
+                    if (teacherEl) {
+                        teacherEl.style.display = (!isCompact && showTeacherLine) ? 'block' : 'none';
+                        teacherEl.textContent = teacherName;
+                    }
                 }
             }
             return true;
@@ -784,9 +945,11 @@ window.TeacherSchedulerWorkspace = (function () {
                         const isCompact = heightPx < PILL_TWO_LINE_MIN_PX;
                         const compactClass = isCompact ? 'is-compact' : '';
                         const locked = isLockedSession(session);
-                        const teacherName = resolveTeacherDisplayName(session.teacherUid, session.teacherName || classroom?.primaryTeacherName);
-                        const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
-                            ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
+                        const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
+                        const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                        const showTeacherLine = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName);
+                        const teacherPill = showTeacherLine
+                            ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(teacherName)}</span>`
                             : '';
                         const layout = sessionLayoutMap.get(sessionId) || (totalSessions > 1 ? { col: idx, totalCols: totalSessions } : { col: 0, totalCols: 1 });
                         const col = layout.col;
@@ -800,12 +963,13 @@ window.TeacherSchedulerWorkspace = (function () {
                         } else {
                             layoutStyle += 'left:2px;right:2px;';
                         }
+                        layoutStyle += ` --color: ${teacherColor.fill};`;
                         const themeClass = isCompleted ? '' : getClassPastelTheme(session.classId);
                         const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${themeClass} ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" style="${layoutStyle}">`
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${themeClass} ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
                             + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? compactBadge : ''}</div>`
-                            + (isCompact ? '' : teacherPill)
                             + (isCompact ? '' : `<div class="pill-meta-row"><span class="pill-time">${escapeHtml(timeRange)}</span>${completedBadge}</div>`)
+                            + (isCompact ? '' : teacherPill)
                             + (locked ? '' : '<div class="scheduler-session-resize-handle is-top" data-resize="top" title="Drag to adjust start time"></div><div class="scheduler-session-resize-handle is-bottom" data-resize="bottom" title="Drag to adjust duration"></div>')
                             + '</button>';
                     }).join('');
@@ -1256,6 +1420,25 @@ window.TeacherSchedulerWorkspace = (function () {
             elements.teacherSchedulerSessionBubble.style.visibility = 'hidden';
             elements.teacherSchedulerSessionBubble.style.display = 'block';
             elements.teacherSchedulerSessionBubble.setAttribute('aria-hidden', 'false');
+
+            const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
+            const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+            if (elements.teacherSchedulerSessionBubble.setAttribute) {
+                elements.teacherSchedulerSessionBubble.setAttribute('data-ts-color', teacherColor.key);
+            }
+            if (elements.teacherSchedulerSessionBubble.style) {
+                elements.teacherSchedulerSessionBubble.style.setProperty('--popover-color', teacherColor.fill);
+            }
+            const bubbleDot = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-bubble-color-dot') : null;
+            if (bubbleDot) {
+                bubbleDot.style.backgroundColor = teacherColor.fill;
+                bubbleDot.setAttribute('data-ts-color', teacherColor.key);
+            }
+            const popoverDot = (typeof document !== 'undefined') ? document.getElementById('ts-popover-color-dot') : null;
+            if (popoverDot) {
+                popoverDot.style.backgroundColor = teacherColor.fill;
+                popoverDot.setAttribute('data-ts-color', teacherColor.key);
+            }
 
             if (elements.teacherSchedulerSessionBubbleTitle) {
                 elements.teacherSchedulerSessionBubbleTitle.textContent = classroom?.name || session.classId || 'Class';
@@ -1717,13 +1900,17 @@ window.TeacherSchedulerWorkspace = (function () {
                     rd.pillEl.style.height = `${heightPx}px`;
                 }
 
+                const isCompactNow = heightPx < PILL_TWO_LINE_MIN_PX;
+                if (rd.pillEl) {
+                    rd.pillEl.classList?.toggle?.('is-compact', isCompactNow);
+                }
                 const newTimeRange = formatTimeRange(newStartTime, newDuration);
                 if (rd.timeEl) {
                     rd.timeEl.textContent = newTimeRange;
                 }
-                if (rd.titleEl && rd.isCompact) {
+                if (rd.titleEl) {
                     const baseTitle = rd.originalTitleText.split(' · ')[0] || rd.originalTitleText;
-                    rd.titleEl.textContent = `${baseTitle} · ${newTimeRange}`;
+                    rd.titleEl.textContent = isCompactNow ? `${baseTitle} · ${newTimeRange}` : baseTitle;
                 }
             } else {
                 // Dragging lower edge (bottom):
@@ -1740,13 +1927,17 @@ window.TeacherSchedulerWorkspace = (function () {
                     rd.pillEl.style.height = `${heightPx}px`;
                 }
 
+                const isCompactNow = heightPx < PILL_TWO_LINE_MIN_PX;
+                if (rd.pillEl) {
+                    rd.pillEl.classList?.toggle?.('is-compact', isCompactNow);
+                }
                 const newTimeRange = formatTimeRange(rd.originalStartTime, newDuration);
                 if (rd.timeEl) {
                     rd.timeEl.textContent = newTimeRange;
                 }
-                if (rd.titleEl && rd.isCompact) {
+                if (rd.titleEl) {
                     const baseTitle = rd.originalTitleText.split(' · ')[0] || rd.originalTitleText;
-                    rd.titleEl.textContent = `${baseTitle} · ${newTimeRange}`;
+                    rd.titleEl.textContent = isCompactNow ? `${baseTitle} · ${newTimeRange}` : baseTitle;
                 }
             }
         }
@@ -2225,6 +2416,12 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.teacherSchedulerTeacherSelect) {
                 elements.teacherSchedulerTeacherSelect.addEventListener('change', () => {
                     state.selectedTeacherUid = elements.teacherSchedulerTeacherSelect.value || 'all';
+                    const listEl = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-teacher-list') : null;
+                    if (listEl) {
+                        listEl.querySelectorAll('.ts-teacher-checkbox').forEach((cb) => {
+                            cb.checked = (state.selectedTeacherUid === 'all' || cb.value === state.selectedTeacherUid);
+                        });
+                    }
                     refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
                 });
             }
@@ -2439,14 +2636,19 @@ window.TeacherSchedulerWorkspace = (function () {
                     const densityVal = Number(density) || 50;
                     document.documentElement.style.setProperty('--ts-hour', `${densityVal}px`);
                     state.hourHeightPx = densityVal;
-                    renderCalendarGrid();
                 }
-                const calendarEl = elements.teacherSchedulerCalendar;
-                if (calendarEl && appearance === 'solid') {
-                    calendarEl.classList.add('ts-appearance-solid');
-                } else if (calendarEl) {
-                    calendarEl.classList.remove('ts-appearance-solid');
+                if (appearance) {
+                    applyAppearance(appearance);
+                    try {
+                        if (typeof localStorage !== 'undefined') {
+                            localStorage.setItem(APPEARANCE_STORAGE_KEY, appearance);
+                        }
+                    } catch (e) {
+                        /* ignore storage error */
+                    }
                 }
+                renderCalendarGrid();
+                renderClassRail();
                 closeSettings();
             });
 
@@ -2787,6 +2989,13 @@ window.TeacherSchedulerWorkspace = (function () {
                 const classroom = session ? getClassroomById(session.classId) : null;
                 const title = classroom?.name || session?.classId || 'Class';
                 const timeRange = session ? formatTimeRange(getSessionLocalTime(session), drag.durationMinutes) : '';
+
+                const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
+                const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                ghost.dataset.tsColor = teacherColor.key;
+                ghost.style.backgroundColor = teacherColor.fill;
+                ghost.style.color = '#ffffff';
+                ghost.style.opacity = '1';
 
                 ghost.innerHTML = `<div style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
                     + `<div class="drag-ghost-chip">${escapeHtml(timeRange)}</div>`;
@@ -3286,6 +3495,7 @@ window.TeacherSchedulerWorkspace = (function () {
             if (state.loaded) return;
             state.loaded = true;
             setToolbarDefaults();
+            initAppearanceSettings();
             initPatternDayChips();
             bindEvents();
             await loadTeachersList();
@@ -3340,6 +3550,13 @@ window.TeacherSchedulerWorkspace = (function () {
             cancelResizeDrag,
             getSlotHeightPx,
             renderCalendarGrid,
+            repaintDayColumns,
+            resolveTeacherColor,
+            applyAppearance,
+            initAppearanceSettings,
+            resetAppearanceSettings,
+            getEffectiveTeacherForSession,
+            getEffectiveTeacherForClassroom,
             getState: () => state
         };
     }

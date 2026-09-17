@@ -45,6 +45,7 @@ async function setupFirebaseMocks(context) {
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: mockUser });
         export const sendPasswordResetEmail = () => Promise.resolve();
         export const sendEmailVerification = () => Promise.resolve();
+        export const signInWithCustomToken = () => Promise.resolve({ user: mockUser });
       `
     });
   });
@@ -59,6 +60,7 @@ async function setupFirebaseMocks(context) {
         export const doc = (db, path, ...segments) => ({ path: [path, ...segments].filter(Boolean).join('/') });
         export const getDoc = async () => ({ exists: () => false, data: () => ({}) });
         export const getDocs = async () => ({ empty: true, docs: [], forEach: () => {} });
+        export const onSnapshot = (queryRef, onNext) => { onNext?.({ empty: true, docs: [] }); return () => {}; };
         export const setDoc = async () => {};
         export const updateDoc = async () => {};
         export const deleteDoc = async () => {};

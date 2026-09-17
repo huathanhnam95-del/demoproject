@@ -193,15 +193,33 @@ window.ClassroomAPI = (function () {
         }
 
         const headers = await getHeaders();
-        // Since we don't have a dedicated student submission endpoint yet, 
-        // and we want to keep it simple, we'll write directly to a top-level collection 
-        // but we'll use a server endpoint if possible for security.
-        // For Phase 3, let's add a submission endpoint to a new route if needed, 
-        // OR reuse admin.js if we allow students (unlikely safe).
-        // Let's assume we have a /api/classrooms/:id/submit route.
-        // FOR NOW: We'll use Firestore directly for the submission write if rules allow, 
-        // otherwise I need to add a student route.
 
+        // 1. Preferred secure server-authoritative submission endpoint
+        try {
+            const res = await fetch(`/api/student/classrooms/${encodeURIComponent(classId)}/classwork/${encodeURIComponent(workId)}/submissions`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ audio: audioData })
+            });
+            if (res.ok) {
+                const json = await res.json();
+                if (json.success) {
+                    return { success: true, submissionId: json.submissionId };
+                }
+            } else {
+                const json = await res.json().catch(() => ({}));
+                if (res.status >= 400 && res.status < 500) {
+                    throw new Error(json.message || `Submission error (HTTP ${res.status})`);
+                }
+            }
+        } catch (serverErr) {
+            if (serverErr.message && !serverErr.message.includes('Failed to fetch') && !serverErr.message.includes('NetworkError')) {
+                throw serverErr;
+            }
+            console.warn('[ClassroomApi] Backend submission endpoint unreachable, falling back to direct Firestore:', serverErr.message);
+        }
+
+        // 2. Direct Firestore fallback (complies with hardened firestore.rules constraints)
         const db = getDb();
         const submissionRef = db.collection('crmSubmissions').doc();
         await submissionRef.set({

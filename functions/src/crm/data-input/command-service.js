@@ -123,7 +123,7 @@ async function prepareCommands({ db, transaction, draft, identity, nowMs, testTo
         if (!result.studentId) continue;
         const student = await workspace.execute(stagedDb => stagedDb.runTransaction(tx => tx.get(stagedDb.collection(C.CRM_STUDENTS).doc(result.studentId))));
         const crmId = normalizeCrmId(student.data()?.crmId);
-        if (student.exists && isValidCrmId(crmId)) result.studentLink = `/crm-admin.html#students/${crmId}`;
+        if (student.exists && isValidCrmId(crmId)) result.studentLink = `/crm-admin#students/${crmId}`;
     }
     return { results, plan: await workspace.prepare(), flush: () => workspace.flush() };
 }

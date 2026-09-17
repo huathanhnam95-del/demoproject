@@ -530,7 +530,7 @@ test('raw Git export handles directory, PAX/Unicode, binary, empty, executable e
   runGit(fixture.root, ['commit', '--quiet', '-m', 'archive extraction inputs']);
   const archiveSha = runGit(fixture.root, ['rev-parse', 'HEAD']);
   runGit(fixture.root, ['config', 'core.autocrlf', 'true']);
-  fs.rmSync(path.join(fixture.root, unicodeRelative));
+  fs.unlinkSync(path.join(fixture.root, unicodeRelative));
   runGit(fixture.root, ['checkout', '--quiet', '--', unicodeRelative]);
   const worktreeUnicodeBytes = fs.readFileSync(path.join(fixture.root, unicodeRelative));
   assert.equal(worktreeUnicodeBytes.equals(Buffer.from('PAX Unicode archive bytes\n')), false, 'autocrlf fixture must differ from canonical blob bytes in the worktree');

@@ -50,7 +50,7 @@ function ok(label, pass, detail) {
         window.localStorage.setItem('hasSeenScopeTutorial', 'true');
         window.localStorage.setItem('read-aloudModeFirstUse', 'true');
       });
-      await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${baseUrl}/index.html?raWorkspace=legacy`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
       const guestButton = page.locator('#guest-mode-btn');
       if (await guestButton.isVisible().catch(() => false)) await guestButton.click();

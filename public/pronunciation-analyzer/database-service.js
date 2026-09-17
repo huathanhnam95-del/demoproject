@@ -49,11 +49,12 @@ export class DatabaseService {
             if (docSnap.exists()) {
                 console.log('📚 Database hit:', normalizedWord);
 
-                // Update search count (fire and forget) - only if authenticated to avoid permission errors
+                // Update search count (fire and forget) - only if admin to comply with SEC-06 write boundaries
                 const auth = window.auth || (window.firebaseAuth && window.firebaseAuth.currentUser);
                 const currentUser = auth ? (auth.uid ? auth : auth.currentUser) : null; // Handle both auth object or user object
+                const isAdmin = currentUser && (currentUser.isAdmin === true || currentUser.role === 'admin' || currentUser.crmRole === 'admin');
 
-                if (currentUser) {
+                if (isAdmin) {
                     updateDoc(docRef, {
                         searchCount: increment(1),
                         lastAccessedAt: serverTimestamp()
@@ -82,11 +83,12 @@ export class DatabaseService {
 
         const normalizedWord = wordData.word.toLowerCase().trim();
 
-        // Prevent guest users or unauthenticated users from saving word references to database
+        // SEC-06: Shared word references can only be written by administrators
         const auth = window.auth || (window.firebaseAuth && window.firebaseAuth.currentUser);
         const currentUser = auth ? (auth.uid ? auth : auth.currentUser) : null;
-        if (!currentUser) {
-            console.log('📚 User not authenticated. Skipping database save for:', normalizedWord);
+        const isAdmin = currentUser && (currentUser.isAdmin === true || currentUser.role === 'admin' || currentUser.crmRole === 'admin');
+        if (!isAdmin) {
+            console.log('📚 Non-admin user. Skipping canonical reference write for:', normalizedWord);
             return false;
         }
 

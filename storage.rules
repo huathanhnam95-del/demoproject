@@ -13,6 +13,39 @@ service firebase.storage {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    function isCrmAdmin() {
+      return request.auth != null
+        && (
+          request.auth.token.isAdmin == true
+          || (
+            firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+            && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true
+          )
+        );
+    }
+
+    function isCrmStaff() {
+      return request.auth != null && (
+        request.auth.token.isAdmin == true
+        || request.auth.token.isTeacher == true
+        || isCrmAdmin()
+        || (
+          firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+          && (
+            firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isTeacher == true
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.crmRole in ['admin', 'teacher']
+          )
+        )
+      );
+    }
+
+    function isStudentLinkedTo(studentId) {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/crmStudents/$(studentId))
+        && (request.auth.uid in firestore.get(/databases/(default)/documents/crmStudents/$(studentId)).data.linked_user_ids);
+    }
+
     function isReasonableAudioUpload(maxBytes) {
       return request.resource != null
         && request.resource.size > 0
@@ -65,12 +98,16 @@ service firebase.storage {
     }
 
     match /uploads/{classId}/{workId}/{uid}/{allPaths=**} {
-      // Students can read/write their own submissions if they are verified students
-      allow read, write: if request.auth != null 
-                         && request.auth.uid == uid 
-                         && request.auth.token.isStudent == true;
-      // Admins can read everything
-      allow read: if isAdmin();
+      // Students can read their own submissions; admins/teachers can read student submissions
+      allow read: if isAdmin() || isCrmStaff() || (
+        request.auth != null && request.auth.uid == uid
+      );
+      // Students can only upload if enrolled in the classroom, within size and media restrictions
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && firestore.exists(/databases/(default)/documents/crmClassrooms/$(classId)/members/$(request.auth.uid))
+        && isAllowedAttemptMediaUpload(50 * 1024 * 1024);
+      allow delete: if isAdmin() || isCrmStaff();
     }
 
     // Speaking attempt uploads (not gated by student status; retention is enforced server-side).
@@ -96,13 +133,6 @@ service firebase.storage {
         && speakingAttemptData(attemptId).mediaSlots[slotFile].status == 'awaiting_upload'
         && speakingAttemptData(attemptId).mediaSlots[slotFile].storagePath == ('practice-attempts/' + uid + '/' + attemptId + '/' + slotFile);
       allow read: if false;
-    }
-
-    // CRM book PDF uploads (admin-only, existence-gated).
-    function isCrmAdmin() {
-      return request.auth != null
-        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
-        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
     function bookDocPath(bookId) {
@@ -167,13 +197,19 @@ service firebase.storage {
       allow read, write: if false;
     }
 
-    // CRM Teaching Session audio recordings (admin/teacher upload up to 250MB)
+    // CRM Teaching Session audio recordings (admin/teacher upload up to 250MB, authorized student read)
     match /teachingSessions/{studentId}/{fileName} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn()
+      allow read: if isCrmStaff() || isStudentLinkedTo(studentId);
+      allow create: if isCrmStaff()
         && request.resource.size > 0
-        && request.resource.size <= 250 * 1024 * 1024;
-      allow delete: if isSignedIn() && (isAdmin() || isCrmAdmin());
+        && request.resource.size <= 250 * 1024 * 1024
+        && request.resource.contentType != null
+        && (
+          request.resource.contentType.matches('audio/.*')
+          || request.resource.contentType.matches('video/.*')
+        );
+      allow update: if false;
+      allow delete: if isAdmin() || isCrmAdmin();
     }
   }
 }

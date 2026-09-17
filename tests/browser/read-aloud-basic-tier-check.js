@@ -28,7 +28,7 @@ async function enterReadAloud(page, baseUrl) {
     // learner lands on.
     window.localStorage.removeItem('bel:speaking-controller:view:v1');
   });
-  await page.goto(`${baseUrl}/index.html`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${baseUrl}/index.html?raWorkspace=legacy`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => typeof window.switchToMode === 'function', { timeout: 30000 });
   const guest = page.locator('#guest-mode-btn');
   if (await guest.isVisible().catch(() => false)) await guest.click();

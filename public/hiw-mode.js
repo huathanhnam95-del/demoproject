@@ -807,36 +807,45 @@
 
     // Render structured explanation
     const mismatchedTokens = state.tokens.filter(t => t.isMismatched);
-    if (elements.explanationToggle && mismatchedTokens.length > 0) {
+    const hasExplanation = Boolean(state.currentQuestion && state.currentQuestion.explanation);
+    if (elements.explanationToggle && (mismatchedTokens.length > 0 || hasExplanation)) {
       elements.explanationToggle.style.display = 'block';
       if (elements.explanationContent) {
         elements.explanationContent.replaceChildren();
-        const table = document.createElement('table');
-        table.className = 'hiw-comparison-table';
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        ['Transcript', 'Spoken'].forEach(text => {
-          const th = document.createElement('th');
-          th.textContent = text;
-          headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-        const tbody = document.createElement('tbody');
-        mismatchedTokens.forEach(t => {
-          const tr = document.createElement('tr');
-          const tdTranscript = document.createElement('td');
-          tdTranscript.className = 'hiw-cmp-transcript';
-          tdTranscript.textContent = t.text;
-          const tdSpoken = document.createElement('td');
-          tdSpoken.className = 'hiw-cmp-spoken';
-          tdSpoken.textContent = t.correctWord;
-          tr.appendChild(tdTranscript);
-          tr.appendChild(tdSpoken);
-          tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        elements.explanationContent.appendChild(table);
+        if (mismatchedTokens.length > 0) {
+          const table = document.createElement('table');
+          table.className = 'hiw-comparison-table';
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+          ['Transcript', 'Spoken'].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+          const tbody = document.createElement('tbody');
+          mismatchedTokens.forEach(t => {
+            const tr = document.createElement('tr');
+            const tdTranscript = document.createElement('td');
+            tdTranscript.className = 'hiw-cmp-transcript';
+            tdTranscript.textContent = t.text;
+            const tdSpoken = document.createElement('td');
+            tdSpoken.className = 'hiw-cmp-spoken';
+            tdSpoken.textContent = t.correctWord;
+            tr.appendChild(tdTranscript);
+            tr.appendChild(tdSpoken);
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          elements.explanationContent.appendChild(table);
+        }
+        if (hasExplanation) {
+          const explanationCard = document.createElement('div');
+          explanationCard.className = 'hiw-explanation-text-card';
+          safeRenderHtml(state.currentQuestion.explanation, explanationCard);
+          elements.explanationContent.appendChild(explanationCard);
+        }
       }
     }
   }

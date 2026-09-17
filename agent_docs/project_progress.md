@@ -1,5 +1,12 @@
 # Project Progress
 
+## Completed package: DEV-SERVER-RESILIENCE-01 Loopback emulator auto-detection and runner (Task 1061)
+
+- Goal: eliminate startup deadlock where `server.js` refused to boot when port 8443 stopped while Firebase emulators remained active.
+- Scope: `server.js` startup guards, `scripts/start-dev-server.cjs`, `package.json` `dev:server` script, `check-server.bat`, and `scripts/structure/policy.json`.
+- Changes: added dual-stack loopback socket probe (`probeLocalFirebaseEmulatorsSync`) detecting active emulators on IPv4/IPv6 loopback; auto-binds emulator environment variables in non-production environments; added `npm run dev:server` cross-platform runner; updated batch launcher; added dedicated test coverage.
+- Verified evidence: 12/12 server tests passed, 45/45 structure policy tests passed, ESLint clean, live HTTPS `https://localhost:8443/api/health` returned HTTP 200 with Firestore connected.
+
 ## Active package: BOOKTXT-FIX-01 CRM Books text accuracy recovery
 
 - Goal: replace corrupt embedded-PDF text ingestion with an immutable, image-OCR-backed text-revision pipeline and verify every physical/rendered page before activation.
@@ -50,12 +57,11 @@
 - Goal: diagnose, fix, and verify the Pronounce-mode reference contour, HTTP 503, notification composite-index failure, and related Firestore Listen-channel errors shown on production.
 - Scope: `public/pronunciation-analyzer/**`, the smallest relevant backend/service surface, `public/js/notification-center.js`, `firestore.indexes.json`, and focused logic/browser/index tests. Preserve all unrelated dirty work.
 - Constraints: Heavy route; root-cause evidence before fixes; failing regression tests before production code; no push, deployment, production data mutation, or traffic change without separate explicit authorization.
-- Acceptance status: lexical variant and measured-reference identity are aligned; the reference remains Merriam-Webster `photograph` noun variant `8050cda57bb448e7`. The collapsed duration canvas and offline SPA fallback are fixed locally. The notification query's exact index is declared and regression-tested, but is still absent from deployed Firestore. Chrome shows both local charts at `800x350` with zero console errors and 200 local WebChannel responses. Focused/broader checks and production source/API boot pass.
-- Phases: HPRON-01A/B/C diagnosis and reproduction complete; HPRON-01D test-first implementation complete; HPRON-01E Terra actual-diff review and repairs complete; HPRON-01F local Chrome and command verification complete. Production deployment/verification remains pending explicit authorization.
+- Acceptance status: lexical variant and measured-reference identity are aligned; the reference remains Merriam-Webster `photograph` noun variant `8050cda57bb448e7`. The collapsed duration canvas and offline SPA fallback are fixed locally. The notification query's exact index (`uid` ASC + `createdAt` DESC) is declared, regression-tested, and verified live on production Firestore (`listening-tasks-3ae34`). Chrome shows both local charts at `800x350` with zero console errors and 200 local WebChannel responses. Focused/broader checks and production source/API boot pass.
+- Phases: HPRON-01A/B/C diagnosis and reproduction complete; HPRON-01D test-first implementation complete; HPRON-01E Terra actual-diff review and repairs complete; HPRON-01F local Chrome and command verification complete; HPRON-01 Firestore composite index deployment & notification recovery complete and empirically verified in production.
 - Roles: root lead; Luna researcher for pronunciation; Luna researcher for notification/index; Luna browser debugger; Luna coder after root-cause confirmation; Terra reviewer after implementation.
-- Verified evidence: `npm run test:pronounce:logic`, Chrome pronunciation browser harness, service-worker config test, notification contract, exact Firestore-index contract, production source/API/CORS/schema boot, and scoped `git diff --check` all pass. Local 8081 health and 8082 readiness pass. Artifact: `test-results/hpron01f-ui/hpron01f-local-after-search.png`.
-- Remaining gate: deployed indexes list only `uid + isRead + createdAt`; deploy the existing `uid + createdAt DESC` index and Hosting changes, then repeat production Chrome console/network verification. No push or deployment has occurred.
-- Next action: obtain explicit production deployment authorization or leave the verified local patch for user-controlled release.
+- Verified evidence: `npm run test:pronounce:logic`, Chrome pronunciation browser harness, service-worker config test, notification contract, exact Firestore-index contract (`node tests/phase3-firestore-indexes.test.js`, `node tests/notification-center-contract.test.js`), production source/API/CORS/schema boot, live production index inspection via CLI (`npx firebase firestore:indexes --project listening-tasks-3ae34`), and live authenticated Chrome browser verification (`uid == user.uid`, `orderBy createdAt DESC`, `limit 30` returning HTTP 200 with zero listener errors and zero fallback warnings) all pass.
+- Completed gate: production Firestore composite index `user_notifications` (`uid` ASC + `createdAt` DESC + `__name__` DESC) is active and serving; authenticated listener resolves successfully with zero fallback warnings.
 
 ## Completed package: PRON-V3-LOCAL-ERROR-01
 

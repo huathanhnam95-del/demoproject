@@ -23,30 +23,170 @@
 
   // ==================== INIT ====================
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function onReady() {
     init().catch((e) => {
       console.error('[EntranceTestResult] init error:', e);
       hideGate();
       renderError(e?.message || 'Failed to load entrance test result.');
     });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+  } else {
+    onReady();
+  }
 
   async function init() {
-    showGate('Checking admin access…', 'Please wait');
+    let warmCached = null;
+    try {
+      let raw = null;
+      try {
+        raw = localStorage.getItem('crm_auth_session');
+      } catch (e1) {
+        /* ignore */
+      }
+      if (!raw) {
+        try {
+          raw = sessionStorage.getItem('crm_auth_session');
+        } catch (e2) {
+          /* ignore */
+        }
+      }
+      if (raw) {
+        const s = JSON.parse(raw);
+        const maxAge = 30 * 60 * 1000;
+        if (s && s.uid && (s.adminOk || s.accessMode === 'admin') && (Date.now() - s.timestamp < maxAge)) {
+          warmCached = s;
+        }
+      }
+    } catch (e) {
+      /* ignore storage read error */
+    }
+
+    if (warmCached) {
+      if (elements.userEmail && warmCached.email) elements.userEmail.textContent = warmCached.email;
+      hideGate();
+    } else {
+      showGate('Checking admin access…', 'Please wait');
+    }
+
     await initFirebaseFromServer();
 
-    const user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
+    let user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
+    if (!user && authSessionGuard && typeof authSessionGuard.bootstrapCompatLocalAdmin === 'function') {
+      if (!warmCached) {
+        showGate('Signing into local CRM…', 'Restoring emulator admin session…');
+      }
+      try {
+        user = await authSessionGuard.bootstrapCompatLocalAdmin(firebase);
+      } catch (bootstrapErr) {
+        console.warn('[EntranceTestResult] Local admin bootstrap note:', bootstrapErr?.message || bootstrapErr);
+      }
+    }
+
+    const cleanPath = (window.location.pathname || '').replace(/\.html$/i, '') || '/';
+    const returnTo = encodeURIComponent(cleanPath + window.location.search + window.location.hash);
+
     if (!user) {
-      showGate('Please log in as admin first.', 'Redirecting to the app…');
-      setTimeout(() => window.location.replace('index.html'), 1800);
+      try {
+        localStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore */
+      }
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore storage removal error */
+      }
+      try {
+        document.documentElement.classList.remove('crm-session-cached');
+      } catch (e) {
+        /* ignore */
+      }
+      showGate('Please log in as admin first.', 'Taking you to sign in…');
+      setTimeout(() => window.location.replace(`/?next=${returnTo}`), 1800);
       return;
     }
 
-    const adminOk = await isAdminUser(user);
+    if (warmCached && warmCached.uid && warmCached.uid !== user.uid) {
+      try {
+        localStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore */
+      }
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore storage removal error */
+      }
+      try {
+        document.documentElement.classList.remove('crm-session-cached');
+      } catch (e) {
+        /* ignore */
+      }
+      showGate('Checking admin access…', 'Please wait');
+    }
+
+    // Fast-path claims inspection
+    let adminOk = false;
+    try {
+      if (typeof user.getIdTokenResult === 'function') {
+        const tokenResult = await user.getIdTokenResult();
+        adminOk = tokenResult?.claims?.isAdmin === true || tokenResult?.claims?.admin === true;
+      }
+    } catch (e) {
+      /* ignore claim inspection error */
+    }
+
     if (!adminOk) {
+      adminOk = await isAdminUser(user);
+    }
+
+    if (!adminOk) {
+      try {
+        localStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore */
+      }
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore storage removal error */
+      }
+      try {
+        document.documentElement.classList.remove('crm-session-cached');
+      } catch (e) {
+        /* ignore */
+      }
       showGate('Access denied.', 'Admin privileges required.');
-      setTimeout(() => window.location.replace('index.html'), 2200);
+      setTimeout(() => window.location.replace('/'), 2200);
       return;
+    }
+
+    try {
+      const sessionData = JSON.stringify({
+        uid: user.uid,
+        email: user.email || '',
+        accessMode: 'admin',
+        adminOk: true,
+        teacherOk: false,
+        capabilities: { classroomMatches: true, readAloudReporting: false, pronunciationSamples: true },
+        projectsAuthorized: false,
+        timestamp: Date.now()
+      });
+      try {
+        localStorage.setItem('crm_auth_session', sessionData);
+      } catch (e) {
+        /* ignore */
+      }
+      try {
+        sessionStorage.setItem('crm_auth_session', sessionData);
+      } catch (e) {
+        /* ignore storage write error */
+      }
+    } catch (e) {
+      /* ignore storage write error */
     }
 
     if (elements.userEmail) elements.userEmail.textContent = user.email || '';
@@ -79,6 +219,11 @@
   // ==================== AUTH & GATE ====================
 
   function showGate(text, subtext) {
+    try {
+      document.documentElement.classList.remove('crm-session-cached');
+    } catch (e) {
+      /* ignore DOM class removal error */
+    }
     if (elements.gateText) elements.gateText.textContent = text || '';
     if (elements.gateSubtext) elements.gateSubtext.textContent = subtext || '';
     if (elements.gate) elements.gate.style.display = 'flex';
@@ -89,8 +234,34 @@
   }
 
   async function initFirebaseFromServer() {
+    if (Array.isArray(firebase.apps) && firebase.apps.length > 0) {
+      if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+        await authSessionGuard.ensureCompatLocalPersistence(firebase);
+      }
+      return;
+    }
+
+    const staticConfig = window.__FIREBASE_CONFIG__ || {
+      apiKey: 'AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ',
+      authDomain: 'listening-tasks-3ae34.firebaseapp.com',
+      projectId: 'listening-tasks-3ae34',
+      storageBucket: 'listening-tasks-3ae34.firebasestorage.app',
+      messagingSenderId: '737872673808',
+      appId: '1:737872673808:web:4db57599aa22b4830fde95',
+      measurementId: 'G-1891MSSLXT'
+    };
+
     if (authSessionGuard && typeof authSessionGuard.ensureCompatFirebaseFromConfig === 'function') {
-      await authSessionGuard.ensureCompatFirebaseFromConfig(firebase);
+      await authSessionGuard.ensureCompatFirebaseFromConfig(firebase, { staticConfig });
+      return;
+    }
+
+    const isLocal = authSessionGuard?.isLocalAuthHost?.() ?? false;
+    if (!isLocal && staticConfig && staticConfig.apiKey) {
+      firebase.initializeApp(staticConfig);
+      if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
+        await authSessionGuard.ensureCompatLocalPersistence(firebase);
+      }
       return;
     }
 
@@ -98,11 +269,13 @@
     const result = await res.json().catch(() => null);
 
     if (!res.ok || !result?.success || !result?.config?.apiKey) {
-      const msg = result?.message || 'Could not fetch /api/config. Ensure the server is running.';
-      throw new Error(msg);
-    }
-
-    if (!firebase.apps.length) {
+      if (staticConfig && staticConfig.apiKey) {
+        firebase.initializeApp(staticConfig);
+      } else {
+        const msg = result?.message || 'Could not fetch /api/config. Ensure the server is running.';
+        throw new Error(msg);
+      }
+    } else if (!firebase.apps.length) {
       firebase.initializeApp(result.config);
     }
     if (authSessionGuard && typeof authSessionGuard.ensureCompatLocalPersistence === 'function') {
@@ -121,6 +294,16 @@
   }
 
   async function isAdminUser(user) {
+    try {
+      if (typeof user?.getIdTokenResult === 'function') {
+        const tokenResult = await user.getIdTokenResult();
+        if (tokenResult?.claims?.isAdmin === true || tokenResult?.claims?.admin === true) {
+          return true;
+        }
+      }
+    } catch (e) {
+      /* ignore claim inspection error */
+    }
     try {
       const idToken = await user.getIdToken();
       const res = await fetch('/api/admin/status', {

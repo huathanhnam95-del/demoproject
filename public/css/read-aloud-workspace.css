@@ -4,7 +4,7 @@
    ========================================================================== */
 
 #mode-read-aloud[data-ra-workspace="v2"] {
-  --ra-reading-width: 46rem;
+  --ra-reading-width: 100%;
   --ra-control-height: 2.75rem;
   --ra-radius: 0.75rem;
   --ra-motion-fast: 140ms;
@@ -15,28 +15,52 @@
   --ra-bg-surface: var(--surface, #ffffff);
 }
 
-/* ── Focused Single-Column Layout ── */
+/* ── Focused Full-Width Layout ── */
 #mode-read-aloud[data-ra-workspace="v2"] .ra-workbench {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
-  max-width: var(--ra-reading-width);
-  margin-inline: auto;
-  padding: 0 1rem 2rem;
+  max-width: none;
+  margin-inline: 0;
+  padding: 0 0 2rem;
   box-sizing: border-box;
 }
 
 #mode-read-aloud[data-ra-workspace="v2"] .ra-split {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
   width: 100%;
 }
 
-#mode-read-aloud[data-ra-workspace="v2"] .ra-stage {
+#mode-read-aloud[data-ra-workspace="v2"] .ra-split:not(:has(.ra-rail:not([hidden]):not([style*="display: none"]):not([style*="display:none"]))) .ra-stage {
   width: 100%;
+  flex: 1 1 100%;
+}
+
+#mode-read-aloud[data-ra-workspace="v2"] .ra-split:has(.ra-rail:not([hidden]):not([style*="display: none"]):not([style*="display:none"])) .ra-stage {
+  flex: 1.35 1 520px;
   min-width: 0;
-  margin: 0 auto;
+}
+
+@supports not (selector(:has(*))) {
+  #mode-read-aloud[data-ra-workspace="v2"] .ra-split .ra-stage {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+#mode-read-aloud[data-ra-workspace="v2"] .ra-stage {
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+}
+
+@media (max-width: 940px) {
+  #mode-read-aloud[data-ra-workspace="v2"] .ra-split {
+    flex-direction: column;
+  }
 }
 
 /* ── Contextual Header / Task Identity ── */
@@ -45,8 +69,10 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--ra-border);
 }
 
@@ -74,7 +100,7 @@
 #mode-read-aloud[data-ra-workspace="v2"] #ra-workspace-steps-host {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 /* ── Stage Instruction ── */
@@ -82,7 +108,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-secondary, #475569);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   text-align: left;
   width: 100%;
 }
@@ -90,6 +116,7 @@
 /* ── Prominent Reading Passage ── */
 #mode-read-aloud[data-ra-workspace="v2"] .ra-prompt-stage {
   width: 100%;
+  max-width: none;
   padding: 1.75rem;
   background: var(--ra-bg-surface);
   border: 1px solid var(--ra-border);
@@ -100,6 +127,7 @@
 }
 
 #mode-read-aloud[data-ra-workspace="v2"] #ra-text-prompt {
+  max-width: none;
   font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.45rem);
   line-height: 1.8;
   color: var(--text-primary, #1e293b);
@@ -151,7 +179,13 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+#mode-read-aloud[data-ra-workspace="v2"] #ra-workspace-tip-text {
+  min-width: 0;
+  word-break: break-word;
 }
 
 #mode-read-aloud[data-ra-workspace="v2"] .ra-tips-actions {
@@ -176,7 +210,7 @@
 }
 
 /* ── Action Area & Emphasis ── */
-#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="primary"] {
+#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="primary"]:not(#ra-record-btn):not(#ra-stop-btn):not(#ra-check-btn):not(#ra-retry-btn) {
   min-height: var(--ra-control-height);
   min-width: 8rem;
   padding: 0.5rem 1.5rem;
@@ -191,12 +225,12 @@
   transition: background-color var(--ra-motion-fast) ease, transform var(--ra-motion-fast) ease;
 }
 
-#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="primary"]:hover:not(:disabled) {
+#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="primary"]:not(#ra-record-btn):not(#ra-stop-btn):not(#ra-check-btn):not(#ra-retry-btn):hover:not(:disabled) {
   background-color: var(--ra-accent-hover) !important;
   transform: translateY(-1px);
 }
 
-#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="secondary"] {
+#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="secondary"]:not(#ra-record-btn):not(#ra-stop-btn):not(#ra-check-btn):not(#ra-retry-btn) {
   min-height: var(--ra-control-height);
   min-width: 7rem;
   padding: 0.5rem 1.25rem;
@@ -211,7 +245,7 @@
   transition: background-color var(--ra-motion-fast) ease;
 }
 
-#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="secondary"]:hover:not(:disabled) {
+#mode-read-aloud[data-ra-workspace="v2"] [data-ra-emphasis="secondary"]:not(#ra-record-btn):not(#ra-stop-btn):not(#ra-check-btn):not(#ra-retry-btn):hover:not(:disabled) {
   background-color: #e2e8f0 !important;
 }
 
@@ -238,4 +272,9 @@
   #mode-read-aloud[data-ra-workspace="v2"] .ra-prompt-stage {
     padding: 1.25rem;
   }
+}
+
+/* Legacy workspace isolation: ensure V2 layout hosts are hidden if not in data-ra-workspace="v2" */
+#mode-read-aloud:not([data-ra-workspace="v2"]) :is(#ra-workspace-heading, #ra-workspace-steps-host, #ra-workspace-instruction, #ra-workspace-coach-host) {
+  display: none !important;
 }

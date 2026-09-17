@@ -813,12 +813,26 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   background: #ffffff;
 }
 
+/* ==========================================================================
+   Defect Repair (bel-calendar-three-defect-repair.md):
+   1. Event layering above grid lines & neighbor cells (z-index: auto on slots)
+   2. Unclipped wrapping class titles in left rail
+   3. Solid opaque event fills with authoritative teacher colors
+   ========================================================================== */
+
+#teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-calendar-cell.teacher-scheduler-slot,
+.teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-calendar-cell.teacher-scheduler-slot,
 .teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot {
   position: relative;
-  z-index: 1;
+  z-index: auto;
+  overflow: visible;
+  contain: none;
 }
 
-.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
+#teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill,
+.teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill,
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill,
+.ts-appearance-solid .scheduler-session-pill {
   position: absolute;
   z-index: 10;
   pointer-events: auto;
@@ -826,21 +840,72 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   font-size: 12px;
   line-height: 1.25;
   border-radius: 4px;
+  border: 0;
+  color: #ffffff;
+  background: var(--color, #1a73e8);
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.15);
+  padding: 4px 6px;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
   transition: transform var(--ts-dur-settle, 120ms) var(--ts-ease-enter, cubic-bezier(0.2, 0, 0, 1)),
               box-shadow 0.15s ease;
 }
 
+#teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill:hover,
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
+  z-index: 20;
+  box-shadow: 0 2px 6px rgba(60, 64, 67, 0.35);
+}
+
+#teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill.is-dragging,
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill.is-dragging {
+  z-index: 30;
+  opacity: 0.35 !important;
+}
+
+/* Red deliberate current-time indicator sits above events */
+.teacher-scheduler-workspace .scheduler-now-line {
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* Sticky headers and sticky time gutter remain above scrolling events */
+.teacher-scheduler-workspace .scheduler-calendar-head {
+  z-index: 25;
+}
+.teacher-scheduler-workspace .scheduler-calendar-time {
+  z-index: 25;
+}
+
+/* Drop targets and hover highlights stay below event layer */
+.teacher-scheduler-workspace .scheduler-calendar-cell.teacher-scheduler-slot.is-drop-target {
+  z-index: auto;
+}
+
+/* Title and meta colors for solid pills */
 .teacher-scheduler-workspace .scheduler-session-pill .pill-title {
   font-size: 12px;
   line-height: 1.25;
   font-weight: 600;
+  color: #ffffff;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-time {
   font-size: 11px;
   line-height: 1.2;
   font-weight: 400;
+  color: #ffffff;
   opacity: 0.95;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill .pill-teacher {
+  font-size: 11px;
+  line-height: 1.2;
+  color: #ffffff;
+  opacity: 0.9;
 }
 
 .teacher-scheduler-workspace .scheduler-calendar-time span {
@@ -850,8 +915,233 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   letter-spacing: 0.2px;
 }
 
-.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
-  z-index: 20;
+/* Section C: Authoritative Teacher Color Palette (Solid Fills) */
+.teacher-scheduler-workspace [data-ts-color="blue"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="blue"] {
+  --color: #1a73e8;
+  background-color: #1a73e8;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="purple"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="purple"] {
+  --color: #8e24aa;
+  background-color: #8e24aa;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="teal"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="teal"] {
+  --color: #00796b;
+  background-color: #00796b;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="green"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="green"] {
+  --color: #1e8e3e;
+  background-color: #1e8e3e;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="orange"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="orange"] {
+  --color: #e37400;
+  background-color: #e37400;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="red"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="red"] {
+  --color: #d93025;
+  background-color: #d93025;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="indigo"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="indigo"] {
+  --color: #3f51b5;
+  background-color: #3f51b5;
+  color: #ffffff;
+}
+.teacher-scheduler-workspace [data-ts-color="coral"],
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="coral"] {
+  --color: #c2185b;
+  background-color: #c2185b;
+  color: #ffffff;
+}
+
+/* Opaque drag ghost with white text and solid teacher fill */
+.teacher-scheduler-drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  border-radius: 4px;
+  padding: 5px 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 14px;
+  color: #ffffff !important;
+  background: var(--color, #1a73e8) !important;
+  box-shadow: 0 4px 12px rgba(32, 33, 36, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  opacity: 1 !important;
+}
+
+/* Section B: Left-rail class row layout with full-width text and wrapping title */
+.teacher-scheduler-workspace .ts-repair-class-row,
+.ts-repair-class-row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 2px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  min-height: auto;
+  box-sizing: border-box;
+}
+
+.teacher-scheduler-workspace .ts-repair-class-row:hover,
+.ts-repair-class-row:hover {
+  background: var(--ts-hover, #e8edf5);
+}
+
+.teacher-scheduler-workspace .ts-repair-class-row.is-armed,
+.ts-repair-class-row.is-armed,
+.ts-repair-class-row[aria-pressed="true"] {
+  background: #e8f0fe;
+  border-color: #1a73e8;
+}
+
+.teacher-scheduler-workspace .ts-repair-color-dot,
+.ts-repair-color-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+  background: var(--dot-color, #1a73e8);
+  flex-shrink: 0;
+}
+
+.teacher-scheduler-workspace .ts-repair-class-body,
+.ts-repair-class-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+}
+
+.teacher-scheduler-workspace .ts-repair-class-title,
+.ts-repair-class-title {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--ts-ink, #1f1f1f);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.teacher-scheduler-workspace .ts-repair-class-teacher,
+.ts-repair-class-teacher {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--ts-muted, #444746);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teacher-scheduler-workspace .ts-repair-class-progress,
+.ts-repair-class-progress {
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: var(--ts-muted, #5f6368);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mini-calendar header on single line with non-shrinking buttons */
+.teacher-scheduler-mini-calendar .mini-cal-header,
+.ts-mini-heading {
+  white-space: nowrap;
+  gap: 4px;
+}
+.teacher-scheduler-mini-calendar .mini-cal-month-title,
+.ts-mini-heading span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.teacher-scheduler-mini-calendar .mini-cal-nav,
+.ts-mini-nav {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.teacher-scheduler-mini-calendar .mini-cal-nav-btn,
+.ts-mini-nav .ts-icon-btn {
+  flex-shrink: 0;
+}
+
+/* Compact pill title text truncation */
+.teacher-scheduler-workspace .scheduler-session-pill.is-compact .pill-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
+}
+
+/* Completed session styling in solid mode - guarantee white text over solid background */
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed,
+.ts-appearance-solid .scheduler-session-pill.is-completed {
+  background-color: var(--color, #1a73e8) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-title,
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-time,
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-teacher,
+.ts-appearance-solid .scheduler-session-pill.is-completed .pill-title,
+.ts-appearance-solid .scheduler-session-pill.is-completed .pill-time,
+.ts-appearance-solid .scheduler-session-pill.is-completed .pill-teacher {
+  color: #ffffff !important;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-badge-completed {
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-badge-compact {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+/* If user explicitly switches appearance to pastel in settings */
+.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill.teacher-scheduler-session-pill {
+  color: var(--pill-ink, #154589);
+  background: var(--pill-bg, #e8f0fe);
+  border: 1px solid var(--pill-border, #bfdbfe);
+  border-left: 3px solid var(--pill-accent, #1a73e8);
+}
+.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-title {
+  color: var(--pill-ink, #154589);
+}
+.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-time,
+.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-teacher {
+  color: var(--pill-meta, #1967d2);
 }
 
 .ts-timeline {

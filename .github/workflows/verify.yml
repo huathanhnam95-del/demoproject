@@ -99,6 +99,9 @@ jobs:
       - name: Run release fixture suite
         run: npm run test:release
 
+      - name: Run security and authorization boundary tests
+        run: npm run test:security
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:

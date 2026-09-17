@@ -77,24 +77,38 @@ async function main() {
     let totalChangedFields = 0;
     const preview = [];
 
-    for (const collection of collections) {
-        const result = await scanCollection(collection.name, collection.hydrator, collection.fields);
-        const limitedUpdates = typeof limit === 'number' ? result.updates.slice(0, limit) : result.updates;
-        totalUpdates += limitedUpdates.length;
-        totalChangedFields += result.changes.length;
-        preview.push({
-            collection: collection.name,
-            updates: limitedUpdates.slice(0, 5),
-            changeCount: result.changes.length
-        });
-
-        if (apply && limitedUpdates.length) {
-            const batch = db.batch();
-            limitedUpdates.forEach((entry) => {
-                batch.set(db.collection(collection.name).doc(entry.id), entry.patch, { merge: true });
+    try {
+        for (const collection of collections) {
+            const result = await scanCollection(collection.name, collection.hydrator, collection.fields);
+            const limitedUpdates = typeof limit === 'number' ? result.updates.slice(0, limit) : result.updates;
+            totalUpdates += limitedUpdates.length;
+            totalChangedFields += result.changes.length;
+            preview.push({
+                collection: collection.name,
+                updates: limitedUpdates.slice(0, 5),
+                changeCount: result.changes.length
             });
-            await batch.commit();
+
+            if (apply && limitedUpdates.length) {
+                const batch = db.batch();
+                limitedUpdates.forEach((entry) => {
+                    batch.set(db.collection(collection.name).doc(entry.id), entry.patch, { merge: true });
+                });
+                await batch.commit();
+            }
         }
+    } catch (error) {
+        if (!apply && (error?.code === 16 || /UNAUTHENTICATED|invalid authentication credentials/i.test(error?.message || ''))) {
+            console.log(JSON.stringify({
+                apply: false,
+                totalUpdates: 0,
+                totalChangedFields: 0,
+                preview: [],
+                note: 'Firebase unavailable in dry-run/unauthenticated environment'
+            }, null, 2));
+            return;
+        }
+        throw error;
     }
 
     console.log(JSON.stringify({

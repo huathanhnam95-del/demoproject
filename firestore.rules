@@ -20,10 +20,32 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId);
       
-      // Create: Prevent users from setting themselves as admin or teacher roles
+      // Create: Prevent users from setting themselves as admin or teacher roles,
+      // and prevent fabrication of scoring, points, coins, ratings or progression flags.
       allow create: if isOwner(userId) && 
                     (!request.resource.data.keys().hasAny(['isAdmin']) || request.resource.data.isAdmin == false) &&
-                    !request.resource.data.keys().hasAny(['role', 'crmRole', 'isTeacher', 'admin']);
+                    !request.resource.data.keys().hasAny([
+                      'role', 'crmRole', 'isTeacher', 'admin',
+                      'totalPoints', 'coins', 'skillPoints', 'skillRatings',
+                      'cefrLevels', 'skillsUpdatedAt',
+                      'vocabularyBookUnlocked', 'sentenceLengthFilterUnlocked'
+                    ]) &&
+                    request.resource.data.keys().hasOnly([
+                      'email',
+                      'displayName',
+                      'photoURL',
+                      'createdAt',
+                      'lastLoginAt',
+                      'totalActiveSeconds',
+                      'englishLevel',
+                      'levelSelectedAt',
+                      'practiceStats',
+                      'srsBonus',
+                      'unlockedModes',
+                      'isAdmin'
+                    ]) &&
+                    (!('unlockedModes' in request.resource.data) ||
+                     request.resource.data.unlockedModes.hasOnly(['type', 'speak', 'extended', 'watch', 'notes', 'pronounce']));
       
       // Update: CLIENT CAN ONLY UPDATE HARMLESS PROFILE FIELDS
       // Scoring and currency fields are SERVER-ONLY (Cloud Functions)
@@ -36,9 +58,8 @@ service cloud.firestore {
                       'englishLevel', 
                       'levelSelectedAt',
                       'practiceStats',
-                      'srsBonus',
-                      'unlockedModes'
-                      // REMOVED: totalPoints, coins, skillPoints, skillRatings, 
+                      'srsBonus'
+                      // REMOVED: unlockedModes, totalPoints, coins, skillPoints, skillRatings, 
                       // cefrLevels, skillsUpdatedAt,
                       // vocabularyBookUnlocked, sentenceLengthFilterUnlocked
                     ]);
@@ -101,8 +122,10 @@ service cloud.firestore {
     // SESSIONS (client-managed for analytics)
     // ============================================
     match /sessions/{sessionId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create, update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update: if isOwner(resource.data.userId)
+                    && request.resource.data.userId == resource.data.userId;
     }
     
     // ============================================
@@ -145,10 +168,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Word References for Pronunciation Analyzer
+    // Word References for Pronunciation Analyzer (canonical reference data)
     match /word_references/{wordId} {
       allow read: if true;
-      allow create, update: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // ============================================
@@ -172,35 +195,52 @@ service cloud.firestore {
     // CLASSROOM FEATURE
     // ============================================
     match /crmClassrooms/{classId} {
-      // Allow admins, students with custom claim, teachers with custom claim, or enrolled classroom members
-      function canReadClassroom() {
-        return isAdmin() || (request.auth != null && (
-          request.auth.token.isStudent == true ||
-          request.auth.token.isTeacher == true ||
+      function isClassroomMember() {
+        return request.auth != null && (
           exists(/databases/$(database)/documents/crmClassrooms/$(classId)/members/$(request.auth.uid))
-        ));
+        );
+      }
+
+      function isAssignedTeacher(classData) {
+        return request.auth != null && (
+          classData.get('primaryTeacherUid', '') == request.auth.uid ||
+          classData.get('teacherUid', '') == request.auth.uid ||
+          (classData.get('teacherUids', []) is list && request.auth.uid in classData.get('teacherUids', []))
+        );
+      }
+
+      function canReadClassroom() {
+        return isAdmin() || isClassroomMember() || isAssignedTeacher(resource.data);
+      }
+
+      function canReadClassroomSubcollection() {
+        return isAdmin() || isClassroomMember() || (
+          request.auth != null
+          && exists(/databases/$(database)/documents/crmClassrooms/$(classId))
+          && isAssignedTeacher(get(/databases/$(database)/documents/crmClassrooms/$(classId)).data)
+        );
       }
 
       allow read: if canReadClassroom();
       allow write: if isAdmin();
 
       match /modules/{moduleId} {
-        allow read: if canReadClassroom();
+        allow read: if canReadClassroomSubcollection();
         allow write: if isAdmin();
       }
 
       match /classwork/{workId} {
-        allow read: if canReadClassroom();
+        allow read: if canReadClassroomSubcollection();
         allow write: if isAdmin();
       }
 
       match /posts/{postId} {
-        allow read: if canReadClassroom();
+        allow read: if canReadClassroomSubcollection();
         allow write: if isAdmin();
       }
 
       match /members/{memberId} {
-        allow read: if canReadClassroom();
+        allow read: if canReadClassroomSubcollection();
         allow write: if isAdmin();
       }
     }
@@ -209,11 +249,41 @@ service cloud.firestore {
     // SUBMISSIONS
     // ============================================
     match /crmSubmissions/{submissionId} {
-      // Only verified students can create their own. Students or admins can read/update.
-      allow create: if request.auth != null 
-                    && request.resource.data.studentUid == request.auth.uid
-                    && request.auth.token.isStudent == true;
-      allow read, update: if isAdmin() || (request.auth != null && resource.data.studentUid == request.auth.uid);
+      function isClassroomMember(cId) {
+        return request.auth != null && (
+          exists(/databases/$(database)/documents/crmClassrooms/$(cId)/members/$(request.auth.uid))
+        );
+      }
+
+      // Only verified students enrolled in the classroom or admins can create submissions.
+      // Must not fabricate grading, score, or feedback fields.
+      allow create: if isAdmin() || (
+        request.auth != null 
+        && request.resource.data.studentUid == request.auth.uid
+        && isClassroomMember(request.resource.data.classId)
+        && request.resource.data.status in ['turned-in', 'submitted']
+        && request.resource.data.keys().hasAll(['classId', 'workId', 'studentUid', 'status'])
+        && request.resource.data.keys().hasOnly(['classId', 'workId', 'studentUid', 'studentEmail', 'audio', 'status', 'submittedAt'])
+        && !request.resource.data.keys().hasAny(['grade', 'feedback', 'score', 'gradedAt', 'gradedBy', 'teacherNotes'])
+      );
+
+      // Students can only update submissions in turned-in or needs-revision state; cannot reassign ownership, classroom, workId, or modify grading fields.
+      allow update: if isAdmin() || (
+        request.auth != null
+        && resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentUid == resource.data.studentUid
+        && request.resource.data.classId == resource.data.classId
+        && request.resource.data.workId == resource.data.workId
+        && resource.data.status in ['turned-in', 'submitted', 'needs-revision']
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['studentUid', 'classId', 'workId', 'status', 'grade', 'score', 'feedback', 'gradedAt', 'gradedBy', 'teacherNotes'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['audio', 'submittedAt'])
+      );
+
+      // Student owner or admin can read submissions (teachers access submissions via Admin SDK endpoint)
+      allow read: if isAdmin() || (
+        request.auth != null && resource.data.studentUid == request.auth.uid
+      );
+
       allow delete: if isAdmin();
     }
 

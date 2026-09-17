@@ -668,8 +668,8 @@ async function checkLevelSelection(userId) {
     if (profileResult.success) {
       const data = profileResult.data;
 
-      // If no englishLevel set, show modal
-      if (!data.englishLevel) {
+      // If no englishLevel set and not admin, show modal
+      if (!data.englishLevel && !data.isAdmin) {
         const modal = document.getElementById('level-selection-modal');
         if (modal) {
           modal.style.display = 'flex';
@@ -956,6 +956,45 @@ function updateAccountPanelState() {
         if (watchAdminLink) watchAdminLink.style.display = isAdmin ? 'flex' : 'none';
         if (crmAdminLink) crmAdminLink.style.display = (isAdmin || isTeacher) ? 'flex' : 'none';
 
+        if (isAdmin || isTeacher) {
+          const sessionPayload = JSON.stringify({
+            uid: user.uid,
+            email: user.email || '',
+            accessMode: isAdmin ? 'admin' : 'teacher',
+            adminOk: Boolean(isAdmin),
+            teacherOk: Boolean(isTeacher),
+            capabilities: { classroomMatches: true, readAloudReporting: false, pronunciationSamples: true },
+            projectsAuthorized: false,
+            timestamp: Date.now()
+          });
+          try {
+            localStorage.setItem('crm_auth_session', sessionPayload);
+          } catch (e) {
+            /* ignore storage write error */
+          }
+          try {
+            sessionStorage.setItem('crm_auth_session', sessionPayload);
+          } catch (e) {
+            /* ignore storage write error */
+          }
+        } else {
+          try {
+            localStorage.removeItem('crm_auth_session');
+          } catch (e) {
+            /* ignore storage removal error */
+          }
+          try {
+            sessionStorage.removeItem('crm_auth_session');
+          } catch (e) {
+            /* ignore storage removal error */
+          }
+          try {
+            document.documentElement.classList.remove('crm-session-cached');
+          } catch (e) {
+            /* ignore DOM class removal error */
+          }
+        }
+
         if (isAdmin) {
           // Seed cache for admin user to ensure full access
           const allModes = ['type', 'speak', 'extended', 'watch', 'notes', 'pronounce', 'lengthFilter', 'vocabBook', 'autoAdjust'];
@@ -1014,6 +1053,21 @@ function updateAccountPanelState() {
     }
   } else {
     // Logged out state
+    try {
+      localStorage.removeItem('crm_auth_session');
+    } catch (e) {
+      /* ignore storage removal error */
+    }
+    try {
+      sessionStorage.removeItem('crm_auth_session');
+    } catch (e) {
+      /* ignore storage removal error */
+    }
+    try {
+      document.documentElement.classList.remove('crm-session-cached');
+    } catch (e) {
+      /* ignore DOM class removal error */
+    }
     if (panelLoggedIn) panelLoggedIn.style.display = 'none';
     if (panelGuestMode) panelGuestMode.style.display = 'none';
     if (panelLoggedOut) panelLoggedOut.style.display = 'block';
@@ -1409,6 +1463,22 @@ async function handleLogout() {
     currentSessionId = null;
   }
 
+  try {
+    localStorage.removeItem('crm_auth_session');
+  } catch (e) {
+    /* ignore storage removal error */
+  }
+  try {
+    sessionStorage.removeItem('crm_auth_session');
+  } catch (e) {
+    /* ignore storage removal error */
+  }
+  try {
+    document.documentElement.classList.remove('crm-session-cached');
+  } catch (e) {
+    /* ignore DOM class removal error */
+  }
+
   const result = await authFunctions.signOut();
 
   if (result.success) {
@@ -1549,9 +1619,10 @@ function setupAuthStateListener() {
           const next = new URLSearchParams(window.location.search).get('next');
           if (next) {
             const target = new URL(next, window.location.origin);
+            const cleanTarget = (target.pathname || '').replace(/\.html$/i, '') || '/';
             if (target.origin === window.location.origin
-              && target.pathname !== window.location.pathname) {
-              window.location.replace(target.pathname + target.search + target.hash);
+              && cleanTarget !== window.location.pathname) {
+              window.location.replace(cleanTarget + target.search + target.hash);
               return;
             }
           }

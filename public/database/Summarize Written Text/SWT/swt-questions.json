@@ -9,7 +9,120 @@
       "UNEP views the participation of sporting events as crucial for inspiring broader global environmental action.",
       "The 2014 Sochi Olympics plan to invest an estimated $1.75 billion into energy conservation and renewable energy.",
       "Sochi's investment will fund improvements in transport infrastructure, reforestation, and green belt development."
-    ]
+    ],
+    "answerAnalysis": {
+      "schemaVersion": 1,
+      "revision": "teaching-demo-1",
+      "reviewStatus": "demo-not-editor-approved",
+      "sourceHash": "623485cb15ec85eeb061eb31f14d02cfe971a2665a5f9cad43ac20876f6a7bcc",
+      "corePoints": [
+        {
+          "id": "core-1",
+          "label": "Sporting events are working toward carbon neutrality through a global climate initiative.",
+          "rationale": "Keep the main action and its wider context: sporting events are participating in a coordinated effort to reduce their climate impact.",
+          "evidence": [
+            {
+              "quote": "Major athletic events around the globe",
+              "start": 19,
+              "end": 57
+            },
+            {
+              "quote": "are striving to neutralize their carbon footprint as part of a world-wide climate network",
+              "start": 139,
+              "end": 228
+            }
+          ]
+        },
+        {
+          "id": "core-2",
+          "label": "Their participation can inspire wider environmental action.",
+          "rationale": "Keep the intended wider effect. The passage is not only about individual events reducing their own emissions.",
+          "evidence": [
+            {
+              "quote": "particularly important for inspiring further global action on the environment",
+              "start": 367,
+              "end": 444
+            }
+          ]
+        },
+        {
+          "id": "core-3",
+          "label": "Sochi organizers plan substantial investment in energy conservation and renewable energy.",
+          "rationale": "Keep the concrete commitment that develops the main claim. The investment is planned, so do not rewrite it as a completed achievement.",
+          "evidence": [
+            {
+              "quote": "Organizers of the 2014 Sochi Olympic and Paralympic Winter Games",
+              "start": 704,
+              "end": 768
+            },
+            {
+              "quote": "say they will put an estimated $1.75 billion into energy conservation and renewable energy",
+              "start": 895,
+              "end": 985
+            }
+          ]
+        },
+        {
+          "id": "core-4",
+          "label": "The investment also supports cleaner transport, emissions offsets and reforestation.",
+          "rationale": "Keep the broad uses of the investment, but compress the individual activities rather than reproducing the whole list.",
+          "evidence": [
+            {
+              "quote": "improving transport infrastructure and offsetting greenhouse gas emissions",
+              "start": 1024,
+              "end": 1098
+            },
+            {
+              "quote": "the reforestation of Sochi National Park and the development of green belts in the city",
+              "start": 1166,
+              "end": 1253
+            }
+          ]
+        }
+      ],
+      "ignorePoints": [
+        {
+          "id": "ignore-1",
+          "label": "The news report’s exact publication date.",
+          "rationale": "This date establishes when the report was written; it is not needed to explain the environmental initiative in a concise summary.",
+          "evidence": [
+            {
+              "quote": "11 February 2009",
+              "start": 0,
+              "end": 16
+            }
+          ],
+          "reasonCode": "dateline"
+        },
+        {
+          "id": "ignore-2",
+          "label": "The picturesque description of Sochi’s location.",
+          "rationale": "The coastal and mountain scenery is descriptive background. Omitting it does not remove the passage’s main environmental message.",
+          "evidence": [
+            {
+              "quote": "to be held in a unique natural setting between the shores of the Black Sea and the soaring snow-capped Caucasus Mountains",
+              "start": 771,
+              "end": 892
+            }
+          ],
+          "reasonCode": "descriptive-background"
+        },
+        {
+          "id": "ignore-3",
+          "label": "The spokesperson’s personal name and job title.",
+          "rationale": "Keep the claim about inspiring environmental action; the individual speaker’s name and title are not essential here. This does not mean organization names are always optional.",
+          "evidence": [
+            {
+              "quote": "Achim Steiner, UNEP Executive Director",
+              "start": 451,
+              "end": 489
+            }
+          ],
+          "reasonCode": "attribution"
+        }
+      ],
+      "sampleSummary": "Major sporting events are joining a global climate initiative to neutralize their carbon footprints and inspire broader environmental action, with the Sochi Olympics planning substantial investment in energy conservation, renewable energy, cleaner transport and reforestation."
+    }
   },
   {
     "id": "2",

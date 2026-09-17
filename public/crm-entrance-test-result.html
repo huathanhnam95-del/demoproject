@@ -9,7 +9,19 @@
   <script>
     (function () {
       try {
-        var raw = sessionStorage.getItem('crm_auth_session');
+        var raw = null;
+        try {
+          raw = localStorage.getItem('crm_auth_session');
+        } catch (e1) {
+          /* ignore */
+        }
+        if (!raw) {
+          try {
+            raw = sessionStorage.getItem('crm_auth_session');
+          } catch (e2) {
+            /* ignore */
+          }
+        }
         if (raw) {
           var s = JSON.parse(raw);
           var maxAge = 30 * 60 * 1000;
@@ -22,6 +34,7 @@
       }
     })();
   </script>
+  <style>html.crm-session-cached #crm-loading { display: none !important; }</style>
 
   <!-- Use system serif/Times New Roman only -->
 
@@ -31,8 +44,8 @@
        one loading them without it. -->
   <link rel="stylesheet" href="/design-tokens.css" />
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="crm-admin.css?v=20260917-v2.0.10" />
-  <link rel="stylesheet" href="crm-entrance-test-result.css?v=20260917-v2.0.10" />
+  <link rel="stylesheet" href="crm-admin.css?v=20260917-v2.0.11" />
+  <link rel="stylesheet" href="crm-entrance-test-result.css?v=20260917-v2.0.11" />
 </head>
 
 <body>
@@ -79,19 +92,31 @@
 
   <!-- html2pdf.js for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
+    referrerpolicy="no-referrer" defer></script>
 
   <!-- Firebase compat SDKs (admin pages use compat like CRM Admin) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" defer></script>
 
-  <script src="js/auth-session-guard.js"></script>
+  <script>
+    window.__FIREBASE_CONFIG__ = {
+      apiKey: "AIzaSyB0vXX7NwOvME_XoaGiJlYaiLRcaHJtrIQ",
+      authDomain: "listening-tasks-3ae34.firebaseapp.com",
+      projectId: "listening-tasks-3ae34",
+      storageBucket: "listening-tasks-3ae34.firebasestorage.app",
+      messagingSenderId: "737872673808",
+      appId: "1:737872673808:web:4db57599aa22b4830fde95",
+      measurementId: "G-1891MSSLXT"
+    };
+  </script>
+
+  <script src="js/auth-session-guard.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
-  <script src="entrance-test-pdf-generator.js?v=20260917-v2.0.10"></script>
-  <script src="phonetics.js?v=20260917-v2.0.10"></script>
-  <script src="crm-entrance-test-result.js?v=20260917-v2.0.10"></script>
+    referrerpolicy="no-referrer" defer></script>
+  <script src="entrance-test-pdf-generator.js?v=20260917-v2.0.11" defer></script>
+  <script src="phonetics.js?v=20260917-v2.0.11" defer></script>
+  <script src="crm-entrance-test-result.js?v=20260917-v2.0.11" defer></script>
 </body>
 
 </html>

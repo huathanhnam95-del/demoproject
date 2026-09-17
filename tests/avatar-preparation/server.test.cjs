@@ -1,0 +1,26 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const os = require('node:os');
+const { createStudio } = require('../../tools/avatar_preparation/server.cjs');
+test('Loopback service rejects foreign writes and serves only explicit resources', async t => {
+  const root = process.env.AVATAR_EVIDENCE_DIR || path.join(os.homedir(), '.codex', 'avatar-preparation-task', 'verification'); await fs.mkdir(root, { recursive: true });
+  const app = await createStudio({ dataDir: await fs.mkdtemp(path.join(root, 'server-')), port: 0 }); t.after(() => app.close());
+  await assert.rejects(createStudio({ dataDir: app.store.root, port: 0 }), /Another studio owns/);
+  const session = await (await fetch(app.origin + '/api/session')).json();
+  const send = (url, method, body, headers = {}) => fetch(app.origin + url, { method, headers: { origin: app.origin, 'x-studio-token': session.token, 'content-type': 'application/json', ...headers }, body: body === undefined ? undefined : JSON.stringify(body) });
+  assert.equal((await fetch(app.origin + '/api/projects', { method: 'POST', body: '{}' })).status, 403);
+  assert.equal((await send('/api/projects', 'POST', {}, { origin: 'https://example.com' })).status, 403);
+  assert.equal((await fetch(app.origin + '/server.cjs')).status, 404); assert.equal((await fetch(app.origin + '/api/admin/voice-cloning/status')).status, 404);
+  const html = await fetch(app.origin); assert.match(html.headers.get('content-security-policy'), /connect-src 'self'/); assert.match(await html.text(), /Start with yourself/);
+  const p = await (await send('/api/projects', 'POST', { name: 'Local only' })).json();
+  const d = await (await send(`/api/projects/${p.id}/drafts`, 'POST', { sceneId: 'steady', language: 'en' })).json();
+  const bytes = Buffer.from('0123456789abcdef'); const upload = await fetch(`${app.origin}/api/drafts/${d.id}/media`, { method: 'PUT', headers: { origin: app.origin, 'x-studio-token': session.token, 'content-type': 'video/webm' }, body: bytes }); assert.equal(upload.status, 200);
+  const saved = await (await send(`/api/drafts/${d.id}/commit`, 'POST', { revision: p.revision })).json();
+  const media = await fetch(`${app.origin}/api/projects/${p.id}/media/${saved.assets[0].id}`, { headers: { range: 'bytes=2-5' } }); assert.equal(media.status, 206); assert.equal(media.headers.get('content-type'), 'video/webm'); assert.equal(await media.text(), '2345');
+  assert.equal((await fetch(`${app.origin}/api/projects/${p.id}/media/${saved.assets[0].id}`, { headers: { range: 'bytes=90-95' } })).status, 416);
+  const result = await send(`/api/projects/${p.id}`, 'PATCH', { revision: saved.revision, name: 'Changed' }); assert.equal(result.status, 200);
+  assert.equal((await send(`/api/projects/${p.id}`, 'PATCH', { revision: saved.revision, name: 'Stale' })).status, 409);
+});

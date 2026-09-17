@@ -80,6 +80,7 @@ test('correction messages identify the step and field in human language', () => 
 });
 test('receipt links permit local application links and reject executable or foreign destinations', () => {
     const origin = 'http://localhost:9270';
+    assert.equal(safeLink('/crm-admin#students/a0001', origin), `${origin}/crm-admin#students/a0001`);
     assert.equal(safeLink('/crm-admin.html#students/a0001', origin), `${origin}/crm-admin.html#students/a0001`);
     assert.equal(safeLink('/entrance-test.html?token=abc', origin), `${origin}/entrance-test.html?token=abc`);
     for (const value of ['javascript:alert(1)', 'data:text/html,test', 'https://other.example/test', '//other.example', 'https://localhost:9270/test']) assert.equal(safeLink(value, origin), null);

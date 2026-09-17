@@ -72,6 +72,13 @@
   padding-inline: var(--spc-shell-pad);
 }
 
+body[data-practice-layout="fluid-v1"] .spc-shell-grid {
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
 @media (max-width: 640px) {
   :root {
     --spc-shell-pad: 14px;

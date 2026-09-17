@@ -33,12 +33,31 @@
   padding: 0 16px;
 }
 
+body[data-practice-layout="fluid-v1"] .smw-container {
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
+}
+
 .smw-split-layout {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 24px;
   margin-bottom: 20px;
   align-items: stretch;
+}
+
+body[data-practice-layout="fluid-v1"] .smw-split-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+body[data-practice-layout="fluid-v1"] .smw-audio-card,
+body[data-practice-layout="fluid-v1"] .smw-question-card {
+  width: 100%;
+  padding: 8px 0;
 }
 
 .smw-audio-card,

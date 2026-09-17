@@ -1,0 +1,190 @@
+/* ==========================================================================
+   Practice Fluid-Layout Foundation (fluid-v1)
+   Governs available width and structural hierarchy across practice modes.
+   Root gate: body[data-practice-layout="fluid-v1"]
+   Does NOT alter CRM, auth, dashboard, dialogs, timers, or scoring rules.
+   ========================================================================== */
+
+body[data-practice-layout="fluid-v1"] {
+  --practice-page-gutter: clamp(16px, 2vw, 40px);
+  --practice-layout-gap: clamp(16px, 1.5vw, 24px);
+  --practice-layout-gutter: var(--practice-page-gutter);
+}
+
+/* ── 1. Ancestor Frames on the Route-to-Workspace Path ── */
+body[data-practice-layout="fluid-v1"] [data-practice-frame],
+body[data-practice-layout="fluid-v1"] #page-layout-wrapper {
+  box-sizing: border-box;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: none;
+  max-inline-size: none;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+/* ── 2. Exactly One Structural Shell Owns Page Gutters ── */
+body[data-practice-layout="fluid-v1"] [data-practice-shell],
+body[data-practice-layout="fluid-v1"] main.container {
+  box-sizing: border-box;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: none !important;
+  max-inline-size: none !important;
+  margin-inline: 0;
+  padding-inline: var(--practice-page-gutter) !important;
+  container-name: practice-shell;
+  container-type: inline-size;
+  container: practice-shell / inline-size;
+}
+
+/* ── 3. Structural Regions Inherit Usable Workspace Width ── */
+body[data-practice-layout="fluid-v1"] [data-practice-region],
+body[data-practice-layout="fluid-v1"] [data-practice-shell] .spc-shell-grid,
+body[data-practice-layout="fluid-v1"] .mode-panel {
+  box-sizing: border-box;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: none !important;
+  max-inline-size: none !important;
+  margin-inline: 0;
+}
+
+body[data-practice-layout="fluid-v1"] [data-practice-shell] .spc-shell-grid {
+  padding-inline: 0;
+}
+
+@media (min-width: 768px) {
+  body[data-practice-layout="fluid-v1"] .spc-footer .spc-row--actions {
+    padding-right: calc(var(--practice-layout-gutter, 24px) + 172px);
+  }
+}
+
+/* ── 4. Task Workarea Grid ── */
+body[data-practice-layout="fluid-v1"] [data-practice-workarea] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
+  inline-size: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  max-width: none;
+  max-inline-size: none;
+  gap: var(--practice-layout-gap);
+}
+
+body[data-practice-layout="fluid-v1"] [data-practice-workarea] > * {
+  min-width: 0;
+  min-inline-size: 0;
+}
+
+/* ── 5. Reading Region: Full Usable Width by Default ── */
+body[data-practice-layout="fluid-v1"] [data-practice-reading],
+body[data-practice-layout="fluid-v1"] .ra-stage .ra-prompt-stage {
+  box-sizing: border-box;
+  width: 100%;
+  inline-size: 100%;
+  max-width: none !important;
+  max-inline-size: none !important;
+  margin-inline: 0;
+}
+
+/* ── 6. Local Media Containment ── */
+body[data-practice-layout="fluid-v1"] [data-practice-media] :is(img, video) {
+  max-inline-size: 100%;
+  block-size: auto;
+  object-fit: contain;
+}
+
+/* ── 7. Long-Form Editor Room ── */
+body[data-practice-layout="fluid-v1"] [data-practice-editor="long"] {
+  width: 100%;
+  min-block-size: clamp(16rem, 48dvh, 36rem);
+  resize: vertical;
+}
+
+/* ── 8. Responsive Multi-Pane Layouts (Container Queries) ── */
+@container practice-shell (min-width: 1040px) {
+  body[data-practice-layout="fluid-v1"] [data-practice-workarea="compare"] {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+
+  body[data-practice-layout="fluid-v1"] [data-practice-workarea="source-editor"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  body[data-practice-layout="fluid-v1"] [data-practice-workarea="reorder"] {
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+  }
+}
+
+/* Fallback for environments where container queries are unsupported or unattached */
+@supports not (container-type: inline-size) {
+  @media (min-width: 1040px) {
+    body[data-practice-layout="fluid-v1"] [data-practice-workarea="compare"] {
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+
+    body[data-practice-layout="fluid-v1"] [data-practice-workarea="source-editor"] {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    }
+
+    body[data-practice-layout="fluid-v1"] [data-practice-workarea="reorder"] {
+      grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+    }
+  }
+}
+
+@media (min-width: 1040px) {
+  body[data-practice-layout="fluid-v1"]:not(:has([data-practice-shell])) [data-practice-workarea="compare"] {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+
+  body[data-practice-layout="fluid-v1"]:not(:has([data-practice-shell])) [data-practice-workarea="source-editor"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  body[data-practice-layout="fluid-v1"]:not(:has([data-practice-shell])) [data-practice-workarea="reorder"] {
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+  }
+}
+
+/* Optional: use ONLY for a verified structural grid with unused side tracks */
+body[data-practice-layout="fluid-v1"] [data-practice-empty-rails] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Never override mode-owned hidden state */
+body[data-practice-layout="fluid-v1"] [data-practice-shell] [hidden] {
+  display: none !important;
+}
+
+/* ── 9. Vertical Compaction (Phase E) ── */
+body[data-practice-layout="fluid-v1"] main.container {
+  margin-top: 8px !important;
+  margin-bottom: 24px !important;
+  padding-top: 0 !important;
+}
+
+body[data-practice-layout="fluid-v1"] .main-header {
+  margin-bottom: 6px !important;
+  padding-bottom: 0 !important;
+  gap: 8px;
+}
+
+body[data-practice-layout="fluid-v1"] .main-header h1 {
+  font-size: 1.15rem !important;
+  margin: 0 !important;
+}
+
+body[data-practice-layout="fluid-v1"] .spc-controller {
+  padding: 8px 0 !important;
+  gap: 8px !important;
+}

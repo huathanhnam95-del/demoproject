@@ -40,6 +40,7 @@ async function setupFirebaseMocks(context) {
         export const createUserWithEmailAndPassword = () => Promise.resolve({ user: mockUser });
         export const sendPasswordResetEmail = () => Promise.resolve();
         export const sendEmailVerification = () => Promise.resolve();
+        export const signInWithCustomToken = () => Promise.resolve({ user: mockUser });
       `
     });
   });
@@ -341,6 +342,8 @@ function startHarnessServer() {
     assert.strictEqual(finalState.callableName, 'scoreRTS', 'RTS should call scoreRTS');
     assert.ok(finalState.payload.transcript.includes('partial update'), 'score payload should use the edited transcript');
     assert.ok(finalState.scoreText.includes('Response Analysis'), 'RTS should render response analysis inline');
+    assert.ok(finalState.scoreText.includes('Full Sample'), 'RTS should render Full Sample tab');
+    assert.ok(finalState.scoreText.includes('Simplified'), 'RTS should render Simplified tab');
     assert.ok(finalState.scoreText.includes('Teacher Advice'), 'RTS should render teacher advice inline');
     assert.strictEqual(finalState.chatOpened, false, 'RTS feedback should not open BEL/Dialogflow chat');
     assert.strictEqual(finalState.renderedAdvice, null, 'RTS feedback should not render into BEL/Dialogflow chat');

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <base href="/">
   <meta name="theme-color" content="#f4f4f6">
+  <script src="/js/bel-performance.js"></script>
   <title>Dictation Practice | AI Language Learning</title>
   <link rel="stylesheet" href="/design-tokens.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,6 +47,7 @@
   <link rel="stylesheet" href="speaking-practice-controller.css">
   <link rel="stylesheet" href="/css/read-aloud-workspace.css?v=20260917_ra_v2">
   <link rel="stylesheet" href="/css/practice-fluid-layout.css?v=20260917_fluid_v1">
+  <meta name="bel-mode-styles-end" content="">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="progress-roadmap.css">
   <link rel="stylesheet" href="/site-header.css">
@@ -66,6 +68,9 @@
 
       // Keep non-survival UI hidden via scoped CSS while this class is present.
       document.body.classList.add('survival-active');
+      if (document.body.dataset.practiceLayout) {
+        delete document.body.dataset.practiceLayout;
+      }
       overlay.style.setProperty('display', 'flex', 'important');
       overlay.style.setProperty('visibility', 'visible', 'important');
 
@@ -210,29 +215,10 @@
       });
       window.__belPreloaderDiagnostics.lastUpdatedAt = Date.now();
     });
-
-    // Failsafe: allow retry/dismiss if loading exceeds a reasonable wait time.
-    setTimeout(() => {
-      const preloader = document.getElementById('app-preloader');
-      if (!preloader || preloader.style.display === 'none') return;
-
-      const text = document.getElementById('preloader-text');
-      if (!text) return;
-
-      const modulesLoaded = !!(window.firebaseAuthFunctions && window.firebaseFirestoreFunctions);
-      const diagnostics = window.__belPreloaderDiagnostics || { resourceErrors: [], scriptErrors: [] };
-      const hasErrors = (diagnostics.resourceErrors?.length || 0) > 0 || (diagnostics.scriptErrors?.length || 0) > 0;
-
-      if (!modulesLoaded || hasErrors) {
-        text.innerHTML = 'Loading is taking longer than expected.<br>If your network is unstable, retry loading or continue in limited mode.<br><span id="preloader-retry-btn" style="font-size:0.9em; color:#4dabf7; cursor:pointer; text-decoration:underline;">Retry loading</span> | <span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Continue</span>';
-      } else {
-        text.innerHTML = 'Still loading on this network.<br><span id="preloader-dismiss-btn" style="font-size:0.9em; cursor:pointer; text-decoration:underline;">Continue</span>';
-      }
-    }, 9000);
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V2.0.10</div>
+  <div id="version-indicator" class="version-indicator">V2.0.11</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -4727,6 +4713,8 @@
                 <button id="swt-ai-score-btn" class="modern-btn modern-btn--play" type="button" style="display:none;">Submit to AI scoring</button>
               </div>
               <div id="swt-ai-score-hint" class="essay-ai-score-hint" style="display:none;"></div>
+              <!-- Parallel prompt-answer review workspace -->
+              <div id="swt-parallel-review-mount" class="swt-parallel-review-mount" style="display: none;"></div>
             </div>
           </div>
         </div>
@@ -6095,13 +6083,15 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=2.0.10"></script>
+  <script src="/read-aloud-mode.js?v=2.0.11"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>
   <script src="/js/write-essay-support.js?v=20260903_guided_ux_v15"></script>
   <script src="/write-essay-mode.js?v=1.8.128"></script>
-  <script src="/swt-mode.js?v=20260513_swt_refactor"></script>
+  <script src="/swt-evidence.js"></script>
+  <script src="/swt-review.js"></script>
+  <script src="/swt-mode.js?v=20260917_swt_parallel_review"></script>
   <script src="/describe-image-mode.js"></script>
   <script src="/rts-mode.js"></script>
   <!-- Dialogflow Messenger Integration -->

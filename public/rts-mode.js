@@ -690,9 +690,12 @@
             el.rtsNextQuestionBtn.style.display = currentEntryIndex < entries.length - 1 ? '' : 'none';
         }
 
-        // Clear previous AI results
+        // Clear previous AI results and display reference model
         hasAiScoreResult = false;
-        if (el.rtsResultsContainer) el.rtsResultsContainer.innerHTML = '';
+        if (el.rtsResultsContainer) {
+            el.rtsResultsContainer.innerHTML = buildSampleResponsesHtml(currentEntry?.sampleResponse);
+            initSampleResponseTabs();
+        }
         if (el.rtsAiScoreBtn) {
             el.rtsAiScoreBtn.style.display = '';
             el.rtsAiScoreBtn.textContent = 'Submit to AI Scoring';
@@ -926,7 +929,9 @@
         const analysisHtml = buildAnalysisHtml(analysis);
 
         // Sample responses
-        const sampleHtml = buildSampleResponsesHtml(data.sampleResponse);
+        const hasValidSample = Boolean(data?.sampleResponse && (data.sampleResponse.full || data.sampleResponse.simplified));
+        const sampleResponse = hasValidSample ? data.sampleResponse : currentEntry?.sampleResponse;
+        const sampleHtml = buildSampleResponsesHtml(sampleResponse);
 
         // Teacher advice inline
         const teacherAdvice = String(data?.teacherAdvice || data?.teacherAdviceChat || '').trim();

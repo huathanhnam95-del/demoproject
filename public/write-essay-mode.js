@@ -5800,7 +5800,7 @@
     }
 
     function getColloEssayTip(item, currentEntry, activePlan) {
-        const term = String(item.term || '').trim().toLowerCase();
+        const term = String(item?.term || '').trim().toLowerCase();
         const tips = {
             'have limitations': 'Dùng để mở đầu phản biện: nêu rõ rằng phương pháp hoặc chính sách hiện tại vẫn còn những điểm hạn chế nhất định.',
             'impose limitations': 'Dùng khi phân tích nguyên nhân: các quy định khắt khe đang vô tình áp đặt rào cản lên sự tự do đổi mới.',
@@ -5816,6 +5816,13 @@
             'technological advancement': 'Dùng để phân tích xu hướng: sự phát triển công nghệ mở ra cơ hội học tập suốt đời cho mọi người.'
         };
         if (tips[term]) return tips[term];
+        if (item?.contextTip) {
+            return item.contextTip;
+        }
+        const gloss = item?.viGloss || item?.vi || item?.meaningVi || '';
+        if (gloss) {
+            return `Dùng cụm từ này để diễn đạt tự nhiên về "${gloss}", giúp bài viết mạch lạc và nâng điểm Lexical Resource.`;
+        }
         return 'Dùng cụm từ này để diễn đạt tự nhiên theo chuẩn văn phong học thuật, giúp nâng điểm tiêu chí Từ vựng (Lexical Resource).';
     }
 

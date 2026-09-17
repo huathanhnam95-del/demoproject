@@ -1,0 +1,48 @@
+[
+  {
+    "model": "Qwen 2.5 14B",
+    "jargon_free": true,
+    "flagged_words": [],
+    "spoken_naturalness_score": 95,
+    "visual_groundedness_score": 95,
+    "verdict": "PASS",
+    "critique": "The script maintains a consistently warm, conversational tone with relatable metaphors ('slow handoff between strangers') that feel authentic to teachers' experiences. The pacing mirrors natural speech patterns, and the emotional arc from frustration to collaboration feels genuine. Visuals are rich with specific, teacher-centric details that avoid clichés.",
+    "recommended_tweaks": [
+      "Consider replacing 'slow handoff between strangers' with 'slow process where people don't work together' for even greater clarity",
+      "Simplify 'closing our laptops at the end of the day feeling good' to 'closing our laptops feeling good' for tighter phrasing"
+    ],
+    "response_time_sec": 33.17,
+    "status": "SUCCESS"
+  },
+  {
+    "model": "DeepSeek R1 14B",
+    "jargon_free": true,
+    "flagged_words": [],
+    "spoken_naturalness_score": 95,
+    "visual_groundedness_score": 95,
+    "verdict": "PASS",
+    "critique": "The script is warm, natural, and authentic. It effectively communicates the challenges of traditional teaching structures and the benefits of collaborative environments without using jargon. The visual scenes are grounded in real classroom experiences, making them relatable and authentic.",
+    "recommended_tweaks": [
+      "Consider adding a brief anecdote or personal story to make it even more relatable.",
+      "Simplify 'step away from all that' to 'move away from traditional structures' for clarity."
+    ],
+    "response_time_sec": 19.47,
+    "status": "SUCCESS"
+  },
+  {
+    "model": "Gemma 12B",
+    "jargon_free": true,
+    "flagged_words": [],
+    "spoken_naturalness_score": 98,
+    "visual_groundedness_score": 98,
+    "version_notes": "The script is exceptionally well-written for its target audience. It avoids the 'hustle' culture of corporate training and focuses on the emotional reality of teaching. The visual storyboard is grounded in physical actions (marking, waiting, sitting together) rather than abstract concepts.",
+    "verdict": "PASS",
+    "critique": "The script is nearly perfect. It avoids all corporate buzzwords and uses relatable, human-centric imagery. The transition from the 'old way' to the 'new way' is clearly defined by the feeling of 'permission' vs. 'trust'.",
+    "recommended_tweaks": [
+      "Change 'sign-off' to 'approval' or 'the green light' if you want to be even softer, though 'sign-off' is okay.",
+      "Change 'playing politics' to 'worrying about how it looks' or 'navigating the hierarchy' if you want to avoid the slight political undertone, though it's very clear in context."
+    ],
+    "response_time_sec": 22.87,
+    "status": "SUCCESS"
+  }
+]

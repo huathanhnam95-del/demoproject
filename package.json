@@ -1,10 +1,14 @@
 {
   "name": "dictation-practice",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "Dictation practice app",
   "scripts": {
     "check:structure": "node scripts/structure/check.cjs check",
+    "build:content:rmcsa": "node scripts/performance/publish-rmcsa.cjs",
+    "check:content:rmcsa": "node scripts/performance/publish-rmcsa.cjs --check",
+    "test:performance:reference": "node --test tests/performance/reference.test.cjs",
     "test:structure": "node --test tests/structure/check.test.cjs",
+    "test:security": "node --test tests/security/authorization-boundaries.test.cjs",
     "test:release": "node --test tests/release/firebase-release-cli.test.cjs",
     "check:crm:selection": "node scripts/crm/verification-selection.cjs check",
     "test:crm:selection": "node --test tests/crm/verification-selection.test.cjs",

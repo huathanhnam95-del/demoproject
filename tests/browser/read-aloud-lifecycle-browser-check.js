@@ -41,6 +41,13 @@ async function dismissBlockingOverlays(page) {
   }, { timeout: 15000 });
 
   await dismissTutorial(page);
+  const levelModal = page.locator('#level-selection-modal');
+  if (await levelModal.count() && await levelModal.isVisible().catch(() => false)) {
+    await page.evaluate(() => {
+      const modal = document.getElementById('level-selection-modal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
 }
 
 async function dismissTutorial(page) {
@@ -55,6 +62,12 @@ async function dismissTutorial(page) {
       return !element || !element.classList.contains('active') || getComputedStyle(element).display === 'none';
     }, { timeout: 10000 });
   }
+  await page.evaluate(() => {
+    const t = document.getElementById('tutorial-overlay');
+    if (t) { t.classList.remove('active'); t.style.display = 'none'; }
+    const b = document.getElementById('tutorial-backdrop');
+    if (b) b.style.display = 'none';
+  });
 }
 
 async function waitForReadAloudState(page, state) {
@@ -67,6 +80,9 @@ async function waitForReadAloudState(page, state) {
   await context.addInitScript(() => {
     localStorage.setItem('userStatus', 'guest');
     localStorage.setItem('hasSeenScopeTutorial', 'true');
+    localStorage.setItem('read-aloudModeFirstUse', 'true');
+    localStorage.setItem('bel_tutorial_completed_read-aloud', 'true');
+    sessionStorage.setItem('bel_app_loaded', '1');
 
     class FakeMediaRecorder {
       constructor(stream) {
@@ -180,6 +196,7 @@ async function waitForReadAloudState(page, state) {
     assert.strictEqual(setup.controllerMounted, true, 'Read Aloud shared controller is mounted');
     assert.ok(setup.promptId, 'Read Aloud has an active prompt');
 
+    await dismissBlockingOverlays(page);
     await page.locator('#ra-record-btn').click();
     await waitForReadAloudState(page, 'RECORDING');
     assert.notStrictEqual(await page.locator('#ra-stop-btn').evaluate((el) => getComputedStyle(el).display), 'none', 'Stop is visible while recording');

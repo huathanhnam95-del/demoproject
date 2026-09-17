@@ -392,40 +392,34 @@
     }
   }
 
-  /* Load Excel Data */
+  let isModeActive = false;
+  let openGeneration = 0;
+  let bankPromise = null;
+
   async function loadData() {
-    if (typeof XLSX === 'undefined') {
-      throw new Error('XLSX library is not loaded. Cannot parse Excel database.');
+    if (state.questions.length) return;
+    if (!window.BELRmcsaContent) throw new Error('RMCSA content client is not loaded.');
+    if (!bankPromise) {
+      const end = window.BELPerf?.begin('rmcsa:content') || (() => {});
+      bankPromise = window.BELRmcsaContent.load().then(bank => {
+        state.questions = bank.questions;
+        end('ok');
+      }).catch(error => {
+        bankPromise = null;
+        end('error');
+        throw error;
+      });
     }
-
-    const response = await fetch(`${EXCEL_PATH}?v=${Date.now()}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Excel database: ${response.statusText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const rawData = XLSX.utils.sheet_to_json(sheet);
-
-    state.questions = rawData.map((row) => {
-      const parsed = parseRmcsaAnswer(row.ANSWER);
-
-      return {
-        id: Number(row.ID) || 0,
-        title: String(row.TITLE || '').trim(),
-        passage: parsed.passage,
-        question: parsed.question,
-        choices: parsed.choices,
-        explanation: String(row.EXPLANATION || '').trim()
-      };
-    }).sort((a, b) => a.id - b.id);
+    return bankPromise;
   }
 
   /* Load Question */
   function loadQuestion(index) {
     if (index < 0 || index >= state.questions.length) return;
+
+    ++openGeneration;
+    const modePanel = document.getElementById('mode-rmcsa');
+    modePanel?.querySelector('#rmcsa-load-recovery')?.remove();
 
     state.currentQuestionIndex = index;
     state.currentQuestion = state.questions[index];
@@ -439,6 +433,11 @@
     closePicker();
     updateNavigationUI();
     renderQuestion();
+
+    if (modePanel) {
+      modePanel.dataset.loadState = 'ready';
+      modePanel.dataset.perfReady = 'true';
+    }
 
     if (window.PracticeRouter && state.currentQuestion?.id != null) {
       window.PracticeRouter.replaceRoute('rmcsa', state.currentQuestion.id);
@@ -648,47 +647,68 @@
     if (elements.fontIncrease) elements.fontIncrease.disabled = state.explanationFontScale >= MAX;
   }
 
-  async function loadQuestionById(questionId) {
-    if (state.questions.length === 0) {
-      await loadData();
-    }
-    const numericId = Number(questionId);
-    const index = state.questions.findIndex(q => Number(q.id) === numericId);
-    if (index !== -1) {
-      loadQuestion(index);
+  function renderLoadFailure(message, requestedId, retryable) {
+    const panel = document.getElementById('mode-rmcsa');
+    setLoadingState(message);
+    state.currentQuestion = null;
+    if (elements.questionPill) elements.questionPill.textContent = 'Choose a question';
+    if (elements.prevBtn) elements.prevBtn.disabled = true;
+    if (elements.nextBtn) elements.nextBtn.disabled = true;
+    panel.dataset.perfReady = 'false';
+    panel.dataset.loadState = retryable ? 'error' : 'not-found';
+    panel.querySelector('#rmcsa-load-recovery')?.remove();
+    if (retryable) {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.id = 'rmcsa-load-recovery';
+      retry.textContent = 'Retry this question';
+      retry.addEventListener('click', () => { void openQuestion(requestedId); });
+      elements.passageText?.insertAdjacentElement('afterend', retry);
     }
   }
 
-  /* Global Controller Hooks */
+  async function openQuestion(requestedId = null) {
+    if (!isModeActive) return { status: 'cancelled' };
+    const generation = ++openGeneration;
+    const panel = document.getElementById('mode-rmcsa');
+    const end = window.BELPerf?.begin('rmcsa:activate') || (() => {});
+    panel.dataset.perfReady = 'false';
+    panel.dataset.loadState = 'loading';
+    panel.querySelector('#rmcsa-load-recovery')?.remove();
+    setLoadingState('Loading reading questions…');
+    try {
+      await loadData();
+      if (!isModeActive || generation !== openGeneration) { end('cancelled'); return { status: 'cancelled' }; }
+      const index = requestedId == null ? 0 : state.questions.findIndex(q => String(q.id) === String(requestedId));
+      if (index < 0 || !state.questions[index]) {
+        renderLoadFailure('This question is unavailable. Choose another question.', requestedId, false);
+        end('error'); return { status: 'not-found' };
+      }
+      loadQuestion(index); // Keep existing shuffle, scoring, keyboard and router behavior.
+      panel.dataset.perfReady = 'true';
+      panel.dataset.loadState = 'ready';
+      end('ok'); return { status: 'loaded' };
+    } catch (error) {
+      if (!isModeActive || generation !== openGeneration) { end('cancelled'); return { status: 'cancelled' }; }
+      console.warn('[RMCSA] Content load failed:', error.code || error.name);
+      renderLoadFailure('Questions could not load. Your connection or this content release may be unavailable.', requestedId, true);
+      end('error'); return { status: 'error' };
+    }
+  }
+
   async function activate() {
     cacheElements();
-    if (!state.initialized) {
-      setupEventListeners();
-      state.initialized = true;
-    }
-
-    if (state.questions.length === 0) {
-      setLoadingState('Loading reading questions...');
-      try {
-        await loadData();
-      } catch (error) {
-        console.error('[RMCSAMode] Error loading excel database:', error);
-        setLoadingState('Failed to load question database. Please check your network connection and reload.');
-        return;
-      }
-    }
-
-    if (state.questions.length > 0) {
-      const urlRoute = window.PracticeRouter ? window.PracticeRouter.initFromURL() : null;
-      if (urlRoute && urlRoute.mode === 'rmcsa' && urlRoute.questionId) {
-        await loadQuestionById(urlRoute.questionId);
-      } else {
-        loadQuestion(0);
-      }
-    }
+    if (!state.initialized) { setupEventListeners(); state.initialized = true; }
+    isModeActive = true;
+    const route = window.PracticeRouter?.initFromURL?.();
+    return openQuestion(route?.mode === 'rmcsa' ? route.questionId ?? null : null);
   }
 
   function onExit() {
+    isModeActive = false;
+    ++openGeneration;
+    const panel = document.getElementById('mode-rmcsa');
+    if (panel) panel.dataset.perfReady = 'false';
     closePicker();
     state.selectedIndices.clear();
     state.submitted = false;
@@ -701,9 +721,9 @@
   };
 
   // Deep-link support: listen for PracticeRouter question navigation events
-  window.addEventListener('practice-route-question', async (event) => {
+  window.addEventListener('practice-route-question', event => {
     const { mode, questionId } = event.detail || {};
-    if (mode !== 'rmcsa' || !questionId) return;
-    await loadQuestionById(questionId);
+    if (mode !== 'rmcsa' || !questionId || !isModeActive) return;
+    void openQuestion(questionId);
   });
 })();

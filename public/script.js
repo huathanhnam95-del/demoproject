@@ -1840,19 +1840,20 @@
   };
 
   async function ensureModeAssets(mode) {
-    if (!['watch', 'notes', 'rfib', 'rmcsa', 'rmcma', 'rop', 'dd', 'lmcma', 'lmcsa', 'hcs', 'smw', 'hiw', 'sst'].includes(mode)) return true;
-    if (!window.BELLazyLoader || typeof window.BELLazyLoader.ensureModeScripts !== 'function') {
-      return true;
+    const loader = window.BELLazyLoader;
+    if (!loader || typeof loader.supportsMode !== 'function') {
+      console.error('[ModeAssets] Loader/entry build mismatch.');
+      return false;
     }
-
+    if (!loader.supportsMode(mode)) return true;
     try {
-      await window.BELLazyLoader.ensureModeScripts(mode);
+      const handled = await loader.ensureModeScripts(mode);
+      if (!handled) throw new Error(`No loader registered for ${mode}.`);
       return true;
     } catch (error) {
-      console.error(`[switchToMode] Failed to load ${mode} assets:`, error);
+      console.error(`[ModeAssets] ${mode} failed:`, error);
       window.shopModule?.showAlertModal?.(
-        `Could not load ${mode} mode right now. Please check your connection and try again.`,
-        true
+        'This practice mode could not load. Please retry.', true
       );
       return false;
     }
@@ -1904,7 +1905,17 @@
       }
       window.DDMode?.onExit?.();
     }
-    if (leavingMode === 'read-aloud') window.ReadAloudMode?.onExit?.();
+    if (leavingMode === 'read-aloud') {
+      if (window.ReadAloudMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Read Aloud?',
+          'You have an unsubmitted recording for this question. Do you want to discard it and leave?',
+          true
+        );
+        if (!confirmed) return false;
+      }
+      window.ReadAloudMode?.onExit?.();
+    }
     if (leavingMode === 'notes') window.TakeNotesMode?.onExit?.();
     // TODO: if (leavingMode === 'speak') window.SpeakMode?.onExit?.();
     if (leavingMode === 'collo-dictate') window.ColloDictateMode?.onExit?.();
@@ -1963,6 +1974,9 @@
     
     currentActiveMode = '';
     window.appState.currentMode = '';
+    if (typeof document !== 'undefined' && document.body && document.body.dataset.practiceLayout) {
+      delete document.body.dataset.practiceLayout;
+    }
     
     // Deselect tab buttons
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1983,6 +1997,9 @@
    */
   async function activatePracticeMode(mode) {
     if (!mode) return;
+    if (mode === 'dashboard') {
+      return typeof window.exitCurrentMode === 'function' ? await window.exitCurrentMode() : false;
+    }
 
     const transitionToken = ++modeTransitionToken;
     const isCurrentTransition = () => transitionToken === modeTransitionToken;
@@ -2075,6 +2092,15 @@
       window.DDMode?.onExit?.();
     }
     if (leavingMode === 'read-aloud' && mode !== 'read-aloud') {
+      if (window.ReadAloudMode?.shouldConfirmExit?.()) {
+        const confirmed = await window.showCustomConfirm(
+          'Leave Read Aloud?',
+          'You have an unsubmitted recording for this question. Do you want to discard it and leave?',
+          true
+        );
+        if (!isCurrentTransition()) return false;
+        if (!confirmed) return false;
+      }
       window.ReadAloudMode?.onExit?.();
     }
     if (leavingMode === 'notes' && mode !== 'notes') {
@@ -2097,6 +2123,9 @@
 
     // Try to cleanup previous mode (safe if it doesn't exist)
     if (mode === 'survival') {
+      if (typeof document !== 'undefined' && document.body && document.body.dataset.practiceLayout) {
+        delete document.body.dataset.practiceLayout;
+      }
       if (typeof window.ensureSurvivalGameLoaded === 'function') {
         try {
           await window.ensureSurvivalGameLoaded();
@@ -2119,11 +2148,9 @@
       return;
     }
 
-    if (mode === 'watch' || mode === 'notes' || mode === 'rfib' || mode === 'rmcsa' || mode === 'rmcma' || mode === 'rop' || mode === 'dd' || mode === 'lmcma' || mode === 'lmcsa' || mode === 'hcs' || mode === 'smw' || mode === 'hiw' || mode === 'sst') {
-      const assetsReady = await ensureModeAssets(mode);
-      if (!assetsReady) return;
-    }
+    const assetsReady = await ensureModeAssets(mode);
     if (!isCurrentTransition()) return false;
+    if (!assetsReady) return false;
 
     // Map mode names to tab IDs and panel IDs
     const tabId = 'tab-' + mode;
@@ -2157,6 +2184,9 @@
     const modePanel = document.getElementById(panelId);
 
     if (tabBtn && modePanel) {
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.dataset.practiceLayout = 'fluid-v1';
+      }
       // 1. Update tab button active states
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       tabBtn.classList.add('active');
@@ -9378,10 +9408,18 @@
     refreshRecommendationUI('speak');
     refreshRecommendationUI('extended');
 
-    // Signal the 2D preloader that the app is ready
-    // The preloader will wait its minimum duration (3s) before dismissing
-    if (typeof window.finishBelPreloader === 'function') {
-      window.finishBelPreloader();
+    // Signal the preloader that the shell setup is ready
+    const publishShellReady = () => {
+      if (typeof window.BELBoot?.shellReady === 'function') {
+        window.BELBoot.shellReady();
+      } else if (typeof window.finishBelPreloader === 'function') {
+        window.finishBelPreloader();
+      }
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', publishShellReady, { once: true });
+    } else {
+      publishShellReady();
     }
   };
 

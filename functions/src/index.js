@@ -58,6 +58,12 @@ const { getStorageBucket } = require('./utils/firebase_admin_init');
 const { createAttachmentStorage } = require('./crm/data-input/attachment-storage');
 const { createAttachmentCleanup } = require('./crm/data-input/attachment-cleanup');
 
+const crypto = require('crypto');
+
+function deriveQueueDocId(dedupeKey) {
+    return crypto.createHash('sha256').update(String(dedupeKey || '')).digest('hex').slice(0, 32);
+}
+
 async function runCrmAutomationQueue() {
     const db = getFirestore();
     const [ruleSnap, templateSnap, leadSnap, studentSnap, invoiceSnap, enrollmentSnap, attendanceSnap, queueSnap] = await Promise.all([
@@ -82,7 +88,7 @@ async function runCrmAutomationQueue() {
         students
     });
 
-    const writes = [];
+    const entriesToWrite = [];
     ruleSnap.docs.forEach((doc) => {
         const rule = { ruleId: doc.id, ...doc.data() };
         const template = templates.get(String(rule.templateId || ''));
@@ -102,12 +108,23 @@ async function runCrmAutomationQueue() {
             serverTimestamp: () => new Date()
         });
         queueEntries.forEach((entry) => {
-            writes.push(db.collection(CRM_AUTOMATION_QUEUE).doc().set(entry));
+            const docId = deriveQueueDocId(entry.dedupeKey);
+            entriesToWrite.push({ docId, entry });
             existingKeys.add(entry.dedupeKey);
         });
     });
 
-    await Promise.all(writes);
+    // Write in bounded batches of 250 to ensure atomicity, bounded concurrency, and prevent duplicate jobs across overlapping runners
+    const BATCH_SIZE = 250;
+    for (let i = 0; i < entriesToWrite.length; i += BATCH_SIZE) {
+        const batch = db.batch();
+        const slice = entriesToWrite.slice(i, i + BATCH_SIZE);
+        slice.forEach(({ docId, entry }) => {
+            const docRef = db.collection(CRM_AUTOMATION_QUEUE).doc(docId);
+            batch.set(docRef, entry, { merge: true });
+        });
+        await batch.commit();
+    }
 }
 
 async function runRecycleBinPurgeQueue() {

@@ -679,7 +679,7 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <p style="margin-bottom:8px;">No scheduled sessions in the next two weeks.</p>
-                        <a href="crm-admin.html#courses/teacher-schedule" class="schedule-action-btn primary" style="display:inline-flex; margin-top:8px;">Open Full Scheduler &rarr;</a>
+                        <a href="/crm-admin#courses/teacher-schedule" class="schedule-action-btn primary" style="display:inline-flex; margin-top:8px;">Open Full Scheduler &rarr;</a>
                     </div>
                 `;
                 return;
@@ -741,7 +741,7 @@
                             </div>
                         </div>
                         <div>
-                            <a href="crm-admin.html#courses/teacher-schedule" class="schedule-action-btn" title="View details in scheduler">View in CRM &rarr;</a>
+                            <a href="/crm-admin#courses/teacher-schedule" class="schedule-action-btn" title="View details in scheduler">View in CRM &rarr;</a>
                         </div>
                     </div>
                 `;

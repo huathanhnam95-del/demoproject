@@ -219,6 +219,7 @@ async function seedFirestoreAdminProfile({ uid, email, displayName }) {
       email: { stringValue: email },
       displayName: { stringValue: displayName },
       isAdmin: { booleanValue: true },
+      englishLevel: { stringValue: 'advanced' },
       createdAt: { timestampValue: new Date().toISOString() },
       lastLoginAt: { timestampValue: new Date().toISOString() },
       totalActiveSeconds: { integerValue: '0' },

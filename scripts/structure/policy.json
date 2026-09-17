@@ -64,6 +64,34 @@
   },
   "commands": [
     {
+      "name": "dev:server",
+      "program": "node",
+      "args": ["scripts/start-dev-server.cjs"],
+      "target": "scripts/start-dev-server.cjs",
+      "effects": ["local-write"]
+    },
+    {
+      "name": "build:content:rmcsa",
+      "program": "node",
+      "args": ["scripts/performance/publish-rmcsa.cjs"],
+      "target": "scripts/performance/publish-rmcsa.cjs",
+      "effects": ["local-write"]
+    },
+    {
+      "name": "check:content:rmcsa",
+      "program": "node",
+      "args": ["scripts/performance/publish-rmcsa.cjs", "--check"],
+      "target": "scripts/performance/publish-rmcsa.cjs",
+      "effects": ["read-only"]
+    },
+    {
+      "name": "test:performance:reference",
+      "program": "node",
+      "args": ["--test", "tests/performance/reference.test.cjs"],
+      "target": "tests/performance/reference.test.cjs",
+      "effects": ["read-only"]
+    },
+    {
       "name": "check:structure",
       "program": "node",
       "args": ["scripts/structure/check.cjs", "check"],

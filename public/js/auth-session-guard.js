@@ -158,24 +158,66 @@
   }
 
   async function ensureCompatFirebaseFromConfig(firebaseRef, options = {}) {
-    if (!firebaseRef || typeof fetch !== 'function') {
+    if (!firebaseRef) {
+      throw new Error('Firebase compat bootstrap is unavailable.');
+    }
+
+    const isLocal = isLocalAuthHost(options.hostname);
+    const existingConfig = options.staticConfig || (typeof window !== 'undefined' ? window.__FIREBASE_CONFIG__ : null);
+
+    if (!isLocal && Array.isArray(firebaseRef.apps) && firebaseRef.apps.length > 0) {
+      await ensureCompatLocalPersistence(firebaseRef);
+      return firebaseRef.apps[0]?.options || existingConfig;
+    }
+
+    if (!isLocal && existingConfig && existingConfig.apiKey) {
+      if (!Array.isArray(firebaseRef.apps) || firebaseRef.apps.length === 0) {
+        firebaseRef.initializeApp(existingConfig);
+      }
+      await ensureCompatLocalPersistence(firebaseRef);
+      return existingConfig;
+    }
+
+    if (typeof fetch !== 'function') {
+      if (existingConfig && existingConfig.apiKey) {
+        if (!Array.isArray(firebaseRef.apps) || firebaseRef.apps.length === 0) {
+          firebaseRef.initializeApp(existingConfig);
+        }
+        await ensureCompatLocalPersistence(firebaseRef);
+        return existingConfig;
+      }
       throw new Error('Firebase compat bootstrap is unavailable.');
     }
 
     const configUrl = String(options.configUrl || '/api/config');
-    const res = await fetch(configUrl, { cache: 'no-store' });
-    const result = await res.json().catch(() => null);
+    let result = null;
+    let res = null;
+    try {
+      res = await fetch(configUrl, { cache: 'no-store' });
+      result = await res.json().catch(() => null);
+    } catch (fetchErr) {
+      if (existingConfig && existingConfig.apiKey) {
+        result = { success: true, config: existingConfig };
+        res = { ok: true };
+      } else {
+        throw fetchErr;
+      }
+    }
 
-    if (!res.ok || !result?.success || !result?.config?.apiKey) {
-      const msg = result?.message || `Could not fetch ${configUrl}. Ensure the server is running.`;
-      throw new Error(msg);
+    if (!res?.ok || !result?.success || !result?.config?.apiKey) {
+      if (existingConfig && existingConfig.apiKey) {
+        result = { success: true, config: existingConfig };
+      } else {
+        const msg = result?.message || `Could not fetch ${configUrl}. Ensure the server is running.`;
+        throw new Error(msg);
+      }
     }
 
     if (!Array.isArray(firebaseRef.apps) || firebaseRef.apps.length === 0) {
       firebaseRef.initializeApp(result.config);
 
-        var isLocal = isLocalAuthHost(options.hostname);
-        if (isLocal) {
+        var isLocalEnv = isLocal;
+        if (isLocalEnv) {
           // The local server publishes its owned emulator endpoints. Use those
           // ports so a phase harness (or another isolated session) cannot
           // silently attach the browser to a different emulator instance.

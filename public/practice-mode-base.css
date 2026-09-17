@@ -20,6 +20,14 @@
   width: 100%;
 }
 
+body[data-practice-layout="fluid-v1"] .pm-container,
+body[data-practice-layout="fluid-v1"] .hcs-container,
+body[data-practice-layout="fluid-v1"] .rop-container {
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
+}
+
 .pm-split-layout {
   display: flex;
   flex-direction: column;
@@ -33,6 +41,13 @@
   gap: var(--space-lg);
   margin-bottom: var(--space-md);
   align-items: stretch;
+}
+
+body[data-practice-layout="fluid-v1"] .hcs-split-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
 @media (min-width: 900px) {

@@ -113,7 +113,7 @@ test('one reviewed operation prepares lead, conversion, test, enrollment, invoic
     ], { testTokens: { test: token } });
     assert.equal(f.rows.size, 1);
     assert.equal(result.results.test.testId, hashTokenToTestId(token));
-    assert.equal(result.results.convert.studentLink, '/crm-admin.html#students/a0001');
+    assert.equal(result.results.convert.studentLink, '/crm-admin#students/a0001');
     assert.equal(result.results.test.testLink, `http://localhost:9000/entrance-test.html?token=${token}`);
     await result.flush();
     const invoice = f.rows.get(`crmInvoices/${result.results.invoice.invoiceId}`);
@@ -130,7 +130,7 @@ test('student links use persisted CRM IDs, including existing converted students
         const f = fixture({ 'crmLeads/l1': { name: 'Lan', studentId: 'document-id' }, 'crmStudents/document-id': { name: 'Lan', crmId } });
         const result = await prepare(f, [{ actionId: 'convert', kind: 'convertLead', values: { leadId: 'l1' } }]);
         assert.equal(result.results.convert.studentId, 'document-id');
-        assert.equal(result.results.convert.studentLink, crmId === 'B0042' ? '/crm-admin.html#students/b0042' : undefined);
+        assert.equal(result.results.convert.studentLink, crmId === 'B0042' ? '/crm-admin#students/b0042' : undefined);
     }
 });
 

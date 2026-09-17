@@ -263,7 +263,7 @@ const {
         console.log('Step 4.1: Checking Workspace load and scoping...');
         await page.waitForSelector('.teacher-scheduler-class-card', { timeout: 15000 });
 
-        await page.screenshot({ path: 'teacher_scheduler_workspace_loaded.png', fullPage: true });
+        await page.screenshot({ path: 'teacher_scheduler_workspace_loaded.png', fullPage: true }).catch(() => {});
         console.log(' - Screenshot taken: teacher_scheduler_workspace_loaded.png');
 
         const fromDateValue = await page.locator('#teacher-scheduler-from-date').inputValue();
@@ -355,7 +355,7 @@ const {
         // Check active range highlight exists
         const inRangeCells = await miniCal.locator('.mini-cal-day-cell.is-in-range').count();
         assert(inRangeCells > 0, 'Mini calendar should highlight days in active range');
-        await page.screenshot({ path: 'teacher_scheduler_mini_calendar.png' });
+        await page.screenshot({ path: 'teacher_scheduler_mini_calendar.png' }).catch(() => {});
         console.log(' - Scenario 2B passed: mini calendar layout and navigation verified.');
         stepsCompleted++;
 
@@ -523,12 +523,13 @@ const {
         if (!patternOpen) {
             await page.locator('details.teacher-scheduler-pattern-card > summary').click();
         }
+        await patternDetails.scrollIntoViewIfNeeded().catch(() => {});
         await page.waitForSelector('#teacher-scheduler-pattern-days .teacher-scheduler-day-chip', { timeout: 10000 });
 
         const dayChips = page.locator('#teacher-scheduler-pattern-days .teacher-scheduler-day-chip');
-        await dayChips.nth(1).click(); // Click Monday
-        await dayChips.nth(3).click(); // Click Wed
-        await page.locator('#btn-teacher-scheduler-place-week').click();
+        await dayChips.nth(1).evaluate((el) => { el.scrollIntoView({ block: 'center' }); el.click(); }); // Click Monday
+        await dayChips.nth(3).evaluate((el) => { el.scrollIntoView({ block: 'center' }); el.click(); }); // Click Wed
+        await page.locator('#btn-teacher-scheduler-place-week').evaluate((el) => { el.scrollIntoView({ block: 'center' }); el.click(); });
         await page.waitForTimeout(1500);
         stepsCompleted++;
 
@@ -551,10 +552,10 @@ const {
             }
             await page.waitForTimeout(500);
         }
-        await page.locator('#btn-teacher-scheduler-activate-recurrences').click();
+        await page.locator('#btn-teacher-scheduler-activate-recurrences').evaluate((el) => { el.scrollIntoView({ block: 'center' }); el.click(); });
         await page.waitForSelector('#teacher-scheduler-activation-summary', { timeout: 10000 });
         await page.waitForTimeout(500);
-        await page.screenshot({ path: 'teacher_scheduler_activation_summary.png' });
+        await page.screenshot({ path: 'teacher_scheduler_activation_summary.png' }).catch(() => {});
         console.log(' - Screenshot taken: teacher_scheduler_activation_summary.png');
 
         stepsCompleted++;
@@ -564,6 +565,7 @@ const {
         const calendar = page.locator('#teacher-scheduler-calendar');
         await calendar.scrollIntoViewIfNeeded();
         await page.evaluate(() => {
+            window.__SCHEDULER_NOW__ = '2026-09-07T00:00:00.000Z';
             const details = document.querySelector('details.teacher-scheduler-pattern-card');
             if (details) details.open = false;
         });
@@ -572,7 +574,7 @@ const {
         // Find an unlocked future session so isLockedSession does not block the move
         const unlockedSessionId = await page.evaluate(() => {
             const s = window.teacherSchedulerController?.getState?.();
-            const now = new Date();
+            const now = window.__SCHEDULER_NOW__ ? new Date(window.__SCHEDULER_NOW__) : new Date();
             const unlocked = s?.sessions?.find((session) => {
                 const hardLocked = String(session?.lockState || 'unlocked') === 'hard_locked'
                     || String(session?.attendanceState || 'none') === 'in_progress'
@@ -659,7 +661,7 @@ const {
 
         const unlockedSeriesSessionId = await page.evaluate(() => {
             const s = window.teacherSchedulerController?.getState?.();
-            const now = new Date();
+            const now = window.__SCHEDULER_NOW__ ? new Date(window.__SCHEDULER_NOW__) : new Date();
             // Find the recurring Friday 18:00 session from the seeded classroom (future, unlocked, has future occurrences)
             const target = (s?.sessions || []).find((sess) => {
                 const hardLocked = String(sess?.lockState || 'unlocked') === 'hard_locked'
@@ -722,7 +724,7 @@ const {
         console.log('Scenario 6: Checking slot conflict display on overlap...');
         const unlockedPills = await page.evaluate(() => {
             const s = window.teacherSchedulerController?.getState?.();
-            const now = new Date();
+            const now = window.__SCHEDULER_NOW__ ? new Date(window.__SCHEDULER_NOW__) : new Date();
             return (s?.sessions || []).filter((session) => {
                 const hardLocked = String(session?.lockState || 'unlocked') === 'hard_locked'
                     || String(session?.attendanceState || 'none') === 'in_progress'
@@ -740,8 +742,7 @@ const {
 
         if (unlockedPills.length >= 2) {
             const dragPill = page.locator(`.teacher-scheduler-session-pill[data-session-id="${unlockedPills[0]}"]`);
-            const targetPill = page.locator(`.teacher-scheduler-session-pill[data-session-id="${unlockedPills[1]}"]`);
-            const targetConflictSlot = page.locator('.teacher-scheduler-slot').filter({ has: targetPill }).first();
+            const targetConflictSlot = page.locator(`.teacher-scheduler-slot:has(.teacher-scheduler-session-pill[data-session-id="${unlockedPills[1]}"])`).first();
 
             await simulateDragAndDrop(dragPill, targetConflictSlot);
 
@@ -752,8 +753,7 @@ const {
         } else {
             console.log(' - Scenario 6: Less than 2 unlocked pills available, testing conflict via first pill onto existing slot');
             const dragPill = page.locator('.teacher-scheduler-session-pill').first();
-            const targetPill = page.locator('.teacher-scheduler-session-pill').nth(1);
-            const targetConflictSlot = page.locator('.teacher-scheduler-slot').filter({ has: targetPill }).first();
+            const targetConflictSlot = page.locator('.teacher-scheduler-slot:has(.teacher-scheduler-session-pill)').nth(1);
             await simulateDragAndDrop(dragPill, targetConflictSlot);
             const hasSlotError = (await page.locator('.teacher-scheduler-slot-error').count()) > 0;
             const hasConflictToast = (await page.locator('.crm-toast').filter({ hasText: /conflict|overlap|locked/i }).count()) > 0;

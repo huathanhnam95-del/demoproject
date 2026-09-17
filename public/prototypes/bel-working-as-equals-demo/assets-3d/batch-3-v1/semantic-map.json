@@ -1,0 +1,179 @@
+{
+  "schema": "bel-3d-semantic-map/1",
+  "pack": "batch-3-v1",
+  "baseline": {
+    "repository": "huathanhnam95-del/demoproject",
+    "branch": "codex/bel-demo-production-20260914",
+    "commit": "249a8fc86b5a293f82008b0db07c64aeca4ad2bd",
+    "featureRoot": "public/prototypes/bel-working-as-equals-demo/"
+  },
+  "rule": "Maps original identities to visual variants only. No teaching text, answers, order hints or labels are embedded in any mesh or texture.",
+  "planks": [
+    {
+      "sourceId": "plank-0",
+      "source": "activities/bridge.mjs PLANKS[0] (colour, mark)",
+      "color": "teal",
+      "mark": "diamond",
+      "colorHex": "#0098a9",
+      "markHex": "#fbe5c8",
+      "assetId": "prop.bridge-plank",
+      "variant": "plank-0",
+      "meshes": [
+        "M_plank_body",
+        "M_plank_mark",
+        "M_plank_nails"
+      ]
+    },
+    {
+      "sourceId": "plank-1",
+      "source": "activities/bridge.mjs PLANKS[1] (colour, mark)",
+      "color": "violet",
+      "mark": "two bars",
+      "colorHex": "#7e3ec0",
+      "markHex": "#fbe5c8",
+      "assetId": "prop.bridge-plank",
+      "variant": "plank-1",
+      "meshes": [
+        "M_plank_body",
+        "M_plank_mark",
+        "M_plank_nails"
+      ]
+    },
+    {
+      "sourceId": "plank-2",
+      "source": "activities/bridge.mjs PLANKS[2] (colour, mark)",
+      "color": "rose",
+      "mark": "star",
+      "colorHex": "#e06575",
+      "markHex": "#fbe5c8",
+      "assetId": "prop.bridge-plank",
+      "variant": "plank-2",
+      "meshes": [
+        "M_plank_body",
+        "M_plank_mark",
+        "M_plank_nails"
+      ]
+    },
+    {
+      "sourceId": "plank-3",
+      "source": "activities/bridge.mjs PLANKS[3] (colour, mark)",
+      "color": "red",
+      "mark": "circle",
+      "colorHex": "#bb2a25",
+      "markHex": "#fbe5c8",
+      "assetId": "prop.bridge-plank",
+      "variant": "plank-3",
+      "meshes": [
+        "M_plank_body",
+        "M_plank_mark",
+        "M_plank_nails"
+      ]
+    },
+    {
+      "sourceId": "plank-4",
+      "source": "activities/bridge.mjs PLANKS[4] (colour, mark)",
+      "color": "blue",
+      "mark": "cross",
+      "colorHex": "#1d5aca",
+      "markHex": "#fbe5c8",
+      "assetId": "prop.bridge-plank",
+      "variant": "plank-4",
+      "meshes": [
+        "M_plank_body",
+        "M_plank_mark",
+        "M_plank_nails"
+      ]
+    },
+    {
+      "sourceId": "plank-5",
+      "source": "activities/bridge.mjs PLANKS[5] (colour, mark)",
+      "color": "amber",
+      "mark": "triangle",
+      "colorHex": "#e28a17",
+      "markHex": "#fbe5c8",
+      "assetId": "prop.bridge-plank",
+      "variant": "plank-5",
+      "meshes": [
+        "M_plank_body",
+        "M_plank_mark",
+        "M_plank_nails"
+      ]
+    }
+  ],
+  "avatarSeats": {
+    "p0": {
+      "assetId": "avatar.participant",
+      "variant": {
+        "actor": "p0"
+      },
+      "baseLook": {
+        "hair": "#4f2f1d",
+        "shirt": "#ab2420",
+        "undershirt": "#f8f0e3",
+        "pants": "#143e66",
+        "shoes": "#5b2c12"
+      },
+      "source": "world/sprites.mjs createSpriteAtlas cast crop"
+    },
+    "p1": {
+      "assetId": "avatar.participant",
+      "variant": {
+        "actor": "p1"
+      },
+      "baseLook": {
+        "hair": "#3f2314",
+        "hairTie": "#9f2313",
+        "shirt": "#47a695",
+        "pants": "#123458",
+        "shoes": "#4b2d14"
+      },
+      "source": "world/sprites.mjs createSpriteAtlas cast crop"
+    },
+    "p2": {
+      "assetId": "avatar.participant",
+      "variant": {
+        "actor": "p2"
+      },
+      "baseLook": {
+        "hair": "#8f4c1d",
+        "shirt": "#f9f2e5",
+        "pants": "#175075",
+        "shoes": "#4a290c"
+      },
+      "source": "world/sprites.mjs createSpriteAtlas cast crop"
+    },
+    "p3": {
+      "assetId": "avatar.participant",
+      "variant": {
+        "actor": "p3"
+      },
+      "baseLook": {
+        "hair": "#4d433d",
+        "shirt": "#c36a15",
+        "pants": "#052b4e",
+        "shoes": "#593611"
+      },
+      "source": "world/sprites.mjs createSpriteAtlas cast crop"
+    }
+  },
+  "appearance": {
+    "shirt": {
+      "default": "actor original clothing colour",
+      "teal": "#248f89",
+      "cream": "#e0d8c1",
+      "amber": "#b46f29",
+      "red": "#a13626"
+    },
+    "shirtSource": "world/sprites.mjs tint table",
+    "hat": {
+      "none": "A_hat_straw and A_hat_cap hidden",
+      "straw": "A_hat_straw visible",
+      "cap": "A_hat_cap visible"
+    },
+    "glasses": {
+      "false": "A_glasses hidden",
+      "true": "A_glasses visible"
+    },
+    "unknownValues": "mirror the 2D renderer: unknown shirt = original clothing, unknown hat = none"
+  }
+}

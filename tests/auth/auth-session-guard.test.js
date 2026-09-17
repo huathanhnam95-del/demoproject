@@ -196,6 +196,107 @@ async function testValidatedEmulatorOverrides() {
   );
 }
 
+async function testIsLocalAuthHost() {
+  assert.strictEqual(guard.isLocalAuthHost('localhost'), true);
+  assert.strictEqual(guard.isLocalAuthHost('127.0.0.1'), true);
+  assert.strictEqual(guard.isLocalAuthHost('::1'), true);
+  assert.strictEqual(guard.isLocalAuthHost('[::1]'), true);
+  assert.strictEqual(guard.isLocalAuthHost('macbook.local'), true);
+  assert.strictEqual(guard.isLocalAuthHost('192.168.1.100'), true);
+  assert.strictEqual(guard.isLocalAuthHost('10.0.0.1'), true);
+  assert.strictEqual(guard.isLocalAuthHost('172.16.0.1'), true);
+  assert.strictEqual(guard.isLocalAuthHost('172.31.255.255'), true);
+
+  assert.strictEqual(guard.isLocalAuthHost('betterenglishlearning.com'), false);
+  assert.strictEqual(guard.isLocalAuthHost('production.firebaseapp.com'), false);
+  assert.strictEqual(guard.isLocalAuthHost('8.8.8.8'), false);
+  assert.strictEqual(guard.isLocalAuthHost('172.32.0.1'), false);
+}
+
+async function testBootstrapCompatLocalAdmin() {
+  let fetchCalled = false;
+  sandbox.fetch = async () => {
+    fetchCalled = true;
+    return { ok: true, json: async () => ({ success: true, token: 'custom-token-123' }) };
+  };
+
+  // 1. Production origin should be rejected immediately without calling fetch
+  const prodResult = await guard.bootstrapCompatLocalAdmin({}, { hostname: 'betterenglishlearning.com' });
+  assert.strictEqual(prodResult, null, 'Production hostname must return null');
+  assert.strictEqual(fetchCalled, false, 'Production hostname must never call fetch');
+
+  // 2. Active user should return immediately without calling fetch
+  const existingUser = { uid: 'existing-admin' };
+  const mockFirebaseWithUser = {
+    auth: () => ({
+      currentUser: existingUser
+    })
+  };
+  const activeUserResult = await guard.bootstrapCompatLocalAdmin(mockFirebaseWithUser, { hostname: 'localhost' });
+  assert.strictEqual(activeUserResult, existingUser, 'Active user must be returned without re-authenticating');
+  assert.strictEqual(fetchCalled, false, 'Active user check must not call fetch');
+
+  // 3. Failed token endpoint (404/503/network error)
+  sandbox.fetch = async () => ({
+    ok: false,
+    status: 503,
+    json: async () => ({ success: false, error: 'LOCAL_ADMIN_UNAVAILABLE' })
+  });
+  const mockAuthWithoutUser = {
+    currentUser: null,
+    signInWithCustomToken: async () => { throw new Error('should not be called'); }
+  };
+  const mockFirebaseWithoutUser = {
+    auth: () => mockAuthWithoutUser
+  };
+  const failedEndpointResult = await guard.bootstrapCompatLocalAdmin(mockFirebaseWithoutUser, { hostname: 'localhost' });
+  assert.strictEqual(failedEndpointResult, null, 'Failed endpoint should return null');
+
+  // 4. Invalid token payload (missing token)
+  sandbox.fetch = async () => ({
+    ok: true,
+    json: async () => ({ success: false })
+  });
+  const invalidPayloadResult = await guard.bootstrapCompatLocalAdmin(mockFirebaseWithoutUser, { hostname: 'localhost' });
+  assert.strictEqual(invalidPayloadResult, null, 'Invalid payload should return null');
+
+  // 5. Successful custom-token sign-in
+  let customTokenReceived = null;
+  let reloadCalled = false;
+  const authedUser = {
+    uid: 'local-admin-uid',
+    email: 'admin@example.com',
+    reload: async () => { reloadCalled = true; }
+  };
+  const successfulAuth = {
+    currentUser: null,
+    setPersistence: async () => true,
+    signInWithCustomToken: async (token) => {
+      customTokenReceived = token;
+      successfulAuth.currentUser = authedUser;
+      return { user: authedUser };
+    }
+  };
+  const successfulFirebase = {
+    auth: () => successfulAuth
+  };
+  successfulFirebase.auth.Auth = { Persistence: { LOCAL: 'local' } };
+
+  sandbox.fetch = async (url, opts) => {
+    assert.strictEqual(url, '/api/local/admin-token');
+    assert.strictEqual(opts.method, 'POST');
+    return {
+      ok: true,
+      json: async () => ({ success: true, token: 'mock-custom-token-xyz' })
+    };
+  };
+
+  const successResult = await guard.bootstrapCompatLocalAdmin(successfulFirebase, { hostname: 'localhost' });
+  assert.strictEqual(successResult, authedUser, 'Should return the authenticated user');
+  assert.strictEqual(customTokenReceived, 'mock-custom-token-xyz', 'Custom token must be passed to signInWithCustomToken');
+  assert.strictEqual(reloadCalled, false, 'User reload should not be invoked after successful token sign-in');
+}
+
 (async () => {
   await testImmediateUser();
   await testDelayedUser();
@@ -204,6 +305,8 @@ async function testValidatedEmulatorOverrides() {
   await testInitialResolution();
   await testCompatHelpers();
   await testValidatedEmulatorOverrides();
+  await testIsLocalAuthHost();
+  await testBootstrapCompatLocalAdmin();
   console.log('auth session guard passed');
 })().catch((error) => {
   console.error(error);

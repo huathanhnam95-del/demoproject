@@ -1,0 +1,187 @@
+{
+  "sourceAuthority": "Canonical authored deck and approved concepts through J and native Determine/ETA",
+  "adaptations": [
+    "Only the served deck response adds the local frame adapter module. Canonical bytes remain unchanged.",
+    "Native slide groups A 1-3, C 4-9, E 10-16, G 17-18, I 19-20 and J 21. Determine/ETA use the original slide-21 nodes and native countdown rendering with one shared origin. Gallery extracts original 10-14. E/G reuse C artwork.",
+    "Canvas composes approved background/furniture crops with dynamic floor, actors, props and doors. No regenerated images."
+  ],
+  "scope": [
+    "home",
+    "street",
+    "reception",
+    "A",
+    "B1",
+    "B2",
+    "B3",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "I",
+    "J"
+  ],
+  "schemaVersion": 1,
+  "externalDependencies": [
+    "React 18.3.1 and ReactDOM 18.3.1 UMD via original support.js CDN/SRI",
+    "Archivo via original design-system Google Fonts import"
+  ],
+  "inputs": [
+    {
+      "sha256": "e480a5889327c7c92a745f0bae32b18fbed66df7f83ade2dbae91dfeed45ead8",
+      "bytes": 149455,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\Our First Month Together (Modernist).dc.html",
+      "url": "/native/deck.html"
+    },
+    {
+      "sha256": "8fe7df74405f3c55f49b7249c74ea1397e65d07dea2b1bd3b4a489bec2e28cbe",
+      "bytes": 69150,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\support.js",
+      "url": "/native/support.js"
+    },
+    {
+      "sha256": "932396f258afa691d97a5f90c7e2df5d84db8b7d2f2dd4cb5e1d289577e468bf",
+      "bytes": 136303,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\deck-stage.js",
+      "url": "/native/deck-stage.js"
+    },
+    {
+      "sha256": "278d972cdbaf76a3e85c42c47c693e379d8fb5c8aea82741a8da096eabb24752",
+      "bytes": 767283,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\cover.jpg",
+      "url": "/native/images/cover.jpg"
+    },
+    {
+      "sha256": "1e49c44de01f3584e577495c7b0125a998d8820303cd575fa375c5d6510e840c",
+      "bytes": 742467,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\threshold.jpg",
+      "url": "/native/images/threshold.jpg"
+    },
+    {
+      "sha256": "aa6bb1c7d0d92a8a276e4299bcd33a14529f707155d9ef4c55300378b8259db6",
+      "bytes": 115019,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\gabe.jpg",
+      "url": "/native/images/gabe.jpg"
+    },
+    {
+      "sha256": "86a16d9103266a3587bdb21a78794cc60b9bd4bc03018a1071eac0638ee48b7b",
+      "bytes": 63177,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\chet.jpg",
+      "url": "/native/images/chet.jpg"
+    },
+    {
+      "sha256": "2c2cd3be40aff2090b68a612d5d2fbc534fa8cbd9bfb63778daeb8fd9f32ae91",
+      "bytes": 97744,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\josh.jpg",
+      "url": "/native/images/josh.jpg"
+    },
+    {
+      "sha256": "6dffddeb948fc6c8822701c7cca528aa59f43219e993a6609ba30f5ba1111f17",
+      "bytes": 79971,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\mike.jpg",
+      "url": "/native/images/mike.jpg"
+    },
+    {
+      "sha256": "9374f85bf6407518a2275a6723e080b675c5af15b55f25103201815cac580494",
+      "bytes": 96899,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\erik.jpg",
+      "url": "/native/images/erik.jpg"
+    },
+    {
+      "sha256": "78317470c78aff90326fcd0528126a909a4906f9c46ad42f64743c0987d63cf7",
+      "bytes": 109690,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\rich.jpg",
+      "url": "/native/images/rich.jpg"
+    },
+    {
+      "sha256": "2eb2c205b7cbff28536befb187f8a03f81f5c81d6a3bd5720e0375845fc9f4eb",
+      "bytes": 822277,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\hub.jpg",
+      "url": "/native/images/hub.jpg"
+    },
+    {
+      "sha256": "41f54b92f39a5634d244a657be712ea3a5727a5c04d9fb9118e950d02274473f",
+      "bytes": 736619,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\modernist\\images\\close.jpg",
+      "url": "/native/images/close.jpg"
+    },
+    {
+      "sha256": "cf9fcf75ac84dfe7517177eb14acf5a20ca4410c55691ab9879c6af7b2168400",
+      "bytes": 10555,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\_ds\\modernist-6011e8f4-2365-454d-a807-ad62f6c72890\\styles.css",
+      "url": "/_ds/modernist-6011e8f4-2365-454d-a807-ad62f6c72890/styles.css"
+    },
+    {
+      "sha256": "6138a8418649050c65574c0abd8394e05a58cfb233f29cc3c2502923753a18ca",
+      "bytes": 303,
+      "path": "C:\\Cursor AI\\Slide Deck From Walkthrough\\_ds\\modernist-6011e8f4-2365-454d-a807-ad62f6c72890\\_ds_bundle.js",
+      "url": "/_ds/modernist-6011e8f4-2365-454d-a807-ad62f6c72890/_ds_bundle.js"
+    },
+    {
+      "sha256": "1b948e4dbcc101cd607dbf5918cb4dab56702eab20cb4d2821727091f0120a67",
+      "bytes": 1304831,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\03-reception-v1.png",
+      "url": "/art/reception.png"
+    },
+    {
+      "sha256": "8fb25f43f44696632a2cfd44b2e605ef283f7aefe1251a6e9d7a704ad64b3c42",
+      "bytes": 1867806,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\02-street-v2.png",
+      "url": "/art/street.png"
+    },
+    {
+      "sha256": "cd3fbf6c716530120e8ab90209612731ff3bdf9375cf4c91a88dd53766d9258d",
+      "bytes": 1361225,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\04-studio-a-v1.png",
+      "url": "/art/A.png"
+    },
+    {
+      "sha256": "33553ae983e07617c2e43e3005222455672e843bc697f2a88bdf2239416f2400",
+      "bytes": 1808339,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\09-gallery-d-v1.png",
+      "url": "/art/D.png"
+    },
+    {
+      "sha256": "91bb498422b62822bfb151b569b64c459c3feb4e636b776681e1236d96f9f441",
+      "bytes": 1511320,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\05-b1-shape-pedestals-v3.png",
+      "url": "/art/B.png"
+    },
+    {
+      "sha256": "04068a34c84b7028dbcf0f1e94ae1e16f73a7990545b0e47dcb8c42ed24da711",
+      "bytes": 1324515,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\08-studio-c-v1.png",
+      "url": "/art/C.png"
+    },
+    {
+      "sha256": "b8c016c7f565670f926785ec33f3a4270218b6a6f9767065c0190987d69b3146",
+      "bytes": 1312880,
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\01-home-v2.png",
+      "url": "/art/home.png"
+    },
+    {
+      "bytes": 1490818,
+      "sha256": "28afd8915502284dcff2aae7cb9de5cf094e965d32d448614c4613f398e3530f",
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\11-bridge-f-initial-v1.png",
+      "url": "/art/F.png"
+    },
+    {
+      "bytes": 1462757,
+      "sha256": "c41d96ee5b014f1d441e8a2540e8415067f6d373cc722c065856d99e7233aeca",
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\14-bridge-f-complete-v1.png",
+      "url": "/art/F-complete.png"
+    },
+    {
+      "url": "/art/I.png",
+      "bytes": 1410807,
+      "sha256": "52c91002e5377b80d0f00909e1b11a1e2efd2cecbde920a84509d29c85b03b91",
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\16-room-i-floor-choices-v1.png"
+    },
+    {
+      "url": "/art/J.png",
+      "path": "C:\\Users\\Admin\\.codex\\visualizations\\2026\\09\\13\\01a09a56-d502-76a3-96b9-570d0cc26cd6\\concepts-review\\17-room-j-initial-v1.png",
+      "sha256": "b9a47e3beb6698d12065d1d9d84b18e2995e38bd1962094b50d45953153bd3fa",
+      "bytes": 1371391
+    }
+  ]
+}

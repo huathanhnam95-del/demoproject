@@ -45,10 +45,12 @@
   <link rel="stylesheet" href="read-aloud-question-picker-v7.css?v=20260507_ra_v7">
   <link rel="stylesheet" href="speaking-practice-controller.css">
   <link rel="stylesheet" href="/css/read-aloud-workspace.css?v=20260917_ra_v2">
+  <link rel="stylesheet" href="/css/practice-fluid-layout.css?v=20260917_fluid_v1">
   <link rel="stylesheet" href="style-scaffolding.css?v=20260123_mode_fix">
   <link rel="stylesheet" href="progress-roadmap.css">
   <link rel="stylesheet" href="/site-header.css">
   <script src="/js/site-header.js" defer></script>
+  <script src="/js/layout-probe.js" defer></script>
   <!-- Scripts moved to end of body for performance -->
   <script>
     const IS_PROD = !['localhost', '127.0.0.1'].includes(location.hostname);
@@ -230,7 +232,7 @@
   </script>
 
   <!-- Version Indicator -->
-  <div id="version-indicator" class="version-indicator">V2.0.9</div>
+  <div id="version-indicator" class="version-indicator">V2.0.10</div>
 
   <!-- Authentication UI -->
   <div id="auth-overlay" class="auth-overlay" style="display: none;">
@@ -925,8 +927,8 @@
   </div>
 
   <!-- Page Layout Wrapper for Watch Mode (video + question panel side by side) -->
-  <div id="page-layout-wrapper" class="page-layout-wrapper">
-    <main class="container">
+  <div id="page-layout-wrapper" class="page-layout-wrapper" data-practice-frame>
+    <main class="container" data-practice-shell>
       <div class="main-header">
         <div class="header-left">
           <h1>Practice</h1>
@@ -5115,7 +5117,7 @@
              the card explaining it are in one line of sight; below 940px the
              rail stacks under the stage. Presentation lives in style.css —
              inline styles here are state (JS display toggles) only. -->
-        <div class="ra-workbench spc-shell-grid">
+        <div class="ra-workbench spc-shell-grid" data-practice-region>
 
           <div class="ra-guidebar">
             <div id="ra-prompt-guides-group" class="ra-guide-chips" role="group" aria-label="Prompt guides">
@@ -5157,9 +5159,9 @@
             groups, linking, reduced words, or sound changes.</div>
 
           <div class="ra-split">
-            <div class="ra-stage">
+            <div class="ra-stage" data-practice-workarea="flow">
               <div id="ra-linking-status" class="ra-sr-only" aria-live="polite" aria-atomic="true"></div>
-              <div id="ra-prompt-stage" class="ra-prompt-stage">
+              <div id="ra-prompt-stage" class="ra-prompt-stage ra-prompt-box" data-practice-reading>
                 <p id="ra-prompt-plain" class="ra-sr-only">Loading text...</p>
                 <p id="ra-text-prompt" class="ra-text">Loading text...</p>
                 <svg id="ra-linking-overlay" class="ra-linking-overlay" aria-hidden="true"
@@ -5251,7 +5253,7 @@
              Zone 5 below and adopted into the SPC sticky footer at runtime. -->
 
         <!-- ═══════ ZONE 3 SOURCE: ACTION CONTROLS (adopted by SPC footer) ═══════ -->
-        <div class="ra-zone-actions-source">
+        <div class="ra-zone-actions-source ra-status-bar">
           <div class="ra-timer-box" id="ra-prep-timer-box">
             <div class="ra-timer-label">Prep Time</div>
             <div class="ra-timer-value" id="ra-prep-time">00:40</div>
@@ -5263,6 +5265,7 @@
           <div id="ra-read-aloud-controls" class="unified-controls">
             <div class="control-toolbar">
               <div class="function-group">
+                <button id="ra-next-btn" class="modern-btn modern-btn--back" type="button" title="Next prompt">Next prompt</button>
                 <button id="ra-record-btn" class="modern-btn modern-btn--record" type="button" disabled>Start
                   Recording</button>
                 <button id="ra-stop-btn" class="modern-btn modern-btn--record recording" type="button"
@@ -6092,7 +6095,7 @@
   <script src="/js/read-aloud-connected-speech-rules.js"></script>
   <script src="/js/read-aloud-linking.js"></script>
   <script src="/js/read-aloud-speech-coach.js"></script>
-  <script src="/read-aloud-mode.js?v=2.0.9"></script>
+  <script src="/read-aloud-mode.js?v=2.0.10"></script>
   <script src="/asq-mode.js"></script>
   <script src="/content-difficulty-classifier.js"></script>
   <script src="/sgd-mode.js"></script>

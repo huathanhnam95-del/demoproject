@@ -1,0 +1,104 @@
+*{box-sizing:border-box} :root{font-family:Segoe UI,system-ui,sans-serif;color:#243740;background:#efe7d9;font-synthesis:none}body{margin:0;overflow:hidden}button,input,select,textarea{font:inherit}button,summary{cursor:pointer}button{background:#f8f2e6;border:1px solid #9eab9a;color:#263d3c;border-radius:5px;padding:8px 13px;min-height:36px}button:hover{background:#e2ecd9}button:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #c7803b;outline-offset:3px}button.primary,#create-session{background:#2c5549;color:#fff9ea;border-color:#2c5549}button:disabled{opacity:.5;cursor:default}[hidden]{display:none!important}#launcher{max-width:790px;margin:12vh auto;padding:40px 60px;border-left:5px solid #809b76}.eyebrow{font-size:13px;letter-spacing:.25em;color:#657c5c;font-weight:700}h1{font-family:Georgia,serif;font-size:clamp(42px,5vw,70px);font-weight:normal;line-height:1.08;margin:24px 0}.intro{font-size:24px;line-height:1.7;color:#6a7368}.small{font-size:12px;line-height:1.65;color:#65706a}.muted{color:#8b9283}#game{height:100vh;display:flex;flex-direction:column}header{height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #b4aea0;background:#f4ede1;gap:16px}header strong{font-size:18px;white-space:nowrap}header strong span{font-weight:400}header>div{display:flex;align-items:center;gap:14px}#identity{font-size:12px;color:#6d7669}header button{font-size:12px;padding:4px 9px;min-height:28px}details{position:relative}details>div{position:absolute;right:0;top:34px;z-index:30;background:#f6efdf;padding:18px;width:330px;box-shadow:0 6px 30px #24374040}#invite-links a{display:block;margin-bottom:12px;color:#345c4a}#world-wrap{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;position:relative;background:#ded5c4}canvas{width:min(100%,calc((100vh - 103px)*2.083333));height:auto;max-height:100%;aspect-ratio:1000/480;display:block;image-rendering:auto;outline:none}
+#world-wrap.mode-3d canvas{width:100%;height:100%;max-height:none;aspect-ratio:auto}footer{height:55px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:13px;border-top:1px solid #b4aea0;gap:12px}footer>span{display:flex;align-items:center;gap:8px}#prompt{max-width:45%;text-align:center;color:#3e604c;font-weight:600}kbd{font-family:inherit;font-weight:700}#toast{position:absolute;left:50%;transform:translateX(-50%);top:16px;background:#fff4d9;padding:11px 20px;box-shadow:0 3px 16px #30281830;z-index:52;max-width:640px;text-align:center}#connection{position:absolute;top:10px;left:14px;background:#f6dfbc;padding:10px 14px;z-index:20;max-width:550px}#panel{position:absolute;right:2.5%;bottom:20px;width:min(490px,43vw);max-height:80%;overflow:auto;background:#f8f6f1f5;box-shadow:0 10px 40px #21343e40;padding:24px 28px;border:1px solid #999b90;z-index:35}#panel h2{font-size:26px;line-height:1.15;color:#232629;margin:6px 0 18px}#panel h3{font-size:13px;letter-spacing:.1em;color:#a23e30;text-transform:uppercase;border-top:2px solid #b7b5ac;padding-top:18px}#panel p.source-text{font-size:21px;line-height:1.45;color:#25272a}.source-text.shift{font-weight:700;border-top:4px solid #af4231;padding-top:16px}#panel blockquote{font-size:20px;line-height:1.45;margin:12px 0;border-left:4px solid #b64b37;padding-left:14px}#panel .attribution{font-size:12px;color:#696b63}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.portrait-head{display:flex;align-items:center;gap:20px}.portrait-head img{width:86px;height:104px;object-fit:cover;filter:grayscale(1)}.portrait-head h2{font-size:25px!important}.form-grid{display:grid;gap:12px}label{display:grid;gap:5px;font-size:13px}input,select,textarea{border:1px solid #a6aca0;border-radius:3px;background:#fffaf1;color:#2a3939;padding:8px;width:100%}input[type=checkbox]{width:auto}#panel.radial{border-radius:50%;width:310px;height:290px;overflow:visible;bottom:12%;right:8%;padding:0;background:#f9f2e9ef;text-align:center}#panel.radial h2{position:absolute;top:116px;left:70px;width:170px;font-size:16px}#panel.radial button{position:absolute;border-radius:30px;min-height:46px;width:120px}#panel.radial button:nth-of-type(1){top:23px;left:96px}#panel.radial button:nth-of-type(2){top:173px;left:5px}#panel.radial button:nth-of-type(3){top:173px;right:5px}#panel.radial .radial-close{right:0;top:0;width:35px;height:35px;min-height:35px;border:0;background:transparent;font-size:22px}#notebook{position:fixed;right:22px;bottom:68px;width:340px;max-height:calc(100vh - 100px);background:#fbf3de;border-left:12px solid #6e8173;padding:18px 22px;box-shadow:0 8px 40px #182b3840;z-index:70;overflow:auto}#notebook.expanded{width:min(780px,83vw);height:80vh;left:50%;right:auto;top:10vh;bottom:auto;transform:translateX(-50%);padding:35px 55px}#notebook h2{font:22px Georgia,serif;margin:0 0 15px}#notebook textarea{min-height:190px;resize:vertical;line-height:1.6;background:#fff9e9}.ink{font:22px/1.7 'Segoe Print','Bradley Hand',cursive;color:#23446d;white-space:pre-wrap;min-height:190px;background:repeating-linear-gradient(transparent 0,transparent 36px,#a5b3b329 37px,transparent 38px);overflow-wrap:anywhere}.notebook-nav{display:flex;justify-content:space-between;align-items:center;gap:6px;margin:15px 0 0}.notebook-nav button{padding:5px 8px;font-size:12px}.page-turn{animation:page-turn .28s ease-out}@keyframes page-turn{from{transform:perspective(700px) rotateY(-14deg);opacity:.35}to{transform:perspective(700px) rotateY(0);opacity:1}}#pair-request{position:absolute;left:30px;bottom:22px;z-index:40;background:#f7efde;padding:18px;box-shadow:0 5px 30px #24374040}#presentation{position:fixed;inset:0;background:#202020;z-index:60}#presentation iframe{width:100%;height:100%;border:0}.slide-tools{position:absolute;left:18px;bottom:14px;display:flex;gap:8px;align-items:center;background:#f6f0e5f2;padding:7px 10px;border-radius:4px;font-size:12px;max-width:calc(100vw - 36px)}.slide-tools button{padding:5px 9px;min-height:30px;font-size:12px}.slide-tools details{background:#f7f1e6}.slide-tools details[open]{padding:12px}.slide-tools label{display:flex;align-items:center;margin-top:7px}.slide-tools select{width:auto}#launch-error{color:#9e4536}@media(max-width:1100px){header{padding:0 12px}header strong{font-size:15px}header>div{gap:8px}#identity{display:none}footer{padding:0 12px;font-size:12px}#panel{width:43vw;padding:20px}#panel h2{font-size:23px}}
+#panel.reflection{width:32vw;max-width:440px;max-height:46%;bottom:8px;padding:16px 20px}#panel.reflection h2{font-size:20px;line-height:1.2;margin:0 0 8px}#panel.reflection h3{padding-top:8px;margin:8px 0;font-size:11px}#panel.reflection p.source-text{font-size:17px;line-height:1.4;margin:10px 0}#panel.reflection .actions{margin-top:8px}#panel.reflection .small{margin:4px 0}
+#activity-status{font-weight:700;color:#19395b;white-space:nowrap} #activity-controls{display:flex;gap:6px;flex-wrap:wrap} #activity-controls[hidden]{display:none}
+
+#presentation.with-notes iframe{width:calc(100% - 380px)}#presentation.with-notes .slide-tools{max-width:calc(100vw - 410px);flex-wrap:wrap}
+dialog.bel-dialog{border:1px solid #999b90;background:#fdfaf4;color:#243740;border-radius:6px;box-shadow:0 14px 48px rgba(24,43,56,0.38);padding:0;max-width:min(620px,92vw);max-height:86vh;position:fixed;inset:0;margin:auto;z-index:75}
+dialog.bel-dialog::backdrop{background:rgba(20,32,42,0.52);backdrop-filter:blur(2px)}
+.bel-modal-card{display:flex;flex-direction:column;max-height:86vh;padding:24px 28px}
+.bel-modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid #ded6c7;padding-bottom:12px;margin-bottom:14px}
+.bel-modal-titles{display:flex;flex-direction:column;gap:4px}
+.bel-modal-eyebrow{font-size:11px;letter-spacing:.2em;color:#5a7356;font-weight:700;margin:0;text-transform:uppercase}
+#bel-modal-title{font-size:24px;line-height:1.2;color:#1e2928;margin:0;outline:none}
+.bel-modal-close{background:transparent;border:0;font-size:24px;line-height:1;min-height:30px;width:30px;padding:0;color:#67746c;cursor:pointer}
+.bel-modal-close:hover{color:#263d3c;background:#ebe4d5}
+.bel-modal-body{flex:1;overflow-y:auto;padding-right:8px;font-size:16px;line-height:1.55;color:#222a2c;outline:none}
+.bel-section-heading{font-size:13px;letter-spacing:.1em;color:#a23e30;text-transform:uppercase;border-top:2px solid #b7b5ac;padding-top:14px;margin:8px 0 14px}
+.bel-modal-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid #ded6c7;padding-top:12px;font-size:12px;color:#6d756e}
+.bel-review-grid{display:grid;gap:12px}
+.bel-review-card{background:#f6efe1;border:1px solid #d4cbb9;padding:12px 14px;border-radius:4px}
+.bel-chip{display:inline-block;padding:2px 8px;border-radius:12px;border:2px solid;font-size:11px;font-weight:700;margin-bottom:6px}
+.activity-hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:28;pointer-events:none;max-width:90vw}
+.hud-bar{display:flex;flex-direction:column;align-items:center;background:#fffdf7f0;border:1px solid #c9beaa;border-radius:8px;padding:8px 18px;box-shadow:0 6px 20px rgba(32,48,60,0.18);pointer-events:auto}
+.hud-row{display:flex;align-items:center;gap:10px}
+.hud-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px;background:#e5eee0;color:#2a5035}
+.hud-placed{font-size:12px;color:#455a58;font-weight:600}
+.hud-carry{font-size:12px;color:#794f28;font-weight:600}
+.hud-debuff{font-size:12px;font-weight:700;color:#852b2b;background:#fde8e8;border:1px solid #e8a8a8;padding:2px 8px;border-radius:10px}
+.hud-statement{font-size:14px;font-weight:600;color:#132342;margin-top:6px;max-width:540px;text-align:center;line-height:1.4}
+
+/* ===== In-game overlay layer =============================================
+   Every popup lives inside the play area and is dressed as game furniture
+   rather than browser chrome: warm panel stock, a carved rail, a soft glow
+   and a scrim that dims only the world, never the surrounding app. */
+#world-wrap{--bel-ink:#20302c;--bel-stock:#fbf4e4;--bel-stock-deep:#f0e4cb;--bel-edge:#7d8a70;--bel-rail:linear-gradient(90deg,#2c5549,#5d8a6a 45%,#c7803b);isolation:isolate}
+#world-wrap::after{content:'';position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;transition:opacity .2s ease;background:radial-gradient(125% 95% at 50% 42%,rgba(16,26,22,.2) 0%,rgba(16,26,22,.44) 62%,rgba(16,26,22,.66) 100%)}
+#world-wrap.dimmed::after{opacity:1}
+
+.bel-frame{position:absolute;background:linear-gradient(180deg,var(--bel-stock) 0%,var(--bel-stock-deep) 100%);color:var(--bel-ink);border:1px solid var(--bel-edge);border-radius:14px;box-shadow:inset 0 1px 0 #fffdf6,inset 0 0 0 1px #ffffff66,0 22px 54px rgba(12,24,20,.45),0 0 0 6px rgba(28,44,38,.16);padding:24px 28px 22px;overflow:hidden}
+.bel-frame::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:var(--bel-rail)}
+@keyframes bel-panel-in{from{opacity:0;transform:translate3d(0,14px,0) scale(.965)}to{opacity:1;transform:none}}
+@keyframes bel-panel-in-centred{from{opacity:0;transform:translate(-50%,-46%) scale(.965)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+
+/* Decision popups sit in the middle of the world, like a real game prompt. */
+#panel{position:absolute;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(560px,74%);max-height:78%;overflow:auto;z-index:40;background:linear-gradient(180deg,var(--bel-stock) 0%,var(--bel-stock-deep) 100%);color:var(--bel-ink);border:1px solid var(--bel-edge);border-radius:14px;box-shadow:inset 0 1px 0 #fffdf6,inset 0 0 0 1px #ffffff66,0 22px 54px rgba(12,24,20,.45),0 0 0 6px rgba(28,44,38,.16);padding:26px 30px 24px;animation:bel-panel-in-centred .2s cubic-bezier(.22,.9,.3,1.06)}
+#panel::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:var(--bel-rail)}
+#panel h2{margin-top:2px}
+#panel .actions{margin-top:22px}
+
+/* The reading companion stays out of the way so the room is still readable. */
+#panel.reflection{left:auto;right:26px;top:auto;bottom:26px;transform:none;width:min(430px,34%);max-height:52%;padding:18px 22px 16px;animation:bel-panel-in .2s cubic-bezier(.22,.9,.3,1.06)}
+
+#panel.radial{left:auto;right:8%;top:auto;bottom:12%;transform:none;border-radius:50%;width:310px;height:290px;padding:0;box-shadow:0 18px 44px rgba(12,24,20,.45),0 0 0 6px rgba(28,44,38,.16);animation:bel-panel-in .2s cubic-bezier(.22,.9,.3,1.06)}
+#panel.radial::before{display:none}
+
+/* Reading / portrait modal: an in-world overlay, not a browser dialog. */
+.bel-overlay{position:absolute;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:4%;background:rgba(16,26,22,.44)}
+.bel-overlay .bel-modal-card{max-width:min(640px,100%);max-height:100%;width:100%;position:relative;background:linear-gradient(180deg,var(--bel-stock) 0%,var(--bel-stock-deep) 100%);color:var(--bel-ink);border:1px solid var(--bel-edge);border-radius:14px;box-shadow:inset 0 1px 0 #fffdf6,inset 0 0 0 1px #ffffff66,0 22px 54px rgba(12,24,20,.5),0 0 0 6px rgba(28,44,38,.18);padding:26px 30px 22px;overflow:hidden;animation:bel-panel-in .2s cubic-bezier(.22,.9,.3,1.06)}
+.bel-overlay .bel-modal-card::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:var(--bel-rail)}
+.bel-overlay .bel-modal-header{border-bottom:1px solid #d8ccb4}
+.bel-overlay .bel-modal-footer{border-top:1px solid #d8ccb4}
+
+/* Presentation Slide Folio Modal (Gallery D Portraits) */
+.bel-overlay .bel-modal-card.portrait-slide{max-width:min(880px,94vw);width:100%;padding:0;border-radius:14px;overflow:hidden;background:#fdfbf7;border:1px solid #d4c8b2;box-shadow:inset 0 1px 0 #fffdf6,0 24px 60px rgba(12,24,20,.55),0 0 0 6px rgba(28,44,38,.18)}
+.bel-overlay .bel-modal-card.portrait-slide::before{height:4px;background:#b64b37}
+.portrait-slide .bel-modal-close{position:absolute;top:14px;right:16px;z-index:20;font-size:26px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#4a5952;background:rgba(235,228,213,.85);border:1px solid #d0c4ad;box-shadow:0 2px 6px rgba(0,0,0,.15);cursor:pointer;transition:all .15s ease}
+.portrait-slide .bel-modal-close:hover{color:#1e2928;background:#f4eee2;transform:scale(1.05)}
+.portrait-slide-grid{display:grid;grid-template-columns:300px 1fr;min-height:430px}
+.portrait-slide-photo-col{position:relative;background:#1a211e;overflow:hidden;display:flex;flex-direction:column}
+.portrait-slide-photo-frame{position:relative;width:100%;height:100%;min-height:360px}
+.portrait-slide-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%}
+.portrait-slide-badge{position:absolute;left:0;right:0;bottom:0;background:#b64b37;color:#fff;padding:20px 24px 18px;box-shadow:0 -4px 16px rgba(0,0,0,.25)}
+.portrait-slide-name{font-size:22px;font-weight:800;letter-spacing:.02em;line-height:1.15;color:#fff}
+.portrait-slide-role{font-size:13px;line-height:1.35;margin-top:6px;color:rgba(255,255,255,.92);font-weight:500}
+.portrait-slide-content-col{display:flex;flex-direction:column;padding:32px 36px 24px 34px;background:#fbf9f4}
+.portrait-slide-top-bar{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #202e2b;padding-bottom:12px;margin-bottom:20px;padding-right:32px}
+.portrait-slide-eyebrow{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#b64b37}
+.portrait-slide-counter{font-size:13px;font-weight:600;letter-spacing:.1em;color:#6e7a74}
+.portrait-slide-body{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:18px;overflow-y:auto;outline:none}
+.portrait-slide-quote{margin:0;font-size:19px;font-weight:600;line-height:1.44;letter-spacing:-.01em;color:#1c2725;border-left:5px solid #b64b37;padding-left:20px;font-style:normal}
+.portrait-slide-takeaway{border-top:2px solid #202e2b;padding-top:16px;margin-top:10px}
+.portrait-slide-takeaway-label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b64b37;margin-bottom:8px}
+.portrait-slide-takeaway-text{margin:0;font-size:15px;line-height:1.52;color:#23302d;font-weight:400}
+.portrait-slide-footer{display:flex;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid #ded5c4}
+@media(max-width:760px){.portrait-slide-grid{grid-template-columns:1fr}.portrait-slide-photo-frame{min-height:220px;height:220px}.portrait-slide-content-col{padding:20px}}
+
+
+/* Notebook and pair requests join the same family. */
+#notebook{position:absolute;right:24px;bottom:24px;max-height:calc(100% - 48px);border-left:12px solid #6e8173;border-radius:0 12px 12px 0;box-shadow:0 20px 48px rgba(12,24,20,.45),0 0 0 6px rgba(28,44,38,.14);animation:bel-panel-in .2s cubic-bezier(.22,.9,.3,1.06);z-index:58}
+#notebook.expanded{right:auto;bottom:auto;top:50%;left:50%;transform:translate(-50%,-50%);height:78%;max-height:none}
+#pair-request{left:26px;bottom:26px;z-index:40;background:linear-gradient(180deg,var(--bel-stock) 0%,var(--bel-stock-deep) 100%);border:1px solid var(--bel-edge);border-radius:12px;box-shadow:0 18px 44px rgba(12,24,20,.42),0 0 0 6px rgba(28,44,38,.14);padding:18px 20px;animation:bel-panel-in .2s cubic-bezier(.22,.9,.3,1.06)}
+#toast{border-radius:11px;border:1px solid #d9c79c;box-shadow:0 12px 30px rgba(12,24,20,.36);animation:bel-panel-in .18s ease-out}
+#connection{border-radius:11px;border:1px solid #dcbf94;box-shadow:0 10px 26px rgba(12,24,20,.3)}
+.hud-bar{border-radius:11px}
+
+/* Buttons inside the world read as game controls. */
+#panel button,.bel-overlay button,#notebook button,#pair-request button{border-radius:9px;box-shadow:inset 0 1px 0 #fffdf5,0 2px 0 #c3b394;transition:transform .12s ease,box-shadow .12s ease,background .12s ease}
+#panel button:hover,.bel-overlay button:hover,#notebook button:hover,#pair-request button:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 #fffdf5,0 4px 0 #c3b394}
+#panel button:active,.bel-overlay button:active,#notebook button:active,#pair-request button:active{transform:translateY(1px);box-shadow:inset 0 1px 0 #fffdf5,0 1px 0 #c3b394}
+#panel button.primary,.bel-overlay button.primary{box-shadow:inset 0 1px 0 #6e947f,0 2px 0 #1d3b32}
+#panel button.primary:hover,.bel-overlay button.primary:hover{box-shadow:inset 0 1px 0 #6e947f,0 4px 0 #1d3b32}
+#panel.radial button{box-shadow:inset 0 1px 0 #fffdf5,0 2px 0 #c3b394}
+
+@media(max-width:1100px){#panel{width:min(520px,86%);padding:22px}#panel.reflection{width:min(360px,46%)}}

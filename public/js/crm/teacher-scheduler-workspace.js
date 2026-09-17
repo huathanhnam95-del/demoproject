@@ -75,6 +75,14 @@ window.TeacherSchedulerWorkspace = (function () {
         return null;
     }
 
+    function getSchedulerNow() {
+        if (typeof window !== 'undefined' && window.__SCHEDULER_NOW__) {
+            const parsed = new Date(window.__SCHEDULER_NOW__);
+            if (parsed && Number.isFinite(parsed.getTime())) return parsed;
+        }
+        return new Date();
+    }
+
     function isLockedSession(session) {
         const hardLocked = String(session?.lockState || 'unlocked') === 'hard_locked'
             || String(session?.attendanceState || 'none') === 'in_progress'
@@ -84,7 +92,7 @@ window.TeacherSchedulerWorkspace = (function () {
         if (hardLocked) return true;
         if (session?.scheduledStartAtUtc) {
             const start = new Date(session.scheduledStartAtUtc);
-            if (Number.isFinite(start.getTime()) && start < new Date()) return true;
+            if (Number.isFinite(start.getTime()) && start < getSchedulerNow()) return true;
         }
         return false;
     }
@@ -129,8 +137,21 @@ window.TeacherSchedulerWorkspace = (function () {
             suppressedSessionClickId: null,
             resizeDrag: null,
             _hasScrolledToHour: false,
-            miniCalendar: null
+            _eventsBound: false,
+            miniCalendar: null,
+            hourHeightPx: Number(deps.hourHeightPx || 50) || 50
         };
+
+        function resolveTeacherDisplayName(uid, directName = '') {
+            const cleanDirect = String(directName || '').trim();
+            const cleanUid = String(uid || '').trim();
+            if (cleanUid && state.teacherMap.has(cleanUid)) {
+                const mapped = String(state.teacherMap.get(cleanUid) || '').trim();
+                if (mapped && !mapped.startsWith('usr_')) return mapped;
+            }
+            if (cleanDirect && !cleanDirect.startsWith('usr_')) return cleanDirect;
+            return cleanUid ? 'Teacher name unavailable' : '';
+        }
 
         function updateRailLabels() {
             if (!elements.teacherSchedulerRailTitle) return;
@@ -138,19 +159,19 @@ window.TeacherSchedulerWorkspace = (function () {
                 if (state.selectedTeacherUid === 'all') {
                     elements.teacherSchedulerRailTitle.textContent = 'All Classes';
                     if (elements.teacherSchedulerRailDesc) {
-                        elements.teacherSchedulerRailDesc.textContent = 'Showing classes across all teachers. Click a class to arm placement mode.';
+                        elements.teacherSchedulerRailDesc.textContent = 'Showing classes across all teachers. Choose a time to schedule.';
                     }
                 } else {
-                    const teacherName = state.teacherMap.get(state.selectedTeacherUid) || 'Teacher';
+                    const teacherName = resolveTeacherDisplayName(state.selectedTeacherUid) || 'Teacher';
                     elements.teacherSchedulerRailTitle.textContent = `${teacherName}'s Classes`;
                     if (elements.teacherSchedulerRailDesc) {
-                        elements.teacherSchedulerRailDesc.textContent = `Showing classes for ${teacherName}. Click a class to arm placement mode.`;
+                        elements.teacherSchedulerRailDesc.textContent = `Showing classes for ${teacherName}. Choose a time to schedule.`;
                     }
                 }
             } else {
                 elements.teacherSchedulerRailTitle.textContent = 'Your Classes';
                 if (elements.teacherSchedulerRailDesc) {
-                    elements.teacherSchedulerRailDesc.textContent = 'Click a class to arm placement mode, then click slots to place sessions.';
+                    elements.teacherSchedulerRailDesc.textContent = 'Click a class, then click any time slot to schedule.';
                 }
             }
         }
@@ -480,7 +501,7 @@ window.TeacherSchedulerWorkspace = (function () {
         function renderClassRail() {
             if (!elements.teacherSchedulerClassList) return;
             if (!state.classrooms.length) {
-                elements.teacherSchedulerClassList.innerHTML = '<div class="crm-muted">No classrooms assigned yet.</div>';
+                elements.teacherSchedulerClassList.innerHTML = '<div class="crm-muted" style="padding:6px 8px;font-size:11px;">No classrooms assigned yet.</div>';
                 return;
             }
 
@@ -491,16 +512,21 @@ window.TeacherSchedulerWorkspace = (function () {
                 const target = Number(summary.contractedTargetCount || 0);
                 const activeClass = state.placementClassroomId === classId ? 'is-armed' : '';
                 const themeClass = getClassPastelTheme(classId);
-                const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || classroom.primaryTeacherUid || '';
+                const teacherName = resolveTeacherDisplayName(classroom.primaryTeacherUid, classroom.primaryTeacherName);
                 const teacherBadge = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
-                    ? `<div class="scheduler-class-card-meta" style="color:var(--crm-primary,#157a3b);font-weight:600;">👤 ${escapeHtml(teacherName)}</div>`
+                    ? `<div class="ts-class-teacher">${escapeHtml(teacherName)}</div>`
                     : '';
+                const countText = target > 0 ? `${assigned}/${target} scheduled` : `${assigned} scheduled`;
                 return `
-                    <button type="button" class="scheduler-class-card teacher-scheduler-class-card ${activeClass}" data-classroom-id="${escapeHtml(classId)}">
-                        <div class="scheduler-class-card-title"><span class="scheduler-class-card-pip ${themeClass}" aria-hidden="true"></span>${escapeHtml(classroom.name || classId)}</div>
-                        ${teacherBadge}
-                        <div class="scheduler-class-card-meta">${assigned}/${target} contracted scheduled</div>
-                        <div class="scheduler-class-card-meta">${activeClass ? 'Placement mode active (Esc to exit)' : 'Click to arm placement mode'}</div>
+                    <button type="button" class="scheduler-class-card teacher-scheduler-class-card ts-class-row ${activeClass}" data-classroom-id="${escapeHtml(classId)}" title="${escapeHtml(classroom.name || classId)}">
+                        <span class="scheduler-class-card-pip ${themeClass} ts-class-dot" aria-hidden="true"></span>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                                <span class="name" style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(classroom.name || classId)}</span>
+                                <small style="color:var(--ts-muted);font-size:10.5px;flex-shrink:0;">${countText}</small>
+                            </div>
+                            ${teacherBadge}
+                        </div>
                     </button>
                 `;
             }).join('');
@@ -513,7 +539,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.inputTeacherSchedulerPatternClass.innerHTML = state.classrooms.map((classroom) => {
                     const classId = String(classroom.classroomId || '');
                     const selectedAttr = selected === classId ? ' selected' : '';
-                    const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || '';
+                    const teacherName = resolveTeacherDisplayName(classroom.primaryTeacherUid, classroom.primaryTeacherName);
                     const teacherSuffix = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName) ? ` (${teacherName})` : '';
                     return `<option value="${escapeHtml(classId)}"${selectedAttr}>${escapeHtml(classroom.name || classId)}${escapeHtml(teacherSuffix)}</option>`;
                 }).join('');
@@ -526,7 +552,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 if (state.placementClassroomId) {
                     const cls = getClassroomById(state.placementClassroomId);
                     const textEl = document.getElementById('teacher-scheduler-placement-text');
-                    if (textEl) textEl.textContent = `Placement mode: click any time slot to schedule ${cls?.name || 'Class'}`;
+                    if (textEl) textEl.textContent = `Choose a time for ${cls?.name || 'class'} (Esc to exit)`;
                     toastEl.style.display = 'flex';
                 } else {
                     toastEl.style.display = 'none';
@@ -570,9 +596,17 @@ window.TeacherSchedulerWorkspace = (function () {
             `;
         }
 
-        /* Google Calendar runs ~48px/hour. Single source of truth: this value is also written
-           onto the grid as --scheduler-slot-height so the CSS row heights can never drift. */
-        const SLOT_HEIGHT_PX = 24;
+        /* Google Calendar geometry model. Single source of truth:
+           hourHeightPx defaults to 50px (--ts-hour). Half-hour slot height is derived as:
+           slotHeightPx = Math.round((hourHeightPx / 60) * 30); (25px at 50px/hr, 30px at 60px/hr).
+           This value is also written onto the grid as --scheduler-slot-height so CSS row heights can never drift. */
+        const DEFAULT_HOUR_HEIGHT_PX = 50;
+        function getHourHeightPx() {
+            return Number(state.hourHeightPx || DEFAULT_HOUR_HEIGHT_PX) || DEFAULT_HOUR_HEIGHT_PX;
+        }
+        function getSlotHeightPx() {
+            return Math.round((getHourHeightPx() / 60) * 30);
+        }
         /* Below this height a pill cannot fit a title AND a time line, so it collapses to one. */
         const PILL_TWO_LINE_MIN_PX = 40;
 
@@ -636,7 +670,7 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function pillLayoutStyle(durationMinutes, layout) {
-            const heightPx = Math.max((durationMinutes / 30) * SLOT_HEIGHT_PX - 2, 18);
+            const heightPx = Math.max((durationMinutes / 30) * getSlotHeightPx() - 2, 18);
             const totalCols = Number(layout?.totalCols || 1) || 1;
             const col = Number(layout?.col || 0) || 0;
             if (totalCols > 1) {
@@ -701,8 +735,9 @@ window.TeacherSchedulerWorkspace = (function () {
             const days = getRenderDays();
             const slots = hourSlots(7, 21);
             const slotErrors = state.slotErrors;
-            let html = `<div class="scheduler-calendar-grid" style="--scheduler-day-count: ${days.length}; --scheduler-slot-height: ${SLOT_HEIGHT_PX}px;">`;
-            const todayStr = toLocalDateInput(new Date());
+            const slotHeight = getSlotHeightPx();
+            let html = `<div class="scheduler-calendar-grid" style="--scheduler-day-count: ${days.length}; --scheduler-slot-height: ${slotHeight}px;">`;
+            const todayStr = toLocalDateInput(getSchedulerNow());
             html += '<div class="scheduler-calendar-head scheduler-calendar-head-gutter"></div>';
             days.forEach((day) => {
                 const isToday = toLocalDateInput(day) === todayStr;
@@ -713,7 +748,7 @@ window.TeacherSchedulerWorkspace = (function () {
             });
 
             const sessionLayoutMap = computeSessionLayout(days.map((day) => toLocalDateInput(day)));
-            const nowDate = new Date();
+            const nowDate = getSchedulerNow();
             const nowMinutes = (nowDate.getHours() * 60) + nowDate.getMinutes();
 
             slots.forEach((slotTime) => {
@@ -745,11 +780,11 @@ window.TeacherSchedulerWorkspace = (function () {
                         const compactBadge = isCompleted ? '<span class="pill-badge-compact" title="Completed">✓</span>' : '';
                         const duration = Number(session.durationMinutes || 0) || 60;
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
-                        const heightPx = Math.max((duration / 30) * SLOT_HEIGHT_PX - 2, 18);
+                        const heightPx = Math.max((duration / 30) * slotHeight - 2, 18);
                         const isCompact = heightPx < PILL_TWO_LINE_MIN_PX;
                         const compactClass = isCompact ? 'is-compact' : '';
                         const locked = isLockedSession(session);
-                        const teacherName = session.teacherName || state.teacherMap.get(session.teacherUid) || classroom?.primaryTeacherName || state.teacherMap.get(classroom?.primaryTeacherUid) || '';
+                        const teacherName = resolveTeacherDisplayName(session.teacherUid, session.teacherName || classroom?.primaryTeacherName);
                         const teacherPill = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName)
                             ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 ${escapeHtml(teacherName)}</span>`
                             : '';
@@ -807,7 +842,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     }
                 });
                 const targetMinutes = earliestMinutes < 24 * 60 ? Math.max(7 * 60, earliestMinutes - 30) : 8 * 60;
-                const targetPx = Math.max(0, Math.floor(((targetMinutes - 7 * 60) / 30) * SLOT_HEIGHT_PX));
+                const targetPx = Math.max(0, Math.floor(((targetMinutes - 7 * 60) / 30) * slotHeight));
                 elements.teacherSchedulerCalendar.scrollTop = targetPx;
             }
             renderMiniCalendar();
@@ -862,6 +897,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
 
         function positionFixedPopover(popoverEl, anchor, defaultTopOffset = 6) {
+            if (!popoverEl) return;
             const viewportWidth = typeof window !== 'undefined' ? (window.innerWidth || document.documentElement?.clientWidth || 1024) : 1024;
             const viewportHeight = typeof window !== 'undefined' ? (window.innerHeight || document.documentElement?.clientHeight || 768) : 768;
             const popoverWidth = popoverEl.offsetWidth || 340;
@@ -874,17 +910,22 @@ window.TeacherSchedulerWorkspace = (function () {
             const anchorBottom = Number(anchor?.bottom || anchor?.top || 0);
             const anchorTop = anchor?.top !== undefined ? Number(anchor.top) : anchorBottom;
             let top = anchorBottom + defaultTopOffset;
+            let originY = 'top';
             if (top + popoverHeight > viewportHeight - 16) {
                 if (anchor?.top !== undefined && anchorTop - popoverHeight - defaultTopOffset >= 16) {
                     top = anchorTop - popoverHeight - defaultTopOffset;
+                    originY = 'bottom';
                 } else {
                     top = Math.max(16, viewportHeight - popoverHeight - 16);
                 }
             }
             top = Math.max(16, Math.min(top, Math.max(16, viewportHeight - popoverHeight - 16)));
 
-            popoverEl.style.left = `${clampedLeft}px`;
-            popoverEl.style.top = `${top}px`;
+            if (popoverEl.style) {
+                popoverEl.style.transformOrigin = `${originY} left`;
+                popoverEl.style.left = `${clampedLeft}px`;
+                popoverEl.style.top = `${top}px`;
+            }
         }
 
         function closeQuickAdd() {
@@ -923,6 +964,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
+            elements.teacherSchedulerQuickAdd.style.visibility = 'hidden';
             elements.teacherSchedulerQuickAdd.style.display = 'block';
             elements.teacherSchedulerQuickAdd.setAttribute('aria-hidden', 'false');
 
@@ -930,7 +972,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.inputTeacherSchedulerQuickClass.innerHTML = state.classrooms.map((classroom) => {
                     const classId = String(classroom.classroomId || '');
                     const selected = classId === draft.classId ? ' selected' : '';
-                    const teacherName = classroom.primaryTeacherName || state.teacherMap.get(classroom.primaryTeacherUid) || '';
+                    const teacherName = resolveTeacherDisplayName(classroom.primaryTeacherUid, classroom.primaryTeacherName);
                     const teacherSuffix = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName) ? ` (${teacherName})` : '';
                     return `<option value="${escapeHtml(classId)}"${selected}>${escapeHtml(classroom.name || classId)}${escapeHtml(teacherSuffix)}</option>`;
                 }).join('');
@@ -971,6 +1013,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 top: draft.anchorTop
             };
             positionFixedPopover(elements.teacherSchedulerQuickAdd, anchor, 6);
+            elements.teacherSchedulerQuickAdd.style.visibility = 'visible';
         }
 
         /* Patch the error node into its own cell rather than rebuilding the grid twice
@@ -1210,6 +1253,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 ? `Overflow ${session.overflowSequence || ''}`.trim()
                 : `Unit ${session.contractUnitIndex || ''}`.trim();
 
+            elements.teacherSchedulerSessionBubble.style.visibility = 'hidden';
             elements.teacherSchedulerSessionBubble.style.display = 'block';
             elements.teacherSchedulerSessionBubble.setAttribute('aria-hidden', 'false');
 
@@ -1264,6 +1308,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 top: bubble.anchorTop
             };
             positionFixedPopover(elements.teacherSchedulerSessionBubble, anchor, 6);
+            elements.teacherSchedulerSessionBubble.style.visibility = 'visible';
         }
 
         async function cancelSession(sessionId) {
@@ -1437,7 +1482,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 active: false,
                 activeSlot: null,
                 highlightedSlots: [],
-                ghostEl: null
+                ghostEl: null,
+                isPointerEvent: Boolean(evt.pointerType || (typeof window !== 'undefined' && window.PointerEvent && evt instanceof window.PointerEvent))
             };
         }
 
@@ -1531,7 +1577,8 @@ window.TeacherSchedulerWorkspace = (function () {
             const columnIndex = Math.floor((clientX - rect.left - metrics.gutterWidth) / columnWidth);
             if (columnIndex < 0 || columnIndex >= metrics.days.length) return null;
 
-            const rowIndex = Math.floor((clientY - rect.top - metrics.headHeight) / SLOT_HEIGHT_PX);
+            const slotHeight = getSlotHeightPx();
+            const rowIndex = Math.floor((clientY - rect.top - metrics.headHeight) / slotHeight);
             if (rowIndex < 0 || rowIndex >= metrics.slots.length) return null;
 
             return { date: metrics.days[columnIndex], time: metrics.slots[rowIndex] };
@@ -1631,7 +1678,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 titleEl,
                 originalTimeText: timeEl ? timeEl.textContent : '',
                 originalTitleText: titleEl ? titleEl.textContent : '',
-                isCompact: Boolean(pillEl.classList?.contains?.('is-compact'))
+                isCompact: Boolean(pillEl.classList?.contains?.('is-compact')),
+                isPointerEvent: Boolean(evt.pointerType || (typeof window !== 'undefined' && window.PointerEvent && evt instanceof window.PointerEvent))
             };
             if (pillEl.style) {
                 pillEl.style.zIndex = '10';
@@ -1642,8 +1690,9 @@ window.TeacherSchedulerWorkspace = (function () {
         function handleResizeMove(evt) {
             const rd = state.resizeDrag;
             if (!rd) return;
+            const slotHeight = getSlotHeightPx();
             const deltaY = evt.clientY - rd.startY;
-            const deltaSlots = Math.round(deltaY / SLOT_HEIGHT_PX);
+            const deltaSlots = Math.round(deltaY / slotHeight);
 
             if (rd.edge === 'top') {
                 // Dragging upper edge:
@@ -1660,8 +1709,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 rd.currentStartTime = newStartTime;
                 rd.currentDuration = newDuration;
 
-                const topOffsetPx = ((clampedStart - rd.originalStartMinutes) / 30) * SLOT_HEIGHT_PX;
-                const heightPx = Math.max((newDuration / 30) * SLOT_HEIGHT_PX - 2, 18);
+                const topOffsetPx = ((clampedStart - rd.originalStartMinutes) / 30) * slotHeight;
+                const heightPx = Math.max((newDuration / 30) * slotHeight - 2, 18);
 
                 if (rd.pillEl?.style) {
                     rd.pillEl.style.top = `${topOffsetPx}px`;
@@ -1685,7 +1734,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 const newDuration = Math.min(Math.max(proposedDuration, 30), Math.max(maxAllowedDuration, 30));
 
                 rd.currentDuration = newDuration;
-                const heightPx = Math.max((newDuration / 30) * SLOT_HEIGHT_PX - 2, 18);
+                const heightPx = Math.max((newDuration / 30) * slotHeight - 2, 18);
 
                 if (rd.pillEl?.style) {
                     rd.pillEl.style.height = `${heightPx}px`;
@@ -1715,7 +1764,10 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
             const session = state.sessions.find((s) => String(s.sessionId || '') === rd.sessionId);
-            if (!session) return;
+            if (!session) {
+                restore();
+                return;
+            }
 
             const startDate = getSessionLocalDate(session);
             const targetStartTime = rd.edge === 'top' ? rd.currentStartTime : getSessionLocalTime(session);
@@ -2168,6 +2220,8 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function bindEvents() {
+            if (state._eventsBound) return;
+            state._eventsBound = true;
             if (elements.teacherSchedulerTeacherSelect) {
                 elements.teacherSchedulerTeacherSelect.addEventListener('change', () => {
                     state.selectedTeacherUid = elements.teacherSchedulerTeacherSelect.value || 'all';
@@ -2382,7 +2436,10 @@ window.TeacherSchedulerWorkspace = (function () {
                 const density = document.getElementById('ts-setting-density')?.value;
                 const appearance = document.getElementById('ts-setting-appearance')?.value;
                 if (density && typeof document !== 'undefined') {
-                    document.documentElement.style.setProperty('--ts-hour', `${density}px`);
+                    const densityVal = Number(density) || 50;
+                    document.documentElement.style.setProperty('--ts-hour', `${densityVal}px`);
+                    state.hourHeightPx = densityVal;
+                    renderCalendarGrid();
                 }
                 const calendarEl = elements.teacherSchedulerCalendar;
                 if (calendarEl && appearance === 'solid') {
@@ -2636,7 +2693,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
                 elements.teacherSchedulerCalendar.addEventListener('pointerdown', handleDragStart, true);
                 elements.teacherSchedulerCalendar.addEventListener('mousedown', (evt) => {
-                    if (typeof window !== 'undefined' && window.PointerEvent && evt.pointerType !== undefined) return;
+                    if (state.pointerDrag || state.resizeDrag) return;
                     handleDragStart(evt);
                 }, true);
             }
@@ -2740,7 +2797,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
             document.addEventListener('pointermove', handleDragMove, true);
             document.addEventListener('mousemove', (evt) => {
-                if (typeof window !== 'undefined' && window.PointerEvent && evt.pointerType !== undefined) return;
+                if (state.pointerDrag?.isPointerEvent || state.resizeDrag?.isPointerEvent) return;
                 handleDragMove(evt);
             }, true);
 
@@ -2791,7 +2848,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
             document.addEventListener('pointerup', handleDragEnd, true);
             document.addEventListener('mouseup', (evt) => {
-                if (typeof window !== 'undefined' && window.PointerEvent && evt.pointerType !== undefined) return;
+                if (state.pointerDrag?.isPointerEvent || state.resizeDrag?.isPointerEvent) return;
                 handleDragEnd(evt);
             }, true);
 
@@ -2804,6 +2861,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 if (evt.key !== 'Escape') {
                     if (elements.teacherSchedulerSessionBubble?.style.display === 'block') {
                         trapFocus(elements.teacherSchedulerSessionBubble, evt);
+                    }
+                    if (elements.teacherSchedulerQuickAdd?.style.display === 'block') {
+                        trapFocus(elements.teacherSchedulerQuickAdd, evt);
                     }
                     return;
                 }
@@ -2851,6 +2911,10 @@ window.TeacherSchedulerWorkspace = (function () {
 
             if (elements.btnTeacherSchedulerQuickCancel) {
                 elements.btnTeacherSchedulerQuickCancel.addEventListener('click', () => closeQuickAdd());
+            }
+            const quickCloseBtn = elements.btnTeacherSchedulerQuickClose || ((typeof document !== 'undefined') ? document.getElementById('btn-teacher-scheduler-quick-close') : null);
+            if (quickCloseBtn) {
+                quickCloseBtn.addEventListener('click', () => closeQuickAdd());
             }
             if (elements.btnTeacherSchedulerQuickAdd) {
                 elements.btnTeacherSchedulerQuickAdd.addEventListener('click', () => {
@@ -3274,6 +3338,8 @@ window.TeacherSchedulerWorkspace = (function () {
             handleResizeMove,
             commitResize,
             cancelResizeDrag,
+            getSlotHeightPx,
+            renderCalendarGrid,
             getState: () => state
         };
     }

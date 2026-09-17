@@ -1,0 +1,1448 @@
+{
+  "schema": "bel-3d-claude-manifest/1",
+  "pack": {
+    "id": "bel-3d-claude",
+    "batch": 0,
+    "version": "batch-0-v2",
+    "artDirection": "BEL-ART-01 v1.0 (block-built, pixel-inspired)",
+    "supersedes": "batch-0-v1 (rounded compatibility sample; kept for rollback)",
+    "representation": "THREE_MODULE",
+    "three": {
+      "version": "0.186.0",
+      "revision": "186"
+    },
+    "units": "1 world unit = 50 logical px (s = 0.02). X = (logical_x - 500) * s, Z = (logical_y - 240) * s, Y = visual height.",
+    "axes": "+Y up; +Z toward the viewer / larger logical y; an avatar faces +Z at rotation.y = 0; character-left = +X."
+  },
+  "createdBy": "Claude (Anthropic) — asset producer role in BEL_3D_Asset_Brief_v2_Claude_ThreeJS.md",
+  "generatedBy": "tools/build-manifest.mjs",
+  "baseline": {
+    "repository": "huathanhnam95-del/demoproject",
+    "branch": "codex/bel-demo-production-20260914",
+    "commit": "249a8fc86b5a293f82008b0db07c64aeca4ad2bd",
+    "featureRoot": "public/prototypes/bel-working-as-equals-demo/"
+  },
+  "artDirection": {
+    "id": "BEL-ART-01",
+    "version": "1.0",
+    "style": "block-built, pixel-inspired translation of the existing BEL theme",
+    "referenceUse": "Vesper screenshot studied for block construction, material response and lighting only; no theme, character, or asset from it is used"
+  },
+  "interfaceChangelog": [
+    {
+      "version": "batch-0-v2",
+      "change": "socket_hat moved to [0, 0.33, 0] and socket_glasses to [0, 0.235, 0.172] in J_head space, because the head is now a cuboid",
+      "impact": "avatar-internal; hats and glasses are owned by the avatar, so no integration code changes"
+    },
+    {
+      "version": "batch-0-v2",
+      "change": "new preview-only asset id ref.material-samples",
+      "impact": "additive; never placed in the game"
+    },
+    {
+      "version": "batch-0-v2",
+      "change": "avatar and plank geometry rebuilt as chamfered cuboids; plank body and shoe materials now use vertexColors",
+      "impact": "visual only: pivots, units, facing, bounds envelope, clips, bindings, asset ids and appearance semantics unchanged"
+    }
+  ],
+  "representation": "THREE_MODULE",
+  "entry": {
+    "path": "runtime/index.mjs",
+    "exports": [
+      "createAsset",
+      "createResourceCache",
+      "PACK",
+      "ASSET_CATALOG"
+    ]
+  },
+  "engine": {
+    "name": "three",
+    "version": "0.186.0",
+    "revision": "186",
+    "npmTarballShasum": "08f70ce80dffa9247a567b421165bec630e86f8d",
+    "npmIntegrity": "sha512-cr/fIM2ddMSVbYVgkfD4jLJv7Fh/8ZTjvo+7gQeSVGUZHxpx9FDwoL5iC7hUz/LiRA8wMbqfnb90xKfm1/HHkQ==",
+    "injected": true,
+    "bundledInRuntime": false,
+    "addonsUsedByRuntime": []
+  },
+  "runtime": {
+    "files": [
+      {
+        "path": "runtime/avatar-clips.mjs",
+        "bytes": 5883,
+        "sha256": "2c1b6de3a5539b5fa1b13a021a6af0ffb5df90149fef20c31b663db871844173",
+        "imports": [
+          "runtime/avatar-rig.mjs"
+        ]
+      },
+      {
+        "path": "runtime/avatar-rig.mjs",
+        "bytes": 3668,
+        "sha256": "c4f57a4d8a71326af9a23b011898f2e8bf4fb55ef0b139dec8f78adbffae9046",
+        "imports": []
+      },
+      {
+        "path": "runtime/avatar.mjs",
+        "bytes": 14939,
+        "sha256": "e9a360711a6ebb1177f80d91aecf2e742ee7f134b04af97504871d63598c5d80",
+        "imports": [
+          "runtime/identity.mjs",
+          "runtime/materials.mjs",
+          "runtime/avatar-rig.mjs",
+          "runtime/avatar-clips.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/bridge-props.mjs",
+        "bytes": 6361,
+        "sha256": "053675b8642a4531f0f222bccb441dc051e4fe83a2bf317a482784084e2adcc7",
+        "imports": [
+          "runtime/identity.mjs",
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/geometry.mjs",
+        "bytes": 6820,
+        "sha256": "8baf768d6b231bffd4c6b4fd51dfc9e94285660097f8b0263cfb912a0b64653b",
+        "imports": []
+      },
+      {
+        "path": "runtime/identity.mjs",
+        "bytes": 2239,
+        "sha256": "89b5ff026ae3b227f9deadd83aa87dffc5b446b748f6fa3873afe7c354c9c25d",
+        "imports": []
+      },
+      {
+        "path": "runtime/index.mjs",
+        "bytes": 4922,
+        "sha256": "b67eef2f647ed84e98b29545c60f6537b6bc191d7df9efd3c62396c6fbf46d94",
+        "imports": [
+          "runtime/resources.mjs",
+          "runtime/identity.mjs",
+          "runtime/avatar.mjs",
+          "runtime/bridge-props.mjs",
+          "runtime/reference-meter.mjs",
+          "runtime/reference-materials.mjs",
+          "runtime/avatar-clips.mjs"
+        ]
+      },
+      {
+        "path": "runtime/materials.mjs",
+        "bytes": 4000,
+        "sha256": "3d401c6b71ad5716c556684b76b7b846e5d6d0c2849dce88a4771508100f2979",
+        "imports": []
+      },
+      {
+        "path": "runtime/reference-materials.mjs",
+        "bytes": 3631,
+        "sha256": "ef036f981c3a8404afebc56b8095328051b4748befe0b524065267ff5efd3f4d",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/reference-meter.mjs",
+        "bytes": 3266,
+        "sha256": "328f8afe724db6cfa2b970bd27b620ea8f4207f8313b41322ee6b43bf3101671",
+        "imports": [
+          "runtime/materials.mjs",
+          "runtime/geometry.mjs"
+        ]
+      },
+      {
+        "path": "runtime/resources.mjs",
+        "bytes": 2630,
+        "sha256": "acb9b049c737c69c48dbea7afd956aa3cb835d4bca7600fd566c1fd59a09c49b",
+        "imports": []
+      }
+    ],
+    "dependencyClosureFrom": "runtime/index.mjs",
+    "closureSha256": "7eb5d678c0a684fb0a9da0847cbcc53da5a2c6501a6234c0c1ba3da12ac396b8",
+    "textures": [],
+    "binaries": []
+  },
+  "provenance": {
+    "creator": "Claude (Anthropic model) authoring procedural Three.js code for the user in this handoff",
+    "license": "UNRESOLVED — to be assigned by the project owner. \"AI-assisted\" does not establish a third-party licence. No third-party art, fonts, textures or models are included; preview/vendor holds three.js (MIT) for the preview only.",
+    "sources": [
+      "Colours: evidence/source-palette.json (median samples of baseline art at the pinned commit)",
+      "Identities/options: evidence/source-fidelity.json (baseline code at the pinned commit)"
+    ],
+    "modificationHistory": [
+      {
+        "version": "batch-0-v2",
+        "change": "initial Batch 0 compatibility sample"
+      }
+    ]
+  },
+  "assets": [
+    {
+      "assetId": "avatar.participant",
+      "type": "THREE_MODULE",
+      "role": "batch-0-compatibility-sample",
+      "entry": "runtime/index.mjs#createAsset",
+      "factory": "runtime/avatar.mjs#createAvatar",
+      "variants": {
+        "actor": [
+          "p0",
+          "p1",
+          "p2",
+          "p3"
+        ],
+        "appearance": {
+          "shirt": [
+            "teal",
+            "cream",
+            "amber",
+            "red"
+          ],
+          "hat": [
+            "none",
+            "straw",
+            "cap"
+          ],
+          "glasses": [
+            false,
+            true
+          ]
+        },
+        "defaultAppearance": {
+          "hat": "none",
+          "glasses": false,
+          "shirt": "default"
+        }
+      },
+      "units": "1 world unit = 50 logical px (s = 0.02). X = (logical_x - 500) * s, Z = (logical_y - 240) * s, Y = visual height.",
+      "axes": "+Y up; +Z toward the viewer / larger logical y; an avatar faces +Z at rotation.y = 0; character-left = +X.",
+      "pivot": "root on the floor between the feet; never animated",
+      "dimensions": {
+        "height": 1.54,
+        "head": {
+          "w": 0.34,
+          "h": 0.36,
+          "d": 0.32,
+          "y": 0.2
+        },
+        "thigh": 0.28,
+        "shin": 0.27,
+        "ankleHeight": 0.065,
+        "hipsHeight": 0.635,
+        "thighOffset": [
+          0.085,
+          -0.02,
+          0
+        ],
+        "upperArm": 0.2,
+        "foreArm": 0.18,
+        "collisionRadiusLogical": 10,
+        "collisionRadius": 0.2
+      },
+      "measured": [
+        {
+          "variant": {
+            "actor": "p0"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.193
+            ],
+            "max": [
+              0.3148,
+              1.5345,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.5345,
+              0.3785
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.28
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.56
+            ]
+          },
+          "triangles": {
+            "base": 2400,
+            "allAccessories": 3420
+          },
+          "meshesIncludingHiddenAccessories": 28,
+          "trianglesIncludingHiddenAccessories": 3600,
+          "vertices": 10800,
+          "uniqueGeometries": 22,
+          "uniqueMaterials": 14,
+          "textures": 0,
+          "style": {
+            "build": "male",
+            "sleeves": "long",
+            "hair": "short",
+            "ears": true,
+            "undershirt": true
+          }
+        },
+        {
+          "variant": {
+            "actor": "p1"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.37
+            ],
+            "max": [
+              0.3148,
+              1.528,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.528,
+              0.5555
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.37
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.65
+            ]
+          },
+          "triangles": {
+            "base": 2460,
+            "allAccessories": 3480
+          },
+          "meshesIncludingHiddenAccessories": 29,
+          "trianglesIncludingHiddenAccessories": 3660,
+          "vertices": 10980,
+          "uniqueGeometries": 22,
+          "uniqueMaterials": 14,
+          "textures": 0,
+          "style": {
+            "build": "female",
+            "sleeves": "short",
+            "hair": "ponytail",
+            "ears": false,
+            "undershirt": false
+          }
+        },
+        {
+          "variant": {
+            "actor": "p2"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.2
+            ],
+            "max": [
+              0.3148,
+              1.528,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.528,
+              0.3855
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.28
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.56
+            ]
+          },
+          "triangles": {
+            "base": 2340,
+            "allAccessories": 3360
+          },
+          "meshesIncludingHiddenAccessories": 26,
+          "trianglesIncludingHiddenAccessories": 3540,
+          "vertices": 10620,
+          "uniqueGeometries": 20,
+          "uniqueMaterials": 13,
+          "textures": 0,
+          "style": {
+            "build": "female",
+            "sleeves": "long",
+            "hair": "shoulder",
+            "ears": false,
+            "undershirt": false
+          }
+        },
+        {
+          "variant": {
+            "actor": "p3"
+          },
+          "bounds": {
+            "min": [
+              -0.3148,
+              0,
+              -0.2
+            ],
+            "max": [
+              0.3148,
+              1.528,
+              0.1855
+            ],
+            "size": [
+              0.6295,
+              1.528,
+              0.3855
+            ]
+          },
+          "boundsWithStrawHatAndGlasses": {
+            "min": [
+              -0.3148,
+              0,
+              -0.28
+            ],
+            "max": [
+              0.3148,
+              1.57,
+              0.28
+            ],
+            "size": [
+              0.6295,
+              1.57,
+              0.56
+            ]
+          },
+          "triangles": {
+            "base": 2340,
+            "allAccessories": 3360
+          },
+          "meshesIncludingHiddenAccessories": 28,
+          "trianglesIncludingHiddenAccessories": 3540,
+          "vertices": 10620,
+          "uniqueGeometries": 21,
+          "uniqueMaterials": 13,
+          "textures": 0,
+          "style": {
+            "build": "female",
+            "sleeves": "short",
+            "hair": "long",
+            "ears": false,
+            "undershirt": false
+          }
+        }
+      ],
+      "measuredMotion": {
+        "Idle": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0,
+          "plantedFootSlipLogicalPx": 0,
+          "soleMinY": 0,
+          "soleMaxY": 0.00027,
+          "hipsY": [
+            0.629,
+            0.635
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root stationary"
+        },
+        "Walk": {
+          "samplesPerSecond": 1200,
+          "plantedFootSlipWorld": 0.000234,
+          "plantedFootSlipLogicalPx": 0.0117,
+          "soleMinY": -0.00057,
+          "soleMaxY": 0.085,
+          "hipsY": [
+            0.5848,
+            0.6094
+          ],
+          "hipsRestY": 0.635,
+          "assumption": "root translated at nominalSpeed along +Z (the facing direction) at timeScale 1"
+        }
+      },
+      "clips": [
+        {
+          "name": "Idle",
+          "duration": 3.2,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": false,
+          "notes": "Grounded breathing/weight loop. Feet solved to fixed floor positions; no world displacement.",
+          "tracks": 17,
+          "keyframes": 97,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        },
+        {
+          "name": "Walk",
+          "duration": 0.4,
+          "fps": 60,
+          "loop": true,
+          "rootMotion": false,
+          "travelPerCycle": 0.864,
+          "travelPerCycleLogical": 43.2,
+          "nominalSpeed": 2.16,
+          "nominalSpeedLogical": 108,
+          "timeScaleRule": "timeScale = displayedSpeed / nominalSpeed (1.0 at the unchanged 108 px/s host speed)",
+          "stanceFraction": 0.5,
+          "footContacts": {
+            "left": [
+              {
+                "plant": 0,
+                "lift": 0.2
+              }
+            ],
+            "right": [
+              {
+                "plant": 0.2,
+                "lift": 0.4
+              }
+            ]
+          },
+          "notes": "In place. During stance the planted ankle moves backwards relative to the root at exactly nominalSpeed, so the foot is stationary on the floor when the host moves the avatar at 108 px/s.",
+          "tracks": 17,
+          "keyframes": 25,
+          "boundProperties": [
+            "J_hips.position",
+            "J_hips.quaternion",
+            "J_spine.quaternion",
+            "J_neck.quaternion",
+            "J_head.quaternion",
+            "J_upperArm_L.quaternion",
+            "J_foreArm_L.quaternion",
+            "J_hand_L.quaternion",
+            "J_upperArm_R.quaternion",
+            "J_foreArm_R.quaternion",
+            "J_hand_R.quaternion",
+            "J_thigh_L.quaternion",
+            "J_shin_L.quaternion",
+            "J_foot_L.quaternion",
+            "J_thigh_R.quaternion",
+            "J_shin_R.quaternion",
+            "J_foot_R.quaternion"
+          ]
+        }
+      ],
+      "sockets": [
+        {
+          "name": "socket_hand_L",
+          "parent": "J_hand_L",
+          "position": [
+            0,
+            -0.045,
+            0.01
+          ],
+          "purpose": "character-left hand grip point"
+        },
+        {
+          "name": "socket_hand_R",
+          "parent": "J_hand_R",
+          "position": [
+            0,
+            -0.045,
+            0.01
+          ],
+          "purpose": "character-right hand grip point"
+        },
+        {
+          "name": "socket_held",
+          "parent": "J_spine",
+          "position": [
+            0,
+            0.06,
+            0.24
+          ],
+          "purpose": "provisional held-object anchor in front of the torso (0.75 above the floor at rest); Batch 1 carry clips refine the grip"
+        },
+        {
+          "name": "socket_hat",
+          "parent": "J_head",
+          "position": [
+            0,
+            0.33,
+            0
+          ],
+          "purpose": "hat seat on the block head (top of the head cuboid is 0.38); straw hat and cap are children"
+        },
+        {
+          "name": "socket_glasses",
+          "parent": "J_head",
+          "position": [
+            0,
+            0.235,
+            0.172
+          ],
+          "purpose": "glasses bridge point on the front face of the block head"
+        }
+      ],
+      "joints": [
+        {
+          "name": "J_hips",
+          "parent": null,
+          "position": [
+            0,
+            0.635,
+            0
+          ]
+        },
+        {
+          "name": "J_spine",
+          "parent": "J_hips",
+          "position": [
+            0,
+            0.055,
+            0
+          ]
+        },
+        {
+          "name": "J_neck",
+          "parent": "J_spine",
+          "position": [
+            0,
+            0.33,
+            0
+          ]
+        },
+        {
+          "name": "J_head",
+          "parent": "J_neck",
+          "position": [
+            0,
+            0.04,
+            0
+          ]
+        },
+        {
+          "name": "J_upperArm_L",
+          "parent": "J_spine",
+          "position": [
+            0.2,
+            0.27,
+            0
+          ]
+        },
+        {
+          "name": "J_foreArm_L",
+          "parent": "J_upperArm_L",
+          "position": [
+            0,
+            -0.2,
+            0
+          ]
+        },
+        {
+          "name": "J_hand_L",
+          "parent": "J_foreArm_L",
+          "position": [
+            0,
+            -0.18,
+            0
+          ]
+        },
+        {
+          "name": "J_upperArm_R",
+          "parent": "J_spine",
+          "position": [
+            -0.2,
+            0.27,
+            0
+          ]
+        },
+        {
+          "name": "J_foreArm_R",
+          "parent": "J_upperArm_R",
+          "position": [
+            0,
+            -0.2,
+            0
+          ]
+        },
+        {
+          "name": "J_hand_R",
+          "parent": "J_foreArm_R",
+          "position": [
+            0,
+            -0.18,
+            0
+          ]
+        },
+        {
+          "name": "J_thigh_L",
+          "parent": "J_hips",
+          "position": [
+            0.085,
+            -0.02,
+            0
+          ]
+        },
+        {
+          "name": "J_shin_L",
+          "parent": "J_thigh_L",
+          "position": [
+            0,
+            -0.28,
+            0
+          ]
+        },
+        {
+          "name": "J_foot_L",
+          "parent": "J_shin_L",
+          "position": [
+            0,
+            -0.27,
+            0
+          ]
+        },
+        {
+          "name": "J_thigh_R",
+          "parent": "J_hips",
+          "position": [
+            -0.085,
+            -0.02,
+            0
+          ]
+        },
+        {
+          "name": "J_shin_R",
+          "parent": "J_thigh_R",
+          "position": [
+            0,
+            -0.28,
+            0
+          ]
+        },
+        {
+          "name": "J_foot_R",
+          "parent": "J_shin_R",
+          "position": [
+            0,
+            -0.27,
+            0
+          ]
+        }
+      ],
+      "seedPolicy": "seed recorded; no cosmetic randomness",
+      "disposal": "idempotent; releases shared cache keys, disposes the per-instance clothing material"
+    },
+    {
+      "assetId": "prop.bridge-plank",
+      "type": "THREE_MODULE",
+      "role": "batch-0-compatibility-sample",
+      "entry": "runtime/index.mjs#createAsset",
+      "factory": "runtime/bridge-props.mjs#createPlank",
+      "variants": [
+        "plank-0",
+        "plank-1",
+        "plank-2",
+        "plank-3",
+        "plank-4",
+        "plank-5"
+      ],
+      "dimensions": {
+        "length": 1.64,
+        "depth": 0.32,
+        "thickness": 0.09,
+        "lengthLogical": 82,
+        "depthLogical": 16,
+        "boards": 3,
+        "markCell": 0.024,
+        "markGrid": 9
+      },
+      "pivot": "bottom-centre; long axis X; mark on the -X end of the top face",
+      "sockets": [
+        "socket_grip",
+        "socket_top"
+      ],
+      "measured": [
+        {
+          "variant": "plank-0",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 960,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 960,
+          "vertices": 2880,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-1",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 1500,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 1500,
+          "vertices": 4500,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-2",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 1140,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 1140,
+          "vertices": 3420,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-3",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 960,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 960,
+          "vertices": 2880,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-4",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 960,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 960,
+          "vertices": 2880,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        },
+        {
+          "variant": "plank-5",
+          "bounds": {
+            "min": [
+              -0.82,
+              0,
+              -0.16
+            ],
+            "max": [
+              0.82,
+              0.093,
+              0.16
+            ],
+            "size": [
+              1.64,
+              0.093,
+              0.32
+            ]
+          },
+          "triangles": 960,
+          "meshesIncludingHiddenAccessories": 3,
+          "trianglesIncludingHiddenAccessories": 960,
+          "vertices": 2880,
+          "uniqueGeometries": 3,
+          "uniqueMaterials": 3,
+          "textures": 0
+        }
+      ],
+      "clips": []
+    },
+    {
+      "assetId": "ref.meter",
+      "type": "THREE_MODULE",
+      "role": "preview-reference (not a gameplay object)",
+      "factory": "runtime/reference-meter.mjs#createMeterReference",
+      "measured": {
+        "bounds": {
+          "min": [
+            -0.65,
+            0,
+            -0.2
+          ],
+          "max": [
+            1.25,
+            2.004,
+            0.63
+          ],
+          "size": [
+            1.9,
+            2.004,
+            0.83
+          ]
+        },
+        "triangles": 408,
+        "meshesIncludingHiddenAccessories": 5,
+        "trianglesIncludingHiddenAccessories": 416,
+        "vertices": 1058,
+        "uniqueGeometries": 5,
+        "uniqueMaterials": 3,
+        "textures": 0
+      }
+    },
+    {
+      "assetId": "ref.material-samples",
+      "type": "THREE_MODULE",
+      "role": "preview-reference (material board; not a gameplay object)",
+      "factory": "runtime/reference-materials.mjs#createMaterialSamples",
+      "measured": {
+        "bounds": {
+          "min": [
+            -2.3,
+            -0.06,
+            -0.3
+          ],
+          "max": [
+            2.3,
+            0.4,
+            0.3
+          ],
+          "size": [
+            4.6,
+            0.46,
+            0.6
+          ]
+        },
+        "triangles": 1020,
+        "families": [
+          {
+            "family": "wall",
+            "hex": "#fef4e9",
+            "surface": {
+              "roughness": 0.88,
+              "metalness": 0
+            },
+            "source": "plaster / painted wall (F.png, C.png)"
+          },
+          {
+            "family": "timber",
+            "hex": "#f3ceac",
+            "surface": {
+              "roughness": 0.7,
+              "metalness": 0
+            },
+            "source": "timber floor and platform boards (F.png)"
+          },
+          {
+            "family": "paintedProp",
+            "hex": "#0098a9",
+            "surface": {
+              "roughness": 0.7,
+              "metalness": 0
+            },
+            "source": "painted activity props, e.g. plank-0 (F-complete.png)"
+          },
+          {
+            "family": "fabric",
+            "hex": "#228a71",
+            "surface": {
+              "roughness": 0.95,
+              "metalness": 0
+            },
+            "source": "studio chair upholstery (C.png)"
+          },
+          {
+            "family": "carpet",
+            "hex": "#9aaf94",
+            "surface": {
+              "roughness": 0.95,
+              "metalness": 0
+            },
+            "source": "studio carpet (C.png)"
+          },
+          {
+            "family": "darkWood",
+            "hex": "#955a2e",
+            "surface": {
+              "roughness": 0.7,
+              "metalness": 0
+            },
+            "source": "console / door timber (C.png)"
+          },
+          {
+            "family": "metal",
+            "hex": "#f2b440",
+            "surface": {
+              "roughness": 0.35,
+              "metalness": 0.7
+            },
+            "source": "small metal details, e.g. plank nails (F-complete.png)"
+          },
+          {
+            "family": "screen",
+            "hex": "#98afd2",
+            "surface": {
+              "roughness": 0.88,
+              "metalness": 0
+            },
+            "source": "monitor surface (C.png) — a neutral prop surface, never slide content"
+          }
+        ],
+        "meshesIncludingHiddenAccessories": 9,
+        "trianglesIncludingHiddenAccessories": 1020,
+        "vertices": 3060,
+        "uniqueGeometries": 2,
+        "uniqueMaterials": 9,
+        "textures": 0
+      }
+    }
+  ],
+  "missingForLaterBatches": {
+    "batch1": [
+      "CarryIdle",
+      "CarryWalk",
+      "SeatedIdle",
+      "studio-kit (chair, monitor, console, plant, door, trim)",
+      "room-f-kit (near/far platforms, gap edges, shell)",
+      "studio G arrangement",
+      "material/reference scene"
+    ],
+    "batch2": [
+      "B1/B2/B3 shapes + pedestals",
+      "Gallery D frames/table/bench",
+      "Room I floor-region surfaces",
+      "Room J cubes + table/monitor"
+    ],
+    "batch3": [
+      "Wave",
+      "HandholdIdle",
+      "HandholdWalk",
+      "scooter riding/coasting",
+      "skateboard riding/coasting",
+      "Home/Street/Reception furnishings and vehicles"
+    ]
+  },
+  "validation": {
+    "gateA_sourceFidelity": {
+      "status": "PASS",
+      "evidence": "evidence/source-fidelity.json",
+      "checks": 23
+    },
+    "gateA_palette": {
+      "status": "PASS",
+      "evidence": "evidence/source-palette.json",
+      "note": "extraction ran; values asserted equal by the contract tests"
+    },
+    "gateB_moduleContract": {
+      "status": "PASS",
+      "evidence": "evidence/module-validation.json",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0
+    },
+    "gateB_negativeControls": {
+      "status": "PASS",
+      "evidence": "evidence/mutation-check.json"
+    },
+    "gateB_gltfValidator": {
+      "status": "NOT_APPLICABLE",
+      "reason": "THREE_MODULE pack; no GLB delivered"
+    },
+    "gateC_chromePreview": {
+      "status": "PASS",
+      "evidence": "evidence/chrome-preview/results.json",
+      "browser": {
+        "channel": "chrome",
+        "headless": false,
+        "version": "153.0.8010.48"
+      },
+      "checks": 18
+    },
+    "gateD_gameIntegration": {
+      "status": "BLOCKED",
+      "reason": "Owned by Gemini: application adapter, four-window Chrome tests and state mapping are outside this pack."
+    },
+    "gateE_humanVisualApproval": {
+      "status": "NOT_RUN",
+      "reason": "Requires the user/reviewer; producer self-review is not approval."
+    }
+  },
+  "supportingFiles": [
+    {
+      "path": "README.md",
+      "bytes": 14127,
+      "sha256": "93367d5edbfdb4d0911bd37e1d7dd73a19b2b61877412f8ad4895923ebdda148",
+      "role": "README.md"
+    },
+    {
+      "path": "asset-contract.json",
+      "bytes": 12514,
+      "sha256": "c63bab9abeb6a2160f67b62f3588a08044c4f8a4f18e3928fe01f6e6fe60f644",
+      "role": "asset-contract.json"
+    },
+    {
+      "path": "evidence/asset-audit.md",
+      "bytes": 11983,
+      "sha256": "b44d45b8e2f022ddbcfe501ba249d396268b2d716927f72ed46a94056f65bbd4",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/motion-contact-sheet.png",
+      "bytes": 632639,
+      "sha256": "9db2c81b98b331040f485bf7a5a64623d687a1cd010798b4c8a8a03da576d3a2",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/motion-root.webm",
+      "bytes": 3598812,
+      "sha256": "a3efab643866616da7e2058b3a77c6bea418ec1d25a84c0f0e6d675d986380cf",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/nested-game.png",
+      "bytes": 92212,
+      "sha256": "6b1b781be8af954d16742246a3d0eb39a58c2b69f98156c7dc9560c4baf5210b",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/results.json",
+      "bytes": 18448,
+      "sha256": "9f928819645c1e6d09f8935f62ee7ffe435ec9b26871eaa512cbfc9bee51f5e2",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-front-appearance-changed-via-ui.png",
+      "bytes": 101605,
+      "sha256": "759b6f63020e8903eb3e911930127636fb8f2e6a8961e91c7c1d6e73a781638b",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-neutral-back.png",
+      "bytes": 57370,
+      "sha256": "c39164fe36ed0502bbbaacd1992edf9ecc59353ed8d828ba92a529d966452ef4",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-neutral-close.png",
+      "bytes": 107650,
+      "sha256": "c8109d1c492daae4a7d17d3555759905c6be1942567de0a2dd4fe273ab456ede",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-neutral-front.png",
+      "bytes": 99352,
+      "sha256": "76927fb1c517ecc7d427c0619c155ac8614e92599bba674c016c174ab3ef1fbd",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-neutral-game.png",
+      "bytes": 84231,
+      "sha256": "f86d6a192451235a918e6f8f4eca9d17b450254e2dabbd69a730973e059871dc",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-neutral-side.png",
+      "bytes": 101887,
+      "sha256": "99a9cdaa693aead51e53f560cbdb5cd9703a3ef8d54c9f831660af15622edae8",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-back.png",
+      "bytes": 57194,
+      "sha256": "2a60712a00cbe7626bbfec1261f71ec07f5c26f491a9dfaf24d85389e9a2e044",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-bridge.png",
+      "bytes": 154703,
+      "sha256": "10c61c2c17b6925d143d870e7c5d0f1b81da73dbeb9d292c1a8ccf5e218b7871",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-close.png",
+      "bytes": 117006,
+      "sha256": "b923254bf93f8b4532c1ed8b9a1780cc1da0dbbb1e4f6050462ada7fca4332a3",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-front.png",
+      "bytes": 108398,
+      "sha256": "7c503c8156ca385d3eb4ba34b9279fa651bec8db253521b061da68a4218aaca5",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-game.png",
+      "bytes": 92712,
+      "sha256": "08c42814cef834fec7d9f429e7000483492faa964da8206afd283f4889405454",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-room-side.png",
+      "bytes": 116290,
+      "sha256": "377c84739a2807175160f428458a3ca1f49e6b3c791c47799e86a63acd79fb78",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/chrome-preview/root-sockets-and-held-plank.png",
+      "bytes": 113795,
+      "sha256": "b17e3d2345a22a4970fe484da98df66fc28141d5d9f15dc229029f986d550454",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/module-validation.json",
+      "bytes": 3099,
+      "sha256": "f8b0bb5342db9d06e19db3b87d699ac63071ec2172b0a8497aa46b7682532ac4",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/module-validation.tap",
+      "bytes": 4965,
+      "sha256": "2957f5cba518e0ff3aef01dbfd1b07dbe6c99c19d537c5e07205cf22dfa49880",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/mutation-check.json",
+      "bytes": 2711,
+      "sha256": "5e633ce73259b63fc70d462c377f3b3a8afe9bec6714eb75346b7c7f413e019a",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/source-fidelity.json",
+      "bytes": 5580,
+      "sha256": "40869ddc52f89340b06973b42fb889c331f542f9e201cc5c12113550baefd719",
+      "role": "evidence"
+    },
+    {
+      "path": "evidence/source-palette.json",
+      "bytes": 12976,
+      "sha256": "18c62d7d7299f8231c1d30656d665f6f1dff41777ddd4f437d0ba28b1b878152",
+      "role": "evidence"
+    },
+    {
+      "path": "open-preview.bat",
+      "bytes": 321,
+      "sha256": "77951144dd2ed72435d9b5c21dc8be632d065eb8efba485eda6fb905797eb132",
+      "role": "open-preview.bat"
+    },
+    {
+      "path": "package.json",
+      "bytes": 378,
+      "sha256": "a0dc854d9cb65beaae1509c3e9b52a533a0e635e06957da178ce6b35844cbf1f",
+      "role": "package.json"
+    },
+    {
+      "path": "preview/index.html",
+      "bytes": 3590,
+      "sha256": "8a5723661b607c9be41ce803c9384f1cad0a4f2c1078d6c0a2b085926f19b7f1",
+      "role": "preview"
+    },
+    {
+      "path": "preview/preview.mjs",
+      "bytes": 20858,
+      "sha256": "464b47b45b7e63fcc5717f1bdf0d6c6edcaf9332a882d99a6d873dec2c443f01",
+      "role": "preview"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/LICENSE",
+      "bytes": 1081,
+      "sha256": "8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/build/three.core.js",
+      "bytes": 1458113,
+      "sha256": "9edde002b066a9a05676a6127f67735b62baf399bdea529f2f7e31657da769e6",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/build/three.module.js",
+      "bytes": 662772,
+      "sha256": "9052042d676cb0fdc1ddfefe193053f34b7ac0513a616fdac4535d49987812ea",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "preview/vendor/three-0.186.0/examples/jsm/controls/OrbitControls.js",
+      "bytes": 40755,
+      "sha256": "3d79d07ecb686b4e5d93232eedab255331c1beef711e13164eaa1f68655a5f2b",
+      "role": "third-party engine copy for the isolated preview only (MIT); not part of runtime"
+    },
+    {
+      "path": "semantic-map.json",
+      "bytes": 4651,
+      "sha256": "d6a8c677c524292b148d83ecfe7de87713f8e860fdf8431b1839f134459e2a66",
+      "role": "semantic-map.json"
+    },
+    {
+      "path": "tests/asset-contract.test.mjs",
+      "bytes": 24654,
+      "sha256": "0d490408edd6d1908fab4948849770befd178083902dbdb20608c092a45a0c2a",
+      "role": "tests"
+    },
+    {
+      "path": "tests/chrome_preview.py",
+      "bytes": 12490,
+      "sha256": "7864970d4bb87429aa0549ed0f77af89004c2b65c4c2a132b4d8ffe19f663e33",
+      "role": "tests"
+    },
+    {
+      "path": "tests/side-effect-probe.mjs",
+      "bytes": 3389,
+      "sha256": "ca97e5f637ea4cbe1ee167d1abe65259b486e563192a2f23cea55d4446bb1e74",
+      "role": "tests"
+    },
+    {
+      "path": "tests/static-server.mjs",
+      "bytes": 2345,
+      "sha256": "01e7f5d483086be6e0077773f0bd1c5e994dfbcf4b15889309f305b9448e4d81",
+      "role": "tests"
+    },
+    {
+      "path": "tools/build-manifest.mjs",
+      "bytes": 19340,
+      "sha256": "0cf2cccf10bef060d3aeea18be53931f92d80d2727d43d86b488fa6f20320e3f",
+      "role": "tools"
+    },
+    {
+      "path": "tools/check-source-identity.mjs",
+      "bytes": 6631,
+      "sha256": "01de796fa309b5756f95ff6c1e096c95fd94b6eb0a27ed21c29264400209dd18",
+      "role": "tools"
+    },
+    {
+      "path": "tools/extract-source-palette.py",
+      "bytes": 5568,
+      "sha256": "a4d9ecbbe7eea5473f325af60dd1348d4713998004678eae3b7de61d3e628e2a",
+      "role": "tools"
+    },
+    {
+      "path": "tools/mutation-check.mjs",
+      "bytes": 3630,
+      "sha256": "379001077c22b6f58b9b6f072ceea55bdfc3ffa8c29a45c482ee0622c5456f70",
+      "role": "tools"
+    },
+    {
+      "path": "tools/run-evidence.mjs",
+      "bytes": 5766,
+      "sha256": "99d28e871579348673cc6287c4f2c09759d6ae82941e65e433d1368ca76d81cf",
+      "role": "tools"
+    }
+  ],
+  "notIncludedInThisManifest": [
+    "manifest.json (self)",
+    "evidence/commands.jsonl (live log)",
+    "SHA256SUMS.txt (covers everything, written last)"
+  ]
+}

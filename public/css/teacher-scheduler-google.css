@@ -3,7 +3,8 @@
    Source: bel-google-calendar-prototype.html & bel-google-calendar-implementation.md
    ========================================================================== */
 
-:root {
+:root,
+.crm-panel[data-panel="courses/teacher-schedule"] {
   --ts-shell: #f8fafd;
   --ts-paper: #ffffff;
   --ts-ink: #1f1f1f;
@@ -15,8 +16,15 @@
   --ts-tools: 48px;
   --ts-gutter: 58px;
   --ts-hour: 50px;
+  --ts-hour-height: 50px;
   --ts-days: 7;
   --ts-scrollbar: 10px;
+  --ts-ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ts-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ts-dur-popover-enter: 160ms;
+  --ts-dur-popover-exit: 100ms;
+  --ts-dur-settle: 120ms;
+  --ts-dur-snapback: 140ms;
 }
 
 /* --------------------------------------------------------------------------
@@ -43,8 +51,7 @@ body.crm-focus-mode > .crm-app-header {
 body.crm-focus-mode .crm-layout,
 body.crm-focus-mode .crm-container,
 body.crm-focus-mode .crm-main,
-body.crm-focus-mode #crm-main,
-body.crm-focus-mode main {
+body.crm-focus-mode #crm-main {
   margin: 0 !important;
   padding: 0 !important;
   width: 100vw !important;
@@ -270,13 +277,14 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 .ts-month-button {
-  font-size: 20px;
-  font-weight: 400;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 28px;
   text-align: left;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   color: var(--ts-ink);
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
 }
 
 .ts-month-button:hover {
@@ -363,7 +371,10 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
    Main Workspace Shell: 3-Column Layout (Sidebar, Calendar, Tools)
    -------------------------------------------------------------------------- */
 .ts-shell {
+  flex: 1 1 0;
+  min-height: 0;
   height: calc(100dvh - 56px);
+  max-height: calc(100dvh - 56px);
   display: grid;
   grid-template-columns: var(--ts-rail) minmax(0, 1fr) var(--ts-tools);
   overflow: hidden;
@@ -382,12 +393,14 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 .ts-sidebar {
   grid-column: 1;
   min-height: 0;
+  height: 100%;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
   display: flex;
   flex-direction: column;
-  padding-bottom: 16px;
+  padding-bottom: 80px;
   background: var(--ts-shell);
   border-right: 1px solid rgba(0, 0, 0, 0.04);
   position: relative;
@@ -717,38 +730,44 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   left: 0;
 }
 
-.ts-day-label {
-  font-size: 10px;
+.ts-day-label,
+.teacher-scheduler-workspace .scheduler-calendar-head .cal-head-dow {
+  font-size: 11px;
   line-height: 16px;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   color: var(--ts-muted);
   font-weight: 500;
 }
 
-.ts-day-date {
+.ts-day-date,
+.teacher-scheduler-workspace .scheduler-calendar-head .cal-head-date {
   height: 38px;
   width: 38px;
+  min-width: 38px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 21px;
+  font-size: 24px;
   font-weight: 400;
   letter-spacing: -0.5px;
   color: var(--ts-ink);
   transition: background-color 0.1s;
 }
 
-.ts-day-date:hover {
+.ts-day-date:hover,
+.teacher-scheduler-workspace .scheduler-calendar-head .cal-head-date:hover {
   background: #f0f4f9;
 }
 
-.ts-day-head.today .ts-day-label {
+.ts-day-head.today .ts-day-label,
+.teacher-scheduler-workspace .scheduler-calendar-head.is-today .cal-head-dow {
   color: var(--ts-blue);
   font-weight: 700;
 }
 
-.ts-day-head.today .ts-day-date {
+.ts-day-head.today .ts-day-date,
+.teacher-scheduler-workspace .scheduler-calendar-head.is-today .cal-head-date {
   color: #ffffff;
   background: var(--ts-blue);
   font-weight: 600;
@@ -803,6 +822,32 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   position: absolute;
   z-index: 10;
   pointer-events: auto;
+  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.25;
+  border-radius: 4px;
+  transition: transform var(--ts-dur-settle, 120ms) var(--ts-ease-enter, cubic-bezier(0.2, 0, 0, 1)),
+              box-shadow 0.15s ease;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill .pill-title {
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill .pill-time {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.teacher-scheduler-workspace .scheduler-calendar-time span {
+  font-size: 10.5px;
+  color: #70757a;
+  font-weight: 400;
+  letter-spacing: 0.2px;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
@@ -1376,30 +1421,49 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 /* --------------------------------------------------------------------------
-   Class cards in left sidebar
+   Class rows in left sidebar (Google Calendar flat style)
    -------------------------------------------------------------------------- */
 .teacher-scheduler-workspace .scheduler-class-card {
   width: 100%;
   text-align: left;
-  border: 1px solid #dfe3e9;
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s ease;
-  margin-bottom: 6px;
-  display: block;
+  transition: background-color 0.15s ease;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ts-ink);
 }
 
 .teacher-scheduler-workspace .scheduler-class-card:hover {
   background: var(--ts-hover);
-  border-color: #c2e7ff;
+  border-color: transparent;
 }
 
 .teacher-scheduler-workspace .scheduler-class-card.is-armed {
-  border: 2px solid var(--ts-blue);
-  background: #edf3fa;
+  border: 1px solid transparent;
+  background: #d3e3fd;
+  color: #0842a0;
+  font-weight: 600;
+}
+
+.teacher-scheduler-workspace .scheduler-class-card .ts-class-dot {
+  height: 9px;
+  width: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.teacher-scheduler-workspace .scheduler-class-card .ts-class-teacher {
+  font-size: 10.5px;
+  color: #157a3b;
+  font-weight: 500;
 }
 
 /* --------------------------------------------------------------------------
@@ -1465,3 +1529,80 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
     display: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Quick Add Event Composer & Detached Drag Ghost Styles
+   -------------------------------------------------------------------------- */
+.ts-quick-add-dialog,
+#teacher-scheduler-quick-add {
+  position: fixed;
+  z-index: 1000;
+  width: 360px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(60, 64, 67, 0.28);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ts-ink, #1f1f1f);
+}
+
+.ts-quick-add-dialog .crm-input,
+#teacher-scheduler-quick-add .crm-input {
+  background: #f1f3f4;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--ts-ink, #1f1f1f);
+  transition: all 0.15s ease;
+}
+
+.ts-quick-add-dialog .crm-input:focus,
+#teacher-scheduler-quick-add .crm-input:focus {
+  background: #ffffff;
+  border-color: var(--ts-blue, #0b57d0);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.2);
+}
+
+#teacher-scheduler-session-bubble,
+.ts-floating-dialog,
+#teacher-scheduler-event-popover {
+  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ts-ink, #1f1f1f);
+}
+
+.teacher-scheduler-drag-ghost,
+.scheduler-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  border-radius: 4px;
+  background: var(--ts-blue, #0b57d0);
+  color: #ffffff;
+  padding: 6px 8px;
+  box-shadow: 0 6px 16px rgba(60, 64, 67, 0.35);
+  font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  opacity: 0.92;
+  will-change: transform;
+  transition: none !important;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill,
+.teacher-scheduler-workspace .scheduler-session-resize-handle {
+  touch-action: none;
+}
+
+/* Reduced motion rules */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

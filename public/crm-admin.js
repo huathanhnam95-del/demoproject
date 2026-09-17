@@ -289,6 +289,11 @@
     bindBulkDeleteWarningModal();
     init().catch((e) => {
       console.error('[CRM Admin] Fatal init error:', e);
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (err) {
+        /* ignore storage cleanup error */
+      }
       showGateMessage('Initialization failed.', e?.message || 'Unknown error');
     });
   });
@@ -664,6 +669,7 @@
     elements.teacherSchedulerQuickError = document.getElementById('teacher-scheduler-quick-error');
     elements.teacherSchedulerQuickSuggestions = document.getElementById('teacher-scheduler-quick-suggestions');
     elements.btnTeacherSchedulerQuickCancel = document.getElementById('btn-teacher-scheduler-quick-cancel');
+    elements.btnTeacherSchedulerQuickClose = document.getElementById('btn-teacher-scheduler-quick-close');
     elements.btnTeacherSchedulerQuickAdd = document.getElementById('btn-teacher-scheduler-quick-add');
     elements.teacherSchedulerSessionBubble = document.getElementById('teacher-scheduler-session-bubble');
     elements.teacherSchedulerSessionBubbleTitle = document.getElementById('teacher-scheduler-session-bubble-title');
@@ -1226,46 +1232,192 @@
   /* ──────────────────────────────────────────────────────────── */
 
   async function init() {
-    showGateMessage('Checking access…', 'Please wait');
+    let warmCached = null;
+    try {
+      const raw = sessionStorage.getItem('crm_auth_session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const maxAge = 30 * 60 * 1000;
+        if (s && s.uid && (s.adminOk || s.teacherOk || s.accessMode === 'admin' || s.accessMode === 'teacher' || s.accessMode === 'projects') && (Date.now() - s.timestamp < maxAge)) {
+          warmCached = s;
+        }
+      }
+    } catch (e) {
+      /* ignore storage read error */
+    }
+
+    if (warmCached) {
+      state.accessMode = warmCached.accessMode || (warmCached.adminOk ? 'admin' : (warmCached.teacherOk ? 'teacher' : 'unknown'));
+      if (warmCached.capabilities) {
+        adminCapabilities = normalizeAdminCapabilities(warmCached.capabilities);
+      }
+      if (warmCached.projectsAuthorized && elements.projectsNavContainer) {
+        state.projectsAuthorized = true;
+        elements.projectsNavContainer.style.display = '';
+      }
+      updateAdminCapabilityNav();
+      hideGate();
+    } else {
+      showGateMessage('Checking access…', 'Please wait');
+    }
 
     await initFirebaseFromServer();
 
     // Preserve where the admin was heading. Without this the intended path is discarded,
     // so after logging in they land on the learner home and have to navigate back by hand.
-    const returnTo = encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
+    const cleanPath = (window.location.pathname || '').replace(/\.html$/i, '') || '/';
+    const returnTo = encodeURIComponent(cleanPath + window.location.search + window.location.hash);
 
-    const user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 1500 });
+    let user = await waitForAuthUser({ timeoutMs: 12000, nullGraceMs: 50 });
+    const isLocal = authSessionGuard?.isLocalAuthHost?.() ?? false;
+    if (!user && isLocal && typeof authSessionGuard.bootstrapCompatLocalAdmin === 'function') {
+      if (!warmCached) {
+        showGateMessage('Signing into local CRM…', 'Restoring emulator admin session…');
+      }
+      try {
+        user = await authSessionGuard.bootstrapCompatLocalAdmin(firebase);
+      } catch (bootstrapErr) {
+        console.warn('[CRM Admin] Local admin bootstrap note:', bootstrapErr?.message || bootstrapErr);
+      }
+    }
+
     if (!user) {
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore storage removal error */
+      }
+      try {
+        document.documentElement.classList.remove('crm-session-cached');
+      } catch (e) {
+        /* ignore DOM class removal error */
+      }
       showGateMessage('Please log in first.', 'Taking you to sign in…');
-      setTimeout(() => window.location.replace(`index.html?next=${returnTo}`), 1800);
+      setTimeout(() => window.location.replace(`/?next=${returnTo}`), 1800);
       return;
+    }
+
+    if (warmCached && warmCached.uid && warmCached.uid !== user.uid) {
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore storage removal error */
+      }
+      try {
+        document.documentElement.classList.remove('crm-session-cached');
+      } catch (e) {
+        /* ignore DOM class removal error */
+      }
+      showGateMessage('Checking CRM permissions…', 'Validating access…');
+    } else if (!warmCached) {
+      showGateMessage('Checking CRM permissions…', 'Validating access…');
     }
 
     const adminOk = await isAdminUser(user);
-    const teacherOk = adminOk ? false : await isTeacherUser(user);
-    const projectsSummary = await fetchProjectsAccessSummary(user);
-    const projectsOk = !!(projectsSummary?.identity?.accountStatus === 'active'
-      && projectsSummary?.identity?.moduleGrants?.projects === true
-      && Array.isArray(projectsSummary?.projects)
-      && projectsSummary.projects.length > 0);
-    state.projectsAuthorized = projectsOk;
-    state.projectsAccessSummary = projectsSummary;
-    state.projectsEnabled = !!(projectsSummary && (projectsSummary.canManagePeople === true || projectsOk));
-    if (!adminOk && !teacherOk && !projectsOk) {
-      showGateMessage('Access denied.', 'An active CRM, Teacher Schedule, or authorized Projects membership is required.');
-      setTimeout(() => window.location.replace('index.html'), 2200);
-      return;
-    }
-    state.accessMode = adminOk ? 'admin' : (teacherOk ? 'teacher' : 'projects');
-    if (elements.projectsNavContainer) {
-      elements.projectsNavContainer.style.display = state.projectsEnabled ? '' : 'none';
-    }
-    updateAdminCapabilityNav();
+    let teacherOk = false;
+    let projectsOk = false;
+    let projectsSummary = null;
 
-    // Ready
-    hideGate();
-    setupScoreDecorations();
-    setupMoneyInputs();
+    if (adminOk) {
+      state.accessMode = 'admin';
+      updateAdminCapabilityNav();
+      hideGate();
+      setupScoreDecorations();
+      setupMoneyInputs();
+
+      try {
+        sessionStorage.setItem('crm_auth_session', JSON.stringify({
+          uid: user.uid,
+          email: user.email || '',
+          accessMode: 'admin',
+          adminOk: true,
+          teacherOk: false,
+          capabilities: adminCapabilities,
+          projectsAuthorized: Boolean(state.projectsAuthorized || warmCached?.projectsAuthorized),
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        /* ignore storage write error */
+      }
+
+      // Decouple projects check from admin gate - run asynchronously in the background
+      fetchProjectsAccessSummary(user).then((summary) => {
+        projectsSummary = summary;
+        projectsOk = !!(projectsSummary?.identity?.accountStatus === 'active'
+          && projectsSummary?.identity?.moduleGrants?.projects === true
+          && Array.isArray(projectsSummary?.projects)
+          && projectsSummary.projects.length > 0);
+        state.projectsAuthorized = projectsOk;
+        state.projectsAccessSummary = projectsSummary;
+        state.projectsEnabled = !!(projectsSummary && (projectsSummary.canManagePeople === true || projectsOk));
+        if (elements.projectsNavContainer) {
+          elements.projectsNavContainer.style.display = state.projectsEnabled ? '' : 'none';
+        }
+        if (window.projectsBudgetController && typeof window.projectsBudgetController.setEligible === 'function') {
+          window.projectsBudgetController.setEligible(projectsOk);
+        }
+        try {
+          const curRaw = sessionStorage.getItem('crm_auth_session');
+          if (curRaw) {
+            const cur = JSON.parse(curRaw);
+            cur.projectsAuthorized = projectsOk;
+            sessionStorage.setItem('crm_auth_session', JSON.stringify(cur));
+          }
+        } catch (e) {
+          /* ignore storage update error */
+        }
+      }).catch((err) => {
+        console.warn('[CRM Admin] Background fetchProjectsAccessSummary error:', err);
+      });
+    } else {
+      teacherOk = await isTeacherUser(user);
+      projectsSummary = await fetchProjectsAccessSummary(user);
+      projectsOk = !!(projectsSummary?.identity?.accountStatus === 'active'
+        && projectsSummary?.identity?.moduleGrants?.projects === true
+        && Array.isArray(projectsSummary?.projects)
+        && projectsSummary.projects.length > 0);
+      state.projectsAuthorized = projectsOk;
+      state.projectsAccessSummary = projectsSummary;
+      state.projectsEnabled = !!(projectsSummary && (projectsSummary.canManagePeople === true || projectsOk));
+      if (!teacherOk && !projectsOk) {
+        try {
+          sessionStorage.removeItem('crm_auth_session');
+        } catch (e) {
+          /* ignore storage removal error */
+        }
+        try {
+          document.documentElement.classList.remove('crm-session-cached');
+        } catch (e) {
+          /* ignore DOM class removal error */
+        }
+        showGateMessage('Access denied.', 'An active CRM, Teacher Schedule, or authorized Projects membership is required.');
+        setTimeout(() => window.location.replace('/'), 2200);
+        return;
+      }
+      state.accessMode = teacherOk ? 'teacher' : 'projects';
+      if (elements.projectsNavContainer) {
+        elements.projectsNavContainer.style.display = state.projectsEnabled ? '' : 'none';
+      }
+      updateAdminCapabilityNav();
+      hideGate();
+      setupScoreDecorations();
+      setupMoneyInputs();
+
+      try {
+        sessionStorage.setItem('crm_auth_session', JSON.stringify({
+          uid: user.uid,
+          email: user.email || '',
+          accessMode: state.accessMode,
+          adminOk: false,
+          teacherOk: Boolean(teacherOk),
+          capabilities: adminCapabilities,
+          projectsAuthorized: Boolean(projectsOk),
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        /* ignore storage write error */
+      }
+    }
 
     if (state.accessMode === 'admin') {
       initPronunciationDualArena();
@@ -1924,6 +2076,16 @@
     firebase.auth().onAuthStateChanged((nextUser) => {
       if (projectsAccountInvalidated || String(nextUser?.uid || '') === projectsDocumentUid) return;
       projectsAccountInvalidated = true;
+      try {
+        sessionStorage.removeItem('crm_auth_session');
+      } catch (e) {
+        /* ignore storage removal error */
+      }
+      try {
+        document.documentElement.classList.remove('crm-session-cached');
+      } catch (e) {
+        /* ignore DOM class removal error */
+      }
       projectsWorkspaceController?.dispose?.();
       clearInterval(projectsAssistantTimer);
       window.projectsAssistantController?.dispose?.();
@@ -1993,11 +2155,6 @@
         console.error('[CRM Admin] Failed to load communications manager:', e);
         showToast(e?.message || 'Failed to load communications manager.', 'error');
       });
-
-      refreshDashboard().catch((e) => {
-        console.error('[CRM Admin] Failed to load dashboard:', e);
-        showToast(e?.message || 'Failed to load dashboard.', 'error');
-      });
     }
   }
 
@@ -2035,9 +2192,31 @@
   }
 
   async function isAdminUser(user) {
+    const claimOk = await isAdminViaClaims(user);
+    if (claimOk === true) return true;
     const serverOk = await isAdminViaServer(user);
     if (serverOk !== null) return serverOk;
     return isAdminViaFirestore(user?.uid);
+  }
+
+  async function isAdminViaClaims(user) {
+    try {
+      if (!user?.getIdTokenResult) return false;
+      const tokenResult = await user.getIdTokenResult();
+      const claims = tokenResult?.claims && typeof tokenResult.claims === 'object'
+        ? tokenResult.claims
+        : {};
+      if (claims.isAdmin === true || claims.admin === true || claims.role === 'admin' || claims.crmRole === 'admin') {
+        if (claims.capabilities || claims.adminCapabilities) {
+          adminCapabilities = normalizeAdminCapabilities(claims.capabilities || claims.adminCapabilities);
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      void e;
+      return false;
+    }
   }
 
   async function isAdminViaServer(user) {
@@ -2279,6 +2458,18 @@
         render();
       });
     });
+
+    const handleBackToCrm = () => {
+      document.body.classList.remove('crm-focus-mode');
+      state.main = 'courses';
+      state.sub = 'courses';
+      updateHash();
+      render();
+    };
+    const btnTsBackCrm = document.getElementById('btn-ts-back-crm');
+    if (btnTsBackCrm) btnTsBackCrm.addEventListener('click', handleBackToCrm);
+    const btnTsToolBack = document.getElementById('btn-ts-tool-back');
+    if (btnTsToolBack) btnTsToolBack.addEventListener('click', handleBackToCrm);
 
     window.addEventListener('hashchange', () => {
       applyRouteFromHash();
@@ -5823,6 +6014,12 @@
       }
     });
 
+    if (activePanel === 'courses/teacher-schedule') {
+      document.body.classList.add('crm-focus-mode');
+    } else {
+      document.body.classList.remove('crm-focus-mode');
+    }
+
     // The document had no <h1> at all across 14 panels — every panel title was an <h2>,
     // so assistive tech got no page title and no top of the outline. Promote whichever
     // panel is showing, and demote the rest so there is never more than one.
@@ -5851,6 +6048,7 @@
       });
     }
     if (lastRenderedPanel === 'courses/teacher-schedule' && activePanel !== 'courses/teacher-schedule') {
+      document.body.classList.remove('crm-focus-mode');
       teacherSchedulerController?.deactivate?.();
     }
     lastRenderedPanel = activePanel;
@@ -5947,10 +6145,18 @@
   }
 
   function showGateMessage(title, subtitle) {
-    if (!elements.gate) return;
-    if (elements.gateText) elements.gateText.textContent = title || '';
-    if (elements.gateSubtext) elements.gateSubtext.textContent = subtitle || '';
-    elements.gate.style.display = 'flex';
+    try {
+      document.documentElement.classList.remove('crm-session-cached');
+    } catch (e) {
+      /* ignore DOM class removal error */
+    }
+    const gate = elements.gate || document.getElementById('crm-loading');
+    if (!gate) return;
+    const gateText = elements.gateText || document.getElementById('crm-loading-text');
+    const gateSubtext = elements.gateSubtext || document.getElementById('crm-loading-subtext');
+    if (gateText) gateText.textContent = title || '';
+    if (gateSubtext) gateSubtext.textContent = subtitle || '';
+    gate.style.display = 'flex';
   }
 
   function updateSelectionSet(set, itemId, selected) {
@@ -5974,8 +6180,9 @@
   }
 
   function hideGate() {
-    if (!elements.gate) return;
-    elements.gate.style.display = 'none';
+    const gate = elements.gate || document.getElementById('crm-loading');
+    if (!gate) return;
+    gate.style.display = 'none';
   }
 
   function setupClassroomModal() {
@@ -7152,11 +7359,18 @@
     return courses;
   }
 
+  let _refreshCourseCatalogPromise = null;
+
   async function refreshCourseCatalog(options = {}) {
     const container = elements.courseCatalogContainer;
     if (!container) return;
 
-    try {
+    if (_refreshCourseCatalogPromise && !options.forceRefresh) {
+      return _refreshCourseCatalogPromise;
+    }
+
+    const run = async () => {
+      try {
       if (!container.__crmCourseLinkHandlerBound) {
         container.addEventListener('click', async (event) => {
           const button = event.target && typeof event.target.closest === 'function'
@@ -7336,8 +7550,14 @@
     } catch (error) {
       console.error('[CRM Admin] Failed to refresh course catalog:', error);
       container.innerHTML = '<div class="crm-muted">Failed to load courses.</div>';
+    } finally {
+      _refreshCourseCatalogPromise = null;
     }
-  }
+  };
+
+  _refreshCourseCatalogPromise = run();
+  return _refreshCourseCatalogPromise;
+}
 
   function bindBulkDeleteWarningModal() {
     if (!elements.bulkDeleteWarningModal || elements.bulkDeleteWarningModal.__crmBulkDeleteWarningBound) return;

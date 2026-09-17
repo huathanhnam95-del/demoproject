@@ -1,3 +1,22 @@
+## [V2.0.10] - 2026-09-17
+
+### Added & Enhanced
+- **CRM Admin Access Check Latency & Auth Bootstrap Optimization (`public/crm-admin.html`, `public/crm-admin.js`, `public/js/crm/courses.js`, `public/js/auth-session-guard.js`)**:
+  - Implemented fast-path admin claims inspection (`isAdminViaClaims`) directly checking ID token claims (`claims.isAdmin`, `claims.role === 'admin'`) to bypass redundant Firestore lookups and eliminate access delay.
+  - Added in-flight request deduplication and local cache for course metadata (`_courseFetchInFlight` and `_courseCache`) in `public/js/crm/courses.js`.
+  - Hardened local auth bootstrap and emulator support with `isLocalAuthHost` validation and clean URL route protection (`/crm-admin` rewrite and trailing slash redirect).
+- **Teacher Schedule Google Calendar UI Overhaul & Audit Hardening (`public/js/crm/teacher-scheduler-workspace.js`, `public/css/teacher-scheduler-google.css`, `public/crm-admin.css`)**:
+  - Reconciled geometry model: standardized canonical 50px hour height (`--ts-hour: 50px`) and 25px half-hour slot derivation across all 24 slots with zero visual drift.
+  - Flattened sidebar classroom rail into minimalist rows with pastel indicator dots, unclipped classroom titles, and muted scheduled counts.
+  - Implemented Google Calendar quick add event composer modal and anchored details popover with smooth entrance transitions.
+  - Motion polish & drag deduplication: self-contained drag ghost (`.teacher-scheduler-drag-ghost`) and pointer event stream deduplication (fixes dual-firing on real browser while supporting synthetic events in tests).
+  - Remediated audit findings: added `touch-action: none` gesture protection, teacher UID sanitization (`resolveTeacherDisplayName`), quick-add focus trap (`A11Y-1`), and idempotent event binding (`LIFECYCLE-1`).
+- **BEL 3D Demo Working as Equals Defect Remediation (`public/prototypes/bel-working-as-equals-demo/*`)**:
+  - Eliminated Studio B duplicated route shapes on the floor by suppressing static instantiation of dynamic activity meshes in `renderer3d.mjs`.
+  - Added inlaid shape emblems on top of pedestals with theme colors for immediate visual target clarity.
+  - Overhauled Gallery D portrait frames with photo textures and redesigned slide modal into a two-column presentation slide folio matching `deck.html`.
+  - Fixed Room F bridge plank mechanics: enabled solo presenter / rehearsal readiness when `p0` is in Room F, HUD thought statement display upon inspection, and smooth forward carry positioning.
+
 ## [V2.0.9] - 2026-09-17
 
 ### Added & Enhanced

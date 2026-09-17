@@ -103,6 +103,7 @@ window.CrmCourses = (function () {
     // --- Course cache: avoid redundant /api/admin/courses calls ---
     let _courseCache = null;
     let _courseCacheTime = 0;
+    let _courseFetchInFlight = null;
     const COURSE_CACHE_TTL_MS = 60000; // 60 seconds
 
     async function fetchCourses(options = {}) {
@@ -110,15 +111,25 @@ window.CrmCourses = (function () {
         if (!options.forceRefresh && _courseCache && (now - _courseCacheTime) < COURSE_CACHE_TTL_MS) {
             return _courseCache;
         }
-        const headers = await getAuthHeaders();
-        const res = await fetch('/api/admin/courses', { method: 'GET', headers });
-        if (!res.ok) throw new Error(`Failed to fetch courses (HTTP ${res.status})`);
-        const json = await res.json();
-        const courses = (json.courses || []).map(normalizeCourse);
-        courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-        _courseCache = courses;
-        _courseCacheTime = now;
-        return courses;
+        if (!options.forceRefresh && _courseFetchInFlight) {
+            return _courseFetchInFlight;
+        }
+        _courseFetchInFlight = (async () => {
+            try {
+                const headers = await getAuthHeaders();
+                const res = await fetch('/api/admin/courses', { method: 'GET', headers });
+                if (!res.ok) throw new Error(`Failed to fetch courses (HTTP ${res.status})`);
+                const json = await res.json();
+                const courses = (json.courses || []).map(normalizeCourse);
+                courses.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+                _courseCache = courses;
+                _courseCacheTime = Date.now();
+                return courses;
+            } finally {
+                _courseFetchInFlight = null;
+            }
+        })();
+        return _courseFetchInFlight;
     }
 
     async function populateCourseSelect(selectEl, options = {}) {

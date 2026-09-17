@@ -147,6 +147,34 @@ async function main() {
     assert.match(String(legacyAdminPageResponse.headers.get('content-security-policy')), /http:\/\/localhost:\*/);
     assert.doesNotMatch(legacyAdminPage, /http-equiv=["']Content-Security-Policy/i);
 
+    // Clean URL route check (/crm-admin without .html)
+    const cleanAdminPageResponse = await fetch(`${baseUrl}/crm-admin`);
+    const cleanAdminPage = await cleanAdminPageResponse.text();
+    assert.equal(cleanAdminPageResponse.status, 200);
+    assert.match(String(cleanAdminPageResponse.headers.get('content-security-policy')), /http:\/\/localhost:\*/);
+    assert.doesNotMatch(cleanAdminPage, /http-equiv=["']Content-Security-Policy/i);
+    assert.match(cleanAdminPage, /CRM Admin/i);
+
+    // Trailing slash redirect check (/crm-admin/ -> /crm-admin)
+    const trailingSlashResponse = await fetch(`${baseUrl}/crm-admin/`, { redirect: 'manual' });
+    assert.equal(trailingSlashResponse.status, 301);
+    assert.equal(trailingSlashResponse.headers.get('location'), '/crm-admin');
+
+    // .html redirect check (/crm-admin.html -> /crm-admin, preserving query)
+    const adminHtmlRedirectResponse = await fetch(`${baseUrl}/crm-admin.html?tab=leads`, { redirect: 'manual' });
+    assert.equal(adminHtmlRedirectResponse.status, 301);
+    assert.equal(adminHtmlRedirectResponse.headers.get('location'), '/crm-admin?tab=leads');
+
+    const adminHtmlBareResponse = await fetch(`${baseUrl}/crm-admin.html`, { redirect: 'manual' });
+    assert.equal(adminHtmlBareResponse.status, 301);
+    assert.equal(adminHtmlBareResponse.headers.get('location'), '/crm-admin');
+
+    // Static HTML fallback without extension (/classroom -> classroom.html)
+    const classroomResponse = await fetch(`${baseUrl}/classroom`);
+    assert.equal(classroomResponse.status, 200);
+    const classroomHtml = await classroomResponse.text();
+    assert.match(classroomHtml, /classroom/i);
+
     process.env.CRM_PROJECTS_EMULATOR_PROJECT = 'demo-crm-projects';
     const conflictingConfigResponse = await fetch(`${baseUrl}/api/config`);
     const conflictingConfig = await conflictingConfigResponse.json();

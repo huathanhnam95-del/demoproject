@@ -6,6 +6,18 @@
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
   }
 
+  function isLocalAuthHost(hostname) {
+    var h = String(hostname || (typeof window !== 'undefined' ? window.location.hostname : '') || '').trim().toLowerCase();
+    if (h.startsWith('[') && h.endsWith(']')) h = h.slice(1, -1);
+    return h === 'localhost'
+      || h === '127.0.0.1'
+      || h === '::1'
+      || h.endsWith('.local')
+      || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)
+      || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)
+      || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h);
+  }
+
   function parseLocalEmulatorEndpoint(endpoint, label) {
     const host = String(endpoint?.host || '').trim().toLowerCase();
     const port = Number(endpoint?.port);
@@ -162,18 +174,7 @@
     if (!Array.isArray(firebaseRef.apps) || firebaseRef.apps.length === 0) {
       firebaseRef.initializeApp(result.config);
 
-        // ── Compat Emulator Redirect ──
-        // Match the same "local dev" hostname logic we use on the server side:
-        // localhost, loopback, *.local, and RFC1918 IP ranges.
-        var h = String(window.location.hostname || '').trim().toLowerCase();
-        if (h.startsWith('[') && h.endsWith(']')) h = h.slice(1, -1); // IPv6 literal
-        var isLocal = h === 'localhost'
-          || h === '127.0.0.1'
-          || h === '::1'
-          || h.endsWith('.local')
-          || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)
-          || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)
-          || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h);
+        var isLocal = isLocalAuthHost(options.hostname);
         if (isLocal) {
           // The local server publishes its owned emulator endpoints. Use those
           // ports so a phase harness (or another isolated session) cannot
@@ -219,12 +220,65 @@
     });
   }
 
+  async function bootstrapCompatLocalAdmin(firebaseRef, options = {}) {
+    try {
+      const hostname = options.hostname || (typeof window !== 'undefined' ? window.location.hostname : '');
+      if (!isLocalAuthHost(hostname)) {
+        return null;
+      }
+
+      if (!firebaseRef || typeof firebaseRef.auth !== 'function') {
+        return null;
+      }
+
+      const auth = firebaseRef.auth();
+      const currentUser = safeGetCurrentUser(() => auth.currentUser);
+      if (currentUser) {
+        return currentUser;
+      }
+
+      if (typeof fetch !== 'function') {
+        return null;
+      }
+
+      const tokenUrl = String(options.tokenUrl || '/api/local/admin-token');
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => null);
+
+      if (!response || !response.ok) {
+        return null;
+      }
+
+      const payload = await response.json().catch(() => null);
+      if (!payload?.success || typeof payload.token !== 'string' || !payload.token) {
+        return null;
+      }
+
+      await ensureCompatLocalPersistence(firebaseRef);
+
+      if (typeof auth.signInWithCustomToken !== 'function') {
+        return null;
+      }
+
+      const userCredential = await auth.signInWithCustomToken(payload.token);
+      const user = userCredential?.user || auth.currentUser || null;
+      return user || auth.currentUser || null;
+    } catch {
+      return null;
+    }
+  }
+
   const api = {
+    isLocalAuthHost,
     waitForInitialAuthResolution,
     waitForStableAuthUser,
     ensureCompatLocalPersistence,
     ensureCompatFirebaseFromConfig,
-    waitForCompatAuthUser
+    waitForCompatAuthUser,
+    bootstrapCompatLocalAdmin
   };
 
   if (typeof module !== 'undefined' && module.exports) {

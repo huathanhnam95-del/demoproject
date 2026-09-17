@@ -2171,6 +2171,11 @@ html.crm-session-cached #crm-loading {
   background: #edf8f1;
 }
 
+.teacher-scheduler-workspace .scheduler-session-pill,
+.teacher-scheduler-workspace .scheduler-session-resize-handle {
+  touch-action: none;
+}
+
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
   position: absolute;
   left: 2px;
@@ -2186,6 +2191,7 @@ html.crm-session-cached #crm-loading {
   line-height: 1.3;
   margin-bottom: 0;
   overflow: hidden;
+  touch-action: none;
   z-index: 3;
   transition: box-shadow 0.15s ease;
   text-align: left;
@@ -2265,6 +2271,7 @@ html.crm-session-cached #crm-loading {
   height: 6px;
   cursor: ns-resize;
   background: transparent;
+  touch-action: none;
   z-index: 5;
   transition: background 0.15s ease;
 }

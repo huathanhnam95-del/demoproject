@@ -8,7 +8,10 @@ const vm = require('vm');
 class MockElement {
     constructor(tag = 'DIV') {
         this.tagName = tag.toUpperCase();
-        this.style = {};
+        this.style = {
+            setProperty(k, v) { this[k] = String(v); },
+            getPropertyValue(k) { return this[k] || ''; }
+        };
         this.dataset = {};
         this.classList = {
             classes: new Set(),
@@ -95,6 +98,7 @@ function createMockDocument() {
         },
         querySelectorAll() { return []; }
     };
+    doc.documentElement = createElement('HTML');
 
     return { doc, elements };
 }
@@ -2154,12 +2158,12 @@ async function runTests() {
         assert.strictEqual(state.resizeDrag.originalStartTime, '09:00');
         assert.strictEqual(state.resizeDrag.originalDuration, 120);
 
-        // Move up by 24px (1 slot = 30 mins) -> 08:30 start, 150 min duration
-        controller.handleResizeMove({ clientY: 76 });
+        // Move up by 25px (1 slot = 30 mins) -> 08:30 start, 150 min duration
+        controller.handleResizeMove({ clientY: 75 });
         assert.strictEqual(state.resizeDrag.currentStartTime, '08:30');
         assert.strictEqual(state.resizeDrag.currentDuration, 150);
-        assert.strictEqual(pillEl.style.top, '-24px', 'Pill top offset must shift upward by 24px');
-        assert.strictEqual(pillEl.style.height, '118px', 'Pill height must expand by 24px');
+        assert.strictEqual(pillEl.style.top, '-25px', 'Pill top offset must shift upward by 25px');
+        assert.strictEqual(pillEl.style.height, '123px', 'Pill height must expand by 25px');
         assert.strictEqual(timeEl.textContent, '8:30–11:00', 'Live time text must update to 8:30–11:00');
 
         await controller.commitResize();
@@ -2170,12 +2174,12 @@ async function runTests() {
         // 3. Test dragging upper edge DOWNWARD (later start time, shortened duration)
         rescheduleCall = null;
         controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'top');
-        // Move down by 24px (1 slot = 30 mins) -> 09:30 start (from 09:00), duration 90 mins
-        controller.handleResizeMove({ clientY: 124 });
+        // Move down by 25px (1 slot = 30 mins) -> 09:30 start (from 09:00), duration 90 mins
+        controller.handleResizeMove({ clientY: 125 });
         assert.strictEqual(state.resizeDrag.currentStartTime, '09:30');
         assert.strictEqual(state.resizeDrag.currentDuration, 90);
-        assert.strictEqual(pillEl.style.top, '24px');
-        assert.strictEqual(pillEl.style.height, '70px');
+        assert.strictEqual(pillEl.style.top, '25px');
+        assert.strictEqual(pillEl.style.height, '73px');
         assert.strictEqual(timeEl.textContent, '9:30–11:00');
 
         await controller.commitResize();
@@ -2187,10 +2191,10 @@ async function runTests() {
         rescheduleCall = null;
         controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'bottom');
         assert.strictEqual(state.resizeDrag.edge, 'bottom');
-        // Move down by 24px -> duration 150 mins
-        controller.handleResizeMove({ clientY: 124 });
+        // Move down by 25px -> duration 150 mins
+        controller.handleResizeMove({ clientY: 125 });
         assert.strictEqual(state.resizeDrag.currentDuration, 150);
-        assert.strictEqual(pillEl.style.height, '118px');
+        assert.strictEqual(pillEl.style.height, '123px');
         assert.strictEqual(timeEl.textContent, '9:00–11:30');
 
         await controller.commitResize();
@@ -2214,7 +2218,7 @@ async function runTests() {
 
         controller.beginResizeDrag('s-resize-target', pillEl, { button: 0, clientY: 100 }, 'top');
         // Drag top up to 08:30 (collides with 08:00–09:00)
-        controller.handleResizeMove({ clientY: 76 });
+        controller.handleResizeMove({ clientY: 75 });
         assert.strictEqual(state.resizeDrag.currentStartTime, '08:30');
 
         await controller.commitResize();
@@ -2334,6 +2338,310 @@ async function runTests() {
 
         windowMock.ClassroomAPI = origAPI;
         console.log('✓ Pastel color system for sessions and classroom rail cards verified');
+    }
+
+    // TEST 28: Dynamic density changes update state.hourHeightPx, derive getSlotHeightPx(), and adjust grid geometry
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-density-1',
+                        classId: 'c1',
+                        teacherUid: 'teacher-1',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '10:00',
+                        durationMinutes: 60,
+                        status: 'scheduled'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        // 1. Initial default density: 50px/hour -> 25px/slot (Math.round((50/60)*30))
+        assert.strictEqual(controller.getState().hourHeightPx, 50, 'Default hourHeightPx should be 50');
+        assert.strictEqual(controller.getSlotHeightPx(), 25, 'Default getSlotHeightPx() should derive 25px');
+        let calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('--scheduler-slot-height: 25px'), 'Grid must declare --scheduler-slot-height: 25px');
+        assert(calHtml.includes('height:48px;'), 'Session pill height should be 48px at 50px/hr density');
+
+        // 2. Change density via settings UI to 60px/hr (Spacious)
+        const densityInput = doc.getElementById('ts-setting-density');
+        densityInput.value = '60';
+        const saveSettingsBtn = doc.getElementById('btn-ts-save-settings');
+        saveSettingsBtn.dispatchEvent({ type: 'click' });
+
+        assert.strictEqual(controller.getState().hourHeightPx, 60, 'Updated hourHeightPx should be 60');
+        assert.strictEqual(controller.getSlotHeightPx(), 30, 'getSlotHeightPx() at 60px/hr should derive 30px');
+        assert.strictEqual(doc.documentElement.style['--ts-hour'], '60px', 'documentElement should have --ts-hour set to 60px');
+        calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('--scheduler-slot-height: 30px'), 'Grid must update --scheduler-slot-height to 30px');
+        assert(calHtml.includes('height:58px;'), 'Session pill height should adjust to 58px at 60px/hr density');
+
+        // 3. Change density via settings UI to 40px/hr (Compact)
+        densityInput.value = '40';
+        saveSettingsBtn.dispatchEvent({ type: 'click' });
+
+        assert.strictEqual(controller.getState().hourHeightPx, 40, 'Updated hourHeightPx should be 40');
+        assert.strictEqual(controller.getSlotHeightPx(), 20, 'getSlotHeightPx() at 40px/hr should derive 20px');
+        assert.strictEqual(doc.documentElement.style['--ts-hour'], '40px', 'documentElement should have --ts-hour set to 40px');
+        calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(calHtml.includes('--scheduler-slot-height: 20px'), 'Grid must update --scheduler-slot-height to 20px');
+        assert(calHtml.includes('height:38px;'), 'Session pill height should adjust to 38px at 40px/hr density');
+        assert(calHtml.includes('is-compact'), 'Pill under 40px must receive is-compact class');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Dynamic density changes, getSlotHeightPx derivation, and grid geometry verified');
+    }
+
+    // TEST 29: Teacher display name sanitization (SEC-1)
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerRailTitle: doc.createElement('div'),
+            teacherSchedulerRailDesc: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const customAPI = {
+            ...mockClassroomAPI,
+            fetchTeachers: async () => [
+                { uid: 'usr_mapped_456', displayName: 'Alice Smith' }
+            ],
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }],
+                sessions: [
+                    {
+                        sessionId: 's-sec-1',
+                        classId: 'c1',
+                        teacherUid: 'usr_unmapped_123',
+                        teacherName: 'usr_unmapped_123',
+                        scheduledLocalDate: '2026-09-08',
+                        scheduledLocalTime: '10:00',
+                        durationMinutes: 60,
+                        status: 'scheduled'
+                    },
+                    {
+                        sessionId: 's-sec-2',
+                        classId: 'c1',
+                        teacherUid: 'usr_mapped_456',
+                        teacherName: 'usr_mapped_456',
+                        scheduledLocalDate: '2026-09-09',
+                        scheduledLocalTime: '14:00',
+                        durationMinutes: 60,
+                        status: 'scheduled'
+                    },
+                    {
+                        sessionId: 's-sec-3',
+                        classId: 'c1',
+                        teacherUid: 'usr_direct_only',
+                        teacherName: 'Bob Teacher',
+                        scheduledLocalDate: '2026-09-10',
+                        scheduledLocalTime: '16:00',
+                        durationMinutes: 60,
+                        status: 'scheduled'
+                    }
+                ],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = customAPI;
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+
+        const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
+        assert(!calHtml.includes('usr_unmapped_123'), 'Unmapped usr_ database identifier must NOT be exposed in pill HTML');
+        assert(calHtml.includes('Teacher name unavailable'), 'Unmapped usr_ identifier must fall through to Teacher name unavailable');
+        assert(!calHtml.includes('usr_mapped_456'), 'Mapped usr_ database identifier must NOT be exposed in pill HTML');
+        assert(calHtml.includes('Alice Smith'), 'Mapped teacher must resolve to displayName from teacherMap');
+        assert(calHtml.includes('Bob Teacher'), 'Clean direct teacher name must be preserved when unmapped');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Teacher display name sanitization (SEC-1) verified');
+    }
+
+    // TEST 30: Quick Add focus trap (A11Y-1)
+    {
+        const quickAddEl = doc.createElement('div');
+        quickAddEl.id = 'teacher-scheduler-quick-add';
+        quickAddEl.style.display = 'block';
+        const input1 = doc.createElement('input');
+        const btn1 = doc.createElement('button');
+        quickAddEl.querySelectorAll = () => [input1, btn1];
+
+        let trapped = false;
+        input1.focus = () => { trapped = true; };
+
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerQuickAdd: quickAddEl,
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+        quickAddEl.style.display = 'block';
+
+        // Simulate Tab press on the last focusable element when quick add is open
+        doc.activeElement = btn1;
+        let prevented = false;
+        doc.dispatchEvent({
+            type: 'keydown',
+            key: 'Tab',
+            shiftKey: false,
+            preventDefault: () => { prevented = true; }
+        });
+
+        assert(trapped, 'Focus must cycle to the first element in quick add');
+        assert(prevented, 'Default Tab event must be prevented');
+        console.log('✓ Quick Add focus trap (A11Y-1) verified');
+    }
+
+    // TEST 31: Idempotent event binding (LIFECYCLE-1)
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerTeacherSelect: doc.createElement('select'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+
+        await controller.init();
+        assert.strictEqual(controller.getState()._eventsBound, true, '_eventsBound must be true after init');
+        const listenerCount = testElements.teacherSchedulerTeacherSelect.listeners['change']?.length || 0;
+        assert.strictEqual(listenerCount, 1, 'Teacher select should have exactly 1 change listener');
+
+        // Calling init again must not re-bind
+        await controller.init();
+        const listenerCountAfter = testElements.teacherSchedulerTeacherSelect.listeners['change']?.length || 0;
+        assert.strictEqual(listenerCountAfter, 1, 'Teacher select listener count must remain 1 after repeated init');
+        console.log('✓ Idempotent event binding (LIFECYCLE-1) verified');
+    }
+
+    // TEST 32: Robust test date parsing (EDGE-1)
+    {
+        windowMock.__SCHEDULER_NOW__ = 'invalid-date-string';
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        let threw = false;
+        try {
+            await controller.init();
+        } catch (e) {
+            threw = true;
+        }
+        assert(!threw, 'Invalid __SCHEDULER_NOW__ must not throw');
+        delete windowMock.__SCHEDULER_NOW__;
+        console.log('✓ Robust test date parsing (EDGE-1) verified');
+    }
+
+    // TEST 33: Style restoration on missing session during commitResize (EDGE-2)
+    {
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => false
+        });
+
+        await controller.init();
+
+        const pillEl = doc.createElement('div');
+        pillEl.style.height = '100px';
+
+        // Simulate resizeDrag for a session that does not exist in state.sessions
+        controller.getState().resizeDrag = {
+            sessionId: 'non-existent-session-id',
+            edge: 'bottom',
+            pillEl,
+            originalHeight: '50px',
+            originalDuration: 60,
+            currentDuration: 90,
+            originalTitleText: 'Some Title',
+            isCompact: false
+        };
+
+        // commitResize should call restore() before returning
+        await controller.commitResize();
+
+        assert.strictEqual(pillEl.style.height, '50px', 'Pill style height must be restored to originalHeight when session is missing');
+        console.log('✓ Style restoration on missing session (EDGE-2) verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');

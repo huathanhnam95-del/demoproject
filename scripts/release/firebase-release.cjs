@@ -2280,10 +2280,11 @@ function buildReleaseContext(options = {}) {
 
     const isProduction = profile === 'full' || profile === 'hosting';
 
+    let lockData = null;
     const lockPath = path.join(source.root, 'config', 'media-release.lock.json');
     if (fs.existsSync(lockPath)) {
       try {
-        const lockData = readJson(lockPath, 'media release lock');
+        lockData = readJson(lockPath, 'media release lock');
         validatePublicationEligibility(lockData, {
           isProduction,
           allowPilot: options.allowPilot === true
@@ -2296,13 +2297,19 @@ function buildReleaseContext(options = {}) {
       }
     }
 
-    if (options.cohort || options.activeCohorts) {
+    const requestedCohorts = options.cohort
+      ? [options.cohort]
+      : (options.activeCohorts || (lockData && lockData.activeCohorts) || []);
+
+    if (requestedCohorts.length > 0) {
       excludedPaths = resolveExcludedPaths(policyResult, {
         ...options,
+        activeCohorts: requestedCohorts,
         isProduction,
-        allowPilot: options.allowPilot === true
+        allowPilot: options.allowPilot === true,
+        projectRoot: source.root
       });
-      activeCohorts = options.cohort ? [options.cohort] : (options.activeCohorts || []);
+      activeCohorts = requestedCohorts;
     }
   } catch (err) {
     if (err.code === 'PILOT_MEDIA_INELIGIBLE') {

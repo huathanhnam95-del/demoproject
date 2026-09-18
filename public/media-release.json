@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "publicationId": "pilot-20260918-035318",
+  "publicationId": "pub-20260918-ra-sst",
   "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
   "defaultRolloutState": "remote-with-fallback",
   "modes": {
     "RA": {
-      "state": "remote-with-fallback",
-      "shardKey": "catalogs/pilot-20260918-035318/RA.json"
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-ra-sst/RA.json"
     },
     "SST": {
-      "state": "remote-with-fallback",
-      "shardKey": "catalogs/pilot-20260918-035318/SST.json"
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-ra-sst/SST.json"
     }
   }
 }

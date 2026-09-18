@@ -121,6 +121,18 @@
                 "destination": "/crm-admin.html"
             },
             {
+                "source": "/database/RA/Voice/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/RA/speech-coach-audio/v1/clips/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/SST/audio/**",
+                "destination": "/404.html"
+            },
+            {
                 "source": "**",
                 "destination": "/index.html"
             }

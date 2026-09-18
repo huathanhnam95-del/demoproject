@@ -187,6 +187,88 @@ test('MediaUrlResolver Playwright Delivery Suite (live GCS + Chromium)', async (
       );
     });
 
+    await t.test('5. Speech Coach: segmented micro-clip GCS resolution and playback progression', async () => {
+      const result = await page.evaluate(async () => {
+        const audio = document.getElementById('test-audio');
+        const clipPath = '/database/RA/speech-coach-audio/v1/clips/03/0377aa5df43feaadcb6ea137a9aad78b026486582ed6b0c04cb81c8c46c833ae.mp3';
+        const resolvedUrl = await window.MediaUrlResolver.resolveAudioUrl(clipPath, { rolloutState: 'remote-only' });
+
+        audio.src = resolvedUrl;
+        audio.load();
+
+        await new Promise((resolve, reject) => {
+          audio.onloadedmetadata = resolve;
+          audio.onerror = () => reject(new Error('Failed to load clip audio: ' + (audio.error ? audio.error.message : 'unknown')));
+          setTimeout(() => reject(new Error('Timeout loading clip metadata')), 10000);
+        });
+
+        await audio.play();
+        await new Promise((r) => setTimeout(r, 400));
+        audio.pause();
+
+        return {
+          resolvedUrl,
+          duration: audio.duration,
+          currentTime: audio.currentTime
+        };
+      });
+
+      assert.ok(result.resolvedUrl.startsWith('https://storage.googleapis.com/listening-tasks-3ae34-practice-media/media/sha256/'), 'Resolved to GCS content-addressed URL');
+      assert.ok(result.duration > 0, 'Clip duration is positive');
+      assert.ok(result.currentTime > 0.1, 'Clip currentTime progressed');
+    });
+
+    await t.test('6. Byte-range seeking: seek forward on GCS audio and resume progression', async () => {
+      const result = await page.evaluate(async () => {
+        const audio = document.getElementById('test-audio');
+        const sstPath = '/database/SST/audio/1/SST_1_af_bella.mp3';
+        const resolvedUrl = await window.MediaUrlResolver.resolveAudioUrl(sstPath, { rolloutState: 'remote-only' });
+
+        audio.src = resolvedUrl;
+        audio.load();
+
+        await new Promise((resolve, reject) => {
+          audio.onloadedmetadata = resolve;
+          audio.onerror = () => reject(new Error('Failed to load audio for seeking'));
+          setTimeout(() => reject(new Error('Timeout loading metadata')), 10000);
+        });
+
+        // Seek forward to 5 seconds
+        audio.currentTime = 5.0;
+        await new Promise((resolve) => {
+          audio.onseeked = resolve;
+          setTimeout(resolve, 3000);
+        });
+
+        await audio.play();
+        await new Promise((r) => setTimeout(r, 500));
+        audio.pause();
+
+        return {
+          duration: audio.duration,
+          currentTime: audio.currentTime
+        };
+      });
+
+      assert.ok(result.currentTime >= 5.2, `CurrentTime (${result.currentTime}) should be >= 5.2s after seeking to 5s and playing for 500ms`);
+    });
+
+    await t.test('7. Strict remote-only defect: unmapped asset rejects with defect in browser', async () => {
+      const result = await page.evaluate(async () => {
+        try {
+          await window.MediaUrlResolver.resolveAudioUrl('/database/RA/Voice/audio/Audio by folder/9999/does_not_exist.mp3', {
+            rolloutState: 'remote-only'
+          });
+          return { threw: false };
+        } catch (err) {
+          return { threw: true, message: err.message };
+        }
+      });
+
+      assert.equal(result.threw, true, 'Must throw error on unmapped asset in remote-only mode');
+      assert.match(result.message, /Remote resolution failed in remote-only mode/i);
+    });
+
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));

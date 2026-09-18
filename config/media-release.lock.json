@@ -1,24 +1,27 @@
 {
   "schemaVersion": 1,
   "environment": "production",
-  "publicationId": "pilot-20260918-035318",
+  "publicationId": "pub-20260918-ra-sst",
   "catalogRoot": {
-    "key": "publications/pilot-20260918-035318/release.json",
-    "sha256": "1989adffc23ef2c028b13975ffd7f2e05d23b3a68b8702e56eb16a5ac20cb687"
+    "key": "publications/pub-20260918-ra-sst/release.json",
+    "sha256": "ce6e57a36738090ee1e7c6bca4d7f6f1c7fe7e5dbe078be9ef79e76e44ad5ecd"
   },
   "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
   "defaultRolloutState": "remote-with-fallback",
+  "activeCohorts": [
+    "cohort-ra-sst"
+  ],
   "modes": {
     "RA": {
-      "state": "remote-with-fallback",
-      "shardKey": "catalogs/pilot-20260918-035318/RA.json"
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-ra-sst/RA.json"
     },
     "SST": {
-      "state": "remote-with-fallback",
-      "shardKey": "catalogs/pilot-20260918-035318/SST.json"
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-ra-sst/SST.json"
     }
   },
-  "ineligibleForProduction": true,
-  "selectionRestricted": true,
-  "updatedAt": "2026-09-18T03:57:01.148Z"
+  "ineligibleForProduction": false,
+  "selectionRestricted": false,
+  "updatedAt": "2026-09-18T06:57:03.804Z"
 }

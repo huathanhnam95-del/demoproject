@@ -58,6 +58,20 @@
         "public/database/SST/audio/1/SST_1_af_bella.mp3",
         "public/database/SST/audio/1/SST_1_bm_lewis.mp3"
       ]
+    },
+    "cohort-ra-sst": {
+      "description": "Full Read Aloud and Summarize Spoken Text externalized production media cohort.",
+      "productionEligible": true,
+      "publicationId": "pub-20260918-ra-sst",
+      "roots": [
+        "public/database/RA/Voice/audio",
+        "public/database/RA/speech-coach-audio/v1/clips",
+        "public/database/SST/audio"
+      ],
+      "catalogShards": [
+        "catalogs/pub-20260918-ra-sst/RA.json",
+        "catalogs/pub-20260918-ra-sst/SST.json"
+      ]
     }
   }
 }

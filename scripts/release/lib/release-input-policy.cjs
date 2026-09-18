@@ -63,9 +63,62 @@ function resolveExcludedPaths(policyObj, options = {}) {
       }
       excluded.add(normalized);
     }
+
+    if (Array.isArray(cohort.catalogShards)) {
+      const projectRoot = options.projectRoot || (policyObj.policyPath ? path.dirname(path.dirname(policyObj.policyPath)) : process.cwd());
+      for (const shardRelPath of cohort.catalogShards) {
+        const candidates = [
+          path.join(projectRoot, 'public', shardRelPath),
+          path.join(projectRoot, shardRelPath),
+          path.join('C:/Cursor AI/public', shardRelPath),
+          path.join(projectRoot, '.media-checkpoints', cohort.publicationId || '', path.basename(shardRelPath)),
+          path.join('C:/Cursor AI/.media-checkpoints', cohort.publicationId || '', path.basename(shardRelPath))
+        ];
+        let shardData = null;
+        for (const candidatePath of candidates) {
+          if (fs.existsSync(candidatePath)) {
+            try {
+              shardData = JSON.parse(fs.readFileSync(candidatePath, 'utf8'));
+              break;
+            } catch (_) {}
+          }
+        }
+        if (shardData && shardData.assets) {
+          for (const assetPath of Object.keys(shardData.assets)) {
+            const normalized = assetPath.replace(/\\/g, '/').replace(/^\/+/, '');
+            if (protectedSet.has(normalized)) {
+              throw new Error(`[ReleaseInputPolicy] Cannot exclude protected builder input: ${normalized}`);
+            }
+            excluded.add(normalized);
+          }
+        }
+      }
+    }
   }
 
   return excluded;
+}
+
+function resolveExcludedRoots(policyObj, options = {}) {
+  const { policy } = policyObj;
+  const activeCohorts = [];
+
+  if (options.cohort) {
+    activeCohorts.push(options.cohort);
+  } else if (Array.isArray(options.activeCohorts)) {
+    activeCohorts.push(...options.activeCohorts);
+  }
+
+  const roots = new Set();
+  for (const cohortName of activeCohorts) {
+    const cohort = policy.cohorts && policy.cohorts[cohortName];
+    if (cohort && Array.isArray(cohort.roots)) {
+      for (const r of cohort.roots) {
+        roots.add(r.replace(/\\/g, '/').replace(/^\/+/, ''));
+      }
+    }
+  }
+  return roots;
 }
 
 function filterTrackedInventory(inventory, excludedSet) {
@@ -119,6 +172,7 @@ module.exports = {
   DEFAULT_POLICY_PATH,
   loadReleaseInputPolicy,
   resolveExcludedPaths,
+  resolveExcludedRoots,
   filterTrackedInventory,
   validatePublicationEligibility
 };

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-ra-sst",
+  "type": "production",
+  "ineligibleForProduction": false,
+  "selectionRestricted": false,
+  "createdAt": "2026-09-18T06:57:03.804Z",
+  "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
+  "summary": {
+    "totalLogicalAssets": 32436,
+    "uniqueStorageObjects": 32436,
+    "totalLogicalBytes": 13493672581,
+    "uniqueStorageBytes": 13493672581,
+    "deduplicationSavingsBytes": 0,
+    "modesCount": 2
+  },
+  "shards": {
+    "RA": {
+      "shardKey": "catalogs/pub-20260918-ra-sst/RA.json",
+      "sha256": "fb0748d1a5bb8b64cc850322825a1265ab37b58a4be935b4ff71b18da1530dfa",
+      "size": 10091734,
+      "assetCount": 30681
+    },
+    "SST": {
+      "shardKey": "catalogs/pub-20260918-ra-sst/SST.json",
+      "sha256": "8271f7f8cc718c44f16a089a12e5aa15531fde32696514c45b22856227f303df",
+      "size": 535773,
+      "assetCount": 1755
+    }
+  }
+}

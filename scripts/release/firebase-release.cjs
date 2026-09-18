@@ -1881,10 +1881,10 @@ function buildPreparationCommands(ctx) {
     cwd: ctx.candidateRoot,
     kind: 'version'
   });
-  if (ctx.profileConfig.preparation.includes('connectedSpeech')) commands.push({
-    command: node,
-    args: [
-      'scripts/read-aloud/build-connected-speech-index.js',
+  if (ctx.profileConfig.preparation.includes('connectedSpeech')) {
+    const releaseWorkspaceRunner = path.join(ctx.candidateRoot, 'tools', 'release-workspace', 'run-generator.cjs');
+    const generatorScript = 'scripts/read-aloud/build-connected-speech-index.js';
+    const generatorArgs = [
       '--timestamp', timestamp,
       '--workbook', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'RA.xlsx'),
       '--audio-manifest', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'Voice', 'audio', 'manifest.json'),
@@ -1892,10 +1892,16 @@ function buildPreparationCommands(ctx) {
       '--featured-prompts', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'connected-speech-featured-prompts.json'),
       '--functions-index', path.join(ctx.candidateRoot, 'functions', 'src', 'data', 'read-aloud-connected-speech-index.json'),
       '--coverage-dir', path.join(ctx.externalRoot, 'connected-speech-coverage')
-    ],
-    cwd: ctx.candidateRoot,
-    kind: 'connectedSpeech'
-  });
+    ];
+    commands.push({
+      command: node,
+      args: fs.existsSync(releaseWorkspaceRunner)
+        ? ['tools/release-workspace/run-generator.cjs', generatorScript, ...generatorArgs]
+        : [generatorScript, ...generatorArgs],
+      cwd: ctx.candidateRoot,
+      kind: 'connectedSpeech'
+    });
+  }
   if (ctx.profileConfig.preparation.includes('segmentationV2')) commands.push({
     command: node,
     args: [
@@ -1926,12 +1932,26 @@ function resolveNpmInvocation(ctx) {
 function buildDependencyCommands(ctx) {
   const invocation = resolveNpmInvocation(ctx);
   const commands = [];
-  if (fs.existsSync(path.join(ctx.candidateRoot, 'package-lock.json'))) commands.push({
-    command: invocation.command,
-    args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
-    cwd: ctx.candidateRoot,
-    kind: 'npm-root'
-  });
+  const releaseWorkspaceLock = path.join(ctx.candidateRoot, 'tools', 'release-workspace', 'package-lock.json');
+  const rootLock = path.join(ctx.candidateRoot, 'package-lock.json');
+  const isHostingOnly = ctx.profileConfig.products.includes('hosting') && !ctx.profileConfig.products.includes('functions');
+
+  if (isHostingOnly && fs.existsSync(releaseWorkspaceLock)) {
+    commands.push({
+      command: invocation.command,
+      args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
+      cwd: path.join(ctx.candidateRoot, 'tools', 'release-workspace'),
+      kind: 'npm-release-tools'
+    });
+  } else if (fs.existsSync(rootLock)) {
+    commands.push({
+      command: invocation.command,
+      args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
+      cwd: ctx.candidateRoot,
+      kind: 'npm-root'
+    });
+  }
+
   if (ctx.profileConfig.products.includes('functions')) {
     const configured = Array.isArray(ctx.functionsSourceDirs) && ctx.functionsSourceDirs.length
       ? ctx.functionsSourceDirs

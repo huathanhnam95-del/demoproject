@@ -2,7 +2,24 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const ExcelJS = require('exceljs');
+
+function resolveExcelJS() {
+  try {
+    return require('exceljs');
+  } catch (err) {
+    const workspacePkg = path.resolve(__dirname, '../../tools/release-workspace/package.json');
+    if (fs.existsSync(workspacePkg)) {
+      try {
+        const wsRequire = require('module').createRequire(workspacePkg);
+        return wsRequire('exceljs');
+      } catch (wsErr) {
+        throw err;
+      }
+    }
+    throw err;
+  }
+}
+const ExcelJS = resolveExcelJS();
 
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const PUBLIC_ROOT = path.join(PROJECT_ROOT, 'public');

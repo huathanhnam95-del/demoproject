@@ -193,6 +193,7 @@
         "scripts/read-aloud/connected-speech-index-core.js",
         "scripts/sync-version.js",
         "scripts/structure/policy.json",
+        "GEMINI.md",
         "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/coverage.json",
         "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/summary.md"
       ],
@@ -214,11 +215,21 @@
         "scripts/release/firebase-release.cjs",
         "scripts/release/release-input-policy.json",
         "scripts/release/lib/release-input-policy.cjs",
+        "scripts/read-aloud/build-connected-speech-index.js",
+        "scripts/read-aloud/connected-speech-index-core.js",
         "scripts/segmentation-study/sync-manifest.js",
-        "scripts/structure/policy.json"
+        "scripts/structure/policy.json",
+        "scripts/data/segmentation-study-v2.json",
+        "public/js/read-aloud-prompt-grammar.js",
+        "public/js/read-aloud-spoken-forms.js",
+        "public/js/read-aloud-connected-speech-rules.js",
+        "public/js/read-aloud-linking.js"
       ],
       "requiredDirectoryPrefixes": [
-        "scripts/release/"
+        "scripts/release/",
+        "scripts/read-aloud/",
+        "scripts/segmentation-study/",
+        "tools/release-workspace/"
       ]
     },
     "full": {
@@ -243,14 +254,17 @@
         "scripts/read-aloud/build-connected-speech-index.js",
         "scripts/read-aloud/connected-speech-index-core.js",
         "scripts/segmentation-study/sync-manifest.js",
+        "scripts/data/segmentation-study-v2.json",
         "scripts/sync-version.js",
         "scripts/structure/policy.json",
+        "GEMINI.md",
         "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/coverage.json",
         "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/summary.md"
       ],
       "requiredDirectoryPrefixes": [
         "scripts/release/",
         "scripts/read-aloud/",
+        "scripts/segmentation-study/",
         "tools/release-workspace/"
       ]
     }

@@ -203,9 +203,6 @@ function classifyTrackedPath(relPath, profile, policyObj, options = {}) {
 
   // Protected builder inputs required by the profile are always included
   if (protectedSet.has(norm)) {
-    if (profileKey === 'functions' && norm.startsWith('public/')) {
-      return { status: 'omit', category: 'app-runtime', reason: 'public runtime omitted from functions profile' };
-    }
     return { status: 'include', category: 'build-only', reason: 'protected builder input' };
   }
 
@@ -215,6 +212,32 @@ function classifyTrackedPath(relPath, profile, policyObj, options = {}) {
     if (norm === cleanPrefix || norm.startsWith(cleanPrefix + '/')) {
       const category = cleanPrefix === 'public' ? 'app-runtime' : (cleanPrefix === 'functions' ? 'backend-functions' : 'app-runtime');
       return { status: 'include', category, reason: `matches required prefix ${prefix}` };
+    }
+  }
+
+  // Dynamic sources configured in firebase.json (configDir, additionalSources)
+  const projectConfig = options.projectConfig;
+  if (projectConfig && (profileKey === 'functions' || profileKey === 'full')) {
+    const functionsConfigs = Array.isArray(projectConfig.functions)
+      ? projectConfig.functions
+      : (projectConfig.functions ? [projectConfig.functions] : []);
+
+    for (const fn of functionsConfigs) {
+      if (!fn) continue;
+      if (typeof fn.configDir === 'string') {
+        const fnConfigDir = fn.configDir.replace(/^\/+/, '').replace(/\/+$/, '');
+        if (fnConfigDir && (norm === fnConfigDir || norm.startsWith(fnConfigDir + '/'))) {
+          return { status: 'include', category: 'backend-functions', reason: `matches configured function configDir ${fnConfigDir}` };
+        }
+      }
+      if (Array.isArray(fn.additionalSources)) {
+        for (const addSource of fn.additionalSources) {
+          const cleanAdd = String(addSource || '').replace(/^\/+/, '').replace(/\/+$/, '');
+          if (cleanAdd && (norm === cleanAdd || norm.startsWith(cleanAdd + '/'))) {
+            return { status: 'include', category: 'backend-functions', reason: `matches configured function additionalSource ${cleanAdd}` };
+          }
+        }
+      }
     }
   }
 

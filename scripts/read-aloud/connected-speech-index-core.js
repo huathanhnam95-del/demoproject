@@ -2,7 +2,24 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const ExcelJS = require('exceljs');
+
+function resolveExcelJS() {
+  try {
+    return require('exceljs');
+  } catch (err) {
+    const workspacePkg = path.resolve(__dirname, '../../tools/release-workspace/package.json');
+    if (fs.existsSync(workspacePkg)) {
+      try {
+        const wsRequire = require('module').createRequire(workspacePkg);
+        return wsRequire('exceljs');
+      } catch (wsErr) {
+        throw err;
+      }
+    }
+    throw err;
+  }
+}
+const ExcelJS = resolveExcelJS();
 
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const PUBLIC_ROOT = path.join(PROJECT_ROOT, 'public');
@@ -474,22 +491,87 @@ async function analyzePromptVariants(linkingApi, text) {
   return { v1_linking, v2_reduced_words, v3_sound_changes };
 }
 
-async function buildConnectedSpeechIndex(options = {}) {
-  const workbookPath = options.workbookPath || DEFAULT_WORKBOOK_PATH;
-  const audioManifestPath = options.audioManifestPath || DEFAULT_AUDIO_MANIFEST_PATH;
-  const publicIndexPath = options.publicIndexPath || DEFAULT_PUBLIC_INDEX_PATH;
-  const featuredPromptsPath = options.featuredPromptsPath || DEFAULT_FEATURED_PROMPTS_PATH;
-  const functionsIndexPath = options.functionsIndexPath || DEFAULT_FUNCTIONS_INDEX_PATH;
-  const coverageDir = options.coverageDir || DEFAULT_COVERAGE_DIR;
-  const indexVersion = String(options.indexVersion || INDEX_VERSION);
-  const generatedAt = normalizeGeneratedAt(options.generatedAt ?? options.timestamp);
-  const linkingApi = options.linkingApi || loadReadAloudLinkingApi();
+const CACHE_SCHEMA_VERSION = 'v1';
 
-  const workbookSha256 = hashFile(workbookPath);
-  const audioManifestSha256 = hashFile(audioManifestPath);
-  const { rows } = await loadWorkbookRows(workbookPath);
-  const audioManifest = loadAudioManifest(audioManifestPath);
+function resolveCacheDir(options = {}) {
+  if (options.cacheDir) return path.resolve(options.cacheDir);
+  if (process.env.RELEASE_CACHE_DIR) return path.resolve(process.env.RELEASE_CACHE_DIR);
+  return path.join(PROJECT_ROOT, '.local', 'release-cache', 'connected-speech');
+}
 
+function computeConnectedSpeechFingerprint(options = {}) {
+  const hash = crypto.createHash('sha256');
+  hash.update(`cache-schema:${CACHE_SCHEMA_VERSION}\n`);
+  hash.update(`node-version:${process.version}\n`);
+  hash.update(`index-version:${String(options.indexVersion || INDEX_VERSION)}\n`);
+
+  const files = [
+    options.workbookPath || DEFAULT_WORKBOOK_PATH,
+    options.audioManifestPath || DEFAULT_AUDIO_MANIFEST_PATH,
+    path.join(__dirname, 'connected-speech-index-core.js'),
+    path.join(__dirname, 'build-connected-speech-index.js'),
+    path.join(PUBLIC_ROOT, 'js', 'read-aloud-prompt-grammar.js'),
+    path.join(PUBLIC_ROOT, 'js', 'read-aloud-spoken-forms.js'),
+    path.join(PUBLIC_ROOT, 'js', 'read-aloud-connected-speech-rules.js'),
+    path.join(PUBLIC_ROOT, 'js', 'read-aloud-linking.js')
+  ];
+
+  const wsLock = path.resolve(__dirname, '../../tools/release-workspace/package-lock.json');
+  if (fs.existsSync(wsLock)) {
+    files.push(wsLock);
+  }
+
+  for (const filePath of files) {
+    const rel = path.relative(PROJECT_ROOT, filePath).replace(/\\/g, '/');
+    if (fs.existsSync(filePath)) {
+      const fileHash = crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+      hash.update(`${rel}:${fileHash}\n`);
+    } else {
+      hash.update(`${rel}:missing\n`);
+    }
+  }
+
+  return hash.digest('hex');
+}
+
+function readAnalysisCache(fingerprint, cacheDir) {
+  if (!fingerprint || !cacheDir) return null;
+  const cacheFile = path.join(cacheDir, `${fingerprint}.json`);
+  if (!fs.existsSync(cacheFile)) return null;
+  try {
+    const content = fs.readFileSync(cacheFile, 'utf8');
+    const parsed = JSON.parse(content);
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (parsed.schemaVersion !== CACHE_SCHEMA_VERSION) return null;
+    if (parsed.fingerprint !== fingerprint) return null;
+    if (!Array.isArray(parsed.prompts) || !parsed.workbookSha256 || !parsed.audioManifestSha256) return null;
+    return parsed;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function writeAnalysisCache(fingerprint, cacheDir, data) {
+  if (!fingerprint || !cacheDir || !data) return;
+  try {
+    fs.mkdirSync(cacheDir, { recursive: true });
+    const cacheFile = path.join(cacheDir, `${fingerprint}.json`);
+    const tempFile = path.join(cacheDir, `${fingerprint}.tmp.${process.pid}.${Date.now()}`);
+    const payload = JSON.stringify({
+      fingerprint,
+      schemaVersion: CACHE_SCHEMA_VERSION,
+      workbookSha256: data.workbookSha256,
+      audioManifestSha256: data.audioManifestSha256,
+      prompts: data.prompts
+    }, null, 2);
+    fs.writeFileSync(tempFile, `${payload}\n`, 'utf8');
+    fs.renameSync(tempFile, cacheFile);
+  } catch (err) {
+    console.warn('Warning: Failed to write connected-speech analysis cache:', err.message);
+  }
+}
+
+async function computePromptAnalysis(rows, audioManifest, linkingApi, options = {}) {
   const prompts = [];
   const concurrency = Math.max(1, Number(options.concurrency || 4));
   let cursor = 0;
@@ -509,13 +591,23 @@ async function buildConnectedSpeechIndex(options = {}) {
 
   const workers = Array.from({ length: Math.min(concurrency, rows.length || 1) }, () => worker());
   await Promise.all(workers);
+  return prompts;
+}
+
+function renderConnectedSpeechOutputs(analysisData, options = {}) {
+  const publicIndexPath = options.publicIndexPath || DEFAULT_PUBLIC_INDEX_PATH;
+  const featuredPromptsPath = options.featuredPromptsPath || DEFAULT_FEATURED_PROMPTS_PATH;
+  const functionsIndexPath = options.functionsIndexPath || DEFAULT_FUNCTIONS_INDEX_PATH;
+  const coverageDir = options.coverageDir || DEFAULT_COVERAGE_DIR;
+  const indexVersion = String(options.indexVersion || INDEX_VERSION);
+  const generatedAt = normalizeGeneratedAt(options.generatedAt ?? options.timestamp);
 
   const index = {
     indexVersion,
     generatedAt,
-    sourceWorkbookSha256: workbookSha256,
-    audioManifestSha256,
-    prompts
+    sourceWorkbookSha256: analysisData.workbookSha256,
+    audioManifestSha256: analysisData.audioManifestSha256,
+    prompts: analysisData.prompts
   };
 
   const coverage = buildCoverageSummary(index);
@@ -530,7 +622,65 @@ async function buildConnectedSpeechIndex(options = {}) {
   fs.writeFileSync(path.join(coverageDir, 'coverage.json'), `${JSON.stringify({ ...coverage, indexVersion, generatedAt: index.generatedAt }, null, 2)}\n`, 'utf8');
   fs.writeFileSync(path.join(coverageDir, 'summary.md'), summaryMarkdown, 'utf8');
 
-  return { index, coverage, publicIndexPath, featuredPromptsPath, functionsIndexPath, coverageDir };
+  return {
+    index,
+    coverage,
+    featuredPrompts,
+    publicIndexPath,
+    featuredPromptsPath,
+    functionsIndexPath,
+    coverageDir
+  };
+}
+
+async function buildConnectedSpeechIndex(options = {}) {
+  const workbookPath = options.workbookPath || DEFAULT_WORKBOOK_PATH;
+  const audioManifestPath = options.audioManifestPath || DEFAULT_AUDIO_MANIFEST_PATH;
+  const noCache = options.noCache === true;
+  const cacheDir = resolveCacheDir(options);
+
+  let analysisData = null;
+  let cacheHit = false;
+  let fingerprint = null;
+
+  if (!noCache) {
+    fingerprint = computeConnectedSpeechFingerprint({
+      ...options,
+      workbookPath,
+      audioManifestPath
+    });
+    analysisData = readAnalysisCache(fingerprint, cacheDir);
+    if (analysisData) {
+      cacheHit = true;
+    }
+  }
+
+  if (!analysisData) {
+    const workbookSha256 = hashFile(workbookPath);
+    const audioManifestSha256 = hashFile(audioManifestPath);
+    const { rows } = await loadWorkbookRows(workbookPath);
+    const audioManifest = loadAudioManifest(audioManifestPath);
+    const linkingApi = options.linkingApi || loadReadAloudLinkingApi();
+
+    const prompts = await computePromptAnalysis(rows, audioManifest, linkingApi, options);
+
+    analysisData = {
+      workbookSha256,
+      audioManifestSha256,
+      prompts
+    };
+
+    if (!noCache && fingerprint) {
+      writeAnalysisCache(fingerprint, cacheDir, analysisData);
+    }
+  }
+
+  const rendered = renderConnectedSpeechOutputs(analysisData, options);
+  return {
+    ...rendered,
+    cacheHit,
+    fingerprint
+  };
 }
 
 async function reportConnectedSpeechCoverage(options = {}) {
@@ -550,6 +700,7 @@ async function reportConnectedSpeechCoverage(options = {}) {
 
 module.exports = {
   INDEX_VERSION,
+  CACHE_SCHEMA_VERSION,
   DEFAULT_WORKBOOK_PATH,
   DEFAULT_AUDIO_MANIFEST_PATH,
   DEFAULT_PUBLIC_INDEX_PATH,
@@ -570,6 +721,12 @@ module.exports = {
   buildCoverageSummary,
   buildCoverageMarkdown,
   buildFeaturedPromptCuration,
+  computeConnectedSpeechFingerprint,
+  resolveCacheDir,
+  readAnalysisCache,
+  writeAnalysisCache,
+  computePromptAnalysis,
+  renderConnectedSpeechOutputs,
   buildConnectedSpeechIndex,
   reportConnectedSpeechCoverage
 };

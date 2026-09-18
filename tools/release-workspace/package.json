@@ -1,0 +1,9 @@
+{
+  "name": "release-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal release tool workspace with locked build dependencies",
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

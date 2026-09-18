@@ -32,6 +32,16 @@ function validatePublicationEligibility(lockData, options) {
   if (releaseInputPolicyLib) return releaseInputPolicyLib.validatePublicationEligibility(lockData, options);
 }
 
+function classifyTrackedPath(relPath, profile, policyResult, options) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.classifyTrackedPath(relPath, profile, policyResult, options);
+  return { status: 'include', category: 'app-runtime' };
+}
+
+function filterTrackedInventoryForProfile(inventory, profile, policyResult, options) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.filterTrackedInventoryForProfile(inventory, profile, policyResult, options);
+  return { filtered: Array.isArray(inventory) ? inventory.slice() : [], omitted: [], omittedCount: 0, omittedBytes: 0, breakdown: {} };
+}
+
 const REPOSITORY_ROOT = path.resolve(__dirname, '..', '..');
 const SUPPORTED_FIREBASE_VERSION = '15.2.1';
 const SUPPORTED_FIREBASE_VERSIONS = new Set(['15.2.1', '15.29.0']);
@@ -1644,6 +1654,19 @@ function verifyTrackedSource(ctx) {
       fail('EXCLUDED_MEDIA_PRESENT', `Excluded media was unexpectedly present in the candidate: ${presentExcluded.slice(0, 12).join(', ')}.`, presentExcluded);
     }
   }
+  if (ctx.profile === 'hosting' && ctx.omittedNonRuntimeCount > 0) {
+    const forbiddenOmittedRoots = ['exported_slides', 'tests', '_tmp_pdf_debug', 'Slide Deck From Walkthrough', 'deck', 'Generated Images', 'docs/specs', 'docs/features'];
+    const presentOmitted = [];
+    for (const root of forbiddenOmittedRoots) {
+      const candidateDir = path.join(ctx.candidateRoot, ...root.split('/'));
+      if (fs.existsSync(candidateDir)) {
+        presentOmitted.push(root);
+      }
+    }
+    if (presentOmitted.length > 0) {
+      fail('OMITTED_SOURCE_PRESENT', `Omitted non-runtime directories were unexpectedly present in the candidate: ${presentOmitted.join(', ')}.`, presentOmitted);
+    }
+  }
   return { checked: ctx.trackedInventory.length };
 }
 
@@ -1858,21 +1881,28 @@ function buildPreparationCommands(ctx) {
     cwd: ctx.candidateRoot,
     kind: 'version'
   });
-  if (ctx.profileConfig.preparation.includes('connectedSpeech')) commands.push({
-    command: node,
-    args: [
-      'scripts/read-aloud/build-connected-speech-index.js',
+  if (ctx.profileConfig.preparation.includes('connectedSpeech')) {
+    const releaseWorkspaceRunner = path.join(ctx.candidateRoot, 'tools', 'release-workspace', 'run-generator.cjs');
+    const generatorScript = 'scripts/read-aloud/build-connected-speech-index.js';
+    const generatorArgs = [
       '--timestamp', timestamp,
       '--workbook', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'RA.xlsx'),
       '--audio-manifest', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'Voice', 'audio', 'manifest.json'),
       '--public-index', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'connected-speech-index.json'),
       '--featured-prompts', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'connected-speech-featured-prompts.json'),
       '--functions-index', path.join(ctx.candidateRoot, 'functions', 'src', 'data', 'read-aloud-connected-speech-index.json'),
-      '--coverage-dir', path.join(ctx.externalRoot, 'connected-speech-coverage')
-    ],
-    cwd: ctx.candidateRoot,
-    kind: 'connectedSpeech'
-  });
+      '--coverage-dir', path.join(ctx.externalRoot, 'connected-speech-coverage'),
+      '--cache-dir', path.join(ctx.root || process.cwd(), '.local', 'release-cache', 'connected-speech')
+    ];
+    commands.push({
+      command: node,
+      args: fs.existsSync(releaseWorkspaceRunner)
+        ? ['tools/release-workspace/run-generator.cjs', generatorScript, ...generatorArgs]
+        : [generatorScript, ...generatorArgs],
+      cwd: ctx.candidateRoot,
+      kind: 'connectedSpeech'
+    });
+  }
   if (ctx.profileConfig.preparation.includes('segmentationV2')) commands.push({
     command: node,
     args: [
@@ -1903,12 +1933,26 @@ function resolveNpmInvocation(ctx) {
 function buildDependencyCommands(ctx) {
   const invocation = resolveNpmInvocation(ctx);
   const commands = [];
-  if (fs.existsSync(path.join(ctx.candidateRoot, 'package-lock.json'))) commands.push({
-    command: invocation.command,
-    args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
-    cwd: ctx.candidateRoot,
-    kind: 'npm-root'
-  });
+  const releaseWorkspaceLock = path.join(ctx.candidateRoot, 'tools', 'release-workspace', 'package-lock.json');
+  const rootLock = path.join(ctx.candidateRoot, 'package-lock.json');
+  const isHostingOnly = ctx.profileConfig.products.includes('hosting') && !ctx.profileConfig.products.includes('functions');
+
+  if (isHostingOnly && fs.existsSync(releaseWorkspaceLock)) {
+    commands.push({
+      command: invocation.command,
+      args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
+      cwd: path.join(ctx.candidateRoot, 'tools', 'release-workspace'),
+      kind: 'npm-release-tools'
+    });
+  } else if (fs.existsSync(rootLock)) {
+    commands.push({
+      command: invocation.command,
+      args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
+      cwd: ctx.candidateRoot,
+      kind: 'npm-root'
+    });
+  }
+
   if (ctx.profileConfig.products.includes('functions')) {
     const configured = Array.isArray(ctx.functionsSourceDirs) && ctx.functionsSourceDirs.length
       ? ctx.functionsSourceDirs
@@ -1988,7 +2032,11 @@ function verifyAndSeal(ctx) {
       policySha256: ctx.policySha256 || null,
       activeCohorts: ctx.activeCohorts || [],
       excludedMediaCount: ctx.excludedMediaCount || 0,
-      avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+      avoidedMediaBytes: ctx.avoidedMediaBytes || 0,
+      omittedNonRuntimeCount: ctx.omittedNonRuntimeCount || 0,
+      omittedNonRuntimeBytes: ctx.omittedNonRuntimeBytes || 0,
+      candidateFileCount: Array.isArray(ctx.trackedInventory) ? ctx.trackedInventory.length : 0,
+      omissionBreakdown: ctx.omissionBreakdown || {}
     },
     tools: {
       node: ctx.node === process.execPath ? process.version : null,
@@ -2268,6 +2316,7 @@ function buildReleaseContext(options = {}) {
     : captureTrackedInventory(source.root, source.sourceSha, options);
   if (metrics) metrics.endPhase('git-inventory');
 
+  let policyResult = null;
   let policySha256 = null;
   let excludedPaths = new Set();
   let activeCohorts = [];
@@ -2275,7 +2324,7 @@ function buildReleaseContext(options = {}) {
   let avoidedBytes = 0;
 
   try {
-    const policyResult = loadReleaseInputPolicy(options.policyPath);
+    policyResult = loadReleaseInputPolicy(options.policyPath);
     policySha256 = policyResult.policySha256;
 
     const isProduction = profile === 'full' || profile === 'hosting';
@@ -2376,12 +2425,34 @@ function buildReleaseContext(options = {}) {
   if (metrics) metrics.endPhase('media-discovery');
   const totalExcludedCount = excludedCount + observedExcludedCount;
   const totalAvoidedBytes = avoidedBytes + observedAvoidedBytes;
+
+  let candidateInventory = trackedInventory;
+  let omittedNonRuntimeCount = 0;
+  let omittedNonRuntimeBytes = 0;
+  let omissionBreakdown = {};
+
+  if (policyResult && policyResult.policy && options.selectiveSourceExport !== false) {
+    const profileFilterResult = filterTrackedInventoryForProfile(trackedInventory, profile, policyResult, {
+      ...options,
+      projectConfig: project.config,
+      sourceRoot: source.root
+    });
+    candidateInventory = profileFilterResult.filtered;
+    omittedNonRuntimeCount = profileFilterResult.omittedCount;
+    omittedNonRuntimeBytes = profileFilterResult.omittedBytes;
+    omissionBreakdown = profileFilterResult.breakdown;
+    if (metrics && omittedNonRuntimeCount > 0) {
+      metrics.increment('omittedNonRuntimeFiles', omittedNonRuntimeCount);
+      metrics.increment('omittedNonRuntimeBytes', omittedNonRuntimeBytes);
+    }
+  }
+
   if (metrics) metrics.startPhase('source-export');
   const candidate = createCandidate({
     ...options,
     sourceRoot: source.root,
     sourceSha: source.sourceSha,
-    treeInventory: trackedInventory,
+    treeInventory: candidateInventory,
     externalRoot: options.externalRoot
   });
   if (metrics) metrics.endPhase('source-export');
@@ -2400,7 +2471,8 @@ function buildReleaseContext(options = {}) {
     configPathRelative: path.relative(candidate.candidateRoot, candidateConfigPath).replace(/\\/g, '/'),
     sourceConfigSnapshot: readJson(candidateConfigPath, 'selected Firebase config'),
     firebaseCli: project.firebaseCli,
-    trackedInventory,
+    trackedInventory: candidateInventory,
+    rawTrackedInventory: trackedInventoryRaw,
     committerEpoch: source.committerEpoch,
     node: options.node || process.execPath,
     npmCli: options.npmCli,
@@ -2417,7 +2489,10 @@ function buildReleaseContext(options = {}) {
     activeCohorts,
     excludedPaths,
     excludedMediaCount: totalExcludedCount,
-    avoidedMediaBytes: totalAvoidedBytes
+    avoidedMediaBytes: totalAvoidedBytes,
+    omittedNonRuntimeCount,
+    omittedNonRuntimeBytes,
+    omissionBreakdown
   };
   const invocationRelativeCwd = path.relative(source.root, source.originalCwd);
   ctx.publishCwd = rejectLinkAncestors(
@@ -2426,7 +2501,11 @@ function buildReleaseContext(options = {}) {
     'Candidate publish cwd'
   );
   if (!fs.existsSync(ctx.publishCwd) || !fs.lstatSync(ctx.publishCwd).isDirectory()) {
-    fail('CANDIDATE_CWD', 'The original invocation directory is unavailable in the release candidate.');
+    if (omittedNonRuntimeCount > 0 && fs.existsSync(ctx.candidateRoot)) {
+      ctx.publishCwd = ctx.candidateRoot;
+    } else {
+      fail('CANDIDATE_CWD', 'The original invocation directory is unavailable in the release candidate.');
+    }
   }
   const assets = [...observedAssets, ...(options.provisionedAssets || options.assets || [])];
   ctx.observedAssets = observedAssets;
@@ -2534,7 +2613,11 @@ function runRelease(options = {}) {
           policySha256: ctx.policySha256 || null,
           activeCohorts: ctx.activeCohorts || [],
           excludedMediaCount: ctx.excludedMediaCount || 0,
-          avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+          avoidedMediaBytes: ctx.avoidedMediaBytes || 0,
+          omittedNonRuntimeCount: ctx.omittedNonRuntimeCount || 0,
+          omittedNonRuntimeBytes: ctx.omittedNonRuntimeBytes || 0,
+          candidateFileCount: Array.isArray(ctx.trackedInventory) ? ctx.trackedInventory.length : 0,
+          omissionBreakdown: ctx.omissionBreakdown || {}
         }
       };
     }
@@ -2561,7 +2644,11 @@ function runRelease(options = {}) {
         policySha256: ctx.policySha256 || null,
         activeCohorts: ctx.activeCohorts || [],
         excludedMediaCount: ctx.excludedMediaCount || 0,
-        avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+        avoidedMediaBytes: ctx.avoidedMediaBytes || 0,
+        omittedNonRuntimeCount: ctx.omittedNonRuntimeCount || 0,
+        omittedNonRuntimeBytes: ctx.omittedNonRuntimeBytes || 0,
+        candidateFileCount: Array.isArray(ctx.trackedInventory) ? ctx.trackedInventory.length : 0,
+        omissionBreakdown: ctx.omissionBreakdown || {}
       }
     };
   } catch (error) {
@@ -2583,6 +2670,7 @@ function parseArgs(argv = process.argv.slice(2)) {
     else if (token === '--non-interactive') args.nonInteractive = true;
     else if (token === '--verify-only') args.verifyOnly = true;
     else if (token === '--allow-pilot-media') args.allowPilot = true;
+    else if (token === '--no-selective-source-export') args.selectiveSourceExport = false;
     else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy'].includes(token)) {
       if (!tokens[index + 1] || tokens[index + 1].startsWith('--')) fail('CLI_ARGUMENT', `${token} requires a value.`);
       if (token === '--policy') {
@@ -2701,7 +2789,9 @@ module.exports = {
   dispatchFirebase,
   runRelease,
   parseArgs,
-  main
+  main,
+  classifyTrackedPath,
+  filterTrackedInventoryForProfile
 };
 
 if (require.main === module) {

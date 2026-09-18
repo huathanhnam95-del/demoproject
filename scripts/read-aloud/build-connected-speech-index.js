@@ -40,6 +40,11 @@ function parseArgs(argv) {
     } else if (arg === '--timestamp') {
       args.generatedAt = requireValue(arg, index);
       index += 1;
+    } else if (arg === '--cache-dir') {
+      args.cacheDir = requireValue(arg, index);
+      index += 1;
+    } else if (arg === '--no-cache') {
+      args.noCache = true;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }

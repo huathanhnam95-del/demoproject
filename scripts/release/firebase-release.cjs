@@ -1891,7 +1891,8 @@ function buildPreparationCommands(ctx) {
       '--public-index', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'connected-speech-index.json'),
       '--featured-prompts', path.join(ctx.candidateRoot, 'public', 'database', 'RA', 'connected-speech-featured-prompts.json'),
       '--functions-index', path.join(ctx.candidateRoot, 'functions', 'src', 'data', 'read-aloud-connected-speech-index.json'),
-      '--coverage-dir', path.join(ctx.externalRoot, 'connected-speech-coverage')
+      '--coverage-dir', path.join(ctx.externalRoot, 'connected-speech-coverage'),
+      '--cache-dir', path.join(ctx.root || process.cwd(), '.local', 'release-cache', 'connected-speech')
     ];
     commands.push({
       command: node,

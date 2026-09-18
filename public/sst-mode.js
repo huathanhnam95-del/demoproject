@@ -228,8 +228,24 @@
       setStatus('Audio is unavailable for this question. Choose another question or retry.', true);
       return;
     }
-    state.elements.audio.src = `/database/SST/audio/${encodeURIComponent(question.id)}/${encodeURIComponent(state.selectedAudio.file)}`;
-    state.elements.audio.load();
+    const logicalPath = `/database/SST/audio/${encodeURIComponent(question.id)}/${encodeURIComponent(state.selectedAudio.file)}`;
+    const questionId = question.id;
+
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+      window.MediaUrlResolver.resolveAudioUrl(logicalPath, { mode: 'SST' }).then((url) => {
+        if (getCurrentQuestion()?.id !== questionId) return;
+        state.elements.audio.src = url;
+        state.elements.audio.load();
+      }).catch((err) => {
+        console.warn('[SST] Audio resolution failed, falling back to legacy path:', err);
+        if (getCurrentQuestion()?.id !== questionId) return;
+        state.elements.audio.src = logicalPath;
+        state.elements.audio.load();
+      });
+    } else {
+      state.elements.audio.src = logicalPath;
+      state.elements.audio.load();
+    }
     state.elements.play.disabled = false;
     setStatus('Select Play when you are ready. Audio plays once.');
   }

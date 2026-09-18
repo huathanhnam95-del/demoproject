@@ -6787,8 +6787,24 @@ class ReadAloudMode {
     if (!audioEl) return;
     const filename = this._resolveAudioFilename();
     if (filename) {
-      audioEl.src = `/database/RA/Voice/audio/Audio by folder/${this.currentQuestionId}/${filename}`;
-      audioEl.load();
+      const logicalPath = `/database/RA/Voice/audio/Audio by folder/${this.currentQuestionId}/${filename}`;
+      const questionId = this.currentQuestionId;
+
+      if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+        window.MediaUrlResolver.resolveAudioUrl(logicalPath, { mode: 'RA' }).then((url) => {
+          if (this.currentQuestionId !== questionId) return;
+          audioEl.src = url;
+          audioEl.load();
+        }).catch((err) => {
+          console.warn('[ReadAloud] Audio resolution failed, falling back to legacy path:', err);
+          if (this.currentQuestionId !== questionId) return;
+          audioEl.src = logicalPath;
+          audioEl.load();
+        });
+      } else {
+        audioEl.src = logicalPath;
+        audioEl.load();
+      }
     }
   }
 

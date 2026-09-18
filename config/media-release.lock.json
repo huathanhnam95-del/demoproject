@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "environment": "production",
+  "publicationId": "pilot-20260918-035318",
+  "catalogRoot": {
+    "key": "publications/pilot-20260918-035318/release.json",
+    "sha256": "1989adffc23ef2c028b13975ffd7f2e05d23b3a68b8702e56eb16a5ac20cb687"
+  },
+  "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
+  "defaultRolloutState": "remote-with-fallback",
+  "modes": {
+    "RA": {
+      "state": "remote-with-fallback",
+      "shardKey": "catalogs/pilot-20260918-035318/RA.json"
+    },
+    "SST": {
+      "state": "remote-with-fallback",
+      "shardKey": "catalogs/pilot-20260918-035318/SST.json"
+    }
+  },
+  "ineligibleForProduction": true,
+  "selectionRestricted": true,
+  "updatedAt": "2026-09-18T03:57:01.148Z"
+}

@@ -11,7 +11,7 @@
 ## Active State
 
 - **Status**: Active Development
-- **Phase**: Release V2.0.11
+- **Phase**: Release V2.0.12
 
 ## Instructions
 
@@ -150,7 +150,7 @@ These workflows add product thinking, automated QA, and release automation:
 
 - **Versioning Rule**: ALWAYS name commits and pushes with explicit version tags.
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
-- **Next Version**: `V2.0.12`
+- **Next Version**: `V2.0.13`
 
 - **Session Tagging Protocol (`(R)` & `(D)`)**:
   - **Ready for Deployment (`(R)`)**: Whenever the user says "R4D", mark the session with prefix `(R) ` via `python scripts/session_tagger.py mark-ready`. List all ready sessions via `python scripts/session_tagger.py list-ready`.

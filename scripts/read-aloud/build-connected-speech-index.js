@@ -57,6 +57,9 @@ async function main() {
   const result = await buildConnectedSpeechIndex(args);
   console.log(`Connected speech index written to ${result.publicIndexPath} and ${result.functionsIndexPath}.`);
   console.log(`Coverage written to ${result.coverageDir}.`);
+  if (result.analysisCache) {
+    console.log(`Connected speech analysis cache: ${result.analysisCache} (${result.analysisCacheReason}) in ${result.analysisDurationMs}ms.`);
+  }
 }
 
 if (require.main === module) {

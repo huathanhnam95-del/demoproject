@@ -226,7 +226,7 @@ const path = require('node:path');
 const args = process.argv.slice(2);
 const value = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
 const candidateRoot = process.env.BEL_FIREBASE_RELEASE_CANDIDATE_ROOT;
-if (!candidateRoot || args[0] !== 'deploy') throw new Error('fixture publisher received an invalid invocation');
+if (!candidateRoot || (args[0] !== 'deploy' && args[0] !== 'hosting:channel:deploy')) throw new Error('fixture publisher received an invalid invocation');
 const configPath = value('--config');
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 const selectors = String(value('--only') || '').split(',');
@@ -1621,4 +1621,34 @@ test('phase telemetry records timers, counters, and redacted metrics outside can
   assert.ok(failMetrics.error, 'failure metrics must record error details');
   assert.ok(failMetrics.error.code, 'error code must be recorded');
 });
+
+test('release CLI deploys hosting profile to specified channel', () => {
+  const fixture = createFixture();
+  const externalRoot = path.join(fixture.externalRoot, 'run-channel');
+  fs.mkdirSync(externalRoot, { recursive: true });
+
+  const result = runChild(fixture, [
+    'hosting',
+    '--channel', 'preview-v2012',
+    '--firebase-cli', fixture.fakeCli.entrypoint,
+    '--npm-cli', fixture.fakeNpm,
+    '--external-root', externalRoot,
+    '--json'
+  ], {
+    env: baseEnvironment(fixture, externalRoot)
+  });
+
+  assert.equal(result.status, 0, `channel release failed: ${result.stderr}`);
+  const parsed = JSON.parse(result.stdout);
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.published, true);
+  assert.equal(parsed.channel, 'preview-v2012');
+
+  const publishLogs = readJsonLines(path.join(externalRoot, 'publisher.jsonl'));
+  assert.ok(publishLogs.length > 0, 'fake CLI must log publish invocation');
+  const channelInvocation = publishLogs.find((inv) => inv.argv && inv.argv.includes('hosting:channel:deploy'));
+  assert.ok(channelInvocation, 'fake CLI must record hosting:channel:deploy invocation');
+  assert.ok(channelInvocation.argv.includes('preview-v2012'), 'invocation must specify preview-v2012 channel');
+});
+
 

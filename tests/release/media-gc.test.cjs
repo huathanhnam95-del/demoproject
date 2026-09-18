@@ -45,3 +45,22 @@ test('Media GC Planner: defaults configure standard project and bucket', () => {
   assert.equal(DEFAULT_PROJECT_ID, 'listening-tasks-3ae34');
   assert.equal(DEFAULT_BUCKET_NAME, 'listening-tasks-3ae34-practice-media');
 });
+
+test('Media GC Planner: clean environment reports isComplete: true with zero discovery errors', () => {
+  const discovery = discoverProtectedObjects({ repoRoot: REPO_ROOT });
+  assert.equal(discovery.isComplete, true);
+  assert.equal(discovery.discoveryErrors.length, 0);
+});
+
+test('Media GC Planner: missing catalogs or lock file marks audit as incomplete/indeterminate', () => {
+  const tmpDir = fs.mkdtempSync(path.join(REPO_ROOT, 'tmp-gc-test-'));
+  try {
+    const discovery = discoverProtectedObjects({ repoRoot: tmpDir });
+    assert.equal(discovery.isComplete, false, 'Missing catalogs must mark discovery as incomplete');
+    assert.ok(discovery.discoveryErrors.length > 0, 'Discovery errors must be recorded');
+    assert.ok(discovery.discoveryErrors.some((e) => e.includes('Production lock file not found')));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+

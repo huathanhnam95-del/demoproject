@@ -1,6 +1,6 @@
 {
   "name": "dictation-practice",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "description": "Dictation practice app",
   "scripts": {
     "check:structure": "node scripts/structure/check.cjs check",

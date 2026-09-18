@@ -2561,18 +2561,27 @@ function dispatchFirebase(ctx, options = {}) {
   const selector = ctx.profileConfig.selector;
   const invocation = resolveFirebaseInvocation(options, ctx);
   const projectSelector = ctx.project.alias || ctx.project.id;
-  const args = [...invocation.prefix, 'deploy', '--project', projectSelector, '--config', ctx.candidateConfigPath, '--only', selector];
+  const channel = options.channel || ctx.channel || null;
+  let args = null;
+  if (channel) {
+    if (ctx.profile !== 'hosting') {
+      fail('CHANNEL_UNSUPPORTED', 'Channel deployments (--channel) are only supported for the hosting profile.');
+    }
+    args = [...invocation.prefix, 'hosting:channel:deploy', channel, '--project', projectSelector, '--config', ctx.candidateConfigPath, '--only', selector];
+  } else {
+    args = [...invocation.prefix, 'deploy', '--project', projectSelector, '--config', ctx.candidateConfigPath, '--only', selector];
+  }
   if (ctx.nonInteractive || options.nonInteractive === true) args.push('--non-interactive');
   const env = { ...(ctx.env || process.env), FUNCTIONS_DISCOVERY_TIMEOUT: process.env.FUNCTIONS_DISCOVERY_TIMEOUT || '60', ...buildHookEnvironment(ctx) };
   const publisher = options.publisher || ctx.publisher;
   if (typeof publisher === 'function') {
-    const result = publisher({ command: invocation.command, args, cwd: ctx.publishCwd || ctx.candidateRoot, env, profile: ctx.profile, selector });
+    const result = publisher({ command: invocation.command, args, cwd: ctx.publishCwd || ctx.candidateRoot, env, profile: ctx.profile, selector, channel });
     if (typeof result === 'number' && result !== 0) fail('PUBLISH_FAILED', 'Firebase publication failed.');
     if (result && typeof result.status === 'number' && result.status !== 0) fail('PUBLISH_FAILED', 'Firebase publication failed.');
-    return { selector, args, result };
+    return { selector, args, channel, result };
   }
   const result = runCommand(invocation.command, args, { cwd: ctx.publishCwd || ctx.candidateRoot, env, kind: 'firebase-publish', metrics: ctx.metrics || ACTIVE_METRICS });
-  return { selector, args, result };
+  return { selector, args, channel, result };
 }
 
 function runRelease(options = {}) {
@@ -2583,6 +2592,7 @@ function runRelease(options = {}) {
     ctx = buildReleaseContext({ ...options, metrics });
     ctx.metrics = metrics;
     if (options.verifyOnly) ctx.verifyOnly = true;
+    if (options.channel) ctx.channel = options.channel;
     metrics.setContextMetadata(ctx);
 
     ctx.preparation = prepareOnce(ctx);
@@ -2603,6 +2613,7 @@ function runRelease(options = {}) {
         published: false,
         profile: ctx.profile,
         selector: ctx.profileConfig.selector,
+        channel: ctx.channel || null,
         sourceSha: ctx.sourceSha,
         project: { id: ctx.project.id, alias: ctx.project.alias },
         publication: null,
@@ -2634,9 +2645,10 @@ function runRelease(options = {}) {
       published: true,
       profile: ctx.profile,
       selector: ctx.profileConfig.selector,
+      channel: publication.channel || ctx.channel || null,
       sourceSha: ctx.sourceSha,
       project: { id: ctx.project.id, alias: ctx.project.alias },
-      publication: { selector: publication.selector, args: publication.args },
+      publication: { selector: publication.selector, args: publication.args, channel: publication.channel || null },
       metricsPath,
       metrics: metrics.toJSON(),
       candidateRoot: ctx.candidateRoot,
@@ -2671,10 +2683,12 @@ function parseArgs(argv = process.argv.slice(2)) {
     else if (token === '--verify-only') args.verifyOnly = true;
     else if (token === '--allow-pilot-media') args.allowPilot = true;
     else if (token === '--no-selective-source-export') args.selectiveSourceExport = false;
-    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy'].includes(token)) {
+    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy', '--channel'].includes(token)) {
       if (!tokens[index + 1] || tokens[index + 1].startsWith('--')) fail('CLI_ARGUMENT', `${token} requires a value.`);
       if (token === '--policy') {
         args.policyPath = tokens[++index];
+      } else if (token === '--channel') {
+        args.channel = tokens[++index];
       } else {
         args[token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = tokens[++index];
       }
@@ -2696,6 +2710,7 @@ function publicResult(result) {
     verified: Boolean(result && result.verified !== undefined ? result.verified : result && result.ok),
     published: Boolean(result && result.published !== undefined ? result.published : result && result.ok),
     profile: result && result.profile,
+    channel: result && result.channel,
     selector: result && result.selector,
     sourceSha: result && result.sourceSha,
     project: result && result.project,
@@ -2719,6 +2734,7 @@ function main(argv = process.argv.slice(2)) {
     npmCli: args.npmCli,
     nonInteractive: args.nonInteractive,
     verifyOnly: args.verifyOnly,
+    channel: args.channel,
     firebaseCliEntrypoint: args.firebaseCli,
     externalRoot: args.externalRoot,
     cohort: args.cohort,
@@ -2727,6 +2743,7 @@ function main(argv = process.argv.slice(2)) {
   });
   if (args.json) console.log(JSON.stringify(publicResult(result)));
   else if (args.verifyOnly) console.log(`${args.profile} Firebase release verified without publication.`);
+  else if (args.channel) console.log(`${args.profile} Firebase release deployed to channel ${args.channel} successfully.`);
   else console.log(`${args.profile} Firebase release succeeded.`);
   return result;
 }

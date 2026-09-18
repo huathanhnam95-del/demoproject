@@ -535,19 +535,36 @@ function computeConnectedSpeechFingerprint(options = {}) {
 }
 
 function readAnalysisCache(fingerprint, cacheDir) {
-  if (!fingerprint || !cacheDir) return null;
+  if (!fingerprint || !cacheDir) {
+    return { status: 'MISS', reason: 'no_fingerprint_or_cache_dir', data: null };
+  }
   const cacheFile = path.join(cacheDir, `${fingerprint}.json`);
-  if (!fs.existsSync(cacheFile)) return null;
+  if (!fs.existsSync(cacheFile)) {
+    return { status: 'MISS', reason: 'entry_missing', data: null };
+  }
   try {
     const content = fs.readFileSync(cacheFile, 'utf8');
-    const parsed = JSON.parse(content);
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (parsed.schemaVersion !== CACHE_SCHEMA_VERSION) return null;
-    if (parsed.fingerprint !== fingerprint) return null;
-    if (!Array.isArray(parsed.prompts) || !parsed.workbookSha256 || !parsed.audioManifestSha256) return null;
-    return parsed;
-  } catch (_err) {
-    return null;
+    let parsed = null;
+    try {
+      parsed = JSON.parse(content);
+    } catch (_parseErr) {
+      return { status: 'REBUILT', reason: 'corrupt_json', data: null };
+    }
+    if (!parsed || typeof parsed !== 'object') {
+      return { status: 'REBUILT', reason: 'invalid_object', data: null };
+    }
+    if (parsed.schemaVersion !== CACHE_SCHEMA_VERSION) {
+      return { status: 'REBUILT', reason: 'schema_mismatch', data: null };
+    }
+    if (parsed.fingerprint !== fingerprint) {
+      return { status: 'REBUILT', reason: 'fingerprint_mismatch', data: null };
+    }
+    if (!Array.isArray(parsed.prompts) || !parsed.workbookSha256 || !parsed.audioManifestSha256) {
+      return { status: 'REBUILT', reason: 'invalid_payload_fields', data: null };
+    }
+    return { status: 'HIT', reason: 'fingerprint_match', data: parsed };
+  } catch (err) {
+    return { status: 'REBUILT', reason: `read_error_${err.code || 'unknown'}`, data: null };
   }
 }
 
@@ -639,8 +656,10 @@ async function buildConnectedSpeechIndex(options = {}) {
   const noCache = options.noCache === true;
   const cacheDir = resolveCacheDir(options);
 
+  const tStart = process.hrtime.bigint();
   let analysisData = null;
-  let cacheHit = false;
+  let cacheStatus = 'MISS';
+  let cacheReason = 'no_cache';
   let fingerprint = null;
 
   if (!noCache) {
@@ -649,10 +668,15 @@ async function buildConnectedSpeechIndex(options = {}) {
       workbookPath,
       audioManifestPath
     });
-    analysisData = readAnalysisCache(fingerprint, cacheDir);
-    if (analysisData) {
-      cacheHit = true;
+    const cacheResult = readAnalysisCache(fingerprint, cacheDir);
+    cacheStatus = cacheResult.status;
+    cacheReason = cacheResult.reason;
+    if (cacheResult.data) {
+      analysisData = cacheResult.data;
     }
+  } else {
+    cacheStatus = 'MISS';
+    cacheReason = 'no_cache_flag';
   }
 
   if (!analysisData) {
@@ -675,10 +699,15 @@ async function buildConnectedSpeechIndex(options = {}) {
     }
   }
 
+  const analysisDurationMs = Number((process.hrtime.bigint() - tStart) / 1000000n);
   const rendered = renderConnectedSpeechOutputs(analysisData, options);
+
   return {
     ...rendered,
-    cacheHit,
+    cacheHit: cacheStatus === 'HIT',
+    analysisCache: cacheStatus,
+    analysisCacheReason: cacheReason,
+    analysisDurationMs,
     fingerprint
   };
 }

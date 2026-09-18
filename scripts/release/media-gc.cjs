@@ -30,6 +30,8 @@ function discoverProtectedObjects(options = {}) {
     protectedObjects.get(normKey).add(refReason);
   }
 
+  const discoveryErrors = [];
+
   // 1. Read production media-release.lock.json
   const lockPath = path.join(repoRoot, 'config', 'media-release.lock.json');
   let activePublicationId = null;
@@ -39,24 +41,40 @@ function discoverProtectedObjects(options = {}) {
       activePublicationId = lockData.publicationId;
       if (activePublicationId) {
         protectedMetadataFiles.add(`publications/${activePublicationId}/release.json`);
+      } else {
+        discoveryErrors.push('Lock file exists but publicationId is missing');
       }
     } catch (err) {
+      discoveryErrors.push(`Error reading ${lockPath}: ${err.message}`);
       console.warn(`[media:gc] Warning reading ${lockPath}:`, err.message);
     }
+  } else {
+    discoveryErrors.push(`Production lock file not found: ${lockPath}`);
   }
 
   // 2. Scan all catalog directories under public/catalogs/
   const catalogsRoot = path.join(repoRoot, 'public', 'catalogs');
   if (fs.existsSync(catalogsRoot)) {
-    const pubDirs = fs.readdirSync(catalogsRoot, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name);
+    let pubDirs = [];
+    try {
+      pubDirs = fs.readdirSync(catalogsRoot, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name);
+    } catch (err) {
+      discoveryErrors.push(`Failed to read catalogs root directory: ${err.message}`);
+    }
 
     for (const pubDir of pubDirs) {
       const pubPath = path.join(catalogsRoot, pubDir);
       protectedMetadataFiles.add(`publications/${pubDir}/release.json`);
 
-      const shards = fs.readdirSync(pubPath).filter((f) => f.endsWith('.json'));
+      let shards = [];
+      try {
+        shards = fs.readdirSync(pubPath).filter((f) => f.endsWith('.json'));
+      } catch (err) {
+        discoveryErrors.push(`Failed to read shards in ${pubDir}: ${err.message}`);
+      }
+
       for (const shard of shards) {
         const shardRelativeKey = `catalogs/${pubDir}/${shard}`;
         protectedMetadataFiles.add(shardRelativeKey);
@@ -74,16 +92,21 @@ function discoverProtectedObjects(options = {}) {
             }
           }
         } catch (err) {
+          discoveryErrors.push(`Error reading shard ${shardRelativeKey}: ${err.message}`);
           console.warn(`[media:gc] Warning reading shard ${shardRelativeKey}:`, err.message);
         }
       }
     }
+  } else {
+    discoveryErrors.push(`Catalogs directory not found: ${catalogsRoot}`);
   }
 
   return {
     activePublicationId,
     protectedObjects,
     protectedMetadataFiles,
+    discoveryErrors,
+    isComplete: discoveryErrors.length === 0,
     totalProtectedObjectKeys: protectedObjects.size,
     totalProtectedMetadataKeys: protectedMetadataFiles.size
   };
@@ -201,15 +224,30 @@ async function planMediaGc(options = {}) {
     });
 
     stream.on('end', () => {
+      const isIndeterminate = !discovery.isComplete || (limit > 0 && totalObjectsScanned >= limit);
+      const auditStatus = isIndeterminate ? 'INDETERMINATE' : 'COMPLETE';
+
+      const referencedCount = retained.length;
+      const referencedBytes = totalRetainedBytes;
+      const potentiallyUnreferencedCount = isIndeterminate ? 0 : candidates.length;
+      const potentiallyUnreferencedBytes = isIndeterminate ? 0 : totalCandidateBytes;
+      const indeterminateCount = isIndeterminate ? candidates.length : 0;
+      const indeterminateBytes = isIndeterminate ? totalCandidateBytes : 0;
+
       console.log(`Scan completed: ${totalObjectsScanned.toLocaleString()} objects examined.`);
       console.log('----------------------------------------------------------------');
       console.log('GC Audit Summary:');
+      console.log(`  Audit Status:               ${auditStatus}`);
       console.log(`  Total Bucket Objects:       ${totalObjectsScanned.toLocaleString()}`);
       console.log(`  Total Bucket Storage:       ${(totalScannedBytes / 1024 / 1024 / 1024).toFixed(3)} GB (${totalScannedBytes.toLocaleString()} bytes)`);
-      console.log(`  Retained / Protected:       ${retained.length.toLocaleString()} objects (${(totalRetainedBytes / 1024 / 1024 / 1024).toFixed(3)} GB)`);
-      console.log(`  Unreferenced Candidates:    ${candidates.length.toLocaleString()} objects (${(totalCandidateBytes / 1024 / 1024 / 1024).toFixed(3)} GB)`);
+      console.log(`  [1] Referenced:             ${referencedCount.toLocaleString()} objects (${(referencedBytes / 1024 / 1024 / 1024).toFixed(3)} GB)`);
+      console.log(`  [2] Potentially Unref:      ${potentiallyUnreferencedCount.toLocaleString()} objects (${(potentiallyUnreferencedBytes / 1024 / 1024 / 1024).toFixed(3)} GB)`);
+      console.log(`  [3] Indeterminate:          ${indeterminateCount.toLocaleString()} objects (${(indeterminateBytes / 1024 / 1024 / 1024).toFixed(3)} GB)`);
+      if (isIndeterminate) {
+        console.log('  NOTICE: Audit is INDETERMINATE; zero objects are flagged as deletion candidates.');
+      }
       console.log('----------------------------------------------------------------');
-      console.log('SAFETY ENFORCEMENT: 0 objects were deleted or modified.');
+      console.log('SAFETY ENFORCEMENT: Permanent read-only tool. 0 objects were deleted or modified.');
       console.log('================================================================');
 
       const planReport = {
@@ -218,16 +256,37 @@ async function planMediaGc(options = {}) {
         projectId,
         bucketName,
         activePublicationId: discovery.activePublicationId,
+        auditStatus,
+        discoveryErrors: discovery.discoveryErrors,
         summary: {
           totalObjectsScanned,
           totalScannedBytes,
-          retainedCount: retained.length,
-          retainedBytes: totalRetainedBytes,
-          candidateCount: candidates.length,
-          candidateBytes: totalCandidateBytes
+          referencedCount,
+          referencedBytes,
+          potentiallyUnreferencedCount,
+          potentiallyUnreferencedBytes,
+          indeterminateCount,
+          indeterminateBytes
         },
-        candidatesSample: candidates.slice(0, 100),
-        allCandidates: candidates
+        categories: {
+          referenced: {
+            count: referencedCount,
+            bytes: referencedBytes,
+            description: 'Required by a supported production, preview, rollback, or pending publication.'
+          },
+          potentiallyUnreferenced: {
+            count: potentiallyUnreferencedCount,
+            bytes: potentiallyUnreferencedBytes,
+            description: 'Not referenced within the successfully completed audit scope.'
+          },
+          indeterminate: {
+            count: indeterminateCount,
+            bytes: indeterminateBytes,
+            description: 'Status could not be established because inventory or publication evidence was incomplete.'
+          }
+        },
+        candidatesSample: isIndeterminate ? [] : candidates.slice(0, 100),
+        allCandidates: isIndeterminate ? [] : candidates
       };
 
       const outputDir = path.join(repoRoot, '.local', 'media-gc');
@@ -250,8 +309,12 @@ async function planMediaGc(options = {}) {
 
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes('--execute') || args.includes('--delete') || args.includes('-f') || args.includes('--force')) {
+    console.error('[media:gc] Fatal: media:gc is a permanent read-only audit tool. Mutation or deletion flags (--execute, --delete) are strictly rejected.');
+    process.exit(1);
+  }
   const isJson = args.includes('--json');
-  const dryRun = args.includes('--dry-run') || true;
+  const dryRun = true;
 
   try {
     const result = await planMediaGc({

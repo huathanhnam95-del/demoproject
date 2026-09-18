@@ -331,6 +331,14 @@ function createFixture() {
   fs.mkdirSync(path.join(root, 'scripts/data'), { recursive: true });
   fs.mkdirSync(path.join(root, 'scripts/structure'), { recursive: true });
   fs.copyFileSync(CONTROLLER_SOURCE, path.join(root, 'scripts/release/firebase-release.cjs'));
+  const libSource = path.join(REPOSITORY_ROOT, 'scripts/release/lib');
+  if (fs.existsSync(libSource)) {
+    fs.cpSync(libSource, path.join(root, 'scripts/release/lib'), { recursive: true });
+  }
+  const policySource = path.join(REPOSITORY_ROOT, 'scripts/release/release-input-policy.json');
+  if (fs.existsSync(policySource)) {
+    fs.copyFileSync(policySource, path.join(root, 'scripts/release/release-input-policy.json'));
+  }
   writeJson(path.join(root, 'package.json'), {
     name: 'str03a-release-fixture',
     version: '1.2.3',

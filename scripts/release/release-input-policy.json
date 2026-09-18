@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "description": "Authoritative release input policy defining file categories, protected builder metadata, and externalized media exclusion cohorts.",
+  "categories": {
+    "app-runtime": {
+      "description": "Files required for application runtime on Firebase Hosting."
+    },
+    "build-only": {
+      "description": "Files required during build and release preparation, omitted from production runtime if not in surface."
+    },
+    "external-media": {
+      "description": "Practice media hosted on Google Cloud Storage and referenced via pinned catalogs."
+    },
+    "forbidden-private": {
+      "description": "Sensitive credentials and environment files that must never enter a release candidate."
+    }
+  },
+  "protectedInputs": [
+    "public/database/RA/RA.xlsx",
+    "public/database/RA/Voice/audio/manifest.json",
+    "public/database/RA/connected-speech-index.json",
+    "public/database/RA/connected-speech-featured-prompts.json",
+    "public/database/SST/SST/SST.xlsx",
+    "public/database/SST/audio/manifest.json",
+    "public/media-release.json",
+    "config/media-release.lock.json"
+  ],
+  "cohorts": {
+    "pilot-cohort": {
+      "description": "Representative 26 pilot assets verified in Stage 2/3. For testing selective exclusion only; ineligible for production release.",
+      "productionEligible": false,
+      "publicationId": "pilot-20260918-035318",
+      "assets": [
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_alloy_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_bella_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_am_echo_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_am_fenrir_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bf_emma_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bm_george_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bm_lewis_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_alloy_80.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bf_emma_80.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bm_george_80.mp3",
+        "public/database/RA/speech-coach-audio/v1/clips/03/0377aa5df43feaadcb6ea137a9aad78b026486582ed6b0c04cb81c8c46c833ae.mp3",
+        "public/database/RA/speech-coach-audio/v1/clips/04/04097ea03028e0f3f0f85e9fda9e70f2a90f6955ba71b6f762fc279216355541.mp3",
+        "public/database/RA/speech-coach-audio/v1/clips/05/05db4dd4b0e1cb9e49b4943b4d1d25e04c5c13fdad2ee5bbd5cdef9552cbfe15.mp3",
+        "public/database/Describe Image/DI/1.png",
+        "public/database/Describe Image/DI/10.png",
+        "public/database/Describe Image/DI/1001.jpg",
+        "public/database/Describe Image/DI/1002.jpg",
+        "public/database/Highlight Incorrect Words/audio/1/HIW_1_af_bella.mp3",
+        "public/database/Highlight Incorrect Words/audio/10/HIW_10_am_puck.mp3",
+        "public/database/Take Notes/RL/audio/1.mp3",
+        "public/database/type/audio/221.mp3",
+        "public/database/speak/audio/767.mp3",
+        "public/database/collo-dictate/audio/cd_cfa1ba29.wav",
+        "public/database/collo-dictate/audio/cd_d2a87aa7.wav",
+        "public/database/SST/audio/1/SST_1_af_bella.mp3",
+        "public/database/SST/audio/1/SST_1_bm_lewis.mp3"
+      ]
+    }
+  }
+}

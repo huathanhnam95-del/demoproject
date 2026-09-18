@@ -6,6 +6,31 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+let releaseInputPolicyLib = null;
+try {
+  releaseInputPolicyLib = require('./lib/release-input-policy.cjs');
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+}
+
+function loadReleaseInputPolicy(customPath) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.loadReleaseInputPolicy(customPath);
+  return { policy: {}, policyPath: null, policySha256: null, protectedSet: new Set() };
+}
+
+function resolveExcludedPaths(policyResult, options) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.resolveExcludedPaths(policyResult, options);
+  return new Set();
+}
+
+function filterTrackedInventory(inventory, excludedPaths) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.filterTrackedInventory(inventory, excludedPaths);
+  return { filtered: Array.isArray(inventory) ? inventory.slice() : [], excluded: [], excludedCount: 0, avoidedBytes: 0 };
+}
+
+function validatePublicationEligibility(lockData, options) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.validatePublicationEligibility(lockData, options);
+}
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '..', '..');
 const SUPPORTED_FIREBASE_VERSION = '15.2.1';
@@ -68,7 +93,12 @@ const RELEASE_INPUTS = Object.freeze([
   'public/js/read-aloud-connected-speech-rules.js',
   'public/js/read-aloud-linking.js',
   'scripts/segmentation-study/sync-manifest.js',
-  'scripts/release/firebase-release.cjs'
+  'scripts/release/firebase-release.cjs',
+  'scripts/release/release-input-policy.json',
+  'scripts/release/lib/release-input-policy.cjs',
+  'config/media-release.lock.json',
+  'public/media-release.json',
+  'public/js/media-url-resolver.js'
 ]);
 
 class ReleaseError extends Error {
@@ -139,7 +169,9 @@ class ReleaseMetrics {
       cacheHits: 0,
       candidateBytes: 0,
       actualUploadedCount: 0,
-      actualUploadedBytes: 0
+      actualUploadedBytes: 0,
+      excludedMediaFiles: 0,
+      excludedMediaBytes: 0
     };
     this.subprocessTimers = [];
     this.success = null;
@@ -555,6 +587,12 @@ function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options 
     for (const file of listFiles(absoluteRoot, { exclude: ['node_modules', '.git'] })) {
       const relative = `${safeRoot}/${file.path}`;
       if (seenPaths.has(relative) || tracked.has(relative) || !PROVISIONED_MEDIA_EXTENSIONS.has(path.extname(file.path).toLowerCase())) continue;
+      if (options.excludedPaths && options.excludedPaths.has(relative)) {
+        if (typeof options.recordAvoided === 'function') {
+          options.recordAvoided(relative, file.stat.size);
+        }
+        continue;
+      }
       seenPaths.add(relative);
       const metrics = options.metrics || ACTIVE_METRICS;
       if (metrics && typeof metrics.increment === 'function') {
@@ -1594,6 +1632,18 @@ function verifyTrackedSource(ctx) {
     if (!pointer || pointer.size !== stat.size || sha256File(candidate) !== pointer.sha256) failures.push(relative);
   }
   if (failures.length) fail('SOURCE_CHANGED', `Selected source files changed in the candidate: ${failures.slice(0, 12).join(', ')}${failures.length > 12 ? '…' : ''}.`, failures);
+  if (ctx.excludedPaths && ctx.excludedPaths.size > 0) {
+    const presentExcluded = [];
+    for (const excludedPath of ctx.excludedPaths) {
+      const candidateFile = path.join(ctx.candidateRoot, ...excludedPath.split('/'));
+      if (fs.existsSync(candidateFile)) {
+        presentExcluded.push(excludedPath);
+      }
+    }
+    if (presentExcluded.length > 0) {
+      fail('EXCLUDED_MEDIA_PRESENT', `Excluded media was unexpectedly present in the candidate: ${presentExcluded.slice(0, 12).join(', ')}.`, presentExcluded);
+    }
+  }
   return { checked: ctx.trackedInventory.length };
 }
 
@@ -1934,6 +1984,12 @@ function verifyAndSeal(ctx) {
     candidateRoot: ctx.candidateRoot,
     surface: inventory,
     prepared: ctx.preparation || null,
+    releaseInputPolicy: {
+      policySha256: ctx.policySha256 || null,
+      activeCohorts: ctx.activeCohorts || [],
+      excludedMediaCount: ctx.excludedMediaCount || 0,
+      avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+    },
     tools: {
       node: ctx.node === process.execPath ? process.version : null,
       npm: ctx.toolVersions?.npm || null,
@@ -2207,35 +2263,112 @@ function buildReleaseContext(options = {}) {
   if (!PROFILE_CONFIG[profile]) fail('PROFILE', `Unsupported release profile: ${profile}.`);
   const metrics = options.metrics || ACTIVE_METRICS;
   if (metrics) metrics.startPhase('git-inventory');
-  const trackedInventory = Array.isArray(options.trackedInventory)
+  const trackedInventoryRaw = Array.isArray(options.trackedInventory)
     ? options.trackedInventory
     : captureTrackedInventory(source.root, source.sourceSha, options);
   if (metrics) metrics.endPhase('git-inventory');
+
+  let policySha256 = null;
+  let excludedPaths = new Set();
+  let activeCohorts = [];
+  let excludedCount = 0;
+  let avoidedBytes = 0;
+
+  try {
+    const policyResult = loadReleaseInputPolicy(options.policyPath);
+    policySha256 = policyResult.policySha256;
+
+    const isProduction = profile === 'full' || profile === 'hosting';
+
+    const lockPath = path.join(source.root, 'config', 'media-release.lock.json');
+    if (fs.existsSync(lockPath)) {
+      try {
+        const lockData = readJson(lockPath, 'media release lock');
+        validatePublicationEligibility(lockData, {
+          isProduction,
+          allowPilot: options.allowPilot === true
+        });
+      } catch (err) {
+        if (err.code === 'PILOT_MEDIA_INELIGIBLE') {
+          fail('PILOT_MEDIA_INELIGIBLE', err.message);
+        }
+        throw err;
+      }
+    }
+
+    if (options.cohort || options.activeCohorts) {
+      excludedPaths = resolveExcludedPaths(policyResult, {
+        ...options,
+        isProduction,
+        allowPilot: options.allowPilot === true
+      });
+      activeCohorts = options.cohort ? [options.cohort] : (options.activeCohorts || []);
+    }
+  } catch (err) {
+    if (err.code === 'PILOT_MEDIA_INELIGIBLE') {
+      fail('PILOT_MEDIA_INELIGIBLE', err.message);
+    }
+    if (!options.policyPath && err.message && err.message.includes('not found')) {
+      // Policy optional if not present
+    } else {
+      throw err;
+    }
+  }
+
+  const {
+    filtered: trackedInventory,
+    excludedCount: count,
+    avoidedBytes: bytes
+  } = filterTrackedInventory(trackedInventoryRaw, excludedPaths);
+
+  excludedCount = count;
+  avoidedBytes = bytes;
+
+  if (metrics && excludedCount > 0) {
+    metrics.increment('excludedMediaFiles', excludedCount);
+    metrics.increment('excludedMediaBytes', avoidedBytes);
+  }
+
   if (metrics) metrics.startPhase('tracked-source-validation');
   if (!options.projectContext) {
     validateSelectedReleaseWiring(source.root, source.sourceSha, project.config, sourceConfigRelative, profile, {
       ...options,
-      trackedInventory
+      trackedInventory: trackedInventoryRaw
     });
   }
   const selectedPaths = selectedReleaseInputPaths(source.root, project.config, sourceConfigRelative, profile);
-  guardDirtyReleaseInputs(source.root, {
-    ...options,
-    cwd: source.originalCwd,
-    profile,
-    extraPaths: selectedPaths
-  });
+  if (options.guardDirty !== false) {
+    guardDirtyReleaseInputs(source.root, {
+      ...options,
+      cwd: source.originalCwd,
+      profile,
+      extraPaths: selectedPaths
+    });
+  }
   if (metrics) metrics.endPhase('tracked-source-validation');
   const configuredPublicRoot = (profile === 'hosting' || profile === 'full') && project.config?.hosting && typeof project.config.hosting.public === 'string'
     ? [project.config.hosting.public]
     : [];
   if (metrics) metrics.startPhase('media-discovery');
+  let observedExcludedCount = 0;
+  let observedAvoidedBytes = 0;
   const observedAssets = captureObservedProvisionedAssets(source.root, trackedInventory, {
     ...options,
     mediaRoots: configuredPublicRoot,
+    excludedPaths,
+    recordAvoided: (rel, size) => {
+      observedExcludedCount += 1;
+      observedAvoidedBytes += size;
+      if (metrics && typeof metrics.increment === 'function') {
+        metrics.increment('excludedMediaFiles', 1);
+        metrics.increment('excludedMediaBytes', size);
+      }
+    },
     metrics
   });
   if (metrics) metrics.endPhase('media-discovery');
+  const totalExcludedCount = excludedCount + observedExcludedCount;
+  const totalAvoidedBytes = avoidedBytes + observedAvoidedBytes;
   if (metrics) metrics.startPhase('source-export');
   const candidate = createCandidate({
     ...options,
@@ -2272,7 +2405,12 @@ function buildReleaseContext(options = {}) {
     functionsConfigDirs,
     functionsSourceDirs: functionsSourceDirectories(project.config, candidate.candidateRoot),
     prepared: false,
-    sealed: false
+    sealed: false,
+    policySha256,
+    activeCohorts,
+    excludedPaths,
+    excludedMediaCount: totalExcludedCount,
+    avoidedMediaBytes: totalAvoidedBytes
   };
   const invocationRelativeCwd = path.relative(source.root, source.originalCwd);
   ctx.publishCwd = rejectLinkAncestors(
@@ -2383,7 +2521,14 @@ function runRelease(options = {}) {
         project: { id: ctx.project.id, alias: ctx.project.alias },
         publication: null,
         metricsPath,
-        metrics: metrics.toJSON()
+        metrics: metrics.toJSON(),
+        candidateRoot: ctx.candidateRoot,
+        releaseInputPolicy: {
+          policySha256: ctx.policySha256 || null,
+          activeCohorts: ctx.activeCohorts || [],
+          excludedMediaCount: ctx.excludedMediaCount || 0,
+          avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+        }
       };
     }
 
@@ -2403,7 +2548,14 @@ function runRelease(options = {}) {
       project: { id: ctx.project.id, alias: ctx.project.alias },
       publication: { selector: publication.selector, args: publication.args },
       metricsPath,
-      metrics: metrics.toJSON()
+      metrics: metrics.toJSON(),
+      candidateRoot: ctx.candidateRoot,
+      releaseInputPolicy: {
+        policySha256: ctx.policySha256 || null,
+        activeCohorts: ctx.activeCohorts || [],
+        excludedMediaCount: ctx.excludedMediaCount || 0,
+        avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+      }
     };
   } catch (error) {
     metrics.recordFailure(error);
@@ -2423,9 +2575,14 @@ function parseArgs(argv = process.argv.slice(2)) {
     if (token === '--json') args.json = true;
     else if (token === '--non-interactive') args.nonInteractive = true;
     else if (token === '--verify-only') args.verifyOnly = true;
-    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root'].includes(token)) {
+    else if (token === '--allow-pilot-media') args.allowPilot = true;
+    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy'].includes(token)) {
       if (!tokens[index + 1] || tokens[index + 1].startsWith('--')) fail('CLI_ARGUMENT', `${token} requires a value.`);
-      args[token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = tokens[++index];
+      if (token === '--policy') {
+        args.policyPath = tokens[++index];
+      } else {
+        args[token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = tokens[++index];
+      }
     } else if (token === '--hook') {
       args.hook = true;
     } else if (token === '--product') {
@@ -2446,7 +2603,8 @@ function publicResult(result) {
     profile: result && result.profile,
     selector: result && result.selector,
     sourceSha: result && result.sourceSha,
-    project: result && result.project
+    project: result && result.project,
+    releaseInputPolicy: result && result.releaseInputPolicy
   };
 }
 
@@ -2467,7 +2625,10 @@ function main(argv = process.argv.slice(2)) {
     nonInteractive: args.nonInteractive,
     verifyOnly: args.verifyOnly,
     firebaseCliEntrypoint: args.firebaseCli,
-    externalRoot: args.externalRoot
+    externalRoot: args.externalRoot,
+    cohort: args.cohort,
+    allowPilot: args.allowPilot,
+    policyPath: args.policyPath
   });
   if (args.json) console.log(JSON.stringify(publicResult(result)));
   else if (args.verifyOnly) console.log(`${args.profile} Firebase release verified without publication.`);

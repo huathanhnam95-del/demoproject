@@ -46,15 +46,14 @@ def backup_data():
             sys.exit(1)
 
 def query_ollama(model, prompt):
-    if model == "qwen3:14b":
-        prompt += "\n/no_think"
-    
     data = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
         "format": "json"
     }
+    if not any(r in model.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+        data["think"] = False
     
     req = urllib.request.Request(API_URL, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
     

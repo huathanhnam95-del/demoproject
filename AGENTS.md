@@ -12,11 +12,14 @@
 - Use a human-readable Vietnam Time format (e.g., `Wednesday, May 20, 2026, 05:23:10 AM`) instead of ISO 8601 string representation.
 - Apply this as a default workspace behavior for all tasks unless a higher-priority instruction overrides it.
 
-## Deployed Session Tagging Protocol (`(D)`)
+## Session Tagging & Deployment Protocol (`(R)` & `(D)`)
 
+- **Ready for Deployment (`(R)`) & R4D Trigger**: When the user says "R4D" (ready for deployment) in any chat session, mark the session name with prefix `(R) ` via `scripts/session_tagger.py mark-ready`.
+- **Push All Readied (`PAR`) Trigger**: When the user requests "PAR" (push all readied), discover all readied sessions (`scripts/session_tagger.py list-ready`), execute the workspace deployment verification and push workflow, and batch transition all deployed sessions to `(D) ` via `scripts/session_tagger.py mark-deployed --cid <cid>` or `scripts/session_tagger.py trace-deployed`.
 - **Active Development Rule**: Active development sessions (planning, bug fixes, feature work, code edits, audits, test runs) **MUST NEVER** retain the `(D) ` prefix in their title.
 - **Resume/new-task removal**: When a tagged `(D) ` session is resumed or a task starts, immediately remove the prefix through the supported task-title API after verifying the task and title identity. Codex must never run the no-ID Antigravity `scripts/session_tagger.py` helper or pass a Codex UUID to it. Antigravity may use that helper only with an explicit, verified Antigravity CID; do not infer a CID from the latest database row.
 - **Deployment tagging**: After an approved production deployment, mark the session `(D) ` through the supported task-title API for Codex after verifying task/title identity. Antigravity uses its helper only with an explicit verified CID.
+- **Batch Deployment Back-Tracing**: When an approved production deployment integrates work from multiple preceding chat sessions or development tracks (e.g. multi-task releases), trace back to each origin session that produced those changes (using `TASK_TRACKER.csv`, git commit log, or session search) and tag each origin session with `(D) ` via `scripts/session_tagger.py mark-deployed --cid <cid>` (or `mark-batch` / `trace-deployed`), in addition to marking the deploying session itself.
 
 ## Browser Testing Credentials
 

@@ -1,0 +1,986 @@
+{
+  "schemaVersion": 1,
+  "version": 1,
+  "title": "Your voice. Your presence.",
+  "intro": "You do not have to be a polished presenter. Work one thought at a time. Retake whenever you need to, and keep the version that feels like you.",
+  "sources": [
+    {
+      "title": "MuseTalk input and capture guidance",
+      "url": "https://github.com/TMElyralab/MuseTalk",
+      "checkedOn": "2026-09-07"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "front-neutral",
+      "title": "Front · neutral",
+      "kind": "photo",
+      "core": true,
+      "group": "photo",
+      "description": "Face the lens directly, mouth relaxed, shoulders level.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Face the lens directly, mouth relaxed, shoulders level.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "front-smile",
+      "title": "Front · soft smile",
+      "kind": "photo",
+      "core": true,
+      "group": "photo",
+      "description": "Keep your head level and use a small, natural smile.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Keep your head level and use a small, natural smile.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "front-full-smile",
+      "title": "Front · fuller smile",
+      "kind": "photo",
+      "core": false,
+      "group": "photo",
+      "description": "Use your natural fuller smile without forcing or stretching it.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Use your natural fuller smile without forcing or stretching it.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "left-quarter",
+      "title": "Left quarter-turn",
+      "kind": "photo",
+      "core": true,
+      "group": "photo",
+      "description": "Turn your head about 20 degrees to your left. Keep both eyes and your mouth visible.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Turn your head about 20 degrees to your left. Keep both eyes and your mouth visible.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "right-quarter",
+      "title": "Right quarter-turn",
+      "kind": "photo",
+      "core": true,
+      "group": "photo",
+      "description": "Turn your head about 20 degrees to your right. Keep both eyes and your mouth visible.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Turn your head about 20 degrees to your right. Keep both eyes and your mouth visible.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "chest-neutral",
+      "title": "Chest-up · neutral",
+      "kind": "photo",
+      "core": false,
+      "group": "photo",
+      "description": "Frame your head, shoulders and upper chest. Keep your hands resting low.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Frame your head, shoulders and upper chest. Keep your hands resting low.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "chest-welcome",
+      "title": "Chest-up · welcoming",
+      "kind": "photo",
+      "core": false,
+      "group": "photo",
+      "description": "Frame your upper body, smile gently and hold your hands low and open.",
+      "durationTargetSeconds": 3,
+      "performance": {
+        "emotion": "natural",
+        "intensity": 2,
+        "expression": "Frame your upper body, smile gently and hold your hands low and open.",
+        "eyeContact": "Toward the lens",
+        "posture": "Upright, shoulders relaxed",
+        "head": "Hold the requested pose",
+        "hands": "Rest below chest",
+        "pauseMs": 1000
+      }
+    },
+    {
+      "id": "steady",
+      "title": "Steady reference video",
+      "kind": "video",
+      "core": true,
+      "group": "core",
+      "durationTargetSeconds": 30,
+      "description": "Steady source footage for later lip-sync testing. Keep your face visible and movement minimal. Aim for 25fps if your camera supports it.",
+      "performance": {
+        "emotion": "neutral",
+        "intensity": 1,
+        "expression": "Relaxed mouth; natural blinking",
+        "head": "Keep still",
+        "hands": "Rest below chest",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "steady-vi-1",
+            "spokenText": "Xin chào, rất vui được gặp bạn. Hôm nay, chúng ta dành một chút thời gian để luyện tiếng Anh cùng nhau.",
+            "emotion": "neutral",
+            "intensity": 1,
+            "expression": "Relaxed mouth; natural blinking",
+            "head": "Keep still",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 15
+          },
+          {
+            "id": "steady-vi-2",
+            "spokenText": "Bạn không cần nói nhanh. Hãy nghe rõ, nói từng ý, và cho mình thời gian để tiến bộ.",
+            "emotion": "neutral",
+            "intensity": 1,
+            "expression": "Relaxed mouth; natural blinking",
+            "head": "Keep still",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 15
+          }
+        ],
+        "en": [
+          {
+            "id": "steady-en-1",
+            "spokenText": "Hello, it is good to see you. Today, we are taking a little time to practise English together.",
+            "emotion": "neutral",
+            "intensity": 1,
+            "expression": "Relaxed mouth; natural blinking",
+            "head": "Keep still",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 15
+          },
+          {
+            "id": "steady-en-2",
+            "spokenText": "You do not need to speak quickly. Listen carefully, express one idea at a time, and give yourself room to improve.",
+            "emotion": "neutral",
+            "intensity": 1,
+            "expression": "Relaxed mouth; natural blinking",
+            "head": "Keep still",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "neutral-voice",
+      "title": "Neutral voice reference",
+      "kind": "audio",
+      "core": true,
+      "group": "core",
+      "durationTargetSeconds": 45,
+      "description": "Keep your normal speaking voice. Record in a quiet room, with the microphone at a comfortable, consistent distance.",
+      "performance": {
+        "emotion": "calm",
+        "intensity": 2,
+        "expression": "Relaxed jaw and natural voice",
+        "head": "Steady",
+        "hands": "Rest comfortably",
+        "eyeContact": "Read comfortably from the script",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "neutral-voice-vi-1",
+            "spokenText": "Mỗi người có một cách học khác nhau. Có bạn thích nghe trước, có bạn muốn nhìn ví dụ, rồi mới thử nói.",
+            "emotion": "calm",
+            "intensity": 2,
+            "expression": "Relaxed jaw and natural voice",
+            "head": "Steady",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 15
+          },
+          {
+            "id": "neutral-voice-vi-2",
+            "spokenText": "Khi luyện tập, tôi thường chia câu dài thành những ý ngắn. Tôi nghe lại, nhận ra một điểm cần sửa, rồi thử thêm một lần.",
+            "emotion": "calm",
+            "intensity": 2,
+            "expression": "Relaxed jaw and natural voice",
+            "head": "Steady",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Pause briefly, then continue at your own pace.",
+            "durationTargetSeconds": 15
+          },
+          {
+            "id": "neutral-voice-vi-3",
+            "spokenText": "Điều quan trọng là giữ giọng nói tự nhiên, nói đủ rõ, và tiếp tục từng bước.",
+            "emotion": "calm",
+            "intensity": 2,
+            "expression": "Relaxed jaw and natural voice",
+            "head": "Steady",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 15
+          }
+        ],
+        "en": [
+          {
+            "id": "neutral-voice-en-1",
+            "spokenText": "Everyone learns in a different way. Some people prefer to listen first. Others like to see an example before they try speaking.",
+            "emotion": "calm",
+            "intensity": 2,
+            "expression": "Relaxed jaw and natural voice",
+            "head": "Steady",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 15
+          },
+          {
+            "id": "neutral-voice-en-2",
+            "spokenText": "When I practise, I break a long sentence into smaller ideas. I listen again, notice one thing I can improve, and give it another try.",
+            "emotion": "calm",
+            "intensity": 2,
+            "expression": "Relaxed jaw and natural voice",
+            "head": "Steady",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Pause briefly, then continue at your own pace.",
+            "durationTargetSeconds": 15
+          },
+          {
+            "id": "neutral-voice-en-3",
+            "spokenText": "What matters is keeping my voice natural, speaking clearly enough, and continuing one step at a time.",
+            "emotion": "calm",
+            "intensity": 2,
+            "expression": "Relaxed jaw and natural voice",
+            "head": "Steady",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "connected-voice",
+      "title": "Connected conversational voice",
+      "kind": "audio",
+      "core": false,
+      "group": "voice",
+      "durationTargetSeconds": 35,
+      "description": "Keep your normal speaking voice. Record in a quiet room, with the microphone at a comfortable, consistent distance.",
+      "performance": {
+        "emotion": "warm",
+        "intensity": 2,
+        "expression": "Soft smile; natural connected rhythm",
+        "head": "One reassuring nod at the end",
+        "hands": "Rest comfortably",
+        "eyeContact": "Read comfortably from the script",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "connected-voice-vi-1",
+            "spokenText": "Nếu hôm nay bạn chỉ có mười phút, chúng ta vẫn có thể bắt đầu. Chọn một đoạn ngắn, nghe một lần, rồi thử nói theo cách của bạn.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft smile; natural connected rhythm",
+            "head": "One reassuring nod at the end",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 18
+          },
+          {
+            "id": "connected-voice-vi-2",
+            "spokenText": "Đừng lo nếu lần đầu chưa trôi chảy. Mình cứ làm chậm lại, sửa một chỗ, rồi thử lại nhé.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft smile; natural connected rhythm",
+            "head": "One reassuring nod at the end",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 18
+          }
+        ],
+        "en": [
+          {
+            "id": "connected-voice-en-1",
+            "spokenText": "If you only have ten minutes today, we can still get started. Choose a short passage, listen once, and then try saying it in your own way.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft smile; natural connected rhythm",
+            "head": "One reassuring nod at the end",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 18
+          },
+          {
+            "id": "connected-voice-en-2",
+            "spokenText": "Do not worry if your first attempt feels uneven. Let us slow down, improve one small part, and try again.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft smile; natural connected rhythm",
+            "head": "One reassuring nod at the end",
+            "hands": "Rest comfortably",
+            "eyeContact": "Read comfortably from the script",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "warm",
+      "title": "A warm welcome",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 25,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "warm",
+        "intensity": 2,
+        "expression": "Soft welcoming smile",
+        "head": "Steady, relaxed",
+        "hands": "One small open-palm invitation on the second cue",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "warm-vi-1",
+            "spokenText": "Chào bạn, rất vui vì bạn đã có mặt ở đây.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft welcoming smile",
+            "head": "Steady, relaxed",
+            "hands": "One small open-palm invitation on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 13
+          },
+          {
+            "id": "warm-vi-2",
+            "spokenText": "Hãy chọn một bài ngắn, làm quen với cách luyện tập, rồi bắt đầu theo nhịp của bạn.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft welcoming smile",
+            "head": "Steady, relaxed",
+            "hands": "One small open-palm invitation on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 13
+          }
+        ],
+        "en": [
+          {
+            "id": "warm-en-1",
+            "spokenText": "Hello, I am glad you are here.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft welcoming smile",
+            "head": "Steady, relaxed",
+            "hands": "One small open-palm invitation on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 13
+          },
+          {
+            "id": "warm-en-2",
+            "spokenText": "Choose a short activity, get comfortable with the practice, and begin at your own pace.",
+            "emotion": "warm",
+            "intensity": 2,
+            "expression": "Soft welcoming smile",
+            "head": "Steady, relaxed",
+            "hands": "One small open-palm invitation on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "encouraging",
+      "title": "Encourage a learner",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 25,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "encouraging",
+        "intensity": 3,
+        "expression": "Reassuring smile",
+        "head": "One small nod after the first thought",
+        "hands": "Rest below chest",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "encouraging-vi-1",
+            "spokenText": "Bạn vừa hoàn thành một bước quan trọng: dám thử nói.",
+            "emotion": "encouraging",
+            "intensity": 3,
+            "expression": "Reassuring smile",
+            "head": "One small nod after the first thought",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 13
+          },
+          {
+            "id": "encouraging-vi-2",
+            "spokenText": "Bây giờ, hãy chọn một câu và thử lại. Mỗi lần luyện tập là một cơ hội để hiểu mình hơn.",
+            "emotion": "encouraging",
+            "intensity": 3,
+            "expression": "Reassuring smile",
+            "head": "One small nod after the first thought",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 13
+          }
+        ],
+        "en": [
+          {
+            "id": "encouraging-en-1",
+            "spokenText": "You have just taken an important step: you were willing to speak.",
+            "emotion": "encouraging",
+            "intensity": 3,
+            "expression": "Reassuring smile",
+            "head": "One small nod after the first thought",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 13
+          },
+          {
+            "id": "encouraging-en-2",
+            "spokenText": "Now, choose one sentence and try again. Each practice session is a chance to understand your own progress.",
+            "emotion": "encouraging",
+            "intensity": 3,
+            "expression": "Reassuring smile",
+            "head": "One small nod after the first thought",
+            "hands": "Rest below chest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "enthusiastic",
+      "title": "Share some enthusiasm",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 25,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "enthusiastic",
+        "intensity": 4,
+        "expression": "Brighter eyes and smile; do not shout",
+        "head": "Small head lift, then centre",
+        "hands": "One compact open-hand beat on the second thought",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "enthusiastic-vi-1",
+            "spokenText": "Tuyệt, chúng ta đã sẵn sàng bắt đầu!",
+            "emotion": "enthusiastic",
+            "intensity": 4,
+            "expression": "Brighter eyes and smile; do not shout",
+            "head": "Small head lift, then centre",
+            "hands": "One compact open-hand beat on the second thought",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 13
+          },
+          {
+            "id": "enthusiastic-vi-2",
+            "spokenText": "Hôm nay, hãy thử một điều mới: nói trọn một ý bằng tiếng Anh, rồi nghe lại giọng của chính mình.",
+            "emotion": "enthusiastic",
+            "intensity": 4,
+            "expression": "Brighter eyes and smile; do not shout",
+            "head": "Small head lift, then centre",
+            "hands": "One compact open-hand beat on the second thought",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 13
+          }
+        ],
+        "en": [
+          {
+            "id": "enthusiastic-en-1",
+            "spokenText": "Great, we are ready to begin!",
+            "emotion": "enthusiastic",
+            "intensity": 4,
+            "expression": "Brighter eyes and smile; do not shout",
+            "head": "Small head lift, then centre",
+            "hands": "One compact open-hand beat on the second thought",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 13
+          },
+          {
+            "id": "enthusiastic-en-2",
+            "spokenText": "Today, try something new: express one complete idea in English, then listen to your own voice.",
+            "emotion": "enthusiastic",
+            "intensity": 4,
+            "expression": "Brighter eyes and smile; do not shout",
+            "head": "Small head lift, then centre",
+            "hands": "One compact open-hand beat on the second thought",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "empathetic",
+      "title": "Meet a difficult moment",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 28,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "empathetic",
+        "intensity": 2,
+        "expression": "Soften your brows; calm voice",
+        "head": "Slight forward inclination; one reassuring nod",
+        "hands": "Rest; no large gesture",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1200
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "empathetic-vi-1",
+            "spokenText": "Có những ngày bạn biết điều mình muốn nói, nhưng lời nói lại không ra như ý.",
+            "emotion": "empathetic",
+            "intensity": 2,
+            "expression": "Soften your brows; calm voice",
+            "head": "Slight forward inclination; one reassuring nod",
+            "hands": "Rest; no large gesture",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1200,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "empathetic-vi-2",
+            "spokenText": "Điều đó có thể khiến bạn nản. Hãy nghỉ một nhịp, chọn một câu đơn giản, rồi bắt đầu lại cùng tôi.",
+            "emotion": "empathetic",
+            "intensity": 2,
+            "expression": "Soften your brows; calm voice",
+            "head": "Slight forward inclination; one reassuring nod",
+            "hands": "Rest; no large gesture",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1200,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ],
+        "en": [
+          {
+            "id": "empathetic-en-1",
+            "spokenText": "Some days, you know what you want to say, but the words do not come out as you hoped.",
+            "emotion": "empathetic",
+            "intensity": 2,
+            "expression": "Soften your brows; calm voice",
+            "head": "Slight forward inclination; one reassuring nod",
+            "hands": "Rest; no large gesture",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1200,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "empathetic-en-2",
+            "spokenText": "That can feel frustrating. Take a breath, choose one simple sentence, and start again with me.",
+            "emotion": "empathetic",
+            "intensity": 2,
+            "expression": "Soften your brows; calm voice",
+            "head": "Slight forward inclination; one reassuring nod",
+            "hands": "Rest; no large gesture",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1200,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "serious",
+      "title": "Explain something clearly",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 28,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "serious",
+        "intensity": 3,
+        "expression": "Neutral mouth and focused expression",
+        "head": "Level chin; steady",
+        "hands": "One small downward beat, without pointing at the viewer",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "serious-vi-1",
+            "spokenText": "Khi luyện phát âm, hãy ưu tiên sự rõ ràng trước tốc độ.",
+            "emotion": "serious",
+            "intensity": 3,
+            "expression": "Neutral mouth and focused expression",
+            "head": "Level chin; steady",
+            "hands": "One small downward beat, without pointing at the viewer",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "serious-vi-2",
+            "spokenText": "Nghe kỹ câu mẫu, chú ý những âm còn khó, và kiểm tra lại bản ghi trước khi chuyển sang bài tiếp theo.",
+            "emotion": "serious",
+            "intensity": 3,
+            "expression": "Neutral mouth and focused expression",
+            "head": "Level chin; steady",
+            "hands": "One small downward beat, without pointing at the viewer",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ],
+        "en": [
+          {
+            "id": "serious-en-1",
+            "spokenText": "When you practise pronunciation, put clarity before speed.",
+            "emotion": "serious",
+            "intensity": 3,
+            "expression": "Neutral mouth and focused expression",
+            "head": "Level chin; steady",
+            "hands": "One small downward beat, without pointing at the viewer",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "serious-en-2",
+            "spokenText": "Listen closely to the example, notice the sounds you find difficult, and check your recording before moving to the next activity.",
+            "emotion": "serious",
+            "intensity": 3,
+            "expression": "Neutral mouth and focused expression",
+            "head": "Level chin; steady",
+            "hands": "One small downward beat, without pointing at the viewer",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "curious",
+      "title": "Ask a thoughtful question",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 28,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "curious",
+        "intensity": 2,
+        "expression": "A small eyebrow lift",
+        "head": "Slight tilt on the question; then centre",
+        "hands": "One open-palm question gesture on the second cue",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1500
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "curious-vi-1",
+            "spokenText": "Bạn muốn dùng tiếng Anh trong tình huống nào nhất?",
+            "emotion": "curious",
+            "intensity": 2,
+            "expression": "A small eyebrow lift",
+            "head": "Slight tilt on the question; then centre",
+            "hands": "One open-palm question gesture on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1500,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "curious-vi-2",
+            "spokenText": "Trong lớp học, khi đi làm, hay khi trò chuyện với một người bạn mới? Hãy chọn một tình huống và bắt đầu từ đó.",
+            "emotion": "curious",
+            "intensity": 2,
+            "expression": "A small eyebrow lift",
+            "head": "Slight tilt on the question; then centre",
+            "hands": "One open-palm question gesture on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1500,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ],
+        "en": [
+          {
+            "id": "curious-en-1",
+            "spokenText": "Where would you most like to use your English?",
+            "emotion": "curious",
+            "intensity": 2,
+            "expression": "A small eyebrow lift",
+            "head": "Slight tilt on the question; then centre",
+            "hands": "One open-palm question gesture on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1500,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "curious-en-2",
+            "spokenText": "In class, at work, or in a conversation with someone new? Choose one situation, and let us begin there.",
+            "emotion": "curious",
+            "intensity": 2,
+            "expression": "A small eyebrow lift",
+            "head": "Slight tilt on the question; then centre",
+            "hands": "One open-palm question gesture on the second cue",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1500,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "reflective",
+      "title": "Recognise gradual progress",
+      "kind": "video",
+      "core": false,
+      "group": "expression",
+      "durationTargetSeconds": 28,
+      "description": "Expressive performance archive. These takes do not train MuseTalk to learn gestures or emotions.",
+      "performance": {
+        "emotion": "reflective",
+        "intensity": 2,
+        "expression": "Thoughtful expression becoming a soft smile",
+        "head": "One small nod near the finish",
+        "hands": "Return to rest",
+        "eyeContact": "Look toward the lens, not down at your own preview",
+        "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+        "pauseMs": 1000
+      },
+      "cues": {
+        "vi": [
+          {
+            "id": "reflective-vi-1",
+            "spokenText": "Tiến bộ không phải lúc nào cũng dễ nhận ra sau một buổi học.",
+            "emotion": "reflective",
+            "intensity": 2,
+            "expression": "Thoughtful expression becoming a soft smile",
+            "head": "One small nod near the finish",
+            "hands": "Return to rest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "reflective-vi-2",
+            "spokenText": "Nhưng khi nghe lại những bản ghi cũ, bạn có thể nhận ra mình đã nói rõ hơn và tự tin hơn từng chút một.",
+            "emotion": "reflective",
+            "intensity": 2,
+            "expression": "Thoughtful expression becoming a soft smile",
+            "head": "One small nod near the finish",
+            "hands": "Return to rest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ],
+        "en": [
+          {
+            "id": "reflective-en-1",
+            "spokenText": "Progress is not always easy to notice after a single lesson.",
+            "emotion": "reflective",
+            "intensity": 2,
+            "expression": "Thoughtful expression becoming a soft smile",
+            "head": "One small nod near the finish",
+            "hands": "Return to rest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Hold still for two seconds, breathe, then begin this thought.",
+            "durationTargetSeconds": 14
+          },
+          {
+            "id": "reflective-en-2",
+            "spokenText": "But when you listen to earlier recordings, you may notice that your speech has become a little clearer and more confident.",
+            "emotion": "reflective",
+            "intensity": 2,
+            "expression": "Thoughtful expression becoming a soft smile",
+            "head": "One small nod near the finish",
+            "hands": "Return to rest",
+            "eyeContact": "Look toward the lens, not down at your own preview",
+            "posture": "Upright without stiffness; shoulders relaxed; steady torso",
+            "pauseMs": 1000,
+            "instruction": "Finish the thought gently. Hold your expression for two seconds after speaking.",
+            "durationTargetSeconds": 14
+          }
+        ]
+      }
+    }
+  ]
+}

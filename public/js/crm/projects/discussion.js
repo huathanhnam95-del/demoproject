@@ -225,12 +225,25 @@
         : '<option value="" disabled>No eligible project members</option>';
     }
 
+    const memberDirectoryCache = new Map();
     async function loadMentionOptions(scope) {
       if (!apiFetchJson || !selection || !isCurrent(scope)) return;
+      const boardState = typeof deps.getBoardState === 'function' ? deps.getBoardState() : null;
+      if (boardState && String(boardState.project?.id || '') === String(selection.projectId) && Array.isArray(boardState.members) && boardState.members.length > 0) {
+        renderMentionOptions(boardState.members);
+        return;
+      }
+      const cacheKey = `${selection.actorUid || ''}:${selection.projectId}`;
+      if (memberDirectoryCache.has(cacheKey)) {
+        renderMentionOptions(memberDirectoryCache.get(cacheKey));
+        return;
+      }
       try {
         const result = await apiFetchJson(`/api/projects/${encodeURIComponent(selection.projectId)}/member-directory`);
         if (!isCurrent(scope)) return;
-        renderMentionOptions(Array.isArray(result?.people) ? result.people : Array.isArray(result?.members) ? result.members : []);
+        const list = Array.isArray(result?.people) ? result.people : Array.isArray(result?.members) ? result.members : [];
+        memberDirectoryCache.set(cacheKey, list);
+        renderMentionOptions(list);
       } catch (_) {
         if (isCurrent(scope)) renderMentionOptions([]);
       }
@@ -309,6 +322,7 @@
         // Retain committed identity even when navigation made the UI stale.
         request.messageId = result?.message?.id;
         request.attachmentExpectedRevision = result?.message?.revision;
+        request.createdMessage = result?.message || null;
       }
       if (!request.messageId) throw new Error('Message completion could not be confirmed.');
       // Message creation settles a text-only request even after navigation.
@@ -393,7 +407,15 @@
       try {
         if (!await submitMessage(request, scope)) return;
         finishMessage(request, scope);
-        if (isCurrentTuple(scope)) await load();
+        if (isCurrentTuple(scope)) {
+          if (request.createdMessage && !request.file) {
+            mergeMessages([request.createdMessage]);
+            render();
+            setStatus(`${messages.length} update${messages.length === 1 ? '' : 's'}`);
+          } else {
+            await load();
+          }
+        }
       } catch (error) {
         if (isCurrent(scope)) {
           await handleMutationError(error, request, scope);
@@ -526,6 +548,7 @@
         selection = null;
         scopeTuple = '';
         authorityKey = '';
+        memberDirectoryCache.clear();
         messages = [];
         cursor = '';
         hasMore = false;

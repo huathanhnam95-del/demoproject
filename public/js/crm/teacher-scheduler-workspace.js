@@ -21,10 +21,79 @@ window.TeacherSchedulerWorkspace = (function () {
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     }
 
-    function startOfWeek(date = new Date()) {
+    const WEEK_START_STORAGE_KEY = 'teacher_scheduler_week_start';
+    let memoryWeekStart = null;
+
+    function getWeekStartSetting() {
+        if (memoryWeekStart === 0 || memoryWeekStart === 1) return memoryWeekStart;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                const val = localStorage.getItem(WEEK_START_STORAGE_KEY);
+                if (val === '0' || val === '1') {
+                    memoryWeekStart = Number(val);
+                    return memoryWeekStart;
+                }
+            }
+        } catch (e) {
+            /* ignore storage access */
+        }
+        return 1; // Default to Monday
+    }
+
+    function setWeekStartSetting(value) {
+        const val = Number(value === '0' || value === 0 ? 0 : 1);
+        memoryWeekStart = val;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(WEEK_START_STORAGE_KEY, String(val));
+            }
+        } catch (e) {
+            /* ignore */
+        }
+        const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-week-start') : null;
+        if (select) select.value = String(val);
+        return val;
+    }
+
+    const TIME_FORMAT_STORAGE_KEY = 'teacher_scheduler_time_format';
+    let memoryTimeFormat = null;
+
+    function getTimeFormatSetting() {
+        if (memoryTimeFormat === '12' || memoryTimeFormat === '24') return memoryTimeFormat;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                const val = localStorage.getItem(TIME_FORMAT_STORAGE_KEY);
+                if (val === '12' || val === '24') {
+                    memoryTimeFormat = val;
+                    return memoryTimeFormat;
+                }
+            }
+        } catch (e) {
+            /* ignore storage access */
+        }
+        return '24'; // Default to 24-hour
+    }
+
+    function setTimeFormatSetting(value) {
+        const val = String(value) === '12' ? '12' : '24';
+        memoryTimeFormat = val;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(TIME_FORMAT_STORAGE_KEY, val);
+            }
+        } catch (e) {
+            /* ignore */
+        }
+        const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-time-format') : null;
+        if (select) select.value = val;
+        return val;
+    }
+
+    function startOfWeek(date = new Date(), weekStart = getWeekStartSetting()) {
         const next = new Date(date);
-        const weekday = next.getDay() || 7;
-        next.setDate(next.getDate() - weekday + 1);
+        const startDay = Number(weekStart === 0 ? 0 : 1);
+        const diff = (next.getDay() - startDay + 7) % 7;
+        next.setDate(next.getDate() - diff);
         next.setHours(0, 0, 0, 0);
         return next;
     }
@@ -41,13 +110,30 @@ window.TeacherSchedulerWorkspace = (function () {
         return (h * 60) + m;
     }
 
-    function formatTimeRange(start, durationMinutes) {
+    function formatGutterHour(slotTime, timeFormat = getTimeFormatSetting()) {
+        if (timeFormat === '12') {
+            const [h] = String(slotTime || '').split(':').map((part) => Number(part));
+            if (Number.isFinite(h)) {
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                const h12 = h % 12 === 0 ? 12 : h % 12;
+                return `${h12} ${ampm}`;
+            }
+        }
+        return slotTime;
+    }
+
+    function formatTimeRange(start, durationMinutes, timeFormat = getTimeFormatSetting()) {
         const startMinutes = parseTimeToMinutes(start);
         if (!Number.isFinite(startMinutes)) return start || '';
         const endMinutes = startMinutes + Number(durationMinutes || 0);
         const fmt = (mins) => {
             const hh = Math.floor(mins / 60) % 24;
             const mm = mins % 60;
+            if (timeFormat === '12') {
+                const ampm = hh >= 12 ? 'PM' : 'AM';
+                const h12 = hh % 12 === 0 ? 12 : hh % 12;
+                return mm === 0 ? `${h12}:00 ${ampm}` : `${h12}:${pad(mm)} ${ampm}`;
+            }
             return mm === 0 ? `${hh}:00` : `${hh}:${pad(mm)}`;
         };
         return `${fmt(startMinutes)}\u2013${fmt(endMinutes)}`;
@@ -118,6 +204,11 @@ window.TeacherSchedulerWorkspace = (function () {
         const state = {
             loaded: false,
             selectedTeacherUid: 'all',
+            selectedTeacherUids: new Set(),
+            fetchGeneration: 0,
+            isSessionNoteDirty: false,
+            isSessionOutcomeDirty: false,
+            viewMode: 'week',
             teachers: [],
             teacherMap: new Map(),
             classrooms: [],
@@ -255,6 +346,18 @@ window.TeacherSchedulerWorkspace = (function () {
             renderClassRail();
         }
 
+        function initWeekStartSetting() {
+            const val = getWeekStartSetting();
+            const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-week-start') : null;
+            if (select) select.value = String(val);
+        }
+
+        function initTimeFormatSetting() {
+            const val = getTimeFormatSetting();
+            const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-time-format') : null;
+            if (select) select.value = val;
+        }
+
         function applyAppearance(appearance) {
             state.appearance = appearance;
             const isSolid = (appearance === 'solid');
@@ -273,15 +376,28 @@ window.TeacherSchedulerWorkspace = (function () {
             }
         }
 
+        function isValidTeacherName(name, uid) {
+            if (!name) return false;
+            const trimmed = String(name).trim();
+            if (!trimmed) return false;
+            if (trimmed.startsWith('usr_')) return false;
+            if (uid && trimmed === String(uid).trim()) return false;
+            if (/^[A-Za-z0-9_-]{24,32}$/.test(trimmed)) return false;
+            return true;
+        }
+
         function resolveTeacherDisplayName(uid, directName = '') {
             const cleanDirect = String(directName || '').trim();
             const cleanUid = String(uid || '').trim();
-            if (cleanUid && state.teacherMap.has(cleanUid)) {
+            if (cleanUid && cleanUid.toLowerCase() !== 'unassigned' && state.teacherMap && state.teacherMap.has(cleanUid)) {
                 const mapped = String(state.teacherMap.get(cleanUid) || '').trim();
-                if (mapped && !mapped.startsWith('usr_')) return mapped;
+                if (isValidTeacherName(mapped, cleanUid)) return mapped;
             }
-            if (cleanDirect && !cleanDirect.startsWith('usr_')) return cleanDirect;
-            return cleanUid ? 'Teacher name unavailable' : '';
+            if (isValidTeacherName(cleanDirect, cleanUid)) return cleanDirect;
+            if (cleanUid && cleanUid.toLowerCase() !== 'unassigned') {
+                return 'Teacher name unavailable';
+            }
+            return cleanUid.toLowerCase() === 'unassigned' ? 'Unassigned' : '';
         }
 
         function updateRailLabels() {
@@ -312,9 +428,9 @@ window.TeacherSchedulerWorkspace = (function () {
             if (Array.isArray(state.classrooms)) {
                 state.classrooms.forEach((c) => {
                     const uid = String(c.primaryTeacherUid || '').trim();
-                    const name = c.primaryTeacherName || uid;
+                    const rawName = String(c.primaryTeacherName || '').trim();
                     if (uid && !state.teacherMap.has(uid)) {
-                        state.teacherMap.set(uid, name);
+                        state.teacherMap.set(uid, isValidTeacherName(rawName, uid) ? rawName : '');
                     }
                 });
             }
@@ -323,16 +439,18 @@ window.TeacherSchedulerWorkspace = (function () {
             const renderedUids = new Set(['all']);
             state.teachers.forEach((t) => {
                 const uid = String(t.uid || t.id || '').trim();
-                const name = t.displayName || t.name || t.email || uid;
+                const rawName = t.displayName || t.name || t.email || '';
+                const name = resolveTeacherDisplayName(uid, rawName);
                 if (uid && !renderedUids.has(uid)) {
                     renderedUids.add(uid);
-                    optionsHtml += `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`;
+                    optionsHtml += `<option value="${escapeHtml(uid)}">${escapeHtml(name || 'Teacher name unavailable')}</option>`;
                 }
             });
             state.teacherMap.forEach((name, uid) => {
+                const resolved = resolveTeacherDisplayName(uid, name);
                 if (uid && !renderedUids.has(uid)) {
                     renderedUids.add(uid);
-                    optionsHtml += `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`;
+                    optionsHtml += `<option value="${escapeHtml(uid)}">${escapeHtml(resolved || 'Teacher name unavailable')}</option>`;
                 }
             });
 
@@ -344,20 +462,24 @@ window.TeacherSchedulerWorkspace = (function () {
                 const teacherItems = [];
                 state.teachers.forEach((t) => {
                     const uid = String(t.uid || t.id || '').trim();
-                    const name = t.displayName || t.name || t.email || uid;
+                    const rawName = t.displayName || t.name || t.email || '';
+                    const name = resolveTeacherDisplayName(uid, rawName);
                     if (uid && !teacherItems.some((x) => x.uid === uid)) {
-                        teacherItems.push({ uid, name });
+                        teacherItems.push({ uid, name: name || 'Teacher name unavailable' });
                     }
                 });
                 state.teacherMap.forEach((name, uid) => {
+                    const resolved = resolveTeacherDisplayName(uid, name);
                     if (uid && !teacherItems.some((x) => x.uid === uid)) {
-                        teacherItems.push({ uid, name });
+                        teacherItems.push({ uid, name: resolved || 'Teacher name unavailable' });
                     }
                 });
 
                 teacherListEl.innerHTML = teacherItems.map((t) => {
                     const teacherColor = resolveTeacherColor(t.uid, t.name);
-                    const isChecked = state.selectedTeacherUid === 'all' || state.selectedTeacherUid === t.uid;
+                    const isChecked = state.selectedTeacherUid === 'none'
+                        ? false
+                        : (state.selectedTeacherUids.size === 0 || state.selectedTeacherUids.has(t.uid));
                     return `
                         <label class="ts-checkbox-row" data-teacher-uid="${escapeHtml(t.uid)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;font-size:12px;border-radius:4px;">
                             <input type="checkbox" class="ts-teacher-checkbox" value="${escapeHtml(t.uid)}" ${isChecked ? 'checked' : ''} style="accent-color:${teacherColor.fill};width:15px;height:15px;cursor:pointer;">
@@ -381,8 +503,10 @@ window.TeacherSchedulerWorkspace = (function () {
                     state.teacherMap.clear();
                     state.teachers.forEach((t) => {
                         const uid = String(t.uid || t.id || '').trim();
-                        const name = t.displayName || t.name || t.email || uid;
-                        if (uid) state.teacherMap.set(uid, name);
+                        const rawName = t.displayName || t.name || t.email || '';
+                        if (uid) {
+                            state.teacherMap.set(uid, isValidTeacherName(rawName, uid) ? rawName.trim() : '');
+                        }
                     });
                     populateTeacherDropdown();
                 } catch (e) {
@@ -470,9 +594,10 @@ window.TeacherSchedulerWorkspace = (function () {
             const fromStr = toLocalDateInput(from);
             const toStr = toLocalDateInput(to);
 
+            const weekStart = getWeekStartSetting();
             const firstOfMonth = new Date(year, month, 1);
-            const startDay = firstOfMonth.getDay(); // 0 is Sunday
-            const startDate = addDays(firstOfMonth, -startDay);
+            const startOffset = (firstOfMonth.getDay() - weekStart + 7) % 7;
+            const startDate = addDays(firstOfMonth, -startOffset);
 
             let daysHtml = '';
             for (let i = 0; i < 42; i++) {
@@ -500,6 +625,10 @@ window.TeacherSchedulerWorkspace = (function () {
                 `;
             }
 
+            const weekdayHeaders = weekStart === 0
+                ? '<span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>'
+                : '<span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>';
+
             elements.teacherSchedulerMiniCalendar.innerHTML = `
                 <div class="mini-cal-header">
                     <span class="mini-cal-month-title">${escapeHtml(monthTitle)}</span>
@@ -509,7 +638,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     </div>
                 </div>
                 <div class="mini-cal-weekdays">
-                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                    ${weekdayHeaders}
                 </div>
                 <div class="mini-cal-days">
                     ${daysHtml}
@@ -603,22 +732,50 @@ window.TeacherSchedulerWorkspace = (function () {
 
         function getSessionLocalDate(session) {
             if (session?.scheduledLocalDate) return String(session.scheduledLocalDate);
-            if (!session?.scheduledStartAtUtc) return '';
-            return String(new Date(session.scheduledStartAtUtc).toISOString().slice(0, 10));
+            const timeSource = session?.startTime || session?.scheduledStartAtUtc;
+            if (timeSource) {
+                const d = new Date(timeSource);
+                if (Number.isFinite(d.getTime())) {
+                    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                }
+            }
+            return '';
         }
 
         function getSessionLocalTime(session) {
             if (session?.scheduledLocalTime) return String(session.scheduledLocalTime).slice(0, 5);
-            const start = session?.scheduledStartAtUtc ? new Date(session.scheduledStartAtUtc) : null;
-            return start ? `${pad(start.getHours())}:${pad(start.getMinutes())}` : '';
+            const timeSource = session?.startTime || session?.scheduledStartAtUtc;
+            if (timeSource) {
+                const d = new Date(timeSource);
+                if (Number.isFinite(d.getTime())) {
+                    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                }
+            }
+            return '';
+        }
+
+        function isSessionVisible(session) {
+            if (state.selectedTeacherUid === 'none') return false;
+            if (state.selectedTeacherUids && state.selectedTeacherUids.size > 0) {
+                const { teacherUid } = getEffectiveTeacherForSession(session);
+                const eff = String(teacherUid || session?.teacherUid || '').trim();
+                return state.selectedTeacherUids.has(eff);
+            }
+            if (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') {
+                const { teacherUid } = getEffectiveTeacherForSession(session);
+                const eff = String(teacherUid || session?.teacherUid || '').trim();
+                return eff === state.selectedTeacherUid;
+            }
+            return true;
         }
 
         function setToolbarDefaults() {
+            const ws = getWeekStartSetting();
             if (elements.inputTeacherSchedulerFromDate && !elements.inputTeacherSchedulerFromDate.value) {
-                elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(startOfWeek(new Date()));
+                elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(startOfWeek(new Date(), ws));
             }
             if (elements.inputTeacherSchedulerToDate && !elements.inputTeacherSchedulerToDate.value) {
-                const end = addDays(startOfWeek(new Date()), 6);
+                const end = addDays(startOfWeek(new Date(), ws), 6);
                 elements.inputTeacherSchedulerToDate.value = toLocalDateInput(end);
             }
         }
@@ -738,8 +895,19 @@ window.TeacherSchedulerWorkspace = (function () {
         function getSlotHeightPx() {
             return Math.round((getHourHeightPx() / 60) * 30);
         }
-        /* Below this height a pill cannot fit a title AND a time line, so it collapses to one. */
+        /* Dynamic 3-tier height-based density:
+           - < 40px (approx 30m): 'compact' (1-line: [Title] · [Time])
+           - 40px – 71px (approx 45-60m): 'mid' (2 lines: Line 1: Title with ellipsis; Line 2: Time range; Teacher omitted)
+           - >= 72px (approx 90m+): 'full' (3 lines: Title + Time range + Teacher name) */
         const PILL_TWO_LINE_MIN_PX = 40;
+        const PILL_THREE_LINE_MIN_PX = 72;
+
+        function getSessionDensityMode(heightPx) {
+            const h = Number(heightPx || 0);
+            if (h < PILL_TWO_LINE_MIN_PX) return 'compact';
+            if (h < PILL_THREE_LINE_MIN_PX) return 'mid';
+            return 'full';
+        }
 
         /* Interval-clustering + greedy column packing, per day. Extracted from renderCalendarGrid
            so a single-pill update can recompute only the day columns it touches. */
@@ -747,7 +915,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const sessionLayoutMap = new Map();
             (Array.isArray(dateStrings) ? dateStrings : []).forEach((dateStr) => {
                 const daySessions = state.sessions
-                    .filter((s) => getSessionLocalDate(s) === dateStr)
+                    .filter((s) => getSessionLocalDate(s) === dateStr && isSessionVisible(s))
                     .map((s) => {
                         const start = parseTimeToMinutes(getSessionLocalTime(s)) ?? 0;
                         const duration = Number(s.durationMinutes || 0) || 60;
@@ -822,7 +990,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
             const layoutMap = computeSessionLayout(dates);
             for (const dateStr of dates) {
-                const daySessions = state.sessions.filter((s) => getSessionLocalDate(s) === dateStr);
+                const daySessions = state.sessions.filter((s) => getSessionLocalDate(s) === dateStr && isSessionVisible(s));
                 for (const session of daySessions) {
                     const sessionId = String(session.sessionId || '');
                     const pill = calendar.querySelector(`.teacher-scheduler-session-pill[data-session-id="${sessionId}"]`);
@@ -853,8 +1021,14 @@ window.TeacherSchedulerWorkspace = (function () {
                     }
                     pill.classList?.toggle?.('is-saving', state.pendingSessionIds.has(sessionId));
 
-                    const isCompact = geo.heightPx < PILL_TWO_LINE_MIN_PX;
+                    const density = getSessionDensityMode(geo.heightPx);
+                    const isCompact = density === 'compact';
+                    const isMid = density === 'mid';
+                    const isFull = density === 'full';
                     pill.classList?.toggle?.('is-compact', isCompact);
+                    pill.classList?.toggle?.('ts-density-compact', isCompact);
+                    pill.classList?.toggle?.('ts-density-mid', isMid);
+                    pill.classList?.toggle?.('ts-density-full', isFull);
 
                     const classroom = getClassroomById(session.classId);
                     const title = classroom?.name || session.classId || 'Class';
@@ -871,9 +1045,15 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (metaRowEl) metaRowEl.style.display = isCompact ? 'none' : '';
 
                     const showTeacherLine = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName);
-                    const teacherEl = pill.querySelector?.('.pill-teacher');
+                    let teacherEl = pill.querySelector?.('.pill-teacher');
+                    if (!teacherEl && showTeacherLine && typeof document !== 'undefined' && typeof pill.appendChild === 'function') {
+                        teacherEl = document.createElement('span');
+                        teacherEl.className = 'pill-teacher';
+                        teacherEl.style.cssText = 'display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                        pill.appendChild(teacherEl);
+                    }
                     if (teacherEl) {
-                        teacherEl.style.display = (!isCompact && showTeacherLine) ? 'block' : 'none';
+                        teacherEl.style.display = (isFull && showTeacherLine) ? 'block' : 'none';
                         teacherEl.textContent = teacherName;
                     }
                 }
@@ -914,8 +1094,9 @@ window.TeacherSchedulerWorkspace = (function () {
 
             slots.forEach((slotTime) => {
                 const isHourStart = slotTime.endsWith(':00');
+                const gutterLabel = isHourStart ? formatGutterHour(slotTime) : '';
                 html += `<div class="scheduler-calendar-time${isHourStart ? '' : ' is-half'}">`
-                    + (isHourStart ? `<span>${slotTime}</span>` : '')
+                    + (isHourStart ? `<span>${escapeHtml(gutterLabel)}</span>` : '')
                     + '</div>';
                 days.forEach((day) => {
                     const dateStr = toLocalDateInput(day);
@@ -924,7 +1105,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
                     /* Render session pills only in the cell matching session start time */
                     const sessionsHere = state.sessions.filter((session) =>
-                        getSessionLocalDate(session) === dateStr && getSessionLocalTime(session) === slotTime
+                        getSessionLocalDate(session) === dateStr && getSessionLocalTime(session) === slotTime && isSessionVisible(session)
                     );
 
                     const totalSessions = sessionsHere.length;
@@ -942,8 +1123,13 @@ window.TeacherSchedulerWorkspace = (function () {
                         const duration = Number(session.durationMinutes || 0) || 60;
                         const timeRange = formatTimeRange(getSessionLocalTime(session), duration);
                         const heightPx = Math.max((duration / 30) * slotHeight - 2, 18);
-                        const isCompact = heightPx < PILL_TWO_LINE_MIN_PX;
-                        const compactClass = isCompact ? 'is-compact' : '';
+                        const density = getSessionDensityMode(heightPx);
+                        const isCompact = density === 'compact';
+                        const isMid = density === 'mid';
+                        const isFull = density === 'full';
+                        const densityClasses = isCompact
+                            ? 'is-compact ts-density-compact'
+                            : (isMid ? 'ts-density-mid' : 'ts-density-full');
                         const locked = isLockedSession(session);
                         const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                         const teacherColor = resolveTeacherColor(teacherUid, teacherName);
@@ -966,7 +1152,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         layoutStyle += ` --color: ${teacherColor.fill};`;
                         const themeClass = isCompleted ? '' : getClassPastelTheme(session.classId);
                         const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${themeClass} ${pending} ${completedClass} ${compactClass}" data-session-id="${escapeHtml(sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${themeClass} ${pending} ${completedClass} ${densityClasses}" data-session-id="${escapeHtml(sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
                             + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? compactBadge : ''}</div>`
                             + (isCompact ? '' : `<div class="pill-meta-row"><span class="pill-time">${escapeHtml(timeRange)}</span>${completedBadge}</div>`)
                             + (isCompact ? '' : teacherPill)
@@ -1026,7 +1212,7 @@ window.TeacherSchedulerWorkspace = (function () {
             let html = '';
             days.forEach((day) => {
                 const dateStr = toLocalDateInput(day);
-                const daySessions = sessions.filter((s) => getSessionLocalDate(s) === dateStr);
+                const daySessions = sessions.filter((s) => getSessionLocalDate(s) === dateStr && isSessionVisible(s));
                 if (daySessions.length === 0) return;
                 const dow = DAY_LABELS[day.getDay()];
                 const dayNum = day.getDate();
@@ -1037,7 +1223,7 @@ window.TeacherSchedulerWorkspace = (function () {
                             ${daySessions.map((session) => {
                                 const classroom = getClassroomById(session.classId);
                                 const title = classroom?.name || session.classId || 'Class';
-                                const teacherName = session.teacherName || state.teacherMap.get(session.teacherUid) || classroom?.primaryTeacherName || '';
+                                const teacherName = resolveTeacherDisplayName(session.teacherUid, session.teacherName || classroom?.primaryTeacherName || '');
                                 const timeRange = formatTimeRange(getSessionLocalTime(session), session.durationMinutes);
                                 return `
                                     <div class="ts-schedule-row" data-session-id="${escapeHtml(session.sessionId)}">
@@ -1097,7 +1283,7 @@ window.TeacherSchedulerWorkspace = (function () {
             renderQuickAdd();
         }
 
-        function openQuickAdd(targetDate, targetTime, anchorRect, classId = '') {
+        function openQuickAdd(targetDate, targetTime, anchorRect, classId = '', durationMinutes = null) {
             closeSessionBubble();
             const preferredClassId = classId && getClassroomById(classId)
                 ? classId
@@ -1105,11 +1291,12 @@ window.TeacherSchedulerWorkspace = (function () {
                     ? state.patternClassId
                     : String(state.classrooms[0]?.classroomId || ''));
             const classroom = getClassroomById(preferredClassId);
+            const dur = Number(durationMinutes || classroom?.scheduleConfig?.sessionMinutes || 60);
             state.quickAdd = {
                 classId: preferredClassId,
                 targetDate,
                 targetTime,
-                durationMinutes: Number(classroom?.scheduleConfig?.sessionMinutes || 0) || 120,
+                durationMinutes: dur,
                 anchorRect: anchorRect || null,
                 anchorLeft: Number(anchorRect?.left || 0),
                 anchorTop: Number(anchorRect?.bottom || 0),
@@ -1117,6 +1304,12 @@ window.TeacherSchedulerWorkspace = (function () {
                 suggestions: []
             };
             renderQuickAdd();
+            if (elements.inputTeacherSchedulerQuickAddDuration) {
+                elements.inputTeacherSchedulerQuickAddDuration.value = String(dur);
+            }
+            if (elements.inputTeacherSchedulerQuickDuration) {
+                elements.inputTeacherSchedulerQuickDuration.value = String(dur);
+            }
         }
 
         function renderQuickAdd() {
@@ -1222,7 +1415,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const slots = hourSlots(7, 21);
             const days = getRenderDays();
             const classroom = getClassroomById(classId);
-            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all' && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : null;
             const effectiveTeacherUid = selectedTeacher || classroom?.primaryTeacherUid || null;
 
             for (const day of days) {
@@ -1270,7 +1463,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 throw new Error('Teacher scheduler API unavailable.');
             }
             const durationMinutes = Number(options?.durationMinutes || classroom.scheduleConfig?.sessionMinutes || 0) || 120;
-            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all' && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : null;
             const teacherUid = selectedTeacher || classroom.primaryTeacherUid || undefined;
             const conflict = hasClientConflict(targetDate, targetTime, durationMinutes, null, classId, teacherUid);
             if (conflict) {
@@ -1282,7 +1475,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
             // --- OPTIMISTIC PLACEMENT: render pill immediately (<16ms) ---
             const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-            const teacherName = (teacherUid && state.teacherMap.get(teacherUid)) || classroom.primaryTeacherName || '';
+            const teacherName = resolveTeacherDisplayName(teacherUid, classroom.primaryTeacherName || '');
             const tempSession = {
                 sessionId: tempId,
                 classId,
@@ -1350,7 +1543,7 @@ window.TeacherSchedulerWorkspace = (function () {
             }
 
             const classroom = getClassroomById(draft.classId);
-            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all' && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : null;
             const teacherUid = selectedTeacher || classroom?.primaryTeacherUid || undefined;
             const conflict = hasClientConflict(draft.targetDate, draft.targetTime, draft.durationMinutes, null, draft.classId, teacherUid);
             if (conflict) {
@@ -1391,7 +1584,10 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function openSessionBubble(sessionId, anchorRect) {
+            closeSessionBubble();
             closeQuickAdd();
+            state.isSessionNoteDirty = false;
+            state.isSessionOutcomeDirty = false;
             state.sessionBubble = {
                 sessionId: String(sessionId || ''),
                 anchorRect: anchorRect || null,
@@ -1450,14 +1646,20 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.teacherSchedulerSessionBubbleLock.textContent = lockStatus;
             }
             if (elements.inputTeacherSchedulerSessionOutcome) {
-                const rawOutcome = String(session.sessionOutcome || '').trim();
-                const outcomeValue = rawOutcome && rawOutcome !== 'none' ? rawOutcome : '';
-                elements.inputTeacherSchedulerSessionOutcome.value = outcomeValue;
+                const isFocused = typeof document !== 'undefined' && document.activeElement === elements.inputTeacherSchedulerSessionOutcome;
+                if (!isFocused && !state.isSessionOutcomeDirty) {
+                    const rawOutcome = String(session.sessionOutcome || '').trim();
+                    const outcomeValue = rawOutcome && rawOutcome !== 'none' ? rawOutcome : '';
+                    elements.inputTeacherSchedulerSessionOutcome.value = outcomeValue;
+                }
                 elements.inputTeacherSchedulerSessionOutcome.disabled = outcomeLocked;
             }
             if (elements.inputTeacherSchedulerSessionNote) {
-                const rawNote = String(session.sessionNote || '').trim();
-                elements.inputTeacherSchedulerSessionNote.value = rawNote;
+                const isFocused = typeof document !== 'undefined' && document.activeElement === elements.inputTeacherSchedulerSessionNote;
+                if (!isFocused && !state.isSessionNoteDirty) {
+                    const rawNote = String(session.sessionNote || '').trim();
+                    elements.inputTeacherSchedulerSessionNote.value = rawNote;
+                }
                 elements.inputTeacherSchedulerSessionNote.disabled = outcomeLocked;
             }
             if (elements.btnTeacherSchedulerVoiceNote) {
@@ -1537,8 +1739,12 @@ window.TeacherSchedulerWorkspace = (function () {
             });
             const session = state.sessions.find(s => s.sessionId === sessionId);
             if (session) session.sessionNote = noteValue || '';
+            state.isSessionNoteDirty = false;
+            state.isSessionOutcomeDirty = false;
             showToast?.('Outcome saved.', 'success');
-            closeSessionBubble();
+            if (state.sessionBubble && String(state.sessionBubble.sessionId || '') === String(sessionId || '')) {
+                closeSessionBubble();
+            }
             await refresh();
         }
 
@@ -1546,7 +1752,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const session = state.sessions.find((item) => String(item.sessionId || '') === String(sessionId || ''));
             if (!session) return;
             const slot = elements.teacherSchedulerCalendar?.querySelector(`.teacher-scheduler-slot[data-date="${getSessionLocalDate(session)}"][data-time="${getSessionLocalTime(session)}"]`);
-            openQuickAdd(getSessionLocalDate(session), getSessionLocalTime(session), slot?.getBoundingClientRect?.() || null, session.classId);
+            openQuickAdd(getSessionLocalDate(session), getSessionLocalTime(session), slot?.getBoundingClientRect?.() || null, session.classId, session.durationMinutes);
             closeSessionBubble();
         }
 
@@ -1555,7 +1761,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 showToast?.('Activate recurrences API unavailable.', 'error');
                 return;
             }
-            if (isAdminMode() && (!state.selectedTeacherUid || state.selectedTeacherUid === 'all')) {
+            if (isAdminMode() && (!state.selectedTeacherUid || state.selectedTeacherUid === 'all' || state.selectedTeacherUid === 'none')) {
                 showToast?.('Please select a specific teacher before activating recurrences.', 'info');
                 return;
             }
@@ -1563,7 +1769,7 @@ window.TeacherSchedulerWorkspace = (function () {
             state.classrooms.forEach((classroom) => {
                 expectedScheduleVersions[String(classroom.classroomId || '')] = Number(classroom?.scheduleConfig?.scheduleVersion || 0) || 1;
             });
-            const teacherUid = isAdminMode() ? (state.selectedTeacherUid !== 'all' ? state.selectedTeacherUid : undefined) : undefined;
+            const teacherUid = isAdminMode() ? ((state.selectedTeacherUid && state.selectedTeacherUid !== 'all' && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : undefined) : undefined;
             try {
                 const result = await window.ClassroomAPI.teacherActivateRecurrences({
                     from: state.fromDate,
@@ -1586,7 +1792,7 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             const classId = String(elements.inputTeacherSchedulerPatternClass?.value || state.patternClassId || '').trim();
             const classroom = getClassroomById(classId);
-            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all') ? state.selectedTeacherUid : null;
+            const selectedTeacher = (state.selectedTeacherUid && state.selectedTeacherUid !== 'all' && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : null;
             const teacherUid = selectedTeacher || classroom?.primaryTeacherUid || undefined;
             const weekdays = Array.from(state.patternWeekdays);
             if (!classId || !weekdays.length) {
@@ -1615,12 +1821,15 @@ window.TeacherSchedulerWorkspace = (function () {
             clampDateRange('to');
             const from = String(elements.inputTeacherSchedulerFromDate?.value || state.fromDate || '').trim();
             const to = String(elements.inputTeacherSchedulerToDate?.value || state.toDate || '').trim();
-            const teacherUid = isAdminMode() ? state.selectedTeacherUid : undefined;
+            const teacherUid = (isAdminMode() && state.selectedTeacherUid && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : undefined;
+            const currentGen = ++state.fetchGeneration;
             const payload = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace({
                 from,
                 to,
                 ...(teacherUid ? { teacherUid } : {})
             });
+            if (currentGen !== state.fetchGeneration) return;
+            if (state._deactivated) return;
             state.classrooms = Array.isArray(payload?.classrooms) ? payload.classrooms : [];
             state.sessions = Array.isArray(payload?.sessions) ? payload.sessions : [];
             const nextFrom = from || payload?.from || null;
@@ -1641,7 +1850,11 @@ window.TeacherSchedulerWorkspace = (function () {
             updateRailLabels();
             renderClassRail();
             renderActivationSummary();
-            renderCalendarGrid();
+            if (state.viewMode === 'schedule') {
+                renderScheduleList();
+            } else {
+                renderCalendarGrid();
+            }
             renderMiniCalendar();
             renderQuickAdd();
             renderSessionBubble();
@@ -1815,6 +2028,18 @@ window.TeacherSchedulerWorkspace = (function () {
             if (rd.titleEl && rd.originalTitleText !== undefined) {
                 rd.titleEl.textContent = rd.originalTitleText;
             }
+            if (rd.metaRowEl) {
+                rd.metaRowEl.style.display = rd.originalMetaDisplay || '';
+            }
+            if (rd.teacherEl) {
+                rd.teacherEl.style.display = rd.originalTeacherDisplay || '';
+            }
+            if (rd.originalDensityClasses) {
+                rd.pillEl.classList?.toggle?.('is-compact', rd.originalDensityClasses.compact);
+                rd.pillEl.classList?.toggle?.('ts-density-compact', rd.originalDensityClasses.densityCompact);
+                rd.pillEl.classList?.toggle?.('ts-density-mid', rd.originalDensityClasses.mid);
+                rd.pillEl.classList?.toggle?.('ts-density-full', rd.originalDensityClasses.full);
+            }
             rd.pillEl.classList?.remove?.('is-resizing');
         }
 
@@ -1841,6 +2066,10 @@ window.TeacherSchedulerWorkspace = (function () {
             const origEndMins = origStartMins + origDuration;
             const timeEl = pillEl.querySelector ? pillEl.querySelector('.pill-time') : null;
             const titleEl = pillEl.querySelector ? pillEl.querySelector('.pill-title') : null;
+            const metaRowEl = pillEl.querySelector ? pillEl.querySelector('.pill-meta-row') : null;
+            const teacherEl = pillEl.querySelector ? pillEl.querySelector('.pill-teacher') : null;
+            const { teacherName } = getEffectiveTeacherForSession(session);
+            const showTeacherLine = (isAdminMode() && state.selectedTeacherUid === 'all' && Boolean(teacherName));
 
             state.resizeDrag = {
                 sessionId: String(sessionId || ''),
@@ -1859,8 +2088,19 @@ window.TeacherSchedulerWorkspace = (function () {
                 originalZIndex: pillEl.style?.zIndex || '',
                 timeEl,
                 titleEl,
+                metaRowEl,
+                teacherEl,
+                showTeacherLine,
                 originalTimeText: timeEl ? timeEl.textContent : '',
                 originalTitleText: titleEl ? titleEl.textContent : '',
+                originalMetaDisplay: metaRowEl?.style?.display || '',
+                originalTeacherDisplay: teacherEl?.style?.display || '',
+                originalDensityClasses: {
+                    compact: Boolean(pillEl.classList?.contains?.('is-compact')),
+                    densityCompact: Boolean(pillEl.classList?.contains?.('ts-density-compact')),
+                    mid: Boolean(pillEl.classList?.contains?.('ts-density-mid')),
+                    full: Boolean(pillEl.classList?.contains?.('ts-density-full'))
+                },
                 isCompact: Boolean(pillEl.classList?.contains?.('is-compact')),
                 isPointerEvent: Boolean(evt.pointerType || (typeof window !== 'undefined' && window.PointerEvent && evt instanceof window.PointerEvent))
             };
@@ -1900,17 +2140,29 @@ window.TeacherSchedulerWorkspace = (function () {
                     rd.pillEl.style.height = `${heightPx}px`;
                 }
 
-                const isCompactNow = heightPx < PILL_TWO_LINE_MIN_PX;
+                const density = getSessionDensityMode(heightPx);
+                const isCompactNow = density === 'compact';
+                const isMidNow = density === 'mid';
+                const isFullNow = density === 'full';
                 if (rd.pillEl) {
                     rd.pillEl.classList?.toggle?.('is-compact', isCompactNow);
+                    rd.pillEl.classList?.toggle?.('ts-density-compact', isCompactNow);
+                    rd.pillEl.classList?.toggle?.('ts-density-mid', isMidNow);
+                    rd.pillEl.classList?.toggle?.('ts-density-full', isFullNow);
                 }
                 const newTimeRange = formatTimeRange(newStartTime, newDuration);
                 if (rd.timeEl) {
                     rd.timeEl.textContent = newTimeRange;
                 }
+                if (rd.metaRowEl) {
+                    rd.metaRowEl.style.display = isCompactNow ? 'none' : '';
+                }
                 if (rd.titleEl) {
                     const baseTitle = rd.originalTitleText.split(' · ')[0] || rd.originalTitleText;
                     rd.titleEl.textContent = isCompactNow ? `${baseTitle} · ${newTimeRange}` : baseTitle;
+                }
+                if (rd.teacherEl) {
+                    rd.teacherEl.style.display = (isFullNow && rd.showTeacherLine) ? 'block' : 'none';
                 }
             } else {
                 // Dragging lower edge (bottom):
@@ -1927,17 +2179,29 @@ window.TeacherSchedulerWorkspace = (function () {
                     rd.pillEl.style.height = `${heightPx}px`;
                 }
 
-                const isCompactNow = heightPx < PILL_TWO_LINE_MIN_PX;
+                const density = getSessionDensityMode(heightPx);
+                const isCompactNow = density === 'compact';
+                const isMidNow = density === 'mid';
+                const isFullNow = density === 'full';
                 if (rd.pillEl) {
                     rd.pillEl.classList?.toggle?.('is-compact', isCompactNow);
+                    rd.pillEl.classList?.toggle?.('ts-density-compact', isCompactNow);
+                    rd.pillEl.classList?.toggle?.('ts-density-mid', isMidNow);
+                    rd.pillEl.classList?.toggle?.('ts-density-full', isFullNow);
                 }
                 const newTimeRange = formatTimeRange(rd.originalStartTime, newDuration);
                 if (rd.timeEl) {
                     rd.timeEl.textContent = newTimeRange;
                 }
+                if (rd.metaRowEl) {
+                    rd.metaRowEl.style.display = isCompactNow ? 'none' : '';
+                }
                 if (rd.titleEl) {
                     const baseTitle = rd.originalTitleText.split(' · ')[0] || rd.originalTitleText;
                     rd.titleEl.textContent = isCompactNow ? `${baseTitle} · ${newTimeRange}` : baseTitle;
+                }
+                if (rd.teacherEl) {
+                    rd.teacherEl.style.display = (isFullNow && rd.showTeacherLine) ? 'block' : 'none';
                 }
             }
         }
@@ -2035,7 +2299,7 @@ window.TeacherSchedulerWorkspace = (function () {
             return `${pad(d.getDate())} ${months[d.getMonth()]}`;
         }
 
-        function openScopeModal({ session, targetDate, targetTime, dryRunResult }) {
+        function openScopeModal({ session, targetDate, targetTime, dryRunResult, originalDate, originalTime }) {
             return new Promise((resolve) => {
                 if (!elements.teacherSchedulerScopeModal) {
                     resolve({ cancelled: false, choice: 'single' });
@@ -2043,8 +2307,8 @@ window.TeacherSchedulerWorkspace = (function () {
                 }
 
                 const classroom = getClassroomById(session.classId);
-                const previousDate = getSessionLocalDate(session);
-                const previousTime = getSessionLocalTime(session);
+                const previousDate = originalDate || getSessionLocalDate(session);
+                const previousTime = originalTime || getSessionLocalTime(session);
                 const duration = Number(session.durationMinutes || 0) || 60;
                 const seriesMoved = dryRunResult?.moved || dryRunResult?.data?.moved || [];
                 const seriesCount = seriesMoved.length || 1;
@@ -2200,6 +2464,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
+            const originalDate = previousDate;
+            const originalTime = previousTime;
+
             // Optimistic move -- patch just the affected day columns, never the whole grid.
             session.scheduledLocalDate = targetDate;
             session.scheduledLocalTime = targetTime;
@@ -2208,8 +2475,8 @@ window.TeacherSchedulerWorkspace = (function () {
 
             const revertOptimistic = () => {
                 const revertFrom = getSessionLocalDate(session);
-                session.scheduledLocalDate = previousDate;
-                session.scheduledLocalTime = previousTime;
+                session.scheduledLocalDate = originalDate;
+                session.scheduledLocalTime = originalTime;
                 updateSessionPill(sessionId, revertFrom);
             };
 
@@ -2223,190 +2490,264 @@ window.TeacherSchedulerWorkspace = (function () {
             const expectedScheduleVersion = classroom?.scheduleConfig?.scheduleVersion ?? null;
 
             try {
-                const dryRun = await window.ClassroomAPI.teacherRescheduleSessionSeries(sessionId, {
-                    targetLocalDate: targetDate,
-                    targetLocalTime: targetTime,
-                    durationMinutes,
-                    dryRun: true,
-                    timezone: session.timezone || 'UTC',
-                    expectedScheduleVersion
-                });
-                const dryRunData = dryRun?.data || dryRun;
-                seriesMoved = dryRunData?.moved || [];
-                const seriesConflicts = dryRunData?.conflicts || [];
-                const isSeries = (seriesMoved.length + seriesConflicts.length) > 1;
+                try {
+                    const dryRun = await window.ClassroomAPI.teacherRescheduleSessionSeries(sessionId, {
+                        targetLocalDate: targetDate,
+                        targetLocalTime: targetTime,
+                        durationMinutes,
+                        dryRun: true,
+                        timezone: session.timezone || 'UTC',
+                        expectedScheduleVersion
+                    });
+                    const dryRunData = dryRun?.data || dryRun;
+                    seriesMoved = dryRunData?.moved || [];
+                    const seriesConflicts = dryRunData?.conflicts || [];
+                    const isSeries = (seriesMoved.length + seriesConflicts.length) > 1;
 
-                if (isSeries) {
-                    const modalResult = await openScopeModal({
-                        session,
-                        targetDate,
-                        targetTime,
-                        dryRunResult: dryRunData
-                    });
-                    if (modalResult.cancelled) {
+                    if (isSeries) {
+                        const modalResult = await openScopeModal({
+                            session,
+                            targetDate,
+                            targetTime,
+                            dryRunResult: dryRunData,
+                            originalDate,
+                            originalTime
+                        });
+                        if (modalResult.cancelled) {
+                            revertOptimistic();
+                            return;
+                        }
+                        chosenScope = modalResult.choice;
+                        allowPartial = Boolean(modalResult.allowPartial);
+                    }
+                } catch (dryRunError) {
+                    // If dryRun fails due to series conflicts, still show scope modal if available
+                    if (dryRunError?.code === 'SERIES_CONFLICT' && dryRunError?.details) {
+                        const modalResult = await openScopeModal({
+                            session,
+                            targetDate,
+                            targetTime,
+                            dryRunResult: dryRunError.details,
+                            originalDate,
+                            originalTime
+                        });
+                        if (modalResult.cancelled) {
+                            revertOptimistic();
+                            return;
+                        }
+                        chosenScope = modalResult.choice;
+                        allowPartial = Boolean(modalResult.allowPartial);
+                    } else {
                         revertOptimistic();
+                        const message = dryRunError?.message || 'Failed to check recurring schedule series.';
+                        showToast?.(message, 'error');
                         return;
                     }
-                    chosenScope = modalResult.choice;
-                    allowPartial = Boolean(modalResult.allowPartial);
                 }
-            } catch (dryRunError) {
-                // If dryRun fails due to series conflicts, still show scope modal if available
-                if (dryRunError?.code === 'SERIES_CONFLICT' && dryRunError?.details) {
-                    const modalResult = await openScopeModal({
-                        session,
-                        targetDate,
-                        targetTime,
-                        dryRunResult: dryRunError.details
-                    });
-                    if (modalResult.cancelled) {
+
+                if (chosenScope === 'series') {
+                    try {
+                        const res = await window.ClassroomAPI.teacherRescheduleSessionSeries(sessionId, {
+                            targetLocalDate: targetDate,
+                            targetLocalTime: targetTime,
+                            durationMinutes,
+                            allowPartial,
+                            timezone: session.timezone || 'UTC',
+                            expectedScheduleVersion
+                        });
+                        const resData = res?.data || res;
+                        const movedList = resData?.moved || seriesMoved;
+                        const opId = resData?.operationId || null;
+                        await refresh();
+
+                        const undoMoves = movedList.map((m) => ({
+                            sessionId: m.sessionId,
+                            targetLocalDate: m.from?.targetLocalDate || m.from?.date,
+                            targetLocalTime: m.from?.targetLocalTime || m.from?.time,
+                            durationMinutes: m.from?.durationMinutes || durationMinutes,
+                            timezone: m.from?.timezone || session.timezone || 'UTC'
+                        }));
+                        const undoToken = {};
+                        state.lastMoveUndo = {
+                            token: undoToken,
+                            operationId: opId,
+                            moves: undoMoves,
+                            timezone: session.timezone || 'UTC',
+                            label: `Moved ${movedList.length} session${movedList.length !== 1 ? 's' : ''}.`
+                        };
+
+                        state.activeToastHandle = showToast?.(state.lastMoveUndo.label, 'success', {
+                            actionLabel: 'Undo',
+                            durationMs: 8000,
+                            onAction: async () => {
+                                if (!state.lastMoveUndo || state.lastMoveUndo.token !== undoToken) {
+                                    return;
+                                }
+                                state.lastMoveUndo = null;
+                                try {
+                                    const undoRes = await window.ClassroomAPI.teacherBulkRescheduleSessions({
+                                        moves: undoMoves,
+                                        undoOf: opId,
+                                        timezone: session.timezone || 'UTC'
+                                    });
+                                    const undoData = undoRes?.data || undoRes;
+                                    const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : undoMoves.length;
+                                    const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
+                                    await refresh();
+                                    if (skipped.length > 0) {
+                                        const total = restoredCount + skipped.length;
+                                        const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
+                                        showToast?.(`Restored ${restoredCount} of ${total} — ${skipped.length} session${skipped.length !== 1 ? 's' : ''} now ${reason}.`, 'info');
+                                    } else {
+                                        showToast?.('Reschedule undone.', 'success');
+                                    }
+                                } catch (undoErr) {
+                                    showToast?.(undoErr?.message || 'Failed to undo reschedule.', 'error');
+                                }
+                            }
+                        });
+                    } catch (error) {
                         revertOptimistic();
-                        return;
+                        const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
+                        showToast?.(message, 'error');
+                        markSlotError(targetDate, targetTime, message);
+                        await refresh();
                     }
-                    chosenScope = modalResult.choice;
-                    allowPartial = Boolean(modalResult.allowPartial);
                 } else {
-                    revertOptimistic();
-                    const message = dryRunError?.message || 'Failed to check recurring schedule series.';
-                    showToast?.(message, 'error');
-                    return;
+                    try {
+                        await window.ClassroomAPI.teacherRescheduleScheduledSession(sessionId, {
+                            targetLocalDate: targetDate,
+                            targetLocalTime: targetTime,
+                            durationMinutes,
+                            timezone: session.timezone || 'UTC',
+                            expectedScheduleVersion
+                        });
+                        await refresh();
+
+                        const undoMoves = [{
+                            sessionId,
+                            targetLocalDate: originalDate,
+                            targetLocalTime: originalTime,
+                            durationMinutes,
+                            timezone: session.timezone || 'UTC'
+                        }];
+                        const undoToken = {};
+                        state.lastMoveUndo = {
+                            token: undoToken,
+                            operationId: null,
+                            moves: undoMoves,
+                            timezone: session.timezone || 'UTC',
+                            label: 'Session rescheduled.'
+                        };
+
+                        state.activeToastHandle = showToast?.('Session rescheduled.', 'success', {
+                            actionLabel: 'Undo',
+                            durationMs: 8000,
+                            onAction: async () => {
+                                if (!state.lastMoveUndo || state.lastMoveUndo.token !== undoToken) {
+                                    return;
+                                }
+                                state.lastMoveUndo = null;
+                                try {
+                                    const undoRes = await window.ClassroomAPI.teacherBulkRescheduleSessions({
+                                        moves: undoMoves,
+                                        timezone: session.timezone || 'UTC'
+                                    });
+                                    const undoData = undoRes?.data || undoRes;
+                                    const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : 1;
+                                    const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
+                                    await refresh();
+                                    if (skipped.length > 0) {
+                                        const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
+                                        showToast?.(`Could not restore — session is now ${reason}.`, 'info');
+                                    } else {
+                                        showToast?.('Reschedule undone.', 'success');
+                                    }
+                                } catch (undoErr) {
+                                    showToast?.(undoErr?.message || 'Failed to undo reschedule.', 'error');
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        revertOptimistic();
+                        const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
+                        showToast?.(message, 'error');
+                        markSlotError(targetDate, targetTime, message);
+                        renderCalendarGrid();
+                    }
                 }
+            } finally {
+                state.pendingSessionIds.delete(String(sessionId || ''));
+                updateSessionPill(sessionId);
+            }
+        }
+
+        const getSettingsDialog = () => (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-settings-dialog') : null;
+
+        function openSettings(openerEl) {
+            const settingsDialog = getSettingsDialog();
+            if (!settingsDialog || settingsDialog.open) return;
+
+            // Sync dialog form controls with current active settings
+            const weekStartSelect = (typeof document !== 'undefined') ? document.getElementById('ts-setting-week-start') : null;
+            if (weekStartSelect) {
+                weekStartSelect.value = String(getWeekStartSetting());
+            }
+            const timeFormatSelect = (typeof document !== 'undefined') ? document.getElementById('ts-setting-time-format') : null;
+            if (timeFormatSelect) {
+                timeFormatSelect.value = getTimeFormatSetting();
+            }
+            const densitySelect = (typeof document !== 'undefined') ? document.getElementById('ts-setting-density') : null;
+            if (densitySelect) {
+                densitySelect.value = String(state.hourHeightPx || 50);
+            }
+            const appearanceSelect = (typeof document !== 'undefined') ? document.getElementById('ts-setting-appearance') : null;
+            if (appearanceSelect) {
+                appearanceSelect.value = state.appearance || 'solid';
             }
 
-            if (chosenScope === 'series') {
+            if (settingsDialog && !settingsDialog._tsCloseBound && typeof settingsDialog.addEventListener === 'function') {
+                settingsDialog._tsCloseBound = true;
+                settingsDialog.addEventListener('close', () => {
+                    if (state._settingsOpener && typeof state._settingsOpener.focus === 'function') {
+                        state._settingsOpener.focus();
+                        state._settingsOpener = null;
+                    }
+                });
+            }
+
+            if (typeof settingsDialog.style?.removeProperty === 'function') {
+                settingsDialog.style.removeProperty('display');
+            } else if (settingsDialog.style) {
+                delete settingsDialog.style.display;
+            }
+            state._settingsOpener = openerEl || (typeof document !== 'undefined' ? document.activeElement : null);
+            if (typeof settingsDialog.showModal === 'function') {
                 try {
-                    const res = await window.ClassroomAPI.teacherRescheduleSessionSeries(sessionId, {
-                        targetLocalDate: targetDate,
-                        targetLocalTime: targetTime,
-                        durationMinutes,
-                        allowPartial,
-                        timezone: session.timezone || 'UTC',
-                        expectedScheduleVersion
-                    });
-                    const resData = res?.data || res;
-                    const movedList = resData?.moved || seriesMoved;
-                    const opId = resData?.operationId || null;
-                    await refresh();
-
-                    const undoMoves = movedList.map((m) => ({
-                        sessionId: m.sessionId,
-                        targetLocalDate: m.from?.targetLocalDate || m.from?.date,
-                        targetLocalTime: m.from?.targetLocalTime || m.from?.time,
-                        durationMinutes: m.from?.durationMinutes || durationMinutes,
-                        timezone: m.from?.timezone || session.timezone || 'UTC'
-                    }));
-                    const undoToken = {};
-                    state.lastMoveUndo = {
-                        token: undoToken,
-                        operationId: opId,
-                        moves: undoMoves,
-                        timezone: session.timezone || 'UTC',
-                        label: `Moved ${movedList.length} session${movedList.length !== 1 ? 's' : ''}.`
-                    };
-
-                    state.activeToastHandle = showToast?.(state.lastMoveUndo.label, 'success', {
-                        actionLabel: 'Undo',
-                        durationMs: 8000,
-                        onAction: async () => {
-                            if (!state.lastMoveUndo || state.lastMoveUndo.token !== undoToken) {
-                                return;
-                            }
-                            state.lastMoveUndo = null;
-                            try {
-                                const undoRes = await window.ClassroomAPI.teacherBulkRescheduleSessions({
-                                    moves: undoMoves,
-                                    undoOf: opId,
-                                    timezone: session.timezone || 'UTC'
-                                });
-                                const undoData = undoRes?.data || undoRes;
-                                const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : undoMoves.length;
-                                const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
-                                await refresh();
-                                if (skipped.length > 0) {
-                                    const total = restoredCount + skipped.length;
-                                    const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
-                                    showToast?.(`Restored ${restoredCount} of ${total} — ${skipped.length} session${skipped.length !== 1 ? 's' : ''} now ${reason}.`, 'info');
-                                } else {
-                                    showToast?.('Reschedule undone.', 'success');
-                                }
-                            } catch (undoErr) {
-                                showToast?.(undoErr?.message || 'Failed to undo reschedule.', 'error');
-                            }
-                        }
-                    });
-                } catch (error) {
-                    revertOptimistic();
-                    const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
-                    showToast?.(message, 'error');
-                    markSlotError(targetDate, targetTime, message);
-                    await refresh();
-                } finally {
-                    state.pendingSessionIds.delete(String(sessionId || ''));
+                    settingsDialog.showModal();
+                } catch (err) {
+                    settingsDialog.style.display = 'block';
                 }
             } else {
+                settingsDialog.style.display = 'block';
+            }
+        }
+
+        function closeSettings() {
+            const settingsDialog = getSettingsDialog();
+            if (!settingsDialog) return;
+            if (typeof settingsDialog.close === 'function') {
                 try {
-                    await window.ClassroomAPI.teacherRescheduleScheduledSession(sessionId, {
-                        targetLocalDate: targetDate,
-                        targetLocalTime: targetTime,
-                        durationMinutes,
-                        timezone: session.timezone || 'UTC',
-                        expectedScheduleVersion
-                    });
-                    await refresh();
-
-                    const undoMoves = [{
-                        sessionId,
-                        targetLocalDate: previousDate,
-                        targetLocalTime: previousTime,
-                        durationMinutes,
-                        timezone: session.timezone || 'UTC'
-                    }];
-                    const undoToken = {};
-                    state.lastMoveUndo = {
-                        token: undoToken,
-                        operationId: null,
-                        moves: undoMoves,
-                        timezone: session.timezone || 'UTC',
-                        label: 'Session rescheduled.'
-                    };
-
-                    state.activeToastHandle = showToast?.('Session rescheduled.', 'success', {
-                        actionLabel: 'Undo',
-                        durationMs: 8000,
-                        onAction: async () => {
-                            if (!state.lastMoveUndo || state.lastMoveUndo.token !== undoToken) {
-                                return;
-                            }
-                            state.lastMoveUndo = null;
-                            try {
-                                const undoRes = await window.ClassroomAPI.teacherBulkRescheduleSessions({
-                                    moves: undoMoves,
-                                    timezone: session.timezone || 'UTC'
-                                });
-                                const undoData = undoRes?.data || undoRes;
-                                const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : 1;
-                                const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
-                                await refresh();
-                                if (skipped.length > 0) {
-                                    const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
-                                    showToast?.(`Could not restore — session is now ${reason}.`, 'info');
-                                } else {
-                                    showToast?.('Reschedule undone.', 'success');
-                                }
-                            } catch (undoErr) {
-                                showToast?.(undoErr?.message || 'Failed to undo reschedule.', 'error');
-                            }
-                        }
-                    });
-                } catch (error) {
-                    revertOptimistic();
-                    const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
-                    showToast?.(message, 'error');
-                    markSlotError(targetDate, targetTime, message);
-                    renderCalendarGrid();
-                } finally {
-                    state.pendingSessionIds.delete(String(sessionId || ''));
+                    if (settingsDialog.open) settingsDialog.close();
+                } catch (err) {
+                    settingsDialog.style.display = 'none';
                 }
+            } else {
+                settingsDialog.style.display = 'none';
+            }
+            if (state._settingsOpener && typeof state._settingsOpener.focus === 'function') {
+                state._settingsOpener.focus();
+                state._settingsOpener = null;
             }
         }
 
@@ -2416,6 +2757,13 @@ window.TeacherSchedulerWorkspace = (function () {
             if (elements.teacherSchedulerTeacherSelect) {
                 elements.teacherSchedulerTeacherSelect.addEventListener('change', () => {
                     state.selectedTeacherUid = elements.teacherSchedulerTeacherSelect.value || 'all';
+                    if (state.selectedTeacherUid === 'all') {
+                        state.selectedTeacherUids = new Set();
+                    } else if (state.selectedTeacherUid === 'none') {
+                        state.selectedTeacherUids = new Set();
+                    } else {
+                        state.selectedTeacherUids = new Set([state.selectedTeacherUid]);
+                    }
                     const listEl = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-teacher-list') : null;
                     if (listEl) {
                         listEl.querySelectorAll('.ts-teacher-checkbox').forEach((cb) => {
@@ -2436,11 +2784,21 @@ window.TeacherSchedulerWorkspace = (function () {
                 teacherListEl.addEventListener('change', (evt) => {
                     const cb = evt.target.closest('.ts-teacher-checkbox');
                     if (!cb) return;
+                    const allBoxes = Array.from(teacherListEl.querySelectorAll('.ts-teacher-checkbox'));
+                    const totalTeachers = allBoxes.length;
                     const checkedBoxes = Array.from(teacherListEl.querySelectorAll('.ts-teacher-checkbox:checked'));
-                    if (checkedBoxes.length === 1) {
+                    if (checkedBoxes.length === 0) {
+                        state.selectedTeacherUid = 'none';
+                        state.selectedTeacherUids = new Set();
+                    } else if (checkedBoxes.length === 1) {
                         state.selectedTeacherUid = checkedBoxes[0].value;
-                    } else {
+                        state.selectedTeacherUids = new Set([checkedBoxes[0].value]);
+                    } else if (checkedBoxes.length > 1 && checkedBoxes.length < totalTeachers) {
                         state.selectedTeacherUid = 'all';
+                        state.selectedTeacherUids = new Set(checkedBoxes.map((b) => b.value));
+                    } else if (checkedBoxes.length === totalTeachers) {
+                        state.selectedTeacherUid = 'all';
+                        state.selectedTeacherUids = new Set();
                     }
                     if (elements.teacherSchedulerTeacherSelect) {
                         elements.teacherSchedulerTeacherSelect.value = state.selectedTeacherUid;
@@ -2498,6 +2856,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const scheduleListEl = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-schedule-list') : null;
 
             function setViewMode(view) {
+                state.viewMode = view;
                 if (view === 'day') {
                     if (viewLabel) viewLabel.textContent = 'Day';
                     gridBtn?.classList.add('active');
@@ -2613,25 +2972,40 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
             }
 
-            const settingsDialog = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-settings-dialog') : null;
-            const openSettings = () => {
-                if (settingsDialog) {
-                    if (typeof settingsDialog.showModal === 'function') settingsDialog.showModal();
-                    else settingsDialog.style.display = 'block';
-                }
-            };
-            const closeSettings = () => {
-                if (settingsDialog) {
-                    if (typeof settingsDialog.close === 'function') settingsDialog.close();
-                    else settingsDialog.style.display = 'none';
-                }
-            };
-            document.getElementById('btn-ts-settings')?.addEventListener('click', openSettings);
-            document.getElementById('btn-ts-appearance')?.addEventListener('click', openSettings);
+            const settingsDialog = getSettingsDialog();
+            if (settingsDialog && !settingsDialog._tsCloseBound) {
+                settingsDialog._tsCloseBound = true;
+                settingsDialog.addEventListener('close', () => {
+                    if (state._settingsOpener && typeof state._settingsOpener.focus === 'function') {
+                        state._settingsOpener.focus();
+                        state._settingsOpener = null;
+                    }
+                });
+            }
+            document.getElementById('btn-ts-settings')?.addEventListener('click', (e) => openSettings(e.currentTarget));
+            document.getElementById('btn-ts-appearance')?.addEventListener('click', (e) => openSettings(e.currentTarget));
             document.getElementById('btn-ts-close-settings')?.addEventListener('click', closeSettings);
             document.getElementById('btn-ts-save-settings')?.addEventListener('click', () => {
                 const density = document.getElementById('ts-setting-density')?.value;
                 const appearance = document.getElementById('ts-setting-appearance')?.value;
+                const weekStartVal = document.getElementById('ts-setting-week-start')?.value;
+                const timeFormatVal = document.getElementById('ts-setting-time-format')?.value;
+                let weekStartChanged = false;
+                let timeFormatChanged = false;
+                if (weekStartVal !== undefined && weekStartVal !== null && weekStartVal !== '') {
+                    const parsed = Number(weekStartVal) === 0 ? 0 : 1;
+                    if (parsed !== getWeekStartSetting()) {
+                        setWeekStartSetting(parsed);
+                        weekStartChanged = true;
+                    }
+                }
+                if (timeFormatVal !== undefined && timeFormatVal !== null && timeFormatVal !== '') {
+                    const parsedTf = String(timeFormatVal) === '12' ? '12' : '24';
+                    if (parsedTf !== getTimeFormatSetting()) {
+                        setTimeFormatSetting(parsedTf);
+                        timeFormatChanged = true;
+                    }
+                }
                 if (density && typeof document !== 'undefined') {
                     const densityVal = Number(density) || 50;
                     document.documentElement.style.setProperty('--ts-hour', `${densityVal}px`);
@@ -2647,8 +3021,20 @@ window.TeacherSchedulerWorkspace = (function () {
                         /* ignore storage error */
                     }
                 }
-                renderCalendarGrid();
-                renderClassRail();
+                if (weekStartChanged) {
+                    const { from } = currentRange();
+                    const newStart = startOfWeek(from, getWeekStartSetting());
+                    const span = rangeSpanDays();
+                    if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(newStart);
+                    if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = toLocalDateInput(addDays(newStart, span - 1));
+                    state.fromDate = toLocalDateInput(newStart);
+                    state.toDate = toLocalDateInput(addDays(newStart, span - 1));
+                    renderMiniCalendar();
+                    refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                } else {
+                    renderCalendarGrid();
+                    renderClassRail();
+                }
                 closeSettings();
             });
 
@@ -2732,6 +3118,8 @@ window.TeacherSchedulerWorkspace = (function () {
             }
 
             function rangeSpanDays() {
+                if (state.viewMode === 'day') return 1;
+                if (state.viewMode === 'week') return 7;
                 const { from, to } = currentRange();
                 const span = Math.round((to.getTime() - from.getTime()) / 86400000);
                 return Math.max(1, span || 7);
@@ -2745,12 +3133,22 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             if (elements.btnTeacherSchedulerToday) {
                 elements.btnTeacherSchedulerToday.addEventListener('click', () => {
-                    const span = rangeSpanDays();
-                    const start = startOfWeek(new Date());
-                    if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(start);
-                    if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = toLocalDateInput(addDays(start, span));
-                    state.fromDate = toLocalDateInput(start);
-                    state.toDate = toLocalDateInput(addDays(start, span));
+                    if (state.viewMode === 'day') {
+                        const today = new Date();
+                        const todayStr = toLocalDateInput(today);
+                        if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = todayStr;
+                        if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = todayStr;
+                        state.fromDate = todayStr;
+                        state.toDate = todayStr;
+                    } else {
+                        const span = state.viewMode === 'week' ? 7 : rangeSpanDays();
+                        const start = startOfWeek(new Date(), getWeekStartSetting());
+                        const end = addDays(start, span - 1);
+                        if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(start);
+                        if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = toLocalDateInput(end);
+                        state.fromDate = toLocalDateInput(start);
+                        state.toDate = toLocalDateInput(end);
+                    }
                     state._hasScrolledToHour = false;
                     refresh().catch((error) => showToast?.(error?.message || 'Failed to jump to today.', 'error'));
                 });
@@ -2785,7 +3183,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         if (!dateStr) return;
                         const clicked = new Date(`${dateStr}T00:00:00`);
                         if (!Number.isFinite(clicked.getTime())) return;
-                        const startOfWeekDate = addDays(clicked, -clicked.getDay());
+                        const startOfWeekDate = startOfWeek(clicked, getWeekStartSetting());
                         const endOfWeekDate = addDays(startOfWeekDate, 6);
                         if (elements.inputTeacherSchedulerFromDate) {
                             elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(startOfWeekDate);
@@ -2911,12 +3309,13 @@ window.TeacherSchedulerWorkspace = (function () {
 
                 const clientX = drag.lastX;
                 const clientY = drag.lastY;
+                const targetY = clientY - (drag.offsetY || 0);
 
                 /* READ */
-                let coords = drag.metrics ? resolveSlotCoords(drag.metrics, clientX, clientY) : null;
+                let coords = drag.metrics ? resolveSlotCoords(drag.metrics, clientX, targetY) : null;
                 let fallbackSlot = null;
                 if (!coords) {
-                    fallbackSlot = findSlotFromPoint(clientX, clientY) || drag.lastEventSlot || null;
+                    fallbackSlot = findSlotFromPoint(clientX, targetY) || drag.lastEventSlot || null;
                 }
 
                 /* WRITE */
@@ -3026,15 +3425,16 @@ window.TeacherSchedulerWorkspace = (function () {
                 }
                 if (!state.pointerDrag) return;
                 const drag = state.pointerDrag;
+                const targetY = evt.clientY - (drag.offsetY || 0);
                 const coords = (drag.active && drag.metrics)
-                    ? resolveSlotCoords(drag.metrics, evt.clientX, evt.clientY)
+                    ? resolveSlotCoords(drag.metrics, evt.clientX, targetY)
                     : null;
                 const geometrySlot = (coords && elements.teacherSchedulerCalendar?.querySelector)
                     ? elements.teacherSchedulerCalendar.querySelector(
                         `.teacher-scheduler-slot[data-date="${coords.date}"][data-time="${coords.time}"]`)
                     : null;
                 const slot = drag.active
-                    ? (geometrySlot || findSlotFromPoint(evt.clientX, evt.clientY) || closestTarget(evt, '.teacher-scheduler-slot') || drag.activeSlot)
+                    ? (geometrySlot || findSlotFromPoint(evt.clientX, targetY) || closestTarget(evt, '.teacher-scheduler-slot'))
                     : null;
                 const shouldSuppressClick = drag.active && drag.kind === 'session';
                 clearPointerDrag();
@@ -3074,6 +3474,10 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (elements.teacherSchedulerQuickAdd?.style.display === 'block') {
                         trapFocus(elements.teacherSchedulerQuickAdd, evt);
                     }
+                    return;
+                }
+                if (state.pointerDrag) {
+                    clearPointerDrag();
                     return;
                 }
                 const createMenu = (typeof document !== 'undefined') ? document.getElementById('ts-create-menu') : null;
@@ -3301,6 +3705,18 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
             }
 
+            if (elements.inputTeacherSchedulerSessionNote) {
+                elements.inputTeacherSchedulerSessionNote.addEventListener('input', () => {
+                    state.isSessionNoteDirty = true;
+                });
+            }
+
+            if (elements.inputTeacherSchedulerSessionOutcome) {
+                elements.inputTeacherSchedulerSessionOutcome.addEventListener('change', () => {
+                    state.isSessionOutcomeDirty = true;
+                });
+            }
+
             if (elements.btnTeacherSchedulerVoiceNote) {
                 const voiceReady = elements.teacherSchedulerVoiceStatus
                     && elements.inputTeacherSchedulerSessionNote;
@@ -3338,6 +3754,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     // Undo AI: button and state
                     const undoBtn = document.getElementById('btn-teacher-scheduler-undo-ai');
                     let previousNote = '';
+                    let previousOutcome = '';
                     let undoSessionId = '';
                     if (undoBtn) {
                         undoBtn.addEventListener('click', () => {
@@ -3345,6 +3762,9 @@ window.TeacherSchedulerWorkspace = (function () {
                             if (state.sessionBubble && state.sessionBubble.sessionId === undoSessionId) {
                                 if (elements.inputTeacherSchedulerSessionNote) {
                                     elements.inputTeacherSchedulerSessionNote.value = previousNote;
+                                }
+                                if (elements.inputTeacherSchedulerSessionOutcome) {
+                                    elements.inputTeacherSchedulerSessionOutcome.value = previousOutcome;
                                 }
                                 showToast?.('Previous note restored.', 'info');
                             }
@@ -3358,6 +3778,7 @@ window.TeacherSchedulerWorkspace = (function () {
                             showToast?.('Speech recognition not supported in this browser. Use Chrome.', 'error');
                             return;
                         }
+                        const recordingSessionId = String(state.sessionBubble?.sessionId || '');
                         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                         recognition = new SpeechRec();
                         recognition.continuous = false;
@@ -3377,6 +3798,10 @@ window.TeacherSchedulerWorkspace = (function () {
                         };
 
                         recognition.onresult = async (evt) => {
+                            if (!state.sessionBubble || String(state.sessionBubble.sessionId || '') !== recordingSessionId) {
+                                stopRecognitionSafe();
+                                return;
+                            }
                             const transcript = Array.from(evt.results).map(r => r[0].transcript).join(' ').trim();
                             if (!transcript) {
                                 showToast?.('No speech detected. Try again.', 'info');
@@ -3385,10 +3810,11 @@ window.TeacherSchedulerWorkspace = (function () {
                             }
 
                             // Capture session context for race-proofing
-                            const capturedSessionId = state.sessionBubble?.sessionId || '';
+                            const capturedSessionId = recordingSessionId;
 
                             // Snapshot for undo
                             previousNote = elements.inputTeacherSchedulerSessionNote?.value || '';
+                            previousOutcome = elements.inputTeacherSchedulerSessionOutcome?.value || '';
                             undoSessionId = capturedSessionId;
 
                             if (elements.teacherSchedulerVoiceStatus) {
@@ -3461,7 +3887,7 @@ window.TeacherSchedulerWorkspace = (function () {
             }
 
             const handleOutsideDismiss = (evt) => {
-                if (elements.teacherSchedulerQuickAdd?.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-quick-add, .teacher-scheduler-slot, #btn-ts-create, #btn-ts-tool-add')) {
+                if (elements.teacherSchedulerQuickAdd?.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-quick-add, .teacher-scheduler-slot, #btn-ts-create, #btn-ts-tool-add, #btn-ts-create-session, .ts-create-btn')) {
                     closeQuickAdd();
                 }
                 if (elements.teacherSchedulerSessionBubble?.style.display === 'block' && !closestTarget(evt, '#teacher-scheduler-session-bubble, .teacher-scheduler-session-pill')) {
@@ -3496,6 +3922,8 @@ window.TeacherSchedulerWorkspace = (function () {
             state.loaded = true;
             setToolbarDefaults();
             initAppearanceSettings();
+            initWeekStartSetting();
+            initTimeFormatSetting();
             initPatternDayChips();
             bindEvents();
             await loadTeachersList();
@@ -3511,9 +3939,7 @@ window.TeacherSchedulerWorkspace = (function () {
             if (createMenu) createMenu.style.display = 'none';
             const viewMenu = (typeof document !== 'undefined') ? document.getElementById('ts-view-menu') : null;
             if (viewMenu) viewMenu.style.display = 'none';
-            const settingsDialog = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-settings-dialog') : null;
-            if (settingsDialog && settingsDialog.open && typeof settingsDialog.close === 'function') settingsDialog.close();
-            else if (settingsDialog) settingsDialog.style.display = 'none';
+            closeSettings();
             if (typeof state._closeScopeModal === 'function') {
                 state._closeScopeModal();
             }
@@ -3535,6 +3961,9 @@ window.TeacherSchedulerWorkspace = (function () {
             refresh,
             load: refresh,
             deactivate,
+            openSettings,
+            closeSettings,
+            resolveTeacherDisplayName,
             placeClassroomSession,
             commitQuickAdd,
             cancelSession,
@@ -3549,6 +3978,14 @@ window.TeacherSchedulerWorkspace = (function () {
             commitResize,
             cancelResizeDrag,
             getSlotHeightPx,
+            getSessionDensityMode,
+            getWeekStartSetting,
+            setWeekStartSetting,
+            getTimeFormatSetting,
+            setTimeFormatSetting,
+            formatTimeRange,
+            formatGutterHour,
+            startOfWeek,
             renderCalendarGrid,
             repaintDayColumns,
             resolveTeacherColor,
@@ -3557,6 +3994,13 @@ window.TeacherSchedulerWorkspace = (function () {
             resetAppearanceSettings,
             getEffectiveTeacherForSession,
             getEffectiveTeacherForClassroom,
+            isSessionVisible,
+            hasClientConflict,
+            getSessionLocalDate,
+            getSessionLocalTime,
+            duplicateSession,
+            saveSessionOutcome,
+            clearPointerDrag,
             getState: () => state
         };
     }

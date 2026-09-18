@@ -343,10 +343,13 @@ const {
         const restoredMonthTitle = await miniCal.locator('.mini-cal-month-title').textContent();
         assert.strictEqual(restoredMonthTitle, initialMonthTitle, 'Mini calendar title must restore on prev month click');
 
-        // Check weekday headers (S M T W T F S)
+        // Check weekday headers (M T W T F S S or S M T W T F S)
         const weekdayHeaders = await miniCal.locator('.mini-cal-weekdays span').allTextContents();
         assert.strictEqual(weekdayHeaders.length, 7, 'Mini calendar should have 7 weekday headers');
-        assert.deepStrictEqual(weekdayHeaders, ['S', 'M', 'T', 'W', 'T', 'F', 'S'], 'Mini calendar weekdays should be S M T W T F S');
+        assert(
+            weekdayHeaders.join('') === 'MTWTFSS' || weekdayHeaders.join('') === 'SMTWTFS',
+            'Mini calendar weekdays should match configured week start (MTWTFSS or SMTWTFS)'
+        );
 
         // Check 42 day cells
         const dayCells = await miniCal.locator('.mini-cal-day-cell').count();
@@ -453,6 +456,93 @@ const {
         await page.waitForTimeout(300);
         assert(!(await isVisible(page.locator('#teacher-scheduler-quick-add'))), 'Quick Add must dismiss on Escape key');
         console.log(' - Scenario 1 passed: popover exclusivity, outside click, and Escape dismissal verified.');
+        stepsCompleted++;
+
+        // SCENARIO 1B: Settings Modal Lifecycle, Outside Click Unfreeze, and Create Menu
+        console.log('Scenario 1B: Checking Settings modal lifecycle, unfreeze, and Quick Add menu trigger...');
+
+        // 1B-a: Click toolbar gear to open Settings
+        await page.locator('#btn-ts-settings').click();
+        await page.waitForTimeout(300);
+        const settingsOpen = await page.evaluate(() => {
+            const d = document.getElementById('teacher-scheduler-settings-dialog');
+            const rect = d ? d.getBoundingClientRect() : null;
+            const style = d ? getComputedStyle(d) : null;
+            return {
+                open: Boolean(d?.open),
+                display: style?.display,
+                width: rect?.width || 0,
+                height: rect?.height || 0
+            };
+        });
+        assert.strictEqual(settingsOpen.open, true, 'Settings modal dialog must be logically open');
+        assert.notStrictEqual(settingsOpen.display, 'none', 'Settings modal dialog must NOT have display: none');
+        assert(settingsOpen.width > 0 && settingsOpen.height > 0, 'Settings modal dialog must have visible geometry');
+
+        // 1B-b: Close via Done button
+        await page.locator('#btn-ts-save-settings').click();
+        await page.waitForTimeout(300);
+        const settingsClosed = await page.evaluate(() => {
+            const d = document.getElementById('teacher-scheduler-settings-dialog');
+            return !d || !d.open;
+        });
+        assert(settingsClosed, 'Settings dialog must be closed after clicking Done');
+
+        // Verify page is not frozen: clicking calendar refresh works immediately
+        await page.locator('#btn-teacher-scheduler-refresh').click();
+        await page.waitForTimeout(400);
+
+        // 1B-c: Click sidebar Display Settings link to open Settings
+        await page.locator('#btn-ts-appearance').click();
+        await page.waitForTimeout(300);
+        assert(await page.evaluate(() => document.getElementById('teacher-scheduler-settings-dialog')?.open), 'Settings modal must open via sidebar trigger');
+
+        // Check controls synced and test discarding uncommitted draft on Escape
+        const initialTimeFormat = await page.locator('#ts-setting-time-format').inputValue();
+        assert.strictEqual(initialTimeFormat, '24', 'Time format select must reflect active 24h setting on open');
+        await page.locator('#ts-setting-time-format').selectOption('12');
+
+        // Close via Escape key without clicking Done
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(300);
+        assert(await page.evaluate(() => !document.getElementById('teacher-scheduler-settings-dialog')?.open), 'Settings modal must close on Escape key');
+
+        // Verify outside controls still clickable after Escape
+        await page.locator('#teacher-scheduler-rail-title').click();
+        await page.waitForTimeout(200);
+
+        // Verify time format remained 24h because draft was discarded
+        const gutterHour24 = await page.evaluate(() => document.querySelector('.scheduler-calendar-time span')?.textContent || '');
+        assert(gutterHour24.includes(':00') || gutterHour24.includes('07:00'), 'Time gutter must remain in 24h format when settings closed without Done');
+
+        // 1B-d: Test committing time format on Done
+        await page.locator('#btn-ts-settings').click();
+        await page.waitForTimeout(300);
+        assert.strictEqual(await page.locator('#ts-setting-time-format').inputValue(), '24', 'Reopening settings must restore time format dropdown to active setting');
+        await page.locator('#ts-setting-time-format').selectOption('12');
+        await page.locator('#btn-ts-save-settings').click();
+        await page.waitForTimeout(300);
+        const gutterHour12 = await page.evaluate(() => document.querySelector('.scheduler-calendar-time span')?.textContent || '');
+        assert(gutterHour12.includes('AM') || gutterHour12.includes('PM'), 'Time gutter must reflect 12h format after saving');
+
+        // Restore back to 24h
+        await page.locator('#btn-ts-settings').click();
+        await page.waitForTimeout(300);
+        await page.locator('#ts-setting-time-format').selectOption('24');
+        await page.locator('#btn-ts-save-settings').click();
+        await page.waitForTimeout(300);
+
+        // 1B-d: Test "+ Create -> Teaching session" menu item opens Quick Add without immediate self-dismissal
+        await page.locator('#btn-ts-create').click();
+        await page.waitForTimeout(200);
+        assert(await isVisible(page.locator('#ts-create-menu')), 'Create menu must be open');
+        await page.locator('#btn-ts-create-session').click();
+        await page.waitForTimeout(300);
+        assert(await isVisible(page.locator('#teacher-scheduler-quick-add')), 'Quick Add must remain open when opened via Create -> Teaching session');
+        await page.locator('#btn-teacher-scheduler-quick-cancel').click();
+        await page.waitForTimeout(300);
+        assert(!(await isVisible(page.locator('#teacher-scheduler-quick-add'))), 'Quick Add closes on cancel');
+        console.log(' - Scenario 1B passed: Settings modal lifecycle, unfreeze, and Quick Add menu trigger verified.');
         stepsCompleted++;
 
         // SCENARIO 3: Compact Pill Layout. At 24px/30min a 30-minute pill is 22px tall, which

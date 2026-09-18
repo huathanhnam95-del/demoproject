@@ -73,6 +73,8 @@ def call_ollama(prompt, timeout=TIMEOUT):
         "format": "json",
         "options": {"temperature": 0.2, "num_predict": 150}
     }
+    if not any(r in MODEL_NAME.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+        payload["think"] = False
     try:
         r = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
         r.raise_for_status()

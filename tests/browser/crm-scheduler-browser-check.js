@@ -74,8 +74,9 @@ async function dragBetween(page, sourceSelector, targetSelector) {
     const targetBox = target.getBoundingClientRect();
     const sourceX = sourceBox.left + (sourceBox.width / 2);
     const sourceY = sourceBox.top + (sourceBox.height / 2);
+    const grabOffsetY = sourceY - sourceBox.top;
     const targetX = targetBox.left + (targetBox.width / 2);
-    const targetY = targetBox.top + (targetBox.height / 2);
+    const targetY = targetBox.top + grabOffsetY + Math.min(10, targetBox.height / 2);
 
     const hit = document.elementFromPoint(sourceX, sourceY);
     const pill = hit?.closest?.('.teacher-scheduler-session-pill[data-session-id]') || null;

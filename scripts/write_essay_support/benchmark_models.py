@@ -33,6 +33,8 @@ def test_model(model_name):
         "stream": False,
         "options": {"temperature": 0.1, "num_predict": 4096}
     }
+    if not any(r in model_name.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+        payload["think"] = False
     t0 = time.time()
     req = urllib.request.Request(
         "http://127.0.0.1:11434/api/chat",

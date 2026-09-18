@@ -1,0 +1,14 @@
+As a visual director, my goal is to translate these complex interpersonal dynamics into "silent" visual narratives. To ensure the AI maintains consistency across all three, I have unified the stylistic descriptors while isolating the specific actions for each scene.
+
+Here are your three production-ready prompts.
+
+***
+
+**PROMPT 1**
+Minimalist editorial stickman line art, 3:4 aspect ratio. A scene of collaborative resolution: Two stick figures are positioned near a large board containing a diagram. One stick figure sits at a drafting table, holding a pencil and leaning in with an attentive posture. The second stick figure stands nearby, pointing a finger at a specific node on the board. The seated figure is drawing a bold, thick circle around that specific node. Both figures have simple, happy facial expressions; the standing figure is giving a clear thumbs-up. Style: Hand-drawn black ink lines on a warm, textured cream paper background. Subtle watercolor washes in terracotta and muted sage. **Strictly no text, no letters, no words, no speech bubbles.**
+
+**PROMPT 2**
+Minimalist editorial stickman line art, 3:4 aspect ratio. A scene of empirical resolution: A small student stick figure sits at a desk in the center. To the left, a teacher holds up a card featuring a tangled, complex scribble with a small "?" symbol above it. To the right, a second teacher holds up a card with a very simple, clean icon; a glowing lightbulb symbol appears above the student’s head. The student is smiling broadly. The teacher on the left is smiling and nodding in agreement. Style: Hand-drawn black ink lines on a warm, textured cream paper background. Subtle watercolor washes in terracotta and muted sage. **Strictly no text, no letters, no words, no speech bubbles.**
+
+**PROMPT 3**
+Minimalist editorial stickman line art, 3:4 aspect ratio. A scene of emotional mediation: Three stick figures are gathered around a round wooden table. In the center, a "mediator" figure is sliding two steaming ceramic coffee cups toward the others. On the left and right, two colleagues sit facing each other; they have placed their large headphones and microphones down on the table. They are leaning in with open palms and smiling, showing a transition from tension to warmth. Style: Hand-drawn black ink lines on a warm, textured cream paper background. Subtle watercolor washes in terracotta and muted sage. **Strictly no text, no letters, no words, no speech bubbles.**

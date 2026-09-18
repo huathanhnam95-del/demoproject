@@ -91,6 +91,8 @@ def query_ollama(model_name: str, prompt: str, temperature: float = 0.1, max_ret
             "num_ctx": 4096
         }
     }
+    if not any(r in model_name.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+        payload["think"] = False
     
     for attempt in range(1, max_retries + 1):
         try:

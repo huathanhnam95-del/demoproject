@@ -2173,4 +2173,29 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1178,2026-09-17,BEL brand identity exploration: Bat Tu chart derivation four logo directions with editable SVGs measured palettes and rationale document,Done,2026-09-17
 1179,2026-09-17,Audit verify and deploy Release V2.0.11 with 5 integrated packages to production,Done,2026-09-17
 1180,2026-09-17,Execute SWT parallel prompt-answer layout with non-jumping responsive view and ARIA linkages,Done,2026-09-17
-1181,2026-09-17,Analyze Question 1 craft candidate answer and test SWT UI locally,In Progress,
+1181,2026-09-17,Analyze Question 1 craft candidate answer and test SWT UI locally,Done,2026-09-17
+1182,2026-09-18,Enable parallel answer review on empty SWT submissions for study mode,Done,2026-09-18
+1183,2026-09-18,Implement PR 1 of deployment speed roadmap: telemetry verify-only root minimization and npm cache,Done,2026-09-18
+1184,2026-09-18,Implement PR 2 of deployment speed roadmap: GCS provisioning script media catalog generator and delta publisher,Done,2026-09-18
+1185,2026-09-18,Update website browser tab title to Better English Learning,Done,2026-09-18
+1186,2026-09-18,Analyze BEL Calendar source audit dd30df94 and formulate architectural questions,Done,2026-09-18
+1187,2026-09-18,Execute BEL Teacher Calendar source-grounded repair pass per user decisions,Done,2026-09-18
+1188,2026-09-18,Execute PR 2 GCS preflight provisioning approval bounded 26-file pilot and Playwright test,Done,2026-09-18
+1189,2026-09-18,Remove SWT point excerpt chips and implement 3-tier 50-70 word sample summaries for Question 1,Done,2026-09-18
+1190,2026-09-18,Audit BEL Teacher Calendar source-grounded repair pass changes,Done,2026-09-18
+1191,2026-09-18,Implement PR 3 client media URL resolver and RA and SST playback integration with pilot GCS publication,Done,2026-09-18
+1192,2026-09-18,Implement multi-color SWT core points simultaneous show all points toggle and sample summary phrase highlights,Done,2026-09-18
+1193,2026-09-18,Implement PR 4a release input policy and selective exclusion controller refactor,Done,2026-09-18
+1194,2026-09-18,Audit debug and refactor SWT multi-color core points and sample summary highlights,Done,2026-09-18
+1195,2026-09-18,Execute BEL Calendar settings freeze fix and surface repair plan,Done,2026-09-18
+1196,2026-09-18,Make Example summary dedicated tab beside Core points and Points to ignore tabs in SWT review,Done,2026-09-18
+1197,2026-09-18,Implement and verify PR 4b complete RA and SST production migration and selective exclusion,Done,2026-09-18
+1198,2026-09-18,Correct IPA in Lesson 2 uh sounds student handout answer key and teacher key,Done,2026-09-18
+1199,2026-09-18,Execute BEL Teacher Schedule functional audit remediation across TS-01 through TS-18,Done,2026-09-18
+1200,2026-09-18,Plan PR 4c unified Cohort 2 practice media migration and selective exclusion,Done,2026-09-18
+1201,2026-09-18,Implement Paraphrasing Guide beneath SWT sample summaries B and C,Done,2026-09-18
+1202,2026-09-18,Remediate BEL Teacher Schedule audit findings and unblock controller test suite,Done,2026-09-18
+1203,2026-09-18,Audit local LLMs for 16GB VRAM and recalibrate context window to 16K with top-level think false,Done,2026-09-18
+1204,2026-09-18,Execute Projects Performance Audit and Implementation Plan PR 1 through PR 3,Done,2026-09-18
+1205,2026-09-18,Establish workspace R4D ready-for-deployment session tagging (R) and PAR push-all-readied deployment orchestration protocol,Done,2026-09-18
+1206,2026-09-18,Integrate PR 4c practice media migration into integration branch and execute PR 4d tracked media pruning dry-run with recovery backup,In Progress,

@@ -121,7 +121,158 @@
           "reasonCode": "attribution"
         }
       ],
-      "sampleSummary": "Major sporting events are joining a global climate initiative to neutralize their carbon footprints and inspire broader environmental action, with the Sochi Olympics planning substantial investment in energy conservation, renewable energy, cleaner transport and reforestation."
+      "sampleSummary": {
+        "versionA": {
+          "id": "versionA",
+          "label": "Version A (Simple)",
+          "tagline": "Reuses original passage phrasing with coordinating connectors",
+          "text": "Major athletic events around the globe are striving to neutralize their carbon footprint as part of a world-wide climate network, which is particularly important for inspiring further global action on the environment, while organizers of the 2014 Sochi Olympics plan substantial investment dedicated to energy conservation, renewable energy, improving transport infrastructure, and the reforestation of Sochi National Park.",
+          "pointHighlights": [
+            {
+              "pointId": "core-1",
+              "phrase": "Major athletic events around the globe are striving to neutralize their carbon footprint as part of a world-wide climate network"
+            },
+            {
+              "pointId": "core-2",
+              "phrase": "particularly important for inspiring further global action on the environment"
+            },
+            {
+              "pointId": "core-3",
+              "phrase": "organizers of the 2014 Sochi Olympics plan substantial investment dedicated to energy conservation, renewable energy"
+            },
+            {
+              "pointId": "core-4",
+              "phrase": "improving transport infrastructure, and the reforestation of Sochi National Park"
+            }
+          ]
+        },
+        "versionB": {
+          "id": "versionB",
+          "label": "Version B (Advanced)",
+          "tagline": "Incorporates synonyms and structural voice shifts (passive <-> active)",
+          "text": "Although carbon neutrality is being actively pursued by prominent sporting competitions worldwide within an international climate initiative to motivate broader ecological stewardship, substantial financial resources have also been formally pledged by Sochi Olympic organizers to advance energy efficiency, develop renewable power, modernize municipal transportation infrastructure, and offset emissions through regional reforestation programs.",
+          "pointHighlights": [
+            {
+              "pointId": "core-1",
+              "phrase": "carbon neutrality is being actively pursued by prominent sporting competitions worldwide within an international climate initiative"
+            },
+            {
+              "pointId": "core-2",
+              "phrase": "to motivate broader ecological stewardship"
+            },
+            {
+              "pointId": "core-3",
+              "phrase": "substantial financial resources have also been formally pledged by Sochi Olympic organizers to advance energy efficiency, develop renewable power"
+            },
+            {
+              "pointId": "core-4",
+              "phrase": "modernize municipal transportation infrastructure, and offset emissions through regional reforestation programs"
+            }
+          ],
+          "paraphrasingGuide": [
+            {
+              "original": "Major athletic events around the globe ... are striving to neutralize their carbon footprint",
+              "paraphrased": "carbon neutrality is being actively pursued by prominent sporting competitions worldwide",
+              "type": "structure",
+              "technique": "Voice Shift & Nominalization",
+              "note": "Converts active verb phrase 'striving to neutralize their carbon footprint' into passive subject 'carbon neutrality is being actively pursued'."
+            },
+            {
+              "original": "Major athletic events around the globe",
+              "paraphrased": "prominent sporting competitions worldwide",
+              "type": "synonym",
+              "technique": "Lexical Substitution",
+              "note": "Replaces 'major athletic events' with 'prominent sporting competitions' and 'around the globe' with 'worldwide'."
+            },
+            {
+              "original": "part of a world-wide climate network",
+              "paraphrased": "within an international climate initiative",
+              "type": "synonym",
+              "technique": "Contextual Synonym",
+              "note": "Paraphrases 'world-wide climate network' into 'international climate initiative' to elevate academic register."
+            },
+            {
+              "original": "inspiring further global action on the environment",
+              "paraphrased": "to motivate broader ecological stewardship",
+              "type": "synonym",
+              "technique": "Academic Synonym",
+              "note": "Upgrades 'inspiring further global action on the environment' to 'motivate broader ecological stewardship'."
+            },
+            {
+              "original": "say they will put an estimated $1.75 billion into energy conservation and renewable energy",
+              "paraphrased": "substantial financial resources have also been formally pledged by Sochi Olympic organizers to advance energy efficiency, develop renewable power",
+              "type": "structure",
+              "technique": "Passive Construction & Generalization",
+              "note": "Shifts from informal reported speech ('say they will put') to formal passive ('have also been formally pledged') while generalizing the dollar amount."
+            },
+            {
+              "original": "improving transport infrastructure and offsetting greenhouse gas emissions ... the reforestation of Sochi National Park",
+              "paraphrased": "modernize municipal transportation infrastructure, and offset emissions through regional reforestation programs",
+              "type": "synonym",
+              "technique": "Parallel Verbs & Lexical Variation",
+              "note": "Condenses the compound predicate using parallel infinitive verbs ('modernize', 'offset') and replaces specific names with descriptive phrases."
+            }
+          ]
+        },
+        "versionC": {
+          "id": "versionC",
+          "label": "Version C (Expert)",
+          "tagline": "True summary with advanced paraphrasing and conceptual restructuring",
+          "text": "By embedding environmental accountability into international athletic competitions to stimulate worldwide ecological action, major sporting organizations are actively spearheading global decarbonization, a commitment prominently demonstrated by the Sochi Olympic organizers dedicating substantial capital toward renewable power generation, sustainable public transit infrastructure, and comprehensive reforestation initiatives designed to effectively neutralize carbon emissions.",
+          "pointHighlights": [
+            {
+              "pointId": "core-1",
+              "phrase": "embedding environmental accountability into international athletic competitions"
+            },
+            {
+              "pointId": "core-2",
+              "phrase": "to stimulate worldwide ecological action"
+            },
+            {
+              "pointId": "core-1",
+              "phrase": "major sporting organizations are actively spearheading global decarbonization"
+            },
+            {
+              "pointId": "core-3",
+              "phrase": "the Sochi Olympic organizers dedicating substantial capital toward renewable power generation"
+            },
+            {
+              "pointId": "core-4",
+              "phrase": "sustainable public transit infrastructure, and comprehensive reforestation initiatives designed to effectively neutralize carbon emissions"
+            }
+          ],
+          "paraphrasingGuide": [
+            {
+              "original": "Major athletic events around the globe ... are striving to neutralize their carbon footprint as part of a world-wide climate network",
+              "paraphrased": "major sporting organizations are actively spearheading global decarbonization",
+              "type": "synonym",
+              "technique": "Idiomatic Verb & Concept Compression",
+              "note": "Condenses the opening sentence into a high-impact summary clause using 'spearheading global decarbonization'."
+            },
+            {
+              "original": "passion for excellence increasingly encompasses environmental performance",
+              "paraphrased": "By embedding environmental accountability into international athletic competitions",
+              "type": "structure",
+              "technique": "Fronted Gerund Prepositional Clause",
+              "note": "Restructures the background quotation into an opening adverbial clause expressing method and scope."
+            },
+            {
+              "original": "inspiring further global action on the environment",
+              "paraphrased": "to stimulate worldwide ecological action",
+              "type": "synonym",
+              "technique": "Academic Verb & Register Upgrade",
+              "note": "Upgrades 'inspiring further global action' to 'stimulate worldwide ecological action' to maintain formal academic tone."
+            },
+            {
+              "original": "say they will put an estimated $1.75 billion into energy conservation and renewable energy ... improving transport infrastructure and offsetting greenhouse gas emissions",
+              "paraphrased": "a commitment prominently demonstrated by the Sochi Olympic organizers dedicating substantial capital toward renewable power generation, sustainable public transit infrastructure, and comprehensive reforestation initiatives",
+              "type": "structure",
+              "technique": "Appositive Noun Phrase Synthesis",
+              "note": "Subordinates the Sochi commitments into an appositive noun phrase ('a commitment prominently demonstrated by...') that anchors the overarching claim."
+            }
+          ]
+        }
+      }
     }
   },
   {

@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="../_ds/nocturne-dba88132-9401-4dad-9b72-94674695c617/styles.css" />
+<title>Architecting Flatland — Phase 2 launch</title>
+<style>
+deck-stage {
+  --type-display: 116px;
+  --type-title: 64px;
+  --type-subtitle: 40px;
+  --type-body: 34px;
+  --type-small: 28px;
+  --type-kicker: 24px;
+  --pad-x: 120px;
+  --pad-top: 104px;
+  --pad-bottom: 96px;
+  --baseline: 48px;
+  --page-foot-note: "Architecting Flatland · Phase 2 launch";
+  counter-reset: page;
+}
+
+.slide {
+  display: flex; flex-direction: column;
+  counter-increment: page;
+  background:
+    radial-gradient(120% 85% at 80% -10%,
+      color-mix(in srgb, var(--color-accent-900) 75%, transparent), transparent 58%),
+    radial-gradient(130% 95% at -12% 112%,
+      color-mix(in srgb, black 30%, transparent), transparent 52%),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  text-wrap: pretty;
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+
+/* — shared pieces — */
+.kicker {
+  position: absolute; top: calc(2 * var(--baseline) - 1cap);
+  left: var(--pad-x); text-box: trim-both cap alphabetic;
+  font-size: var(--type-kicker); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-accent); font-feature-settings: "tnum" 1;
+}
+.kicker::before {
+  content: ""; position: absolute; left: -64px; top: calc(50% - 0.5px);
+  width: 44px; height: 1px; background: var(--color-accent);
+}
+.slide-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: var(--type-title); line-height: calc(1.5 * var(--baseline)); letter-spacing: -0.015em; margin: 0;
+  margin-left: -0.06em;
+  text-box: trim-both cap alphabetic;
+}
+.pin-bottom { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: var(--pad-bottom); }
+.meta { display: flex; align-items: baseline; gap: 18px; font-size: var(--type-kicker); color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.meta span { text-box: trim-both cap alphabetic; }
+.page-foot {
+  position: absolute; right: var(--pad-x); bottom: 32px;
+  font-size: var(--type-kicker); letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  text-box: trim-both cap alphabetic;
+}
+.page-foot::before { content: counter(page) " · "; font-feature-settings: "tnum" 1; }
+.page-foot::after { content: var(--page-foot-note); }
+.furniture-off .page-foot { display: none !important; }
+.half-bleed.flip .page-foot { right: auto; left: var(--pad-x); }
+
+/* — cover and close — */
+.cover { justify-content: center; }
+.cover .rise { display: flex; flex-direction: column; gap: 36px; position: relative; isolation: isolate; }
+.cover .rise::before {
+  content: ""; position: absolute; left: -200px; top: -160px;
+  width: 920px; height: 620px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--color-accent-800) 60%, transparent), transparent);
+  filter: blur(70px); z-index: -1;
+}
+.display {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: var(--type-display); line-height: calc(2.5 * var(--baseline)); letter-spacing: -0.02em; margin: 0;
+  margin-left: -0.06em;
+}
+.cover-sub { font-size: var(--type-subtitle); line-height: var(--baseline); max-width: 34ch; margin: 0; }
+
+/* — contents — */
+.toc { display: flex; flex-direction: column; max-width: 1440px; }
+.toc-row {
+  display: flex; align-items: baseline; gap: 48px;
+  padding: calc(1.5 * var(--baseline) - 0.5cap - 0.5px) 0;
+  font-size: var(--type-subtitle);
+  border-bottom: 1px solid transparent;
+  background: linear-gradient(to right,
+    transparent, var(--color-divider) 48px,
+    var(--color-divider) calc(100% - 48px), transparent) no-repeat bottom / 100% 1px border-box;
+}
+.toc-row > span { text-box: trim-both cap alphabetic; }
+.toc-row .toc-note { margin-left: auto; font-size: var(--type-small); color: var(--color-neutral-300); }
+.toc-row:first-child {
+  border-top: 1px solid transparent;
+  background:
+    linear-gradient(to right,
+      transparent, var(--color-divider) 48px,
+      var(--color-divider) calc(100% - 48px), transparent) no-repeat top / 100% 1px border-box,
+    linear-gradient(to right,
+      transparent, var(--color-divider) 48px,
+      var(--color-divider) calc(100% - 48px), transparent) no-repeat bottom / 100% 1px border-box;
+}
+.toc-num { font-size: var(--type-kicker); color: var(--color-accent); font-feature-settings: "tnum" 1; }
+
+/* — section dividers — */
+.divider {
+  justify-content: center;
+  background:
+    radial-gradient(75% 105% at 22% 42%,
+      color-mix(in srgb, var(--color-section-glow) 70%, transparent), transparent 64%),
+    var(--color-section);
+}
+.ground-ink .divider {
+  background:
+    radial-gradient(75% 105% at 22% 42%,
+      color-mix(in srgb, var(--color-accent-900) 85%, transparent), transparent 64%),
+    var(--color-neutral-900);
+}
+.divider .rise { display: flex; flex-direction: column; align-items: flex-start; gap: 40px; }
+.divider .slide-title { position: relative; }
+.divider .slide-title::before {
+  content: ""; position: absolute; left: calc(-64px + 0.06em);
+  top: calc(0.5cap - 0.5px);
+  width: 44px; height: 1px; background: var(--color-accent);
+}
+.divider .note { font-size: var(--type-small); line-height: var(--baseline); max-width: 46ch; margin: 0; color: var(--color-neutral-200); }
+.ghost-num {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 260px; line-height: 0.9; letter-spacing: -0.02em;
+  color: var(--color-section-ghost);
+  margin-left: -0.055em;
+}
+
+/* — content slides — */
+.content { padding-top: calc(5 * var(--baseline)); }
+.content > .slide-title, .content > .chart-head { margin-top: -1cap; }
+.content > .bullets { margin-top: calc(3 * var(--baseline) - 1cap); }
+.content > .table { margin-top: calc(2 * var(--baseline)); }
+.content > .toc { margin-top: calc(2 * var(--baseline) - 1px); }
+.content > figure { margin-top: var(--baseline); }
+.content > .chart-caption { margin-top: calc(2 * var(--baseline) - 1cap); }
+.content > .foot-note { margin-top: calc(3 * var(--baseline) - 1cap); }
+.content > .foot-note.tight { margin-top: calc(1.5 * var(--baseline) - 1cap); }
+.foot-note {
+  font-size: var(--type-small); line-height: var(--baseline); max-width: 88ch; margin: 0;
+  text-box: trim-both cap alphabetic; color: var(--color-neutral-300);
+}
+.bullets { display: flex; flex-direction: column; max-width: 1240px; margin: 0; padding: 0; list-style: none; font-size: var(--type-body); }
+.bullets li { position: relative; line-height: var(--baseline); text-box: trim-both cap alphabetic; }
+.bullets li + li { margin-top: calc(2 * var(--baseline) - 1cap); }
+.bullets li::before { content: ""; position: absolute; left: -46px; top: calc(0.5cap - 0.5px); width: 26px; height: 1px; background: var(--color-accent); }
+.bullets .lead { color: var(--color-text); }
+.bullets .rest { color: var(--color-neutral-300); }
+
+/* — column and quadrant layouts — */
+.cols { display: grid; gap: calc(2 * var(--baseline)) 96px; margin-top: calc(4 * var(--baseline) - 1cap); }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols p { font-size: var(--type-small); line-height: var(--baseline); margin: 0; text-box: trim-both cap alphabetic; color: var(--color-neutral-300); }
+.cols p + p { margin-top: calc(1 * var(--baseline)); }
+.cols h3 { font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: var(--type-body); margin: 0 0 calc(1 * var(--baseline) - 1cap);
+  text-box: trim-both cap alphabetic; }
+.cols .step { display: block; font-size: var(--type-kicker); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-accent); margin-bottom: calc(1 * var(--baseline) - 1cap); text-box: trim-both cap alphabetic;
+  font-feature-settings: "tnum" 1; }
+.quad { position: relative; display: grid; grid-template-columns: 1fr 1fr;
+  gap: calc(2 * var(--baseline)) 96px; margin-top: calc(4 * var(--baseline) - 1cap);
+  padding-bottom: calc(1 * var(--baseline)); }
+.quad::before, .quad::after { content: ""; position: absolute; pointer-events: none; }
+.quad::before { left: 0; right: 0; top: calc((100% - 1 * var(--baseline)) / 2); height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-neutral-700) 48px calc(100% - 48px), transparent); }
+.quad::after { top: 0; bottom: 0; left: 50%; width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--color-neutral-700) 48px calc(100% - 48px), transparent); }
+.quad > div { padding-right: 48px; }
+.quad h3 { font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: var(--type-body); margin: 0 0 calc(1 * var(--baseline) - 1cap);
+  text-box: trim-both cap alphabetic; }
+.quad p { font-size: var(--type-small); line-height: var(--baseline); margin: 0; text-box: trim-both cap alphabetic; color: var(--color-neutral-300); }
+.quad .step { display: block; font-size: var(--type-kicker); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-accent); margin-bottom: calc(1 * var(--baseline) - 1cap); text-box: trim-both cap alphabetic; }
+.quad-axis { display: flex; justify-content: space-between; margin-top: calc(1 * var(--baseline) - 1cap);
+  font-size: var(--type-kicker); color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.quad-axis span { text-box: trim-both cap alphabetic; }
+
+/* — two-column numbered list (short items) — */
+.list-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: calc(1 * var(--baseline)) 96px;
+  margin: calc(3 * var(--baseline) - 1cap) 0 0; padding: 0; list-style: none;
+  max-width: 1560px; font-size: var(--type-small);
+}
+.list-2 li { display: flex; gap: 24px; line-height: var(--baseline); text-box: trim-both cap alphabetic; color: var(--color-neutral-200); }
+.list-2 .n { color: var(--color-accent); font-feature-settings: "tnum" 1; }
+
+/* — data table — */
+.slide .table { max-width: 1680px; font-size: 30px; }
+.slide .table th, .slide .table td {
+  text-box: trim-both cap alphabetic;
+  padding: calc(var(--baseline) - 0.5cap - 0.5px) 28px calc(var(--baseline) - 0.5cap - 0.5px);
+}
+.slide .table th { font-size: var(--type-kicker); border-bottom: 1px solid var(--color-divider); }
+.slide .table td { border-bottom: 1px solid var(--color-divider); }
+.slide .table thead tr, .slide .table tbody tr, .slide .table tbody tr:hover { background: none; }
+@supports (mask: linear-gradient(#000, #000)) {
+  .slide .table th, .slide .table td { border-bottom-color: transparent; }
+  .slide .table { position: relative; }
+  .slide .table::after {
+    content: ""; position: absolute; inset: 0 0 -0.5px; pointer-events: none;
+    background: linear-gradient(to right,
+      transparent, var(--color-divider) 48px,
+      var(--color-divider) calc(100% - 48px), transparent);
+    mask: repeating-linear-gradient(to bottom,
+      transparent 0 calc(2 * var(--baseline) - 1px),
+      #000 calc(2 * var(--baseline) - 1px) calc(2 * var(--baseline)));
+  }
+}
+.slide .table th:first-child, .slide .table td:first-child { padding-left: 0; }
+.slide .table th:last-child, .slide .table td:last-child { padding-right: 0; }
+.slide .table .when { color: var(--color-accent); font-feature-settings: "tnum" 1; width: 220px; }
+.slide .table .dim { color: color-mix(in srgb, var(--color-text) 62%, transparent); width: 300px; }
+.slide .table.compact { font-size: var(--type-small); max-width: 1560px; }
+.slide .table.compact th, .slide .table.compact td {
+  padding: calc(0.75 * var(--baseline) - 0.5cap - 0.5px) 28px;
+}
+@supports (mask: linear-gradient(#000, #000)) {
+  .slide .table.compact::after {
+    mask: repeating-linear-gradient(to bottom,
+      transparent 0 calc(1.5 * var(--baseline) - 1px),
+      #000 calc(1.5 * var(--baseline) - 1px) calc(1.5 * var(--baseline)));
+  }
+}
+.slide .table.compact .when { width: 180px; }
+.slide .table.compact .dim { width: 380px; }
+
+/* — hero figure — */
+.hero { justify-content: center; gap: 36px; }
+.hero-num {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 300px; line-height: 1; letter-spacing: -0.03em; margin: 0;
+  margin-left: -0.055em;
+}
+.hero-caption { font-size: var(--type-small); line-height: var(--baseline); max-width: 52ch; margin: 0; }
+
+/* — timeline (static SVG on the tokens) — */
+.chart { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text {
+  font-family: var(--font-body); font-size: 24px;
+  fill: color-mix(in srgb, var(--color-text) 55%, transparent);
+  font-feature-settings: "tnum" 1;
+}
+.chart .rule-fade-mid { stop-color: var(--color-divider); stop-opacity: 1; }
+.chart .rule-fade-edge { stop-color: var(--color-divider); stop-opacity: 0; }
+.chart .tl-line { stroke-width: 1; }
+.chart .tl-node { fill: var(--color-accent-600); }
+.chart .tl-node-hi { fill: var(--color-accent-300); }
+.chart .tl-date { fill: var(--color-accent); letter-spacing: 0.06em; }
+.chart .tl-date-hi { fill: var(--color-accent-300); letter-spacing: 0.06em; }
+.chart .tl-label { fill: var(--color-text); font-size: 30px; }
+.chart-caption { font-size: 26px; line-height: var(--baseline); max-width: 82ch; margin: 0; text-box: trim-both cap alphabetic; }
+.chart-head { display: flex; align-items: baseline; justify-content: space-between; font-size: var(--type-title); }
+
+/* — photographs — */
+figure.lighten img { display: block; width: 100%; height: 100%; object-fit: cover; }
+figure.lighten { filter: saturate(0.48) brightness(0.74) contrast(1.06); }
+.grade-plain figure.lighten { mix-blend-mode: normal; filter: saturate(0.9) brightness(0.92); }
+
+/* — split image slide — */
+.split { flex-direction: row; align-items: center; gap: 96px; }
+.split-copy { flex: none; width: 660px; display: flex; flex-direction: column; gap: 40px; }
+.split-copy .note { font-size: var(--type-small); line-height: var(--baseline); margin: 0; color: var(--color-neutral-200); }
+.split-figure { flex: 1; min-width: 0; }
+.split-figure img { aspect-ratio: 1000 / 780; border-radius: var(--radius-md); }
+
+/* — full-bleed image slide — */
+.bleed-figure { position: absolute; inset: 0; margin: 0; }
+.bleed-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(to top,
+      color-mix(in srgb, var(--color-bg) 92%, transparent),
+      color-mix(in srgb, var(--color-bg) 46%, transparent) 34%,
+      transparent 62%),
+    linear-gradient(to bottom,
+      color-mix(in srgb, var(--color-bg) 60%, transparent),
+      transparent 22%);
+}
+.bleed-copy { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: var(--pad-bottom); }
+.bleed .kicker { color: var(--color-accent-400); }
+.bleed-copy .note {
+  font-size: var(--type-small); line-height: var(--baseline); max-width: 56ch;
+  margin: calc(2 * var(--baseline) - 1cap) 0 0;
+  text-box: trim-both cap alphabetic;
+  color: var(--color-text);
+}
+.bleed-copy .cover-sub { margin: calc(2 * var(--baseline) - 1cap) 0 0; max-width: 40ch; }
+
+/* — half-bleed image slides — */
+.half-bleed { padding-top: calc(5 * var(--baseline)); }
+.half-bleed > .slide-title { margin-top: -1cap; max-width: 660px; }
+.half-bleed .note {
+  font-size: var(--type-small); line-height: var(--baseline); max-width: 660px;
+  margin: calc(2 * var(--baseline) - 1cap) 0 0;
+  text-box: trim-both cap alphabetic; color: var(--color-neutral-200);
+}
+.half-bleed-figure { position: absolute; inset: 0 auto 0 0; width: 960px; margin: 0; }
+.half-bleed:not(.flip) > .slide-title { margin-left: calc(960px - 0.06em); }
+.half-bleed:not(.flip) .note { margin-left: 960px; }
+.half-bleed:not(.flip) .kicker { left: calc(960px + var(--pad-x)); }
+.half-bleed.flip .half-bleed-figure { inset: 0 0 0 auto; }
+
+/* — quote — */
+.quote { justify-content: center; gap: 48px; }
+.quote .rise { display: flex; flex-direction: column; gap: 48px; }
+.quote blockquote {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 56px; line-height: calc(1.5 * var(--baseline)); letter-spacing: -0.015em;
+  max-width: 28ch; margin: 0;
+  text-indent: -0.474em;
+}
+.quote figcaption { font-size: var(--type-small); margin: 0; text-indent: -1.267em; color: var(--color-neutral-300); }
+.quote .foot-note { max-width: 68ch; }
+
+a { color: var(--color-accent-300); text-decoration: none; }
+a:hover { color: var(--color-accent); }
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-deck-active] .rise { animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+}
+</style>
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%" class="{{ deckClass }}">
+
+  <section class="slide bleed" data-screen-label="01" data-label="Cover" data-speaker-notes="Welcome, colleagues. Today marks our formal crossing into Phase 2. Month 1 gave us what organizational psychologists call the orientation honeymoon. Phase 2 asks for something different: an industrial-grade curriculum production engine.">
+    <figure class="bleed-figure lighten"><img src="images/cover.jpg" alt="An empty seminar room, desks rolled out of their rows and left at loose angles" /></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="kicker"><span>Phase 2 launch</span></div>
+    <div class="bleed-copy rise">
+      <h1 class="display">Architecting Flatland</h1>
+      <p class="cover-sub">From pedagogical dogma to empirical engineering — operationalizing the Cabal for English pronunciation curriculum R&amp;D.</p>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="02" data-label="Contents" data-speaker-notes="Two halves. First the evidence: what thirty days without hierarchy actually did to us, and what fifty years of research says about it. Then the method, the twelve-week plan, and the contract we hold each other to.">
+    <h2 class="slide-title">Contents</h2>
+    <div class="toc rise">
+      <div class="toc-row"><span class="toc-num">01</span><span>The evidence</span><span class="toc-note">Thirty days without hierarchy</span></div>
+      <div class="toc-row"><span class="toc-num">02</span><span>The Cabal method</span><span class="toc-note">How one module gets built</span></div>
+      <div class="toc-row"><span class="toc-num">03</span><span>Phase 2 execution</span><span class="toc-note">Fifty modules, twelve weeks</span></div>
+      <div class="toc-row"><span class="toc-num">04</span><span>The social contract</span><span class="toc-note">What you can and cannot expect</span></div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="03" data-label="01 The evidence" data-speaker-notes="Before we open any research papers, we look honestly at what this past month felt like inside our own heads.">
+    <div class="rise">
+      <div class="ghost-num">01</div>
+      <h2 class="slide-title">The evidence</h2>
+      <p class="note">Five decades of organizational sociology, twenty-five years of Valve production history, and thirty days of our own.</p>
+    </div>
+  </section>
+
+  <section class="slide half-bleed" data-screen-label="04" data-label="Out of the honeymoon" data-speaker-notes="Thirty days without a head of department, without lesson observations, without anyone assigning you work. On paper that is pure freedom. In practice it is the hardest month most of us have had.">
+    <figure class="half-bleed-figure lighten"><img src="images/threshold.jpg" alt="Looking from a dim cluttered staff room through an open door into a bright, orderly workroom" /></figure>
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <h2 class="slide-title rise">Out of the honeymoon</h2>
+    <p class="note rise">Month 1 is complete. What comes next is not more freedom — it is more discipline: explicit protocols, peer transparency, and learner data as the arbiter.</p>
+  </section>
+
+  <section class="slide content" data-screen-label="05" data-label="The Phase 2 threshold" data-speaker-notes="Flat organization is one of the most romanticized concepts in modern management. Too many teams believe eliminating bosses automatically creates a creative utopia. An unstructured flat team degenerates into an academic debating society, where the most articulate voices dominate and output stalls. We are not building a loose collection of teacher worksheets.">
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <h2 class="slide-title">The Phase 2 threshold</h2>
+    <ul class="bullets rise">
+      <li><span class="lead">Month 1 retrospective.</span> <span class="rest">Team calibration, phonological scoping, first real peer collaboration.</span></li>
+      <li><span class="lead">The Phase 2 mandate.</span> <span class="rest">Exploratory conversation becomes an industrial-grade production engine.</span></li>
+      <li><span class="lead">The false dichotomy.</span> <span class="rest">Flat does not mean the absence of structure. It demands more discipline, not less.</span></li>
+      <li><span class="lead">The evidence base.</span> <span class="rest">Freeman, Barker, Edmondson, Tuckman, Laloux — and Valve&rsquo;s own production record.</span></li>
+    </ul>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="06" data-label="Month 1, in three questions" data-speaker-notes="Raise your hand or simply nod if any of these hit home over the last four weeks. Every one of us has felt them. In a hierarchy your syllabus is handed down, a supervisor tells you when you are safe, and the boss makes the unpopular calls. Remove all three and the brain invents paralysis, phantom guilt, and politeness.">
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <h2 class="slide-title">Month 1, in three questions</h2>
+    <div class="cols cols-3 rise">
+      <div>
+        <span class="step">01 · Direction</span>
+        <h3>The permission reflex</h3>
+        <p>Did you catch yourself waiting for permission, or waiting for someone else to tell you what to work on?</p>
+      </div>
+      <div>
+        <span class="step">02 · Validation</span>
+        <h3>The phantom guilt</h3>
+        <p>Did you worry whether you&rsquo;re doing enough, because there is no boss to judge or evaluate your work?</p>
+      </div>
+      <div>
+        <span class="step">03 · Candor</span>
+        <h3>The politeness trap</h3>
+        <p>Did you hold back honest feedback, worried you might hurt feelings or cause tension?</p>
+      </div>
+    </div>
+    <p class="foot-note">These are documented, predictable human responses to the removal of traditional hierarchy — not a sign that anyone here is broken, lazy or disorganized.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="07" data-label="The Valve blueprint" data-speaker-notes="In 2012 Valve's internal Handbook for New Employees was leaked. It opened with a radical promise: no bosses, and a desk on wheels. But read carefully and it also documents the exact anxieties you felt this month — page 16, page 17, and pages 26 through 33.">
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <h2 class="slide-title">The Valve blueprint</h2>
+    <div class="cols cols-2 rise">
+      <div>
+        <span class="step">The radical promise</span>
+        <h3>Desks on wheels</h3>
+        <p>Contributors do not wait for assignments. They roll the desk to the highest-leverage bottleneck in the curriculum.</p>
+        <p>The T-shaped teacher: deep vertical craft — articulatory mechanics, lesson design, audio prompting — over broad literacy in learner feedback and cognitive load.</p>
+      </div>
+      <div>
+        <span class="step">The fine print</span>
+        <h3>Three documented traps</h3>
+        <p><em>Structure happens</em> (p. 16). Removing official bosses does not abolish hierarchy; informal leadership emerges instantly and hardens if unwatched.</p>
+        <p><em>Hours</em> (p. 17). Overtime is a symptom of broken planning, not heroism.</p>
+        <p><em>Stack ranking</em> (pp. 26&ndash;33). Peer grading bred risk aversion and popularity contests. We reject it outright.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="08" data-label="The tyranny of structurelessness" data-speaker-notes="Jo Freeman, 1972, studying feminist collectives that abolished all formal titles. Eliminating formal structure does not abolish hierarchy — it replaces a visible, accountable one with an invisible, unaccountable one. Her antidote was not bureaucracy but explicit democratic structuring.">
+    <div class="kicker"><span>01 · The evidence · Freeman, 1972</span></div>
+    <h2 class="slide-title">There is no such thing as a structureless group</h2>
+    <ul class="list-2 rise">
+      <li><span class="n">1</span><span>Explicit delegation — specific tasks to specific people, by transparent procedure</span></li>
+      <li><span class="n">2</span><span>Direct responsibility — delegated authority answers to the whole group</span></li>
+      <li><span class="n">3</span><span>Distribution of authority — no one monopolizes the syllabus</span></li>
+      <li><span class="n">4</span><span>Rotation of tasks — facilitation and other visible roles move around</span></li>
+      <li><span class="n">5</span><span>Rational allocation — by demonstrated craft, never by popularity</span></li>
+      <li><span class="n">6</span><span>Diffusion of information — real-time access to every metric, no back channels</span></li>
+      <li><span class="n">7</span><span>Equal access to resources — audio suites, software, test cohorts</span></li>
+    </ul>
+    <p class="foot-note tight">Striving for structurelessness only masks power, transferring it to informal elites.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide quote" data-screen-label="09" data-label="Insider accounts" data-speaker-notes="Rich Geldreich described hidden managers and hallway whisper networks, and contributors too frightened of stack ranking to take creative risks. Jeri Ellsworth was blunter. In our field the equivalent is a seniority clique dictating pronunciation standards through social pressure.">
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <figure class="rise">
+      <blockquote>&ldquo;There is a pseudo-structure&hellip; it felt like high school where popular kids wielded absolute power, and if you weren&rsquo;t in their clique, your project starved.&rdquo;</blockquote>
+      <figcaption>&mdash; Jeri Ellsworth, hardware lead, on Valve&rsquo;s flat structure</figcaption>
+    </figure>
+    <p class="foot-note rise">Rich Geldreich&rsquo;s post-mortem adds the mechanism: without formal leads, informal power brokers lobby behind closed doors, and the safest career move is to work on whatever the most popular veteran is doing. We must protect technical merit over social seniority.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="10" data-label="The iron cage of peer surveillance" data-speaker-notes="Barker, 1993: a plant removed its foremen and the workers built a system of mutual surveillance more oppressive than any boss had dared. Lee and Edmondson, 2017: remove the manager and the psychological stakes rise, because criticism now comes from your professional tribe. Pronunciation work is uniquely exposed — our voices are our identities.">
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <h2 class="slide-title">The iron cage, tightened from within</h2>
+    <div class="cols cols-3 rise">
+      <div>
+        <span class="step">Weber</span>
+        <h3>The bureaucratic cage</h3>
+        <p>Authority is visible, rule-bound and appealable. You can dismiss a manager&rsquo;s criticism as bureaucratic ignorance.</p>
+      </div>
+      <div>
+        <span class="step">Barker, 1993</span>
+        <h3>The concertive cage</h3>
+        <p>Self-managing teams developed peer consensus more rigid and intrusive than any supervisor: continuous anxiety, chronic guilt, self-policed overwork.</p>
+      </div>
+      <div>
+        <span class="step">Lee &amp; Edmondson, 2017</span>
+        <h3>Psychological safety</h3>
+        <p>Autonomy raises interpersonal risk. Without explicit role boundaries, fear of peer rejection produces defensive silence.</p>
+      </div>
+    </div>
+    <p class="foot-note">Vocal modeling and accent work expose deep personal vulnerability. Feedback here must be decoupled from personal worth by design, not by good manners.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="11" data-label="02 The Cabal method" data-speaker-notes="Now the mechanism. Not a committee — a room.">
+    <div class="rise">
+      <div class="ghost-num">02</div>
+      <h2 class="slide-title">The Cabal method</h2>
+      <p class="note">One room, several crafts, one module at a time — and a learner in the chair before lunch.</p>
+    </div>
+  </section>
+
+  <section class="slide bleed" data-screen-label="12" data-label="One table, four disciplines" data-speaker-notes="This is the whole mechanism: the people who would otherwise email each other, sitting at the same table for the same six hours. Pronunciation lead, lesson designer, audio prompter, playtest coordinator.">
+    <figure class="bleed-figure lighten"><img src="images/cabal-room.jpg" alt="Four adults crowded around one small table, all leaning toward a single laptop, mid-conversation" /></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="kicker"><span>02 · The Cabal method</span></div>
+    <div class="bleed-copy rise">
+      <h2 class="slide-title">One table, four disciplines</h2>
+      <p class="note">No linguist throws a syllabus draft over a wall to a lesson writer who emails a script to a voice coach. The handoffs are deleted, not optimized.</p>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="13" data-label="The Cabal design process" data-speaker-notes="Late 1997: a year of siloed work assembled into an unplayable disaster. Birdwell's team scrapped it, abolished handoffs, and put one engineer, one level designer, one animator, one writer and one sound artist in a single room. Six hours a day, four days a week, five months. The fifth day stayed free.">
+    <div class="kicker"><span>02 · The Cabal method · Birdwell, 1999</span></div>
+    <h2 class="slide-title">The pivot that made the method</h2>
+    <figure class="rise">
+      <svg class="chart" viewBox="0 0 1680 240" role="img" aria-label="Timeline: siloed development through 1996, a year of work scrapped in late 1997, the Cabal formed, five months of sessions, and the game shipped in November 1998">
+        <defs>
+          <linearGradient id="tl-fade-a" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1680" y2="0">
+            <stop class="rule-fade-edge" offset="0" /><stop class="rule-fade-mid" offset="0.02857" />
+            <stop class="rule-fade-mid" offset="0.97143" /><stop class="rule-fade-edge" offset="1" />
+          </linearGradient>
+        </defs>
+        <line class="tl-line" stroke="url(#tl-fade-a)" x1="0" y1="96" x2="1680" y2="96" />
+        <text class="tl-date" x="0" y="60">1996</text>
+        <text class="tl-date" x="360" y="60">LATE 97</text>
+        <text class="tl-date-hi" x="720" y="60">NOV 97</text>
+        <text class="tl-date" x="1080" y="60">1998</text>
+        <text class="tl-date" x="1440" y="60">NOV 98</text>
+        <circle class="tl-node" cx="8" cy="96" r="8" />
+        <circle class="tl-node" cx="368" cy="96" r="8" />
+        <circle class="tl-node-hi" cx="728" cy="96" r="8" />
+        <circle class="tl-node" cx="1088" cy="96" r="8" />
+        <circle class="tl-node" cx="1448" cy="96" r="8" />
+        <text class="tl-label" x="0" y="156">Silos</text>
+        <text class="tl-label" x="360" y="156">Scrapped</text>
+        <text class="tl-label" x="720" y="156">The Cabal</text>
+        <text class="tl-label" x="1080" y="156">Five months</text>
+        <text class="tl-label" x="1440" y="156">Shipped</text>
+        <text x="0" y="216">four rooms, four crafts</text>
+        <text x="360" y="216">one year of work</text>
+        <text x="720" y="216">one room, five crafts</text>
+        <text x="1080" y="216">6 hours × 4 days</text>
+        <text x="1440" y="216">Half-Life</text>
+      </svg>
+    </figure>
+    <p class="chart-caption">The fifth day was deliberately kept free of group meetings: solo drafting, asset work, recovery. Everything agreed went into one living document — if an idea was not in the Bible, it did not exist.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide quote" data-screen-label="14" data-label="The self-blame principle" data-speaker-notes="Developers watched playtesters in silence from behind a one-way mirror. Explaining, defending or helping the player was forbidden. If the player got lost, the signposting had failed. In our field, that means the defensive excuse is outlawed: no more they just do not have an ear for English.">
+    <div class="kicker"><span>02 · The Cabal method · The self-blame principle</span></div>
+    <figure class="rise">
+      <blockquote>&ldquo;Player confusion is one hundred percent the fault of the designer, never the user.&rdquo;</blockquote>
+      <figcaption>&mdash; Ken Birdwell, on the Half-Life playtests</figcaption>
+    </figure>
+    <p class="foot-note rise">Translated: when a learner finishes our module on aspiration and still fails to aspirate the /p/ in <em>pack</em>, that is diagnostic proof our cross-section was ambiguous, our reference audio lacked contrast, or our discrimination scaffold failed. If an exercise needs a live teacher in the room to explain it, the exercise is broken.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="15" data-label="Four veterans, four lessons" data-speaker-notes="Faliszek: flat organizations die when they become debating committees; a mediocre prototype ends a theoretical debate in two minutes. Weier: a lead is a servant and a janitor. Morasky: audio is not varnish. Wolpaw: if a line failed in playtest, he opened his laptop and rewrote it.">
+    <div class="kicker"><span>02 · The Cabal method</span></div>
+    <h2 class="slide-title">Four veterans, four lessons</h2>
+    <div class="quad rise">
+      <div>
+        <span class="step">Chet Faliszek</span>
+        <h3>Build, don&rsquo;t debate</h3>
+        <p>Debating committees are the death of flat organizations. The only way to resolve conflicting opinions is to stop talking and put an executable prototype on the screen.</p>
+      </div>
+      <div>
+        <span class="step">Josh Weier</span>
+        <h3>The lead is a janitor</h3>
+        <p>Leads do not issue orders or approve work. They remove roadblocks, manage hardware, schedule playtests and protect creative flow.</p>
+      </div>
+      <div>
+        <span class="step">Mike Morasky</span>
+        <h3>Audio is not varnish</h3>
+        <p>Acoustic design cannot be pasted onto finished visuals. It is engineered from day one as a primary cognitive driver — and here it is the product itself.</p>
+      </div>
+      <div>
+        <span class="step">Erik Wolpaw</span>
+        <h3>Ego surrender</h3>
+        <p>Writers sat in silent playtests. If a line failed to communicate its clue, it was rewritten on the spot — never defended.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide split" data-screen-label="16" data-label="Tension, not length" data-speaker-notes="Textbooks teach this contrast as long vowel versus short vowel. It is not length — it is mouth tension. That single diagnostic reframe is what a Cabal produces in fifteen minutes and a handoff chain never produces at all.">
+    <div class="split-copy">
+      <div class="kicker"><span>02 · The Cabal method</span></div>
+      <h2 class="slide-title">Tension, not length</h2>
+      <p class="note">For /iː/ in <em>sheep</em>, the lips stretch into a smile and the tongue is high and tense. For /ɪ/ in <em>ship</em>, the jaw drops slightly and the cheeks relax. Learners fail because textbooks describe duration; the mouth is doing something else entirely.</p>
+    </div>
+    <figure class="split-figure lighten rise"><img src="images/mouth-mechanics.jpg" alt="Close-up of an adult's lower face in profile, lips stretched in the tense smile of a high front vowel" /></figure>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="17" data-label="One morning, one module" data-speaker-notes="In a traditional school this lesson takes three months: a writer types minimal pairs, an external voice actor records them without the pedagogy, a designer adds a picture of a ship, and the student still says look at that big sheep in the harbour. Here it takes one morning.">
+    <div class="kicker"><span>02 · The Cabal method</span></div>
+    <h2 class="slide-title">One morning, one module</h2>
+    <table class="table compact rise">
+      <thead>
+        <tr><th>Time</th><th>Who</th><th>What happens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="when">09:00</td><td class="dim">Four teachers</td><td>One table, Module 04 — /iː/ vs. /ɪ/</td></tr>
+        <tr><td class="when">09:15</td><td class="dim">Pronunciation lead</td><td>Diagnoses the root cause: mouth tension and jaw drop, not vowel length</td></tr>
+        <tr><td class="when">09:45</td><td class="dim">Lesson designer</td><td>Builds the motor drill: smile tension vs. jaw drop, then a 3-second listening contrast</td></tr>
+        <tr><td class="when">10:30</td><td class="dim">AI audio prompter</td><td>Generates the pair in two minutes, then runs the Blind Ear Test — 10 out of 10</td></tr>
+        <tr><td class="when">11:15</td><td class="dim">Playtest coordinator</td><td>A real learner masters the contrast in four minutes</td></tr>
+        <tr><td class="when">12:00</td><td class="dim">The Cabal</td><td>Module 04 validated and committed to the Living Bible</td></tr>
+      </tbody>
+    </table>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="18" data-label="The 24-hour playtest rule" data-speaker-notes="Teacher A argues the English /r/ through tongue-placement schematics; Teacher B argues auditory vowel colouring. In a university department that costs three hours and ends in deadlock. Here debate is capped at fifteen minutes and settled by three learners in silence.">
+    <div class="kicker"><span>02 · The Cabal method</span></div>
+    <h2 class="slide-title">The 24-hour playtest rule</h2>
+    <div class="cols cols-2 rise">
+      <div>
+        <span class="step">The gridlock loop</span>
+        <h3>Three hours, no decision</h3>
+        <p>Two experienced teachers argue in a conference room, pull conflicting papers off the shelf, appeal to classroom tenure, and leave exhausted and deadlocked.</p>
+      </div>
+      <div>
+        <span class="step">The protocol</span>
+        <h3>Fifteen minutes, then build</h3>
+        <p>Verbal debate is capped at 15 minutes. Both proponents build a functional five-minute micro-lesson within 24 hours.</p>
+        <p>Three ESL learners run both, in randomized order, under silent observation. Faster comprehension, better acoustic accuracy and fewer motor stalls wins and enters the Bible.</p>
+      </div>
+    </div>
+    <p class="foot-note">Let the learner&rsquo;s vocal tract resolve the disagreement, not teacher rhetoric.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide split" data-screen-label="19" data-label="Silence behind the learner" data-speaker-notes="The observers say nothing. No hints, no explanations, no excuses. If the learner is lost, the module is broken — and the notes we take are about the module, never about the learner.">
+    <div class="split-copy">
+      <div class="kicker"><span>02 · The Cabal method</span></div>
+      <h2 class="slide-title">Silence behind the learner</h2>
+      <p class="note">Watch, write, say nothing. Hesitation markers, replays and wrong selections are the data. The temptation to lean in and explain is the single thing that destroys a playtest.</p>
+    </div>
+    <figure class="split-figure lighten rise"><img src="images/playtest.jpg" alt="A learner at a laptop in headphones, mouth mid-vowel, with two observers seated behind at a distance, writing" /></figure>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="20" data-label="Decisions without bureaucracy" data-speaker-notes="Consensus is paralyzing: it moves at the speed of the most anxious person in the room and diffuses accountability until nobody owns anything. The Advice Process replaces it. Advice is not permission — advisors have no veto, and the decision-maker owns the outcome.">
+    <div class="kicker"><span>02 · The Cabal method</span></div>
+    <h2 class="slide-title">Decisions without bureaucracy</h2>
+    <div class="cols cols-2 rise">
+      <div>
+        <span class="step">The advice process</span>
+        <h3>Anyone can decide anything</h3>
+        <p>No approval sign-offs. But before acting you must consult, first, the qualified domain experts — the phonetician on IPA, the audio specialist on acoustics — and second, the people who must execute or live with the decision.</p>
+        <p>Advice is not consensus. Advisors hold no veto. You weigh the counsel, make the call, log it in the Bible, and own the outcome completely.</p>
+      </div>
+      <div>
+        <span class="step">When it breaks down</span>
+        <h3>Three tiers, then binding</h3>
+        <p><em>Tier 1</em> — direct one-to-one resolution within 24 hours.</p>
+        <p><em>Tier 2</em> — a neutral peer mediator, chosen by both parties, within 48 hours.</p>
+        <p><em>Tier 3</em> — a three-person peer panel reviews the playtest evidence and issues a binding determination.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="21" data-label="03 Phase 2 execution" data-speaker-notes="Now the concrete objectives. Twelve weeks, fifty modules, two learner gates.">
+    <div class="rise">
+      <div class="ghost-num">03</div>
+      <h2 class="slide-title">Phase 2 execution</h2>
+      <p class="note">Twelve weeks. Two learner gates. One standard of progress.</p>
+    </div>
+  </section>
+
+  <section class="slide hero" data-screen-label="22" data-label="Fifty modules" data-speaker-notes="Vanity metrics are dead. We do not care if a syllabus outline runs sixty pages, or if a team logged fifty hours of debate. The only currency of progress is validated learner improvement inside 48 hours.">
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <p class="hero-num rise">50</p>
+    <p class="hero-caption">Core interactive pronunciation modules — vowel contrasts, consonant pairs, rhythm and sentence stress — engineered, playtested and validated in twelve weeks.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="23" data-label="The twelve-week roadmap" data-speaker-notes="At Week 5 the Alpha gate: twenty real learners from Vietnamese, Mandarin, Spanish and Arabic backgrounds run the first twenty modules with no teacher guidance. No measurable acoustic improvement means the sprint has not passed. At Week 10 the Beta gate: fifty learners under automated assessment.">
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <h2 class="slide-title">The twelve-week roadmap</h2>
+    <figure class="rise">
+      <svg class="chart" viewBox="0 0 1680 240" role="img" aria-label="Timeline: Sprint 1 in weeks one to four covering vowels, the Alpha gate at week five, Sprint 2 in weeks six to nine covering consonants, the Beta gate at week ten, and Sprint 3 in weeks eleven and twelve covering prosody">
+        <defs>
+          <linearGradient id="tl-fade-b" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1680" y2="0">
+            <stop class="rule-fade-edge" offset="0" /><stop class="rule-fade-mid" offset="0.02857" />
+            <stop class="rule-fade-mid" offset="0.97143" /><stop class="rule-fade-edge" offset="1" />
+          </linearGradient>
+        </defs>
+        <line class="tl-line" stroke="url(#tl-fade-b)" x1="0" y1="96" x2="1680" y2="96" />
+        <text class="tl-date-hi" x="0" y="60">WEEK 1–4</text>
+        <text class="tl-date" x="360" y="60">WEEK 5</text>
+        <text class="tl-date" x="720" y="60">WEEK 6–9</text>
+        <text class="tl-date" x="1080" y="60">WEEK 10</text>
+        <text class="tl-date" x="1440" y="60">WEEK 11–12</text>
+        <circle class="tl-node-hi" cx="8" cy="96" r="8" />
+        <circle class="tl-node" cx="368" cy="96" r="8" />
+        <circle class="tl-node" cx="728" cy="96" r="8" />
+        <circle class="tl-node" cx="1088" cy="96" r="8" />
+        <circle class="tl-node" cx="1448" cy="96" r="8" />
+        <text class="tl-label" x="0" y="156">Sprint 1</text>
+        <text class="tl-label" x="360" y="156">Alpha gate</text>
+        <text class="tl-label" x="720" y="156">Sprint 2</text>
+        <text class="tl-label" x="1080" y="156">Beta gate</text>
+        <text class="tl-label" x="1440" y="156">Sprint 3</text>
+        <text x="0" y="216">vowels 01–20</text>
+        <text x="360" y="216">20 learners, blind</text>
+        <text x="720" y="216">consonants 21–40</text>
+        <text x="1080" y="216">50 learners, assessed</text>
+        <text x="1440" y="216">prosody 41–50</text>
+      </svg>
+    </figure>
+    <p class="chart-caption">Progress is validated learning, not activity: can a learner complete a module and demonstrate clear auditory discrimination and accurate production, verified by voice-to-text, within 48 hours?</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="24" data-label="Forming to storming" data-speaker-notes="Month 1 was Forming — polite, accommodating, contentious topics avoided. Today we step into Storming, and everyone in this room has explicit permission to storm. The only fatal danger is artificial harmony: smiling in meetings while harbouring resentment in private.">
+    <div class="kicker"><span>03 · Phase 2 execution · Tuckman, 1965</span></div>
+    <h2 class="slide-title">Forming to storming</h2>
+    <div class="quad rise">
+      <div>
+        <span class="step">Month 1</span>
+        <h3>Forming</h3>
+        <p>Polite orientation and artificial harmony. Appropriate for onboarding, useless for production.</p>
+      </div>
+      <div>
+        <span class="step">Weeks 1–4</span>
+        <h3>Storming</h3>
+        <p>Friction over pedagogical boundaries, standards and workload. Not dysfunction — the mandatory negotiation of real standards.</p>
+      </div>
+      <div>
+        <span class="step">Weeks 5–8</span>
+        <h3>Norming</h3>
+        <p>Explicit social contracts replace unspoken assumptions. The Bible starts settling arguments before they begin.</p>
+      </div>
+      <div>
+        <span class="step">Weeks 9–12</span>
+        <h3>Performing</h3>
+        <p>Fluid execution. Disagreement resolves through prototypes inside a day.</p>
+      </div>
+    </div>
+    <div class="quad-axis" aria-hidden="true"><span>← polite avoidance</span><span>open, depersonal disagreement →</span></div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="25" data-label="Situational leadership" data-speaker-notes="If you are the situational lead for a sprint, it does not mean you have been crowned. It means you take out the logistical trash so your teammates can do their best work. And leadership rotates: the phonetician leads on IPA standards, the audio specialist leads on voice models.">
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <h2 class="slide-title">The lead is a shield, not a crown</h2>
+    <div class="cols cols-3 rise">
+      <div>
+        <span class="step">01</span>
+        <h3>Roadblock removal</h3>
+        <p>Software, recording equipment and workspace friction cleared within hours, not sprints.</p>
+      </div>
+      <div>
+        <span class="step">02</span>
+        <h3>Advice-process facilitation</h3>
+        <p>Making sure decision-makers actually consulted the experts and the people downstream.</p>
+      </div>
+      <div>
+        <span class="step">03</span>
+        <h3>Playtest logistics</h3>
+        <p>Sourcing learners, booking observation rooms, curating the error telemetry.</p>
+      </div>
+    </div>
+    <p class="foot-note">A Cabal lead has no authority to mandate pedagogy or dictate syllabus content. Leadership rotates with the sprint&rsquo;s problem domain — you step forward when your craft is on the line and step back when another specialist takes the floor.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="26" data-label="Monarch to engineer" data-speaker-notes="For years many of us have been classroom monarchs: close the door, and for ninety minutes you are the undisputed ruler, carrying the lesson on warmth and charisma. In a self-paced course you are not in the room. You cannot read a furrowed brow at two in the morning in Hanoi.">
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <h2 class="slide-title">Classroom monarch to curriculum engineer</h2>
+    <table class="table rise">
+      <thead>
+        <tr><th></th><th>The classroom monarch</th><th>The curriculum engineer</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="dim">Authority</td><td>Sovereign behind a closed door</td><td>Peer-reviewed in the open</td></tr>
+        <tr><td class="dim">Method</td><td>Charisma and live improvisation</td><td>Modular scaffolding, foolproof at 2 a.m.</td></tr>
+        <tr><td class="dim">Evidence</td><td>Reading the room</td><td>Learner telemetry and acoustic benchmarks</td></tr>
+        <tr><td class="dim">On failure</td><td>The student did not practise</td><td>The scaffold was ambiguous</td></tr>
+      </tbody>
+    </table>
+    <p class="foot-note">Our worth is no longer measured by how much students like us, but by how reliably our materials produce acoustic mastery without us in the room.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide half-bleed flip" data-screen-label="27" data-label="The acoustic director's desk" data-speaker-notes="No voice actors, no studio bookings, no accent anxiety. Nobody's vocal cords are on trial, which makes critique of an audio asset entirely depersonalized — a structural superpower most teaching teams never get.">
+    <figure class="half-bleed-figure lighten"><img src="images/booth.jpg" alt="A modest home recording corner: a condenser microphone on a small stand, a closed laptop, a foam panel taped to the wall" /></figure>
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <h2 class="slide-title rise">The acoustic director&rsquo;s desk</h2>
+    <p class="note rise">We engineer curriculum audio with speech synthesis rather than recording ourselves. When a colleague critiques a file, nobody feels personally attacked — it is an asset, not a voice. That removes vocal insecurity from peer review entirely.</p>
+  </section>
+
+  <section class="slide content" data-screen-label="28" data-label="Three filters against synthetic slop" data-speaker-notes="Default models are trained on statistical averages: ask for did you sit on the seat and the tense-lax contrast is smoothed into a generic mid-length vowel, or a final stop is slurred. Accepting default output means shipping synthetic slop. Three filters catch it without a lab.">
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <h2 class="slide-title">Three filters against synthetic slop</h2>
+    <div class="cols cols-3 rise">
+      <div>
+        <span class="step">Filter 1</span>
+        <h3>The Blind Ear Test</h3>
+        <p>Play the audio to a teammate with eyes closed and no text on screen. Can they identify the target word 10 out of 10 times without guessing?</p>
+      </div>
+      <div>
+        <span class="step">Filter 2</span>
+        <h3>Speech-to-text stress test</h3>
+        <p>Play it into phone dictation. If recognition hears <em>sheep</em> when the model said <em>ship</em>, the sound is not distinct enough.</p>
+      </div>
+      <div>
+        <span class="step">Filter 3</span>
+        <h3>Learner mimicry check</h3>
+        <p>Put it in front of a real learner. If they cannot hear the difference and repeat it back, re-prompt and try again.</p>
+      </div>
+    </div>
+    <p class="foot-note">AI removes teacher vocal insecurity. It does not remove the need for rigorous human verification — in a Cabal, we are the acoustic directors.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="29" data-label="04 The social contract" data-speaker-notes="Finally, the terms. What we owe each other, and what we will not do to each other.">
+    <div class="rise">
+      <div class="ghost-num">04</div>
+      <h2 class="slide-title">The social contract</h2>
+      <p class="note">How we critique, how we work, and where the day ends.</p>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="30" data-label="The objective critique protocol" data-speaker-notes="Valve banned cool and sucks in post-mortems, because a subjective declaration carries zero engineering value and triggers an instant ego threat. I do not like this exercise is lazy critique. Every review of a script, diagram or audio asset follows three steps.">
+    <div class="kicker"><span>04 · The social contract</span></div>
+    <h2 class="slide-title">Nothing can be cool, and nothing can suck</h2>
+    <div class="cols cols-3 rise">
+      <div>
+        <span class="step">Step 1</span>
+        <h3>Behavioral observation</h3>
+        <p>What happened, not what you felt: &ldquo;In playtest 2 the learner replayed the prompt three times and hesitated seven seconds before answering.&rdquo;</p>
+      </div>
+      <div>
+        <span class="step">Step 2</span>
+        <h3>Root-cause diagnostic</h3>
+        <p>&ldquo;The /p/–/b/ contrast was unclear because the audio produced no crisp puff of air — <em>pat</em> sounded like <em>bat</em>.&rdquo;</p>
+      </div>
+      <div>
+        <span class="step">Step 3</span>
+        <h3>Actionable proposal</h3>
+        <p>&ldquo;Re-prompt with an aspirated phonetic tag, and add a tissue-paper drill so the learner sees the puff of air.&rdquo;</p>
+      </div>
+    </div>
+    <p class="foot-note">Compassionate and straightforward, never harsh — and never a verdict on the person who made it. Treat lesson scripts as functional cues: if the learner stumbles, rewrite the prompt.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="31" data-label="A sustainable cadence" data-speaker-notes="When nobody clocks your hours, dedicated professionals invent hero culture: 2 a.m. messages and guilt every time they step away. We reject it. Exhausted teachers do not craft world-class pronunciation materials.">
+    <div class="kicker"><span>04 · The social contract</span></div>
+    <h2 class="slide-title">What you can and cannot expect</h2>
+    <div class="cols cols-2 rise">
+      <div>
+        <span class="step">You can expect</span>
+        <p>Complete autonomy to decide within your Cabal, through the Advice Process.</p>
+        <p>Transparent access to all learner telemetry, acoustic benchmarks and project files.</p>
+        <p>Objective, behavioral feedback on your materials within 24 hours.</p>
+        <p>Fierce protection of your boundaries and your rest.</p>
+      </div>
+      <div>
+        <span class="step">You cannot expect</span>
+        <p>A manager handing you a daily checklist or counting your hours.</p>
+        <p>Consensus committees where everyone must agree before you may act.</p>
+        <p>Freedom to ignore playtest data or bypass the Advice Process.</p>
+        <p>Tolerance for passive aggression or back-channel politics.</p>
+      </div>
+    </div>
+    <p class="foot-note">Monday to Thursday, 10:00 to 17:00 — six hours of Cabal work. Friday is solo drafting, quiet testing and recovery, with zero group meetings. No evening or weekend messaging.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide bleed" data-screen-label="32" data-label="The fifth day" data-speaker-notes="Six hours a day, four days a week — Birdwell's own schedule during the most intense turnaround in Valve's history. The fifth day is not slack in the plan. It is the plan.">
+    <figure class="bleed-figure lighten"><img src="images/friday.jpg" alt="An empty office at dusk, lights off, one desk lamp still on over a closed notebook" /></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="kicker"><span>04 · The social contract</span></div>
+    <div class="bleed-copy rise">
+      <h2 class="slide-title">The fifth day</h2>
+      <p class="note">Overtime is a symptom of broken planning, not heroism. If we are working late, our predictions failed — and that is a planning problem to fix, not a virtue to reward.</p>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="33" data-label="The Phase 2 charter" data-speaker-notes="We have chosen not the naive chaos of structurelessness but the disciplined freedom of an empirically grounded, self-managing team. Cabal assignments and pod workspaces go live this afternoon.">
+    <div class="kicker"><span>04 · The social contract</span></div>
+    <h2 class="slide-title">The Phase 2 charter</h2>
+    <ul class="bullets rise">
+      <li><span class="lead">We have discarded the illusion of structurelessness</span> <span class="rest">and armed ourselves with verified organizational science instead.</span></li>
+      <li><span class="lead">We resolve pedagogical conflict through learner prototypes,</span> <span class="rest">not rhetorical filibustering.</span></li>
+      <li><span class="lead">We lead by serving</span> <span class="rest">— clearing obstacles, holding peer safety, rotating the floor to whoever&rsquo;s craft is on the line.</span></li>
+      <li><span class="lead">Cabal assignments and pod workspaces go live this afternoon.</span> <span class="rest">Week 1: draft the Living Syllabus Bible and build the first Alpha prototypes.</span></li>
+    </ul>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide bleed" data-screen-label="34" data-label="Close" data-speaker-notes="We are not just building another English course. We are engineering a learning experience that gives thousands of learners the vocal clarity and confidence to be understood. Let us begin Phase 2. Let's get to work.">
+    <figure class="bleed-figure lighten"><img src="images/close.jpg" alt="A learner and a teacher side by side at a laptop in bright daylight, seen from behind" /></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="kicker"><span>Phase 2 launch</span></div>
+    <div class="bleed-copy rise">
+      <h2 class="display">Let&rsquo;s get to work</h2>
+      <p class="cover-sub">Vocal clarity, acoustic precision and communicative confidence — engineered, proven by learner data, and shipped.</p>
+    </div>
+  </section>
+
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;pageFurniture&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Deck&quot;},&quot;photoTreatment&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Blended&quot;,&quot;Full colour&quot;],&quot;default&quot;:&quot;Blended&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Imagery&quot;},&quot;dividerGround&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Indigo&quot;,&quot;Ink&quot;],&quot;default&quot;:&quot;Indigo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Deck&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const furniture = this.props.pageFurniture ?? true;
+    const grade = this.props.photoTreatment ?? "Blended";
+    const ground = this.props.dividerGround ?? "Indigo";
+    return {
+      deckClass: [
+        furniture ? "furniture-on" : "furniture-off",
+        grade === "Blended" ? "grade-blend" : "grade-plain",
+        ground === "Indigo" ? "ground-indigo" : "ground-ink"
+      ].join(" ")
+    };
+  }
+}
+</script>
+</body>
+</html>

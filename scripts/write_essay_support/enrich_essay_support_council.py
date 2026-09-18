@@ -221,6 +221,8 @@ class OllamaClient:
                 "num_ctx": 8192
             }
         }
+        if not any(r in model.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+            payload["think"] = False
 
         req = urllib.request.Request(
             url,

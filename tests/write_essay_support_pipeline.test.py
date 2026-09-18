@@ -7,12 +7,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from unittest.mock import patch, MagicMock
+
 from scripts.write_essay_support.pipeline import (  # noqa: E402
     MODELS,
     AuditEngine,
+    OllamaClient as PipelineOllamaClient,
     build_manifest,
     run_batch,
 )
+from scripts.write_essay_support.enrich_essay_support_council import OllamaClient as CouncilOllamaClient  # noqa: E402
 from scripts.write_essay_support.sources import load_question_sources  # noqa: E402
 
 
@@ -122,6 +126,73 @@ class WriteEssaySupportPipelineTest(unittest.TestCase):
             self.assertEqual(records[0]["status"], "PUBLISHED")
             self.assertEqual(records[0]["previousAuditRecord"]["status"], "QUARANTINED")
             self.assertTrue(rerun["targetedReportPath"])
+
+    def test_local_model_client_passes_think_false_for_qwen_and_gemma(self):
+        client = PipelineOllamaClient()
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps({
+            "message": {"content": '{"test": "ok"}'}
+        }).encode("utf-8")
+        mock_resp.__enter__.return_value = mock_resp
+
+        with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
+            # Test Qwen
+            client.generate_json(MODELS["qw"], "audit", {"prompt": "test"})
+            req_qwen = mock_urlopen.call_args[0][0]
+            body_qwen = json.loads(req_qwen.data.decode("utf-8"))
+            self.assertIn("think", body_qwen)
+            self.assertIs(body_qwen["think"], False)
+            self.assertNotIn("think", body_qwen["options"])
+            self.assertEqual(body_qwen["options"]["num_ctx"], 8192)
+
+            # Test Gemma
+            client.generate_json(MODELS["gm"], "audit", {"prompt": "test"})
+            req_gemma = mock_urlopen.call_args[0][0]
+            body_gemma = json.loads(req_gemma.data.decode("utf-8"))
+            self.assertIn("think", body_gemma)
+            self.assertIs(body_gemma["think"], False)
+
+            # Test DeepSeek R1
+            client.generate_json(MODELS["dr"], "audit", {"prompt": "test"})
+            req_deepseek = mock_urlopen.call_args[0][0]
+            body_deepseek = json.loads(req_deepseek.data.decode("utf-8"))
+            self.assertNotIn("think", body_deepseek)
+
+            # Test QwQ reasoning model
+            client.generate_json("qwq:32b", "audit", {"prompt": "test"})
+            req_qwq = mock_urlopen.call_args[0][0]
+            body_qwq = json.loads(req_qwq.data.decode("utf-8"))
+            self.assertNotIn("think", body_qwq)
+
+    def test_enrich_council_ollama_client_passes_think_false(self):
+        client = CouncilOllamaClient()
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps({
+            "message": {"content": '{"test": "ok"}'}
+        }).encode("utf-8")
+        mock_resp.__enter__.return_value = mock_resp
+
+        with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
+            # Qwen
+            client.generate_json("qwen3:14b", "sys", "usr")
+            req = mock_urlopen.call_args[0][0]
+            body = json.loads(req.data.decode("utf-8"))
+            self.assertIn("think", body)
+            self.assertIs(body["think"], False)
+            self.assertNotIn("think", body["options"])
+            self.assertEqual(body["options"]["num_ctx"], 8192)
+
+            # DeepSeek-R1
+            client.generate_json("deepseek-r1:14b", "sys", "usr")
+            req_r1 = mock_urlopen.call_args[0][0]
+            body_r1 = json.loads(req_r1.data.decode("utf-8"))
+            self.assertNotIn("think", body_r1)
+
+            # QwQ reasoning model
+            client.generate_json("qwq:32b", "sys", "usr")
+            req_qwq = mock_urlopen.call_args[0][0]
+            body_qwq = json.loads(req_qwq.data.decode("utf-8"))
+            self.assertNotIn("think", body_qwq)
 
 
 if __name__ == "__main__":

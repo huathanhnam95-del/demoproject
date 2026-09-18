@@ -136,6 +136,8 @@ These workflows add product thinking, automated QA, and release automation:
   3. Read `council_latest.txt` and present the full council output.
   The `--context` flag injects the temp file's contents as inline context so council personas can analyze the conversation. The script auto-saves to a timestamped file if `--out` is omitted, but always use `--out` for a predictable filename.
 - **#hproto**: When the user types `#hproto`, immediately initiate the [Harness Engineering Protocol](.agent/workflows/harness-protocol.md) and guide the user through the Spec -> Plan -> Execute -> Verify loop.
+- **R4D**: When the user states "R4D" (ready for deployment), immediately mark the session as `(R) ` in the session title by running `python scripts/session_tagger.py mark-ready`.
+- **PAR**: When the user asks to "PAR" ("push all readied"), inspect all readied sessions (`python scripts/session_tagger.py list-ready`), execute the workspace deployment verification and push workflow per rules, and batch mark all deployed sessions with `(D) ` using `python scripts/session_tagger.py mark-deployed --cid <cids...>` or `python scripts/session_tagger.py trace-deployed`.
 - **Auto-Boost Protocol**: Automatically activated on any **Complex Task** per [.agent/rules/auto_boost_protocol.md](.agent/rules/auto_boost_protocol.md). Automatically applies the deep reasoning, subagent orchestration, and empirical verification workflow of `/boost` without requiring manual `/boost` invocation.
 
 ## Response Formatting
@@ -150,9 +152,12 @@ These workflows add product thinking, automated QA, and release automation:
 - **Changelog Rule**: ALWAYS add a changelog summarizing all updates before pushing.
 - **Next Version**: `V2.0.12`
 
-- **Deployed Session Tagging Protocol (`(D)`)**:
-  - Whenever a session/conversation concludes with an approved production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.
-  - Whenever a conversation marked with `(D)` is resumed or new development starts, the agent MUST immediately strip the `(D) ` prefix during its initial tool calls by running: `python scripts/session_tagger.py remove-deployed`. Never wait until after answering.
+- **Session Tagging Protocol (`(R)` & `(D)`)**:
+  - **Ready for Deployment (`(R)`)**: Whenever the user says "R4D", mark the session with prefix `(R) ` via `python scripts/session_tagger.py mark-ready`. List all ready sessions via `python scripts/session_tagger.py list-ready`.
+  - **Push All Readied (`PAR`)**: When the user requests "PAR", deploy all readied changes per the workspace deployment workflow, then transition readied sessions to `(D) ` using `python scripts/session_tagger.py mark-deployed --cid ...` or `python scripts/session_tagger.py trace-deployed`.
+  - **Deployed Tagging (`(D)`)**: Whenever a session/conversation concludes with an approved production deployment, rename it with a `(D) ` prefix by running `python scripts/session_tagger.py mark-deployed`.
+  - **Batch Deployment Back-Tracing (MANDATORY)**: When an approved production deployment integrates work from multiple preceding development tracks or chat sessions (e.g. multi-task releases), trace back to each chat session that produced those changes (via `TASK_TRACKER.csv`, git commit log, or `python scripts/session_tagger.py search "<query>"`) and mark each origin session with `(D) ` as well (e.g. `python scripts/session_tagger.py mark-deployed --cid <cid1> <cid2> ...` or `mark-batch` or `trace-deployed`).
+  - **Resume / Task Start Removal**: Whenever a conversation marked with `(D)` is resumed or new development starts, the agent MUST immediately strip the `(D) ` prefix during its initial tool calls by running: `python scripts/session_tagger.py remove-deployed`. Never wait until after answering.
 
 - **SemVer Protocol**:
   - **Minor Push (Bug fixes, small edits)**: Increment the LAST digit (e.g., `1.0.0` -> `1.0.1`).

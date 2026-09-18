@@ -100,15 +100,12 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   box-sizing: border-box;
 }
 
-.teacher-scheduler-google button,
-.teacher-scheduler-google input,
-.teacher-scheduler-google select,
-.teacher-scheduler-google textarea {
+.teacher-scheduler-google :where(button, input, select, textarea) {
   font: inherit;
   color: inherit;
 }
 
-.teacher-scheduler-google button {
+.teacher-scheduler-google :where(button) {
   cursor: pointer;
   touch-action: manipulation;
   border: 0;
@@ -475,38 +472,69 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   font-weight: 600;
 }
 
-.ts-mini-days button {
-  font-size: 10.5px;
+.teacher-scheduler-mini-calendar .mini-cal-days,
+.ts-mini-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell,
+.ts-mini-days .mini-cal-day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  position: relative;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-in-range {
+  background: #c2e7ff;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-range-start {
+  border-top-left-radius: 13px;
+  border-bottom-left-radius: 13px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-range-end {
+  border-top-right-radius: 13px;
+  border-bottom-right-radius: 13px;
+}
+
+.teacher-scheduler-mini-calendar .mini-cal-day-btn,
+.mini-cal-day-btn {
+  font-size: 11px;
   width: 24px;
   height: 24px;
   border-radius: 50%;
   padding: 0;
-  justify-self: center;
+  border: 0;
+  background: none;
   font-variant-numeric: tabular-nums;
   display: grid;
   place-items: center;
-  color: var(--ts-ink);
+  color: var(--ts-ink, #202124);
+  cursor: pointer;
   transition: background-color 0.1s;
 }
 
-.ts-mini-days button:hover {
-  background: var(--ts-hover);
+.teacher-scheduler-mini-calendar .mini-cal-day-btn:hover {
+  background: var(--ts-hover, #f1f3f4);
 }
 
-.ts-mini-days button.outside {
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-outside .mini-cal-day-btn {
   color: #9aa0a6;
 }
 
-.ts-mini-days button.selected {
-  background: #c2e7ff;
-  color: #004a77;
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-today .mini-cal-day-btn {
+  background: var(--ts-blue, #1a73e8);
+  color: #ffffff;
   font-weight: 700;
 }
 
-.ts-mini-days button.today {
-  background: var(--ts-blue);
-  color: #ffffff;
-  font-weight: 700;
+.teacher-scheduler-mini-calendar .mini-cal-day-cell.is-in-range:not(.is-today) .mini-cal-day-btn {
+  color: #004a77;
+  font-weight: 600;
 }
 
 /* Sidebar Search & Sections */
@@ -885,27 +913,98 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   z-index: auto;
 }
 
-/* Title and meta colors for solid pills */
+/* Title and meta colors for solid pills (overriding crm-admin.css legacy variables) */
+.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill {
+  --pill-ink: #ffffff !important;
+  --pill-meta: rgba(255, 255, 255, 0.95) !important;
+  color: #ffffff !important;
+}
+
 .teacher-scheduler-workspace .scheduler-session-pill .pill-title {
   font-size: 12px;
   line-height: 1.25;
   font-weight: 600;
-  color: #ffffff;
+}
+
+.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-title {
+  color: #ffffff !important;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-time {
   font-size: 11px;
   line-height: 1.2;
   font-weight: 400;
-  color: #ffffff;
+}
+
+.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-time {
+  color: #ffffff !important;
   opacity: 0.95;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-teacher {
   font-size: 11px;
   line-height: 1.2;
-  color: #ffffff;
+}
+
+.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-teacher {
+  color: #ffffff !important;
   opacity: 0.9;
+}
+
+/* Dynamic 3-tier density styles */
+/* Tier 1: compact (< 40px) */
+.teacher-scheduler-workspace .scheduler-session-pill.is-compact,
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-compact {
+  padding: 1px 4px;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.is-compact .pill-meta-row,
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-compact .pill-meta-row,
+.teacher-scheduler-workspace .scheduler-session-pill.is-compact .pill-teacher,
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-compact .pill-teacher {
+  display: none !important;
+}
+
+/* Tier 2: mid (40-71px) - 2 lines: Title with ellipsis + Time; teacher omitted */
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid {
+  padding: 3px 6px;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-header {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  line-height: 1.25;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-meta-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1px;
+  width: 100%;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-time {
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-mid .pill-teacher {
+  display: none !important;
+}
+
+/* Tier 3: full (>= 72px) - 3 lines */
+.teacher-scheduler-workspace .scheduler-session-pill.ts-density-full .pill-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
 }
 
 .teacher-scheduler-workspace .scheduler-calendar-time span {
@@ -915,54 +1014,72 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   letter-spacing: 0.2px;
 }
 
-/* Section C: Authoritative Teacher Color Palette (Solid Fills) */
-.teacher-scheduler-workspace [data-ts-color="blue"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="blue"] {
+/* Section C: Authoritative Teacher Color Palette (Solid Fills) - strictly scoped to pills and drag ghosts */
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="blue"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="blue"] {
   --color: #1a73e8;
   background-color: #1a73e8;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="purple"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="purple"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="purple"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="purple"] {
   --color: #8e24aa;
   background-color: #8e24aa;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="teal"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="teal"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="teal"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="teal"] {
   --color: #00796b;
   background-color: #00796b;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="green"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="green"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="green"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="green"] {
   --color: #1e8e3e;
   background-color: #1e8e3e;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="orange"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="orange"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="orange"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="orange"] {
   --color: #e37400;
   background-color: #e37400;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="red"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="red"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="red"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="red"] {
   --color: #d93025;
   background-color: #d93025;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="indigo"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="indigo"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="indigo"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="indigo"] {
   --color: #3f51b5;
   background-color: #3f51b5;
   color: #ffffff;
 }
-.teacher-scheduler-workspace [data-ts-color="coral"],
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="coral"] {
+.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="coral"],
+.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="coral"] {
   --color: #c2185b;
   background-color: #c2185b;
   color: #ffffff;
+}
+
+/* Neutral sidebar teacher rows and class cards */
+.teacher-scheduler-workspace .ts-checkbox-row {
+  background-color: transparent !important;
+  color: var(--ts-ink, #202124) !important;
+  transition: background-color 0.15s ease;
+}
+.teacher-scheduler-workspace .ts-checkbox-row:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+.teacher-scheduler-workspace .ts-checkbox-row .ts-checkbox-label {
+  color: var(--ts-ink, #202124) !important;
+}
+
+.teacher-scheduler-workspace .scheduler-class-card.ts-repair-class-row {
+  background-color: transparent;
+  color: inherit;
 }
 
 /* Opaque drag ghost with white text and solid teacher fill */
@@ -1137,11 +1254,11 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   border-left: 3px solid var(--pill-accent, #1a73e8);
 }
 .teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-title {
-  color: var(--pill-ink, #154589);
+  color: var(--pill-ink, #154589) !important;
 }
 .teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-time,
 .teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-teacher {
-  color: var(--pill-meta, #1967d2);
+  color: var(--pill-meta, #1967d2) !important;
 }
 
 .ts-timeline {
@@ -1389,6 +1506,58 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 /* --------------------------------------------------------------------------
+   Dropdown Menus: #ts-create-menu and #ts-view-menu
+   -------------------------------------------------------------------------- */
+#ts-create-menu,
+#ts-view-menu,
+.ts-menu-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid #dadce0;
+  padding: 6px 0;
+  min-width: 180px;
+  box-sizing: border-box;
+}
+
+#ts-create-menu button,
+#ts-view-menu button,
+.ts-menu-card button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 13px;
+  line-height: 20px;
+  color: #3c4043;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color 0.12s ease;
+}
+
+#ts-create-menu button:hover,
+#ts-view-menu button:hover,
+.ts-menu-card button:hover,
+#ts-create-menu button:focus-visible,
+#ts-view-menu button:focus-visible,
+.ts-menu-card button:focus-visible {
+  background: #f1f3f4;
+  color: #202124;
+}
+
+#ts-create-menu button svg,
+.ts-menu-card button svg {
+  width: 18px;
+  height: 18px;
+  color: #5f6368;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
    Right Tools Rail (48px)
    -------------------------------------------------------------------------- */
 .ts-tools {
@@ -1509,21 +1678,26 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 /* Full Editor Dialog */
+dialog.ts-modal-dialog,
 .ts-modal-dialog {
   border: 0;
-  border-radius: 16px;
-  width: 580px;
-  max-width: calc(100vw - 24px);
+  border-radius: 12px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
   max-height: calc(100dvh - 32px);
   padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
   color: var(--ts-ink);
   background: #ffffff;
-  box-shadow: 0 12px 35px rgba(32, 33, 36, 0.25);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
   z-index: 60;
 }
 
+dialog.ts-modal-dialog::backdrop,
 .ts-modal-dialog::backdrop {
-  background: rgba(32, 33, 36, 0.35);
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(1px);
 }
 
 .ts-dialog-header {
@@ -1824,41 +1998,78 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
    Quick Add Event Composer & Detached Drag Ghost Styles
    -------------------------------------------------------------------------- */
 .ts-quick-add-dialog,
-#teacher-scheduler-quick-add {
+#teacher-scheduler-quick-add,
+#teacher-scheduler-session-bubble,
+.teacher-scheduler-session-bubble {
   position: fixed;
   z-index: 1000;
-  width: 360px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(60, 64, 67, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 16px;
+  padding: 16px 20px;
   font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--ts-ink, #1f1f1f);
 }
 
 .ts-quick-add-dialog .crm-input,
-#teacher-scheduler-quick-add .crm-input {
+#teacher-scheduler-quick-add .crm-input,
+#teacher-scheduler-session-bubble .crm-input {
   background: #f1f3f4;
   border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 6px 8px;
-  font-size: 12px;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
   color: var(--ts-ink, #1f1f1f);
   transition: all 0.15s ease;
 }
 
 .ts-quick-add-dialog .crm-input:focus,
-#teacher-scheduler-quick-add .crm-input:focus {
+#teacher-scheduler-quick-add .crm-input:focus,
+#teacher-scheduler-session-bubble .crm-input:focus {
   background: #ffffff;
-  border-color: var(--ts-blue, #0b57d0);
+  border-color: var(--ts-blue, #1a73e8);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.2);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+#teacher-scheduler-session-note {
+  min-height: 80px;
+  height: 86px;
+  max-height: 200px;
+  resize: vertical;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+#btn-teacher-scheduler-quick-add,
+#btn-teacher-scheduler-save-outcome,
+#btn-ts-save-settings,
+.ts-blue-btn {
+  background: #1a73e8 !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+#btn-teacher-scheduler-quick-add:hover,
+#btn-teacher-scheduler-save-outcome:hover,
+#btn-ts-save-settings:hover,
+.ts-blue-btn:hover {
+  background: #1557b0 !important;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
 }
 
 #teacher-scheduler-session-bubble,
-.ts-floating-dialog,
-#teacher-scheduler-event-popover {
+.ts-floating-dialog {
   font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--ts-ink, #1f1f1f);
 }

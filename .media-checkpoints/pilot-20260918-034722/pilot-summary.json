@@ -1,0 +1,189 @@
+{
+  "publicationId": "pilot-20260918-034722",
+  "type": "pilot",
+  "ineligibleForProduction": true,
+  "selectionRestricted": true,
+  "targetBucket": "listening-tasks-3ae34-practice-media",
+  "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
+  "executedAt": "2026-09-18T03:50:57.945Z",
+  "stats": {
+    "totalLogicalAssets": 26,
+    "uniqueStorageObjects": 24,
+    "uploadedCount": 0,
+    "reusedCount": 24,
+    "totalLogicalBytes": 10525202,
+    "uniqueStorageBytes": 10413637,
+    "deduplicationSavingsBytes": 111565
+  },
+  "rootReleaseKey": "publications/pilot-20260918-034722/release.json",
+  "objectUploadReceipts": [
+    {
+      "storageKey": "media/sha256/0ac3e88e6e516eac81c9cf2202b35398da0ec39bf0ddd841954d6dd4498115f6.mp3",
+      "action": "reused",
+      "sha256": "0ac3e88e6e516eac81c9cf2202b35398da0ec39bf0ddd841954d6dd4498115f6",
+      "size": 255788,
+      "generation": "1789702928136463"
+    },
+    {
+      "storageKey": "media/sha256/c0404f37bb6e38ddc43c98f665432fc7197aec8b6e6b82599e7ebab89029ebdb.mp3",
+      "action": "reused",
+      "sha256": "c0404f37bb6e38ddc43c98f665432fc7197aec8b6e6b82599e7ebab89029ebdb",
+      "size": 293804,
+      "generation": "1789702933134732"
+    },
+    {
+      "storageKey": "media/sha256/87984c191fe9c337df70acb0fa981891aaee51d4ac6614578ddb86e2bebf75c7.mp3",
+      "action": "reused",
+      "sha256": "87984c191fe9c337df70acb0fa981891aaee51d4ac6614578ddb86e2bebf75c7",
+      "size": 259244,
+      "generation": "1789702938084894"
+    },
+    {
+      "storageKey": "media/sha256/f3aa6d82577c03f34a540d781240964e97de1d2719e56958b768f2dfedb45696.mp3",
+      "action": "reused",
+      "sha256": "f3aa6d82577c03f34a540d781240964e97de1d2719e56958b768f2dfedb45696",
+      "size": 285740,
+      "generation": "1789702943259728"
+    },
+    {
+      "storageKey": "media/sha256/12006bcde7cb9a349a55576310114f8caa47ea22012a4cecf23a32505e60c5c1.mp3",
+      "action": "reused",
+      "sha256": "12006bcde7cb9a349a55576310114f8caa47ea22012a4cecf23a32505e60c5c1",
+      "size": 264620,
+      "generation": "1789702948338588"
+    },
+    {
+      "storageKey": "media/sha256/f87e6a273fd1d871f8f7e43d21bbff14a2c9f65005d86caf087d61540591ad11.mp3",
+      "action": "reused",
+      "sha256": "f87e6a273fd1d871f8f7e43d21bbff14a2c9f65005d86caf087d61540591ad11",
+      "size": 309548,
+      "generation": "1789702953169642"
+    },
+    {
+      "storageKey": "media/sha256/ddfab46adc8c7ed42e1504374b04b731fcdfa67d49746395fa6491f6d3e51644.mp3",
+      "action": "reused",
+      "sha256": "ddfab46adc8c7ed42e1504374b04b731fcdfa67d49746395fa6491f6d3e51644",
+      "size": 300332,
+      "generation": "1789702958118417"
+    },
+    {
+      "storageKey": "media/sha256/329f30ede684a2323feea1896c008e8e6f7a7e5fa9702643db5bd9b6991ef866.mp3",
+      "action": "reused",
+      "sha256": "329f30ede684a2323feea1896c008e8e6f7a7e5fa9702643db5bd9b6991ef866",
+      "size": 334892,
+      "generation": "1789702963277679"
+    },
+    {
+      "storageKey": "media/sha256/5bc1f8688cd41d65bace315ba22497d177d547a95aedeb525317a049ea43fe61.mp3",
+      "action": "reused",
+      "sha256": "5bc1f8688cd41d65bace315ba22497d177d547a95aedeb525317a049ea43fe61",
+      "size": 341036,
+      "generation": "1789702969145122"
+    },
+    {
+      "storageKey": "media/sha256/0eea91b5940a79fec7840b013af411733ec7971d7af43df49391e1097ad5af7b.mp3",
+      "action": "reused",
+      "sha256": "0eea91b5940a79fec7840b013af411733ec7971d7af43df49391e1097ad5af7b",
+      "size": 400172,
+      "generation": "1789702974060219"
+    },
+    {
+      "storageKey": "media/sha256/231f10f6a3e745230a1edb3c8b505ed1f3388f85aa44ac4587dcd6162124b470.mp3",
+      "action": "reused",
+      "sha256": "231f10f6a3e745230a1edb3c8b505ed1f3388f85aa44ac4587dcd6162124b470",
+      "size": 19916,
+      "generation": "1789702978943022"
+    },
+    {
+      "storageKey": "media/sha256/ce5543f4172c3575ef86249c0f578b0c0aeda3b38ee82b9df228847170cc14f1.mp3",
+      "action": "reused",
+      "sha256": "ce5543f4172c3575ef86249c0f578b0c0aeda3b38ee82b9df228847170cc14f1",
+      "size": 21932,
+      "generation": "1789702983901615"
+    },
+    {
+      "storageKey": "media/sha256/8e02941a4dfc4fd0312dfc07b48fa423ccb6b64f12d158cad1da928098499b69.mp3",
+      "action": "reused",
+      "sha256": "8e02941a4dfc4fd0312dfc07b48fa423ccb6b64f12d158cad1da928098499b69",
+      "size": 19628,
+      "generation": "1789702988838883"
+    },
+    {
+      "storageKey": "media/sha256/0d480676a0dcf019926184a80455857657c646846e13b1e7a823f4d737323772.png",
+      "action": "reused",
+      "sha256": "0d480676a0dcf019926184a80455857657c646846e13b1e7a823f4d737323772",
+      "size": 349073,
+      "generation": "1789702993959050"
+    },
+    {
+      "storageKey": "media/sha256/71718bea05af88f91d5372be40a1d6bc72f9b173977b6048242cf41c65dd4793.png",
+      "action": "reused",
+      "sha256": "71718bea05af88f91d5372be40a1d6bc72f9b173977b6048242cf41c65dd4793",
+      "size": 580507,
+      "generation": "1789702999753639"
+    },
+    {
+      "storageKey": "media/sha256/b3e19da633c3abcd365f69c34fb3ec904d5575c009bdf69f0daff320388f82e9.jpg",
+      "action": "reused",
+      "sha256": "b3e19da633c3abcd365f69c34fb3ec904d5575c009bdf69f0daff320388f82e9",
+      "size": 64743,
+      "generation": "1789703004539772"
+    },
+    {
+      "storageKey": "media/sha256/3f44b09982a1fa4bff59ee22b1de2ed610ec0ba0e50344026697751f0f76de94.jpg",
+      "action": "reused",
+      "sha256": "3f44b09982a1fa4bff59ee22b1de2ed610ec0ba0e50344026697751f0f76de94",
+      "size": 331540,
+      "generation": "1789703009514411"
+    },
+    {
+      "storageKey": "media/sha256/09a53040b647efd07d8cf8ec007eb0742bc0f7d4cee086854782d7412ea98d22.mp3",
+      "action": "reused",
+      "sha256": "09a53040b647efd07d8cf8ec007eb0742bc0f7d4cee086854782d7412ea98d22",
+      "size": 1145900,
+      "generation": "1789703014689998"
+    },
+    {
+      "storageKey": "media/sha256/f49c9f882e40448d5d0e0d1d2f3d1c08ccbb3caad80f64b26d63d828e2444528.mp3",
+      "action": "reused",
+      "sha256": "f49c9f882e40448d5d0e0d1d2f3d1c08ccbb3caad80f64b26d63d828e2444528",
+      "size": 1277996,
+      "generation": "1789703020642426"
+    },
+    {
+      "storageKey": "media/sha256/e925accba85b89efda546917411abc8c3c53cbd1325908e9bfc52c8f8fd0e53a.mp3",
+      "action": "reused",
+      "sha256": "e925accba85b89efda546917411abc8c3c53cbd1325908e9bfc52c8f8fd0e53a",
+      "size": 1085509,
+      "generation": "1789703026485280"
+    },
+    {
+      "storageKey": "media/sha256/677018cf37671dfccbed3af6af62c2710fd48cca91fff6cdbf781a33fb2c583f.mp3",
+      "action": "reused",
+      "sha256": "677018cf37671dfccbed3af6af62c2710fd48cca91fff6cdbf781a33fb2c583f",
+      "size": 46721,
+      "generation": "1789703032294203"
+    },
+    {
+      "storageKey": "media/sha256/d4c9940a5937e82a91fa9a610f62706a5d918cd36bd4755da35bc266a77af810.wav",
+      "action": "reused",
+      "sha256": "d4c9940a5937e82a91fa9a610f62706a5d918cd36bd4755da35bc266a77af810",
+      "size": 64844,
+      "generation": "1789703037218036"
+    },
+    {
+      "storageKey": "media/sha256/9a5d54c050d0325f48762398d1bf5dbaee81ccd8709ae83da928cb918a984a9a.mp3",
+      "action": "reused",
+      "sha256": "9a5d54c050d0325f48762398d1bf5dbaee81ccd8709ae83da928cb918a984a9a",
+      "size": 1165100,
+      "generation": "1789703042495159"
+    },
+    {
+      "storageKey": "media/sha256/ee135f19e463892c50270b88a3c60517f5da2a6cdd88c266bc2f81dd49e73213.mp3",
+      "action": "reused",
+      "sha256": "ee135f19e463892c50270b88a3c60517f5da2a6cdd88c266bc2f81dd49e73213",
+      "size": 1195052,
+      "generation": "1789703048244277"
+    }
+  ]
+}

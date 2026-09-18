@@ -26,8 +26,9 @@ def load_env_file():
 load_env_file()
 
 # Ollama settings for Pipeline B
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-OLLAMA_EMBED_URL = os.getenv("OLLAMA_URL", "http://localhost:11434").replace("/api/generate", "").rstrip("/") + "/api/embed"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/chat")
+_base_ollama_url = OLLAMA_URL.replace("/api/generate", "").replace("/api/chat", "").rstrip("/")
+OLLAMA_EMBED_URL = f"{_base_ollama_url}/api/embed"
 OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 
 DEFAULT_LOCAL_MODELS = {

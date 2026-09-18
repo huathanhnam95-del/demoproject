@@ -167,7 +167,7 @@ class OllamaClient:
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
-        body = json.dumps({
+        payload = {
             "model": model,
             "messages": messages,
             "stream": False,
@@ -177,7 +177,10 @@ class OllamaClient:
                 "num_ctx": 8192,
                 "num_predict": 2048,
             },
-        }).encode("utf-8")
+        }
+        if not any(r in model.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+            payload["think"] = False
+        body = json.dumps(payload).encode("utf-8")
         import time
         last_exc = None
         for attempt in range(3):

@@ -284,18 +284,22 @@
                     taskIds: taskIdsToUpdate,
                     patch: { status: newStatus }
                 });
+                if (!scopeIsCurrent(mutationScope)) return;
                 taskIdsToUpdate.forEach((id) => {
                     const t = taskFor(id);
                     if (t) tasks.set(id, { ...t, status: newStatus });
                 });
+                invalidateHierarchy();
                 showToast(`Updated status for ${taskIdsToUpdate.length} task${taskIdsToUpdate.length === 1 ? '' : 's'}.`, 'success');
                 renderBoard();
             } catch (err) {
-                showToast(err?.message || 'Batch status update failed.', 'error');
+                if (scopeIsCurrent(mutationScope)) showToast(err?.message || 'Batch status update failed.', 'error');
             } finally {
-                setBusy(false);
-                const statusSelect = document.getElementById('projects-batch-status');
-                if (statusSelect) statusSelect.value = '';
+                if (scopeIsCurrent(mutationScope)) {
+                    setBusy(false);
+                    const statusSelect = document.getElementById('projects-batch-status');
+                    if (statusSelect) statusSelect.value = '';
+                }
             }
         }
         async function executeBatchSection(targetSectionId) {
@@ -309,11 +313,23 @@
             }
             const taskIdsToMove = [...selectedTaskIds];
             setBusy(true);
+            let successCount = 0;
+            let skippedCount = 0;
+            let lastError = null;
             try {
                 for (const id of taskIdsToMove) {
+                    if (!scopeIsCurrent(mutationScope)) return;
                     const t = taskFor(id);
-                    if (t && (t.effectiveSectionId || t.sectionId) !== resolvedTargetId) {
-                        await requestMutation(`/api/projects/${encodeURIComponent(mutationScope.projectId)}/tasks/${encodeURIComponent(id)}/move`, {
+                    if (!t) {
+                        skippedCount++;
+                        continue;
+                    }
+                    if ((t.effectiveSectionId || t.sectionId) === resolvedTargetId && !t.parentTaskId) {
+                        skippedCount++;
+                        continue;
+                    }
+                    try {
+                        const response = await requestMutation(`/api/projects/${encodeURIComponent(mutationScope.projectId)}/tasks/${encodeURIComponent(id)}/move`, {
                             operationId: operationId(`batch-move-${id}`),
                             expectedRevision: t.revision,
                             expectedStructureRevision: structureRevision(),
@@ -321,16 +337,39 @@
                             sectionId: resolvedTargetId,
                             index: rootsForSection(resolvedTargetId).length
                         });
+                        if (!scopeIsCurrent(mutationScope)) return;
+                        const movedTask = response?.task || response?.result?.task;
+                        const updatedStructure = response?.structureRevision ?? response?.result?.structureRevision;
+                        if (updatedStructure !== undefined) {
+                            boardRevision.structureRevision = Math.max(structureRevision(), Number(updatedStructure));
+                        }
+                        if (movedTask) {
+                            tasks.set(id, { ...t, ...movedTask });
+                            invalidateHierarchy();
+                        }
+                        successCount++;
+                    } catch (itemErr) {
+                        lastError = itemErr;
+                        break;
                     }
                 }
-                showToast(`Moved ${taskIdsToMove.length} task${taskIdsToMove.length === 1 ? '' : 's'} to section.`, 'success');
-                await loadProject(mutationScope.projectId, { preserve: true });
+                if (!scopeIsCurrent(mutationScope)) return;
+                if (successCount > 0 && !lastError) {
+                    showToast(`Moved ${successCount} task${successCount === 1 ? '' : 's'} to section.`, 'success');
+                } else if (successCount > 0 && lastError) {
+                    showToast(`Moved ${successCount} task${successCount === 1 ? '' : 's'}; remaining moves stopped due to error: ${lastError.message}`, 'warning');
+                } else if (lastError) {
+                    showToast(lastError.message || 'Batch section move failed.', 'error');
+                }
+                renderBoard();
             } catch (err) {
-                showToast(err?.message || 'Batch section move failed.', 'error');
+                if (scopeIsCurrent(mutationScope)) showToast(err?.message || 'Batch section move failed.', 'error');
             } finally {
-                setBusy(false);
-                const sectionSelect = document.getElementById('projects-batch-section');
-                if (sectionSelect) sectionSelect.value = '';
+                if (scopeIsCurrent(mutationScope)) {
+                    setBusy(false);
+                    const sectionSelect = document.getElementById('projects-batch-section');
+                    if (sectionSelect) sectionSelect.value = '';
+                }
             }
         }
         async function executeBatchDelete() {
@@ -345,20 +384,30 @@
                     taskIds: taskIdsToArchive,
                     patch: { lifecycle: 'archived' }
                 });
+                if (!scopeIsCurrent(mutationScope)) return;
                 taskIdsToArchive.forEach((id) => tasks.delete(id));
+                invalidateHierarchy();
                 selectedTaskIds = [];
                 renderBatchDock();
                 showToast(`Archived ${taskIdsToArchive.length} task${taskIdsToArchive.length === 1 ? '' : 's'}.`, 'success');
                 renderBoard();
             } catch (err) {
-                showToast(err?.message || 'Batch archive failed.', 'error');
+                if (scopeIsCurrent(mutationScope)) showToast(err?.message || 'Batch archive failed.', 'error');
             } finally {
-                setBusy(false);
+                if (scopeIsCurrent(mutationScope)) {
+                    setBusy(false);
+                }
             }
         }
+        let cachedContextTasks = null;
+        let contextTasksVersion = -1;
         function contextSnapshot() {
             if (String(deps.getCurrentUser?.()?.uid || '') !== controllerActorUid) { if (project || tasks.size) invalidateAccess(currentProjectId()); resetColumnForm(); selectedTaskIds = []; stateModel?.setSelectedTaskIds?.([]); }
-            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject() && !refreshRequested(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: new Map(tasks), selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
+            if (contextTasksVersion !== tasksVersion || !cachedContextTasks) {
+                cachedContextTasks = new Map(tasks);
+                contextTasksVersion = tasksVersion;
+            }
+            return { project, actorUid: controllerActorUid, authorityPending, authorizationReady: !authorityPending && hasProject() && !refreshRequested(), filterOptionsReady: !!project && !busy && !authorityPending, authorityRevision, membership, members: members.slice(), sections: sections.slice(), columns: columns.slice(), tasks: cachedContextTasks, selectedTaskId, selectedTaskIds: selectedTaskIds.slice() };
         }
 
         function syncTaskCreation() {
@@ -453,12 +502,14 @@
             stateModel?.switchProject('');
             selection = { projects: selection.projects.filter((entry) => String(entry.id) !== String(deniedProjectId)), selectedProjectId: '', selectedProject: null };
             project = null; membership = null; members = []; sections = []; columns = []; tasks = new Map();
+            invalidateHierarchy();
             selectedTaskId = ''; selectedTaskIds = []; focusedRowId = ''; logicalRows = [];
             expanded.clear(); collapsedSections.clear(); loadedBranches.clear(); branchCursors.clear(); branchHasMore.clear(); branchLoadChains.clear();
             drafts.clear(); draftVersions.clear(); settingsDrafts.clear(); pending.clear(); movePending.clear();
             optimisticIdMap.clear(); optimisticSectionIdMap.clear(); recentlyExecutedOperations.clear();
             taskCreateQueue = Promise.resolve(); sectionCreateQueue = Promise.resolve();
             boardRevision.structureRevision = 0; boardRevision.schemaRevision = 0;
+            renderedHeaderSignature = ''; renderedSettingsSignature = '';
             clearDragInteraction(); resetSectionForm(); resetColumnForm(); setBusy(false); renderProjectPicker();
             for (const name of ['projectsBoardRows', 'projectsBoardHeader', 'projectsBoardDetailBody', 'projectsBoardDetailTitle', 'projectsBoardCount']) {
                 if (elements[name]) { elements[name].innerHTML = ''; elements[name].textContent = ''; }
@@ -485,6 +536,8 @@
                 remoteObserver?.stop(); draftBases.clear();
                 selectedTaskIds = [];
                 sharedFilters = {};
+                renderedHeaderSignature = '';
+                renderedSettingsSignature = '';
                 globalScope.CrmProjectsRecovery?.setSelection(null);
                 globalScope.CrmProjectsDiscussion?.setSelection(null);
                 projectEpoch += 1;
@@ -704,15 +757,38 @@
                 let nextStructure = Number(nextProject.structureRevision || 0), nextSchema = Number(nextProject.schemaRevision || 0);
                 const readBranch = async (parentTaskId = null) => {
                     let cursor = null;
+                    let pageCount = 0;
                     do {
-                        const response = await read(queryPath(normalized, parentTaskId, cursor, loadFilters));
+                        let response;
+                        try {
+                            response = await read(queryPath(normalized, parentTaskId, cursor, loadFilters));
+                        } catch (pageError) {
+                            if (pageCount > 0 && current()) {
+                                setStatus(`Some tasks could not be loaded: ${pageError.message || 'connection error'}. Refresh to retry.`, 'warning');
+                                const key = parentTaskId || '__root__';
+                                nextLoaded.add(key); nextCursors.set(key, cursor); nextMore.set(key, true);
+                                return true;
+                            }
+                            throw pageError;
+                        }
                         if (!current()) return false;
+                        pageCount++;
                         asArray(response?.tasks).forEach(task => nextTasks.set(String(task.id), { ...task }));
                         if (Array.isArray(response?.sections)) nextSections = response.sections.slice().sort(rankCompare);
                         if (Array.isArray(response?.columns)) nextColumns = response.columns.slice().sort(rankCompare);
                         nextStructure = Number(response?.revision?.structureRevision ?? nextStructure);
                         nextSchema = Number(response?.revision?.schemaRevision ?? nextSchema);
                         cursor = response?.nextCursor || null;
+                        if (parentTaskId === null && pageCount === 1 && cursor && current()) {
+                            project = nextProject;
+                            membership = nextMembership;
+                            members = asArray(memberResponse?.people);
+                            tasks = new Map(nextTasks);
+                            sections = nextSections;
+                            columns = nextColumns;
+                            invalidateHierarchy();
+                            renderBoard();
+                        }
                     } while (cursor);
                     const key = parentTaskId || '__root__';
                     nextLoaded.add(key); nextCursors.set(key, null); nextMore.set(key, false);
@@ -784,11 +860,69 @@
             return sections[0]?.id || null;
         }
 
+        let hierarchyDirty = true;
+        let childrenByParent = new Map();
+        let rootsByGroupMap = new Map();
+        let rowIndexById = new Map();
+        let tasksVersion = 0;
+        let lastIndexedGroupBy = 'section';
+
+        function invalidateHierarchy() {
+            hierarchyDirty = true;
+            rowIndexById.clear();
+            tasksVersion++;
+        }
+
+        function ensureHierarchy() {
+            if (!hierarchyDirty && lastIndexedGroupBy === currentGroupBy) return;
+            childrenByParent = new Map();
+            const activeRoots = [];
+            for (const task of tasks.values()) {
+                const lifecycle = task.effectiveLifecycle || task.lifecycle || 'active';
+                if (lifecycle !== 'active') continue;
+                const parentId = task.parentTaskId ? String(task.parentTaskId) : null;
+                if (parentId) {
+                    let list = childrenByParent.get(parentId);
+                    if (!list) { list = []; childrenByParent.set(parentId, list); }
+                    list.push(task);
+                } else {
+                    activeRoots.push(task);
+                }
+            }
+            for (const list of childrenByParent.values()) {
+                list.sort(rankCompare);
+            }
+            activeRoots.sort(rankCompare);
+            childrenByParent.set(null, activeRoots);
+            rootsByGroupMap = new Map();
+            for (const task of activeRoots) {
+                let key;
+                if (currentGroupBy === 'section') {
+                    key = String(task.effectiveSectionId || task.sectionId || '');
+                } else if (currentGroupBy === 'status') {
+                    key = String(task.status || 'not_started');
+                } else if (currentGroupBy === 'ownerUid') {
+                    key = String(task.ownerUid || '__unassigned__');
+                } else if (currentGroupBy === 'priority') {
+                    key = String(task.values?.priority || task.priority || 'none');
+                } else {
+                    key = '';
+                }
+                let list = rootsByGroupMap.get(key);
+                if (!list) { list = []; rootsByGroupMap.set(key, list); }
+                list.push(task);
+            }
+            for (const list of rootsByGroupMap.values()) {
+                list.sort(rankCompare);
+            }
+            lastIndexedGroupBy = currentGroupBy;
+            hierarchyDirty = false;
+        }
+
         function childrenOf(parentTaskId) {
-            const parent = parentTaskId || null;
-            return Array.from(tasks.values())
-                .filter((task) => (task.parentTaskId || null) === parent && (task.effectiveLifecycle || task.lifecycle || 'active') === 'active')
-                .sort(rankCompare);
+            ensureHierarchy();
+            const parent = parentTaskId ? String(parentTaskId) : null;
+            return childrenByParent.get(parent) || [];
         }
 
         let currentGroupBy = 'section';
@@ -818,20 +952,8 @@
         }
 
         function rootsForGroup(groupId) {
-            const activeTasks = Array.from(tasks.values()).filter((task) => !task.parentTaskId && (task.effectiveLifecycle || task.lifecycle || 'active') === 'active');
-            if (currentGroupBy === 'section') {
-                return activeTasks.filter((task) => (task.effectiveSectionId || task.sectionId) === groupId).sort(rankCompare);
-            }
-            if (currentGroupBy === 'status') {
-                return activeTasks.filter((task) => (task.status || 'not_started') === groupId).sort(rankCompare);
-            }
-            if (currentGroupBy === 'ownerUid') {
-                return activeTasks.filter((task) => (groupId === '__unassigned__' ? !task.ownerUid : task.ownerUid === groupId)).sort(rankCompare);
-            }
-            if (currentGroupBy === 'priority') {
-                return activeTasks.filter((task) => (task.values?.priority || task.priority || 'none') === groupId).sort(rankCompare);
-            }
-            return [];
+            ensureHierarchy();
+            return rootsByGroupMap.get(groupId) || [];
         }
 
         function rootsForSection(sectionId) {
@@ -846,11 +968,12 @@
         }
 
         function flattenRows() {
+            ensureHierarchy();
             const rows = [];
             const appendTask = (task, depth) => {
                 rows.push({ kind: 'task', id: `task:${String(task.id)}`, task, depth });
                 if (!expanded.has(String(task.id))) return;
-                childrenOf(task.id).forEach((child) => appendTask(child, depth + 1));
+                (childrenByParent.get(String(task.id)) || []).forEach((child) => appendTask(child, depth + 1));
             };
             const groups = activeGroups();
             groups.forEach((group) => {
@@ -860,6 +983,8 @@
                     groupRoots.forEach((task) => appendTask(task, 0));
                 }
             });
+            rowIndexById.clear();
+            rows.forEach((row, index) => rowIndexById.set(String(row.id), index));
             return rows;
         }
 
@@ -1095,8 +1220,13 @@
             </div>`;
         }
 
+        let renderedHeaderSignature = '';
         function renderHeader() {
             if (!elements.projectsBoardHeader) return;
+            const schema = canSchema();
+            const sig = `${currentProjectId()}:${schema}:${busy}:${columns.map((c) => `${c.id}:${c.label || c.id}`).join('|')}`;
+            if (renderedHeaderSignature === sig && elements.projectsBoardHeader.innerHTML !== '') return;
+            renderedHeaderSignature = sig;
             const base = ['Task', 'Status', 'Accountable owner', 'Assignees', 'Dates'];
             const gridTemplate = [
                 'minmax(300px, 2.8fr)',
@@ -1110,7 +1240,7 @@
             elements.projectsBoardTable?.style.setProperty('--crm-project-column-count', String(columns.length));
             const minimumWidth = 300 + 126 + 146 + 124 + 200 + (columns.length * 130);
             if (elements.projectsBoardTable) elements.projectsBoardTable.style.minWidth = `${minimumWidth}px`;
-            elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && canSchema() ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && canSchema() && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && canSchema() ? `<button type="button" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}</div>`).join('');
+            elements.projectsBoardHeader.innerHTML = base.concat(columns.map((column) => column.label || column.id)).map((label, index) => `<div role="columnheader"${index >= 5 && schema ? ' class="crm-projects-board-column-editable"' : ''}${index >= 5 && schema && !busy ? ` draggable="true" data-column-id="${escape(columns[index - 5].id)}"` : ''}><span class="crm-projects-board-column-label" title="${escape(label)}">${escape(label)}</span>${index >= 5 && schema ? `<button type="button" data-action="edit-column" data-column-id="${escape(columns[index - 5].id)}" aria-label="Edit column ${escape(label)}"${busy ? ' disabled' : ''}>Edit column</button>` : ''}</div>`).join('');
         }
 
         function rowMarkup(row) {
@@ -1326,8 +1456,15 @@
             const activeRowId = activeRow?.dataset?.rowId || '';
             const sourceRowId = dragSourceRowId();
             const pinnedIds = new Set([activeRowId, sourceRowId, dragHoverTargetRowId, focusRowId].filter(Boolean));
-            const pinnedRows = logicalRows.filter((row) => pinnedIds.has(String(row.id))
-                && !visibleRows.some((visibleRow) => String(visibleRow.id) === String(row.id)));
+            const pinnedRows = [];
+            pinnedIds.forEach((id) => {
+                const idx = typeof rowIndexById !== 'undefined'
+                    ? rowIndexById.get(String(id))
+                    : logicalRows.findIndex((row) => String(row.id) === String(id));
+                if (idx !== undefined && idx !== -1 && (idx < first || idx >= last)) {
+                    pinnedRows.push(logicalRows[idx]);
+                }
+            });
             const desiredRows = visibleRows.concat(pinnedRows);
             if (!desiredRows.length) {
                 elements.projectsBoardRows.innerHTML = '<div class="crm-projects-board-loading">No tasks yet. Add a task to begin.</div>';
@@ -1418,10 +1555,17 @@
 
         }
 
+        let renderedSettingsSignature = '';
         function renderSettings() {
             const owner = canSchema();
             const nameKey = scopedKey(currentProjectId(), 'settings:name');
             const descriptionKey = scopedKey(currentProjectId(), 'settings:description');
+            const nameDraft = settingsDrafts.get(nameKey) || '';
+            const descDraft = settingsDrafts.get(descriptionKey) || '';
+            const statusDraftsStr = ['not_started', 'in_progress', 'blocked', 'done'].map((k) => settingsDrafts.get(scopedKey(currentProjectId(), `settings:status:${k}`)) || '').join('|');
+            const sig = `${currentProjectId()}:${owner}:${busy}:${project?.name || project?.title || ''}:${project?.description || ''}:${JSON.stringify(project?.statusLabels || {})}:${nameDraft}:${descDraft}:${statusDraftsStr}`;
+            if (renderedSettingsSignature === sig) return;
+            renderedSettingsSignature = sig;
             if (elements.projectsBoardSettingsName) { if (document.activeElement !== elements.projectsBoardSettingsName) elements.projectsBoardSettingsName.value = settingsDrafts.has(nameKey) ? settingsDrafts.get(nameKey) : asText(project?.name || project?.title); elements.projectsBoardSettingsName.disabled = busy || !owner; }
             if (elements.projectsBoardSettingsDescription) { if (document.activeElement !== elements.projectsBoardSettingsDescription) elements.projectsBoardSettingsDescription.value = settingsDrafts.has(descriptionKey) ? settingsDrafts.get(descriptionKey) : asText(project?.description); elements.projectsBoardSettingsDescription.disabled = busy || !owner; }
             const statusControls = { not_started: elements.projectsBoardStatusNotStarted, in_progress: elements.projectsBoardStatusInProgress, blocked: elements.projectsBoardStatusBlocked, done: elements.projectsBoardStatusDone };
@@ -1442,6 +1586,7 @@
             if (elements.projectsBoardWorkspace) elements.projectsBoardWorkspace.hidden = (project?.lifecycle || 'active') !== 'active';
             if ((project?.lifecycle || 'active') !== 'active') { globalScope.CrmProjectsDiscussion?.setSelection(null); return; }
             if (elements.projectsBoardEmpty) elements.projectsBoardEmpty.hidden = true;
+            invalidateHierarchy();
             renderHeader();
             renderVirtualRows({ focusRowId });
             renderDetail();
@@ -1522,6 +1667,7 @@
                 const opId = operationId(`edit-${taskId}`);
                 const operationPendingKey = pendingKeyFor(mutationScope, taskId);
                 tasks.set(taskId, next);
+                invalidateHierarchy();
                 pending.set(operationPendingKey, opId);
                 const view = snapshotView();
                 renderVirtualRows();
@@ -1531,7 +1677,10 @@
                     }, { method: 'PATCH' });
                     if (!scopeIsCurrent(mutationScope)) return;
                     const saved = response?.task || response?.result?.task;
-                    if (taskFor(taskId) && saved && Number(saved.revision) >= Number(taskFor(taskId).revision || 0)) tasks.set(taskId, { ...taskFor(taskId), ...saved });
+                    if (taskFor(taskId) && saved && Number(saved.revision) >= Number(taskFor(taskId).revision || 0)) {
+                        tasks.set(taskId, { ...taskFor(taskId), ...saved });
+                        invalidateHierarchy();
+                    }
                     if (draftVersions.get(keyForDraft) === draftVersion) {
                         drafts.delete(keyForDraft);
                         draftVersions.delete(keyForDraft);
@@ -1552,7 +1701,10 @@
                     return lineage;
                 } catch (error) {
                     if (!scopeIsCurrent(mutationScope)) return;
-                    if (tasks.get(taskId) === next) tasks.set(taskId, previous);
+                    if (tasks.get(taskId) === next) {
+                        tasks.set(taskId, previous);
+                        invalidateHierarchy();
+                    }
                     setStatus(error?.message || 'Task save failed. Your draft is retained.', 'error');
                     if (Number(error?.status) === 409 && elements.projectsBoardStatus) {
                         const review = document.createElement('button'); review.type = 'button'; review.className = 'crm-btn-secondary crm-btn-sm'; review.textContent = 'Review and retry'; review.dataset.remoteConflictReview = taskId;
@@ -1568,7 +1720,10 @@
                                 if (!globalScope.confirm(`Current saved value: ${JSON.stringify(currentValue ?? '')}\n\nSave your retained draft instead?`)) return;
                                 const retained = drafts.get(keyForDraft);
                                 if (retained === undefined) return;
-                                if (Number(reviewedTask.revision || 0) >= Number(taskFor(taskId)?.revision || 0)) tasks.set(taskId, { ...taskFor(taskId), ...reviewedTask });
+                                if (Number(reviewedTask.revision || 0) >= Number(taskFor(taskId)?.revision || 0)) {
+                                    tasks.set(taskId, { ...taskFor(taskId), ...reviewedTask });
+                                    invalidateHierarchy();
+                                }
                                 draftBases.set(keyForDraft, reviewedTask.revision);
                                 const retryControl = { dataset: { ...control.dataset }, value: retained, type: control.type, multiple: Array.isArray(retained), selectedOptions: Array.isArray(retained) ? retained.map(value => ({ value })) : [] };
                                 await saveTaskField(taskId, kind, retryControl);
@@ -2179,6 +2334,7 @@
                     }
                 };
                 updateDescendants(taskId, effectiveSec);
+                invalidateHierarchy();
             } catch (error) {
                 if (!scopeIsCurrent(mutationScope)) return;
                 setStatus(error?.message || 'Move conflicted; refresh and retry.', 'error');
@@ -2977,6 +3133,7 @@
                 }
                 if (!taskFor(selectedTaskId)) selectedTaskId = '';
                 selectedTaskIds = selectedTaskIds.filter(id => tasks.has(id));
+                invalidateHierarchy();
                 if (hasChanges || membershipChanged || change.authorityChanged) { renderBoard(); restoreView(view); }
             }
             return true;
@@ -2995,7 +3152,27 @@
             moveSection: (sectionId, index) => moveSection(sectionId, index),
             moveTask: (taskId, destination) => moveTask(taskId, destination),
             setFilters: (filters) => { sharedFilters = { ...filters }; filterGeneration++; if (currentProjectId()) { authorityPending = true; setBusy(true); } return refresh(); },
-            selectTask: (task) => { if (!task?.id || !hasProject()) return; tasks.set(String(task.id), task); asArray(task.pathIds).filter((id) => id !== task.id).forEach((id) => expanded.add(String(id))); selectedTaskId = String(task.id); renderDetail(); renderVirtualRows(); },
+            selectTask: (task) => {
+                if (!task?.id || !hasProject()) return;
+                tasks.set(String(task.id), task);
+                if (typeof invalidateHierarchy === 'function') invalidateHierarchy();
+                asArray(task.pathIds).filter((id) => id !== task.id).forEach((id) => expanded.add(String(id)));
+                selectedTaskId = String(task.id);
+                renderDetail();
+                renderVirtualRows();
+            },
+            updateTask: (task) => {
+                if (!task?.id || !hasProject()) return;
+                const id = String(task.id);
+                const old = tasks.get(id);
+                if (!old || Number(task.revision || 0) >= Number(old.revision || 0)) {
+                    tasks.set(id, { ...old, ...task });
+                    if (typeof invalidateHierarchy === 'function') invalidateHierarchy();
+                    renderVirtualRows();
+                    if (selectedTaskId === id) renderDetail();
+                    deps.onContextChanged?.(contextSnapshot());
+                }
+            },
             getState: contextSnapshot };
     }
 

@@ -1,0 +1,4 @@
+out/
+data/*.wav
+fonts/*.ttf
+fonts/css.txt

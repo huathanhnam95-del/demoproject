@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<link rel="stylesheet" href="../_ds/classical-3c5b7cc4-8fd1-4b53-b358-3abfb0e3549d/styles.css">
+<title>Architecting Flatland</title>
+<script src="./ds-base.js"></script>
+
+<style>
+/* Template scaffolding — slide layout and projection-scale sizing only; every
+   color, font, radius and shadow comes from ../../styles.css. Change one
+   number here to re-size the whole deck. */
+deck-stage {
+  --type-display: 140px;
+  --type-title: 76px;
+  --type-subtitle: 42px;
+  --type-body: 36px;
+  --type-small: 30px;
+  --type-kicker: 24px;
+  --pad-x: 144px;
+  --pad-top: 104px;
+  --pad-bottom: 92px;
+  --page-foot-note: "Architecting Flatland · Phase 2 Launch"; /* the deck-wide folio text (page furniture; see the PAGE FURNITURE note below) */
+  --baseline: 52px; /* grid unit — one default-text line: the 36px Lora body at a 1.44 deck
+     leading (the system's editorial "tight leading", loosened just enough for projection;
+     Lora's big x-height reads a size larger than its px). 92px pad-bottom puts the pinned
+     footer baseline on the 19th gridline (988) — see .meta. */
+}
+
+.slide {
+  display: flex; flex-direction: column;
+  background: var(--color-bg); color: var(--color-text);
+  font-family: var(--font-body);
+  text-wrap: pretty; /* inherited: better breaks, no orphans on wrapped blocks */
+  /* Tabular numbers (review round 3, Barron's ask) are set per class, not
+     deck-wide: everywhere digits stand as figures or columns — kicker, toc,
+     table, charts, meta, and the display numerals — takes "tnum"; running
+     prose keeps its text figures, because Lora's tnum also substitutes
+     tabular SPACES and punctuation (period 0.246em → 0.325em, measured from
+     the font's GSUB), which loosens every line of prose it touches. */
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+
+/* — shared pieces — */
+/* Baseline grid: text sits on a 52px rhythm (--baseline) measured from the
+   slide's top edge. Snapped text blocks are trimmed to their cap and baseline
+   edges (text-box), so a block's bottom edge IS its last baseline and the next
+   block's first baseline lands N gridlines down with
+   margin-top: calc(N * var(--baseline) - 1cap). Compact rhythms (table rows,
+   chart axes and ticks) sit on the 26px half-step. Review the rhythm with
+   ?baselines in the URL, or press B (script in the helmet) —
+   half-step lines draw fainter than full ones. */
+/* Hairlines carry the structure: this system draws its page with 1px rules in
+   the divider token — so this deck rules its contents rows and keeps the
+   table's component rules, all ON gridlines and flush with the text edge.
+   Color is applied as stroke, not fill: the charts draw outlined geometry,
+   the timeline's nodes are stroked circles, and gold appears as marks and
+   line work. The filled gold moments are counted and deliberate: the hero
+   numeral (the one filled gold TYPE moment), the highlighted bar, and the
+   current timeline node — each figure keeps exactly one solid fill. */
+/* The kicker survives only as a RUNNING HEAD, the way a classical book sets
+   one: on the two slides that carry no title of their own (the hero figure
+   and the quote), the small gold section slug is the head's only text and
+   earns its place. Everywhere a slide has a title, the eyebrow is gone —
+   review round 2 cut the reflexive label-over-every-title pattern, and the
+   title carries the slide (wayfinding stays with the ruled contents page and
+   the dividers' ghost numerals). */
+.kicker {
+  position: absolute; top: calc(2 * var(--baseline) - 1cap); /* baseline on the 2nd gridline */
+  left: var(--pad-x); text-box: trim-both cap alphabetic;
+  font-size: var(--type-kicker); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-accent);
+  font-feature-settings: "tnum" 1; /* Lora defaults to proportional figures — columns and
+     furniture take tabular (the reverse of the tabular-default decks) */
+}
+.slide-title {
+  font-family: var(--font-heading); font-weight: 400; /* review round 3: bold retired —
+     display-size text takes the normal cut (the styles.css token keeps semibold
+     for interface headings, which need the weight at small sizes) */
+  font-size: var(--type-title); line-height: calc(1.5 * var(--baseline)); letter-spacing: -0.01em; margin: 0;
+  margin-left: -0.042em; /* optical left alignment — see the note below */
+  text-box: trim-both cap alphabetic;
+}
+/* Optical left alignment — the deliberate exception to box-edge alignment
+   the reviewed decks share, re-derived for this face (the rules generalize,
+   the numbers never do — see ../../../deck-templates.md). Review round 3
+   re-measured everything for the NORMAL cut, since bold is retired from
+   display text: from the 400's hmtx (cross-checked against render scans),
+   flat stems sit at 0.033-0.041em, rounds at 0.049em, T at 0.038em, S at
+   0.067em, and the diagonals carry slightly negative bearings (A/V/W
+   -0.003 to -0.004em). One value per class targets the population:
+   -0.042em lands E/B/R flush within half a pixel, lets H/D overhang a
+   0.009em hair, keeps rounds a 0.007em inset, and lets the diagonals
+   overhang the way hand-set optical margins let pointed letters — tuned
+   to the slide titles actually in the deck. Digits: review round 3 sets
+   every figure and column tabular (Barron's ask — see the note at .slide),
+   and this face's tnum maps its default oldstyle figures to tabular
+   oldstyle (.tosf): same figure style, equal widths. Tabular bearings at 400: 0 0.042em, 1 0.129em
+   (the padded tabular one), 4 0.041em, 7 0.057em. The ghost numerals
+   lead with "0" and take -0.042em; the hero leads with the padded "1"
+   and compensates it directly at -0.129em (a derived deck leading with
+   another digit should retune that one value). Nothing hangs off a
+   shifted class here except the half-bleed column offset, which folds
+   the term in. */
+.pin-bottom { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: var(--pad-bottom); }
+.meta { display: flex; align-items: baseline; gap: 18px; font-size: var(--type-kicker); color: color-mix(in srgb, var(--color-text) 55%, transparent); font-feature-settings: "tnum" 1; /* furniture digits — see the tabular note at .slide */ }
+.meta span { text-box: trim-both cap alphabetic; } /* pinned at pad-bottom: baseline lands on the 19th gridline at 988 */
+
+/* PAGE FURNITURE — on by default. To remove the page numbers and footer
+   text deck-wide, add data-no-page-furniture to the deck's <x-import>
+   mount (a one-line tweak — it renders on the <deck-stage>); to change
+   the text, edit --page-foot-note in
+   the deck's token block. The folio sits in the book's foot margin: flush
+   left on the text axis, baseline on the 20th gridline (1040) — one full
+   gridline below the 988 footer line, so it never touches the vertical
+   budget (the contents page closes its last rule exactly ON 988) — at the
+   meta row's scale and 55% ink, the number tabular like every figure in
+   this deck. Carried by the content slides (hero, quote, split and the
+   half-bleeds included — on the half-bleeds it follows the copy half,
+   because small muted type cannot pass the type-over-photography rule).
+   The cover and close keep their meta rows instead, the full bleed's
+   photograph owns its edges, and the dividers stay clean — a colophon
+   page carries no folio. Every slide still counts, so the printed number
+   stays truthful to position. */
+deck-stage { counter-reset: page; }
+.slide { counter-increment: page; }
+.page-foot {
+  position: absolute; left: var(--pad-x); bottom: calc(1080px - 20 * var(--baseline)); /* baseline ON the 20th gridline (1040): 40px of foot margin */
+  font-size: var(--type-kicker);
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  text-box: trim-both cap alphabetic; /* bottom edge = baseline */
+}
+.page-foot::before { content: counter(page) " · "; font-feature-settings: "tnum" 1; /* furniture digits — see the tabular note at .slide */ }
+.page-foot::after { content: var(--page-foot-note); }
+deck-stage[data-no-page-furniture] .page-foot, deck-stage[data-no-page-furniture] .page-head { display: none !important; }
+.half-bleed:not(.flip) .page-foot { left: calc(960px + var(--pad-x)); } /* the folio follows the copy half — type never sits on the photograph (deck-templates.md law) */
+
+/* — cover and close — */
+.cover { justify-content: center; }
+.cover .rise { display: flex; flex-direction: column; gap: 42px; }
+.display {
+  font-family: var(--font-heading); font-weight: 400; /* the normal cut — see .slide-title */
+  font-size: var(--type-display); line-height: calc(2.5 * var(--baseline)); letter-spacing: -0.015em; margin: 0;
+  margin-left: -0.042em; /* optical left alignment — see the .slide-title note */
+}
+.cover-sub { font-size: var(--type-subtitle); line-height: var(--baseline); max-width: 38ch; margin: 0; }
+
+/* — contents — */
+/* Ruled rows — the system's hairlines carrying the structure (a style call;
+   the rule-less decks space these rows with whitespace alone). Rules sit ON
+   gridlines at a three-gridline pitch, flush with the text edge, and the row
+   text centers its cap box between rule centerlines — the documented optical
+   exception ruled rows share (see the table note below; same machinery, the
+   0.5px terms are the rule's halves). */
+.toc { display: flex; flex-direction: column; max-width: 1040px;
+  font-size: var(--type-subtitle); border-top: 1px solid var(--color-divider); }
+.toc-row { display: flex; align-items: baseline; gap: 54px;
+  border-bottom: 1px solid var(--color-divider);
+  padding-block: calc(1.5 * var(--baseline) - 0.5cap - 0.5px); }
+.toc-row > span { text-box: trim-both cap alphabetic; }
+.toc-num { font-size: var(--type-kicker); color: var(--color-accent); font-feature-settings: "tnum" 1; }
+
+/* — section dividers — */
+/* Dividers sit on a ground of their own — the shared deck contract (see
+   ../../../deck-templates.md): the ground change is what makes sections read
+   as breaks when flipping the deck. Classical's divider ground is a deep
+   warm near-black, a colophon page: paper type and a gold section numeral,
+   the engraved book's gilt-on-leather voice. Review round 3 (Barron: the
+   bronze on black read too low): the ground darkens a shade below
+   neutral-900 AND the gilt lightens two ramp steps to the system's own
+   gold. Contrast re-derived for the darkened ground (printed values are
+   per-ground): paper type 13.7:1; gilt numeral 4.5:1 (was 2.1:1). */
+.divider { justify-content: center; background: color-mix(in srgb, var(--color-neutral-900) 85%, black); color: var(--color-bg); } /* review round 3 (Barron): the colophon ground darkens
+   a step below neutral-900 — shade, as in the shadow tokens — so the gilt
+   reads against it; re-derived: paper type 13.7:1 (was 12.6) */
+.divider .rise { display: flex; flex-direction: column; align-items: flex-start; gap: 52px; }
+.ghost-num {
+  font-family: var(--font-heading); font-weight: 400; /* the normal cut — see .slide-title */
+  font-size: 300px; line-height: 0.9; letter-spacing: -0.015em;
+  color: var(--color-accent); /* review round 3 (Barron: the bronze on black read too
+     low) — the gilt lightens two ramp steps to the system's own gold, 4.5:1
+     on the darkened ground (was accent-700 at 2.1:1): a legible gilt figure
+     rather than a ghost */
+  font-feature-settings: "tnum" 1; /* tabular oldstyle — see the note at .slide */
+  /* these lead with "0" — optical left alignment per the .slide-title note */
+  margin-left: -0.042em;
+}
+
+/* — content slides — */
+.content { padding-top: calc(4 * var(--baseline)); /* title baseline on the 4th gridline — the kicker row over titles is cut (see .kicker), so the head closes up; the first-element margins below grew a gridline each and the body rhythm holds its old gridlines */ }
+.content > .slide-title, .content > .chart-head { margin-top: -1cap; } /* cap-trimmed: the baseline, not the cap top, sits on the gridline */
+.content > .bullets { margin-top: calc(4 * var(--baseline) - 1cap); }
+.content > .table { margin-top: calc(3 * var(--baseline)); } /* top edge on a gridline */
+.content > .toc { margin-top: calc(3 * var(--baseline)); } /* ruled rows: the border-top sits on a
+   gridline three below the title baseline (the title rose a gridline; the rules did not), and the
+   four 3-gridline bands still close with the last rule exactly on the 988 footer gridline — the
+   vertical budget, met to the pixel */
+.content > figure { margin-top: calc(2 * var(--baseline)); }
+.content > .chart-caption { margin-top: calc(2 * var(--baseline) - 1cap); }
+.bullets { display: flex; flex-direction: column; max-width: 1200px; margin: 0; padding: 0; list-style: none; font-size: var(--type-body); }
+.bullets li {
+  line-height: var(--baseline); text-box: trim-both cap alphabetic;
+  /* the bullet mark is type: a solid bullet in the accent — a gilt mark, the
+     way this system lets gold carry small details — hung clear of the text
+     axis by its own measured advance ("• " = 0.401em + 0.263em in Lora
+     Regular), so wrapped lines stay flush on the axis */
+  text-indent: -0.664em;
+}
+.bullets li::before { content: "• "; color: var(--color-accent); }
+.bullets li + li { margin-top: calc(2 * var(--baseline) - 1cap); } /* every other gridline */
+
+/* — column layouts — */
+/* Columns set as the book sets them: JUSTIFIED body copy with automatic
+   hyphenation — the editorial setting this system's own direction names —
+   parted by a vertical hairline at each gutter's center (drawn structure
+   at a whisper, the column rule of a set page; a style call — the
+   whitespace decks part columns with the gutter alone). The hairline is
+   ink, not gold: gold stays in marks. Cell heads take Cormorant at 48px —
+   the face's low cap (0.625) reads a step smaller than its px, so the
+   subtitle step would sink to body weight. Geometry: columns top on the
+   312 gridline (two below the title baseline), head baselines on 364,
+   body baselines from 416, all on the 52px lattice. The gutter is two
+   grid units (the round-9 air rule: a drawn column rule keeps a full
+   unit of air each side); with 1fr tracks the three-column widths land
+   on thirds (fractional px, the charts' own precedent for horizontal
+   geometry). Measures at the small size: two columns 764px, three 475px
+   — about 46 and 30 characters per rendered line of running Lora,
+   spaces counted — the narrow third is why the three-column copy
+   stays brief. */
+.cols { position: relative; display: grid; --col-gap: calc(2 * var(--baseline)); /* review round 9 (Barron): air around
+     the mid-gutter hairline — two grid units, 52px each side of the rule
+     (was one unit, which set the justified edge ~26px off the rule) */
+  column-gap: var(--col-gap); margin-top: calc(2 * var(--baseline)); }
+.content > .slide-title + .cols { margin-top: calc(4 * var(--baseline)); } /* no figure between title and columns: the copy drops a full band so the head is not crowded */
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.cols::before, .cols::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-divider); }
+.cols-2::before { left: calc(50% - 0.5px); }
+.cols-2::after { content: none; }
+.cols-3::before { left: calc((100% - 2 * var(--col-gap)) / 3 + var(--col-gap) / 2 - 0.5px); }
+.cols-3::after { left: calc(2 * (100% - 2 * var(--col-gap)) / 3 + 1.5 * var(--col-gap) - 0.5px); }
+.cols h3 { font-family: var(--font-heading); font-weight: 400; /* the normal cut — see .slide-title */
+  font-size: 48px; line-height: var(--baseline); margin: 0;
+  margin-top: calc(var(--baseline) - 1cap); /* head baseline one gridline below the column top */
+  text-box: trim-both cap alphabetic; }
+.cols p { font-size: var(--type-small); line-height: var(--baseline); margin: 0;
+  margin-top: calc(var(--baseline) - 1cap); /* first body baseline one gridline below the head's */
+  text-align: justify; hyphens: auto; hyphenate-limit-chars: 6 3 3;
+  text-box: trim-both cap alphabetic; }
+
+/* — quadrants — */
+/* The 2x2 matrix parted by HAIRLINES — a 1px crossing in the divider
+   token (centered on its lines like the toc's rules), the vertical through
+   the content center (960), the horizontal on the 572 gridline. Geometry:
+   matrix top on the 312 gridline, two 4-gridline rows with a 2-gridline
+   row gap; cell-head baselines on 364/676, cell lines from 416/728, matrix
+   foot on 832. The axis pair prints one gridline lower (baseline 884), two
+   clear of the 988 footer line, with the folio below at 1040. Left column
+   = lower x; the y reading (top row more demanding) is carried by the cell
+   copy — the horizontal pair does the labeling (the shared-spec minimum),
+   in the kicker's quiet voice but ink, not gold: gold is for marks, and an
+   axis label is furniture. */
+.quad { position: relative; display: grid; grid-template-columns: 1fr 1fr;
+  grid-template-rows: calc(4 * var(--baseline)) calc(4 * var(--baseline));
+  gap: calc(2 * var(--baseline)) 96px; margin-top: calc(2 * var(--baseline)); }
+.quad::before { content: ""; position: absolute; left: calc(50% - 0.5px); top: 0; bottom: 0; width: 1px; background: var(--color-divider); }
+.quad::after { content: ""; position: absolute; top: calc(50% - 0.5px); left: 0; right: 0; height: 1px; background: var(--color-divider); }
+.quad h3 { font-family: var(--font-heading); font-weight: 400;
+  font-size: 48px; line-height: var(--baseline); margin: 0;
+  margin-top: calc(var(--baseline) - 1cap);
+  text-box: trim-both cap alphabetic; }
+.quad p { font-size: var(--type-small); line-height: var(--baseline); margin: 0;
+  margin-top: calc(var(--baseline) - 1cap);
+  text-box: trim-both cap alphabetic; }
+.quad-axis { display: flex; justify-content: space-between;
+  margin-top: calc(var(--baseline) - 1cap); /* label baselines one gridline below the matrix foot (884) */
+  font-size: var(--type-kicker); letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.quad-axis span { text-box: trim-both cap alphabetic; }
+
+/* — data table (component class at projection scale) — */
+.slide .table { max-width: 1560px; font-size: 30px; font-feature-settings: "tnum" 1; }
+/* 104px row pitch (two gridlines): the component's own rules land on
+   gridlines, and — the deliberate optical exception the ruled-row decks
+   share — the cell text centers its cap box between rule centerlines (the
+   collapsed 1px rules paint centered on cell boundaries at gridline-0.5px,
+   hence the 0.5px terms; the cap terms cancel, so the pitch holds in any
+   font). The rules themselves are the system's .table component's: this deck
+   adds none of its own. */
+.slide .table th, .slide .table td {
+  text-box: trim-both cap alphabetic;
+  padding: calc(var(--baseline) - 0.5cap - 0.5px) 28px calc(var(--baseline) - 0.5cap - 0.5px);
+}
+.slide .table th { font-size: var(--type-kicker); }
+.slide .table tbody tr:hover { background: none; } /* a projected slide has no hover state */
+.slide .table th:first-child, .slide .table td:first-child { padding-left: 0; }
+.slide .table th:last-child, .slide .table td:last-child { padding-right: 0; }
+.slide .table td:first-child { width: 64px; position: relative; }
+/* Out of flow so its 40px box can't stretch the cap-trimmed row; centered on
+   the 104px row band like the row text (the cell's padding box starts half a
+   collapsed border below the row boundary, so --baseline - 20px lands the
+   40px box on whole pixels at the inter-rule center). Transform-free so
+   exporters that read offsets stay exact. */
+.slide .table .swatch { position: absolute; left: 0; top: calc(var(--baseline) - 20px); }
+.swatch { display: inline-block; width: 40px; height: 40px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); }
+
+/* — hero figure — */
+.hero { justify-content: center; gap: 42px; }
+.hero-num {
+  font-family: var(--font-heading); font-weight: 400; /* the normal cut — see .slide-title */
+  font-size: 340px; line-height: 1; letter-spacing: -0.02em; margin: 0;
+  color: var(--color-accent); /* the deck's one filled gold TYPE moment — everywhere else
+     gold fills appear only as each chart's single highlight (this mono system has no second
+     accent to spend) */
+  font-feature-settings: "tnum" 1; /* review round 3 replaced the proportional
+     opt-out that used to live here — see the tabular note at .slide */
+  margin-left: -0.129em; /* the tabular oldstyle "1" pads its bearing to 0.129em —
+     the hero leads with it; see the optical-alignment note */
+}
+.hero-caption { font-size: var(--type-small); line-height: var(--baseline); max-width: 44ch; margin: 0; }
+
+/* — charts (static SVG on the tokens; no script, no chart library) — */
+/* Engraved charts: geometry is drawn, not painted — bars are hairline-stroked
+   boxes on a quiet tint, series are lines, nodes are stroked circles; the one
+   solid fill is the highlighted step, in the accent. Grid and axis hairlines
+   carry the divider token, solid and full-width (hairlines inside a figure
+   are data furniture, like the table's rules). */
+.chart { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text {
+  font-family: var(--font-body); font-size: 24px;
+  fill: color-mix(in srgb, var(--color-text) 55%, transparent);
+  font-feature-settings: "tnum" 1; /* chart text is columns — see .kicker */
+}
+.chart .grid, .chart .axis { stroke: var(--color-divider); stroke-width: 1; }
+.chart .bar { fill: color-mix(in srgb, var(--color-surface) 60%, transparent); stroke: var(--color-neutral-600); stroke-width: 1; }
+.chart .bar-hi { fill: var(--color-accent); stroke: var(--color-accent-700); stroke-width: 1; }
+.chart .val { fill: color-mix(in srgb, var(--color-text) 70%, transparent); }
+.chart .ref { stroke: var(--color-accent-700); stroke-width: 1; stroke-dasharray: 8 8; }
+.chart .ref-label { fill: var(--color-accent-700); }
+.chart .hi-label { fill: var(--color-accent-700); }
+.chart .series-a, .key .series-a { stroke: var(--color-accent); stroke-width: 3; fill: none; }
+.chart .series-b, .key .series-b { stroke: var(--color-neutral-800); stroke-width: 3; fill: none; stroke-dasharray: 10 8; }
+.chart-caption { font-size: 26px; line-height: var(--baseline); max-width: 84ch; margin: 0; text-box: trim-both cap alphabetic; }
+/* Chart title row — title left, legend right, sharing one baseline. */
+.chart-head { display: flex; align-items: baseline; justify-content: space-between;
+  font-family: var(--font-heading); font-size: var(--type-title); /* both set, so the row's 1cap
+     margin resolves against the heading face — in a two-family system an inherited body font
+     carries a different cap height (Lora 0.700 vs Cormorant 0.625: a 5.7px grid break at this
+     size), so the -1cap idiom only ports with the family pinned */ }
+.chart-legend { display: flex; align-items: baseline; gap: 16px; font-family: var(--font-body); /* back out of the head's pinned heading face */ font-size: var(--type-kicker); color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.chart-legend span { text-box: trim-both cap alphabetic; }
+.chart-legend .key { width: 60px; height: 4px; overflow: visible; position: relative; top: -7px; } /* flex sits the box bottom on the baseline; the nudge lifts the key line to the label's optical center */
+.chart-legend .key:not(:first-child) { margin-left: 24px; }
+/* Timeline (same .chart text defaults as the other SVGs). These classes
+   carry color and size only; the geometry — one left edge per column and
+   the optically-set vertical cluster — is documented where it lives, in
+   the pattern comment inside the timeline SVG. Nodes are stroked circles —
+   drawn, not painted — with the current milestone the one filled in gold. */
+.chart .tl-line { stroke: var(--color-divider); stroke-width: 1; }
+.chart .tl-node { fill: none; stroke: var(--color-neutral-700); stroke-width: 1.5; }
+.chart .tl-node-hi { fill: var(--color-accent); stroke: none; }
+.chart .tl-date { fill: color-mix(in srgb, var(--color-text) 55%, transparent); letter-spacing: 0.08em; }
+.chart .tl-date-hi { fill: var(--color-accent-700); letter-spacing: 0.08em; }
+.chart .tl-label { fill: var(--color-text); font-size: 30px; }
+
+/* — image slide — */
+.split { flex-direction: row; align-items: center; gap: 96px; }
+.split-copy { flex: none; width: 640px; display: flex; flex-direction: column; gap: 42px; }
+.split-copy .note { font-size: var(--type-small); line-height: var(--baseline); margin: 0; }
+.split-figure { min-width: 0; /* flex item: the image-slot host's intrinsic width would otherwise expand the plate past the stage (the old img exerted no width pressure) */ flex: 1; height: 780px; /* 15 gridlines — the reference photograph is a tall
+   portrait plate; the fixed height keeps the mat inside the stage and crops the
+   plate within it */ }
+.split-figure image-slot { width: 100%; height: 100%; } /* the fixed 780px plate box does the
+   framing; cover is the component's own default — no object-fit to carry */
+/* The plate treatment at projection scale: the component's 6px mat is sized
+   for interface imagery; on a metre-wide projected figure the mat re-derives
+   to 14px so it still reads as a mat (sizing only — the grade, mat color and
+   hairline outline stay the component's). Edge-bleeding photographs keep the
+   archival grade but drop the mat: a plate is a photograph sitting ON the
+   page; a bleed IS the page (see the bleed slides). */
+.split-figure.plate { border-width: 14px; }
+.bleed-figure.plate, .half-bleed-figure.plate { border: 0; outline: 0; }
+
+/* — full-bleed image slide — */
+/* The photograph covers the stage (the slide clips it) through the same
+   plate grade as every image. Type sits on the photograph over a scrim
+   built from the ground token: near-opaque at the foot where the title sits,
+   gone by mid-stage so the image stays the subject. Copy pins to the bottom
+   padding edge like the cover's meta row, so its last baseline lands on the
+   988 gridline. */
+.bleed-figure { position: absolute; inset: 0; margin: 0; }
+.bleed-figure image-slot { width: 100%; height: 100%; } /* framing is the component's (fit=cover default) */
+.bleed-scrim {
+  position: absolute; inset: 0; pointer-events: none; /* the slot beneath is interactive (hover controls, drops) — overlays must not eat its events (image-slot usage contract) */
+  /* stronger than the sibling decks' scrims, tuned to this system's reference
+     imagery: a light, busy engraving fights small muted type, so the foot
+     band runs nearly opaque and reaches higher before letting go */
+  background:
+    linear-gradient(to top,
+      color-mix(in srgb, var(--color-bg) 98%, transparent),
+      color-mix(in srgb, var(--color-bg) 88%, transparent) 30%,
+      color-mix(in srgb, var(--color-bg) 45%, transparent) 52%,
+      transparent 70%);
+  /* the head echo left with the bleed slide's kicker — the engraving keeps
+     the whole top of the stage */
+}
+.bleed-copy { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: var(--pad-bottom); pointer-events: none; } /* text over the slot — must not eat its hover/drop events */
+.bleed-copy .note {
+  font-size: var(--type-small); line-height: var(--baseline); max-width: 52ch;
+  margin: calc(2 * var(--baseline) - 1cap) 0 0; /* note's first baseline two gridlines below the title's */
+  text-box: trim-both cap alphabetic; /* bottom edge = last baseline, pinned to 988 */
+  color: var(--color-text); /* full ink over photography — the muted alpha
+     measured 3.6:1 against the engraving where the rule asks 4.5
+     (deck-templates.md, type over photography) */
+}
+
+/* — half-bleed image slides — */
+/* The photograph takes half the 1920 stage and bleeds to its three edges; the
+   copy takes the other half on the standard content rhythm (title baseline
+   on the 4th gridline, bullets/notes below as on any content slide). Base
+   class puts the image LEFT and the copy right, one pad-x beyond the image
+   edge; add .flip to mirror (image right, copy back at the text axis).
+   Hanging marks keep hanging left of the copy either way. */
+.half-bleed { padding-top: calc(4 * var(--baseline)); }
+.half-bleed > .slide-title { margin-top: -1cap; max-width: 640px; }
+.half-bleed .note {
+  font-size: var(--type-small); line-height: var(--baseline); max-width: 640px;
+  margin: calc(3 * var(--baseline) - 1cap) 0 0; /* grew a gridline with the title's rise, holding the note's gridline */
+  text-box: trim-both cap alphabetic; /* the margin calc presupposes the trim */
+}
+.half-bleed .bullets { margin-top: calc(4 * var(--baseline) - 1cap); max-width: 640px; }
+.half-bleed-figure { position: absolute; inset: 0 auto 0 0; width: 960px; margin: 0; }
+.half-bleed-figure image-slot { width: 100%; height: 100%; } /* framing is the component's (fit=cover default) */
+.half-bleed:not(.flip) > .slide-title { margin-left: calc(960px - 0.042em); } /* the copy column offset, preserving the optical shift */
+.half-bleed:not(.flip) .note,
+.half-bleed:not(.flip) .bullets { margin-left: 960px; }
+.half-bleed.flip .half-bleed-figure { inset: 0 0 0 auto; }
+
+/* Photographs are plain <img> in the plate/bleed figures: the figure box does
+   the framing, the img covers it, the .plate grade and mat stay the system's. */
+.bleed-figure img, .half-bleed-figure img, .split-figure img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bleed, .half-bleed, .split { overflow: hidden; } /* the slide clips the bleeding photograph */
+/* Cover and close carry display-scale type over the photograph, higher up the
+   stage than the foot band reaches — so those two slides take a taller scrim
+   (same ground token, same shape, one stop set higher). */
+.bleed-plate .bleed-scrim {
+  background:
+    linear-gradient(to top,
+      color-mix(in srgb, var(--color-bg) 94%, transparent),
+      color-mix(in srgb, var(--color-bg) 82%, transparent) 42%,
+      color-mix(in srgb, var(--color-bg) 45%, transparent) 64%,
+      transparent 86%);
+}
+
+/* — quote — */
+.quote { justify-content: center; gap: 52px; }
+.quote .rise { display: flex; flex-direction: column; gap: 52px; }
+.quote blockquote {
+  font-family: var(--font-heading); font-weight: 400; /* review round 3: down from the 500
+     with the rest of the display text — the system loads no italic face (a styles.css
+     candidate — see the readme), and a synthesized oblique would fake what this face
+     does better upright */
+  font-size: 66px; line-height: calc(1.5 * var(--baseline)); letter-spacing: -0.005em;
+  max-width: 30ch; margin: 0;
+  text-indent: -0.340em; /* hang the opening “ (measured advance in the 400) */
+}
+.quote figcaption { font-size: var(--type-small); margin: 0; text-indent: -1.104em; /* hang the leading em-dash + space (measured advance in Lora Regular) */ }
+
+
+/* — drawn diagrams (engraved geometry: hairline strokes, gold as stroke, one
+   solid gold mark per figure) — */
+.strip { display: block; width: 100%; height: auto; overflow: visible; }
+.strip .ln { stroke: var(--color-divider); stroke-width: 1; fill: none; }
+.strip .link { stroke: var(--color-neutral-600); stroke-width: 1.5; fill: none; }
+.strip .fig { stroke: var(--color-neutral-700); stroke-width: 2; fill: none; }
+.strip .fig-hi { stroke: var(--color-accent); stroke-width: 2.5; fill: none; }
+.strip .dash { stroke: var(--color-neutral-700); stroke-width: 2; fill: none; stroke-dasharray: 9 9; }
+.strip .dash-hi { stroke: var(--color-accent); stroke-width: 2; fill: none; stroke-dasharray: 9 9; }
+.strip .solid { fill: var(--color-accent); stroke: none; }
+.strip text { font-family: var(--font-body); font-size: 24px; letter-spacing: 0.08em;
+  fill: color-mix(in srgb, var(--color-text) 55%, transparent); font-feature-settings: "tnum" 1; }
+.strip text.lbl { fill: var(--color-text); letter-spacing: 0.06em; }
+/* the one live affordance a projected figure can carry: pointing at a step
+   brings it forward in gold — cursor-driven, so print and projection are
+   unaffected */
+.strip .node { transition: opacity 0.2s ease; }
+.strip .node:hover .fig, .strip .node:hover .link { stroke: var(--color-accent); }
+.strip .node:hover text.lbl { fill: var(--color-accent-700); }
+
+/* Review aid: the baseline grid drawn as a hairline under every --baseline
+   step. Debug-only — toggled by ?baselines or the B key; not part of the look. */
+deck-stage[data-baselines] .slide::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom,
+      color-mix(in srgb, var(--color-accent) 35%, transparent) 0 1px,
+      transparent 1px var(--baseline)),
+    repeating-linear-gradient(to bottom,
+      transparent 0 calc(var(--baseline) / 2),
+      color-mix(in srgb, var(--color-accent) 16%, transparent) calc(var(--baseline) / 2) calc(var(--baseline) / 2 + 1px),
+      transparent calc(var(--baseline) / 2 + 1px) var(--baseline));
+}
+
+/* Entrance — end-state is the base style; animate from hidden, gated on the
+   active slide and the motion preference, so print and reduced-motion are safe. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-deck-active] .rise { animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+}
+</style>
+<script>
+// Review aid: baseline-grid overlay — add ?baselines to the URL, or press B to toggle.
+// This runs from <helmet>, before the deck renders, so the stage is looked up when it is
+// needed instead of captured up front; the window flag keeps a second evaluation of
+// this helmet script (a recreated script node) from binding the B key twice.
+(() => {
+  if (window.__deckBaselineAid) return;
+  window.__deckBaselineAid = true;
+  const stage = () => document.querySelector('deck-stage');
+  if (new URLSearchParams(location.search).has('baselines')) {
+    let tries = 600; // wait out the deck's first render (up to ~10s of frames)
+    const arm = () => { const s = stage(); if (s) s.setAttribute('data-baselines', ''); else if (tries-- > 0) requestAnimationFrame(arm); };
+    arm();
+  }
+  addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; // typing guard, as in deck-stage's own keys
+    if ((e.key === 'b' || e.key === 'B') && !e.metaKey && !e.ctrlKey && !e.altKey) stage()?.toggleAttribute('data-baselines');
+  });
+})();
+</script>
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%" data-uneditable="">
+
+  <section class="slide bleed bleed-plate" data-screen-label="01" data-label="Cover" data-speaker-notes="">
+    <figure class="bleed-figure plate"><img src="images/cover.jpg" alt="An empty seminar room, desks rolled out of their rows and left at loose angles"></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="bleed-copy">
+      <h1 class="display">Architecting Flatland</h1>
+      <p class="cover-sub" style="margin-top: 42px">Operationalizing Valve’s Cabal architecture, organizational science, and empirical self-management for Phase 2 English Pronunciation Curriculum R&amp;D.</p>
+      <div class="meta" style="margin-top: 52px"><span>Phase 2 Launch</span><span>·</span><span>Month 2, Week 1</span></div>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="02" data-label="Contents" data-speaker-notes="">
+    <h2 class="slide-title">Contents</h2>
+    <div class="toc rise">
+      <div class="toc-row"><span class="toc-num">01</span><span>The evidence</span></div>
+      <div class="toc-row"><span class="toc-num">02</span><span>The Cabal method</span></div>
+      <div class="toc-row"><span class="toc-num">03</span><span>Phase 2 execution</span></div>
+      <div class="toc-row"><span class="toc-num">04</span><span>The social contract</span></div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="03" data-label="01 The evidence" data-speaker-notes="">
+    <div class="rise">
+      <div class="ghost-num">01</div>
+      <h2 class="slide-title">The evidence</h2>
+    </div>
+  </section>
+
+  <section class="slide half-bleed" data-screen-label="04" data-label="Out of the honeymoon" data-speaker-notes="Month 1 is over. The room we worked in for thirty days was open, informal and unstructured — and that was exactly right for orientation. Phase 2 is a different room.">
+    <figure class="half-bleed-figure plate"><img src="images/threshold.jpg" alt="Looking from a dim cluttered staff room through an open door into a bright, orderly workroom"></figure>
+    <h2 class="slide-title">Out of the honeymoon</h2>
+    <p class="note">Flat does not mean unstructured. It demands more discipline, not less — and everything that follows is the discipline we are importing.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="05" data-label="The Phase 2 threshold" data-speaker-notes="Welcome, colleagues. Today marks our formal crossing into Phase 2. Over the past four weeks in Month 1, we enjoyed what organizational psychologists call the 'orientation honeymoon.' We shared our personal teaching histories, debated phonological theories over coffee, and experienced the exhilarating freedom of working without a traditional department chair looking over our shoulders.
+
+But let us look at the reality before us: flat organization is one of the most romanticized, misunderstood concepts in modern management. Too many teams believe that eliminating bosses automatically creates a creative utopia. In reality, an unstructured flat team quickly degenerates into an academic debating society, where the most articulate or stubborn voices dominate, decisions drift for weeks, and output stalls.
+
+We are not here to build a loose collection of teacher worksheets. We are here to engineer a world-class, 50-module English pronunciation curriculum with acoustic precision, verified by real learner data. To accomplish that without a top-down hierarchy, we must replace managerial authority with rigorous organizational science and empirical production mechanics. But before we open the research papers, let us pause and talk honestly about what this past month actually felt like inside our own heads.">
+    <h2 class="slide-title">The Phase 2 threshold</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Left: four separate nodes inside a dashed field, joined only by occasional faint links, labelled working alongside each other. Right: the same four nodes drawn as a fully linked group, labelled working through each other">
+        <g class="node">
+          <text class="lbl" x="0" y="18">MONTH 1 · WORKING ALONGSIDE</text>
+          <rect class="dash" x="1" y="40" width="600" height="96"/>
+          <path class="dash" d="M140 68 L300 112"/>
+          <circle class="fig" cx="140" cy="68" r="14"/>
+          <circle class="fig" cx="300" cy="112" r="14"/>
+          <circle class="fig" cx="450" cy="62" r="14"/>
+          <circle class="fig" cx="560" cy="114" r="14"/>
+        </g>
+        <path class="dash" d="M646 88 H716"/>
+        <line class="fig-hi" x1="756" y1="32" x2="756" y2="136"/>
+        <g class="node">
+          <text class="lbl" x="880" y="18">PHASE 2 · WORKING THROUGH EACH OTHER</text>
+          <path class="link" d="M980 56 H1180 M980 120 H1180 M980 56 V120 M1180 56 V120 M980 56 L1180 120 M1180 56 L980 120"/>
+          <circle class="fig-hi" cx="980" cy="56" r="14"/>
+          <circle class="fig-hi" cx="1180" cy="56" r="14"/>
+          <circle class="fig-hi" cx="980" cy="120" r="14"/>
+          <circle class="fig-hi" cx="1180" cy="120" r="14"/>
+          <text x="1250" y="82">one table · shared decisions</text>
+          <text x="1250" y="118">no handoffs to wait on</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-2 rise">
+      <div>
+        <h3>Month 1: alongside</h3>
+        <p>Thirty days without a department chair, lesson observations or top-down approval gates. We worked in parallel, mapped each other’s strengths and found out who we turn to for what.</p>
+      </div>
+      <div>
+        <h3>Phase 2: collaboration</h3>
+        <p>Parallel work becomes joint work: cross-disciplinary teams at one table, decisions made in the room rather than passed between us, and a shared record everyone writes to. Flat does not mean unstructured; it demands more discipline, not less.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="06" data-label="Month 1, in three questions" data-speaker-notes="For thirty days, we have worked without a head of department, without lesson observations, and without a manager telling us what to do next. On paper, that sounds like pure freedom. But let us be completely honest with each other. Look at these three questions on the screen, and raise your hand or simply nod if any of them hit home over the last four weeks:
+
+First: Did you catch yourself waiting for permission, or waiting for someone else to tell you what to work on? In traditional teaching, your syllabus, classes, and tasks are handed to you from above. In a flat team, the hardest part is realizing that nobody is going to assign you a task. You have to decide what matters and take initiative - and that can feel strangely paralyzing.
+
+Second: Did you worry whether you're doing enough, because there is no boss to judge or evaluate your work? In a hierarchy, a supervisor's feedback or annual appraisal tells you if you're safe. Without that top-down validation, your brain invents phantom guilt: 'Am I doing enough? How does anyone know if I'm succeeding or slacking?'
+
+And third: Did you hold back your honest feedback or disagreements, worried you might hurt feelings or cause tension? In a traditional school, the boss makes the unpopular decisions or enforces standards. When you are all equals, critiquing a colleague's lesson idea or audio model feels dangerous, so we default to being polite instead of being direct.
+
+Look around the room. Every single one of us has felt these. You are not broken. You are not disorganized. You are not a bad teacher. What you felt is the universal, documented psychological friction that happens whenever people move from a hierarchy into self-management.">
+    <h2 class="slide-title">Month 1, in three questions</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Figure: an org chart whose top node is an empty gold dashed circle, with dashed connectors down to four equal teacher nodes">
+        <g class="node">
+          <circle class="dash-hi" cx="200" cy="34" r="24"></circle>
+          <text class="lbl" x="256" y="42">THE CHAIR NOBODY HOLDS</text>
+        </g>
+        <path class="dash" d="M200 58 V96 M200 96 H920 M200 96 V106 M440 96 V106 M680 96 V106 M920 96 V106"></path>
+        <g class="node">
+          <circle class="fig" cx="200" cy="130" r="24"></circle>
+          <circle class="fig" cx="440" cy="130" r="24"></circle>
+          <circle class="fig" cx="680" cy="130" r="24"></circle>
+          <circle class="fig" cx="920" cy="130" r="24"></circle>
+          <text class="lbl" x="1010" y="138">FOUR EQUALS, NOBODY ASSIGNING THE WORK</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-3 rise">
+      <div>
+        <h3>The permission reflex</h3>
+        <p>Did you catch yourself waiting for permission, or waiting for someone else to tell you what to work on?</p>
+      </div>
+      <div>
+        <h3>The phantom guilt</h3>
+        <p>Did you worry whether you’re doing enough, because there is no boss to judge or evaluate your work?</p>
+      </div>
+      <div>
+        <h3>The politeness trap</h3>
+        <p>Did you hold back honest feedback, worried you might hurt feelings or cause tension?</p>
+      </div>
+    </div>
+    <p class="chart-caption text-muted">These are documented, predictable human responses to the removal of traditional hierarchy — not a sign that anyone here is broken, lazy or disorganized.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="07" data-label="The Valve blueprint" data-speaker-notes="In 2012, Valve Software's internal Handbook for New Employees was leaked to the public. It opened with a radical statement: 'Welcome to Flatland. We have no bosses. This company is yours to steer. Your desk has wheels - unplug it and roll it wherever you can create the most value.'
+
+For language teachers who have spent decades trapped inside rigid school administrations, forced to teach outdated textbooks by committees who haven't stepped into a classroom in twenty years, this sounds like utopia. Valve proved that autonomous professionals could build multi-billion dollar cultural landmarks like Portal, Half-Life, and Steam by treating people like adults.
+
+But if you read the Handbook carefully, you discover that Valve documented the exact anxieties you felt this past month. On page 16, under the title 'Structure Happens,' Valve confessed that human beings naturally form hierarchies. When there are no official titles, informal social hubs take over. On page 17, under 'Hours,' they warned that when nobody tells you when to stop, professionals work until 2 AM out of unspoken guilt. And most painfully, on pages 26 through 33, Valve described peer stack ranking - which degenerated into a covert popularity contest where people were terrified of challenging popular veterans.
+
+We are going to adopt Valve's brilliance - their mobile Cabals, their autonomous ownership, their T-shaped mindset. But we are going to avoid their traps by putting clear, healthy, democratic systems in place.">
+    <h2 class="slide-title">The Valve blueprint</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Left: a T-shaped bar and stem labelled deep craft with broad literacy. Right: three hazard triangles, the middle one gold, labelled structure happens, overtime, stack ranking">
+        <g class="node">
+        <g transform="translate(84.04 0) scale(0.78)">
+        <line class="fig" x1="262" y1="42" x2="502" y2="42"/>
+        <line class="fig" x1="382" y1="42" x2="382" y2="142"/>
+        <line class="ln" x1="262" y1="42" x2="262" y2="30"/>
+        <line class="ln" x1="502" y1="42" x2="502" y2="30"/>
+        </g>
+        <text class="lbl" x="382" y="152" text-anchor="middle">T-SHAPED: DEEP CRAFT, BROAD LITERACY</text>
+        </g>
+        <g class="node">
+        <g transform="translate(275 0) scale(0.78)">
+        <path class="fig" d="M1090 124 L1130 44 L1170 124 Z"/>
+        <path class="fig-hi" d="M1210 124 L1250 44 L1290 124 Z"/>
+        <path class="fig" d="M1330 124 L1370 44 L1410 124 Z"/>
+        <line class="ln" x1="1050" y1="132" x2="1450" y2="132"/>
+        </g>
+        <text class="lbl" x="1250" y="152" text-anchor="middle">STRUCTURE HAPPENS · OVERTIME · STACK RANKING</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-2 rise">
+      <div>
+        <h3>The promise</h3>
+        <p>Desks on wheels: contributors roll to the highest-leverage bottleneck rather than wait for assignments. T-shaped teachers pair deep craft — articulatory mechanics, lesson design, audio prompting — with broad literacy across learner feedback.</p>
+      </div>
+      <div>
+        <h3>The fine print</h3>
+        <p>Structure happens (p. 16): informal leadership emerges instantly and hardens if unwatched. Overtime signals failed planning (p. 17). Stack ranking bred risk aversion and popularity contests (pp. 26–33) — we take the Cabals and leave the ranking.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="08" data-label="The tyranny of structurelessness" data-speaker-notes="The most crucial sociological paper for our team to absorb is Jo Freeman's 1972 classic, The Tyranny of Structurelessness. Freeman was examining feminist collectives that intentionally abolished all formal titles, chairs, and voting rules in pursuit of absolute equality.
+
+What she uncovered was startling: eliminating formal structure does not abolish hierarchy. It simply replaces a visible, accountable hierarchy with an invisible, unaccountable, informal hierarchy. Power flows to the 'shadow barons' - the most charismatic, socially connected individuals who hang out after hours. If you are outside that informal clique, you have no formal appeal, no vote, and no voice.
+
+Freeman's antidote was not top-down bureaucracy, but explicit democratic structuring. She laid down seven non-negotiable principles: explicitly delegate authority for specific tasks; ensure delegated individuals are directly accountable to the group; distribute authority widely so no single teacher monopolizes the syllabus; rotate situational roles like sprint facilitation; allocate responsibilities along rational criteria - phonetic problems go to phoneticians, audio problems go to audio engineers; diffuse all information freely, with no back-channel secrets; and ensure equal access to all production resources.
+
+In Phase 2, we will honor Freeman's principles to ensure our team remains genuinely fair, transparent, and democratic.">
+    <h2 class="slide-title">The tyranny of structurelessness</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Left: scattered nodes with a gold clique joined by dashed links, labelled the invisible hierarchy. Right: an accountable structure drawn with solid links, labelled explicit delegation">
+        <g class="node">
+        <g transform="translate(70.4 0) scale(0.78)">
+        <path class="dash-hi" d="M240 60 L320 112 L410 46 Z"/>
+        <circle class="fig" cx="80" cy="40" r="12"/>
+        <circle class="fig" cx="150" cy="124" r="12"/>
+        <circle class="fig-hi" cx="240" cy="60" r="12"/>
+        <circle class="fig-hi" cx="320" cy="112" r="12"/>
+        <circle class="fig-hi" cx="410" cy="46" r="12"/>
+        <circle class="fig" cx="500" cy="124" r="12"/>
+        <circle class="fig" cx="560" cy="56" r="12"/>
+        </g>
+        <text class="lbl" x="382" y="152" text-anchor="middle">POWER WITHOUT A VOTE OR AN APPEAL</text>
+        </g>
+        <g class="node">
+        <g transform="translate(275 0) scale(0.78)">
+        <path class="link" d="M1250 30 L1202 82 M1250 30 L1298 82 M1202 82 L1156 134 M1202 82 L1226 134 M1298 82 L1274 134 M1298 82 L1344 134"/>
+        <circle class="fig" cx="1250" cy="30" r="12"/>
+        <circle class="fig" cx="1202" cy="82" r="12"/>
+        <circle class="fig" cx="1298" cy="82" r="12"/>
+        <circle class="fig" cx="1156" cy="134" r="12"/>
+        <circle class="fig" cx="1226" cy="134" r="12"/>
+        <circle class="fig" cx="1274" cy="134" r="12"/>
+        <circle class="fig" cx="1344" cy="134" r="12"/>
+        </g>
+        <text class="lbl" x="1250" y="152" text-anchor="middle">DELEGATED, ACCOUNTABLE, ROTATED</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-2 rise">
+      <div>
+        <h3>The warning</h3>
+        <p>There is no such thing as a structureless group. Abolishing formal rules does not abolish power; it hands power to whoever is charismatic and socially connected, with no vote and no appeal for anyone outside the clique.</p>
+      </div>
+      <div>
+        <h3>The seven principles</h3>
+        <p>Explicit delegation of specific tasks. Direct responsibility to the whole group. Distribution of authority. Rotation of demanding roles. Rational allocation by demonstrated competence. Diffusion of information. Equal access to resources.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide quote" data-screen-label="09" data-label="Insider accounts" data-speaker-notes="To build a truly resilient system, we must listen to those who lived through the breakdown of self-management. Senior software engineer Rich Geldreich and hardware pioneer Jeri Ellsworth spent years at Valve and documented its cultural pathologies.
+
+Geldreich revealed that when there are no formal managers, 'hidden managers' inevitably take their place. Decisions were made in hallway whisper networks. Contributors became terrified of taking creative risks, because if an ambitious idea failed, peer stack ranking would punish them severely. The safest career move was to work on whatever the most popular veteran was doing.
+
+Jeri Ellsworth was even blunter. She described how Valve's culture often felt like a high-school cafeteria. The cool kids sat at the center tables, and if they liked you, your project got resources. If they didn't, you were frozen out.
+
+In English language teaching, we have senior teachers with fifteen years in the classroom and master's degrees, and we have younger teachers with cutting-edge training in acoustic phonetics and digital UX. If our team allows an informal seniority clique to dictate pronunciation standards through social pressure, our curriculum will stagnate in outdated methodologies. We must protect technical merit over social seniority.">
+    <div class="kicker"><span>01 · The evidence</span></div>
+    <figure class="rise">
+      <blockquote>“There is a pseudo-structure… it felt like high school where popular kids wielded absolute power, and if you weren’t in their clique, your project starved.”</blockquote>
+      <figcaption class="text-muted">— Jeri Ellsworth, Valve hardware lead, on Flatland’s shadow dynamics</figcaption>
+    </figure>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="10" data-label="The iron cage of peer surveillance" data-speaker-notes="In 1993, sociologist James Barker published a landmark study titled The Tightening of the Iron Cage: Concertive Control in Self-Managing Teams. When a manufacturing plant eliminated its foremen and gave total autonomy to self-directed worker teams, management thought they were setting the workers free.
+
+What happened was horrifying. The workers developed an unwritten system of mutual peer surveillance that was far more oppressive than any boss had ever dared to be. They monitored each other's bathroom breaks, judged each other's pace, and created an environment of unrelenting social guilt. Max Weber's traditional bureaucratic iron cage had been tightened from within.
+
+Fast-forward to 2017: Harvard Business School's Amy Edmondson and Minna-Maaria Lee examined modern self-managing organizations. They discovered that when you remove traditional managers, the psychological stakes skyrocket. If a boss criticizes your work, you can dismiss it as bureaucratic ignorance. But if your peers criticize your curriculum design or your pronunciation audio model, you feel existential rejection by your professional tribe.
+
+Pronunciation teaching is uniquely vulnerable. Our voices, our accents, and our pedagogical beliefs are deeply tied to our personal identities. If peer surveillance takes root in our team, teachers will become paralyzed by the fear of peer judgment. We must establish radical psychological safety where feedback is strictly decoupled from personal worth.">
+    <h2 class="slide-title">The iron cage of peer surveillance</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Three cage glyphs: wide bars labelled rules from above, tightened bars with inward arrows labelled peers tighten it, and bars opened at the top labelled safety opens it">
+        <g class="node">
+        <g transform="translate(52.14 0) scale(0.78)">
+        <rect class="fig" x="147" y="24" width="180" height="108"/>
+        <line class="fig" x1="192" y1="24" x2="192" y2="132"/>
+        <line class="fig" x1="237" y1="24" x2="237" y2="132"/>
+        <line class="fig" x1="282" y1="24" x2="282" y2="132"/>
+        </g>
+        <text class="lbl" x="237" y="152" text-anchor="middle">RULES FROM ABOVE</text>
+        </g>
+        <g class="node">
+        <g transform="translate(179.52 0) scale(0.78)">
+        <rect class="fig" x="726" y="24" width="180" height="108"/>
+        <line class="fig" x1="748" y1="24" x2="748" y2="132"/>
+        <line class="fig" x1="771" y1="24" x2="771" y2="132"/>
+        <line class="fig" x1="794" y1="24" x2="794" y2="132"/>
+        <line class="fig" x1="816" y1="24" x2="816" y2="132"/>
+        <line class="fig" x1="839" y1="24" x2="839" y2="132"/>
+        <line class="fig" x1="862" y1="24" x2="862" y2="132"/>
+        <line class="fig" x1="884" y1="24" x2="884" y2="132"/>
+        <path class="fig-hi" d="M666 78 H714 m-18 -12 l18 12 -18 12"/>
+        <path class="fig-hi" d="M966 78 H918 m18 -12 l-18 12 18 12"/>
+        </g>
+        <text class="lbl" x="816" y="152" text-anchor="middle">PEERS TIGHTEN IT FURTHER</text>
+        </g>
+        <g class="node">
+        <g transform="translate(306.9 0) scale(0.78)">
+        <path class="fig" d="M1305 24 H1360 M1430 24 H1485 M1305 24 V132 H1485 V24"/>
+        <line class="fig" x1="1340" y1="60" x2="1340" y2="132"/>
+        <line class="fig" x1="1450" y1="60" x2="1450" y2="132"/>
+        <path class="fig-hi" d="M1395 132 V10 m-12 22 l12 -22 12 22"/>
+        </g>
+        <text class="lbl" x="1395" y="152" text-anchor="middle">STATED SAFETY OPENS IT</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-3 rise">
+      <div>
+        <h3>Weber’s cage</h3>
+        <p>Bureaucracy constrains from above: visible rules, visible authority, a supervisor to appeal to or dismiss.</p>
+      </div>
+      <div>
+        <h3>Barker, 1993</h3>
+        <p>Remove the foremen and peers build a tighter cage: mutual surveillance, chronic guilt, self-policed overwork.</p>
+      </div>
+      <div>
+        <h3>Lee &amp; Edmondson, 2017</h3>
+        <p>Autonomy raises interpersonal risk. Without explicit safety, fear of peer rejection becomes defensive silence.</p>
+      </div>
+    </div>
+    <p class="chart-caption text-muted">Vocal modeling and accent work expose personal identity — so in this team, feedback stays decoupled from personal worth.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="11" data-label="02 The Cabal method" data-speaker-notes="">
+    <div class="rise">
+      <div class="ghost-num">02</div>
+      <h2 class="slide-title">The Cabal method</h2>
+    </div>
+  </section>
+
+  <section class="slide bleed" data-screen-label="12" data-label="One table, five disciplines" data-speaker-notes="This is the whole mechanism: the people who would otherwise email each other, sitting at one table, watching the same screen.">
+    <figure class="bleed-figure plate"><img src="images/cabal-room.jpg" alt="Four adults crowded around one small table, all leaning toward a single laptop, mid-conversation"></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="bleed-copy">
+      <h2 class="slide-title">One table, five disciplines</h2>
+      <p class="note">The Cabal did not improve the handoffs between departments. It removed them.</p>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="13" data-label="The Cabal design process" data-speaker-notes="In late 1997, Valve Software was facing total ruin. They had spent over a year developing Half-Life using traditional industry silos: programmers wrote rendering code in one room, level designers built rooms in another, writers drafted scripts, and animators drew monsters. When they finally assembled the pieces, the game was a fragmented, unplayable disaster.
+
+Ken Birdwell and the Valve team made a radical decision. They scrapped a year of work, abolished inter-departmental handoffs, and created 'The Cabal' - a multidisciplinary cohort composed of one engineer, one level designer, one animator, one writer, and one sound artist.
+
+They established an uncompromising schedule: 6 hours a day, 4 days a week, for 5 intense months. In those sessions, every scene was co-designed. When the designer created an ambush, the writer immediately scripted the dialogue, the sound engineer placed the acoustic cues, and the programmer coded the event trigger. Crucially, the 5th day of the week was kept completely free of group meetings so individuals could focus on solo drafting, asset creation, and mental recovery.
+
+Everything was documented in a master living document called 'The Cabal Bible.' This is the exact operational framework we are importing for Phase 2. We will not have linguists throwing syllabus drafts over the wall to lesson writers who email scripts to voice teachers. We will work as integrated Pronunciation Cabals.">
+    <h2 class="slide-title">The Cabal design process</h2>
+    <figure class="rise">
+      <svg class="chart" viewBox="0 0 1632 260" role="img" aria-label="Timeline of the 1997 Half-Life turnaround: siloed development, the scrapped year, the Cabal room, and the five-month cadence">
+      <line class="tl-line" x1="0" y1="104" x2="1632" y2="104"></line>
+      <text class="tl-date" x="0" y="68">1996</text>
+      <text class="tl-date" x="440" y="68">LATE 1997</text>
+      <text class="tl-date-hi" x="880" y="68">1997–98</text>
+      <text class="tl-date" x="1320" y="68">NOV 1998</text>
+      <circle class="tl-node" cx="8.75" cy="104" r="8"></circle>
+      <circle class="tl-node" cx="448.75" cy="104" r="8"></circle>
+      <circle class="tl-node-hi" cx="888" cy="104" r="8"></circle>
+      <circle class="tl-node" cx="1328.75" cy="104" r="8"></circle>
+      <text class="tl-label" x="0" y="170">Silos</text>
+      <text class="tl-label" x="440" y="170">The scrap</text>
+      <text class="tl-label" x="880" y="170">The Cabal room</text>
+      <text class="tl-label" x="1320" y="170">Ship</text>
+      <text x="0" y="234">disconnected fragments</text>
+      <text x="440" y="234">a year of work discarded</text>
+      <text x="880" y="234">6 hrs × 4 days, 5 months</text>
+      <text x="1320" y="234">a landmark release</text>
+      </svg>
+    </figure>
+    <p class="chart-caption text-muted">One engineer, one designer, one animator, one writer, one sound artist, in one room. The fifth day stayed free for solo drafting and recovery, and everything settled was written into the living Cabal Bible.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide quote" data-screen-label="14" data-label="The self-blame principle" data-speaker-notes="During those 1997 Cabal sessions, Ken Birdwell formulated what I consider the most revolutionary principle in creative design: The Self-Blame Principle.
+
+When Valve brought in ordinary gamers to playtest early builds of Half-Life, developers sat directly behind them with notepads under a sacred rule of absolute silence. Designers were strictly forbidden from telling the player where to go, explaining the controls, or making excuses. If the player couldn't find the door, it was 100% the designer's fault. The lighting was wrong. The environmental contrast was weak. The audio cue was muffled.
+
+In language teaching, we must undergo this exact epistemological conversion. For generations, language teachers have indulged in defensive attribution. When a Vietnamese or Spanish learner mispronounces the English flapped /t/ or collapses the contrast between /b/ and /v/, teachers sigh: 'They just have an intractable L1 accent. They don't have an ear for languages. They didn't practice enough.'
+
+In Phase 2, that defensive excuse is outlawed. If a learner works through our lesson on English aspiration and fails to aspirate the initial /p/ in 'pack', that failure belongs entirely to us. Our mouth-shape diagram was confusing; our minimal pair contrast was poorly sequenced; our motor planning drill was inadequate. By taking 100% ownership of learner failure, we stop defending dogma and start engineering real pedagogical breakthroughs.
+
+Corollary: if a curriculum requires a live teacher in the room to intervene and explain a self-study exercise, that exercise is fundamentally broken.">
+    <div class="kicker"><span>02 · The Cabal method</span></div>
+    <figure class="rise">
+      <blockquote>“Player confusion is 100% the fault of the designer, never the user.”</blockquote>
+      <figcaption class="text-muted">— Ken Birdwell, on the Half-Life playtests, 1999</figcaption>
+    </figure>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="15" data-label="Four veterans, four lessons" data-speaker-notes="To understand how Valve functioned at its creative peak, we must listen to its core creators in their technical interviews on Kiwi Talkz.
+
+Chet Faliszek, co-writer of Portal and Left 4 Dead, warned that flat organizations die when they become debating committees. When people argue in abstract circles for hours, Faliszek's rule was simple: build a rough, working prototype. Put it on screen. A mediocre prototype ends theoretical debates in two minutes.
+
+Josh Weier, who led the development of Portal 2, gave us our definitive definition of leadership in flatland. He explained that being a 'lead' never meant being a boss. It meant being a servant and a janitor: taking out the logistical trash, unblocking software bugs, organizing playtests, and buffering creators from external distractions.
+
+Mike Morasky, the audio director behind Half-Life: Alyx and Portal 2, delivered an insight that directly impacts our pronunciation project: audio is not post-production varnish. In our curriculum, audio is our primary pedagogical product. Phonetic acoustic targets, pitch curves, and vocal contrasts must be architected from Day 1, not recorded as an afterthought at the end of a sprint.
+
+And Erik Wolpaw reminded us of the humility required in writing. In playtest table reads, Wolpaw sat silently. If a player was confused by an instruction or missed a narrative beat, Wolpaw never blamed the player. He opened his laptop and rewrote the script. That same humility must guide our lesson scripts.">
+    <h2 class="slide-title">Four veterans, four lessons</h2>
+    <div class="quad rise">
+      <div>
+        <h3>Chet Faliszek</h3>
+        <p>Debating committees kill flat teams. Build the prototype.</p>
+      </div>
+      <div>
+        <h3>Josh Weier</h3>
+        <p>Leads remove roadblocks. They do not approve work.</p>
+      </div>
+      <div>
+        <h3>Mike Morasky</h3>
+        <p>Audio is engineered from day one, never varnished on.</p>
+      </div>
+      <div>
+        <h3>Erik Wolpaw</h3>
+        <p>If the line failed to land, rewrite the line.</p>
+      </div>
+    </div>
+    <div class="quad-axis" aria-hidden="true"><span>process</span><span>craft</span></div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide split" data-screen-label="16" data-label="Tension, not length" data-speaker-notes="Textbooks teach this contrast as long vowel versus short vowel. It is not length — it is mouth tension, and that is a thing a learner can be shown and can feel.">
+    <div class="split-copy">
+      <h2 class="slide-title">Tension, not length</h2>
+      <p class="note">For /iː/ in <em>sheep</em> the lips stretch into a smile and the tongue rides high and tight. For /ɪ/ in <em>ship</em> the jaw drops half an inch and the cheeks relax.</p>
+    </div>
+    <figure class="split-figure plate"><img src="images/mouth-mechanics.jpg" alt="Close-up of an adult’s lower face in profile, mid-articulation, lips stretched in the tense smile of a high front vowel"></figure>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="17" data-label="One morning, one module" data-speaker-notes="To understand why we work in Cabals rather than traditional committees, let us look at an example every single teacher in this room knows intimately: teaching the difference between /i:/ and /I/ - the classic 'sheep versus ship' or 'leave versus live' problem.
+
+In a traditional language school or textbook publisher, creating this lesson takes three months of bureaucratic ping-pong. In month one, a curriculum writer types a list of minimal pairs on a worksheet. In month two, that document is emailed to an external voice actor in a studio who records the words in isolation, without understanding the pedagogy, pronouncing them with generic vowel lengths that sound almost identical. In month three, a graphic designer slaps on a picture of a ship. And what happens in the classroom? The student says 'Look at that big sheep in the harbor.' The teacher sighs and blames the student: 'They just don't have an ear for English.'
+
+Now look at how our 4-teacher Cabal solves that exact problem in a single Tuesday morning. At 9:00 AM, our four teachers sit down together. At 9:15, Teacher A stops the guesswork: 'The reason students fail is because textbooks tell them it's a long vowel versus a short vowel. It's not length - it's mouth tension! For /i:/ in sheep, your lips stretch into a smile and the tongue is high and tight. For /I/ in ship, your jaw drops half an inch and your cheeks relax.' At 9:45, Teacher B chimes in: 'Let's design a tactile motor cue: an exaggerated smile-tension exercise versus a relaxed jaw-drop, followed by an immediate 3-second audio discrimination drill.' At 10:30, Teacher C generates pristine contrasting vocal pairs in two minutes, then runs the Blind Ear Test: Teacher B closes their eyes, Teacher C plays the words randomly, and Teacher B must identify which is which 10 out of 10 times. Then we speak the AI audio into Google Voice Typing to ensure voice recognition transcribes both words perfectly. At 11:15, Teacher D brings in an actual ESL student from down the hall. Within four minutes, the learner can hear the difference and accurately produces both vowels. By 12:00 noon, Module 04 is tested, verified, and committed to our Living Syllabus Bible.
+
+That is the power of the Cabal: no department memos, no tech barriers. Four teachers armed with AI audio, solving a learner roadblock in three hours.">
+    <h2 class="slide-title">One morning, one module</h2>
+    <table class="table rise">
+      <thead>
+        <tr><th>Time</th><th>Who</th><th>What happens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>9:15</td><td>Pronunciation lead</td><td>Mouth tension, not vowel length</td></tr>
+        <tr><td>9:45</td><td>Lesson designer</td><td>Motor drill plus listening contrast</td></tr>
+        <tr><td>10:30</td><td>AI audio prompter</td><td>Blind ear test, ten out of ten</td></tr>
+        <tr><td>11:15</td><td>Playtest coordinator</td><td>A learner masters it in four minutes</td></tr>
+        <tr><td>12:00</td><td>All four</td><td>Committed to the living Bible</td></tr>
+      </tbody>
+    </table>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="18" data-label="The 24-hour playtest rule" data-speaker-notes="Here is our primary operational weapon against academic gridlock: The 24-Hour Learner Playtest Rule.
+
+Teachers are passionate, highly educated scholars who have spent decades refining their personal teaching philosophies. In Phase 2, you will encounter moments of intense theoretical disagreement. Teacher A will argue passionately that students must learn the English /r/ through articulatory tongue-placement schematics. Teacher B will argue just as passionately that learners acquire /r/ through auditory vowel coloring and pitch contour matching.
+
+In a traditional university department, those two professors would argue for three hours in a conference room, pull conflicting linguistics papers off the shelf, appeal to their classroom tenure, and leave the room exhausted, bitter, and deadlocked.
+
+Under our 24-Hour Playtest Rule, verbal debate is strictly capped at 15 minutes. If an agreement cannot be reached, the discussion is terminated immediately. Both teachers have exactly 24 hours to build a functional, 5-minute micro-prototype of their lesson. We bring in three real ESL learners, give them both prototypes, sit back in absolute silence, and observe.
+
+If the learners achieve target pronunciation in 4 minutes with Version B, and get frustrated and lost with Version A, the debate is finished. Version B goes into the syllabus. We let learner data, not academic egos, steer our curriculum.">
+    <h2 class="slide-title">The 24-hour playtest rule</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 416" role="img" aria-label="Flow chart: a fifteen-minute debate splits into two twenty-four-hour prototypes, both run past three silent learners, and the winner enters the living Bible">
+        <g class="node">
+        <rect class="fig" x="0" y="168" width="300" height="80"></rect>
+        <text class="lbl" x="150" y="216" text-anchor="middle">DEBATE · 15 MIN</text>
+        </g>
+        <path class="fig" d="M300 208 H340 M340 208 V96 H400 M340 208 V320 H400 m-26 -12 l26 12 -26 12 M374 84 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig" x="400" y="56" width="380" height="80"></rect>
+        <text class="lbl" x="590" y="104" text-anchor="middle">PROTOTYPE A · 24 H</text>
+        </g>
+        <g class="node">
+        <rect class="fig" x="400" y="280" width="380" height="80"></rect>
+        <text class="lbl" x="590" y="328" text-anchor="middle">PROTOTYPE B · 24 H</text>
+        </g>
+        <path class="fig" d="M780 96 H800 V208 M780 320 H800 V208 M800 208 H840 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig" x="840" y="168" width="380" height="80"></rect>
+        <text class="lbl" x="1030" y="216" text-anchor="middle">3 LEARNERS · SILENT</text>
+        </g>
+        <path class="fig-hi" d="M1220 208 H1290 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig-hi" x="1290" y="168" width="342" height="80"></rect>
+        <text class="lbl" x="1461" y="216" text-anchor="middle">THE LIVING BIBLE</text>
+        </g>
+        <text x="840" y="400">accuracy · completion speed · hesitation markers</text>
+      </svg>
+    </figure>
+    <p class="chart-caption text-muted">Fifteen minutes of argument, then the talking stops. Both proponents build a five-minute micro-lesson, three learners run them in randomized order, and the learners’ vocal tracts settle it.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide split" data-screen-label="19" data-label="Silence behind the learner" data-speaker-notes="The observers say nothing. No hints, no explanations, no excuses. If the learner is lost, the lesson is at fault — that is the self-blame principle in its operational form.">
+    <div class="split-copy">
+      <h2 class="slide-title">Silence behind the learner</h2>
+      <p class="note">Three learners, both prototypes in randomized order, and not one word of help from the room.</p>
+    </div>
+    <figure class="split-figure plate"><img src="images/playtest.jpg" alt="A learner at a laptop in headphones, two observers seated behind at a distance writing on paper"></figure>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="20" data-label="Decisions without bureaucracy" data-speaker-notes="The greatest operational bottleneck in flat organizations is the 'Consensus Trap.' In an effort to be democratic and kind, teams fall into believing that everyone must agree on every decision. Consensus is paralyzing: it moves at the speed of the most anxious person in the room, results in bland, watered-down compromises, and diffuses accountability until no one owns anything.
+
+Instead of consensus, we are adopting Dennis Bakke and Frederic Laloux's 'Advice Process.' Under this model, any person in this room can make any pedagogical, technical, or curriculum decision. There are no approval sign-offs.
+
+But there is an ironclad condition: before making that decision, you MUST seek advice from two groups: first, people with deep domain expertise in the subject - for instance, consulting our phonetics specialist on physical mouth and tongue positions for vowel contrasts; and second, those who must directly execute or live with the consequences of that decision, such as the voice coach recording the audio, or the playtest coordinator.
+
+Crucially, advice is not permission. Advisors have no veto. You listen with genuine humility, synthesize their wisdom, make the decision yourself, and record it in the Bible. And if an irreconcilable conflict or safety violation arises, we use Laloux's formal 3-tier escalation: direct 1-on-1 dialogue, then peer mediation, and finally a binding peer arbitration panel. This guarantees agility with absolute accountability.">
+    <h2 class="slide-title">Decisions without bureaucracy</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 416" role="img" aria-label="Flow chart: propose, consult domain experts and those affected, decide, and log the decision in the Bible; below, the three escalation tiers from a one-to-one to a binding peer panel">
+        <g class="node">
+        <rect class="fig" x="0" y="26" width="260" height="80"></rect>
+        <text class="lbl" x="130" y="74" text-anchor="middle">PROPOSE</text>
+        </g>
+        <path class="fig" d="M260 66 H316 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig" x="316" y="6" width="420" height="120"></rect>
+        <text class="lbl" x="526" y="52" text-anchor="middle">DOMAIN EXPERTS</text>
+        <text class="lbl" x="526" y="98" text-anchor="middle">THOSE AFFECTED</text>
+        </g>
+        <path class="fig" d="M736 66 H792 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig" x="792" y="26" width="260" height="80"></rect>
+        <text class="lbl" x="922" y="74" text-anchor="middle">DECIDE</text>
+        </g>
+        <path class="fig-hi" d="M1052 66 H1108 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig-hi" x="1108" y="26" width="380" height="80"></rect>
+        <text class="lbl" x="1298" y="74" text-anchor="middle">LOG IN THE BIBLE</text>
+        </g>
+        <text x="316" y="166">consultation is mandatory · advice carries no veto</text>
+        <line class="ln" x1="0" y1="216" x2="1632" y2="216"></line>
+        <text x="0" y="266">IF IT DEADLOCKS</text>
+        <g class="node">
+        <rect class="fig" x="0" y="296" width="400" height="80"></rect>
+        <text class="lbl" x="200" y="344" text-anchor="middle">1 · ONE TO ONE</text>
+        </g>
+        <path class="fig" d="M400 336 H456 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig" x="456" y="296" width="400" height="80"></rect>
+        <text class="lbl" x="656" y="344" text-anchor="middle">2 · PEER MEDIATOR</text>
+        </g>
+        <path class="fig" d="M856 336 H912 m-26 -12 l26 12 -26 12"></path>
+        <g class="node">
+        <rect class="fig" x="912" y="296" width="400" height="80"></rect>
+        <text class="lbl" x="1112" y="344" text-anchor="middle">3 · PEER PANEL</text>
+        </g>
+        <text x="1348" y="344">binding on both</text>
+      </svg>
+    </figure>
+    <p class="chart-caption text-muted">Anyone can make any curricular or technical decision, on one condition: consult the people who know the craft and the people who have to live with it. Advice is not consensus — the decider owns the outcome.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="21" data-label="03 Phase 2 execution" data-speaker-notes="">
+    <div class="rise">
+      <div class="ghost-num">03</div>
+      <h2 class="slide-title">Phase 2 execution</h2>
+    </div>
+  </section>
+
+  <section class="slide hero" data-screen-label="22" data-label="Fifty modules" data-speaker-notes="Over the next twelve weeks, our prime directive is to build, playtest, and validate the first 50 core modules of our comprehensive English Pronunciation Curriculum - spanning fundamental vowel contrasts, consonant pairs, and natural rhythm and sentence stress.
+
+Let me make our standard of progress crystal clear: in Phase 2, vanity metrics are dead. We do not care if a syllabus outline is 60 pages long. We do not care if a team logged 50 hours of debate. The only currency of progress in this project is validated empirical learner progress: can a learner complete a module and demonstrate clear auditory discrimination and accurate pronunciation, verified by voice-to-text checks, within 48 hours?">
+    <div class="kicker"><span>03 · Phase 2 execution</span></div>
+    <p class="hero-num rise">50</p>
+    <p class="hero-caption text-muted">Interactive pronunciation modules, engineered and validated in twelve weeks. Progress is measured in validated learner performance — never in pages written or hours logged.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="23" data-label="The twelve-week roadmap" data-speaker-notes="At Week 5, we hit our first non-negotiable quality gate: The Alpha Cohort. We will bring in real ESL learners and place our first 20 prototype modules in front of them without any teacher guidance. If those learners cannot demonstrate measurable acoustic improvement on objective speech analysis software, that sprint has not passed. We work backward from that empirical reality.
+
+At Week 10, the Beta Cohort gate: 50 learners test full segmental integration under automated pronunciation assessment. Sprint 3 then closes out prosody, modules 41 to 50.">
+    <h2 class="slide-title">The twelve-week roadmap</h2>
+    <figure class="rise">
+      <svg class="chart" viewBox="0 0 1632 260" role="img" aria-label="Phase 2 roadmap: sprint one weeks one to four, the alpha gate in week five, sprint two weeks six to nine, the beta gate in week ten, and sprint three weeks eleven and twelve">
+      <line class="tl-line" x1="0" y1="104" x2="1632" y2="104"></line>
+      <text class="tl-date-hi" x="0" y="68">WK 1–4</text>
+      <text class="tl-date" x="350" y="68">WK 5</text>
+      <text class="tl-date" x="700" y="68">WK 6–9</text>
+      <text class="tl-date" x="1050" y="68">WK 10</text>
+      <text class="tl-date" x="1400" y="68">WK 11–12</text>
+      <circle class="tl-node-hi" cx="8" cy="104" r="8"></circle>
+      <circle class="tl-node" cx="358.75" cy="104" r="8"></circle>
+      <circle class="tl-node" cx="708.75" cy="104" r="8"></circle>
+      <circle class="tl-node" cx="1058.75" cy="104" r="8"></circle>
+      <circle class="tl-node" cx="1408.75" cy="104" r="8"></circle>
+      <text class="tl-label" x="0" y="170">Sprint 1</text>
+      <text class="tl-label" x="350" y="170">Alpha gate</text>
+      <text class="tl-label" x="700" y="170">Sprint 2</text>
+      <text class="tl-label" x="1050" y="170">Beta gate</text>
+      <text class="tl-label" x="1400" y="170">Sprint 3</text>
+      <text x="0" y="234">vowels 01–20</text>
+      <text x="350" y="234">20 learners, blind</text>
+      <text x="700" y="234">consonants 21–40</text>
+      <text x="1050" y="234">50 learners, assessed</text>
+      <text x="1400" y="234">prosody 41–50</text>
+      </svg>
+    </figure>
+    <p class="chart-caption text-muted">The gates are not reviews of our documents. A sprint passes only when real learners show measurable acoustic improvement without a teacher in the room.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="24" data-label="Forming to storming" data-speaker-notes="In 1965, educational psychologist Bruce Tuckman mapped the four evolutionary stages of every high-performing group: Forming, Storming, Norming, and Performing.
+
+Month 1 was our Forming stage. We were polite, accommodating, and gentle with one another. We avoided contentious topics, smiled through differences of opinion, and focused on building rapport. That was appropriate and necessary for onboarding.
+
+But as we launch Phase 2 today, we are stepping directly into the crucible of Storming. And I want to give everyone in this room explicit permission to storm. When you find yourself in fierce disagreement with a colleague over whether we should prioritize articulatory mouth diagrams or minimal pair listening drills, do not panic. Do not think our team is failing or that our culture is breaking.
+
+Storming is the fire that burns away vague assumptions and forces us to establish real standards. The only fatal danger is artificial harmony - smiling in meetings while harboring resentment in private. We will storm openly, professionally, and depersonally, grounding our debates in empirical learner outcomes.">
+    <div class="chart-head">
+      <h2 class="slide-title">Forming to storming</h2>
+      <div class="chart-legend">
+        <svg class="key" viewBox="0 0 60 4" aria-hidden="true"><line class="series-a" x1="0" y1="2" x2="60" y2="2"></line></svg><span>Team effectiveness</span>
+      </div>
+    </div>
+    <figure class="rise">
+      <svg class="chart" viewBox="0 0 1632 468" role="img" aria-label="Tuckman curve: effectiveness dips through storming before rising through norming to performing; the team is entering storming now">
+      <line class="grid" x1="0" y1="260" x2="1632" y2="260"></line>
+      <line class="grid" x1="0" y1="130" x2="1632" y2="130"></line>
+      <polyline class="series-a" points="0,300 140,286 300,312 460,348 620,330 780,286 940,234 1100,182 1300,130 1632,91"></polyline>
+      <circle class="tl-node-hi" cx="460" cy="348" r="10"></circle>
+      <text class="hi-label" x="460" y="312" text-anchor="middle">we are here</text>
+      <text x="70" y="442" text-anchor="middle">Forming</text>
+      <text x="460" y="442" text-anchor="middle">Storming</text>
+      <text x="1000" y="442" text-anchor="middle">Norming</text>
+      <text x="1500" y="442" text-anchor="middle">Performing</text>
+      <line class="axis" x1="0" y1="390" x2="1632" y2="390"></line>
+      </svg>
+    </figure>
+    <p class="chart-caption text-muted">Storming is not dysfunction — it is the friction that negotiates real standards. The fatal state is artificial harmony: agreement in the room, resentment outside it.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="25" data-label="Situational leadership" data-speaker-notes="Let us be completely transparent about what leadership means in our flat team, drawing directly from Josh Weier's experience leading Portal 2 at Valve.
+
+If you are designated as the Situational Lead for a Cabal sprint, let me tell you what that does not mean: it does not mean you have been crowned boss. It does not mean you get to dictate your personal pedagogical preferences, assign tasks, or approve your colleagues' work.
+
+In our team, a Lead is a servant and a shield. Your job is to take out the logistical trash so your teammates can do their best creative work. If an AI speech generation script is throwing phoneme parsing errors, you help unblock it. If two teachers need three ESL learners for a blind playtest tomorrow at 2 PM, you recruit them and set up the observation station. If someone is skipping the Advice Process, you step in and facilitate the consultation.
+
+Furthermore, our leadership is fluid. In Week 2, when we are defining core IPA standards, our phonetician leads. In Week 6, when we are tuning high-fidelity AI voice models, our AI audio specialist leads. You step forward when your craft is on the line, and you step back and serve when another specialist takes the floor.">
+    <h2 class="slide-title">Situational leadership</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Left: an inverted pyramid resting on a single gold point, labelled the lead carries the weight. Right: a ring of four nodes with the gold one leading and a rotation arrow, labelled the lead rotates with the problem">
+        <g class="node">
+        <g transform="translate(84.04 0) scale(0.78)">
+        <path class="fig" d="M262 30 H502 L382 132 Z"/>
+        <circle class="solid" cx="382" cy="140" r="11"/>
+        </g>
+        <text class="lbl" x="382" y="152" text-anchor="middle">A SHIELD, NOT A CROWN</text>
+        </g>
+        <g class="node">
+        <g transform="translate(275 0) scale(0.78)">
+        <circle class="ln" cx="1250" cy="82" r="56"/>
+        <circle class="solid" cx="1250" cy="26" r="12"/>
+        <circle class="fig" cx="1306" cy="82" r="12"/>
+        <circle class="fig" cx="1250" cy="138" r="12"/>
+        <circle class="fig" cx="1194" cy="82" r="12"/>
+        <path class="fig-hi" d="M1338 44 a80 80 0 0 1 14 44 m0 0 l-12 -14 m12 14 l12 -14"/>
+        </g>
+        <text class="lbl" x="1250" y="152" text-anchor="middle">THE LEAD ROTATES WITH THE PROBLEM</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-2 rise">
+      <div>
+        <h3>What a lead does</h3>
+        <p>Clears roadblocks within hours, facilitates the Advice Process so no step is skipped, sources learners, books observation rooms and curates the error telemetry. The lead is a shield, not a crown.</p>
+      </div>
+      <div>
+        <h3>Who leads when</h3>
+        <p>Leadership follows the sprint’s problem domain. The phonetician leads while we set IPA standards; the audio specialist leads while we calibrate synthesis voices. You step forward for your craft and step back for someone else’s.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="26" data-label="Monarch to engineer" data-speaker-notes="Let us confront the most profound psychological shift facing every teacher in this room: the transition from 'Classroom Monarch' to 'Curriculum Engineer.'
+
+For years, many of us have lived as classroom monarchs. You walk into your lecture room, close the door, and for ninety minutes, you are the undisputed ruler. You command the room with your personal energy, your warmth, your vocal charisma, and your storytelling. If a pronunciation drill falls flat, you notice a student's furrowed brow and immediately improvise an alternative metaphor on the fly.
+
+But curriculum R&amp;D is a completely different discipline. In a self-paced digital course, you are not in the room with the student. You cannot smile, read their body language, or rescue a confusing diagram with an impromptu joke. If your explanation of vowel nasalization or consonant aspiration is slightly off, that student will fail in isolation at 2 AM in Tokyo or Hanoi.
+
+You must hang up the crown of the Classroom Monarch and put on the hard hat of the Curriculum Engineer. We must expose our lesson designs to relentless peer scrutiny, welcome failure data from learner playtests, and recognize that our personal charm cannot save a broken scaffold. We are building a pedagogical engine that must run flawlessly without us.">
+    <h2 class="slide-title">Monarch to engineer</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Left: a closed room with one gold teacher and four students, labelled one room, ninety minutes. Right: a dashed line of distant learners, labelled nobody in the room at 2 a.m.">
+        <g class="node">
+        <g transform="translate(84.04 0) scale(0.78)">
+        <rect class="fig" x="272" y="26" width="220" height="112"/>
+        <circle class="solid" cx="382" cy="58" r="12"/>
+        <circle class="fig" cx="312" cy="110" r="10"/>
+        <circle class="fig" cx="352" cy="110" r="10"/>
+        <circle class="fig" cx="412" cy="110" r="10"/>
+        <circle class="fig" cx="452" cy="110" r="10"/>
+        </g>
+        <text class="lbl" x="382" y="152" text-anchor="middle">ONE ROOM, NINETY MINUTES</text>
+        </g>
+        <g class="node">
+        <g transform="translate(284.9 0) scale(0.78)">
+        <path class="dash" d="M1010 82 H1580"/>
+        <circle class="fig" cx="1030" cy="46" r="10"/>
+        <circle class="fig" cx="1092" cy="120" r="10"/>
+        <circle class="fig" cx="1154" cy="44" r="10"/>
+        <circle class="fig" cx="1216" cy="122" r="10"/>
+        <circle class="fig" cx="1278" cy="48" r="10"/>
+        <circle class="fig" cx="1340" cy="118" r="10"/>
+        <circle class="fig" cx="1402" cy="44" r="10"/>
+        <circle class="fig" cx="1464" cy="122" r="10"/>
+        <circle class="fig" cx="1526" cy="50" r="10"/>
+        <circle class="fig" cx="1572" cy="116" r="10"/>
+        </g>
+        <text class="lbl" x="1250" y="152" text-anchor="middle">NOBODY IN THE ROOM AT 2 A.M.</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-2 rise">
+      <div>
+        <h3>The classroom monarch</h3>
+        <p>Behind a closed door, warmth and charisma carry the lesson. A furrowed brow gets an improvised metaphor within seconds, and the teacher is always in the room to rescue an ambiguous explanation.</p>
+      </div>
+      <div>
+        <h3>The curriculum engineer</h3>
+        <p>Nobody is in the room at 2 AM in Hanoi or Tokyo. Scaffolding has to be unambiguous, peer scrutiny is constant, and worth is measured by how reliably the materials produce mastery at scale.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide half-bleed flip" data-screen-label="27" data-label="The acoustic director’s desk" data-speaker-notes="No voice actors, no studio bookings, no accent anxiety. The equipment is modest because the work is judgement, not recording.">
+    <figure class="half-bleed-figure plate"><img src="images/booth.jpg" alt="A modest home recording corner: a condenser microphone on a small stand, a closed laptop, a foam panel taped to the wall"></figure>
+    <h2 class="slide-title">The acoustic director’s desk</h2>
+    <p class="note">Audio is synthesized, then judged by ear before it enters the syllabus. The scarce resource is not studio time — it is a teacher willing to fail a file.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="28" data-label="Three audio filters" data-speaker-notes="Now, let us address our unique audio architecture: we do not hire human voice actors or record our own voices on studio microphones - we engineer our curriculum audio using artificial intelligence speech synthesis.
+
+This gives our team an incredible structural superpower: it completely eliminates vocal insecurity and accent anxiety. When a colleague critiques an audio file, nobody feels defensive or personally attacked, because nobody's vocal cords are on trial. It is purely an AI asset.
+
+But AI audio introduces a dangerous new temptation: the trap of 'Synthetic Slop.' Default AI voice models are trained on statistical averages. Out of the box, AI voice generators love to smooth out phonological nuances. If you type 'Did you sit on the seat?', the AI will often synthesize both vowels with a generic mid-length sound that erases the tense-lax contrast. Or it will slur over unreleased final stops like /t/ and /k/. If we just accept default AI audio, we are giving our students synthetic slop that will confuse them.
+
+We don't need a physics degree or acoustic lab software to catch this. In our Cabals, we act as Acoustic Directors using our 3-Filter Quality Gate. First is the Blind Ear Test: play the AI audio to another teacher with their eyes closed and no text on screen. Can they identify the target word 10 out of 10 times without guessing? Second is the Speech-to-Text Sanity Check: play the AI audio into Google Voice Typing or Siri on your phone. If speech recognition hears 'sheep' when the AI said 'ship', the sound isn't distinct enough. Third is the Student Mimicry Test: put it in front of a real learner. Can they hear the difference and repeat it back?">
+    <h2 class="slide-title">Three filters against synthetic slop</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Three gates whose gaps narrow from left to right, each with an arrow passing through and a pass criterion: ten out of ten by ear, dictation transcribes it, a learner repeats it back">
+        <g class="node">
+        <g transform="translate(52.14 0) scale(0.78)">
+        <path class="dash" d="M97 84 H207"/>
+        <line class="fig-hi" x1="237" y1="16" x2="237" y2="54"/>
+        <line class="fig-hi" x1="237" y1="114" x2="237" y2="152"/>
+        <path class="fig" d="M267 84 H377 m-26 -12 l26 12 -26 12"/>
+        </g>
+        <text class="lbl" x="237" y="152" text-anchor="middle">10 OUT OF 10 BY EAR</text>
+        </g>
+        <g class="node">
+        <g transform="translate(179.52 0) scale(0.78)">
+        <path class="dash" d="M676 84 H786"/>
+        <line class="fig-hi" x1="816" y1="16" x2="816" y2="66"/>
+        <line class="fig-hi" x1="816" y1="102" x2="816" y2="152"/>
+        <path class="fig" d="M846 84 H956 m-26 -12 l26 12 -26 12"/>
+        </g>
+        <text class="lbl" x="816" y="152" text-anchor="middle">DICTATION TRANSCRIBES IT</text>
+        </g>
+        <g class="node">
+        <g transform="translate(306.9 0) scale(0.78)">
+        <path class="dash" d="M1255 84 H1365"/>
+        <line class="fig-hi" x1="1395" y1="16" x2="1395" y2="76"/>
+        <line class="fig-hi" x1="1395" y1="92" x2="1395" y2="152"/>
+        <path class="fig" d="M1425 84 H1535 m-26 -12 l26 12 -26 12"/>
+        </g>
+        <text class="lbl" x="1395" y="152" text-anchor="middle">A LEARNER REPEATS IT BACK</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-3 rise">
+      <div>
+        <h3>The blind ear test</h3>
+        <p>A colleague listens with eyes closed and no text, and must identify the target word ten times out of ten.</p>
+      </div>
+      <div>
+        <h3>Speech-to-text</h3>
+        <p>Play the file into phone dictation. If recognition hears “sheep” for “ship”, the audio is not crisp enough.</p>
+      </div>
+      <div>
+        <h3>Learner mimicry</h3>
+        <p>A real learner hears the contrast and repeats it back. If not, re-prompt and generate again.</p>
+      </div>
+    </div>
+    <p class="chart-caption text-muted">Synthesis removes vocal insecurity from critique — nobody’s voice is on trial — but default models average away tense–lax contrasts and unreleased final stops. Teachers act as acoustic directors.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide divider" data-screen-label="29" data-label="04 The social contract" data-speaker-notes="">
+    <div class="rise">
+      <div class="ghost-num">04</div>
+      <h2 class="slide-title">The social contract</h2>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="30" data-label="The objective critique protocol" data-speaker-notes="During early playtests at Valve, review meetings frequently degenerated into shouting matches where someone would say 'This level sucks' and the creator would respond 'No, it's cool, you just played it wrong.' Valve instituted the famous 'No Cool, No Sucks' rule. In our team, subjective aesthetic declarations are officially banned.
+
+Saying 'I don't like this exercise' or 'This explanation feels awkward' is intellectually lazy critique. It attacks the creator, provides zero actionable guidance, and sparks defensive resentment.
+
+From this day forward, every peer review of a lesson script, diagram, or audio asset must strictly follow our 3-part Objective Critique Formula. Step 1: state the precise behavioral observation. Not what you think, but what actually happened: 'In playtest 3, the learner listened to the /ae/ versus /^/ comparison four times, selected the wrong word twice, and looked visibly frustrated.' Step 2: state your diagnostic root-cause hypothesis: 'The distinction was lost because the AI audio didn't open the mouth enough on /ae/ - both words sounded like a lazy uh.' Step 3: propose an actionable engineering change: 'Let's adjust the AI prompt with a broader vowel tag and add a visual cue for dropping the jaw two fingers wide.'
+
+Critique must be descriptive, behavioral, and oriented toward concrete solutions. This preserves trust while elevating our pedagogical standard.">
+    <h2 class="slide-title">The objective critique protocol</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="Three linked glyphs labelled what happened, why it happened, and what changes: an eye, a magnifier, and an arrow entering a gold box">
+        <line class="ln" x1="237" y1="66" x2="1395" y2="66"/>
+        <g class="node">
+        <g transform="translate(52.14 0) scale(0.78)">
+        <path class="fig" d="M167 84 Q237 30 307 84 Q237 138 167 84 Z"/>
+        <circle class="fig" cx="237" cy="84" r="16"/>
+        </g>
+        <text class="lbl" x="237" y="152" text-anchor="middle">WHAT HAPPENED</text>
+        </g>
+        <g class="node">
+        <g transform="translate(179.52 0) scale(0.78)">
+        <circle class="fig" cx="800" cy="70" r="44"/>
+        <line class="fig" x1="832" y1="102" x2="874" y2="144"/>
+        </g>
+        <text class="lbl" x="816" y="152" text-anchor="middle">WHY IT HAPPENED</text>
+        </g>
+        <g class="node">
+        <g transform="translate(306.9 0) scale(0.78)">
+        <rect class="fig-hi" x="1352" y="42" width="92" height="84"/>
+        <path class="fig" d="M1288 84 H1346 m-24 -12 l24 12 -24 12"/>
+        </g>
+        <text class="lbl" x="1395" y="152" text-anchor="middle">WHAT CHANGES</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cols cols-3 rise">
+      <div>
+        <h3>Observation</h3>
+        <p>“In playtest two, the learner replayed the prompt three times and hesitated seven seconds before answering.”</p>
+      </div>
+      <div>
+        <h3>Diagnosis</h3>
+        <p>“The /p/–/b/ contrast failed because the audio gave no crisp puff of air; “pat” sounded like “bat”.”</p>
+      </div>
+      <div>
+        <h3>Proposal</h3>
+        <p>“Re-prompt with an aspirated phonetic tag and add the tissue-paper drill so the puff is visible.”</p>
+      </div>
+    </div>
+    <p class="chart-caption text-muted">Nothing is cool and nothing sucks. Subjective verdicts carry no engineering information and trigger defensiveness; observation, diagnosis and proposal carry all three.</p>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide content" data-screen-label="31" data-label="A sustainable cadence" data-speaker-notes="Our fourth challenge is the danger of self-inflicted burnout and ambiguity. When there are no traditional bosses clocking hours, dedicated professionals often fall into the trap of 'hero culture' - working until 2 AM, answering messages at midnight, and feeling pervasive guilt whenever they step away from their desks. We reject this entirely.
+
+Remember Ken Birdwell's schedule during the most intense creative turnaround in Valve's history: 6 hours a day, 4 days a week. We want sharp, uninterrupted collaborative focus during our Cabal sessions, accompanied by a dedicated 5th day for individual drafting, followed by genuine rest. Exhausted, sleep-deprived teachers do not craft world-class pronunciation materials; rested, intellectually sharp teachers do.
+
+What you CAN expect: complete creative ownership over your modules, rapid objective feedback from domain specialists, total transparency across all learner data, and colleagues and leads who fiercely protect your time.
+
+What you CANNOT expect: a boss to micromanage your morning, committee meetings where we debate until everyone agrees, or freedom to ignore student playtest data because it contradicts your personal teaching habits. This contract is our shared pledge.">
+    <h2 class="slide-title">A sustainable cadence</h2>
+    <figure class="rise">
+      <svg class="strip" viewBox="0 0 1632 156" role="img" aria-label="A week strip: four gold six-hour Cabal days, a dashed solo Friday, and two empty days">
+        <line class="ln" x1="0" y1="112" x2="1632" y2="112"></line>
+        <rect class="fig-hi" x="26" y="24" width="181" height="88"></rect>
+        <text class="lbl" x="116" y="80" text-anchor="middle">6 H</text>
+        <rect class="fig-hi" x="259" y="24" width="181" height="88"></rect>
+        <text class="lbl" x="349" y="80" text-anchor="middle">6 H</text>
+        <rect class="fig-hi" x="492" y="24" width="181" height="88"></rect>
+        <text class="lbl" x="582" y="80" text-anchor="middle">6 H</text>
+        <rect class="fig-hi" x="725" y="24" width="181" height="88"></rect>
+        <text class="lbl" x="815" y="80" text-anchor="middle">6 H</text>
+        <rect class="dash" x="958" y="24" width="181" height="88"></rect>
+        <text x="1048" y="80" text-anchor="middle">SOLO</text>
+        <text x="116" y="148" text-anchor="middle">MON</text>
+        <text x="349" y="148" text-anchor="middle">TUE</text>
+        <text x="582" y="148" text-anchor="middle">WED</text>
+        <text x="815" y="148" text-anchor="middle">THU</text>
+        <text x="1048" y="148" text-anchor="middle">FRI</text>
+        <text x="1281" y="148" text-anchor="middle">SAT</text>
+        <text x="1514" y="148" text-anchor="middle">SUN</text>
+      </svg>
+    </figure>
+    <div class="cols cols-2 rise">
+      <div>
+        <h3>What you can expect</h3>
+        <p>Autonomy inside your Cabal through the Advice Process. Transparent access to every file, benchmark and learner metric. Objective feedback within a day. Six focused hours a day, four days a week, and a fifth day for solo work and rest.</p>
+      </div>
+      <div>
+        <h3>What you cannot expect</h3>
+        <p>A daily checklist or a manager counting your hours. Consensus committees that must agree before anyone acts. Permission to bypass the Advice Process or ignore playtest data. Tolerance for back-channel politics or midnight heroism.</p>
+      </div>
+    </div>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide bleed" data-screen-label="32" data-label="The fifth day" data-speaker-notes="Six hours a day, four days a week — Birdwell's own schedule during the most intense turnaround in Valve's history. The empty office at seven o'clock is the plan working, not the plan failing.">
+    <figure class="bleed-figure plate"><img src="images/friday.jpg" alt="An empty office at dusk, lights off, one desk lamp still on over a closed notebook"></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="bleed-copy">
+      <h2 class="slide-title">The fifth day</h2>
+      <p class="note">Friday stays free for solo drafting and recovery. Nobody is measured on hours logged.</p>
+    </div>
+  </section>
+
+  <section class="slide content" data-screen-label="33" data-label="The Phase 2 charter" data-speaker-notes="Colleagues, we stand at the threshold of something extraordinary.
+
+Today, we have journeyed through the triumphs and pitfalls of Flatland. We have drawn inspiration from the visionary breakthroughs of Ken Birdwell, Chet Faliszek, and Josh Weier, and we have taken to heart the sobering warnings of Jo Freeman, Rich Geldreich, and James Barker. We have chosen not the naive chaos of structurelessness, but the mature, disciplined freedom of an empirically grounded, self-managing organization.
+
+Starting this afternoon, we step into our Pronunciation Cabals. We will write our Living Syllabus Bible together. When we disagree, we will not retreat into academic silos or waste hours in unproductive debate; we will build prototypes within 24 hours and let our learners guide us.
+
+We are not just building another English course. We are engineering a transformative learning experience that will give thousands of learners around the world the vocal clarity, acoustic precision, and communicative confidence to achieve their life dreams. Let us begin Phase 2 with courage, discipline, and shared purpose. Let's get to work.">
+    <h2 class="slide-title">The Phase 2 charter</h2>
+    <ul class="bullets rise">
+      <li>We replace the illusion of structurelessness with explicit, documented structure.</li>
+      <li>We settle pedagogical conflict with learner prototypes, not rhetoric.</li>
+      <li>We lead by clearing obstacles and protecting each other’s time.</li>
+      <li>Cabal assignments go live this afternoon; week one drafts the living Bible.</li>
+    </ul>
+    <div class="page-foot" aria-hidden="true"></div>
+  </section>
+
+  <section class="slide bleed bleed-plate" data-screen-label="34" data-label="Close" data-speaker-notes="">
+    <figure class="bleed-figure plate"><img src="images/close.jpg" alt="A learner and a teacher side by side at a laptop in bright daylight, seen from behind"></figure>
+    <div class="bleed-scrim" aria-hidden="true"></div>
+    <div class="bleed-copy">
+      <h2 class="display">Let’s get to work.</h2>
+      <p class="cover-sub" style="margin-top: 42px">Fifty modules, twelve weeks, one living Bible — and a learner in the room every time we claim something works.</p>
+      <div class="meta" style="margin-top: 52px"><span>Pronunciation Cabals</span><span>·</span><span>Phase 2</span></div>
+    </div>
+  </section>
+
+</x-import>
+</x-dc>
+</body>
+</html>

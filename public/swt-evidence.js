@@ -96,6 +96,17 @@
         const mark = doc.createElement('mark');
         mark.className = kind === 'ignore' ? 'swt-evidence swt-evidence--ignore' : 'swt-evidence swt-evidence--core';
         mark.dataset.pointIds = segment.pointIds.join(' ');
+        const indices = segment.pointIds
+          .map(pid => {
+            const pt = points.find(p => p && p.id === pid);
+            if (pt && typeof pt.pointIndex === 'number') return pt.pointIndex;
+            if (pt && typeof pt.index === 'number') return pt.index;
+            return points.findIndex(p => p && p.id === pid);
+          })
+          .filter(idx => idx !== -1);
+        if (indices.length) {
+          mark.dataset.pointIndices = indices.join(' ');
+        }
         mark.dataset.sourceStart = String(segment.start);
         mark.dataset.sourceEnd = String(segment.end);
         mark.textContent = segment.text;

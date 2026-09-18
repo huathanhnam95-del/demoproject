@@ -51,7 +51,7 @@
   <script src="/js/ui-continuity.js?v=20260917-v2.0.11" defer></script>
   <link rel="stylesheet" href="css/crm-projects.css?v=20260917-v2.0.11&phase=9" />
   <link rel="stylesheet" href="css/crm-data-input.css?v=20260917-v2.0.11&input=20260908-2" />
-  <link rel="stylesheet" href="css/teacher-scheduler-google.css?v=20260917-v2.0.11&repair=v1" />
+  <link rel="stylesheet" href="css/teacher-scheduler-google.css?v=20260917-v2.0.11&repair=20260918-v2.0.13" />
 </head>
 
 <body>
@@ -818,8 +818,8 @@
 
 
           <!-- Dropdown Menus -->
-          <div class="menu" id="ts-create-menu" role="menu" style="display:none;">
-            <button role="menuitem" id="btn-ts-create-session">
+          <div class="menu ts-menu-card" id="ts-create-menu" role="menu" style="display:none;">
+            <button role="menuitem" id="btn-ts-create-session" class="ts-create-btn">
               <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2M3 9h18M8 2v4M16 2v4"></path></svg>
               <span>Session</span>
             </button>
@@ -829,16 +829,16 @@
             </button>
           </div>
 
-          <div class="menu" id="ts-view-menu" role="menu" style="display:none;">
+          <div class="menu ts-menu-card" id="ts-view-menu" role="menu" style="display:none;">
             <button role="menuitem" data-ts-view="day">Day <small style="margin-left:auto;color:#5f6368;">D</small></button>
             <button role="menuitem" data-ts-view="week">Week <small style="margin-left:auto;color:#5f6368;">W</small></button>
             <button role="menuitem" data-ts-view="schedule">Schedule <small style="margin-left:auto;color:#5f6368;">A</small></button>
           </div>
 
           <!-- Display Settings Dialog -->
-          <dialog class="ts-modal-dialog" id="teacher-scheduler-settings-dialog" style="display:none;width:420px;">
+          <dialog class="ts-modal-dialog" id="teacher-scheduler-settings-dialog" aria-labelledby="ts-settings-title" style="width:420px;max-width:calc(100vw - 32px);">
             <div class="ts-dialog-header">
-              <h2>Display Settings</h2>
+              <h2 id="ts-settings-title">Calendar settings</h2>
               <button class="ts-icon-btn" id="btn-ts-close-settings" type="button" aria-label="Close settings">
                 <svg class="ts-icon" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"></path></svg>
               </button>
@@ -885,52 +885,6 @@
           </div>
         </div>
 
-        <!-- Google Calendar Anchored Details Popover (#teacher-scheduler-event-popover) -->
-        <dialog class="ts-floating-dialog" id="teacher-scheduler-event-popover" style="display:none;">
-          <div class="ts-popover-toolbar">
-            <button class="ts-icon-btn" id="btn-ts-popover-edit" aria-label="Edit session" title="Edit session">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="m4 15 12-12 5 5-12 12-6 1 1-6M13 6l5 5"></path></svg>
-            </button>
-            <button class="ts-icon-btn" id="btn-ts-popover-delete" aria-label="Cancel session" title="Cancel session">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V3h8v3M5 6l1 15h12l1-15M10 10v7M14 10v7"></path></svg>
-            </button>
-            <button class="ts-icon-btn" id="btn-ts-popover-duplicate" aria-label="Duplicate session" title="Duplicate session">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M9 9h12v12H9zM5 15H3V3h12v2"></path></svg>
-            </button>
-            <button class="ts-icon-btn" id="btn-ts-popover-close" aria-label="Close details" title="Close">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"></path></svg>
-            </button>
-          </div>
-          <div class="ts-popover-content">
-            <div class="ts-info-row">
-              <span class="square-dot" id="ts-popover-color-dot"></span>
-              <div>
-                <h2 class="ts-event-title-display" id="ts-popover-title">Class Title</h2>
-                <div class="ts-event-date-display" id="ts-popover-datetime">Wednesday, Sep 16 · 18:00–20:00</div>
-              </div>
-            </div>
-            <div class="ts-info-row">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M16 21v-2a5 5 0 0 0-10 0v2M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0"></path></svg>
-              <div class="ts-info-detail" id="ts-popover-teacher">Assigned Teacher</div>
-            </div>
-            <div class="ts-info-row">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2M3 9h18"></path></svg>
-              <div class="ts-info-detail" id="ts-popover-course">Course info</div>
-            </div>
-            <div class="ts-info-row" id="ts-popover-status-row">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M20 7a9 9 0 1 1-5-4M8 11l4 4L21 4"></path></svg>
-              <div class="ts-info-detail"><span class="status-chip" id="ts-popover-status">Scheduled</span></div>
-            </div>
-            <div class="ts-info-row" id="ts-popover-notes-row" style="display:none;">
-              <svg class="ts-icon" viewBox="0 0 24 24"><path d="M5 3h14v14l-4 4H5zM15 21v-5h4M8 7h8M8 11h8"></path></svg>
-              <div class="ts-info-detail" id="ts-popover-notes"></div>
-            </div>
-            <div class="ts-popover-actions">
-              <button class="ts-text-btn" id="btn-ts-popover-record-attendance" type="button">Record attendance</button>
-              <button class="ts-text-btn" id="btn-ts-popover-add-notes" type="button">Add notes</button>
-            </div>
-          </div>
-        </dialog>
 
         <!-- Quick Add Popover / Dialog -->
         <div id="teacher-scheduler-quick-add" class="teacher-scheduler-popover ts-quick-add-dialog" aria-hidden="true"
@@ -1027,7 +981,7 @@
             <div class="bubble-secondary-row">
               <button id="btn-teacher-scheduler-toggle-reschedule" class="crm-btn-secondary" type="button" title="Reschedule date and time">⤺ Reschedule</button>
               <button id="btn-teacher-scheduler-duplicate-session" class="crm-btn-secondary" type="button" title="Duplicate session">⧉ Duplicate</button>
-              <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button" title="Open full class roster">📋 Full Roster</button>
+              <button id="btn-teacher-scheduler-open-attendance" class="crm-btn-secondary" type="button" title="Open scheduled attendance session">📋 Open Attendance</button>
               <button id="btn-teacher-scheduler-undo-ai" class="crm-btn-secondary" type="button"
                 style="display:none;padding:2px 8px;font-size:12px;">Undo AI</button>
             </div>
@@ -3226,7 +3180,7 @@
   <script src="js/crm/finance.js?v=20260917-v2.0.11" defer></script>
   <script src="js/crm/communications.js?v=20260917-v2.0.11" defer></script>
   <script src="js/crm/scheduler-workspace.js?v=20260917-v2.0.11" defer></script>
-  <script src="js/crm/teacher-scheduler-workspace.js?v=20260917-v2.0.11&repair=v1" defer></script>
+  <script src="js/crm/teacher-scheduler-workspace.js?v=20260917-v2.0.11&repair=20260918-v2.0.13" defer></script>
   <script src="js/crm/staff-workspace.js?v=20260917-v2.0.11" defer></script>
   <script src="js/crm/ai-assistance/budget.js?v=20260917-v2.0.11&budget=monitored" defer></script>
   <script src="js/crm/ai-assistance/voice-transport.js?v=20260917-v2.0.11&voice=retirement" defer></script>

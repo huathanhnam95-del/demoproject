@@ -253,16 +253,33 @@ def query_ollama(
         # Without format:json, instruct Gemma to output clean JSON in a code block.
         eff_prompt = "Output your analysis as a single JSON code block (```json ... ```). Do NOT include any 'thought' or reasoning fields. Start directly with the JSON.\n\n" + prompt
 
+    # Route to /api/chat endpoint
+    target_url = OLLAMA_URL.rstrip("/")
+    if target_url.endswith("/api/generate"):
+        target_url = target_url[:-len("/api/generate")] + "/api/chat"
+    elif not target_url.endswith("/api/chat"):
+        target_url = target_url + "/api/chat"
+
     payload = {
         "model": model_name,
-        "prompt": eff_prompt,
+        "messages": [
+            {"role": "user", "content": eff_prompt}
+        ],
         "stream": False,
         "options": {
             "temperature": temperature,
             "num_predict": max_tokens,
-            "num_ctx": 32768
+            "num_ctx": 16384
         }
     }
+
+    # Pass "think": False as a top-level body parameter for non-reasoning models (such as qwen3 and gemma4)
+    # when JSON output is expected. This prevents Ollama v0.34.1 from burning tokens on reasoning traces
+    # and truncating JSON output.
+    is_reasoning = any(r in model_name.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"])
+    if force_json and not is_reasoning:
+        payload["think"] = False
+
     # Disable format:json for models that misbehave with it (Gemma emits "thought"
     # field, Qwen3 returns empty {}). Only DeepSeek uses native JSON mode reliably.
     use_json_format = force_json and ("gemma" not in model_name.lower()) and ("qwen" not in model_name.lower())
@@ -270,9 +287,17 @@ def query_ollama(
         payload["format"] = "json"
 
     try:
-        resp = requests.post(OLLAMA_URL, json=payload, timeout=timeout)
+        resp = requests.post(target_url, json=payload, timeout=timeout)
         if resp.status_code == 200:
-            raw_text = resp.json().get("response", "")
+            resp_data = resp.json()
+            if isinstance(resp_data, dict):
+                msg = resp_data.get("message")
+                if isinstance(msg, dict) and "content" in msg:
+                    raw_text = msg.get("content") or ""
+                else:
+                    raw_text = resp_data.get("response", "")
+            else:
+                raw_text = str(resp_data or "")
             cleaned = clean_response(raw_text)
             parsed = None
             if force_json:
@@ -510,9 +535,9 @@ def run_roundtable_arbitration(
     judge_model = judge_model or DEFAULT_LOCAL_MODELS.get("qwen", "qwen3:14b")
     drafts_json = {m: d for m, d in drafts.items() if d is not None}
 
-    # Provide a reasonable portion of the transcript to the judge (up to ~48K chars)
-    # This fits within 32K context alongside the drafts and consensus metrics
-    max_transcript_chars = 48000
+    # Provide a reasonable portion of the transcript to the judge (up to ~32K chars)
+    # This fits within 16K context alongside the drafts and consensus metrics
+    max_transcript_chars = 32000
     transcript_for_judge = transcript[:max_transcript_chars]
     if len(transcript) > max_transcript_chars:
         transcript_for_judge += f"\n\n[... TRUNCATED — showing first {max_transcript_chars} of {len(transcript)} characters ...]"

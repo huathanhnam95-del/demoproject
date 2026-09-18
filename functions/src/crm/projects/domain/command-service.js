@@ -522,11 +522,15 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
             const sectionId = effectiveSection(chainMap, taskId);
             const sectionSnapshot = await transaction.get(sectionRef(db, project.id, sectionId));
             if (!sectionSnapshot?.exists || (sectionSnapshot.data()?.lifecycle || 'active') !== 'active') throw new DomainError(409, 'TASK_LIFECYCLE_FORBIDDEN', 'Task section is not active.');
-            const columns = mapById(await readCollection(transaction, projectCollection(db, project.id, 'columns')));
-            const columnData = Object.fromEntries(Array.from(columns, ([key, row]) => [key, row.data]));
-            const validatedValues = payload.values === undefined ? {} : validateTypedValues(payload.values, columnData);
-            const values = { ...(current.values || {}), ...validatedValues };
-            await assertPeopleValueTargets({ transaction, accessService, db, projectId: project.id, columns: columnData, values: validatedValues });
+            let validatedValues = {};
+            let values = current.values || {};
+            if (payload.values !== undefined) {
+                const columns = mapById(await readCollection(transaction, projectCollection(db, project.id, 'columns')));
+                const columnData = Object.fromEntries(Array.from(columns, ([key, row]) => [key, row.data]));
+                validatedValues = validateTypedValues(payload.values, columnData);
+                values = { ...values, ...validatedValues };
+                await assertPeopleValueTargets({ transaction, accessService, db, projectId: project.id, columns: columnData, values: validatedValues });
+            }
             const ownerUid = payload.ownerUid === undefined ? current.ownerUid : payload.ownerUid;
             const assigneeUids = payload.assigneeUids === undefined ? current.assigneeUids || [] : payload.assigneeUids;
             if (ownerUid && assigneeUids.includes(ownerUid)) throw new DomainError(400, 'INVALID_ASSIGNEES', 'The accountable owner cannot also be an additional assignee.');

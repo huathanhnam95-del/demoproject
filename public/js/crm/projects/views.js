@@ -24,6 +24,8 @@
         let taskLinkSequence = 0;
         let projectLinkLayoutKey = '';
         let taskKey = '', datesVersion = 0, calendarMonth = new Date().toISOString().slice(0, 7), ganttZoom = 'weeks';
+        const calendarCache = new Map();
+        let viewStale = false;
         const uid = () => String(deps.getCurrentUser?.()?.uid || '');
         const scope = () => ({ uid: uid(), projectId, generation });
         const current = (s) => s.uid === uid() && s.uid === actorUid && s.projectId === projectId && s.generation === generation;
@@ -257,7 +259,11 @@
                 if (task && task.id === id) {
                     task = { ...task, status: nextStatus, ...(minimal?.revision !== undefined ? { revision: minimal.revision } : {}) };
                 }
-                await board?.refresh();
+                if (board?.updateTask) {
+                    board.updateTask({ ...found, status: nextStatus, ...(minimal?.revision !== undefined ? { revision: minimal.revision } : {}) });
+                } else {
+                    await board?.refresh();
+                }
                 if (current(s)) await refresh();
             } catch (err) {
                 if (current(s)) {
@@ -477,24 +483,35 @@
             }).join('')}</div><h4>Tasks overlapping ${escape(calendarMonth)} on this page</h4>${calendarQuery().empty ? '<p class="crm-muted">The shared date filters do not overlap this month. No tasks match.</p>' : ''}${rows.map((t) => taskRow(t)).join('')}<details class="crm-calendar-tech-drawer" style="margin-top:24px;border-top:1px solid var(--pj-line, #e2e8f0);padding-top:12px;"><summary class="crm-muted" style="cursor:pointer;font-size:12px;font-weight:500;">Vietnam calendar details &amp; holiday rules</summary><div id="projects-calendar-details" class="crm-muted" style="margin-top:8px;font-size:12px;line-height:1.6;"></div><div id="projects-calendar-availability" style="margin-top:8px;"></div></details>`;
             if (response) loadCalendar(`${calendarMonth}-01`, `${calendarMonth}-${days}`);
         }
+        function applyCalendarData(c) {
+            if (!c) return;
+            const prov = el('projects-calendar-view-provenance');
+            if (prov) {
+                prov.textContent = `Vietnam calendar${c?.coverage?.status === 'verified' ? ' · Verified' : ''}`;
+            }
+            const details = el('projects-calendar-details');
+            if (details) {
+                details.innerHTML = `${escape(calendarCoverage(c))} ${sourceLinks(c?.coverage?.sourceUrls)}<br>Accountable-owner availability governs scheduling; other assignees generate warnings.`;
+            }
+            const avail = el('projects-calendar-availability');
+            if (avail) {
+                avail.innerHTML = `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;">Availability and reason provenance for this month</summary>${array(c?.days).map((day) => `<p style="margin:4px 0;"><strong>${escape(day.date)}</strong>: organization ${day.organization?.working ? 'working' : 'nonworking'}${array(day.organization?.reasons).length ? ` — ${escape(day.organization.reasons.map(warningText).join('; '))}` : ''}${day.workingSwap ? ' · explicitly adopted working swap' : ''}${array(day.members).filter((m) => m.reasons?.some((r) => r.code === 'personal_leave')).map((m) => `<br>${escape(memberName(m.uid))}: personal leave`).join('')}</p>`).join('')}</details>`;
+            }
+        }
         async function loadCalendar(fromDate, toDate) {
             const s = scope(), sequence = ++calendarSequence;
+            const rev = response?.calendar?.revision ?? 0;
+            const cacheKey = `${actorUid}:${projectId}:${calendarMonth}:${rev}`;
+            if (calendarCache.has(cacheKey)) {
+                applyCalendarData(calendarCache.get(cacheKey));
+                return;
+            }
             try {
                 const result = await api(`${base()}/calendar?${new URLSearchParams({ fromDate, toDate })}`);
                 if (!current(s) || sequence !== calendarSequence || view !== 'calendar') return;
                 const c = result.calendar;
-                const prov = el('projects-calendar-view-provenance');
-                if (prov) {
-                    prov.textContent = `Vietnam calendar${c?.coverage?.status === 'verified' ? ' · Verified' : ''}`;
-                }
-                const details = el('projects-calendar-details');
-                if (details) {
-                    details.innerHTML = `${escape(calendarCoverage(c))} ${sourceLinks(c.coverage?.sourceUrls)}<br>Accountable-owner availability governs scheduling; other assignees generate warnings.`;
-                }
-                const avail = el('projects-calendar-availability');
-                if (avail) {
-                    avail.innerHTML = `<details style="margin-top:6px;"><summary style="cursor:pointer;font-size:12px;">Availability and reason provenance for this month</summary>${array(c.days).map((day) => `<p style="margin:4px 0;"><strong>${escape(day.date)}</strong>: organization ${day.organization?.working ? 'working' : 'nonworking'}${array(day.organization?.reasons).length ? ` — ${escape(day.organization.reasons.map(warningText).join('; '))}` : ''}${day.workingSwap ? ' · explicitly adopted working swap' : ''}${array(day.members).filter((m) => m.reasons?.some((r) => r.code === 'personal_leave')).map((m) => `<br>${escape(memberName(m.uid))}: personal leave`).join('')}</p>`).join('')}</details>`;
-                }
+                if (c) calendarCache.set(cacheKey, c);
+                applyCalendarData(c);
             } catch (error) { if (current(s) && sequence === calendarSequence) status(error.message || 'Calendar could not be loaded.'); }
         }
         function calendarQuery() {
@@ -546,6 +563,7 @@
             projectId = ''; response = null; task = null; taskKey = ''; preview = null; filters = {}; filterDrafts = {};
             links = []; canManageLinks = false; projectLinks = []; projectLinkAccess = false;
             cursor = null; previous = []; pageIndex = 0; loading = false; mutation = false; projectLinkBusy = false;
+            calendarCache.clear();
             if (notifyBoard) board?.invalidateAccess?.(deniedProjectId, false);
             const form = el('projects-view-filters');
             if (form) {
@@ -571,6 +589,7 @@
             const next = String(id || ''), nextUid = uid();
             if (next === projectId && nextUid === actorUid) return;
             generation++; readSequence++; calendarSequence++; projectId = next; actorUid = nextUid;
+            calendarCache.clear();
             filters = {}; filterDrafts = {}; response = null; cursor = null; previous = []; pageIndex = 0; loading = false; mutation = false;
             const form = el('projects-view-filters');
             form?.reset();
@@ -772,12 +791,25 @@
                     if (error.status || !taskCurrent(s)) throw error;
                     result = await api(path, { method, headers: { 'Content-Type': 'application/json' }, body });
                 }
-                if (!taskCurrent(s)) return false;
-                const minimal = result.task || result.result?.task || result.result || result;
-                if (minimal.revision !== undefined) task = { ...task, revision: minimal.revision };
+                const canonicalTask = result.task || result.result?.task;
+                const minimal = canonicalTask || result.result || result;
+                if (minimal?.revision !== undefined) task = { ...task, revision: minimal.revision };
+                if (canonicalTask) task = { ...task, ...canonicalTask };
+                if (payload?.predecessorTaskIds) task = { ...task, predecessorTaskIds: payload.predecessorTaskIds };
                 taskStatus('Saved.'); preview = null;
-                await board?.refresh();
-                if (current(s)) await refresh();
+                if (board?.updateTask && (canonicalTask || minimal?.id)) {
+                    board.updateTask(task);
+                } else {
+                    await board?.refresh();
+                }
+                if (response?.tasks) {
+                    response.tasks = response.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t));
+                }
+                if (view !== 'board' && current(s)) {
+                    await refresh();
+                } else {
+                    viewStale = true;
+                }
                 return taskCurrent(s);
             } catch (error) {
                 if (taskCurrent(s)) { taskStatus(`${error.message || 'Save failed.'} Your inputs are retained; refresh stale task state before retrying.`); if ([401, 403].includes(error.status)) { links = []; canManageLinks = false; renderLinks(); } }
@@ -822,8 +854,10 @@
                     }
                     const monthScopeChanged = view === 'calendar' || button.dataset.view === 'calendar';
                     view = button.dataset.view;
-                    if (monthScopeChanged) resetViewPage();
-                    else render();
+                    if (monthScopeChanged || viewStale) {
+                        viewStale = false;
+                        resetViewPage();
+                    } else render();
                 }
             });
             const captureFilterDraft = (event) => { const name = event.target.name; if (['title', 'sectionId', 'status', 'ownerUid', 'assigneeUid', 'fromDate', 'toDate'].includes(name)) filterDrafts[name] = event.target.value; };
@@ -851,7 +885,15 @@
                 board?.setFilters(filters);
                 refresh();
             });
-            el('projects-view-filters')?.addEventListener('reset', () => { filters = {}; filterDrafts = {}; syncFilterBadge(); if (typeof setTimeout === 'function') setTimeout(renderFilterChips, 0); else renderFilterChips(); if (projectId) { board?.setFilters(filters); refresh(); } });
+            el('projects-view-filters')?.addEventListener('reset', () => {
+                filters = {}; filterDrafts = {}; syncFilterBadge();
+                if (typeof setTimeout === 'function') setTimeout(renderFilterChips, 0);
+                else renderFilterChips();
+                if (projectId) {
+                    board?.setFilters(filters);
+                    refresh();
+                }
+            });
             el('projects-view-more')?.addEventListener('click', () => { if (!loading && response?.hasMore) refresh(response.nextCursor, [...previous, cursor], pageIndex + 1); });
             el('projects-view-previous')?.addEventListener('click', () => { if (!loading && previous.length) refresh(previous.at(-1), previous.slice(0, -1), pageIndex - 1); });
             el('projects-view-retry')?.addEventListener('click', () => refresh());

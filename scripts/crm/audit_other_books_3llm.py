@@ -168,8 +168,8 @@ def query_model(model_name: str, prompt: str, timeout: int = 120) -> dict:
             "num_ctx": 2048,
         }
     }
-    if "qwen" in model_name:
-        payload["options"]["think"] = False
+    if not any(r in model_name.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+        payload["think"] = False
 
     t0 = time.time()
     try:

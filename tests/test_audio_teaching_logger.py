@@ -1,7 +1,7 @@
 import pytest
 import json
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from scripts.audio_teaching_logger.pipeline_local_consensus import (
     clean_response,
     calculate_consensus_rate,
@@ -9,7 +9,8 @@ from scripts.audio_teaching_logger.pipeline_local_consensus import (
     cosine_similarity,
     get_embeddings,
     chunk_transcript,
-    merge_chunk_drafts
+    merge_chunk_drafts,
+    query_ollama
 )
 from scripts.audio_teaching_logger.pipeline_gemini import (
     format_markdown_report,
@@ -449,3 +450,180 @@ def test_generate_mermaid_diagrams_llm_failure_fallback():
     assert "flowchart" in diagrams
     assert diagrams["mindmap"].startswith("mindmap")
     assert diagrams["flowchart"].startswith("graph TD")
+
+
+def test_query_ollama_qwen_chat_payload_and_num_ctx():
+    """Verify Qwen3 routes to /api/chat, uses num_ctx=16384, and sets top-level think=False."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "model": "qwen3:14b",
+        "message": {
+            "role": "assistant",
+            "content": "```json\n{\"what_taught\": [{\"topic\": \"PEEL structure\"}], \"student_problems\": [], \"teacher_solutions\": []}\n```"
+        },
+        "done": True
+    }
+
+    with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp) as mock_post:
+        result = query_ollama("qwen3:14b", "Analyze teaching session", temperature=0.2, max_tokens=8192, force_json=True)
+
+    assert result["success"] is True
+    assert result["model"] == "qwen3:14b"
+    assert result["parsed"]["what_taught"][0]["topic"] == "PEEL structure"
+
+    mock_post.assert_called_once()
+    call_url = mock_post.call_args[0][0]
+    call_payload = mock_post.call_args[1]["json"]
+
+    # Endpoint must be /api/chat
+    assert call_url.endswith("/api/chat")
+
+    # Payload must have messages (chat format)
+    assert "messages" in call_payload
+    assert isinstance(call_payload["messages"], list)
+    assert call_payload["messages"][0]["role"] == "user"
+
+    # num_ctx must be recalibrated to 16384 (not 32768)
+    assert call_payload["options"]["num_ctx"] == 16384
+
+    # Top-level think: False for Qwen3 (non-reasoning model where JSON output is expected)
+    assert "think" in call_payload
+    assert call_payload["think"] is False
+
+    # think must NOT be inside options
+    assert "think" not in call_payload["options"]
+
+
+def test_query_ollama_gemma_chat_payload_and_think_false():
+    """Verify Gemma4 routes to /api/chat, uses num_ctx=16384, and sets top-level think=False."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "model": "gemma4:12b",
+        "message": {
+            "role": "assistant",
+            "content": "```json\n{\"what_taught\": [], \"student_problems\": [], \"teacher_solutions\": []}\n```"
+        },
+        "done": True
+    }
+
+    with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp) as mock_post:
+        result = query_ollama("gemma4:12b", "Analyze teaching session", force_json=True)
+
+    assert result["success"] is True
+    call_payload = mock_post.call_args[1]["json"]
+
+    # Top-level think: False for Gemma4
+    assert "think" in call_payload
+    assert call_payload["think"] is False
+    assert "think" not in call_payload["options"]
+
+    # num_ctx must be 16384
+    assert call_payload["options"]["num_ctx"] == 16384
+
+
+def test_query_ollama_deepseek_r1_retains_thinking():
+    """Verify DeepSeek-R1 reasoning model does NOT have think: False injected."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "model": "deepseek-r1:14b",
+        "message": {
+            "role": "assistant",
+            "content": "<think>\nStep-by-step reasoning\n</think>\n```json\n{\"what_taught\": [], \"student_problems\": [], \"teacher_solutions\": []}\n```"
+        },
+        "done": True
+    }
+
+    with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp) as mock_post:
+        result = query_ollama("deepseek-r1:14b", "Analyze teaching session", force_json=True)
+
+    assert result["success"] is True
+    call_payload = mock_post.call_args[1]["json"]
+
+    # DeepSeek-R1 is a reasoning model: think: False should NOT be present
+    assert call_payload.get("think") is not False
+    # Format json is used for DeepSeek
+    assert call_payload.get("format") == "json"
+    # num_ctx must be 16384
+    assert call_payload["options"]["num_ctx"] == 16384
+
+
+def test_query_ollama_response_fallback_and_repair():
+    """Verify query_ollama supports raw response fallback and soft JSON bracket repair."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    # Returns legacy generate endpoint format with truncated JSON
+    mock_resp.json.return_value = {
+        "response": '{"what_taught": [], "student_problems": [], "teacher_solutions": []'
+    }
+
+    with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp):
+        result = query_ollama("qwen3:14b", "Analyze chunk", force_json=True)
+
+    assert result["success"] is True
+    assert isinstance(result["parsed"], dict)
+    assert "what_taught" in result["parsed"]
+
+
+def test_query_ollama_http_error_handling():
+    """Verify query_ollama handles HTTP error status cleanly without crashing."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+    mock_resp.text = "Internal Server Error"
+
+    with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp):
+        result = query_ollama("qwen3:14b", "Analyze chunk")
+
+    assert result["success"] is False
+    assert "HTTP 500" in result["error"]
+
+
+def test_query_ollama_trailing_slash_url_sanitization():
+    """Verify that trailing slashes on OLLAMA_URL do not create duplicate paths like /api/generate/api/chat."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "message": {"content": '{"what_taught": []}'}
+    }
+
+    test_urls = [
+        ("http://localhost:11434/api/generate/", "http://localhost:11434/api/chat"),
+        ("http://localhost:11434/api/chat/", "http://localhost:11434/api/chat"),
+        ("http://localhost:11434/", "http://localhost:11434/api/chat"),
+        ("http://localhost:11434", "http://localhost:11434/api/chat"),
+    ]
+
+    for input_url, expected_url in test_urls:
+        with patch("scripts.audio_teaching_logger.pipeline_local_consensus.OLLAMA_URL", input_url):
+            with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp) as mock_post:
+                query_ollama("qwen3:14b", "test prompt")
+                called_url = mock_post.call_args[0][0]
+                assert called_url == expected_url, f"Failed for input_url '{input_url}': got '{called_url}', expected '{expected_url}'"
+
+
+def test_query_ollama_qwq_reasoning_model_retains_thinking():
+    """Verify QwQ reasoning model is recognized as reasoning and think: False is NOT injected."""
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "message": {"content": '{"what_taught": []}'}
+    }
+
+    with patch("scripts.audio_teaching_logger.pipeline_local_consensus.requests.post", return_value=mock_resp) as mock_post:
+        result = query_ollama("qwq:32b", "test prompt", force_json=True)
+
+    assert result["success"] is True
+    call_payload = mock_post.call_args[1]["json"]
+    assert "think" not in call_payload or call_payload.get("think") is not False
+
+
+def test_config_embed_url_derivation():
+    """Verify OLLAMA_EMBED_URL is derived cleanly from OLLAMA_URL without malformed paths."""
+    from scripts.audio_teaching_logger.config import OLLAMA_EMBED_URL
+    assert OLLAMA_EMBED_URL.endswith("/api/embed")
+    assert "/api/chat" not in OLLAMA_EMBED_URL
+    assert "/api/generate" not in OLLAMA_EMBED_URL
+
+

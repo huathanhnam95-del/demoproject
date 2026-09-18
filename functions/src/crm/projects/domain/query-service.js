@@ -174,6 +174,38 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         return snapshot;
     }
 
+    async function readCalendarContext(identity, projectId) {
+        projectId = id(projectId, 'project ID');
+        let context;
+        const start = Date.now();
+        await db.runTransaction(async (transaction) => {
+            const access = await accessService.assertTransactionContentAccess(transaction, identity.uid, projectId, { roles: ['Owner', 'Editor', 'Viewer'] });
+            const projectSnapshot = await transaction.get(projectRef(db, projectId));
+            if (!projectSnapshot?.exists) throw new DomainError(404, 'PROJECT_NOT_FOUND', 'Project not found.');
+            const calendarDoc = await transaction.get(db.collection(PROJECT_COLLECTIONS.organizationConfig).doc('calendar'));
+            const memberDocs = await transaction.get(db.collection(PROJECT_COLLECTIONS.members).where('projectId', '==', projectId).limit(1001));
+            if (memberDocs.docs.length > 1000) throw new DomainError(409, 'PROJECT_QUERY_LIMIT', 'Project member limit exceeded.');
+            const memberUids = memberDocs.docs.filter((doc) => {
+                const data = doc.data();
+                return data.projectId === projectId && doc.id === memberDocumentId(projectId, data.uid) && data.active !== false && ['Owner', 'Editor', 'Viewer'].includes(data.role);
+            }).map((doc) => doc.data().uid);
+            context = {
+                calendar: calendarDoc.exists ? calendarDoc.data() : {},
+                memberUids,
+                access,
+                project: { id: projectId, data: projectSnapshot.data() || {}, updateTime: serializeUpdateTime(projectSnapshot.updateTime) },
+                costs: {
+                    taskEnumeration: 0,
+                    sectionEnumeration: 0,
+                    columnEnumeration: 0,
+                    memberDocsRead: memberDocs.docs.length,
+                    durationMs: Date.now() - start
+                }
+            };
+        }, { readOnly: true });
+        return context;
+    }
+
     async function queryTasks(identity, projectId, rawOptions = {}, suppliedSnapshot = null) {
         const normalizedProjectId = id(projectId, 'project ID');
         const filters = normalizeFilters(rawOptions.filters || rawOptions);
@@ -390,7 +422,7 @@ function buildService({ db, accessService, now = () => new Date() } = {}) {
         }, { readOnly: true });
     }
     async function listTasks(identity, projectId, options) { return queryTasks(identity, projectId, options); }
-    return { queryTasks, listTasks, readSnapshot, hydrateChanges, constants: { CURSOR_TTL_MS, MAX_QUERY_TASKS, MAX_QUERY_SECTIONS, MAX_QUERY_COLUMNS, PROJECT_CURSOR_COLLECTION } };
+    return { queryTasks, listTasks, readSnapshot, readCalendarContext, hydrateChanges, constants: { CURSOR_TTL_MS, MAX_QUERY_TASKS, MAX_QUERY_SECTIONS, MAX_QUERY_COLUMNS, PROJECT_CURSOR_COLLECTION } };
 }
 
 module.exports = { buildService, createProjectsQueryService: buildService, normalizeFilters, normalizeSort, matches, rowLifecycle, snapshotDigest, MAX_QUERY_TASKS, MAX_QUERY_SECTIONS, MAX_QUERY_COLUMNS };

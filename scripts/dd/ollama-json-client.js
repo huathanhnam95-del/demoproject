@@ -16,6 +16,7 @@ async function callOllamaChatJson(messages, temperature = 0.3, retries = 2) {
           model: OLLAMA_MODEL,
           messages,
           stream: false,
+          think: false,
           format: 'json',
           options: {
             temperature,

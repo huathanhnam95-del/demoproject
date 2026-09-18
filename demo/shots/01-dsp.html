@@ -1,0 +1,212 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  :root{
+    --brand:#2563eb; --brand-soft:#60a5fa;
+    --bg:#05070d; --ink:#e8ecf5; --muted:#5f6b85;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;background:var(--bg);overflow:hidden}
+  body{font-family:'Outfit',system-ui,sans-serif;color:var(--ink)}
+  #stage{position:absolute;inset:0;transform-origin:50% 50%}
+  #vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 92% 78% at 50% 48%,transparent 52%,rgba(0,0,0,.45) 100%)}
+  canvas{position:absolute;left:0;top:0}
+
+  #stageLabel{position:absolute;left:150px;top:150px}
+  .kicker{font-family:'Roboto Mono',monospace;font-weight:300;font-size:19px;
+    letter-spacing:.42em;text-transform:uppercase;color:var(--muted)}
+  .title{font-weight:200;font-size:82px;letter-spacing:-.022em;line-height:1.04;margin-top:22px}
+  .title em{font-style:normal;color:var(--brand-soft)}
+
+  #readout{position:absolute;right:150px;top:158px;text-align:right;
+    font-family:'Roboto Mono',monospace;font-weight:300;font-size:23px;letter-spacing:.02em}
+  #readout .row{display:flex;justify-content:flex-end;gap:20px;margin-bottom:15px;color:var(--muted)}
+  #readout .row b{font-weight:400;color:var(--ink);min-width:170px;text-align:right;font-variant-numeric:tabular-nums}
+
+  #ticks{position:absolute;left:150px;bottom:150px;display:flex;gap:0;align-items:center}
+  .tick{width:150px;height:2px;background:#151b2b;position:relative}
+  .tick i{position:absolute;left:0;top:0;height:100%;background:var(--brand);display:block}
+  .tickLabel{position:absolute;top:22px;left:0;font-family:'Roboto Mono',monospace;
+    font-weight:300;font-size:15px;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+
+  #footer{position:absolute;right:150px;bottom:150px;text-align:right;
+    font-family:'Roboto Mono',monospace;font-weight:300;font-size:16px;
+    letter-spacing:.26em;color:var(--muted);text-transform:uppercase}
+</style></head>
+<body>
+<div id="stage">
+  <canvas id="wave" width="1920" height="1080"></canvas>
+  <div id="stageLabel"><div class="kicker" id="kicker">client-side</div><div class="title" id="title"></div></div>
+  <div id="readout">
+    <div class="row"><span>sample rate</span><b id="rSr">24 000 Hz</b></div>
+    <div class="row"><span>peak</span><b id="rPk">-5.14 dBFS</b></div>
+    <div class="row"><span>duration</span><b id="rDur">3.600 s</b></div>
+  </div>
+  <div id="ticks"></div>
+  <div id="footer">audio dsp pipeline</div>
+</div>
+<div id="vignette"></div>
+
+<script>
+const DATA_URL = "../data/waveforms.json";
+const ORDER = ["s0_raw","s1_highpass","s2_resample","s3_normalize","s4_trim"];
+const COPY = [
+  {kick:"raw input", title:"a student<br>recording"},
+  {kick:"stage 01",  title:"80 Hz<br><em>high-pass</em>"},
+  {kick:"stage 02",  title:"16 kHz<br><em>resample</em>"},
+  {kick:"stage 03",  title:"&minus;3 dBFS<br><em>normalize</em>"},
+  {kick:"stage 04",  title:"silence<br><em>trim</em>"}
+];
+const TICKS = ["80HZ","16KHZ","-3DB","TRIM"];
+const KEY = [0.30, 1.05, 1.90, 2.75, 3.60];
+const MORPH = 0.62;
+const DUR = 5.0;
+
+let D = null;
+const cv = document.getElementById("wave"), cx = cv.getContext("2d");
+
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const easeIO = t => t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+const easeOut = t => 1-Math.pow(1-t,3);
+const lerp = (a,b,t)=>a+(b-a)*t;
+const spaceNum = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+for(let i=0;i<4;i++){
+  const d=document.createElement("div"); d.className="tick";
+  d.innerHTML='<i style="width:0"></i><span class="tickLabel">'+TICKS[i]+'</span>';
+  document.getElementById("ticks").appendChild(d);
+}
+const tickFills=[].slice.call(document.querySelectorAll(".tick i"));
+
+function stageProgress(t){
+  if(t<=KEY[0]) return {i:0,f:0};
+  for(let i=0;i<KEY.length-1;i++){
+    if(t<KEY[i+1]) return {i:i, f: easeIO(clamp((t-KEY[i])/MORPH,0,1))};
+  }
+  return {i:KEY.length-1,f:0};
+}
+
+/** First/last bin carrying real energy — the boundaries stage 04 trims to. */
+function silenceBounds(env){
+  const th=0.02; let lo=0, hi=env.length-1;
+  while(lo<env.length&&env[lo]<th) lo++;
+  while(hi>lo&&env[hi]<th) hi--;
+  return {lo:lo/(env.length-1), hi:hi/(env.length-1)};
+}
+
+function drawWave(env,widthFrac,alpha,ghost,cut){
+  const W=1920,cxm=W/2,cym=524;
+  const fullW=1180, w=fullW*widthFrac, x0=cxm-w/2, amp=232;
+  cx.save(); cx.globalAlpha=alpha;
+
+  // dead air the trim stage is about to discard
+  if(cut&&cut.a>0.01){
+    cx.save(); cx.globalAlpha=alpha*cut.a;
+    const h=amp*0.5;
+    const band=(bx,bw,dir)=>{
+      if(bw<2) return;
+      const g2=cx.createLinearGradient(bx,0,bx+bw,0);
+      const stops=dir>0?[0.16,0.0]:[0.0,0.16];
+      g2.addColorStop(0,"rgba(239,68,68,"+stops[0]+")");
+      g2.addColorStop(1,"rgba(239,68,68,"+stops[1]+")");
+      cx.fillStyle=g2; cx.fillRect(bx,cym-h,bw,h*2);
+      // caliper at the boundary the cut lands on
+      const ex=dir>0?bx+bw:bx;
+      cx.strokeStyle="rgba(248,113,113,0.85)"; cx.lineWidth=1.5;
+      cx.beginPath(); cx.moveTo(ex,cym-h); cx.lineTo(ex,cym+h); cx.stroke();
+    };
+    band(x0,w*cut.lo,1);
+    band(x0+w*cut.hi,w*(1-cut.hi),-1);
+    cx.restore();
+  }
+
+  if(ghost){
+    cx.beginPath();
+    for(let i=0;i<ghost.length;i++){const x=x0+w*(i/(ghost.length-1));cx.lineTo(x,cym-ghost[i]*amp);}
+    for(let i=ghost.length-1;i>=0;i--){const x=x0+w*(i/(ghost.length-1));cx.lineTo(x,cym+ghost[i]*amp);}
+    cx.closePath(); cx.fillStyle="rgba(239,68,68,0.26)"; cx.fill();
+  }
+
+  const g=cx.createLinearGradient(x0,0,x0+w,0);
+  g.addColorStop(0,"#1d4ed8"); g.addColorStop(0.5,"#60a5fa"); g.addColorStop(1,"#1d4ed8");
+  cx.beginPath();
+  for(let i=0;i<env.length;i++){const x=x0+w*(i/(env.length-1));cx.lineTo(x,cym-env[i]*amp);}
+  for(let i=env.length-1;i>=0;i--){const x=x0+w*(i/(env.length-1));cx.lineTo(x,cym+env[i]*amp);}
+  cx.closePath();
+  cx.shadowColor="rgba(59,130,246,0.55)"; cx.shadowBlur=34;
+  cx.fillStyle=g; cx.fill();
+  cx.shadowBlur=0;
+
+  // baseline runs the full frame so silent regions read as intent, not artifact
+  cx.strokeStyle="rgba(255,255,255,0.07)"; cx.lineWidth=1;
+  cx.beginPath(); cx.moveTo(150,cym); cx.lineTo(1770,cym); cx.stroke();
+  cx.strokeStyle="rgba(96,165,250,0.32)";
+  cx.beginPath(); cx.moveTo(x0,cym); cx.lineTo(x0+w,cym); cx.stroke();
+  cx.restore();
+}
+
+function render(t){
+  t=clamp(t,0,DUR);
+  cx.clearRect(0,0,1920,1080);
+  const sp=stageProgress(t), i=sp.i, f=sp.f;
+  const a=D.stages[ORDER[i]], b=D.stages[ORDER[Math.min(i+1,ORDER.length-1)]];
+
+  const env=a.env.map(function(v,k){return lerp(v,b.env[k],f);});
+  const widthFrac=lerp(a.widthFrac,b.widthFrac,f);
+
+  let ghost=null;
+  if(i===0&&f>0.02){
+    const raw=D.stages.s0_raw.env, hp=D.stages.s1_highpass.env;
+    const fade=1-easeOut(f);
+    ghost=raw.map(function(v,k){return Math.max(v,hp[k])*fade;});
+  }
+
+  // stage 03 -> 04: flag the dead air, brightest just before the cut lands
+  let cut=null;
+  if(i===3){
+    const bnd=silenceBounds(D.stages.s3_normalize.env);
+    cut={lo:bnd.lo,hi:bnd.hi,a:Math.sin(Math.min(1,f/0.75)*Math.PI)};
+  } else if(i===2&&f>0.75){
+    const bnd=silenceBounds(D.stages.s3_normalize.env);
+    cut={lo:bnd.lo,hi:bnd.hi,a:(f-0.75)*2};
+  }
+
+  const intro=easeOut(clamp(t/0.55,0,1));
+  drawWave(env,widthFrac,intro,ghost,cut);
+
+  const c=COPY[f>0.5?Math.min(i+1,4):i];
+  document.getElementById("kicker").textContent=c.kick;
+  document.getElementById("title").innerHTML=c.title;
+  const swap=f>0.5?(f-0.5)*2:1-f*2;
+  const vis=Math.min(1,swap*1.6);
+  const lab=document.getElementById("stageLabel");
+  lab.style.opacity=(0.25+0.75*vis)*intro;
+  lab.style.transform="translateY("+((1-vis)*9).toFixed(2)+"px)";
+
+  const sr=f>0.5?b.sampleRate:a.sampleRate;
+  document.getElementById("rSr").textContent=spaceNum(sr)+" Hz";
+  document.getElementById("rPk").textContent=lerp(a.peakDb,b.peakDb,f).toFixed(2).replace("-","−")+" dBFS";
+  document.getElementById("rDur").textContent=lerp(a.dur,b.dur,f).toFixed(3)+" s";
+  document.getElementById("readout").style.opacity=intro*0.96;
+
+  for(let k=0;k<4;k++){
+    const p=clamp((i+f)-k,0,1);
+    tickFills[k].style.width=(p*100).toFixed(2)+"%";
+  }
+  document.getElementById("ticks").style.opacity=intro;
+  document.getElementById("footer").style.opacity=intro*0.85;
+
+  document.getElementById("stage").style.transform="scale("+(1+0.055*easeIO(t/DUR)).toFixed(5)+")";
+}
+
+window.__ready = (async function(){
+  D = await (await fetch(DATA_URL)).json();
+  await document.fonts.ready;
+  render(0);
+  return true;
+})();
+window.__seek = function(t){ render(t); return true; };
+</script>
+</body></html>

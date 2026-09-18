@@ -252,7 +252,7 @@
     if (isWriting || index < 0 || index >= questions.length) return;
     if (recordHistory && randomMode && index !== currentIndex) navHistory.push(currentIndex);
     currentIndex = index;
-    destroyReview();
+    resetAttempt({ clearDraft: true });
     renderPicker();
     renderSource();
     closePicker();
@@ -425,6 +425,7 @@
     lastSubmittedFormResult = null;
     lastSubmittedQuestion = null;
     hasAiScoreResult = false;
+    destroyReview();
     if (d.startBtn) d.startBtn.style.display = 'none';
     const toggleBtn = document.getElementById('swt-history-toggle');
     const historyContainer = document.getElementById('swt-history-container');
@@ -515,7 +516,7 @@
       lastSubmittedSummaryText = '';
       lastSubmittedWordCount = 0;
       lastSubmittedFormResult = null;
-      lastSubmittedQuestion = null;
+      lastSubmittedQuestion = questions[currentIndex] || null;
       hasAiScoreResult = false;
       renderScoreLine({ empty: true });
       if (d.resultsContainer) {
@@ -526,7 +527,7 @@
           </div>`;
       }
       if (d.aiScoreBtn) d.aiScoreBtn.style.display = 'none';
-      destroyReview();
+      mountReview(lastSubmittedQuestion);
       return;
     }
 
@@ -598,7 +599,7 @@
       });
     } catch (err) {
       console.error('[SWT] Failed to mount parallel review:', err);
-      d.parallelReviewMount.style.display = 'none';
+      destroyReview();
     }
   }
 
@@ -875,6 +876,12 @@
 
     if (d.aiScoreBtn) d.aiScoreBtn.style.display = 'none';
     if (d.aiScoreHint) d.aiScoreHint.style.display = 'none';
+
+    if (reviewController && reviewController.getState()?.isMounted) {
+      reviewController.updateLayout();
+    } else if (lastSubmittedQuestion?.answerAnalysis) {
+      mountReview(lastSubmittedQuestion);
+    }
 
     ensureArchiveAttemptId().then((archiveAttemptId) => {
       if (!archiveAttemptId) return;

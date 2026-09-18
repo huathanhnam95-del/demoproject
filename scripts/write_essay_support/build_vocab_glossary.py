@@ -45,6 +45,7 @@ def translate_batch(batch):
     payload = {
         "model": MODEL,
         "messages": [{"role": "user", "content": prompt}],
+        "think": False,
         "format": "json",
         "stream": False,
         "options": {

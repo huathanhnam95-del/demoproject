@@ -127,6 +127,8 @@ Respond ONLY with valid JSON in this exact structure:
             "num_ctx": 4096
         }
     }
+    if not any(r in name.lower() for r in ["deepseek-r1", "-r1", "/r1", "reasoner", "qwq"]):
+        payload["think"] = False
     if "qwen" not in name.lower():
         payload["format"] = "json"
 

@@ -1,0 +1,152 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  /* Preloader styles below are lifted verbatim from public/style.css:174-270
+     so the first beat of the film IS the shipped loading screen. */
+  :root{ --brand:#2563eb; --brand-soft:#60a5fa; --ink:#e8ecf5; --muted:#5f6b85; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:#05070d}
+  body{font-family:'Outfit',system-ui,sans-serif}
+
+  /* ── Beat 2: the v2.0.0 card, sitting underneath ── */
+  /* Opaque from frame 0 and sitting under the preloader, so the handoff is a true
+     crossfade to black rather than the two layers blending into mud. */
+  #card{position:absolute;inset:0;background:#05070d;display:flex;
+    flex-direction:column;justify-content:center;align-items:center}
+  #cardInner{text-align:center;transform-origin:50% 50%}
+  #kicker{font-family:'Roboto Mono',monospace;font-weight:300;font-size:20px;
+    letter-spacing:.52em;text-transform:uppercase;color:var(--muted);
+    margin-left:.52em}
+  #version{font-weight:200;font-size:208px;letter-spacing:-.045em;line-height:1;
+    color:#fff;margin-top:28px}
+  #rule{height:2px;background:var(--brand);margin:44px auto 0;width:0}
+  #tagline{font-family:'Roboto Mono',monospace;font-weight:300;font-size:21px;
+    letter-spacing:.34em;text-transform:uppercase;color:var(--brand-soft);
+    margin-top:40px;margin-left:.34em}
+  #glow{position:absolute;left:50%;top:50%;width:1500px;height:1500px;
+    transform:translate(-50%,-50%);pointer-events:none;
+    background:radial-gradient(circle,rgba(37,99,235,.16) 0%,transparent 62%);opacity:0}
+
+  /* ── Beat 1: the shipped preloader, verbatim ── */
+  .app-preloader{position:absolute;top:0;left:0;width:100%;height:100%;
+    display:flex;justify-content:center;align-items:center;z-index:20;
+    overflow:hidden;transform-origin:50% 50%}
+  .app-preloader.preloader-2d{
+    background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 50%,#a1c4fd 100%);}
+  .preloader-text-container{position:relative;font-family:'Outfit',sans-serif;
+    font-weight:800;font-size:64px;text-align:center;white-space:nowrap;}
+  .preloader-text-stroke{color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.6);}
+  .preloader-text-fill-wrapper{position:absolute;top:0;left:0;width:0%;height:100%;
+    overflow:hidden;border-right:2px solid rgba(255,255,255,.8);
+    box-shadow:inset -4px 0 8px rgba(255,255,255,.4);}
+  .preloader-text-fill{color:#fff;-webkit-text-stroke:0px transparent;
+    text-shadow:0 4px 16px rgba(255,255,255,.5);width:max-content;}
+  .preloader-slogan{position:absolute;bottom:38%;left:50%;transform:translateX(-50%);
+    text-align:center;font-family:'Outfit',sans-serif;font-size:28.8px;font-weight:400;
+    letter-spacing:.04em;color:#1a1a1a;white-space:nowrap;}
+  .preloader-slogan__line{display:inline;opacity:0}
+</style></head>
+<body>
+
+<div id="card">
+  <div id="glow"></div>
+  <div id="cardInner">
+    <div id="kicker">Better English Learning</div>
+    <div id="version">2.0.0</div>
+    <div id="rule"></div>
+    <div id="tagline">Acoustic pronunciation assessment</div>
+  </div>
+</div>
+
+<div id="app-preloader" class="app-preloader preloader-2d">
+  <div class="preloader-text-container">
+    <div class="preloader-text-stroke">Better English Learning</div>
+    <div class="preloader-text-fill-wrapper" id="preloader-text-fill-wrapper">
+      <div class="preloader-text-fill">Better English Learning</div>
+    </div>
+  </div>
+  <div class="preloader-slogan">
+    <span class="preloader-slogan__line" id="sl1">Not the best.</span>
+    <span class="preloader-slogan__line" id="sl2">&nbsp;But better.</span>
+  </div>
+</div>
+
+<script>
+const DUR = 5.0;
+
+// Values taken from the shipping implementation, not invented:
+//   PRELOADER_MIN_DURATION_MS = 2200          (js/preloader-2d.js)
+//   fill easing = 1 - (1 - p)^3               (js/preloader-2d.js)
+//   exit = opacity 0 + scale(1.05) over 600ms (finishPreloader)
+const FILL_MS = 2200;
+const HANDOFF = 2.20;   // preloader begins its exit
+const EXIT_MS = 600;
+
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const easeOutCubic=p=>1-Math.pow(1-p,3);
+const easeInCubic=p=>p*p*p;
+const easeOutQuint=p=>1-Math.pow(1-p,5);
+
+const pre=document.getElementById("app-preloader");
+const fill=document.getElementById("preloader-text-fill-wrapper");
+const sl1=document.getElementById("sl1"), sl2=document.getElementById("sl2");
+const card=document.getElementById("card"), inner=document.getElementById("cardInner");
+const glow=document.getElementById("glow");
+const rule=document.getElementById("rule"), version=document.getElementById("version");
+const kicker=document.getElementById("kicker"), tagline=document.getElementById("tagline");
+
+// Slogan beats compressed to fit the 2.2s window. The shipped CSS fires line 2 at
+// 4s, which the 2200ms preloader never actually reaches — on screen you only ever
+// see "Not the best." Here both land, which is the line the brand is actually making.
+const SL1_IN=0.62, SL2_IN=1.34, SL_FADE=0.55;
+
+function render(t){
+  t=clamp(t,0,DUR);
+
+  // ── Beat 1 ──────────────────────────────────────────────
+  fill.style.width=(easeOutCubic(clamp((t*1000)/FILL_MS,0,1))*100).toFixed(3)+"%";
+  sl1.style.opacity=clamp((t-SL1_IN)/SL_FADE,0,1).toFixed(3);
+  sl2.style.opacity=clamp((t-SL2_IN)/SL_FADE,0,1).toFixed(3);
+
+  const ex=clamp((t-HANDOFF)/(EXIT_MS/1000),0,1);
+  const exE=easeInCubic(ex);
+  pre.style.opacity=(1-ex).toFixed(3);
+  // scale(1.05) is the shipped exit; the blur is added for the film — it turns a
+  // hard pastel-to-black cut into a rack focus.
+  pre.style.transform="scale("+(1+0.05*exE).toFixed(4)+")";
+  pre.style.filter="blur("+(exE*16).toFixed(2)+"px) brightness("+(1-0.22*exE).toFixed(3)+")";
+  pre.style.visibility = ex>=1 ? "hidden" : "visible";
+
+  // ── Beat 2 ──────────────────────────────────────────────
+  const c=clamp((t-2.34)/0.62,0,1), cE=easeOutQuint(c);
+  // settles from a hair over-size — reads as the frame coming to rest
+  inner.style.transform="scale("+(1.055-0.055*cE).toFixed(4)+")";
+  glow.style.opacity=(cE*clamp((t-2.5)/1.0,0,1)).toFixed(3);
+
+  const kv=clamp((t-2.52)/0.5,0,1);
+  kicker.style.opacity=easeOutQuint(kv).toFixed(3);
+  kicker.style.transform="translateY("+((1-easeOutQuint(kv))*10).toFixed(2)+"px)";
+
+  const vv=clamp((t-2.62)/0.72,0,1), vE=easeOutQuint(vv);
+  version.style.opacity=vE.toFixed(3);
+  version.style.filter="blur("+((1-vE)*13).toFixed(2)+"px)";
+  version.style.transform="translateY("+((1-vE)*16).toFixed(2)+"px)";
+
+  // The rule wipes with the SAME easing as the preloader fill — the loading bar,
+  // returning as the thing it was loading.
+  const rv=clamp((t-3.10)/0.85,0,1);
+  rule.style.width=(easeOutCubic(rv)*470).toFixed(1)+"px";
+
+  const tv=clamp((t-3.52)/0.62,0,1), tE=easeOutQuint(tv);
+  tagline.style.opacity=tE.toFixed(3);
+  tagline.style.transform="translateY("+((1-tE)*9).toFixed(2)+"px)";
+
+  // whole-frame push-in across the full 5s
+  document.body.style.transform="";
+}
+
+window.__ready=(async function(){ await document.fonts.ready; render(0); return true; })();
+window.__seek=function(t){ render(t); return true; };
+</script>
+</body></html>

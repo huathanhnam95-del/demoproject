@@ -20,6 +20,7 @@ prompt = (
 payload = {
     "model": "qwen3:14b",
     "messages": [{"role": "user", "content": prompt}],
+    "think": False,
     "format": "json",
     "stream": False,
     "options": {"temperature": 0.1, "num_predict": 2048}

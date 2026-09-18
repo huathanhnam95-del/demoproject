@@ -70,8 +70,13 @@ function createViewCalendarService({ db, accessService, queryService, commandSer
     }
     async function calendar(identity, projectId, input) {
         datesInRange(input.fromDate, input.toDate);
-        const snapshot = await queryService.readSnapshot(identity, id(projectId, 'project ID'));
-        return { calendar: calendarDays(snapshot.calendar, input.fromDate, input.toDate, snapshot.memberUids) };
+        const normalizedId = id(projectId, 'project ID');
+        const context = typeof queryService.readCalendarContext === 'function'
+            ? await queryService.readCalendarContext(identity, normalizedId)
+            : await queryService.readSnapshot(identity, normalizedId);
+        const result = { calendar: calendarDays(context.calendar, input.fromDate, input.toDate, context.memberUids) };
+        if (context.costs) result.costs = context.costs;
+        return result;
     }
     async function readScheduleState(transaction, projectId) {
         async function bounded(name, maximum) {
@@ -100,7 +105,7 @@ function createViewCalendarService({ db, accessService, queryService, commandSer
                 const revision = expectedRevision + 1; const structureRevision = expectedStructureRevision + 1;
                 transaction.update(task.ref, { predecessorTaskIds: predecessors, revision, updatedAt: nowIso(now), updatedBy: identity.uid });
                 transaction.update(projectRef(db, projectId), { structureRevision, dependencyRevision: Number(snapshot.project.data.dependencyRevision || 0) + 1, updatedAt: nowIso(now) });
-                return { result: { task: { id: taskId, revision }, structureRevision, operationId: input.operationId }, before: { taskId, revision: expectedRevision }, after: { taskId, revision }, inverse: { kind: 'taskDependencies', changes: [{ type: 'task', id: taskId, previous: { predecessorTaskIds: task.data.predecessorTaskIds || [] }, fields: ['predecessorTaskIds'], expectedRevisionAfter: revision }], expectedStructureRevisionAfter: structureRevision }, affectedIds: [taskId], affectedPaths: [task.ref.path], beforeRevisions: { [task.ref.path]: expectedRevision }, afterRevisions: { [task.ref.path]: revision }, structureRevisionBefore: expectedStructureRevision, structureRevisionAfter: structureRevision };
+                return { result: { task: { id: taskId, revision, predecessorTaskIds: predecessors }, structureRevision, operationId: input.operationId }, before: { taskId, revision: expectedRevision }, after: { taskId, revision }, inverse: { kind: 'taskDependencies', changes: [{ type: 'task', id: taskId, previous: { predecessorTaskIds: task.data.predecessorTaskIds || [] }, fields: ['predecessorTaskIds'], expectedRevisionAfter: revision }], expectedStructureRevisionAfter: structureRevision }, affectedIds: [taskId], affectedPaths: [task.ref.path], beforeRevisions: { [task.ref.path]: expectedRevision }, afterRevisions: { [task.ref.path]: revision }, structureRevisionBefore: expectedStructureRevision, structureRevisionAfter: structureRevision };
             } });
     }
     async function preview(identity, projectId, input) {
@@ -137,7 +142,7 @@ function createViewCalendarService({ db, accessService, queryService, commandSer
             if (!value.preview.canApply || value.preview.feedVersion !== FEED_VERSION) throw new DomainError(409, 'CALENDAR_INCOMPLETE', 'Resolve calendar choices before applying this preview.');
             const revision = value.expectedRevision + 1;
             transaction.update(task.ref, { ...value.preview.after, revision, updatedAt: nowIso(now), updatedBy: identity.uid });
-            return { result: { task: { id: task.id, revision }, operationId: input.operationId }, before: { taskId: task.id, revision: value.expectedRevision }, after: { taskId: task.id, revision }, inverse: { kind: 'updateTask', changes: [{ type: 'task', id: task.id, previous: value.preview.before, fields: ['startDate', 'dueDate'], expectedRevisionAfter: revision }] }, affectedIds: [task.id], affectedPaths: [task.ref.path], beforeRevisions: { [task.ref.path]: value.expectedRevision }, afterRevisions: { [task.ref.path]: revision } };
+            return { result: { task: { id: task.id, revision, startDate: value.preview.after.startDate, dueDate: value.preview.after.dueDate }, operationId: input.operationId }, before: { taskId: task.id, revision: value.expectedRevision }, after: { taskId: task.id, revision }, inverse: { kind: 'updateTask', changes: [{ type: 'task', id: task.id, previous: value.preview.before, fields: ['startDate', 'dueDate'], expectedRevisionAfter: revision }] }, affectedIds: [task.id], affectedPaths: [task.ref.path], beforeRevisions: { [task.ref.path]: value.expectedRevision }, afterRevisions: { [task.ref.path]: revision } };
         } });
     }
     return { views, calendar, dependencies, preview, apply };

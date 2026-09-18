@@ -350,9 +350,13 @@
     const wasPlaying = !elements.audioElement.paused;
     const curTime = elements.audioElement.currentTime;
 
-    elements.audioElement.src = audioUrl;
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+      window.MediaUrlResolver.loadAudio(elements.audioElement, audioUrl, { mode: 'HIW' });
+    } else {
+      elements.audioElement.src = audioUrl;
+      elements.audioElement.load();
+    }
     elements.audioElement.volume = state.volume;
-    elements.audioElement.load();
 
     const restoreState = () => {
       elements.audioElement.currentTime = curTime;
@@ -663,9 +667,13 @@
         elements.voiceSelect.value = voices[0].id;
         const firstVoiceUrl = `/database/Highlight Incorrect Words/audio/${qId}/${voices[0].file}`;
         if (elements.audioElement) {
-          elements.audioElement.src = firstVoiceUrl;
+          if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+            window.MediaUrlResolver.loadAudio(elements.audioElement, firstVoiceUrl, { mode: 'HIW' });
+          } else {
+            elements.audioElement.src = firstVoiceUrl;
+            elements.audioElement.load();
+          }
           elements.audioElement.volume = state.volume;
-          elements.audioElement.load();
         }
         setAudioControlsEnabled(true);
       } else {

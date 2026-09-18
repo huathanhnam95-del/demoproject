@@ -1,0 +1,2566 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "mode": "Take-Notes",
+  "ineligibleForProduction": false,
+  "createdAt": "2026-09-18T08:41:33.017Z",
+  "assetCount": 426,
+  "assets": {
+    "public/database/Take Notes/RL/audio/1.mp3": {
+      "key": "media/sha256/e925accba85b89efda546917411abc8c3c53cbd1325908e9bfc52c8f8fd0e53a.mp3",
+      "sha256": "e925accba85b89efda546917411abc8c3c53cbd1325908e9bfc52c8f8fd0e53a",
+      "size": 1085509,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/10.mp3": {
+      "key": "media/sha256/38605f419c6f8e7aadac6aeb2ba84776cf32ef9fe452e0222d9503ffbbfe4c2f.mp3",
+      "sha256": "38605f419c6f8e7aadac6aeb2ba84776cf32ef9fe452e0222d9503ffbbfe4c2f",
+      "size": 1079117,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/100.mp3": {
+      "key": "media/sha256/af3f4350f672851382f4b86f22272a52878cceecaae479ade8e7488fc93c8b40.mp3",
+      "sha256": "af3f4350f672851382f4b86f22272a52878cceecaae479ade8e7488fc93c8b40",
+      "size": 293185,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/101.mp3": {
+      "key": "media/sha256/98af6baa0f1f5344c362e9e80e8d30a73b96689cdc962fb7dea635ade511408f.mp3",
+      "sha256": "98af6baa0f1f5344c362e9e80e8d30a73b96689cdc962fb7dea635ade511408f",
+      "size": 378193,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/102.mp3": {
+      "key": "media/sha256/8f846469f8c56dbf251320baabcc14f9fd7446c44ca23dfaddd44a59bd355c7e.mp3",
+      "sha256": "8f846469f8c56dbf251320baabcc14f9fd7446c44ca23dfaddd44a59bd355c7e",
+      "size": 365179,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/103.mp3": {
+      "key": "media/sha256/52b42c3918b1e9a6d26714323451f0494ae9a57dc7989897fff1da841d48d172.mp3",
+      "sha256": "52b42c3918b1e9a6d26714323451f0494ae9a57dc7989897fff1da841d48d172",
+      "size": 408438,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/104.mp3": {
+      "key": "media/sha256/5b6bf20d61cc733047044b2a5377e6ebd5890c684d2f34e2e16fca299255bd23.mp3",
+      "sha256": "5b6bf20d61cc733047044b2a5377e6ebd5890c684d2f34e2e16fca299255bd23",
+      "size": 426309,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/105.mp3": {
+      "key": "media/sha256/82c13abab6678d86a597c2643db0c4d09e0d12aca5d42bfb70ee7faa4d4187cc.mp3",
+      "sha256": "82c13abab6678d86a597c2643db0c4d09e0d12aca5d42bfb70ee7faa4d4187cc",
+      "size": 482942,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/106.mp3": {
+      "key": "media/sha256/1e7f9d57128c06ad6e10216dbe8eb1f717d79cfbb96fde696fea67b6e18fddc4.mp3",
+      "sha256": "1e7f9d57128c06ad6e10216dbe8eb1f717d79cfbb96fde696fea67b6e18fddc4",
+      "size": 257553,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/107.mp3": {
+      "key": "media/sha256/f507bc11a6dd640fbca7372a6ab8093b05f8d17fb9edbc33018628ba618d2545.mp3",
+      "sha256": "f507bc11a6dd640fbca7372a6ab8093b05f8d17fb9edbc33018628ba618d2545",
+      "size": 294647,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/108.mp3": {
+      "key": "media/sha256/8fa7bddada8d975a054c3076a91e432790187c91c35edec8a0090b1379f05a0a.mp3",
+      "sha256": "8fa7bddada8d975a054c3076a91e432790187c91c35edec8a0090b1379f05a0a",
+      "size": 341145,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/109.mp3": {
+      "key": "media/sha256/858cf076444d90bd9037adbdf8a412b400e0066955889af32a9c804eb70f0177.mp3",
+      "sha256": "858cf076444d90bd9037adbdf8a412b400e0066955889af32a9c804eb70f0177",
+      "size": 458801,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/11.mp3": {
+      "key": "media/sha256/4058fc6c86c0baa7e538921ce824c28cacac240c9eee6f533e6a45d37715ed11.mp3",
+      "sha256": "4058fc6c86c0baa7e538921ce824c28cacac240c9eee6f533e6a45d37715ed11",
+      "size": 1544705,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/110.mp3": {
+      "key": "media/sha256/845c6a36564e39f4443b5e9733aa09de5853914c6ed643c220096eadf617bb0f.mp3",
+      "sha256": "845c6a36564e39f4443b5e9733aa09de5853914c6ed643c220096eadf617bb0f",
+      "size": 335607,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/111.mp3": {
+      "key": "media/sha256/f07dea2bea0f4cc455f6b340f82ec7663f242c8a5b501b3601de586354a73f58.mp3",
+      "sha256": "f07dea2bea0f4cc455f6b340f82ec7663f242c8a5b501b3601de586354a73f58",
+      "size": 408959,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/112.mp3": {
+      "key": "media/sha256/daff4503f2acdf5effddeb7dd044ef5a15f207dc10f1ac82732dbba6385283c5.mp3",
+      "sha256": "daff4503f2acdf5effddeb7dd044ef5a15f207dc10f1ac82732dbba6385283c5",
+      "size": 285557,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/113.mp3": {
+      "key": "media/sha256/8e626a850df6c7b4906aa5d381a2508b02ad91a9d1a16f399c6fe32346dd16eb.mp3",
+      "sha256": "8e626a850df6c7b4906aa5d381a2508b02ad91a9d1a16f399c6fe32346dd16eb",
+      "size": 343131,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/114.mp3": {
+      "key": "media/sha256/9877f842652b43d3af89a570f32e8c8322e7bcc3a8c4666bb2bb59c90679a324.mp3",
+      "sha256": "9877f842652b43d3af89a570f32e8c8322e7bcc3a8c4666bb2bb59c90679a324",
+      "size": 382941,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/115.mp3": {
+      "key": "media/sha256/3b1856aba654bc85b0f5f7a76ce0ab48a651d731d4a9f75f08fc729273f6af1f.mp3",
+      "sha256": "3b1856aba654bc85b0f5f7a76ce0ab48a651d731d4a9f75f08fc729273f6af1f",
+      "size": 404153,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/116.mp3": {
+      "key": "media/sha256/431aa89c0f134ea14d0e82c6d9715e4f4d4af50bf8653d5c787751c6751d77db.mp3",
+      "sha256": "431aa89c0f134ea14d0e82c6d9715e4f4d4af50bf8653d5c787751c6751d77db",
+      "size": 358178,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/117.mp3": {
+      "key": "media/sha256/f36766c90f4d11fcd390a7ececbfc7ebf41baf9b9df6ca19726aa7270f67fe26.mp3",
+      "sha256": "f36766c90f4d11fcd390a7ececbfc7ebf41baf9b9df6ca19726aa7270f67fe26",
+      "size": 541558,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/118.mp3": {
+      "key": "media/sha256/1f1d2f06a44160cf234fb942522eabb85dbda3e852dd1d339811723f1718f2fd.mp3",
+      "sha256": "1f1d2f06a44160cf234fb942522eabb85dbda3e852dd1d339811723f1718f2fd",
+      "size": 469355,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/119.mp3": {
+      "key": "media/sha256/cfffa5cc4e1d0fc44bcc07675454c0d902165db3e1ef4d34e0962b5145efaf37.mp3",
+      "sha256": "cfffa5cc4e1d0fc44bcc07675454c0d902165db3e1ef4d34e0962b5145efaf37",
+      "size": 391510,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/12.mp3": {
+      "key": "media/sha256/3bc0e3b4de7d7072d4367d454e93504dd6329aa44467664d9d94cb32aefc1361.mp3",
+      "sha256": "3bc0e3b4de7d7072d4367d454e93504dd6329aa44467664d9d94cb32aefc1361",
+      "size": 1191111,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/120.mp3": {
+      "key": "media/sha256/9b555272262bc89df0a1a785527eada0db53d6722bba24943fce65d3001d7666.mp3",
+      "sha256": "9b555272262bc89df0a1a785527eada0db53d6722bba24943fce65d3001d7666",
+      "size": 472494,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/121.mp3": {
+      "key": "media/sha256/2ba03f88c3c7ccc9ec79c432ad8bbd78185a4681e86f03f0abeaa73513c1344b.mp3",
+      "sha256": "2ba03f88c3c7ccc9ec79c432ad8bbd78185a4681e86f03f0abeaa73513c1344b",
+      "size": 271200,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/122.mp3": {
+      "key": "media/sha256/cd963cb23218a9dabe99bb29d436d856e7e14a5689c6019d3a63dd78705d0bc0.mp3",
+      "sha256": "cd963cb23218a9dabe99bb29d436d856e7e14a5689c6019d3a63dd78705d0bc0",
+      "size": 2158695,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/123.mp3": {
+      "key": "media/sha256/5ea8fa71d8a23f68e5be4cc7991c4e4ae934605cd2de26f9eddec31edde10d75.mp3",
+      "sha256": "5ea8fa71d8a23f68e5be4cc7991c4e4ae934605cd2de26f9eddec31edde10d75",
+      "size": 2059220,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/124.mp3": {
+      "key": "media/sha256/726810eeac9a126895a8327308c4d9fcc6f178e8e3831169315b92ba1abcd39e.mp3",
+      "sha256": "726810eeac9a126895a8327308c4d9fcc6f178e8e3831169315b92ba1abcd39e",
+      "size": 1408926,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/125.mp3": {
+      "key": "media/sha256/4b8ab7bd8fe3ca70153339571c37881b22f39ddf0bc6eb8081da20cddcc64295.mp3",
+      "sha256": "4b8ab7bd8fe3ca70153339571c37881b22f39ddf0bc6eb8081da20cddcc64295",
+      "size": 1158518,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/126.mp3": {
+      "key": "media/sha256/19b6cb4be5d1e86ec0215c2575e04cad27d65f8a5acd6d35a83f8a1f88feecc8.mp3",
+      "sha256": "19b6cb4be5d1e86ec0215c2575e04cad27d65f8a5acd6d35a83f8a1f88feecc8",
+      "size": 523872,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/127.mp3": {
+      "key": "media/sha256/837d36b778e846aa583f2b9c7b10985f781bd127dc4af9a45400506e655bf739.mp3",
+      "sha256": "837d36b778e846aa583f2b9c7b10985f781bd127dc4af9a45400506e655bf739",
+      "size": 274368,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/128.mp3": {
+      "key": "media/sha256/567295227f4c6b034ad636389f108c12a61694307adf2fdb9f048b2fc98f85ce.mp3",
+      "sha256": "567295227f4c6b034ad636389f108c12a61694307adf2fdb9f048b2fc98f85ce",
+      "size": 631872,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/129.mp3": {
+      "key": "media/sha256/957e9d9765999f8c526b41810ae9e2b68dd98b24bb920f30c1929c1931457171.mp3",
+      "sha256": "957e9d9765999f8c526b41810ae9e2b68dd98b24bb920f30c1929c1931457171",
+      "size": 832903,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/13.mp3": {
+      "key": "media/sha256/42239522ab7739015c4d03ac900e638b6001ddc6cfc260a3b572bc4deb2cfd91.mp3",
+      "sha256": "42239522ab7739015c4d03ac900e638b6001ddc6cfc260a3b572bc4deb2cfd91",
+      "size": 2338132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/130.mp3": {
+      "key": "media/sha256/db96b02bc51e6ce776bb734fd536bb455417973edb5737b5038d81ad431ff5d2.mp3",
+      "sha256": "db96b02bc51e6ce776bb734fd536bb455417973edb5737b5038d81ad431ff5d2",
+      "size": 920833,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/131.mp3": {
+      "key": "media/sha256/bfb61f83b7bb97151cf79e4fe451d0c9f7705940d105ea3830db2f45527f5306.mp3",
+      "sha256": "bfb61f83b7bb97151cf79e4fe451d0c9f7705940d105ea3830db2f45527f5306",
+      "size": 349152,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/133.mp3": {
+      "key": "media/sha256/b01d5593f2232fd5db5bbc1de7f652b7e25886620d3766b225e2227c448e37ea.mp3",
+      "sha256": "b01d5593f2232fd5db5bbc1de7f652b7e25886620d3766b225e2227c448e37ea",
+      "size": 292012,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/134.mp3": {
+      "key": "media/sha256/3bc36d5bc5c7a3d544dd9962781b78c067c99351c6882b38c49d0590c447daf9.mp3",
+      "sha256": "3bc36d5bc5c7a3d544dd9962781b78c067c99351c6882b38c49d0590c447daf9",
+      "size": 344736,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/135.mp3": {
+      "key": "media/sha256/a90296f9db4c5843b4811a10c2ee3e8c006aae7af8dd8dff240f812c4c98c9ff.mp3",
+      "sha256": "a90296f9db4c5843b4811a10c2ee3e8c006aae7af8dd8dff240f812c4c98c9ff",
+      "size": 287808,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/136.mp3": {
+      "key": "media/sha256/865496ae057c10e42cd3a19000b2bb6783e3247c6c4469802938ad606b017914.mp3",
+      "sha256": "865496ae057c10e42cd3a19000b2bb6783e3247c6c4469802938ad606b017914",
+      "size": 220320,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/137.mp3": {
+      "key": "media/sha256/fd1e93523255c880be931e44a2818b795692df56341cb11031160e79c1235029.mp3",
+      "sha256": "fd1e93523255c880be931e44a2818b795692df56341cb11031160e79c1235029",
+      "size": 291168,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/138.mp3": {
+      "key": "media/sha256/89754ba4703d7f3cc080bd4a5922d1378888bb48d2a8186f1fce0389921b925e.mp3",
+      "sha256": "89754ba4703d7f3cc080bd4a5922d1378888bb48d2a8186f1fce0389921b925e",
+      "size": 1125928,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/139.mp3": {
+      "key": "media/sha256/44848f4ef35f286b9183073b625ad891175e68bca47db1d99a138b048c70b910.mp3",
+      "sha256": "44848f4ef35f286b9183073b625ad891175e68bca47db1d99a138b048c70b910",
+      "size": 2708628,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/14.wav": {
+      "key": "media/sha256/96c7e4645b486d7cfd8fac342f9588352674c0a66aafd4a3ce146c5f0f2ef1b5.wav",
+      "sha256": "96c7e4645b486d7cfd8fac342f9588352674c0a66aafd4a3ce146c5f0f2ef1b5",
+      "size": 722824,
+      "contentType": "audio/wav"
+    },
+    "public/database/Take Notes/RL/audio/140.mp3": {
+      "key": "media/sha256/964b2b18f006355e6e000f8a261cc18eac0df754422e6e2abd75133d75196cf0.mp3",
+      "sha256": "964b2b18f006355e6e000f8a261cc18eac0df754422e6e2abd75133d75196cf0",
+      "size": 175680,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/141.mp3": {
+      "key": "media/sha256/aa22f76f630feaebecb7be739937fca1dda2fe32aaf97a91e0255301c4388171.mp3",
+      "sha256": "aa22f76f630feaebecb7be739937fca1dda2fe32aaf97a91e0255301c4388171",
+      "size": 225984,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/142.mp3": {
+      "key": "media/sha256/e13592859fcabcbd43cedd572519a5c85e24622f5d79eea4b6e1a71ce9e9f537.mp3",
+      "sha256": "e13592859fcabcbd43cedd572519a5c85e24622f5d79eea4b6e1a71ce9e9f537",
+      "size": 1462272,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/143.mp3": {
+      "key": "media/sha256/08de8b51f009bac8a298e1bdd02562541bc962a783df48575688e8431c501326.mp3",
+      "sha256": "08de8b51f009bac8a298e1bdd02562541bc962a783df48575688e8431c501326",
+      "size": 1034733,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/144.mp3": {
+      "key": "media/sha256/51f0777df5844121521c007eb7ce5a39a3ba244fc12f802399d896f8839a237e.mp3",
+      "sha256": "51f0777df5844121521c007eb7ce5a39a3ba244fc12f802399d896f8839a237e",
+      "size": 2225467,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/145.mp3": {
+      "key": "media/sha256/5e7d9f4bc50d34479e43daedde46564c6ccc6cc3e6c1bb41df34ff2f658fd1f5.mp3",
+      "sha256": "5e7d9f4bc50d34479e43daedde46564c6ccc6cc3e6c1bb41df34ff2f658fd1f5",
+      "size": 440544,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/146.mp3": {
+      "key": "media/sha256/2093450adc3c29e5f84c43464e4f45f612e7d95ea0683ab632bcd7f04bbff1e3.mp3",
+      "sha256": "2093450adc3c29e5f84c43464e4f45f612e7d95ea0683ab632bcd7f04bbff1e3",
+      "size": 456096,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/147.mp3": {
+      "key": "media/sha256/0fa71dec40d1f9b58b7921b2ffe438ac985d80b7fe885566650de349d4a59f8c.mp3",
+      "sha256": "0fa71dec40d1f9b58b7921b2ffe438ac985d80b7fe885566650de349d4a59f8c",
+      "size": 1467957,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/148.mp3": {
+      "key": "media/sha256/2fd680ea1218994c6a68b88b69f1bb97a27854114f0c692700c36fe2c5e2769d.mp3",
+      "sha256": "2fd680ea1218994c6a68b88b69f1bb97a27854114f0c692700c36fe2c5e2769d",
+      "size": 1016550,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/149.mp3": {
+      "key": "media/sha256/53d85d3bfa8caabc70ab3fc8b79ba5838f82367f035496a403d2f1d6a57620f9.mp3",
+      "sha256": "53d85d3bfa8caabc70ab3fc8b79ba5838f82367f035496a403d2f1d6a57620f9",
+      "size": 1737522,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/15.mp3": {
+      "key": "media/sha256/ba65b66823a09bf0bfddb0c9b958997690ebac16dc3cd362c48fece71f54683c.mp3",
+      "sha256": "ba65b66823a09bf0bfddb0c9b958997690ebac16dc3cd362c48fece71f54683c",
+      "size": 756340,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/150.mp3": {
+      "key": "media/sha256/2b935473c15126bee394a5c22fa970ecb4ee975b47db362fb62ae7c927c6dc4c.mp3",
+      "sha256": "2b935473c15126bee394a5c22fa970ecb4ee975b47db362fb62ae7c927c6dc4c",
+      "size": 1212153,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/151.mp3": {
+      "key": "media/sha256/63acf3cdb29f370ef9ac85a6e17ae0604ba74dd3e67e5a564adad623caa6f849.mp3",
+      "sha256": "63acf3cdb29f370ef9ac85a6e17ae0604ba74dd3e67e5a564adad623caa6f849",
+      "size": 1398931,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/152.mp3": {
+      "key": "media/sha256/6aa0ddaf1f0b26a63dc4c91badd2a8c08beb47fcb479dacc3b2ac877e9781b47.mp3",
+      "sha256": "6aa0ddaf1f0b26a63dc4c91badd2a8c08beb47fcb479dacc3b2ac877e9781b47",
+      "size": 1206298,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/153.mp3": {
+      "key": "media/sha256/b5cb028c4cbb3221df8da89cfa2851a7e811337ffc7bb0a01f3678f0364c6d0d.mp3",
+      "sha256": "b5cb028c4cbb3221df8da89cfa2851a7e811337ffc7bb0a01f3678f0364c6d0d",
+      "size": 2304000,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/154.mp3": {
+      "key": "media/sha256/d8baec9d21e551f7c3f755a83edaad111f57dfd7d60ba69403decdd4cd84338b.mp3",
+      "sha256": "d8baec9d21e551f7c3f755a83edaad111f57dfd7d60ba69403decdd4cd84338b",
+      "size": 1973729,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/155.mp3": {
+      "key": "media/sha256/cac7620bbed1b8e41beb6ae0c92fe41f2e995160a3898fece5ee1ae5fc9a53f3.mp3",
+      "sha256": "cac7620bbed1b8e41beb6ae0c92fe41f2e995160a3898fece5ee1ae5fc9a53f3",
+      "size": 1555590,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/157.mp3": {
+      "key": "media/sha256/24ba47cc51f1f970560a038836d8a59d06e8346b20daadc7f480ef5a0da36a88.mp3",
+      "sha256": "24ba47cc51f1f970560a038836d8a59d06e8346b20daadc7f480ef5a0da36a88",
+      "size": 1056946,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/159.mp3": {
+      "key": "media/sha256/d71ca800e0a92fbc1e53d1389fe68d0a4e9d1cc673b62c2a6ea7002546d62fde.mp3",
+      "sha256": "d71ca800e0a92fbc1e53d1389fe68d0a4e9d1cc673b62c2a6ea7002546d62fde",
+      "size": 635956,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/16.mp3": {
+      "key": "media/sha256/8765d51792f453dd1ee72dcfa7269166decde232df172d6fea2c2c7ef26ff7a2.mp3",
+      "sha256": "8765d51792f453dd1ee72dcfa7269166decde232df172d6fea2c2c7ef26ff7a2",
+      "size": 1373064,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/160.mp3": {
+      "key": "media/sha256/93ed218e8ee583f6fa24f620a2d1d22c634a4ae8305774b019b9396c8388e54e.mp3",
+      "sha256": "93ed218e8ee583f6fa24f620a2d1d22c634a4ae8305774b019b9396c8388e54e",
+      "size": 1968933,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/161.mp3": {
+      "key": "media/sha256/4139ae8a6912a7776e5eb596c4f2868ddb163cf36fa314be2c5763f13891d880.mp3",
+      "sha256": "4139ae8a6912a7776e5eb596c4f2868ddb163cf36fa314be2c5763f13891d880",
+      "size": 1697183,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/162.mp3": {
+      "key": "media/sha256/d4fe7e880525b2b5e08190178f0506495b01b10c575b3d45d632be4cdfd5b300.mp3",
+      "sha256": "d4fe7e880525b2b5e08190178f0506495b01b10c575b3d45d632be4cdfd5b300",
+      "size": 1693940,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/163.mp3": {
+      "key": "media/sha256/b2ebb19c31d3c365cbef1f95569ed790138c88cbe166ed8da0b9ea7060d69225.mp3",
+      "sha256": "b2ebb19c31d3c365cbef1f95569ed790138c88cbe166ed8da0b9ea7060d69225",
+      "size": 1446085,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/164.mp3": {
+      "key": "media/sha256/a46284b5fde95f6c43b6c338a5c1575e63143a70571ca828dc2c68495ecb39d6.mp3",
+      "sha256": "a46284b5fde95f6c43b6c338a5c1575e63143a70571ca828dc2c68495ecb39d6",
+      "size": 1536703,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/165.mp3": {
+      "key": "media/sha256/0053cbf9333df03c4e3f3c0b0bcc93bda10680ed360936f82116ffdbda6235c8.mp3",
+      "sha256": "0053cbf9333df03c4e3f3c0b0bcc93bda10680ed360936f82116ffdbda6235c8",
+      "size": 1270124,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/166.mp3": {
+      "key": "media/sha256/dac7ce2e2bebbe899f80fa7a8450c2edba09afd5d5917e439a6201b07fb01e12.mp3",
+      "sha256": "dac7ce2e2bebbe899f80fa7a8450c2edba09afd5d5917e439a6201b07fb01e12",
+      "size": 827087,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/167.mp3": {
+      "key": "media/sha256/1a557c35cd6f67636f479b444f110c4449a09d50170992ad2d9d7878deda5aea.mp3",
+      "sha256": "1a557c35cd6f67636f479b444f110c4449a09d50170992ad2d9d7878deda5aea",
+      "size": 607659,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/168.mp3": {
+      "key": "media/sha256/8315b9b8cc38c062838f1860c9f5640d879b26bd62250a98cc227e5aec44199f.mp3",
+      "sha256": "8315b9b8cc38c062838f1860c9f5640d879b26bd62250a98cc227e5aec44199f",
+      "size": 1244062,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/169.mp3": {
+      "key": "media/sha256/bb072f3dbc94090d70d7a472d63771d238d082c61be2690e3e5c0b134ff1521e.mp3",
+      "sha256": "bb072f3dbc94090d70d7a472d63771d238d082c61be2690e3e5c0b134ff1521e",
+      "size": 1083714,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/17.mp3": {
+      "key": "media/sha256/e8b3d185c629d08074a72390be3282b6838ed10d46495a76b55abaf1492d3c8b.mp3",
+      "sha256": "e8b3d185c629d08074a72390be3282b6838ed10d46495a76b55abaf1492d3c8b",
+      "size": 1731256,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/170.mp3": {
+      "key": "media/sha256/e4ace53b3eb8571b401efbdbb3182e1669980398199b55ab155460246e3bc355.mp3",
+      "sha256": "e4ace53b3eb8571b401efbdbb3182e1669980398199b55ab155460246e3bc355",
+      "size": 1350362,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/171.mp3": {
+      "key": "media/sha256/c5f2d873ce1c999ee0aab191d29bc47290ac023f03fc06d17c80abcb1f83a3f9.mp3",
+      "sha256": "c5f2d873ce1c999ee0aab191d29bc47290ac023f03fc06d17c80abcb1f83a3f9",
+      "size": 1394982,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/172.mp3": {
+      "key": "media/sha256/10416dc7a41dc5403e52ea0daffe760428cb6576ea93c1d216995afb7516ab68.mp3",
+      "sha256": "10416dc7a41dc5403e52ea0daffe760428cb6576ea93c1d216995afb7516ab68",
+      "size": 1492845,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/173.mp3": {
+      "key": "media/sha256/b0d4c87c50c183e2cbf8108decf7ff11e732da2da39f595247fff4736dfb0710.mp3",
+      "sha256": "b0d4c87c50c183e2cbf8108decf7ff11e732da2da39f595247fff4736dfb0710",
+      "size": 344246,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/174.mp3": {
+      "key": "media/sha256/cd1e42403850ed9f3c62569289d154ef1797506d61498a7a1aab2199e43d34a1.mp3",
+      "sha256": "cd1e42403850ed9f3c62569289d154ef1797506d61498a7a1aab2199e43d34a1",
+      "size": 1778856,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/175.mp3": {
+      "key": "media/sha256/4647ef9b3c40859ec074a2163bbc0a5fd81f821d807c15ca70b64c5277f207ab.mp3",
+      "sha256": "4647ef9b3c40859ec074a2163bbc0a5fd81f821d807c15ca70b64c5277f207ab",
+      "size": 902148,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/18.mp3": {
+      "key": "media/sha256/dda90a16f7b66b004c9064806054ee504528a11794e495646a8801c45e9d6188.mp3",
+      "sha256": "dda90a16f7b66b004c9064806054ee504528a11794e495646a8801c45e9d6188",
+      "size": 906387,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/180.mp3": {
+      "key": "media/sha256/12a7a2369851db48600ea9536a4ee112ded50e6d862ce6b89fdf279cb9396c18.mp3",
+      "sha256": "12a7a2369851db48600ea9536a4ee112ded50e6d862ce6b89fdf279cb9396c18",
+      "size": 1084707,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/181.mp3": {
+      "key": "media/sha256/da4faab445b4b4cb577ef94412567163fb1ae37054005b87739eca7acef7eb47.mp3",
+      "sha256": "da4faab445b4b4cb577ef94412567163fb1ae37054005b87739eca7acef7eb47",
+      "size": 3003035,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/182.mp3": {
+      "key": "media/sha256/4e2a2fb76d3bb3b295b4e469960f64f7dd0ec98d9170340b771ea0396435775f.mp3",
+      "sha256": "4e2a2fb76d3bb3b295b4e469960f64f7dd0ec98d9170340b771ea0396435775f",
+      "size": 1259263,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/183.mp3": {
+      "key": "media/sha256/18f585a676fd8736b07448e7ec227d3a00559ec2e6d537b6398d73fc14ad9b02.mp3",
+      "sha256": "18f585a676fd8736b07448e7ec227d3a00559ec2e6d537b6398d73fc14ad9b02",
+      "size": 1488778,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/184.mp3": {
+      "key": "media/sha256/8c8326d2032c16d5c857863d12d9a3b5b57e966c7818c871ee9b381130deda2e.mp3",
+      "sha256": "8c8326d2032c16d5c857863d12d9a3b5b57e966c7818c871ee9b381130deda2e",
+      "size": 266445,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/185.mp3": {
+      "key": "media/sha256/b55c8daf9f99f70625010fa8fc3f0bef2e1203e0aed5be4abd5a3cfe59394929.mp3",
+      "sha256": "b55c8daf9f99f70625010fa8fc3f0bef2e1203e0aed5be4abd5a3cfe59394929",
+      "size": 1206483,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/186.mp3": {
+      "key": "media/sha256/4b03216dc86f2c2bf22329ce521e53f037be7d793654bfb209380f5bef195581.mp3",
+      "sha256": "4b03216dc86f2c2bf22329ce521e53f037be7d793654bfb209380f5bef195581",
+      "size": 629515,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/188.mp3": {
+      "key": "media/sha256/55fa4931d3212aafd838186e3b8600b57cfc25061a1dae961df7561e896de3cb.mp3",
+      "sha256": "55fa4931d3212aafd838186e3b8600b57cfc25061a1dae961df7561e896de3cb",
+      "size": 949949,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/189.mp3": {
+      "key": "media/sha256/5f6f17fde49769a2e8754ef3ae15543a8cfe147ab9bc486dc2d426c639abeff4.mp3",
+      "sha256": "5f6f17fde49769a2e8754ef3ae15543a8cfe147ab9bc486dc2d426c639abeff4",
+      "size": 1236669,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/191.mp3": {
+      "key": "media/sha256/f5a5c8c304c8f6068f33fa600a4695a2331e9b4221450866d023dbe2ded6edfe.mp3",
+      "sha256": "f5a5c8c304c8f6068f33fa600a4695a2331e9b4221450866d023dbe2ded6edfe",
+      "size": 413664,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/192.mp3": {
+      "key": "media/sha256/37cfbb9e78b96da8e2ea6cfb5d2bcd69cca248d120033c2d115d7ecd226553b4.mp3",
+      "sha256": "37cfbb9e78b96da8e2ea6cfb5d2bcd69cca248d120033c2d115d7ecd226553b4",
+      "size": 1795094,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/193.mp3": {
+      "key": "media/sha256/55edda10dc6391adbbef142c7b1043f86c3b11330039216d4f635f323ac4ea2e.mp3",
+      "sha256": "55edda10dc6391adbbef142c7b1043f86c3b11330039216d4f635f323ac4ea2e",
+      "size": 1533822,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/194.mp3": {
+      "key": "media/sha256/bed550f374776ac233cfd484a09e44d88cf63541e81399daafd6534d444d23d1.mp3",
+      "sha256": "bed550f374776ac233cfd484a09e44d88cf63541e81399daafd6534d444d23d1",
+      "size": 1341601,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/199.mp3": {
+      "key": "media/sha256/c519a19398478a44cc31554ca8f9cf3b4490e404fccfff44f65530055448f832.mp3",
+      "sha256": "c519a19398478a44cc31554ca8f9cf3b4490e404fccfff44f65530055448f832",
+      "size": 481839,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/2.mp3": {
+      "key": "media/sha256/439a0c488e4f8b24b84b125edc46c0fe3920177c8675f0afb380e701eccdd55d.mp3",
+      "sha256": "439a0c488e4f8b24b84b125edc46c0fe3920177c8675f0afb380e701eccdd55d",
+      "size": 676092,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/200.mp3": {
+      "key": "media/sha256/ede57ff07293b329dfdbb6cb6130526492271eeba37adc49020b917d3eb6591e.mp3",
+      "sha256": "ede57ff07293b329dfdbb6cb6130526492271eeba37adc49020b917d3eb6591e",
+      "size": 1039010,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/203.mp3": {
+      "key": "media/sha256/8c5f006745137d11009a59c2ac045eb9afc3a4c140f2bd10f8401d337e9cfe2a.mp3",
+      "sha256": "8c5f006745137d11009a59c2ac045eb9afc3a4c140f2bd10f8401d337e9cfe2a",
+      "size": 1617698,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/216.mp3": {
+      "key": "media/sha256/719370b45efafd6537c98a9ecdcd89bd5906de729daae7f6408adb5c2f3667d2.mp3",
+      "sha256": "719370b45efafd6537c98a9ecdcd89bd5906de729daae7f6408adb5c2f3667d2",
+      "size": 772290,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/217.mp3": {
+      "key": "media/sha256/b0fc879d73628917e208d20a7e9930e6c9371b302a2bfeeddc43b0e7384ae29d.mp3",
+      "sha256": "b0fc879d73628917e208d20a7e9930e6c9371b302a2bfeeddc43b0e7384ae29d",
+      "size": 1744354,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/22.mp3": {
+      "key": "media/sha256/611d7192c48f37242e61ea4a0d37633671a04e10632d77a004adfe5e616865be.mp3",
+      "sha256": "611d7192c48f37242e61ea4a0d37633671a04e10632d77a004adfe5e616865be",
+      "size": 791866,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/223.mp3": {
+      "key": "media/sha256/5fe1173d474edc6458af2094ec96b876375d06594bc28e2fe80a14e4893be67a.mp3",
+      "sha256": "5fe1173d474edc6458af2094ec96b876375d06594bc28e2fe80a14e4893be67a",
+      "size": 2138207,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/229.mp3": {
+      "key": "media/sha256/5225af6a17c50fcfa3516505ebf507b74cb79cf26192b6a948cf60bad6adb65d.mp3",
+      "sha256": "5225af6a17c50fcfa3516505ebf507b74cb79cf26192b6a948cf60bad6adb65d",
+      "size": 1148897,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/23.mp3": {
+      "key": "media/sha256/2cb5a15d5a9e3e2869a959fb6a7b05c4095af483d334fc7d7a3ea8f8c5a612d7.mp3",
+      "sha256": "2cb5a15d5a9e3e2869a959fb6a7b05c4095af483d334fc7d7a3ea8f8c5a612d7",
+      "size": 797927,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/230.mp3": {
+      "key": "media/sha256/b5a2b103b18f29a0d0aa321f2af0c8bb6dc5a52869b513f0e6d7de795c9ebaa8.mp3",
+      "sha256": "b5a2b103b18f29a0d0aa321f2af0c8bb6dc5a52869b513f0e6d7de795c9ebaa8",
+      "size": 2129350,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/232.mp3": {
+      "key": "media/sha256/797edf3c0ff798750162abf4e623b38439ea8375a91c988795f07ffeefd25e77.mp3",
+      "sha256": "797edf3c0ff798750162abf4e623b38439ea8375a91c988795f07ffeefd25e77",
+      "size": 967202,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/233.mp3": {
+      "key": "media/sha256/60f0142d72069431c2b001ecd6cd11262dd63ae767b813e4203cea66ca7224a9.mp3",
+      "sha256": "60f0142d72069431c2b001ecd6cd11262dd63ae767b813e4203cea66ca7224a9",
+      "size": 642432,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/234.mp3": {
+      "key": "media/sha256/76f4f94192ce054100856ab45b2368473eda4d4e2d91a5fb24c0d954f7c4a465.mp3",
+      "sha256": "76f4f94192ce054100856ab45b2368473eda4d4e2d91a5fb24c0d954f7c4a465",
+      "size": 658466,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/235.mp3": {
+      "key": "media/sha256/6c3ef6534dddcef8b58caa30cda8794f960d594a71f5840b40e280dc4d607c62.mp3",
+      "sha256": "6c3ef6534dddcef8b58caa30cda8794f960d594a71f5840b40e280dc4d607c62",
+      "size": 1386093,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/237.mp3": {
+      "key": "media/sha256/4b03a4af8db8e9c4b56f8097a2e9a3f3ba97e0ee6b18d278bedb1928a325c334.mp3",
+      "sha256": "4b03a4af8db8e9c4b56f8097a2e9a3f3ba97e0ee6b18d278bedb1928a325c334",
+      "size": 768674,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/238.mp3": {
+      "key": "media/sha256/a9605a76f71e96b3a21c9fa19265e028fb033836ae540d2a499ac606f0017bcc.mp3",
+      "sha256": "a9605a76f71e96b3a21c9fa19265e028fb033836ae540d2a499ac606f0017bcc",
+      "size": 709922,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/24.mp3": {
+      "key": "media/sha256/93591b10c38d57e27d5cba5625a0333d776051d9c3729fdc4efd0a31fa3272c7.mp3",
+      "sha256": "93591b10c38d57e27d5cba5625a0333d776051d9c3729fdc4efd0a31fa3272c7",
+      "size": 857277,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/240.mp3": {
+      "key": "media/sha256/7ec3a9eb559e648b3d397df9ee417c1f91d0df86d2316e51118e22fbe1f1250e.mp3",
+      "sha256": "7ec3a9eb559e648b3d397df9ee417c1f91d0df86d2316e51118e22fbe1f1250e",
+      "size": 190560,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/242.mp3": {
+      "key": "media/sha256/f6ec98922e5b84e1b022fc3d4af6e517165d1f3eeab24391978cc9244c7e84cb.mp3",
+      "sha256": "f6ec98922e5b84e1b022fc3d4af6e517165d1f3eeab24391978cc9244c7e84cb",
+      "size": 1119266,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/243.mp3": {
+      "key": "media/sha256/7807fefebcc1ad5c0f2dfce02d56c97caee729eeb80bb7ea369f86128d791dca.mp3",
+      "sha256": "7807fefebcc1ad5c0f2dfce02d56c97caee729eeb80bb7ea369f86128d791dca",
+      "size": 1143074,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/244.mp3": {
+      "key": "media/sha256/c6919995e5b6b8691942b11ea3bf9b36bdc2cb70c925b1ac4126df889353c509.mp3",
+      "sha256": "c6919995e5b6b8691942b11ea3bf9b36bdc2cb70c925b1ac4126df889353c509",
+      "size": 2144801,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/245.mp3": {
+      "key": "media/sha256/304feb2e7623cdb48de5171920ad4fa2ac6a532e0cb4d61f9ac150105fa9467a.mp3",
+      "sha256": "304feb2e7623cdb48de5171920ad4fa2ac6a532e0cb4d61f9ac150105fa9467a",
+      "size": 1379266,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/247.mp3": {
+      "key": "media/sha256/d0f1a366fb8d445420c622cda2cc13a6c0aa7d58577c751b068d3cffde1232d8.mp3",
+      "sha256": "d0f1a366fb8d445420c622cda2cc13a6c0aa7d58577c751b068d3cffde1232d8",
+      "size": 1161041,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/248.mp3": {
+      "key": "media/sha256/385392b9b375d672b033c3df96dd51fb42e63b5c6deae6f5b71dae0645a8b3fd.mp3",
+      "sha256": "385392b9b375d672b033c3df96dd51fb42e63b5c6deae6f5b71dae0645a8b3fd",
+      "size": 576058,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/249.mp3": {
+      "key": "media/sha256/348f8fbebb18d383f1742568f04f82f1e28a86aeb76e9ee3b05c6bc765c4f126.mp3",
+      "sha256": "348f8fbebb18d383f1742568f04f82f1e28a86aeb76e9ee3b05c6bc765c4f126",
+      "size": 1280879,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/25.mp3": {
+      "key": "media/sha256/f0c8939f0c53d118d930796b1175198c4e596733defb3eacd49fd93ce2c1baf5.mp3",
+      "sha256": "f0c8939f0c53d118d930796b1175198c4e596733defb3eacd49fd93ce2c1baf5",
+      "size": 661045,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/250.mp3": {
+      "key": "media/sha256/ad1b8d3c7e2f0cbd31dd667e0965e3e77f27574bef13277859fcce57434b42a0.mp3",
+      "sha256": "ad1b8d3c7e2f0cbd31dd667e0965e3e77f27574bef13277859fcce57434b42a0",
+      "size": 691874,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/252.mp3": {
+      "key": "media/sha256/42cecf2951b8567d596af4319c4473c9b9cd56a49a75fe9e169b41082c69baa7.mp3",
+      "sha256": "42cecf2951b8567d596af4319c4473c9b9cd56a49a75fe9e169b41082c69baa7",
+      "size": 911276,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/253.mp3": {
+      "key": "media/sha256/a7b017cba4a13c95ad00371f323b7e1b5ba31d2e2fab2d25a8429e6a8d83178d.mp3",
+      "sha256": "a7b017cba4a13c95ad00371f323b7e1b5ba31d2e2fab2d25a8429e6a8d83178d",
+      "size": 752869,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/254.mp3": {
+      "key": "media/sha256/faad0a5fb4a08333230eb2f7d8addc1f0d442aad5c0cbc2272965286a8b02bbc.mp3",
+      "sha256": "faad0a5fb4a08333230eb2f7d8addc1f0d442aad5c0cbc2272965286a8b02bbc",
+      "size": 1125026,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/256.mp3": {
+      "key": "media/sha256/25035e6e2f3974e35e4479ea47529a6dc3f7e4c6b59becf54b1c456f56045148.mp3",
+      "sha256": "25035e6e2f3974e35e4479ea47529a6dc3f7e4c6b59becf54b1c456f56045148",
+      "size": 1013282,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/257.mp3": {
+      "key": "media/sha256/7c467f1e802d0f685e7f8db13d6f7c797f7be8f69a9c549e977472413a1414ba.mp3",
+      "sha256": "7c467f1e802d0f685e7f8db13d6f7c797f7be8f69a9c549e977472413a1414ba",
+      "size": 549312,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/258.mp3": {
+      "key": "media/sha256/4069153938bc32d841ac58ad7c96504c286aa5a7eb222ab10f1961e7ab643892.mp3",
+      "sha256": "4069153938bc32d841ac58ad7c96504c286aa5a7eb222ab10f1961e7ab643892",
+      "size": 998892,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/259.mp3": {
+      "key": "media/sha256/811bfc20f1536db5126bcd3d281431823e21c7a3aa7f6e4cb3530530d72c2da6.mp3",
+      "sha256": "811bfc20f1536db5126bcd3d281431823e21c7a3aa7f6e4cb3530530d72c2da6",
+      "size": 300214,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/26.mp3": {
+      "key": "media/sha256/96e2818cfdbab2a2196fb8ebdbd3c0fa4b6fd54344a8ee0ba29bbfec211ebd04.mp3",
+      "sha256": "96e2818cfdbab2a2196fb8ebdbd3c0fa4b6fd54344a8ee0ba29bbfec211ebd04",
+      "size": 1390478,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/260.mp3": {
+      "key": "media/sha256/39fec84d3ba62960a908410a9d54bb7726125ea1fdd5aa71d566f9f9c3b139b2.mp3",
+      "sha256": "39fec84d3ba62960a908410a9d54bb7726125ea1fdd5aa71d566f9f9c3b139b2",
+      "size": 762530,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/261.mp3": {
+      "key": "media/sha256/347ba5f34112ac97f93b079892715912be1155132f2f0a725784011a7b292700.mp3",
+      "sha256": "347ba5f34112ac97f93b079892715912be1155132f2f0a725784011a7b292700",
+      "size": 1316642,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/262.mp3": {
+      "key": "media/sha256/53b2e935583387c418ed84dd1870b7b0e3376252c0b258bcbffac38291a61473.mp3",
+      "sha256": "53b2e935583387c418ed84dd1870b7b0e3376252c0b258bcbffac38291a61473",
+      "size": 1491765,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/263.mp3": {
+      "key": "media/sha256/f79991cc744f95afa12437dcfe9714e6486a6214c7a40500bee911b4c7552d11.mp3",
+      "sha256": "f79991cc744f95afa12437dcfe9714e6486a6214c7a40500bee911b4c7552d11",
+      "size": 1174819,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/264.mp3": {
+      "key": "media/sha256/0ee70d60765196f3688c25eff57aff6c84501bf6d5f42f34031a2a522ec0bd81.mp3",
+      "sha256": "0ee70d60765196f3688c25eff57aff6c84501bf6d5f42f34031a2a522ec0bd81",
+      "size": 951842,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/265.mp3": {
+      "key": "media/sha256/4bc0f0819d4aaa2d7097121fa014d8bc9ff792647c2eed031f99570b97ce1d94.mp3",
+      "sha256": "4bc0f0819d4aaa2d7097121fa014d8bc9ff792647c2eed031f99570b97ce1d94",
+      "size": 237520,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/266.mp3": {
+      "key": "media/sha256/782a1c706d8e77a30aa4a62268d5f250aaa5940b85d4374d1b3db252738a31d4.mp3",
+      "sha256": "782a1c706d8e77a30aa4a62268d5f250aaa5940b85d4374d1b3db252738a31d4",
+      "size": 469056,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/268.mp3": {
+      "key": "media/sha256/8e3f5430b0e648a1c3fb097f7eb365439a91bb9fa586c817cddab82fd3d611b0.mp3",
+      "sha256": "8e3f5430b0e648a1c3fb097f7eb365439a91bb9fa586c817cddab82fd3d611b0",
+      "size": 1290366,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/269.mp3": {
+      "key": "media/sha256/b006d365a2c995429e5b1a36f49541c48b7d7b5f38359891518478e0d3bf1e1b.mp3",
+      "sha256": "b006d365a2c995429e5b1a36f49541c48b7d7b5f38359891518478e0d3bf1e1b",
+      "size": 1356525,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/27.mp3": {
+      "key": "media/sha256/557a7f278812f1e1fbf0813a4c06e492297cb9c3904cbde8b88027ebe2625617.mp3",
+      "sha256": "557a7f278812f1e1fbf0813a4c06e492297cb9c3904cbde8b88027ebe2625617",
+      "size": 1496221,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/270.mp3": {
+      "key": "media/sha256/a9730c381ba3492991097f950e430ea235594b92d309c726654d85cdb60535eb.mp3",
+      "sha256": "a9730c381ba3492991097f950e430ea235594b92d309c726654d85cdb60535eb",
+      "size": 2058702,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/271.mp3": {
+      "key": "media/sha256/43df8e3a496c63d95e834c1215b81715f9a7dbfaa8b565c46159f45b5b13c550.mp3",
+      "sha256": "43df8e3a496c63d95e834c1215b81715f9a7dbfaa8b565c46159f45b5b13c550",
+      "size": 929469,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/272.mp3": {
+      "key": "media/sha256/d850aee740b1b0a7d604ee869ba8875f728b0cee9c218310f73dc82a10e78095.mp3",
+      "sha256": "d850aee740b1b0a7d604ee869ba8875f728b0cee9c218310f73dc82a10e78095",
+      "size": 736329,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/273.mp3": {
+      "key": "media/sha256/3f1931832b99242fc555b67e26d2cf826c7cbf9a90045c6c985e242bf124ddfb.mp3",
+      "sha256": "3f1931832b99242fc555b67e26d2cf826c7cbf9a90045c6c985e242bf124ddfb",
+      "size": 1499147,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/274.mp3": {
+      "key": "media/sha256/9e9e8df0c744fc3b2f95e170eb1dfbd03dac28ff2d56fcff54dc0510ad6490d1.mp3",
+      "sha256": "9e9e8df0c744fc3b2f95e170eb1dfbd03dac28ff2d56fcff54dc0510ad6490d1",
+      "size": 1663440,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/276.mp3": {
+      "key": "media/sha256/70e1eb17f46990578af62251202b17d5f180e97508bb8c1a8ce04d6f351843ad.mp3",
+      "sha256": "70e1eb17f46990578af62251202b17d5f180e97508bb8c1a8ce04d6f351843ad",
+      "size": 718437,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/278.mp3": {
+      "key": "media/sha256/563c135db187d9d646a24105a6d5eddf8068990223dcb37ffb6dde1aa509b299.mp3",
+      "sha256": "563c135db187d9d646a24105a6d5eddf8068990223dcb37ffb6dde1aa509b299",
+      "size": 873505,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/279.mp3": {
+      "key": "media/sha256/4cb4d38ab954e98e95a3fbd2088c409c58e400b0dc79f6930a1ddd60375fe2c8.mp3",
+      "sha256": "4cb4d38ab954e98e95a3fbd2088c409c58e400b0dc79f6930a1ddd60375fe2c8",
+      "size": 809088,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/28.mp3": {
+      "key": "media/sha256/f116af1d1dedd3fcd06564d9e2fb43a747b4c12d6ed47ee37753432726cf558e.mp3",
+      "sha256": "f116af1d1dedd3fcd06564d9e2fb43a747b4c12d6ed47ee37753432726cf558e",
+      "size": 1410958,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/280.mp3": {
+      "key": "media/sha256/028a4ee1309f757009f8d40a91bbc1f356613c8ae9c545880b2f01abdb110d14.mp3",
+      "sha256": "028a4ee1309f757009f8d40a91bbc1f356613c8ae9c545880b2f01abdb110d14",
+      "size": 1290075,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/281.mp3": {
+      "key": "media/sha256/e92ac64f69b5778f048821c351817418b82a0587af97d4efb9effc1b039ebb36.mp3",
+      "sha256": "e92ac64f69b5778f048821c351817418b82a0587af97d4efb9effc1b039ebb36",
+      "size": 1447917,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/283.mp3": {
+      "key": "media/sha256/53fa19dadb313329839f605e28c29141a0b34bea8db53c17a664b3500cb02254.mp3",
+      "sha256": "53fa19dadb313329839f605e28c29141a0b34bea8db53c17a664b3500cb02254",
+      "size": 1546092,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/284.mp3": {
+      "key": "media/sha256/0408f773f0704aee1bd4616b43ec601a653fe63c8cece7739e89cd9d8802474f.mp3",
+      "sha256": "0408f773f0704aee1bd4616b43ec601a653fe63c8cece7739e89cd9d8802474f",
+      "size": 689049,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/286.mp3": {
+      "key": "media/sha256/88b2667f5940f858094d31289a930c1215d5a268e04c46bd45690349e8d22e07.mp3",
+      "sha256": "88b2667f5940f858094d31289a930c1215d5a268e04c46bd45690349e8d22e07",
+      "size": 1052610,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/287.mp3": {
+      "key": "media/sha256/000881908c664c7979b49adadf6b552e61694d16be6d8e5b5c65fb98a5ad3918.mp3",
+      "sha256": "000881908c664c7979b49adadf6b552e61694d16be6d8e5b5c65fb98a5ad3918",
+      "size": 477312,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/288.mp3": {
+      "key": "media/sha256/a62e10cd5c5a51d5d5ee86448912d189b9302247bb1aa0fa5bb8fdcda1d4dfa4.mp3",
+      "sha256": "a62e10cd5c5a51d5d5ee86448912d189b9302247bb1aa0fa5bb8fdcda1d4dfa4",
+      "size": 1393403,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/29.mp3": {
+      "key": "media/sha256/962bb34ffaf769bde91175d94ba2f9c301d7d208785a24eecb8eb0dede5b4e7a.mp3",
+      "sha256": "962bb34ffaf769bde91175d94ba2f9c301d7d208785a24eecb8eb0dede5b4e7a",
+      "size": 1423845,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/294.mp3": {
+      "key": "media/sha256/f6dad71bc949d288c8a36ced8c7fcdd1f7ef4dcfa63b75bb46f2ee5f0fc29c0e.mp3",
+      "sha256": "f6dad71bc949d288c8a36ced8c7fcdd1f7ef4dcfa63b75bb46f2ee5f0fc29c0e",
+      "size": 587810,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/295.mp3": {
+      "key": "media/sha256/ab279cebe3b5449287cd032f9cf1197d52da9177c5325ce580b16e857a169ae8.mp3",
+      "sha256": "ab279cebe3b5449287cd032f9cf1197d52da9177c5325ce580b16e857a169ae8",
+      "size": 1078680,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/296.mp3": {
+      "key": "media/sha256/f93990562e07df700b81cd7d7781185825bc78d24cf0504a8905a61b41396943.mp3",
+      "sha256": "f93990562e07df700b81cd7d7781185825bc78d24cf0504a8905a61b41396943",
+      "size": 1202814,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/297.mp3": {
+      "key": "media/sha256/8ed9cb5dd997ce97d89ab213ec1b9f3dcfdc1d08202cb11c77233bbeed8582bf.mp3",
+      "sha256": "8ed9cb5dd997ce97d89ab213ec1b9f3dcfdc1d08202cb11c77233bbeed8582bf",
+      "size": 181722,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/3.mp3": {
+      "key": "media/sha256/79ec397bdd469adbba5e3deb1c66f2851ab9565579e5c0e0ecf6a9cf6467dd53.mp3",
+      "sha256": "79ec397bdd469adbba5e3deb1c66f2851ab9565579e5c0e0ecf6a9cf6467dd53",
+      "size": 1591239,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/30.mp3": {
+      "key": "media/sha256/3c7526146cd6270e83f1989f827bfa4bb4ab525d5df102098e7e457544525f44.mp3",
+      "sha256": "3c7526146cd6270e83f1989f827bfa4bb4ab525d5df102098e7e457544525f44",
+      "size": 302841,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/305.mp3": {
+      "key": "media/sha256/cd2212f11abbf306a1b48ead25aa125966fbc0f647f063e21d5433df5a1f1d7f.mp3",
+      "sha256": "cd2212f11abbf306a1b48ead25aa125966fbc0f647f063e21d5433df5a1f1d7f",
+      "size": 770880,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/306.mp3": {
+      "key": "media/sha256/efbc9e1cae11ab46fa148767624ae1474fe03e1d4fb4e3526c649fb4e95f0141.mp3",
+      "sha256": "efbc9e1cae11ab46fa148767624ae1474fe03e1d4fb4e3526c649fb4e95f0141",
+      "size": 287478,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/307.mp3": {
+      "key": "media/sha256/ba3e27485980bacc31613b1146f3ebdef8d9b88f0cd748ca40e3f2d0bf7f1928.mp3",
+      "sha256": "ba3e27485980bacc31613b1146f3ebdef8d9b88f0cd748ca40e3f2d0bf7f1928",
+      "size": 262743,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/31.mp3": {
+      "key": "media/sha256/0e883113d154715354fc38f570bb6fba663f156c73bef83d76edc5e84b61c079.mp3",
+      "sha256": "0e883113d154715354fc38f570bb6fba663f156c73bef83d76edc5e84b61c079",
+      "size": 1732927,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/315.mp3": {
+      "key": "media/sha256/d34ec6de579df2c0f3fea8b589c3506ac06c67b40efa449b8e7685fd3e9b6e1e.mp3",
+      "sha256": "d34ec6de579df2c0f3fea8b589c3506ac06c67b40efa449b8e7685fd3e9b6e1e",
+      "size": 485161,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/32.mp3": {
+      "key": "media/sha256/093525dc10a1d5df308671ab79b49cc4dcd3098678a21602d113d1a7316e8048.mp3",
+      "sha256": "093525dc10a1d5df308671ab79b49cc4dcd3098678a21602d113d1a7316e8048",
+      "size": 1926027,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/322.mp3": {
+      "key": "media/sha256/dd425f44eb12dd421485188a930ae24cc270f9f3efb5784c629690f4ba1b60ae.mp3",
+      "sha256": "dd425f44eb12dd421485188a930ae24cc270f9f3efb5784c629690f4ba1b60ae",
+      "size": 651347,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/326.mp3": {
+      "key": "media/sha256/eb49cce699482042af94365de794686052fa0de47e502f594251ff431915f98d.mp3",
+      "sha256": "eb49cce699482042af94365de794686052fa0de47e502f594251ff431915f98d",
+      "size": 1211197,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/327.mp3": {
+      "key": "media/sha256/bf71f710cf6592dcc7a33eaa8cb7b6d166ed0514a4dc947e2ebd84f29f7eae81.mp3",
+      "sha256": "bf71f710cf6592dcc7a33eaa8cb7b6d166ed0514a4dc947e2ebd84f29f7eae81",
+      "size": 428109,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/328.mp3": {
+      "key": "media/sha256/c8610d53085882d4b89db0499141196d8eea14a899fa3679c8e9b61f18c8ecf5.mp3",
+      "sha256": "c8610d53085882d4b89db0499141196d8eea14a899fa3679c8e9b61f18c8ecf5",
+      "size": 1803137,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/33.mp3": {
+      "key": "media/sha256/487993520e8c16cede9bfb2e95854bab471a64d3360fe8b5f788c9334be35052.mp3",
+      "sha256": "487993520e8c16cede9bfb2e95854bab471a64d3360fe8b5f788c9334be35052",
+      "size": 2000187,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/330.mp3": {
+      "key": "media/sha256/4f04d7e3a97655970663b77657ddf3264055bd531e22356d96689f04bcbccdaa.mp3",
+      "sha256": "4f04d7e3a97655970663b77657ddf3264055bd531e22356d96689f04bcbccdaa",
+      "size": 499789,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/331.mp3": {
+      "key": "media/sha256/1526bb2683abec0934892a827e63f079e01a9d5f8ec1da8fcd1d2c734f569c32.mp3",
+      "sha256": "1526bb2683abec0934892a827e63f079e01a9d5f8ec1da8fcd1d2c734f569c32",
+      "size": 351623,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/332.mp3": {
+      "key": "media/sha256/887df29155d210c3e63d004b4b8af207d20ba9592397b72945c726a3f1e23cfb.mp3",
+      "sha256": "887df29155d210c3e63d004b4b8af207d20ba9592397b72945c726a3f1e23cfb",
+      "size": 1344374,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/333.mp3": {
+      "key": "media/sha256/bb1ca6c77fae286b06d7020ff1d5550f26ce65a6d4fa4e9fc4054dc1a0ec8194.mp3",
+      "sha256": "bb1ca6c77fae286b06d7020ff1d5550f26ce65a6d4fa4e9fc4054dc1a0ec8194",
+      "size": 372910,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/335.mp3": {
+      "key": "media/sha256/c6bf9738470daa6dff694c537e4da78f262a6efb2491b7a6496b86d02b7308de.mp3",
+      "sha256": "c6bf9738470daa6dff694c537e4da78f262a6efb2491b7a6496b86d02b7308de",
+      "size": 1175577,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/336.mp3": {
+      "key": "media/sha256/0e2c2e3ccc42fd2e3589af0b22b57a180f32e21f58f71ff7dd57d51e87ebddc8.mp3",
+      "sha256": "0e2c2e3ccc42fd2e3589af0b22b57a180f32e21f58f71ff7dd57d51e87ebddc8",
+      "size": 906223,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/337.mp3": {
+      "key": "media/sha256/177fd91cf57b1d5b098e8481bb2b29df4b02bf40741c084c46f139c4426a289e.mp3",
+      "sha256": "177fd91cf57b1d5b098e8481bb2b29df4b02bf40741c084c46f139c4426a289e",
+      "size": 1082583,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/338.mp3": {
+      "key": "media/sha256/ce566ae66aeefa615800b28331a74d199ec0cdb362dd623970d736c383c615b9.mp3",
+      "sha256": "ce566ae66aeefa615800b28331a74d199ec0cdb362dd623970d736c383c615b9",
+      "size": 693513,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/339.mp3": {
+      "key": "media/sha256/af2811fd2e3f5de82f49212ca46fd4dc0119bf3e7ccb38ff8f9f3fe41581d6b8.mp3",
+      "sha256": "af2811fd2e3f5de82f49212ca46fd4dc0119bf3e7ccb38ff8f9f3fe41581d6b8",
+      "size": 546392,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/340.mp3": {
+      "key": "media/sha256/d5fe08f6d070bcf677c837317922c62bc7a3b23f9ac3e31fe89967b2b6dc0556.mp3",
+      "sha256": "d5fe08f6d070bcf677c837317922c62bc7a3b23f9ac3e31fe89967b2b6dc0556",
+      "size": 791734,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/342.mp3": {
+      "key": "media/sha256/d612351c475afb125b3527a4f367bba8af677e770ea1c615e01f8224bea2ef72.mp3",
+      "sha256": "d612351c475afb125b3527a4f367bba8af677e770ea1c615e01f8224bea2ef72",
+      "size": 630610,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/343.mp3": {
+      "key": "media/sha256/1d8dfb8ea786294d88019fbf24d5a3de5b4036725a14c8698e8bcee4c757515b.mp3",
+      "sha256": "1d8dfb8ea786294d88019fbf24d5a3de5b4036725a14c8698e8bcee4c757515b",
+      "size": 2888768,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/344.mp3": {
+      "key": "media/sha256/46fdb952682629b4f6dacade85f9c6f71a480042977c9fadf69e63c00ba6e9ca.mp3",
+      "sha256": "46fdb952682629b4f6dacade85f9c6f71a480042977c9fadf69e63c00ba6e9ca",
+      "size": 1172745,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/345.mp3": {
+      "key": "media/sha256/ef9e29ee34e2dfb2be7d7fefce5b332aceabcb6a2e3955efa866c837b6d1a406.mp3",
+      "sha256": "ef9e29ee34e2dfb2be7d7fefce5b332aceabcb6a2e3955efa866c837b6d1a406",
+      "size": 514836,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/346.mp3": {
+      "key": "media/sha256/e705c3bdeae4f4b3b7dc9684bb454739172817cdae84c8cee0212d04ee99b4a9.mp3",
+      "sha256": "e705c3bdeae4f4b3b7dc9684bb454739172817cdae84c8cee0212d04ee99b4a9",
+      "size": 1573936,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/347.mp3": {
+      "key": "media/sha256/c15b5bbf635cec95c38c303088ec32d1c2e384ad24c93fdb015d0210f2fc2fa3.mp3",
+      "sha256": "c15b5bbf635cec95c38c303088ec32d1c2e384ad24c93fdb015d0210f2fc2fa3",
+      "size": 429154,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/348.mp3": {
+      "key": "media/sha256/57599fbabc99a21b359788b4529bbb6a91c3adc5103a958b5b6bc56100de22e5.mp3",
+      "sha256": "57599fbabc99a21b359788b4529bbb6a91c3adc5103a958b5b6bc56100de22e5",
+      "size": 1366584,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/349.mp3": {
+      "key": "media/sha256/b07a56bba8ecedddd154e1ec26ee6d9bac9f830a6e6660348a9c9e34e29cafe3.mp3",
+      "sha256": "b07a56bba8ecedddd154e1ec26ee6d9bac9f830a6e6660348a9c9e34e29cafe3",
+      "size": 530112,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/350.mp3": {
+      "key": "media/sha256/c6bc617b0b4e092e6eedc6bb759489a4a47f296376c2ebf92573b5f444e628d3.mp3",
+      "sha256": "c6bc617b0b4e092e6eedc6bb759489a4a47f296376c2ebf92573b5f444e628d3",
+      "size": 2050133,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/351.mp3": {
+      "key": "media/sha256/06adb58dfb56cdf04b9d9139e45008a99fd680d425e1dae6d6dc4aff97fcd8ec.mp3",
+      "sha256": "06adb58dfb56cdf04b9d9139e45008a99fd680d425e1dae6d6dc4aff97fcd8ec",
+      "size": 1279208,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/352.mp3": {
+      "key": "media/sha256/519d0485e86ee235b0af5f31182fe44ca4bcb36452e713f6a752647b2f5527e1.mp3",
+      "sha256": "519d0485e86ee235b0af5f31182fe44ca4bcb36452e713f6a752647b2f5527e1",
+      "size": 1113696,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/353.mp3": {
+      "key": "media/sha256/39d4f806e8f0e3dd80a35930df40102fe6e5390121bcffed4b098c706e37ede3.mp3",
+      "sha256": "39d4f806e8f0e3dd80a35930df40102fe6e5390121bcffed4b098c706e37ede3",
+      "size": 605324,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/354.mp3": {
+      "key": "media/sha256/5e8289d8b97cc4bc90ab52195fb8aa3b599998cb8f99349f52898111677c254f.mp3",
+      "sha256": "5e8289d8b97cc4bc90ab52195fb8aa3b599998cb8f99349f52898111677c254f",
+      "size": 365206,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/355.mp3": {
+      "key": "media/sha256/f514cb2b6d3009ba4099a3120a3c481cc378919b64530336a4d9347a247bc59d.mp3",
+      "sha256": "f514cb2b6d3009ba4099a3120a3c481cc378919b64530336a4d9347a247bc59d",
+      "size": 1025088,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/356.mp3": {
+      "key": "media/sha256/8dbcc82c331164b7edeb11e5b15734e01797a5dd444a1699c3671c3969043c24.mp3",
+      "sha256": "8dbcc82c331164b7edeb11e5b15734e01797a5dd444a1699c3671c3969043c24",
+      "size": 1757360,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/357.mp3": {
+      "key": "media/sha256/ccdb9c1870b8b376f98a3977d0a1f022e93e93abbdb42dc8f4859e90b5095f06.mp3",
+      "sha256": "ccdb9c1870b8b376f98a3977d0a1f022e93e93abbdb42dc8f4859e90b5095f06",
+      "size": 1793715,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/358.mp3": {
+      "key": "media/sha256/8faf97cdc8203e9adc4b680d59c553f28ceb29399b959220731faff7efba97b9.mp3",
+      "sha256": "8faf97cdc8203e9adc4b680d59c553f28ceb29399b959220731faff7efba97b9",
+      "size": 1579302,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/359.mp3": {
+      "key": "media/sha256/0c4c14c4288244d94d158125b30a709dea2004cacc32611c6c0dcdd101423f91.mp3",
+      "sha256": "0c4c14c4288244d94d158125b30a709dea2004cacc32611c6c0dcdd101423f91",
+      "size": 2125993,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/36.mp3": {
+      "key": "media/sha256/6a589d6bbb038ee4390a0146bcbe61c4c50acc2ed4c48142d2694eae905a22a7.mp3",
+      "sha256": "6a589d6bbb038ee4390a0146bcbe61c4c50acc2ed4c48142d2694eae905a22a7",
+      "size": 698636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/360.mp3": {
+      "key": "media/sha256/57f851d9a73daacbd2a1872c79f08c7d938e4a96957944547c9a7af8513a3246.mp3",
+      "sha256": "57f851d9a73daacbd2a1872c79f08c7d938e4a96957944547c9a7af8513a3246",
+      "size": 1581810,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/361.mp3": {
+      "key": "media/sha256/dc0306cc3dbe64ce7d56c4bf96f598a9ed944dcbd3446562eec778e22cce8ee8.mp3",
+      "sha256": "dc0306cc3dbe64ce7d56c4bf96f598a9ed944dcbd3446562eec778e22cce8ee8",
+      "size": 1976782,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/362.mp3": {
+      "key": "media/sha256/7e2e5dcef0fd51d89dac1822322a92b094a7a170aaa0c388f0e41a8e45bfc934.mp3",
+      "sha256": "7e2e5dcef0fd51d89dac1822322a92b094a7a170aaa0c388f0e41a8e45bfc934",
+      "size": 2062672,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/363.mp3": {
+      "key": "media/sha256/f45c444772ab05d597f1ff09efdde13c6cd1936250eca60424f43c9a160be962.mp3",
+      "sha256": "f45c444772ab05d597f1ff09efdde13c6cd1936250eca60424f43c9a160be962",
+      "size": 1708452,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/364.mp3": {
+      "key": "media/sha256/21d42a6bafe5bfb0cb6696f168336d49e17f82ddeb167d30108a4cf8f18c4ca9.mp3",
+      "sha256": "21d42a6bafe5bfb0cb6696f168336d49e17f82ddeb167d30108a4cf8f18c4ca9",
+      "size": 1475231,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/365.mp3": {
+      "key": "media/sha256/51789bbc242ab4b1a55a54e5faa306ea6aa918f816d12ef6be71ddccb10a7e02.mp3",
+      "sha256": "51789bbc242ab4b1a55a54e5faa306ea6aa918f816d12ef6be71ddccb10a7e02",
+      "size": 1392893,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/366.mp3": {
+      "key": "media/sha256/cd13cfe318f0b9f1bd1fc2e51c12c9184b794589f3cde270a8b7172a5cf2919d.mp3",
+      "sha256": "cd13cfe318f0b9f1bd1fc2e51c12c9184b794589f3cde270a8b7172a5cf2919d",
+      "size": 2181164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/367.mp3": {
+      "key": "media/sha256/371fef3d20535818ebac492480cdcc5fe5fa1af4e26639bea3290aae92b44202.mp3",
+      "sha256": "371fef3d20535818ebac492480cdcc5fe5fa1af4e26639bea3290aae92b44202",
+      "size": 1950450,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/368.mp3": {
+      "key": "media/sha256/d7415d6767ff425af465e0968ad68dc9ddbdb87dafc1191642d052ffb5904776.mp3",
+      "sha256": "d7415d6767ff425af465e0968ad68dc9ddbdb87dafc1191642d052ffb5904776",
+      "size": 1812524,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/369.mp3": {
+      "key": "media/sha256/6f6dcf9b7ae9a8486b8b3ab4567f85fce3d39a98bd661f17c2187ddc7c4769d5.mp3",
+      "sha256": "6f6dcf9b7ae9a8486b8b3ab4567f85fce3d39a98bd661f17c2187ddc7c4769d5",
+      "size": 474085,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/37.wav": {
+      "key": "media/sha256/d50da21b573945e6f7b91174eaa24478a0aed7bc8f21d37d36bbaffce90f7cc6.wav",
+      "sha256": "d50da21b573945e6f7b91174eaa24478a0aed7bc8f21d37d36bbaffce90f7cc6",
+      "size": 1618911,
+      "contentType": "audio/wav"
+    },
+    "public/database/Take Notes/RL/audio/370.mp3": {
+      "key": "media/sha256/1254df01a74ea16c73160d9e56433529a865d9d3fc89df8a58503bc232e83aa2.mp3",
+      "sha256": "1254df01a74ea16c73160d9e56433529a865d9d3fc89df8a58503bc232e83aa2",
+      "size": 959051,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/371.mp3": {
+      "key": "media/sha256/cdcb84fcf9f1a5097114f242c74da40e4b8ccfd70795d3bbf8d2cdb6e3749de1.mp3",
+      "sha256": "cdcb84fcf9f1a5097114f242c74da40e4b8ccfd70795d3bbf8d2cdb6e3749de1",
+      "size": 1321004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/372.mp3": {
+      "key": "media/sha256/2bde9861c3b999cbb0cc2da5e2629ef18fd9b8ca6608a3bbc06aebb51000a9fe.mp3",
+      "sha256": "2bde9861c3b999cbb0cc2da5e2629ef18fd9b8ca6608a3bbc06aebb51000a9fe",
+      "size": 1527057,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/373.mp3": {
+      "key": "media/sha256/69fa7337e1ed47aa958bb71c0fedc3bfeb651b09184b0f97bff00af6add9b68b.mp3",
+      "sha256": "69fa7337e1ed47aa958bb71c0fedc3bfeb651b09184b0f97bff00af6add9b68b",
+      "size": 1343155,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/374.mp3": {
+      "key": "media/sha256/893cdae5f19c510ab91befdd3613a922e8e7828c38879fa12561c557d829e39a.mp3",
+      "sha256": "893cdae5f19c510ab91befdd3613a922e8e7828c38879fa12561c557d829e39a",
+      "size": 1645131,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/375.mp3": {
+      "key": "media/sha256/fb6d488ec2c49f7b09edcc35aa6e09011ea5d297262f2f72497cb38366782499.mp3",
+      "sha256": "fb6d488ec2c49f7b09edcc35aa6e09011ea5d297262f2f72497cb38366782499",
+      "size": 1262071,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/376.mp3": {
+      "key": "media/sha256/1ef85d95a750f9bb5d9225620057ff548769c63558ad59ce828ec036ae36d0f0.mp3",
+      "sha256": "1ef85d95a750f9bb5d9225620057ff548769c63558ad59ce828ec036ae36d0f0",
+      "size": 495598,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/377.mp3": {
+      "key": "media/sha256/f549b24c50b7604c548fdd09d427f8a117bf24bd94c2782682fe992fb0c9df81.mp3",
+      "sha256": "f549b24c50b7604c548fdd09d427f8a117bf24bd94c2782682fe992fb0c9df81",
+      "size": 557885,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/378.mp3": {
+      "key": "media/sha256/a90c452a7e23e03dbb6eda885bf363e727bbb6870e268f64a6ccc4e1e5c4d432.mp3",
+      "sha256": "a90c452a7e23e03dbb6eda885bf363e727bbb6870e268f64a6ccc4e1e5c4d432",
+      "size": 1470215,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/379.mp3": {
+      "key": "media/sha256/f2b1fd3f94478bfc9b92d71bdd4529b327f3aeaa7f6d822607712de75a13fd76.mp3",
+      "sha256": "f2b1fd3f94478bfc9b92d71bdd4529b327f3aeaa7f6d822607712de75a13fd76",
+      "size": 1571152,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/38.mp3": {
+      "key": "media/sha256/a47bedbef27b0eafce0ce60a88eba17c9bdf5585733fe9870e090ab39fcc73e4.mp3",
+      "sha256": "a47bedbef27b0eafce0ce60a88eba17c9bdf5585733fe9870e090ab39fcc73e4",
+      "size": 1768872,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/380.mp3": {
+      "key": "media/sha256/e0e9e9e5cce3094116dd06383d5d911598051f8a1ed3f20a935ff38e6d0e5cc9.mp3",
+      "sha256": "e0e9e9e5cce3094116dd06383d5d911598051f8a1ed3f20a935ff38e6d0e5cc9",
+      "size": 2475825,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/381.mp3": {
+      "key": "media/sha256/0e4d2020d1842ddce57a686b601f4f8b3c89387f6b45369590ebc62aa33468a3.mp3",
+      "sha256": "0e4d2020d1842ddce57a686b601f4f8b3c89387f6b45369590ebc62aa33468a3",
+      "size": 1804164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/382.mp3": {
+      "key": "media/sha256/a1b118a4d73083082b748d20a321861409d972a126d5641a82f67976e3943546.mp3",
+      "sha256": "a1b118a4d73083082b748d20a321861409d972a126d5641a82f67976e3943546",
+      "size": 1789954,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/383.mp3": {
+      "key": "media/sha256/e24237163ee18fc27eee49a9960b2c8ef7381ca4815609d950b29b51373cdde9.mp3",
+      "sha256": "e24237163ee18fc27eee49a9960b2c8ef7381ca4815609d950b29b51373cdde9",
+      "size": 1203975,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/384.mp3": {
+      "key": "media/sha256/16b1b8f91562f64b4310dd4c73f91f47ebf462f3b1cdfb794d3bdef04ab47707.mp3",
+      "sha256": "16b1b8f91562f64b4310dd4c73f91f47ebf462f3b1cdfb794d3bdef04ab47707",
+      "size": 1281297,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/385.mp3": {
+      "key": "media/sha256/0028682700e29ffbd6d671693ec1ec2bbc896932edc5366cb94d78b9ec4052a1.mp3",
+      "sha256": "0028682700e29ffbd6d671693ec1ec2bbc896932edc5366cb94d78b9ec4052a1",
+      "size": 2089631,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/386.mp3": {
+      "key": "media/sha256/1f6c92f367e53519b755fddb826ebf5758490cb7daedb9ee1f73d950780cd0be.mp3",
+      "sha256": "1f6c92f367e53519b755fddb826ebf5758490cb7daedb9ee1f73d950780cd0be",
+      "size": 1229053,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/387.mp3": {
+      "key": "media/sha256/ae168da9f359ff3cf68f1c32ce1de65dd6e83819182abc6b2fead5a4f269383c.mp3",
+      "sha256": "ae168da9f359ff3cf68f1c32ce1de65dd6e83819182abc6b2fead5a4f269383c",
+      "size": 1167195,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/388.mp3": {
+      "key": "media/sha256/96b5e33195c1e4d2594c5ce8d1f087a630e622257fd0a5478ecbd786b30f309e.mp3",
+      "sha256": "96b5e33195c1e4d2594c5ce8d1f087a630e622257fd0a5478ecbd786b30f309e",
+      "size": 1202721,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/389.mp3": {
+      "key": "media/sha256/6fe6acd77773c21242f4093a080e1aca0c520688ac0b70162fa3a272e621fe5f.mp3",
+      "sha256": "6fe6acd77773c21242f4093a080e1aca0c520688ac0b70162fa3a272e621fe5f",
+      "size": 1207319,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/39.mp3": {
+      "key": "media/sha256/d8c260950193cc78eb0bbbb8639cb4b869fb5f6653069f669fa3d843b91995de.mp3",
+      "sha256": "d8c260950193cc78eb0bbbb8639cb4b869fb5f6653069f669fa3d843b91995de",
+      "size": 1005955,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/390.mp3": {
+      "key": "media/sha256/3bfc49dfe2fb8e9dfe1e5f86b8e7cfad98a420c333ed7b0c005973c250ca8c0f.mp3",
+      "sha256": "3bfc49dfe2fb8e9dfe1e5f86b8e7cfad98a420c333ed7b0c005973c250ca8c0f",
+      "size": 1346917,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/391.mp3": {
+      "key": "media/sha256/e79cd4d3149970b6a5ecdfd0a57b2c07209c4e8c4fcb6ef23c46631018e59045.mp3",
+      "sha256": "e79cd4d3149970b6a5ecdfd0a57b2c07209c4e8c4fcb6ef23c46631018e59045",
+      "size": 1517444,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/392.mp3": {
+      "key": "media/sha256/68fef6fff21e13ce66f84a37eb993484cd865d3923b53c4fec810dd952177d24.mp3",
+      "sha256": "68fef6fff21e13ce66f84a37eb993484cd865d3923b53c4fec810dd952177d24",
+      "size": 1513474,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/393.mp3": {
+      "key": "media/sha256/edde8277ba29712d1139e77b845dc9cd67961f99344c9229b0d68494bcde072c.mp3",
+      "sha256": "edde8277ba29712d1139e77b845dc9cd67961f99344c9229b0d68494bcde072c",
+      "size": 1364889,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/394.mp3": {
+      "key": "media/sha256/36ec250f3a71cb64a38e8fec7bc26f0b34ff40221bdb1de23e7de6f9d2cc4f43.mp3",
+      "sha256": "36ec250f3a71cb64a38e8fec7bc26f0b34ff40221bdb1de23e7de6f9d2cc4f43",
+      "size": 1473559,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/395.mp3": {
+      "key": "media/sha256/cb8db6349e42a404a836fbe1ac5193e5cae7a6ce55531208a8a14c2dabebc2b4.mp3",
+      "sha256": "cb8db6349e42a404a836fbe1ac5193e5cae7a6ce55531208a8a14c2dabebc2b4",
+      "size": 1063123,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/396.mp3": {
+      "key": "media/sha256/c77e41fb770adcc503100fc36a23d0589ca7081d1cef4bd7e41fbe0fb170e921.mp3",
+      "sha256": "c77e41fb770adcc503100fc36a23d0589ca7081d1cef4bd7e41fbe0fb170e921",
+      "size": 1963616,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/397.mp3": {
+      "key": "media/sha256/f87987230a37a3a18b9b2890a21319011edee6093395e99515a55ea202048f7c.mp3",
+      "sha256": "f87987230a37a3a18b9b2890a21319011edee6093395e99515a55ea202048f7c",
+      "size": 512119,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/398.mp3": {
+      "key": "media/sha256/4ae4146798153cc066885570eb106696563964b20632b5dc5f5c64197504f38c.mp3",
+      "sha256": "4ae4146798153cc066885570eb106696563964b20632b5dc5f5c64197504f38c",
+      "size": 1270430,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/399.mp3": {
+      "key": "media/sha256/9f7ccf37026ba8cf0feb51b2b7660f358958ae3a6be8fdce992018c7f8624f21.mp3",
+      "sha256": "9f7ccf37026ba8cf0feb51b2b7660f358958ae3a6be8fdce992018c7f8624f21",
+      "size": 1069810,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/4.mp3": {
+      "key": "media/sha256/6cafe33778b677455b91a8214eba3f855b588b473292396acf80299c70140445.mp3",
+      "sha256": "6cafe33778b677455b91a8214eba3f855b588b473292396acf80299c70140445",
+      "size": 680480,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/400.mp3": {
+      "key": "media/sha256/ac80dca72370ea0ec096514ac54de98324f27e66a465cc19a850c0a13688ae0a.mp3",
+      "sha256": "ac80dca72370ea0ec096514ac54de98324f27e66a465cc19a850c0a13688ae0a",
+      "size": 453187,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/401.mp3": {
+      "key": "media/sha256/ce8ae6c753051455200e9e8efc8bbcf9b0fb0bef6e042cfd92c75176b88f434e.mp3",
+      "sha256": "ce8ae6c753051455200e9e8efc8bbcf9b0fb0bef6e042cfd92c75176b88f434e",
+      "size": 1379936,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/41.mp3": {
+      "key": "media/sha256/ab13edcb180bea3a73204de6ae21cbb6b06e2e6a6feb8829b18dc48c752a3c52.mp3",
+      "sha256": "ab13edcb180bea3a73204de6ae21cbb6b06e2e6a6feb8829b18dc48c752a3c52",
+      "size": 1522553,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/42.mp3": {
+      "key": "media/sha256/5738c036767c6a79b3abd4e2577ba45c1552e818389c3050b178e5de6c20198c.mp3",
+      "sha256": "5738c036767c6a79b3abd4e2577ba45c1552e818389c3050b178e5de6c20198c",
+      "size": 671494,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/426.mp3": {
+      "key": "media/sha256/124c1ba9a4ff245d84edfe9dc22e767f9279b0a80aacf65729039523a8c6c7ec.mp3",
+      "sha256": "124c1ba9a4ff245d84edfe9dc22e767f9279b0a80aacf65729039523a8c6c7ec",
+      "size": 1445973,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/427.mp3": {
+      "key": "media/sha256/ab39a8d3dd5b766a8aab6c1bc9059f6387eea9f6953446942d1779beba5b88a8.mp3",
+      "sha256": "ab39a8d3dd5b766a8aab6c1bc9059f6387eea9f6953446942d1779beba5b88a8",
+      "size": 1307211,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/428.mp3": {
+      "key": "media/sha256/ca2405ff7fb373db543139aa4e41c1d0540e310581dcbbe0faa306f09f56f6eb.mp3",
+      "sha256": "ca2405ff7fb373db543139aa4e41c1d0540e310581dcbbe0faa306f09f56f6eb",
+      "size": 1143789,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/430.mp3": {
+      "key": "media/sha256/76ab0e8589531c8bc330b8879e9b568ecb90b79bbfe498fdd072143aaff39c04.mp3",
+      "sha256": "76ab0e8589531c8bc330b8879e9b568ecb90b79bbfe498fdd072143aaff39c04",
+      "size": 1433435,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/431.mp3": {
+      "key": "media/sha256/b01b7fc851e78102ba0e2cbff1a3573177ab0d9be69d63fe32417f4cec57910a.mp3",
+      "sha256": "b01b7fc851e78102ba0e2cbff1a3573177ab0d9be69d63fe32417f4cec57910a",
+      "size": 1225291,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/432.mp3": {
+      "key": "media/sha256/409db3751475cec777239f978f851829ea5781d91f2fa099c6bee937067816b0.mp3",
+      "sha256": "409db3751475cec777239f978f851829ea5781d91f2fa099c6bee937067816b0",
+      "size": 1500308,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/433.mp3": {
+      "key": "media/sha256/85c19f885dd9ba90dbc981a741b6305187a78e14b7dda895d3965ba08ffa884f.mp3",
+      "sha256": "85c19f885dd9ba90dbc981a741b6305187a78e14b7dda895d3965ba08ffa884f",
+      "size": 2176775,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/434.mp3": {
+      "key": "media/sha256/7795d24139f84d3f102ff8abae421aa6ec1a251a5388378913109b8f77b73552.mp3",
+      "sha256": "7795d24139f84d3f102ff8abae421aa6ec1a251a5388378913109b8f77b73552",
+      "size": 1412119,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/435.mp3": {
+      "key": "media/sha256/d2c9060f13f3e0134caed944b3da84183855f0a5ea2f266502c84520d3707e3f.mp3",
+      "sha256": "d2c9060f13f3e0134caed944b3da84183855f0a5ea2f266502c84520d3707e3f",
+      "size": 1453497,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/436.mp3": {
+      "key": "media/sha256/0d318cfdf8df8b47d13dddaa1b339c6973cc9744d9c3ec94bffbf5af59b91e3e.mp3",
+      "sha256": "0d318cfdf8df8b47d13dddaa1b339c6973cc9744d9c3ec94bffbf5af59b91e3e",
+      "size": 1434270,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/437.mp3": {
+      "key": "media/sha256/ea8e271f8c7b0821e7ff5d3ebc73379a5c0060d4e52b7e2af230577e79ee6563.mp3",
+      "sha256": "ea8e271f8c7b0821e7ff5d3ebc73379a5c0060d4e52b7e2af230577e79ee6563",
+      "size": 1359456,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/438.mp3": {
+      "key": "media/sha256/788bba3451af4acc3f60181cef37b930a60db10fc05afb37b39c2f12c0f4a07e.mp3",
+      "sha256": "788bba3451af4acc3f60181cef37b930a60db10fc05afb37b39c2f12c0f4a07e",
+      "size": 1455168,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/439.mp3": {
+      "key": "media/sha256/30671a52f867b338a5bd43852f8b02ffe5db5681b3618fbf33b0ef6827a6e946.mp3",
+      "sha256": "30671a52f867b338a5bd43852f8b02ffe5db5681b3618fbf33b0ef6827a6e946",
+      "size": 1290493,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/44.mp3": {
+      "key": "media/sha256/441b81faee671d15ddf950f8c0055434ecdc0fc0ca8c09edbe00e64a865cd388.mp3",
+      "sha256": "441b81faee671d15ddf950f8c0055434ecdc0fc0ca8c09edbe00e64a865cd388",
+      "size": 1328620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/440.mp3": {
+      "key": "media/sha256/f6c790dbb9cac1b039fb9ec107b17f3bd3d36e4a058b2eeff910c459d9e78de3.mp3",
+      "sha256": "f6c790dbb9cac1b039fb9ec107b17f3bd3d36e4a058b2eeff910c459d9e78de3",
+      "size": 1351515,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/441.mp3": {
+      "key": "media/sha256/f38e0530ad377fd964a4d9e5fabd7859ebf921cd63d0989c3ee05827fe36e8cf.mp3",
+      "sha256": "f38e0530ad377fd964a4d9e5fabd7859ebf921cd63d0989c3ee05827fe36e8cf",
+      "size": 1164687,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/442.mp3": {
+      "key": "media/sha256/754e87b6d848b2a5a189359c66809fb496200f553b649a98afa407b597b47645.mp3",
+      "sha256": "754e87b6d848b2a5a189359c66809fb496200f553b649a98afa407b597b47645",
+      "size": 969500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/443.mp3": {
+      "key": "media/sha256/46aa0b9cf30c6bbd93eb59cee3d7cffd69cf73b197dd06bf5a86e389fadb3af5.mp3",
+      "sha256": "46aa0b9cf30c6bbd93eb59cee3d7cffd69cf73b197dd06bf5a86e389fadb3af5",
+      "size": 1117875,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/444.mp3": {
+      "key": "media/sha256/145781a0172b12f670170530cfd1c1e2dbb9e0b02d25bb57dd07f1db1edfc8ce.mp3",
+      "sha256": "145781a0172b12f670170530cfd1c1e2dbb9e0b02d25bb57dd07f1db1edfc8ce",
+      "size": 984964,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/445.mp3": {
+      "key": "media/sha256/71ee5bacf6263440f277d41c06bfffceb2f098ca2bbea88fb006cdc9cc39d3ad.mp3",
+      "sha256": "71ee5bacf6263440f277d41c06bfffceb2f098ca2bbea88fb006cdc9cc39d3ad",
+      "size": 2183044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/446.mp3": {
+      "key": "media/sha256/d3384db98376eea12ae1748a1e9e264152acca7ef2d08fdaab82172f5173fd99.mp3",
+      "sha256": "d3384db98376eea12ae1748a1e9e264152acca7ef2d08fdaab82172f5173fd99",
+      "size": 1471051,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/447.mp3": {
+      "key": "media/sha256/f61bf0945b022de78916caa58a0240844321c0f3f77466a5c70aeed66511a864.mp3",
+      "sha256": "f61bf0945b022de78916caa58a0240844321c0f3f77466a5c70aeed66511a864",
+      "size": 1245771,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/449.mp3": {
+      "key": "media/sha256/890dc0e767ece94061ee90d7d9e84d91c3adaa7fd09973bac4a194d3107e90db.mp3",
+      "sha256": "890dc0e767ece94061ee90d7d9e84d91c3adaa7fd09973bac4a194d3107e90db",
+      "size": 2176148,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/45.mp3": {
+      "key": "media/sha256/2456cad1741a548e66726ae08d098e470135bb75f5cc07dd45ae1a815b19e325.mp3",
+      "sha256": "2456cad1741a548e66726ae08d098e470135bb75f5cc07dd45ae1a815b19e325",
+      "size": 812764,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/450.mp3": {
+      "key": "media/sha256/d07c71c7d25178b923444db9ec4a73258e9d13a0ea3cc56ff1f6a327eaa1b734.mp3",
+      "sha256": "d07c71c7d25178b923444db9ec4a73258e9d13a0ea3cc56ff1f6a327eaa1b734",
+      "size": 1452243,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/451.mp3": {
+      "key": "media/sha256/4decfdf49a539064b8efb3b284e1dd0e192a4fb80f3e7a8a4241af97e2c30708.mp3",
+      "sha256": "4decfdf49a539064b8efb3b284e1dd0e192a4fb80f3e7a8a4241af97e2c30708",
+      "size": 1141699,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/452.mp3": {
+      "key": "media/sha256/d4da870b9aecb0793ce160cc144b5e388857e6e95150ed12933ca8cc2e04ceb8.mp3",
+      "sha256": "d4da870b9aecb0793ce160cc144b5e388857e6e95150ed12933ca8cc2e04ceb8",
+      "size": 1379936,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/453.mp3": {
+      "key": "media/sha256/28728261d41152c2544f9fa90831b4e9704490801dd06b2d123b411586a566da.mp3",
+      "sha256": "28728261d41152c2544f9fa90831b4e9704490801dd06b2d123b411586a566da",
+      "size": 1103665,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/454.mp3": {
+      "key": "media/sha256/94186ee6f6e07c96f858c58571661d5dbf0eefdca54bdf4abe12b15c737e168e.mp3",
+      "sha256": "94186ee6f6e07c96f858c58571661d5dbf0eefdca54bdf4abe12b15c737e168e",
+      "size": 1383279,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/456.mp3": {
+      "key": "media/sha256/9558f765533ae0f6a07350f5cece8298f0fa00f0d8a5117a98ed003fbed3cc4f.mp3",
+      "sha256": "9558f765533ae0f6a07350f5cece8298f0fa00f0d8a5117a98ed003fbed3cc4f",
+      "size": 1168030,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/457.mp3": {
+      "key": "media/sha256/6d1ea2f5a2190fd78e4ff80376e9f2410c9ffb6466232ab133bec7050d80c52a.mp3",
+      "sha256": "6d1ea2f5a2190fd78e4ff80376e9f2410c9ffb6466232ab133bec7050d80c52a",
+      "size": 1647848,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/458.mp3": {
+      "key": "media/sha256/193acd68d3f8868da71c99b9fe01514884db95feb1467837b7ca912f66d587ff.mp3",
+      "sha256": "193acd68d3f8868da71c99b9fe01514884db95feb1467837b7ca912f66d587ff",
+      "size": 976187,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/459.mp3": {
+      "key": "media/sha256/f33935186dfcaf836aa59d5e45b1d2915f5b2f1c300b0bba5e462858ca2b965d.mp3",
+      "sha256": "f33935186dfcaf836aa59d5e45b1d2915f5b2f1c300b0bba5e462858ca2b965d",
+      "size": 2266661,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/46.mp3": {
+      "key": "media/sha256/1fbbf3413507c1bb06ea981cec6b70f4c3a48cdb0d824eb63e91af8aafff161e.mp3",
+      "sha256": "1fbbf3413507c1bb06ea981cec6b70f4c3a48cdb0d824eb63e91af8aafff161e",
+      "size": 866263,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/460.mp3": {
+      "key": "media/sha256/3a6540ed760e59cb94e8086d70911b5ae001b2fc9da3728ca447e885a666b2ba.mp3",
+      "sha256": "3a6540ed760e59cb94e8086d70911b5ae001b2fc9da3728ca447e885a666b2ba",
+      "size": 1484242,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/461.mp3": {
+      "key": "media/sha256/17c51865b53511fbd5cd873eb9faff05ef16cd9071b6e01ddb8f40563abb0425.mp3",
+      "sha256": "17c51865b53511fbd5cd873eb9faff05ef16cd9071b6e01ddb8f40563abb0425",
+      "size": 1369905,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/462.mp3": {
+      "key": "media/sha256/2fd57ceb6825f1824167779896da00bb7adb74faa6799cf6d80f6542619baa7d.mp3",
+      "sha256": "2fd57ceb6825f1824167779896da00bb7adb74faa6799cf6d80f6542619baa7d",
+      "size": 1224689,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/463.mp3": {
+      "key": "media/sha256/c0baa73000114a800f61ce289043929b37aaa7c9b579d7b17e92276c17fad974.mp3",
+      "sha256": "c0baa73000114a800f61ce289043929b37aaa7c9b579d7b17e92276c17fad974",
+      "size": 1630945,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/464.mp3": {
+      "key": "media/sha256/c50d8c8ede4e2d7c6054c5be8ffcc84d7cb3f73f9c3c71f252cc509cbc8bed23.mp3",
+      "sha256": "c50d8c8ede4e2d7c6054c5be8ffcc84d7cb3f73f9c3c71f252cc509cbc8bed23",
+      "size": 1191854,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/465.mp3": {
+      "key": "media/sha256/6273d5496a9a59c7fc3b39b23636ff81c6d9259e85794413f904a0ab28f288aa.mp3",
+      "sha256": "6273d5496a9a59c7fc3b39b23636ff81c6d9259e85794413f904a0ab28f288aa",
+      "size": 1493621,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/466.mp3": {
+      "key": "media/sha256/7e4b39fba010db52906439ffe67338c9204e16e35dcc233850ea53f10e18feb6.mp3",
+      "sha256": "7e4b39fba010db52906439ffe67338c9204e16e35dcc233850ea53f10e18feb6",
+      "size": 1321839,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/469.mp3": {
+      "key": "media/sha256/9acb1e59a31e03e24f734335eec66951ada38bafcdc6341124af7f2e0f8a269e.mp3",
+      "sha256": "9acb1e59a31e03e24f734335eec66951ada38bafcdc6341124af7f2e0f8a269e",
+      "size": 1341502,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/47.mp3": {
+      "key": "media/sha256/ffc18f21ed9a3ce86cfbaa3766909446f3e0f489e8c85edee5890513e4f17f46.mp3",
+      "sha256": "ffc18f21ed9a3ce86cfbaa3766909446f3e0f489e8c85edee5890513e4f17f46",
+      "size": 1149733,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/470.mp3": {
+      "key": "media/sha256/b341ee355a8de3323ef4e804ff8f4e428f5e4369056b5de3f3702da9975c7606.mp3",
+      "sha256": "b341ee355a8de3323ef4e804ff8f4e428f5e4369056b5de3f3702da9975c7606",
+      "size": 1119965,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/471.mp3": {
+      "key": "media/sha256/9a9f5cdf9c6d89545e187be7f2cdc53bae1d86e4532b1aa7aa63ea94bd2b007f.mp3",
+      "sha256": "9a9f5cdf9c6d89545e187be7f2cdc53bae1d86e4532b1aa7aa63ea94bd2b007f",
+      "size": 1451223,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/472.mp3": {
+      "key": "media/sha256/ac9a9d1065c096fdf38f4edcd914b4e090152d6d691a3c71c71ff233fc9d0a04.mp3",
+      "sha256": "ac9a9d1065c096fdf38f4edcd914b4e090152d6d691a3c71c71ff233fc9d0a04",
+      "size": 1295926,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/473.mp3": {
+      "key": "media/sha256/8dcbff5cf861634bb73e76a1dfd7fbbe090cca37139cbe938c30655e0d000fdb.mp3",
+      "sha256": "8dcbff5cf861634bb73e76a1dfd7fbbe090cca37139cbe938c30655e0d000fdb",
+      "size": 1562446,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/474.mp3": {
+      "key": "media/sha256/a361f7eddd3d5417da893de1b9f217816b0f0b1889538bb9e2826e805e51655a.mp3",
+      "sha256": "a361f7eddd3d5417da893de1b9f217816b0f0b1889538bb9e2826e805e51655a",
+      "size": 1338792,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/475.mp3": {
+      "key": "media/sha256/387d6c479e0663567cfddd2260345d5654737060969869eb4a9a8d090299d364.mp3",
+      "sha256": "387d6c479e0663567cfddd2260345d5654737060969869eb4a9a8d090299d364",
+      "size": 1431579,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/476.mp3": {
+      "key": "media/sha256/fcb81f8466e7b18540891bff7d3b13a469a09d7ecb5d6a2ce72eb7d3e3d0b953.mp3",
+      "sha256": "fcb81f8466e7b18540891bff7d3b13a469a09d7ecb5d6a2ce72eb7d3e3d0b953",
+      "size": 1118109,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/477.mp3": {
+      "key": "media/sha256/f8297db54a277c54017f37503f192a1515ec1cca3a04b98d509119b8783e56a8.mp3",
+      "sha256": "f8297db54a277c54017f37503f192a1515ec1cca3a04b98d509119b8783e56a8",
+      "size": 1840626,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/478.mp3": {
+      "key": "media/sha256/becfbdacee9da8d41d252e413627f60995d09bf058d0828cdebb72b25c2fd3a6.mp3",
+      "sha256": "becfbdacee9da8d41d252e413627f60995d09bf058d0828cdebb72b25c2fd3a6",
+      "size": 2151170,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/48.mp3": {
+      "key": "media/sha256/5f420eaab1b5912e3110081529c61a440b5765bdbc8335a24de6d6fed4165e03.mp3",
+      "sha256": "5f420eaab1b5912e3110081529c61a440b5765bdbc8335a24de6d6fed4165e03",
+      "size": 676092,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/481.mp3": {
+      "key": "media/sha256/d00c3b48a0c0dad61521153323ce4d633a0ebd9ac96f4dfd2c8b606fa03a6aea.mp3",
+      "sha256": "d00c3b48a0c0dad61521153323ce4d633a0ebd9ac96f4dfd2c8b606fa03a6aea",
+      "size": 1616317,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/482.mp3": {
+      "key": "media/sha256/0a71f25a921848752ce0aca8205c5aa8926b60d325f6ea2f0e9af2afd65c7c71.mp3",
+      "sha256": "0a71f25a921848752ce0aca8205c5aa8926b60d325f6ea2f0e9af2afd65c7c71",
+      "size": 1645783,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/483.mp3": {
+      "key": "media/sha256/a389eb50aa3561aa05ee6079270f8826e7f3027f0d912145e613d0630702c109.mp3",
+      "sha256": "a389eb50aa3561aa05ee6079270f8826e7f3027f0d912145e613d0630702c109",
+      "size": 1003589,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/484.mp3": {
+      "key": "media/sha256/84b5725eec481e0aa57769a54ddf57fa1ee7c9d153be5996a2c46d3de6575633.mp3",
+      "sha256": "84b5725eec481e0aa57769a54ddf57fa1ee7c9d153be5996a2c46d3de6575633",
+      "size": 1079657,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/485.mp3": {
+      "key": "media/sha256/98f81c5fa5273ea8f31a0407f672a35142f22056db315f59f5e79d58ab31a63a.mp3",
+      "sha256": "98f81c5fa5273ea8f31a0407f672a35142f22056db315f59f5e79d58ab31a63a",
+      "size": 1469822,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/487.mp3": {
+      "key": "media/sha256/8196df06525a34f46125b8cab15290acd0ac129722aefb3e7f0443c1196e12bf.mp3",
+      "sha256": "8196df06525a34f46125b8cab15290acd0ac129722aefb3e7f0443c1196e12bf",
+      "size": 1289378,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/488.mp3": {
+      "key": "media/sha256/8cf07bbb296af29ec9ec6020a6c77e4b65dba3f23af2322a4bef09713c31755e.mp3",
+      "sha256": "8cf07bbb296af29ec9ec6020a6c77e4b65dba3f23af2322a4bef09713c31755e",
+      "size": 1089517,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/489.mp3": {
+      "key": "media/sha256/c19c943347849847973d6fad260612574f3b0e13c5834832405fa02942c6ea08.mp3",
+      "sha256": "c19c943347849847973d6fad260612574f3b0e13c5834832405fa02942c6ea08",
+      "size": 1073388,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/49.mp3": {
+      "key": "media/sha256/fdf67fb6108b1118a0e9dd0f0627dd5099ea320b8a3d581bdc367aace6ec818c.mp3",
+      "sha256": "fdf67fb6108b1118a0e9dd0f0627dd5099ea320b8a3d581bdc367aace6ec818c",
+      "size": 628444,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/490.mp3": {
+      "key": "media/sha256/f373a77df234cdb84470e4250ca02ae28fccf3209ae1377965ef907d1fff05fb.mp3",
+      "sha256": "f373a77df234cdb84470e4250ca02ae28fccf3209ae1377965ef907d1fff05fb",
+      "size": 1309535,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/491.mp3": {
+      "key": "media/sha256/1536f1f29db3b4f9d0fb4d323d97e9bcb92d3704538976f0c1f94aa7e78f57b3.mp3",
+      "sha256": "1536f1f29db3b4f9d0fb4d323d97e9bcb92d3704538976f0c1f94aa7e78f57b3",
+      "size": 1271291,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/492.mp3": {
+      "key": "media/sha256/cda3b457f8987c9243c224d87cf5616b47f230b893c76f2889bfee862ff99c31.mp3",
+      "sha256": "cda3b457f8987c9243c224d87cf5616b47f230b893c76f2889bfee862ff99c31",
+      "size": 1600852,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/493.mp3": {
+      "key": "media/sha256/b93c59b46f75a233cb88bd2d9ba86ed5d187ae399783a814453bebf2e5ad9193.mp3",
+      "sha256": "b93c59b46f75a233cb88bd2d9ba86ed5d187ae399783a814453bebf2e5ad9193",
+      "size": 2014005,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/494.mp3": {
+      "key": "media/sha256/2439c803a526618eff9cece68e6d3cbcdea6ce2a38418494c86f31f323f3c66e.mp3",
+      "sha256": "2439c803a526618eff9cece68e6d3cbcdea6ce2a38418494c86f31f323f3c66e",
+      "size": 1857726,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/495.mp3": {
+      "key": "media/sha256/f081cc9559dc3dfd9607c51efa141b11f163530bdcf89819d6f2c1fb8b5931b9.mp3",
+      "sha256": "f081cc9559dc3dfd9607c51efa141b11f163530bdcf89819d6f2c1fb8b5931b9",
+      "size": 1476091,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/496.mp3": {
+      "key": "media/sha256/08f014be852346a0facb5818e8786bc66789b960c5fa55744eccd74ee5240092.mp3",
+      "sha256": "08f014be852346a0facb5818e8786bc66789b960c5fa55744eccd74ee5240092",
+      "size": 1222010,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/498.mp3": {
+      "key": "media/sha256/942863db937eafce4424d47780fa0d675d4341574f53e3d9a959d52025f8b83f.mp3",
+      "sha256": "942863db937eafce4424d47780fa0d675d4341574f53e3d9a959d52025f8b83f",
+      "size": 1605868,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/499.mp3": {
+      "key": "media/sha256/d58fed1bc892e57f610e826ad7b94a76fc8f43ace505a2f782f82a9f3a7e56ce.mp3",
+      "sha256": "d58fed1bc892e57f610e826ad7b94a76fc8f43ace505a2f782f82a9f3a7e56ce",
+      "size": 1748183,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/5.mp3": {
+      "key": "media/sha256/663c95a61030fd458b7697e7fe2b2828f75a365f2bbcd6297cdeaca5db698850.mp3",
+      "sha256": "663c95a61030fd458b7697e7fe2b2828f75a365f2bbcd6297cdeaca5db698850",
+      "size": 1386021,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/50.mp3": {
+      "key": "media/sha256/3caa11e8d688598334dbbbba65cc7e9055b5b845116db30d12636f10db6b4e2c.mp3",
+      "sha256": "3caa11e8d688598334dbbbba65cc7e9055b5b845116db30d12636f10db6b4e2c",
+      "size": 830527,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/500.mp3": {
+      "key": "media/sha256/d4e8110e9d1564ad9bf022cdbb59360e319afa1732ff03d67f0ac061d9392dfd.mp3",
+      "sha256": "d4e8110e9d1564ad9bf022cdbb59360e319afa1732ff03d67f0ac061d9392dfd",
+      "size": 2043889,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/501.mp3": {
+      "key": "media/sha256/66a6064881090bc62b3637ac91f965befa994c637de54ab5cca1574971e3027e.mp3",
+      "sha256": "66a6064881090bc62b3637ac91f965befa994c637de54ab5cca1574971e3027e",
+      "size": 1358436,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/502.mp3": {
+      "key": "media/sha256/27bbf9571b6d01bc661bed849af544129091a456af8beacc0f2ac5dafcae9dd2.mp3",
+      "sha256": "27bbf9571b6d01bc661bed849af544129091a456af8beacc0f2ac5dafcae9dd2",
+      "size": 1387548,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/503.mp3": {
+      "key": "media/sha256/c8a2c12c477f5d32e146b862513a70ed1a50f84ea5a87e5f6e3c13d25cbc8d08.mp3",
+      "sha256": "c8a2c12c477f5d32e146b862513a70ed1a50f84ea5a87e5f6e3c13d25cbc8d08",
+      "size": 1274008,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/504.mp3": {
+      "key": "media/sha256/82a4fa58a9d137c95d59c24e4fbe575fc75325312f150907b73218aa9c3770f0.mp3",
+      "sha256": "82a4fa58a9d137c95d59c24e4fbe575fc75325312f150907b73218aa9c3770f0",
+      "size": 881544,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/505.mp3": {
+      "key": "media/sha256/fbd18bbfa03e0dca4d8687c67f5890cc3bfc14dfcc516d42c723cb7997b7930b.mp3",
+      "sha256": "fbd18bbfa03e0dca4d8687c67f5890cc3bfc14dfcc516d42c723cb7997b7930b",
+      "size": 1680674,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/506.mp3": {
+      "key": "media/sha256/5767eb842d848ccaeb6ad802ccd4c3e3f265de9dc75c471e17954c5c6a927253.mp3",
+      "sha256": "5767eb842d848ccaeb6ad802ccd4c3e3f265de9dc75c471e17954c5c6a927253",
+      "size": 1500578,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/507.mp3": {
+      "key": "media/sha256/fef7222b56503fce2df9a2731358fa068c9d76dd007a8142f9798d46adec8d8d.mp3",
+      "sha256": "fef7222b56503fce2df9a2731358fa068c9d76dd007a8142f9798d46adec8d8d",
+      "size": 1509319,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/508.mp3": {
+      "key": "media/sha256/5cf807e1f01708b73079007eae67df223cd57738b38bfec1a2604e4234f63c94.mp3",
+      "sha256": "5cf807e1f01708b73079007eae67df223cd57738b38bfec1a2604e4234f63c94",
+      "size": 1609838,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/509.mp3": {
+      "key": "media/sha256/50b194dfa530560b8c68874bcc086884843b67f4413a84072dc025237a9a849a.mp3",
+      "sha256": "50b194dfa530560b8c68874bcc086884843b67f4413a84072dc025237a9a849a",
+      "size": 1392082,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/51.mp3": {
+      "key": "media/sha256/6ecd334e5aa8f89f7bcab72f18a4a422b6ce3187d250a65d10b6f9c59261a230.mp3",
+      "sha256": "6ecd334e5aa8f89f7bcab72f18a4a422b6ce3187d250a65d10b6f9c59261a230",
+      "size": 583932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/510.mp3": {
+      "key": "media/sha256/a7f741673f82c0c10f64f5f3d7eff8dfa6cc0bc7be1bd4cf17d95ff3d03efcce.mp3",
+      "sha256": "a7f741673f82c0c10f64f5f3d7eff8dfa6cc0bc7be1bd4cf17d95ff3d03efcce",
+      "size": 1338976,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/511.mp3": {
+      "key": "media/sha256/7681ce1256beb937ce47e6480bf42641d49ae918db30f5725b4bb09377c02fde.mp3",
+      "sha256": "7681ce1256beb937ce47e6480bf42641d49ae918db30f5725b4bb09377c02fde",
+      "size": 1371811,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/512.mp3": {
+      "key": "media/sha256/b0a9982c769e59ae440862b99993271508e64c80865f8c1e9e83183201507021.mp3",
+      "sha256": "b0a9982c769e59ae440862b99993271508e64c80865f8c1e9e83183201507021",
+      "size": 1335866,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/513.mp3": {
+      "key": "media/sha256/d1119b868d752b3ef11f22edb332a9764d4d1b040d555e595e224cbfa432986a.mp3",
+      "sha256": "d1119b868d752b3ef11f22edb332a9764d4d1b040d555e595e224cbfa432986a",
+      "size": 1461254,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/514.mp3": {
+      "key": "media/sha256/6a298cbcdec15c0f29b7056ddad98d977711b4b558a8529f3254dce0fd2d3274.mp3",
+      "sha256": "6a298cbcdec15c0f29b7056ddad98d977711b4b558a8529f3254dce0fd2d3274",
+      "size": 1436176,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/515.mp3": {
+      "key": "media/sha256/58312633803e01c2312cbc18f39d5e47549935f2831e56a90d769c62298897ff.mp3",
+      "sha256": "58312633803e01c2312cbc18f39d5e47549935f2831e56a90d769c62298897ff",
+      "size": 1709706,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/516.mp3": {
+      "key": "media/sha256/fcda3e034ca43606f1826db8b99bc582d0a1baa197d35845912ab09ad6ec7573.mp3",
+      "sha256": "fcda3e034ca43606f1826db8b99bc582d0a1baa197d35845912ab09ad6ec7573",
+      "size": 1406685,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/517.mp3": {
+      "key": "media/sha256/47e854c631b894a8ec7d8e409c92f67132c40372078ea21fddca8028d0e35373.mp3",
+      "sha256": "47e854c631b894a8ec7d8e409c92f67132c40372078ea21fddca8028d0e35373",
+      "size": 1762411,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/518.mp3": {
+      "key": "media/sha256/cd2c514e09660a311236bc1317386efb492ab5d6c54e0c119bf845f87bce9af5.mp3",
+      "sha256": "cd2c514e09660a311236bc1317386efb492ab5d6c54e0c119bf845f87bce9af5",
+      "size": 1896767,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/519.mp3": {
+      "key": "media/sha256/491669ae3448b0de7ebc80b1945e7db1099157558ab1470835cf6234de445dba.mp3",
+      "sha256": "491669ae3448b0de7ebc80b1945e7db1099157558ab1470835cf6234de445dba",
+      "size": 1467105,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/520.mp3": {
+      "key": "media/sha256/25f3c6e628c504ac080e110f09ccd3138fd1511cd24085bdff497de0c9b738ba.mp3",
+      "sha256": "25f3c6e628c504ac080e110f09ccd3138fd1511cd24085bdff497de0c9b738ba",
+      "size": 1553870,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/521.mp3": {
+      "key": "media/sha256/a4914515894fbbe7ac8ccb78d2be60c8e111eb4e57c70282e45b882be49c8243.mp3",
+      "sha256": "a4914515894fbbe7ac8ccb78d2be60c8e111eb4e57c70282e45b882be49c8243",
+      "size": 1634568,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/522.mp3": {
+      "key": "media/sha256/4e342fc6c15d052250932ff14776ef59f2072402fab3c6c7c28c48acaebc9567.mp3",
+      "sha256": "4e342fc6c15d052250932ff14776ef59f2072402fab3c6c7c28c48acaebc9567",
+      "size": 932788,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/523.mp3": {
+      "key": "media/sha256/7cfac3bc0f81ad636bd230c375db25061747beeacf61bb80a3a2e42947743e9b.mp3",
+      "sha256": "7cfac3bc0f81ad636bd230c375db25061747beeacf61bb80a3a2e42947743e9b",
+      "size": 1632478,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/524.mp3": {
+      "key": "media/sha256/e69772eec73d80803df6c03f08cb4f4f0c3842c4d2c5e38e23308203739e05f8.mp3",
+      "sha256": "e69772eec73d80803df6c03f08cb4f4f0c3842c4d2c5e38e23308203739e05f8",
+      "size": 1636208,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/525.mp3": {
+      "key": "media/sha256/6766ef0586c0fc01fb27681da2cd9772d2c39d20ce5a02a064430d5457e814d3.mp3",
+      "sha256": "6766ef0586c0fc01fb27681da2cd9772d2c39d20ce5a02a064430d5457e814d3",
+      "size": 1417229,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/526.mp3": {
+      "key": "media/sha256/1b6662bd3d18ebd88d8e871435e6b53ad06ea1057646739b40f04efb27921d7f.mp3",
+      "sha256": "1b6662bd3d18ebd88d8e871435e6b53ad06ea1057646739b40f04efb27921d7f",
+      "size": 1671316,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/527.mp3": {
+      "key": "media/sha256/596b5bfaabf4ea0352059b899a56781c00e4fc780821364e09bb0c5ad3d0e4e5.mp3",
+      "sha256": "596b5bfaabf4ea0352059b899a56781c00e4fc780821364e09bb0c5ad3d0e4e5",
+      "size": 2407942,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/528.mp3": {
+      "key": "media/sha256/d5a9476c2feb012dfad4f6d080352d0f877b479039985363429710765288034f.mp3",
+      "sha256": "d5a9476c2feb012dfad4f6d080352d0f877b479039985363429710765288034f",
+      "size": 1647848,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/529.mp3": {
+      "key": "media/sha256/e9ea0918a9f103e11cf460df95f0234c3c6c8a6c55bc01fef8aa92d0cb1186d6.mp3",
+      "sha256": "e9ea0918a9f103e11cf460df95f0234c3c6c8a6c55bc01fef8aa92d0cb1186d6",
+      "size": 1140445,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/53.mp3": {
+      "key": "media/sha256/1e59ea43a73cc7d79c50fa7bda88c94817f198e4f23376b91db67dc948e48409.mp3",
+      "sha256": "1e59ea43a73cc7d79c50fa7bda88c94817f198e4f23376b91db67dc948e48409",
+      "size": 1482152,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/530.mp3": {
+      "key": "media/sha256/fe3dd2268f1f183d3e9e4d3ed47a842018cc99eda5452742468d94331a3dd707.mp3",
+      "sha256": "fe3dd2268f1f183d3e9e4d3ed47a842018cc99eda5452742468d94331a3dd707",
+      "size": 1443700,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/531.mp3": {
+      "key": "media/sha256/ff1700158573d816d2edaf203241d3c9d1af0c5e50a41132488a97f18b4195cb.mp3",
+      "sha256": "ff1700158573d816d2edaf203241d3c9d1af0c5e50a41132488a97f18b4195cb",
+      "size": 1344852,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/532.mp3": {
+      "key": "media/sha256/816fb0844b4d31583395af306496a0e044e7286803f4fc6149fd3816c5f89c98.mp3",
+      "sha256": "816fb0844b4d31583395af306496a0e044e7286803f4fc6149fd3816c5f89c98",
+      "size": 2418438,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/533.mp3": {
+      "key": "media/sha256/3fab7881168f3de8333d060eae46464fc3ba602d1622b6e3ffaa6689d10ffcd3.mp3",
+      "sha256": "3fab7881168f3de8333d060eae46464fc3ba602d1622b6e3ffaa6689d10ffcd3",
+      "size": 1216812,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/534.mp3": {
+      "key": "media/sha256/759dc7fae407fdde88bf3ddf7ebcbdb896e8f9a12d5726489b2e725d4a5ebaf0.mp3",
+      "sha256": "759dc7fae407fdde88bf3ddf7ebcbdb896e8f9a12d5726489b2e725d4a5ebaf0",
+      "size": 1739888,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/535.mp3": {
+      "key": "media/sha256/e13117c54dda28d68c2dbcd00f45365977ae898368b3be78585c584db12beefb.mp3",
+      "sha256": "e13117c54dda28d68c2dbcd00f45365977ae898368b3be78585c584db12beefb",
+      "size": 1757450,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/536.mp3": {
+      "key": "media/sha256/bb3f73d90de612e44b50f608335a5f812aa185c0b9923bdebfb72d06c104d6df.mp3",
+      "sha256": "bb3f73d90de612e44b50f608335a5f812aa185c0b9923bdebfb72d06c104d6df",
+      "size": 1459646,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/537.mp3": {
+      "key": "media/sha256/1bf7cf0d281f057b22e88b5dab143bf7f20953c7fea43d08c29dc2ed49d662e1.mp3",
+      "sha256": "1bf7cf0d281f057b22e88b5dab143bf7f20953c7fea43d08c29dc2ed49d662e1",
+      "size": 1200029,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/538.mp3": {
+      "key": "media/sha256/9e39ea61b789114b5ec96d093efd9025da60d470f3a026e239f084a624fc79ce.mp3",
+      "sha256": "9e39ea61b789114b5ec96d093efd9025da60d470f3a026e239f084a624fc79ce",
+      "size": 1138589,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/539.mp3": {
+      "key": "media/sha256/e12a2de2b6beb708c4c3bccea4422a804fd246c8879092d39b37ae22f17e054f.mp3",
+      "sha256": "e12a2de2b6beb708c4c3bccea4422a804fd246c8879092d39b37ae22f17e054f",
+      "size": 1076313,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/54.mp3": {
+      "key": "media/sha256/aa69963970fb29f7606245315b5b297d0ce599e5ebd536b29f9c5b65636af3a4.mp3",
+      "sha256": "aa69963970fb29f7606245315b5b297d0ce599e5ebd536b29f9c5b65636af3a4",
+      "size": 1259239,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/540.mp3": {
+      "key": "media/sha256/ee49118f4eddd4a5cd67ed9d8b08b4c5627eacd2483cbfd095713e5579346836.mp3",
+      "sha256": "ee49118f4eddd4a5cd67ed9d8b08b4c5627eacd2483cbfd095713e5579346836",
+      "size": 1250393,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/541.mp3": {
+      "key": "media/sha256/8b947e99cf1e6c9f81459ffcd7c2c06a66a1c2270815cf52139cc6b5bf49a258.mp3",
+      "sha256": "8b947e99cf1e6c9f81459ffcd7c2c06a66a1c2270815cf52139cc6b5bf49a258",
+      "size": 1413607,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/542.mp3": {
+      "key": "media/sha256/2c9d702351889fc4a58cdbf7d31d9606296f452b76f46794e152e74c244d89ed.mp3",
+      "sha256": "2c9d702351889fc4a58cdbf7d31d9606296f452b76f46794e152e74c244d89ed",
+      "size": 1524784,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/543.mp3": {
+      "key": "media/sha256/ce670bee5d89e5de8d40406e8188225f25c33868a454e1e8b5e3c6fa273a8a91.mp3",
+      "sha256": "ce670bee5d89e5de8d40406e8188225f25c33868a454e1e8b5e3c6fa273a8a91",
+      "size": 1233884,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/544.mp3": {
+      "key": "media/sha256/94313cf0775ff48f8b74594ffe61fa54e7d4e6560cb0e299e2767851ad983acc.mp3",
+      "sha256": "94313cf0775ff48f8b74594ffe61fa54e7d4e6560cb0e299e2767851ad983acc",
+      "size": 948908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/545.mp3": {
+      "key": "media/sha256/c1cfa32818601329b87ce934ab0694f484e0e372105c8d57f4ac77ebbf9ce3ea.mp3",
+      "sha256": "c1cfa32818601329b87ce934ab0694f484e0e372105c8d57f4ac77ebbf9ce3ea",
+      "size": 1394034,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/546.mp3": {
+      "key": "media/sha256/930cce3cf150024dcb546a7c06862a2a7279b682b597f728b1f21bbf8a5945b0.mp3",
+      "sha256": "930cce3cf150024dcb546a7c06862a2a7279b682b597f728b1f21bbf8a5945b0",
+      "size": 1672950,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/547.mp3": {
+      "key": "media/sha256/fce70ec2fef728db69dc745d9dfa4293e35402d024513ed20c632cdcee06ae91.mp3",
+      "sha256": "fce70ec2fef728db69dc745d9dfa4293e35402d024513ed20c632cdcee06ae91",
+      "size": 1408036,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/548.mp3": {
+      "key": "media/sha256/6c7d3b95d71ec01bd99dbbdfd9d4795bf38b4af9f812dd2624f90921afcbabf6.mp3",
+      "sha256": "6c7d3b95d71ec01bd99dbbdfd9d4795bf38b4af9f812dd2624f90921afcbabf6",
+      "size": 1578073,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/549.mp3": {
+      "key": "media/sha256/6a0f83869d3c0d46f987dd5aeba27b8ec8b04dbaaba727d4b3ccc8ba27a9357a.mp3",
+      "sha256": "6a0f83869d3c0d46f987dd5aeba27b8ec8b04dbaaba727d4b3ccc8ba27a9357a",
+      "size": 1596255,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/550.mp3": {
+      "key": "media/sha256/2eb966059c9a189f0c1fc9904a0778572087dde3f7017bc5dab29ae8484792bc.mp3",
+      "sha256": "2eb966059c9a189f0c1fc9904a0778572087dde3f7017bc5dab29ae8484792bc",
+      "size": 1060704,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/56.mp3": {
+      "key": "media/sha256/47516aef64d32c01ec42d7e7edc790651b819c5ddf7d1ed816ff1f5f1abd2427.mp3",
+      "sha256": "47516aef64d32c01ec42d7e7edc790651b819c5ddf7d1ed816ff1f5f1abd2427",
+      "size": 656959,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/57.mp3": {
+      "key": "media/sha256/903965c94edb5185a944aa22c069a784aa86d95b63fdc37e38e31a603141b16e.mp3",
+      "sha256": "903965c94edb5185a944aa22c069a784aa86d95b63fdc37e38e31a603141b16e",
+      "size": 1554732,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/58.mp3": {
+      "key": "media/sha256/b2ff5becf0c5d62bfb6d4be32548db875614e4a1ce3ffb117fbdba2614e7f209.mp3",
+      "sha256": "b2ff5becf0c5d62bfb6d4be32548db875614e4a1ce3ffb117fbdba2614e7f209",
+      "size": 1245024,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/59.mp3": {
+      "key": "media/sha256/40b74381d59ab3d54a83b020a69077beb288265016a6fe18ed4ec2e25c32d8cb.mp3",
+      "sha256": "40b74381d59ab3d54a83b020a69077beb288265016a6fe18ed4ec2e25c32d8cb",
+      "size": 1137195,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/6.wav": {
+      "key": "media/sha256/c48f88dbc70211124cff0b48a381a3a0ebf2c3a2d1dc764611a9f0c960399aae.wav",
+      "sha256": "c48f88dbc70211124cff0b48a381a3a0ebf2c3a2d1dc764611a9f0c960399aae",
+      "size": 1530722,
+      "contentType": "audio/wav"
+    },
+    "public/database/Take Notes/RL/audio/60.mp3": {
+      "key": "media/sha256/96b089501d5049c6c5f927dffe2cbcff67c8cad0712ebe420c2153ac6b531d99.mp3",
+      "sha256": "96b089501d5049c6c5f927dffe2cbcff67c8cad0712ebe420c2153ac6b531d99",
+      "size": 829677,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/61.mp3": {
+      "key": "media/sha256/8ccd92e29bf2b7bb527c535f8740b42221287daa233c0d3ef810300cf91a28e1.mp3",
+      "sha256": "8ccd92e29bf2b7bb527c535f8740b42221287daa233c0d3ef810300cf91a28e1",
+      "size": 1441051,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/62.mp3": {
+      "key": "media/sha256/7c6f1903d8e7c47408715ee9883a38399afa778a175d90f3124ff1146e4fe967.mp3",
+      "sha256": "7c6f1903d8e7c47408715ee9883a38399afa778a175d90f3124ff1146e4fe967",
+      "size": 2138423,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/63.mp3": {
+      "key": "media/sha256/8ce64f1a6872a103bcf38c5ad62b168a53c4dddcc30d2981c836c41c0b253833.mp3",
+      "sha256": "8ce64f1a6872a103bcf38c5ad62b168a53c4dddcc30d2981c836c41c0b253833",
+      "size": 1072829,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/64.mp3": {
+      "key": "media/sha256/b102cca93d74db1a70a7627bedc50fc0f036502951ae651e4c1bb5dc88422e61.mp3",
+      "sha256": "b102cca93d74db1a70a7627bedc50fc0f036502951ae651e4c1bb5dc88422e61",
+      "size": 747440,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/65.mp3": {
+      "key": "media/sha256/d5df32afb018c65feafba66afc2e06fff0640fbe15fb52026ee631c9aec1476a.mp3",
+      "sha256": "d5df32afb018c65feafba66afc2e06fff0640fbe15fb52026ee631c9aec1476a",
+      "size": 1937633,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/66.mp3": {
+      "key": "media/sha256/595b35c9d35163df4b540b088e62da9500c52159a593b72c34184f4c1e3ef6b6.mp3",
+      "sha256": "595b35c9d35163df4b540b088e62da9500c52159a593b72c34184f4c1e3ef6b6",
+      "size": 1711470,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/67.mp3": {
+      "key": "media/sha256/4db21002c7d6bc08fd4a24d9afd7636907598e3695be37c35d0bc82a51c90c1e.mp3",
+      "sha256": "4db21002c7d6bc08fd4a24d9afd7636907598e3695be37c35d0bc82a51c90c1e",
+      "size": 1457357,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/68.mp3": {
+      "key": "media/sha256/cb9baff4052a71f68c45e667554f4704cb3b6a9ce06ff4947397ea80f46a00d5.mp3",
+      "sha256": "cb9baff4052a71f68c45e667554f4704cb3b6a9ce06ff4947397ea80f46a00d5",
+      "size": 1734378,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/69.mp3": {
+      "key": "media/sha256/29e9bbe2592bed66121c1a3bc28a489895acb5814a9545513940a5b3d4e2cbd7.mp3",
+      "sha256": "29e9bbe2592bed66121c1a3bc28a489895acb5814a9545513940a5b3d4e2cbd7",
+      "size": 1218287,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/7.mp3": {
+      "key": "media/sha256/494f7c0a81693d01110da7a21780674bca2851d443d584034d1dd83b786a8902.mp3",
+      "sha256": "494f7c0a81693d01110da7a21780674bca2851d443d584034d1dd83b786a8902",
+      "size": 554047,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/70.mp3": {
+      "key": "media/sha256/59cf38c2566520be48abf78f36fc1dff178ad99986fa6e37cc9ba1f48072b01f.mp3",
+      "sha256": "59cf38c2566520be48abf78f36fc1dff178ad99986fa6e37cc9ba1f48072b01f",
+      "size": 2049187,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/71.mp3": {
+      "key": "media/sha256/213de4d1fc3e46b017519edf41502b6db7f6fa94e330f980b256a69be76430cb.mp3",
+      "sha256": "213de4d1fc3e46b017519edf41502b6db7f6fa94e330f980b256a69be76430cb",
+      "size": 1460283,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/72.mp3": {
+      "key": "media/sha256/1400d0f5a61e28450150cbb98427241b28beeb9ad500b91609e241dc85e7e7e4.mp3",
+      "sha256": "1400d0f5a61e28450150cbb98427241b28beeb9ad500b91609e241dc85e7e7e4",
+      "size": 2429026,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/73.mp3": {
+      "key": "media/sha256/2c0b686e9863237aebb8f731eca00c227d6652e67dceb812b9f0a45b957ba735.mp3",
+      "sha256": "2c0b686e9863237aebb8f731eca00c227d6652e67dceb812b9f0a45b957ba735",
+      "size": 512129,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/74.mp3": {
+      "key": "media/sha256/5200071ebe2139ecde9a66964a36396d4b073774d9d9902bb95534cb06e62885.mp3",
+      "sha256": "5200071ebe2139ecde9a66964a36396d4b073774d9d9902bb95534cb06e62885",
+      "size": 865441,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/76.mp3": {
+      "key": "media/sha256/d2220025d6a82a202c9602da54489bd1d188487ac1bd707c9e31160923a05660.mp3",
+      "sha256": "d2220025d6a82a202c9602da54489bd1d188487ac1bd707c9e31160923a05660",
+      "size": 1277211,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/77.mp3": {
+      "key": "media/sha256/c1dcc8b3c3f2125539dd26959f9db75a5f4374da2d9887fb52110a9a2ca689ac.mp3",
+      "sha256": "c1dcc8b3c3f2125539dd26959f9db75a5f4374da2d9887fb52110a9a2ca689ac",
+      "size": 1473154,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/78.mp3": {
+      "key": "media/sha256/7192e602285399a16770dcdf662af7dc418875396d692895fee424f5fc1a422d.mp3",
+      "sha256": "7192e602285399a16770dcdf662af7dc418875396d692895fee424f5fc1a422d",
+      "size": 922371,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/79.mp3": {
+      "key": "media/sha256/28de1d98c31f3b2b34a2116881f42121f62f15377345e128a550dd0da5f5497f.mp3",
+      "sha256": "28de1d98c31f3b2b34a2116881f42121f62f15377345e128a550dd0da5f5497f",
+      "size": 962210,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/8.mp3": {
+      "key": "media/sha256/3c4833c10a81d0010a38d4e096074cc62c90b2c407b5edf50c48b0a5be2ab46b.mp3",
+      "sha256": "3c4833c10a81d0010a38d4e096074cc62c90b2c407b5edf50c48b0a5be2ab46b",
+      "size": 521213,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/80.mp3": {
+      "key": "media/sha256/03aa0297efa151a8e3964bf22009066d984c347db12229a44cecdb1b4fa6518d.mp3",
+      "sha256": "03aa0297efa151a8e3964bf22009066d984c347db12229a44cecdb1b4fa6518d",
+      "size": 734604,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/81.mp3": {
+      "key": "media/sha256/5b526c6a46ee69518f6d19ccc1948c23cd0d0758d3464c1d1c215916c37f603c.mp3",
+      "sha256": "5b526c6a46ee69518f6d19ccc1948c23cd0d0758d3464c1d1c215916c37f603c",
+      "size": 2048693,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/82.mp3": {
+      "key": "media/sha256/17b4c9cb4dd53b3cae351d2fc8c274eb249324bd20886fb0fd543b6f59d7b284.mp3",
+      "sha256": "17b4c9cb4dd53b3cae351d2fc8c274eb249324bd20886fb0fd543b6f59d7b284",
+      "size": 2403123,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/83.mp3": {
+      "key": "media/sha256/68421a1c85a46b53c601df79482476c9a357b34495bc805cd3a7c79239284d22.mp3",
+      "sha256": "68421a1c85a46b53c601df79482476c9a357b34495bc805cd3a7c79239284d22",
+      "size": 2222565,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/84.mp3": {
+      "key": "media/sha256/f657d8e18cd17d6ff16e45e57c28bef11a77a4423c8a2f050ed84ef836312717.mp3",
+      "sha256": "f657d8e18cd17d6ff16e45e57c28bef11a77a4423c8a2f050ed84ef836312717",
+      "size": 488104,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/85.mp3": {
+      "key": "media/sha256/f0f9d8a77222fbe70c9024ec0fff5fb3f842292f1ea1d59e9168f3284bfb530e.mp3",
+      "sha256": "f0f9d8a77222fbe70c9024ec0fff5fb3f842292f1ea1d59e9168f3284bfb530e",
+      "size": 1579081,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/86.mp3": {
+      "key": "media/sha256/a713b4cea408a8b0f4f981970acd5c16c3eaf9ede9c38576d3b01d05164e9f99.mp3",
+      "sha256": "a713b4cea408a8b0f4f981970acd5c16c3eaf9ede9c38576d3b01d05164e9f99",
+      "size": 1898646,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/87.mp3": {
+      "key": "media/sha256/10ed8a72b2dc7a209f0fbc8b622c2b1d7ad2b42a657884731bf6e0cc62e9a434.mp3",
+      "sha256": "10ed8a72b2dc7a209f0fbc8b622c2b1d7ad2b42a657884731bf6e0cc62e9a434",
+      "size": 1787887,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/88.mp3": {
+      "key": "media/sha256/5fbf94e00fa36cec3c6d3e6385fdab80075c710a204148fa9198acc653d79df1.mp3",
+      "sha256": "5fbf94e00fa36cec3c6d3e6385fdab80075c710a204148fa9198acc653d79df1",
+      "size": 623741,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/89.mp3": {
+      "key": "media/sha256/1c38b41a7ddffe4d10b60568922c3704ec5d0963e3cbefb532bff86f7088a514.mp3",
+      "sha256": "1c38b41a7ddffe4d10b60568922c3704ec5d0963e3cbefb532bff86f7088a514",
+      "size": 379130,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/90.mp3": {
+      "key": "media/sha256/def0347eb28654e6759352c9e8c53531009fb658dc2fee983d44c0e6d68d03d8.mp3",
+      "sha256": "def0347eb28654e6759352c9e8c53531009fb658dc2fee983d44c0e6d68d03d8",
+      "size": 412140,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/91.mp3": {
+      "key": "media/sha256/bc7d614128201a5adc6be44e1d7930517551efa2a2054a23598ec1a544cedcbb.mp3",
+      "sha256": "bc7d614128201a5adc6be44e1d7930517551efa2a2054a23598ec1a544cedcbb",
+      "size": 622046,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/92.mp3": {
+      "key": "media/sha256/9df4330a4d656fb19374b64758f2f19c0e57568ce6c3502477e0f4222e5e9b25.mp3",
+      "sha256": "9df4330a4d656fb19374b64758f2f19c0e57568ce6c3502477e0f4222e5e9b25",
+      "size": 703884,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/93.mp3": {
+      "key": "media/sha256/6bcca31c4f06cf844650557a2d116b471eb116282615e9b515ab1a8fb738770a.mp3",
+      "sha256": "6bcca31c4f06cf844650557a2d116b471eb116282615e9b515ab1a8fb738770a",
+      "size": 1008367,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/94.mp3": {
+      "key": "media/sha256/cf2f646acdec02f26abf714bb5c453ffb5cfef36627b61c0fea25cd414549e93.mp3",
+      "sha256": "cf2f646acdec02f26abf714bb5c453ffb5cfef36627b61c0fea25cd414549e93",
+      "size": 1220481,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/95.mp3": {
+      "key": "media/sha256/2f97d7f675549d3bda994750bfbe108e3a7c20cca27cf49e201ba9e4c59ca8ae.mp3",
+      "sha256": "2f97d7f675549d3bda994750bfbe108e3a7c20cca27cf49e201ba9e4c59ca8ae",
+      "size": 420980,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/96.mp3": {
+      "key": "media/sha256/b29c1d45467fa9f8248ea6298a12786dd3de3330eb60b2664ed48887d018f14b.mp3",
+      "sha256": "b29c1d45467fa9f8248ea6298a12786dd3de3330eb60b2664ed48887d018f14b",
+      "size": 299141,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/97.mp3": {
+      "key": "media/sha256/be65df7f472066dcc51f918fa302199e789a0f9a8bbc1a762420fb0cd795c2fe.mp3",
+      "sha256": "be65df7f472066dcc51f918fa302199e789a0f9a8bbc1a762420fb0cd795c2fe",
+      "size": 338847,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/98.mp3": {
+      "key": "media/sha256/96fd5aa0b1182839e9dbecd3d2a1a84feda52bb48fbe2813118543ec69702638.mp3",
+      "sha256": "96fd5aa0b1182839e9dbecd3d2a1a84feda52bb48fbe2813118543ec69702638",
+      "size": 370194,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Take Notes/RL/audio/99.mp3": {
+      "key": "media/sha256/a3ad61a8d145af81a075c49e5e9132f4e6b615ff56b2c12d78204333a49138b4.mp3",
+      "sha256": "a3ad61a8d145af81a075c49e5e9132f4e6b615ff56b2c12d78204333a49138b4",
+      "size": 393496,
+      "contentType": "audio/mpeg"
+    }
+  }
+}

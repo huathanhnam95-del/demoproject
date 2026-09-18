@@ -980,16 +980,29 @@
         let resolvedPath = '';
         for (const ext of tryExts) {
             const path = `${basePath}.${ext}`;
-            const exists = await checkFileExists(path);
+            let targetUrl = path;
+            let exists = false;
+            if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+                try {
+                    const res = await window.MediaUrlResolver.resolveAudioUrl(path, { mode: 'SGD' });
+                    if (res && res !== path) {
+                        targetUrl = res;
+                        exists = true;
+                    }
+                } catch (_) {}
+            }
+            if (!exists) {
+                exists = await checkFileExists(path);
+            }
             if (loadToken !== currentAudioLoadToken) return;
             if (exists) {
                 if (el.audio) {
-                    el.audio.src = path;
+                    el.audio.src = targetUrl;
                     el.audio.load();
                 }
                 const activePlayer = getAudioPlayer();
                 if (activePlayer) activePlayer.setEnabled(true);
-                resolvedPath = path;
+                resolvedPath = targetUrl;
                 found = true;
                 break;
             }

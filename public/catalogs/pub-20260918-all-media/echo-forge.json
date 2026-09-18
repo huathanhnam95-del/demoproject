@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "mode": "echo-forge",
+  "ineligibleForProduction": false,
+  "createdAt": "2026-09-18T08:41:36.879Z",
+  "assetCount": 30,
+  "assets": {
+    "public/database/echo-forge/audio/v1/a1/listening/001.wav": {
+      "key": "media/sha256/dc15aa6862628b1194d9f4499dce6954ee29ea91c45cbcc9e3417bd8ac2f0ef4.wav",
+      "sha256": "dc15aa6862628b1194d9f4499dce6954ee29ea91c45cbcc9e3417bd8ac2f0ef4",
+      "size": 38502,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a1/listening/002.wav": {
+      "key": "media/sha256/9bd85450dc3b15652de8be5013567eb6b9077dd4abe89c54f69df2dae48177fb.wav",
+      "sha256": "9bd85450dc3b15652de8be5013567eb6b9077dd4abe89c54f69df2dae48177fb",
+      "size": 38806,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a1/listening/003.wav": {
+      "key": "media/sha256/1dde2cb271cfaefb7830d798a14d76ec9ca470457118f38ed84bc8923fb30f39.wav",
+      "sha256": "1dde2cb271cfaefb7830d798a14d76ec9ca470457118f38ed84bc8923fb30f39",
+      "size": 39732,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a1/listening/004.wav": {
+      "key": "media/sha256/d2194690f4c25fe5122eec1917f6ea80e91c2ff7a68e07a90cd010cf51a1158a.wav",
+      "sha256": "d2194690f4c25fe5122eec1917f6ea80e91c2ff7a68e07a90cd010cf51a1158a",
+      "size": 40642,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a1/listening/005.wav": {
+      "key": "media/sha256/48e4d5b709ce20914c0db3bc8069565623b9d723f9e074ddda7f39a8ab7cd4f1.wav",
+      "sha256": "48e4d5b709ce20914c0db3bc8069565623b9d723f9e074ddda7f39a8ab7cd4f1",
+      "size": 39368,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a1/listening/006.wav": {
+      "key": "media/sha256/fec454ec950e7e9e152a2257ec1386e620e526659f5e54aa91c9a0f5c6c6b62d.wav",
+      "sha256": "fec454ec950e7e9e152a2257ec1386e620e526659f5e54aa91c9a0f5c6c6b62d",
+      "size": 41142,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a2/listening/001.wav": {
+      "key": "media/sha256/39ffeb4e5e33bf22bfae864fe015cd3b7a8ab38bb89270f0af20b9dbcccb35eb.wav",
+      "sha256": "39ffeb4e5e33bf22bfae864fe015cd3b7a8ab38bb89270f0af20b9dbcccb35eb",
+      "size": 42174,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a2/listening/002.wav": {
+      "key": "media/sha256/0367bf954cdba628e041fca5b700bfc2cca9113ded21399de70f59645ab0c361.wav",
+      "sha256": "0367bf954cdba628e041fca5b700bfc2cca9113ded21399de70f59645ab0c361",
+      "size": 50686,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a2/listening/003.wav": {
+      "key": "media/sha256/de37cdd7b49c9f16e7ebe2cbb94346de14ec7fc0ef2d526f684e2f9ab5fd1de3.wav",
+      "sha256": "de37cdd7b49c9f16e7ebe2cbb94346de14ec7fc0ef2d526f684e2f9ab5fd1de3",
+      "size": 39104,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a2/listening/004.wav": {
+      "key": "media/sha256/a1625fcff1ef54fdfa2580eb09af27a966885f866013cadd2bf14a56a8ac8029.wav",
+      "sha256": "a1625fcff1ef54fdfa2580eb09af27a966885f866013cadd2bf14a56a8ac8029",
+      "size": 42480,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a2/listening/005.wav": {
+      "key": "media/sha256/bc8dad4630198885bf4472e1071a234fd6ee80ea240d0a6b481d1dc542aa3caa.wav",
+      "sha256": "bc8dad4630198885bf4472e1071a234fd6ee80ea240d0a6b481d1dc542aa3caa",
+      "size": 41900,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/a2/listening/006.wav": {
+      "key": "media/sha256/bb94af3411786070050dde8b23a9f022df00e12558867c7e870ecc20c486d6e1.wav",
+      "sha256": "bb94af3411786070050dde8b23a9f022df00e12558867c7e870ecc20c486d6e1",
+      "size": 42372,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b1/listening/001.wav": {
+      "key": "media/sha256/141b43f9dbbb5d8825cf1badb4f467a8c5f7d048d62202a46a8147dc7aef18df.wav",
+      "sha256": "141b43f9dbbb5d8825cf1badb4f467a8c5f7d048d62202a46a8147dc7aef18df",
+      "size": 43766,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b1/listening/002.wav": {
+      "key": "media/sha256/1bcaf52064dcf132beefda5e2d967e991e89dfc36210af37c02d543420ba475f.wav",
+      "sha256": "1bcaf52064dcf132beefda5e2d967e991e89dfc36210af37c02d543420ba475f",
+      "size": 46942,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b1/listening/003.wav": {
+      "key": "media/sha256/13885b775ed4ed2f6bda4aae8f41169448ea27d877f581888c2124be0c9c9530.wav",
+      "sha256": "13885b775ed4ed2f6bda4aae8f41169448ea27d877f581888c2124be0c9c9530",
+      "size": 46136,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b1/listening/004.wav": {
+      "key": "media/sha256/a793c04753dd84d7e3e0845f88abbf05a7efd80aaee8139d8f25f871c1ff9952.wav",
+      "sha256": "a793c04753dd84d7e3e0845f88abbf05a7efd80aaee8139d8f25f871c1ff9952",
+      "size": 45420,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b1/listening/005.wav": {
+      "key": "media/sha256/bd8872486134c6c036a2d1faec9360428ce04fdbb08a605b109beeeabb341fc0.wav",
+      "sha256": "bd8872486134c6c036a2d1faec9360428ce04fdbb08a605b109beeeabb341fc0",
+      "size": 40440,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b1/listening/006.wav": {
+      "key": "media/sha256/6367731612aac5da284cffc8b4dd9ec1dcadfbc3c681c059380cd4b3653ff9e8.wav",
+      "sha256": "6367731612aac5da284cffc8b4dd9ec1dcadfbc3c681c059380cd4b3653ff9e8",
+      "size": 42724,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b2/listening/001.wav": {
+      "key": "media/sha256/92f8eaa670fa89da473ab0ab8cec0435f25c34b553083c34006d542379f9c220.wav",
+      "sha256": "92f8eaa670fa89da473ab0ab8cec0435f25c34b553083c34006d542379f9c220",
+      "size": 47156,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b2/listening/002.wav": {
+      "key": "media/sha256/a7cdddf82bb75d3adc4b19191e706db8664c83e15722d3efa9b20f033ab4e940.wav",
+      "sha256": "a7cdddf82bb75d3adc4b19191e706db8664c83e15722d3efa9b20f033ab4e940",
+      "size": 49792,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b2/listening/003.wav": {
+      "key": "media/sha256/5af4867399fa7b28914ed0172ee0d85b02fbf43d9b056ed01b26ab42020a7d89.wav",
+      "sha256": "5af4867399fa7b28914ed0172ee0d85b02fbf43d9b056ed01b26ab42020a7d89",
+      "size": 41118,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b2/listening/004.wav": {
+      "key": "media/sha256/3b700c9fdb47c684afc9d4b405334726f8f77ac5b02863f0464590c229bb7823.wav",
+      "sha256": "3b700c9fdb47c684afc9d4b405334726f8f77ac5b02863f0464590c229bb7823",
+      "size": 46218,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b2/listening/005.wav": {
+      "key": "media/sha256/cb5e53bed4583502064740aac028b0c6604327dd06888b73eb7446d4dd5ce16e.wav",
+      "sha256": "cb5e53bed4583502064740aac028b0c6604327dd06888b73eb7446d4dd5ce16e",
+      "size": 45654,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/b2/listening/006.wav": {
+      "key": "media/sha256/bd1ccdd1b7d6daa36bd77e127f265140180f3abb4a5572293468ec1e5b61a89c.wav",
+      "sha256": "bd1ccdd1b7d6daa36bd77e127f265140180f3abb4a5572293468ec1e5b61a89c",
+      "size": 49262,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/c1/listening/001.wav": {
+      "key": "media/sha256/b9a3f845359e781c2d1362ac888b2af97eae3cbd1780bf9ebb7d6648a1e8f358.wav",
+      "sha256": "b9a3f845359e781c2d1362ac888b2af97eae3cbd1780bf9ebb7d6648a1e8f358",
+      "size": 44562,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/c1/listening/002.wav": {
+      "key": "media/sha256/a1d65c38835a10c9a70bfaa5aa44315f553933a5bcaf503b53473f563aa897a3.wav",
+      "sha256": "a1d65c38835a10c9a70bfaa5aa44315f553933a5bcaf503b53473f563aa897a3",
+      "size": 47296,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/c1/listening/003.wav": {
+      "key": "media/sha256/dcd30e625001f7eafab8671068253962496e1aa0b1cf606daa0ac45db6308896.wav",
+      "sha256": "dcd30e625001f7eafab8671068253962496e1aa0b1cf606daa0ac45db6308896",
+      "size": 48658,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/c1/listening/004.wav": {
+      "key": "media/sha256/9efbd626196ea594f8a0ce337872de327df77feba60c138928dc90a368d1d45d.wav",
+      "sha256": "9efbd626196ea594f8a0ce337872de327df77feba60c138928dc90a368d1d45d",
+      "size": 48266,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/c1/listening/005.wav": {
+      "key": "media/sha256/8013f8826726eb1bbd8997bec3f763fd9ac70fae8ecb3dd2ba2571c380964f7b.wav",
+      "sha256": "8013f8826726eb1bbd8997bec3f763fd9ac70fae8ecb3dd2ba2571c380964f7b",
+      "size": 42178,
+      "contentType": "audio/wav"
+    },
+    "public/database/echo-forge/audio/v1/c1/listening/006.wav": {
+      "key": "media/sha256/764d89751ff4a393c6c80748abebbbe4a186513483eff297f75d8b59cfc11dcb.wav",
+      "sha256": "764d89751ff4a393c6c80748abebbbe4a186513483eff297f75d8b59cfc11dcb",
+      "size": 45334,
+      "contentType": "audio/wav"
+    }
+  }
+}

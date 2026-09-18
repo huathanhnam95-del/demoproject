@@ -73,8 +73,8 @@ test('MediaUrlResolver: _detectMode extracts mode from logical path', () => {
   const { resolver } = createResolverContext();
   assert.equal(resolver._detectMode('public/database/RA/Voice/audio/1.mp3'), 'RA');
   assert.equal(resolver._detectMode('public/database/SST/audio/1.mp3'), 'SST');
-  assert.equal(resolver._detectMode('public/database/Describe Image/DI/1.png'), 'Describe Image');
-  assert.equal(resolver._detectMode('public/database/Highlight Incorrect Words/1.mp3'), 'Highlight Incorrect Words');
+  assert.equal(resolver._detectMode('public/database/Describe Image/DI/1.png'), 'Describe-Image');
+  assert.equal(resolver._detectMode('public/database/Highlight Incorrect Words/1.mp3'), 'HIW');
 });
 
 test('MediaUrlResolver: rollout state = legacy bypasses remote fetch', async () => {

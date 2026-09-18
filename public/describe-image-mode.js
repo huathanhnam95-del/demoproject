@@ -252,9 +252,19 @@
         const fallbackSrc = getImageFallbackSrc(entry);
         imgEl.onerror = () => {
             imgEl.onerror = null;
-            if (fallbackSrc && imgEl.src !== fallbackSrc) imgEl.src = fallbackSrc;
+            if (fallbackSrc && imgEl.src !== fallbackSrc) {
+                if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadImage === 'function') {
+                    window.MediaUrlResolver.loadImage(imgEl, fallbackSrc, { mode: 'Describe-Image' });
+                } else {
+                    imgEl.src = fallbackSrc;
+                }
+            }
         };
-        imgEl.src = primarySrc;
+        if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadImage === 'function') {
+            window.MediaUrlResolver.loadImage(imgEl, primarySrc, { mode: 'Describe-Image' });
+        } else {
+            imgEl.src = primarySrc;
+        }
     }
 
     function updateQuestionDisplay() {

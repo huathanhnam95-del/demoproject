@@ -133,6 +133,78 @@
                 "destination": "/404.html"
             },
             {
+                "source": "/database/RFIB/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/Highlight Incorrect Words/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/Take Notes/RL/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/collo-dictate/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/Describe Image/DI/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/LMCMA/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/LMCSA/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/HCS/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/type/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/SMW/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/speak/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/extended/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/LFIB/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/SGD/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/quiz/ASQ/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/RTS/audio/**",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/Entrance Test/*.mp3",
+                "destination": "/404.html"
+            },
+            {
+                "source": "/database/echo-forge/audio/**",
+                "destination": "/404.html"
+            },
+            {
                 "source": "**",
                 "destination": "/index.html"
             }

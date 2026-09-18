@@ -41,10 +41,48 @@
     return withoutLeading;
   }
 
+  const MODE_MAP = {
+    'ra': 'RA',
+    'sst': 'SST',
+    'rfib': 'RFIB',
+    'hiw': 'HIW',
+    'highlight incorrect words': 'HIW',
+    'take notes': 'Take-Notes',
+    'take-notes': 'Take-Notes',
+    'rl': 'Take-Notes',
+    'collo-dictate': 'collo-dictate',
+    'describe image': 'Describe-Image',
+    'describe-image': 'Describe-Image',
+    'di': 'Describe-Image',
+    'lmcma': 'LMCMA',
+    'lmcsa': 'LMCSA',
+    'hcs': 'HCS',
+    'type': 'type',
+    'wfd': 'type',
+    'smw': 'SMW',
+    'speak': 'speak',
+    'rs': 'speak',
+    'extended': 'extended',
+    'lfib': 'LFIB',
+    'sgd': 'SGD',
+    'quiz': 'quiz',
+    'asq': 'quiz',
+    'rts': 'RTS',
+    'entrance test': 'Entrance-Test',
+    'entrance-test': 'Entrance-Test',
+    'echo-forge': 'echo-forge'
+  };
+
+  function _canonicalMode(modeStr) {
+    if (!modeStr || typeof modeStr !== 'string') return 'unknown';
+    const key = modeStr.trim().toLowerCase();
+    return MODE_MAP[key] || modeStr;
+  }
+
   function _detectMode(normalizedPath) {
     const parts = normalizedPath.split('/');
     if (parts.length >= 3 && parts[1] === 'database') {
-      return parts[2];
+      return _canonicalMode(parts[2]);
     }
     return 'unknown';
   }
@@ -104,32 +142,33 @@
   }
 
   function _loadShard(mode, options) {
-    if (_shardCache.has(mode)) {
-      return Promise.resolve(_shardCache.get(mode));
+    const canonMode = _canonicalMode(mode);
+    if (_shardCache.has(canonMode)) {
+      return Promise.resolve(_shardCache.get(canonMode));
     }
-    if (_shardPromises.has(mode)) {
-      return _shardPromises.get(mode);
+    if (_shardPromises.has(canonMode)) {
+      return _shardPromises.get(canonMode);
     }
 
     const promise = (async () => {
       try {
         const config = await init(options && options.config);
-        const modeConfig = (config.modes && config.modes[mode]) || {};
+        const modeConfig = (config.modes && (config.modes[canonMode] || config.modes[mode])) || {};
         const publicationId = config.publicationId;
         const deliveryBaseUrl = config.deliveryBaseUrl || '';
 
-        const shardKey = modeConfig.shardKey || ('catalogs/' + publicationId + '/' + mode + '.json');
+        const shardKey = modeConfig.shardKey || ('catalogs/' + publicationId + '/' + canonMode + '.json');
         const shardUrl = deliveryBaseUrl ? (deliveryBaseUrl + shardKey) : ('/' + shardKey);
 
         const shardData = await _fetchWithRetry(shardUrl, {}, 1, 200);
-        _shardCache.set(mode, shardData);
+        _shardCache.set(canonMode, shardData);
         return shardData;
       } finally {
-        _shardPromises.delete(mode);
+        _shardPromises.delete(canonMode);
       }
     })();
 
-    _shardPromises.set(mode, promise);
+    _shardPromises.set(canonMode, promise);
     return promise;
   }
 
@@ -148,10 +187,11 @@
     }
 
     const normalized = _normalizePath(logicalPath);
-    const mode = opts.mode || _detectMode(normalized);
+    const rawMode = opts.mode || _detectMode(normalized);
+    const mode = _canonicalMode(rawMode);
 
     const config = await init(opts.config);
-    const modeConfig = (config.modes && config.modes[mode]) || {};
+    const modeConfig = (config.modes && (config.modes[mode] || config.modes[rawMode])) || {};
     const rolloutState = opts.rolloutState || modeConfig.state || config.defaultRolloutState || 'remote-with-fallback';
 
     if (rolloutState === 'legacy') {
@@ -250,6 +290,58 @@
     });
   }
 
+  function resolveImageUrl(logicalPath, options) {
+    return resolveAudioUrl(logicalPath, options);
+  }
+
+  function resolveMediaUrl(logicalPath, options) {
+    return resolveAudioUrl(logicalPath, options);
+  }
+
+  function loadImage(imgEl, logicalPath, options) {
+    const opts = options || {};
+    if (!imgEl) return Promise.reject(new Error('imgEl is required'));
+
+    const requestId = ++_requestCounter;
+    imgEl.dataset.mediaResolverRequestId = String(requestId);
+
+    return resolveImageUrl(logicalPath, opts).then((resolvedUrl) => {
+      if (imgEl.dataset.mediaResolverRequestId !== String(requestId)) {
+        return null;
+      }
+
+      const mode = _canonicalMode(opts.mode || _detectMode(_normalizePath(logicalPath)));
+      const modeConfig = (_config && _config.modes && _config.modes[mode]) || {};
+      const rolloutState = opts.rolloutState || modeConfig.state || (_config && _config.defaultRolloutState) || 'remote-with-fallback';
+
+      if (rolloutState === 'remote-with-fallback' && resolvedUrl !== logicalPath) {
+        const fallbackHandler = function() {
+          if (imgEl.dataset.mediaResolverRequestId !== String(requestId)) return;
+          console.warn('[MediaUrlResolver] Image load error on remote URL, falling back to legacy path:', resolvedUrl, '->', logicalPath);
+          _emitFallbackEvent({
+            logicalPath,
+            mode,
+            rolloutState,
+            error: 'image_element_error',
+            timestamp: Date.now()
+          });
+          imgEl.removeEventListener('error', fallbackHandler);
+          imgEl.src = logicalPath;
+        };
+        imgEl.addEventListener('error', fallbackHandler, { once: true });
+      }
+
+      if (opts.crossOrigin) {
+        imgEl.crossOrigin = opts.crossOrigin;
+      } else if (resolvedUrl && (resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://'))) {
+        imgEl.crossOrigin = 'anonymous';
+      }
+
+      imgEl.src = resolvedUrl;
+      return resolvedUrl;
+    });
+  }
+
   function _reset() {
     _config = null;
     _initPromise = null;
@@ -261,10 +353,14 @@
   return {
     init,
     resolveAudioUrl,
+    resolveImageUrl,
+    resolveMediaUrl,
     loadAudio,
+    loadImage,
     _reset,
     _normalizePath,
     _detectMode,
+    _canonicalMode,
     _getShardCache: () => _shardCache,
     _getConfig: () => _config
   };

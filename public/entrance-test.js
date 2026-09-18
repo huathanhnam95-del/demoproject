@@ -594,6 +594,13 @@
 
     hydrateFillDefaults(step);
 
+    const audioEl = elements.card.querySelector('.et-audio-player');
+    if (audioEl && rawAudioUrl && window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+      window.MediaUrlResolver.resolveAudioUrl(rawAudioUrl, { mode: 'Entrance-Test' }).then((resolvedUrl) => {
+        if (resolvedUrl) audioEl.src = resolvedUrl;
+      }).catch(() => {});
+    }
+
     elements.card.querySelector('#btn-submit').addEventListener('click', () => {
       submitFill(step).catch((e) => {
         console.error(e);

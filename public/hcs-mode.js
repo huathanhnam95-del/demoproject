@@ -356,8 +356,12 @@
     const wasPlaying = !elements.audioElement.paused;
     const curTime = elements.audioElement.currentTime;
 
-    elements.audioElement.src = audioUrl;
-    elements.audioElement.load();
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+      window.MediaUrlResolver.loadAudio(elements.audioElement, audioUrl, { mode: 'HCS' });
+    } else {
+      elements.audioElement.src = audioUrl;
+      elements.audioElement.load();
+    }
 
     const restoreState = () => {
       elements.audioElement.currentTime = curTime;
@@ -627,8 +631,12 @@
         elements.voiceSelect.value = voices[0].id;
         const firstVoiceUrl = `/database/HCS/audio/${qId}/${voices[0].file}`;
         if (elements.audioElement) {
-          elements.audioElement.src = firstVoiceUrl;
-          elements.audioElement.load();
+          if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+            window.MediaUrlResolver.loadAudio(elements.audioElement, firstVoiceUrl, { mode: 'HCS' });
+          } else {
+            elements.audioElement.src = firstVoiceUrl;
+            elements.audioElement.load();
+          }
         }
         setAudioControlsEnabled(true);
       } else {

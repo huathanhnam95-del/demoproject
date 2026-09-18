@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "type": "production",
+  "ineligibleForProduction": false,
+  "selectionRestricted": false,
+  "createdAt": "2026-09-18T08:41:37.113Z",
+  "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
+  "summary": {
+    "totalLogicalAssets": 52888,
+    "uniqueStorageObjects": 20216,
+    "totalLogicalBytes": 5830230975,
+    "uniqueStorageBytes": 5701967338,
+    "deduplicationSavingsBytes": 128263637,
+    "modesCount": 20
+  },
+  "shards": {
+    "RA": {
+      "shardKey": "catalogs/pub-20260918-all-media/RA.json",
+      "sha256": "962717c5a3f14bbb7e828eb7445c01c937ac153e6e14ca31fe79d438593b7573",
+      "size": 10091737,
+      "assetCount": 30681
+    },
+    "SST": {
+      "shardKey": "catalogs/pub-20260918-all-media/SST.json",
+      "sha256": "dd97144e68c5783dda6436a9ed83fd3e9849c4b78f63298d8404e49c0b40a62c",
+      "size": 535776,
+      "assetCount": 1755
+    },
+    "RFIB": {
+      "shardKey": "catalogs/pub-20260918-all-media/RFIB.json",
+      "sha256": "6a974aa6deaf36137f65ff06f3e478a50abc02b79a7db88fddd751094e23f154",
+      "size": 1201786,
+      "assetCount": 4001
+    },
+    "HIW": {
+      "shardKey": "catalogs/pub-20260918-all-media/HIW.json",
+      "sha256": "0b0bfc56c6b819f20a2fb1ebcbdeb2f3c72fa59da5f26be3f7bc4afcb96f66c6",
+      "size": 346470,
+      "assetCount": 1059
+    },
+    "Take-Notes": {
+      "shardKey": "catalogs/pub-20260918-all-media/Take-Notes.json",
+      "sha256": "59c7a9d57b524c6ef700979f49dba8a68c919b1a6e4b21d614f636d70ba720b2",
+      "size": 127343,
+      "assetCount": 426
+    },
+    "collo-dictate": {
+      "shardKey": "catalogs/pub-20260918-all-media/collo-dictate.json",
+      "sha256": "512832f81db80dfca1d8ccf8e6bbc540d05bc5c1114140c353ca2f88539d4892",
+      "size": 1144919,
+      "assetCount": 3765
+    },
+    "Describe-Image": {
+      "shardKey": "catalogs/pub-20260918-all-media/Describe-Image.json",
+      "sha256": "bb94a8e674686c5c658c620ef88ff4570833dbe0495f5aba69d0434ca0625e94",
+      "size": 355438,
+      "assetCount": 1204
+    },
+    "LMCMA": {
+      "shardKey": "catalogs/pub-20260918-all-media/LMCMA.json",
+      "sha256": "893b74b8d1b5aa298bea15267554b9e164f4af7cbdebaa3ae010bab7fac39ac7",
+      "size": 64860,
+      "assetCount": 210
+    },
+    "LMCSA": {
+      "shardKey": "catalogs/pub-20260918-all-media/LMCSA.json",
+      "sha256": "426e80f6a549496ef1cf2f58a1001721fe133eadf49bb1a23b6afa3e18d2ce91",
+      "size": 80490,
+      "assetCount": 261
+    },
+    "HCS": {
+      "shardKey": "catalogs/pub-20260918-all-media/HCS.json",
+      "sha256": "aaed19591d1d282c50165ebfc80104c11968197b786b93a6148abce261915abb",
+      "size": 54822,
+      "assetCount": 180
+    },
+    "type": {
+      "shardKey": "catalogs/pub-20260918-all-media/type.json",
+      "sha256": "f49da5952c46d1172d7249964201a06697d72176e6c7aa42bad313419ad92195",
+      "size": 919013,
+      "assetCount": 3182
+    },
+    "SMW": {
+      "shardKey": "catalogs/pub-20260918-all-media/SMW.json",
+      "sha256": "20d614ce12a8d571c1a5e47ab9a047a350961ae6d7445690b9bf8acc24b65268",
+      "size": 81162,
+      "assetCount": 267
+    },
+    "speak": {
+      "shardKey": "catalogs/pub-20260918-all-media/speak.json",
+      "sha256": "996fe68aa5e7ae708e0820faae75cf4cf0718e289a8efb1e7625d04e40660f7e",
+      "size": 819904,
+      "assetCount": 2830
+    },
+    "extended": {
+      "shardKey": "catalogs/pub-20260918-all-media/extended.json",
+      "sha256": "49cda00d09bdaaa527240aa301897b6db133af83afeb8320d496595e88fb3286",
+      "size": 68098,
+      "assetCount": 232
+    },
+    "LFIB": {
+      "shardKey": "catalogs/pub-20260918-all-media/LFIB.json",
+      "sha256": "a8a5a1eea090d840abfed5aa01568d849ac325c7d3c97443dc2ee47d8aaa7712",
+      "size": 67166,
+      "assetCount": 232
+    },
+    "SGD": {
+      "shardKey": "catalogs/pub-20260918-all-media/SGD.json",
+      "sha256": "713933ec4ad9e9c8c1eda2524fda6bc850584bb84d13cdfa7f92194d00080c1d",
+      "size": 23475,
+      "assetCount": 81
+    },
+    "quiz": {
+      "shardKey": "catalogs/pub-20260918-all-media/quiz.json",
+      "sha256": "1ae44c2e015c8c0f415ce62fa67df2f9b9b05971c5670573604751dc43f4d6b6",
+      "size": 685639,
+      "assetCount": 2344
+    },
+    "RTS": {
+      "shardKey": "catalogs/pub-20260918-all-media/RTS.json",
+      "sha256": "eb4576a166beb91731467e55fa5a8e5fddd5482a8978a4bd3cde52dbb9fdedfe",
+      "size": 42724,
+      "assetCount": 146
+    },
+    "Entrance-Test": {
+      "shardKey": "catalogs/pub-20260918-all-media/Entrance-Test.json",
+      "sha256": "b9b08f6685eab9951243fa7b538f6f02659ce5d4c78b2bab9a8254baa5926819",
+      "size": 817,
+      "assetCount": 2
+    },
+    "echo-forge": {
+      "shardKey": "catalogs/pub-20260918-all-media/echo-forge.json",
+      "sha256": "4ba7977c8f59a513b4128edc7661c62d0ffcaaa3f1fdbad6ef8e01b60750c52e",
+      "size": 9481,
+      "assetCount": 30
+    }
+  }
+}

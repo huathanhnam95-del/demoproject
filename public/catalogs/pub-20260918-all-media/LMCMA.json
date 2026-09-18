@@ -1,0 +1,1270 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "mode": "LMCMA",
+  "ineligibleForProduction": false,
+  "createdAt": "2026-09-18T08:41:33.834Z",
+  "assetCount": 210,
+  "assets": {
+    "public/database/LMCMA/audio/1/LMCMA_1_af_heart.mp3": {
+      "key": "media/sha256/cbbb194a20ea9e9b3b63bc0566251f7ebba02a586f2462036cc5c3efc0658261.mp3",
+      "sha256": "cbbb194a20ea9e9b3b63bc0566251f7ebba02a586f2462036cc5c3efc0658261",
+      "size": 1179692,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/1/LMCMA_1_am_liam.mp3": {
+      "key": "media/sha256/130401671805e08e9506c64e8abb76812079b012cf1b4c32ea93882fff451970.mp3",
+      "sha256": "130401671805e08e9506c64e8abb76812079b012cf1b4c32ea93882fff451970",
+      "size": 1008044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/1/LMCMA_1_bm_fable.mp3": {
+      "key": "media/sha256/b03bc6025355f880ed9e3f06f8ff89d51ad1ba5795939e4222762373941f7070.mp3",
+      "sha256": "b03bc6025355f880ed9e3f06f8ff89d51ad1ba5795939e4222762373941f7070",
+      "size": 1013804,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/10/LMCMA_10_af_alloy.mp3": {
+      "key": "media/sha256/c4eaacbb39dc6b5f28eb3db2246946bce4b76dca961656d9885c057c73d1d7be.mp3",
+      "sha256": "c4eaacbb39dc6b5f28eb3db2246946bce4b76dca961656d9885c057c73d1d7be",
+      "size": 789548,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/10/LMCMA_10_am_echo.mp3": {
+      "key": "media/sha256/6c04d889ff308714aec83e9a3d8659b45d5f6003a53e7e0da36c5fd4db58bc21.mp3",
+      "sha256": "6c04d889ff308714aec83e9a3d8659b45d5f6003a53e7e0da36c5fd4db58bc21",
+      "size": 800300,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/10/LMCMA_10_am_liam.mp3": {
+      "key": "media/sha256/f184234390f84718e17e7aed42d06e6dbd064cb650d9538eafd3d2e88a98a50b.mp3",
+      "sha256": "f184234390f84718e17e7aed42d06e6dbd064cb650d9538eafd3d2e88a98a50b",
+      "size": 776876,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/101/LMCMA_101_af_kore.mp3": {
+      "key": "media/sha256/8b286c12f56e906c1851590c547697f4696739b2e38fb9540e2a1d7ab8113795.mp3",
+      "sha256": "8b286c12f56e906c1851590c547697f4696739b2e38fb9540e2a1d7ab8113795",
+      "size": 808364,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/101/LMCMA_101_am_liam.mp3": {
+      "key": "media/sha256/d14b8392ccd840b0ee3c76f5152ae4bc97e0df33b08b3df3e763b3e7c9e0d7b4.mp3",
+      "sha256": "d14b8392ccd840b0ee3c76f5152ae4bc97e0df33b08b3df3e763b3e7c9e0d7b4",
+      "size": 712364,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/101/LMCMA_101_bm_george.mp3": {
+      "key": "media/sha256/36a2a613b32249fb74a97f3cbe3c03bdbd0d03d8d07bb3ae6528f0406a8c9d36.mp3",
+      "sha256": "36a2a613b32249fb74a97f3cbe3c03bdbd0d03d8d07bb3ae6528f0406a8c9d36",
+      "size": 868652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/102/LMCMA_102_af_heart.mp3": {
+      "key": "media/sha256/3bc745e2d67d10ef1c5a332147a1328a728268122f20a12f71fa5576caa7a743.mp3",
+      "sha256": "3bc745e2d67d10ef1c5a332147a1328a728268122f20a12f71fa5576caa7a743",
+      "size": 934700,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/102/LMCMA_102_am_liam.mp3": {
+      "key": "media/sha256/03da71e640789ff0a2e9f199e000e33983afef73f3bfea49a72a738514817cb0.mp3",
+      "sha256": "03da71e640789ff0a2e9f199e000e33983afef73f3bfea49a72a738514817cb0",
+      "size": 816044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/102/LMCMA_102_am_michael.mp3": {
+      "key": "media/sha256/b328f08f02a2890a19950b22e8f3dba206646884bb728682f02d2cc82c721633.mp3",
+      "sha256": "b328f08f02a2890a19950b22e8f3dba206646884bb728682f02d2cc82c721633",
+      "size": 1027244,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/103/LMCMA_103_am_eric.mp3": {
+      "key": "media/sha256/6812d2f5da989a57cf82e363060f6797b2934c92e15d98217702e73dd407109f.mp3",
+      "sha256": "6812d2f5da989a57cf82e363060f6797b2934c92e15d98217702e73dd407109f",
+      "size": 915116,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/103/LMCMA_103_am_puck.mp3": {
+      "key": "media/sha256/934e33d9b304ff6dc79aeb1c97db1ea9e2982e60124785acebd3c0009b551239.mp3",
+      "sha256": "934e33d9b304ff6dc79aeb1c97db1ea9e2982e60124785acebd3c0009b551239",
+      "size": 980396,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/103/LMCMA_103_bm_lewis.mp3": {
+      "key": "media/sha256/bfffc7d912cb0b9a7a9b69f328eb7d9d2e5ddd1ff6170a36a9bb84f28e9adf23.mp3",
+      "sha256": "bfffc7d912cb0b9a7a9b69f328eb7d9d2e5ddd1ff6170a36a9bb84f28e9adf23",
+      "size": 1070636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/104/LMCMA_104_af_alloy.mp3": {
+      "key": "media/sha256/081b924547ff6a7a937c8a26cc30faeddb1fbf4c7815bff0fbbbf58b8005a786.mp3",
+      "sha256": "081b924547ff6a7a937c8a26cc30faeddb1fbf4c7815bff0fbbbf58b8005a786",
+      "size": 693932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/104/LMCMA_104_af_kore.mp3": {
+      "key": "media/sha256/3bd1249f4ebb853318460f7cba8579c4564e14b8513bf993c6edc318c421c0fd.mp3",
+      "sha256": "3bd1249f4ebb853318460f7cba8579c4564e14b8513bf993c6edc318c421c0fd",
+      "size": 748076,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/104/LMCMA_104_bm_george.mp3": {
+      "key": "media/sha256/b39a69a1ebddda7989c6c00790fb056a0f41dc247d79e86b601b0ab07e69561a.mp3",
+      "sha256": "b39a69a1ebddda7989c6c00790fb056a0f41dc247d79e86b601b0ab07e69561a",
+      "size": 847916,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/105/LMCMA_105_am_liam.mp3": {
+      "key": "media/sha256/9b653e2b7a3e2854d4161f0383b168cd595cc566403e0d3a060e61842eb94943.mp3",
+      "sha256": "9b653e2b7a3e2854d4161f0383b168cd595cc566403e0d3a060e61842eb94943",
+      "size": 860204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/105/LMCMA_105_bf_emma.mp3": {
+      "key": "media/sha256/eca3c2c34c93a2c436889c002fded92a905756a97e074f0811051786aed3fdac.mp3",
+      "sha256": "eca3c2c34c93a2c436889c002fded92a905756a97e074f0811051786aed3fdac",
+      "size": 915500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/105/LMCMA_105_bm_lewis.mp3": {
+      "key": "media/sha256/f904d00e81158ca14019e5ec2a1ec7452e181f4e86619d01ec69a2f8a141e987.mp3",
+      "sha256": "f904d00e81158ca14019e5ec2a1ec7452e181f4e86619d01ec69a2f8a141e987",
+      "size": 1018796,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/106/LMCMA_106_af_alloy.mp3": {
+      "key": "media/sha256/d550b85932ac1ba024a2ac0caccfe03b3794df953475fb7887e4f1cb60b06c37.mp3",
+      "sha256": "d550b85932ac1ba024a2ac0caccfe03b3794df953475fb7887e4f1cb60b06c37",
+      "size": 786092,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/106/LMCMA_106_am_eric.mp3": {
+      "key": "media/sha256/6541465bfefe83effc0a4004346a48093d1569f3f083a934813e2d6f002a5dff.mp3",
+      "sha256": "6541465bfefe83effc0a4004346a48093d1569f3f083a934813e2d6f002a5dff",
+      "size": 753068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/106/LMCMA_106_am_puck.mp3": {
+      "key": "media/sha256/e24ece0ee7111692ded758c16e298664532e42b36941ef7f76a28f5552659bd1.mp3",
+      "sha256": "e24ece0ee7111692ded758c16e298664532e42b36941ef7f76a28f5552659bd1",
+      "size": 856364,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/107/LMCMA_107_af_kore.mp3": {
+      "key": "media/sha256/11bcb0ea3d9064e5c623149cd37f52b2c303ce1d8cfdb33373dc199ee81190c8.mp3",
+      "sha256": "11bcb0ea3d9064e5c623149cd37f52b2c303ce1d8cfdb33373dc199ee81190c8",
+      "size": 1026092,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/107/LMCMA_107_am_liam.mp3": {
+      "key": "media/sha256/7b031751ae517b4a5977927f8acaacc6db10721f8364e66379d2a2356432c682.mp3",
+      "sha256": "7b031751ae517b4a5977927f8acaacc6db10721f8364e66379d2a2356432c682",
+      "size": 923948,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/107/LMCMA_107_bm_george.mp3": {
+      "key": "media/sha256/de1f06d4df097a7e14de242de583ccbd8e7e2fc41fd333a5c9ed67b773d1f078.mp3",
+      "sha256": "de1f06d4df097a7e14de242de583ccbd8e7e2fc41fd333a5c9ed67b773d1f078",
+      "size": 1126700,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/108/LMCMA_108_af_bella.mp3": {
+      "key": "media/sha256/2b08d3fc2a0a618c5eaca51edf957dce3871f34401155cd96630c4e99edeb72c.mp3",
+      "sha256": "2b08d3fc2a0a618c5eaca51edf957dce3871f34401155cd96630c4e99edeb72c",
+      "size": 1052972,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/108/LMCMA_108_af_heart.mp3": {
+      "key": "media/sha256/6e1b3375ac771f22e7575593b79562f74c7116ca197d6d18cc3795281335ab8b.mp3",
+      "sha256": "6e1b3375ac771f22e7575593b79562f74c7116ca197d6d18cc3795281335ab8b",
+      "size": 1021100,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/108/LMCMA_108_am_puck.mp3": {
+      "key": "media/sha256/26e11347155a28a7a406b303497a0e3d889b6558f6fe90dbf94ef935a6fcb5e1.mp3",
+      "sha256": "26e11347155a28a7a406b303497a0e3d889b6558f6fe90dbf94ef935a6fcb5e1",
+      "size": 986540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/109/LMCMA_109_af_kore.mp3": {
+      "key": "media/sha256/e44198e0ec6c98aa97eb7d62495727f51ba86e9edd4017023be51a07e3506459.mp3",
+      "sha256": "e44198e0ec6c98aa97eb7d62495727f51ba86e9edd4017023be51a07e3506459",
+      "size": 870572,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/109/LMCMA_109_af_sarah.mp3": {
+      "key": "media/sha256/06a82842066c5fd7e7d8f4aae2ffc22f3893f371a7648823d55e645452ec2b68.mp3",
+      "sha256": "06a82842066c5fd7e7d8f4aae2ffc22f3893f371a7648823d55e645452ec2b68",
+      "size": 850988,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/109/LMCMA_109_am_eric.mp3": {
+      "key": "media/sha256/f385a6db5645961f2285bc876eb8ea1ba8323dcbb16d7262831fdd53a4843c4a.mp3",
+      "sha256": "f385a6db5645961f2285bc876eb8ea1ba8323dcbb16d7262831fdd53a4843c4a",
+      "size": 736556,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/11/LMCMA_11_am_eric.mp3": {
+      "key": "media/sha256/02743f3d7b50464bbf6ad214afca25c7f4042fe8e3f0b1906636fea4b984c828.mp3",
+      "sha256": "02743f3d7b50464bbf6ad214afca25c7f4042fe8e3f0b1906636fea4b984c828",
+      "size": 1057964,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/11/LMCMA_11_am_fenrir.mp3": {
+      "key": "media/sha256/6e4f99a197c169c401b5d8f05b01624473a75a48501261c2fbdf01387db5bce8.mp3",
+      "sha256": "6e4f99a197c169c401b5d8f05b01624473a75a48501261c2fbdf01387db5bce8",
+      "size": 1225004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/11/LMCMA_11_bm_george.mp3": {
+      "key": "media/sha256/b2f3092c4876c5a6ee80c31bb03686e16f58c5771077155af10949591f361ad8.mp3",
+      "sha256": "b2f3092c4876c5a6ee80c31bb03686e16f58c5771077155af10949591f361ad8",
+      "size": 1337900,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/110/LMCMA_110_am_echo.mp3": {
+      "key": "media/sha256/39e216bb69d75aeb8c6ecb5f49d6f3720c0cde9f6c32c8a2655a6a5779d4d1aa.mp3",
+      "sha256": "39e216bb69d75aeb8c6ecb5f49d6f3720c0cde9f6c32c8a2655a6a5779d4d1aa",
+      "size": 905516,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/110/LMCMA_110_bm_fable.mp3": {
+      "key": "media/sha256/e463e9ff356ad729f3fc434a896914d1d3349ba13900cba3908c4762be839126.mp3",
+      "sha256": "e463e9ff356ad729f3fc434a896914d1d3349ba13900cba3908c4762be839126",
+      "size": 903596,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/110/LMCMA_110_bm_lewis.mp3": {
+      "key": "media/sha256/df9590ea5ac538fe332a6e363f04e3ed0771a448c6d60fc2b3964edb158cdf5e.mp3",
+      "sha256": "df9590ea5ac538fe332a6e363f04e3ed0771a448c6d60fc2b3964edb158cdf5e",
+      "size": 1059884,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/111/LMCMA_111_af_kore.mp3": {
+      "key": "media/sha256/dfcf8ce69090b16fd676de46e6b59b08c7fa0c9b1d664ae15419b8b1a1da8025.mp3",
+      "sha256": "dfcf8ce69090b16fd676de46e6b59b08c7fa0c9b1d664ae15419b8b1a1da8025",
+      "size": 1203500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/111/LMCMA_111_bf_emma.mp3": {
+      "key": "media/sha256/33ee1e15c95f4ad6c4f2811171ffbd72d373b0235a4da0de4208a5c564e85d4b.mp3",
+      "sha256": "33ee1e15c95f4ad6c4f2811171ffbd72d373b0235a4da0de4208a5c564e85d4b",
+      "size": 1156652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/111/LMCMA_111_bm_george.mp3": {
+      "key": "media/sha256/9abdaf4e886a07bd8f6ff1a0e09a0a990e7fe73a52658700e77221aca273a951.mp3",
+      "sha256": "9abdaf4e886a07bd8f6ff1a0e09a0a990e7fe73a52658700e77221aca273a951",
+      "size": 1320236,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/112/LMCMA_112_am_eric.mp3": {
+      "key": "media/sha256/fb976c9af81f794d9bbfddd7a8391504d41f9064b5f592c131d69b2301283bde.mp3",
+      "sha256": "fb976c9af81f794d9bbfddd7a8391504d41f9064b5f592c131d69b2301283bde",
+      "size": 949676,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/112/LMCMA_112_am_michael.mp3": {
+      "key": "media/sha256/d7dc621127a9f785a33d1601e325a39ad797182f5c3f3eda1258fc3f61963fba.mp3",
+      "sha256": "d7dc621127a9f785a33d1601e325a39ad797182f5c3f3eda1258fc3f61963fba",
+      "size": 1225772,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/112/LMCMA_112_bm_george.mp3": {
+      "key": "media/sha256/3698dae884c3309462815ffc598c3206572b3cf050fe2dd65cb2a81b6bf922f0.mp3",
+      "sha256": "3698dae884c3309462815ffc598c3206572b3cf050fe2dd65cb2a81b6bf922f0",
+      "size": 1199276,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/113/LMCMA_113_af_alloy.mp3": {
+      "key": "media/sha256/66b61377177d9f6b6a75a1fe8e391f30a27e8a9af8b415678c3686c5e064e365.mp3",
+      "sha256": "66b61377177d9f6b6a75a1fe8e391f30a27e8a9af8b415678c3686c5e064e365",
+      "size": 821420,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/113/LMCMA_113_am_michael.mp3": {
+      "key": "media/sha256/0455fda4bdc86037b15fadf6ceaf3ccd3ac47f8eb42e592067eafe93e11e7a45.mp3",
+      "sha256": "0455fda4bdc86037b15fadf6ceaf3ccd3ac47f8eb42e592067eafe93e11e7a45",
+      "size": 1011500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/113/LMCMA_113_bm_fable.mp3": {
+      "key": "media/sha256/6282593509dbdf1e8850111839132d062fcd73f8bb6a8809776866b59bfc4397.mp3",
+      "sha256": "6282593509dbdf1e8850111839132d062fcd73f8bb6a8809776866b59bfc4397",
+      "size": 823724,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/114/LMCMA_114_af_bella.mp3": {
+      "key": "media/sha256/19958de0382435ba068c54e555623d4f013ca72f7e5302226be446ab7677685b.mp3",
+      "sha256": "19958de0382435ba068c54e555623d4f013ca72f7e5302226be446ab7677685b",
+      "size": 1411628,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/114/LMCMA_114_af_kore.mp3": {
+      "key": "media/sha256/701d75738a1704fa5e95a5220c18bbeb57c4b301a59a640e9708b932ae48e5ea.mp3",
+      "sha256": "701d75738a1704fa5e95a5220c18bbeb57c4b301a59a640e9708b932ae48e5ea",
+      "size": 1370924,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/114/LMCMA_114_am_liam.mp3": {
+      "key": "media/sha256/5cf2ec471ac42e93bb90fac6cba6c95e773f3eaec02bdc8007a01f302bd2f870.mp3",
+      "sha256": "5cf2ec471ac42e93bb90fac6cba6c95e773f3eaec02bdc8007a01f302bd2f870",
+      "size": 1183148,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/115/LMCMA_115_af_kore.mp3": {
+      "key": "media/sha256/e70296fa29dc068034c9ef4d47fbbd6102915415bfde141f5934dd3a7d34d269.mp3",
+      "sha256": "e70296fa29dc068034c9ef4d47fbbd6102915415bfde141f5934dd3a7d34d269",
+      "size": 1133996,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/115/LMCMA_115_af_sarah.mp3": {
+      "key": "media/sha256/4bf98a5a78de149b945cb3f2278b48b88711ab87fdffbcbfd01fc4cde60e0a00.mp3",
+      "sha256": "4bf98a5a78de149b945cb3f2278b48b88711ab87fdffbcbfd01fc4cde60e0a00",
+      "size": 1120556,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/115/LMCMA_115_bm_lewis.mp3": {
+      "key": "media/sha256/467c67753ee3c919898a8baae95b25d419226db7b29722f58d4f42d6a33f9bde.mp3",
+      "sha256": "467c67753ee3c919898a8baae95b25d419226db7b29722f58d4f42d6a33f9bde",
+      "size": 1208108,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/116/LMCMA_116_am_liam.mp3": {
+      "key": "media/sha256/47a0be838d53a09d8e1cde55644777ff5dc659a255fd647a022c2ca8a6584c41.mp3",
+      "sha256": "47a0be838d53a09d8e1cde55644777ff5dc659a255fd647a022c2ca8a6584c41",
+      "size": 918572,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/116/LMCMA_116_am_puck.mp3": {
+      "key": "media/sha256/03d345699c80cc406ccfff90f6de76b4e9ba9d5f6a9cb22b38a67dc806f9ea47.mp3",
+      "sha256": "03d345699c80cc406ccfff90f6de76b4e9ba9d5f6a9cb22b38a67dc806f9ea47",
+      "size": 1004204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/116/LMCMA_116_bm_george.mp3": {
+      "key": "media/sha256/70725e24d5b4ddb0e39c878f991db323ad380bf2ae07805b0e010435821981d5.mp3",
+      "sha256": "70725e24d5b4ddb0e39c878f991db323ad380bf2ae07805b0e010435821981d5",
+      "size": 1129388,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/117/LMCMA_117_af_heart.mp3": {
+      "key": "media/sha256/fc34dddf81ebae7b02136af279ebfea23012f90bcbd950cda056e326ed13d956.mp3",
+      "sha256": "fc34dddf81ebae7b02136af279ebfea23012f90bcbd950cda056e326ed13d956",
+      "size": 1183532,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/117/LMCMA_117_af_kore.mp3": {
+      "key": "media/sha256/dd1dfbcdd721efa9a771ceb3dcd32dbb547365110ba2ae0af57f98b96d9b7097.mp3",
+      "sha256": "dd1dfbcdd721efa9a771ceb3dcd32dbb547365110ba2ae0af57f98b96d9b7097",
+      "size": 1162796,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/117/LMCMA_117_bm_george.mp3": {
+      "key": "media/sha256/ca65f47769ed97633b1528fc04a44ac732525482fe52552ed261cefaf78845ea.mp3",
+      "sha256": "ca65f47769ed97633b1528fc04a44ac732525482fe52552ed261cefaf78845ea",
+      "size": 1251116,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/118/LMCMA_118_af_heart.mp3": {
+      "key": "media/sha256/4dd1b6a84b95e759741e609611fa880231845a1046f7eea6d8cbb698018cd0e6.mp3",
+      "sha256": "4dd1b6a84b95e759741e609611fa880231845a1046f7eea6d8cbb698018cd0e6",
+      "size": 1108652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/118/LMCMA_118_am_michael.mp3": {
+      "key": "media/sha256/b77cf20325cede9015f33a13bcdb9f6e1fb010331d3fc5c58d03e99d9b74a23e.mp3",
+      "sha256": "b77cf20325cede9015f33a13bcdb9f6e1fb010331d3fc5c58d03e99d9b74a23e",
+      "size": 1197356,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/118/LMCMA_118_am_puck.mp3": {
+      "key": "media/sha256/6376094ec7efe349cf7bf5a2fc841fe2a798b01ef2313d4a1905e995d489c9e2.mp3",
+      "sha256": "6376094ec7efe349cf7bf5a2fc841fe2a798b01ef2313d4a1905e995d489c9e2",
+      "size": 1042988,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/119/LMCMA_119_af_heart.mp3": {
+      "key": "media/sha256/36566d4592189b862f33aaa18095497f867536a56eb60b2f35dbce20f64a7834.mp3",
+      "sha256": "36566d4592189b862f33aaa18095497f867536a56eb60b2f35dbce20f64a7834",
+      "size": 924332,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/119/LMCMA_119_af_sarah.mp3": {
+      "key": "media/sha256/ebff57f2299fe729f7156bb7e30e7d86a88f4a025ded3375e049a0aa3ea3d73b.mp3",
+      "sha256": "ebff57f2299fe729f7156bb7e30e7d86a88f4a025ded3375e049a0aa3ea3d73b",
+      "size": 885932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/119/LMCMA_119_bm_lewis.mp3": {
+      "key": "media/sha256/38f8751c58b6cfa308a012678bf1db78be26c5b040d4e2a932c41b8ebdfe49f4.mp3",
+      "sha256": "38f8751c58b6cfa308a012678bf1db78be26c5b040d4e2a932c41b8ebdfe49f4",
+      "size": 952748,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/12/LMCMA_12_af_sarah.mp3": {
+      "key": "media/sha256/835d54f0c5fc8c7b4ae7ee24367ecb475614691b4e975e7cd4c9ec1bdb073cea.mp3",
+      "sha256": "835d54f0c5fc8c7b4ae7ee24367ecb475614691b4e975e7cd4c9ec1bdb073cea",
+      "size": 1055276,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/12/LMCMA_12_am_eric.mp3": {
+      "key": "media/sha256/f5bba1e792c9c37fde02a08e958f5e75a174e5069d962714e16866eb6c0272c0.mp3",
+      "sha256": "f5bba1e792c9c37fde02a08e958f5e75a174e5069d962714e16866eb6c0272c0",
+      "size": 920492,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/12/LMCMA_12_am_michael.mp3": {
+      "key": "media/sha256/b42ca9fbc74c9240f3b364364d40286acc62853a1bcad6139ba34671189cb880.mp3",
+      "sha256": "b42ca9fbc74c9240f3b364364d40286acc62853a1bcad6139ba34671189cb880",
+      "size": 1166252,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/120/LMCMA_120_af_kore.mp3": {
+      "key": "media/sha256/0856a29428b5674feb34846b82260038bb1a19e30cbfb5e0e8de5e55676469e7.mp3",
+      "sha256": "0856a29428b5674feb34846b82260038bb1a19e30cbfb5e0e8de5e55676469e7",
+      "size": 996524,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/120/LMCMA_120_am_fenrir.mp3": {
+      "key": "media/sha256/3444d6656e309eb8e64395ff7b1ebce98a1a603f5b8fada1e1c2cb10b858273e.mp3",
+      "sha256": "3444d6656e309eb8e64395ff7b1ebce98a1a603f5b8fada1e1c2cb10b858273e",
+      "size": 994220,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/120/LMCMA_120_bm_george.mp3": {
+      "key": "media/sha256/df7b59799bf78b395396f9385b7b1b242c600912dc3acb913a31423aa9b4d781.mp3",
+      "sha256": "df7b59799bf78b395396f9385b7b1b242c600912dc3acb913a31423aa9b4d781",
+      "size": 1089068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/13/LMCMA_13_af_sarah.mp3": {
+      "key": "media/sha256/0f67d4c983d2e0ec0c2d77be581eeb1162b459cc543d86910830f5bbbcb9ae0f.mp3",
+      "sha256": "0f67d4c983d2e0ec0c2d77be581eeb1162b459cc543d86910830f5bbbcb9ae0f",
+      "size": 1302956,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/13/LMCMA_13_am_michael.mp3": {
+      "key": "media/sha256/146d038e3a21e79a8835d6782e5987b27d00e826d76f975abf866ec0b4db7db4.mp3",
+      "sha256": "146d038e3a21e79a8835d6782e5987b27d00e826d76f975abf866ec0b4db7db4",
+      "size": 1444652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/13/LMCMA_13_bm_lewis.mp3": {
+      "key": "media/sha256/f47b0cebab92c032c9a3b80850fec39369b39e557dff482b2a44ec44e188bc35.mp3",
+      "sha256": "f47b0cebab92c032c9a3b80850fec39369b39e557dff482b2a44ec44e188bc35",
+      "size": 1395116,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/14/LMCMA_14_af_bella.mp3": {
+      "key": "media/sha256/d8d6411460e104666e0913681febcf5bd0308a3275efa64aefc15301d5ad21b4.mp3",
+      "sha256": "d8d6411460e104666e0913681febcf5bd0308a3275efa64aefc15301d5ad21b4",
+      "size": 1287212,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/14/LMCMA_14_am_liam.mp3": {
+      "key": "media/sha256/fdcb5521e24dcdf614d9ade4d4afe4ca754ea482d04fc958f51d632c2dfb2624.mp3",
+      "sha256": "fdcb5521e24dcdf614d9ade4d4afe4ca754ea482d04fc958f51d632c2dfb2624",
+      "size": 1082156,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/14/LMCMA_14_am_puck.mp3": {
+      "key": "media/sha256/e51ecb395fa8665708591699cbfc26ba7f4b33a7839ece5d08c9dd52658ba9c7.mp3",
+      "sha256": "e51ecb395fa8665708591699cbfc26ba7f4b33a7839ece5d08c9dd52658ba9c7",
+      "size": 1119788,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/15/LMCMA_15_af_alloy.mp3": {
+      "key": "media/sha256/ccda70b7cb9c070c03627a00149e5e1c5bd66722ec0649d8f0f965132b73782a.mp3",
+      "sha256": "ccda70b7cb9c070c03627a00149e5e1c5bd66722ec0649d8f0f965132b73782a",
+      "size": 1119020,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/15/LMCMA_15_af_kore.mp3": {
+      "key": "media/sha256/30cb43306fd9efb1aadffb1039ed69a306fdc0bb5659462e069ba8fbdc50eeca.mp3",
+      "sha256": "30cb43306fd9efb1aadffb1039ed69a306fdc0bb5659462e069ba8fbdc50eeca",
+      "size": 1217708,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/15/LMCMA_15_am_fenrir.mp3": {
+      "key": "media/sha256/584278642921f03822b1ebdecdd62fb33f6fe2c729e53cca083cf0aa809466bc.mp3",
+      "sha256": "584278642921f03822b1ebdecdd62fb33f6fe2c729e53cca083cf0aa809466bc",
+      "size": 1214636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/16/LMCMA_16_am_eric.mp3": {
+      "key": "media/sha256/eacf406f8ec939a84edeafc74fd5de249af8aa5111500690421f2801decfe4cd.mp3",
+      "sha256": "eacf406f8ec939a84edeafc74fd5de249af8aa5111500690421f2801decfe4cd",
+      "size": 801068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/16/LMCMA_16_bf_emma.mp3": {
+      "key": "media/sha256/2e671f7e8821e135de5d1c36ed00cac749fef4f17ffef966f501fd0e010ae40f.mp3",
+      "sha256": "2e671f7e8821e135de5d1c36ed00cac749fef4f17ffef966f501fd0e010ae40f",
+      "size": 841388,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/16/LMCMA_16_bm_george.mp3": {
+      "key": "media/sha256/08f92738b48e9a23e4cda52ef2958e9218ff88bcdc53690fe6a23f1c36ad484c.mp3",
+      "sha256": "08f92738b48e9a23e4cda52ef2958e9218ff88bcdc53690fe6a23f1c36ad484c",
+      "size": 1010348,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/17/LMCMA_17_am_echo.mp3": {
+      "key": "media/sha256/9e1aeb1823333d1ffd07279300b6be47910ac9b0696dec2a2d17b785de0e9a98.mp3",
+      "sha256": "9e1aeb1823333d1ffd07279300b6be47910ac9b0696dec2a2d17b785de0e9a98",
+      "size": 1126700,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/17/LMCMA_17_am_fenrir.mp3": {
+      "key": "media/sha256/ffa967ae6470c5f99df204b86c5185234cf18879f01070e0209bcd8291289540.mp3",
+      "sha256": "ffa967ae6470c5f99df204b86c5185234cf18879f01070e0209bcd8291289540",
+      "size": 1258412,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/17/LMCMA_17_bm_fable.mp3": {
+      "key": "media/sha256/879d0039782b89d96bdf3a82fb85b015345311c17cd5650ae98d17b033f29541.mp3",
+      "sha256": "879d0039782b89d96bdf3a82fb85b015345311c17cd5650ae98d17b033f29541",
+      "size": 1097132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/18/LMCMA_18_af_bella.mp3": {
+      "key": "media/sha256/717e4c9e0e2c8ff4fcf54c905b08745d02a74edb0ea2c145e12ac943e2f25d6b.mp3",
+      "sha256": "717e4c9e0e2c8ff4fcf54c905b08745d02a74edb0ea2c145e12ac943e2f25d6b",
+      "size": 1297964,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/18/LMCMA_18_af_heart.mp3": {
+      "key": "media/sha256/bdcd2ae37ad3757cd3e95da15bb0cf8d60f573a21964f9ed2b7db75a8b3d7fec.mp3",
+      "sha256": "bdcd2ae37ad3757cd3e95da15bb0cf8d60f573a21964f9ed2b7db75a8b3d7fec",
+      "size": 1274924,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/18/LMCMA_18_am_michael.mp3": {
+      "key": "media/sha256/2f165c1756c88077ce0800d061c0dfc214018a92c70d07fdbb484b7e52ea13e3.mp3",
+      "sha256": "2f165c1756c88077ce0800d061c0dfc214018a92c70d07fdbb484b7e52ea13e3",
+      "size": 1383212,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/19/LMCMA_19_af_alloy.mp3": {
+      "key": "media/sha256/bbb05904ec52b73702dbcc830e3ce547c27388cb6cc55527723c0365582826a8.mp3",
+      "sha256": "bbb05904ec52b73702dbcc830e3ce547c27388cb6cc55527723c0365582826a8",
+      "size": 917036,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/19/LMCMA_19_am_michael.mp3": {
+      "key": "media/sha256/0a81ed4433a1fd040c98cb0de2142855ff770ea71ad9cf86d2fbd11bdad73f03.mp3",
+      "sha256": "0a81ed4433a1fd040c98cb0de2142855ff770ea71ad9cf86d2fbd11bdad73f03",
+      "size": 1152812,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/19/LMCMA_19_bm_fable.mp3": {
+      "key": "media/sha256/7345fd2b968d0c3f8fa0d80e65aaf4c6eacc389790ec483851eae018ea165975.mp3",
+      "sha256": "7345fd2b968d0c3f8fa0d80e65aaf4c6eacc389790ec483851eae018ea165975",
+      "size": 906284,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/2/LMCMA_2_af_alloy.mp3": {
+      "key": "media/sha256/41c30fe32239f47d40395c1a1bee340e8fb0fa49f5d7c26b4fe3586444eda25c.mp3",
+      "sha256": "41c30fe32239f47d40395c1a1bee340e8fb0fa49f5d7c26b4fe3586444eda25c",
+      "size": 869804,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/2/LMCMA_2_bm_george.mp3": {
+      "key": "media/sha256/5beeca94e15f7cf36e3ccf6cf7e86db324cf35392105952433377d71ce5ebcc6.mp3",
+      "sha256": "5beeca94e15f7cf36e3ccf6cf7e86db324cf35392105952433377d71ce5ebcc6",
+      "size": 1062956,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/2/LMCMA_2_bm_lewis.mp3": {
+      "key": "media/sha256/49b3328a0b717ffb025300e65933ddbab6cfe0b6a14e0d9f1b6c80d5900dff87.mp3",
+      "sha256": "49b3328a0b717ffb025300e65933ddbab6cfe0b6a14e0d9f1b6c80d5900dff87",
+      "size": 1034540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/20/LMCMA_20_am_michael.mp3": {
+      "key": "media/sha256/4b9868345a89907f8cf85aaa1d30eefffd9aacacd27f67d8e2551d34bca89f33.mp3",
+      "sha256": "4b9868345a89907f8cf85aaa1d30eefffd9aacacd27f67d8e2551d34bca89f33",
+      "size": 1220780,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/20/LMCMA_20_am_puck.mp3": {
+      "key": "media/sha256/149f9728b7092171dde5a9b03bad81b3b94efd265d70062bdaabb5339052816a.mp3",
+      "sha256": "149f9728b7092171dde5a9b03bad81b3b94efd265d70062bdaabb5339052816a",
+      "size": 1033004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/20/LMCMA_20_bm_lewis.mp3": {
+      "key": "media/sha256/51fcf409eec9ea3aafd6900f997a7faa895353dd4e34f25fdcb45dfe2b15d08a.mp3",
+      "sha256": "51fcf409eec9ea3aafd6900f997a7faa895353dd4e34f25fdcb45dfe2b15d08a",
+      "size": 1157804,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/21/LMCMA_21_af_heart.mp3": {
+      "key": "media/sha256/82aeb207a62dbe5e8ff780c61d1bd66d329dcaa84ddb0517c4aededc90ba25d3.mp3",
+      "sha256": "82aeb207a62dbe5e8ff780c61d1bd66d329dcaa84ddb0517c4aededc90ba25d3",
+      "size": 1015724,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/21/LMCMA_21_am_echo.mp3": {
+      "key": "media/sha256/d915aded59f3cc0625162aa96aa99f40565b1fc36a8abeb8a291dfec1f600df4.mp3",
+      "sha256": "d915aded59f3cc0625162aa96aa99f40565b1fc36a8abeb8a291dfec1f600df4",
+      "size": 897068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/21/LMCMA_21_am_puck.mp3": {
+      "key": "media/sha256/8a8b87298904401bcdffd617cbf7a2ff16b7585256e0f832e174bc96c2c2397c.mp3",
+      "sha256": "8a8b87298904401bcdffd617cbf7a2ff16b7585256e0f832e174bc96c2c2397c",
+      "size": 951980,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/22/LMCMA_22_af_heart.mp3": {
+      "key": "media/sha256/6f48647a394552bf4fa859cb90fb3c76ef5cd83e2078d05ffaafdb4dea2ea195.mp3",
+      "sha256": "6f48647a394552bf4fa859cb90fb3c76ef5cd83e2078d05ffaafdb4dea2ea195",
+      "size": 1095980,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/22/LMCMA_22_af_kore.mp3": {
+      "key": "media/sha256/bde79ba85d7abc37f31e26c05966d2a40fe6ea876fd56a1707ab2ea632d52115.mp3",
+      "sha256": "bde79ba85d7abc37f31e26c05966d2a40fe6ea876fd56a1707ab2ea632d52115",
+      "size": 1067948,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/22/LMCMA_22_bm_lewis.mp3": {
+      "key": "media/sha256/ed4203390d494f6fa19e98985579b0d4865da01755d80a38da357e095b66a66a.mp3",
+      "sha256": "ed4203390d494f6fa19e98985579b0d4865da01755d80a38da357e095b66a66a",
+      "size": 1136300,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/23/LMCMA_23_af_sarah.mp3": {
+      "key": "media/sha256/1d0fdc7126bacb4f031a2894cf345faa4a53473f7399c9d5b15672aa861b9f12.mp3",
+      "sha256": "1d0fdc7126bacb4f031a2894cf345faa4a53473f7399c9d5b15672aa861b9f12",
+      "size": 1339820,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/23/LMCMA_23_bm_fable.mp3": {
+      "key": "media/sha256/7f7e448cd28b370bc4062922e0f77014322c0b3720259aa53daf3426442f6e9e.mp3",
+      "sha256": "7f7e448cd28b370bc4062922e0f77014322c0b3720259aa53daf3426442f6e9e",
+      "size": 1208492,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/23/LMCMA_23_bm_lewis.mp3": {
+      "key": "media/sha256/0b49be3b8f97610c4bf734936be8f1fb813ac51cfd5f66f3e7439d18b7948a52.mp3",
+      "sha256": "0b49be3b8f97610c4bf734936be8f1fb813ac51cfd5f66f3e7439d18b7948a52",
+      "size": 1420844,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/24/LMCMA_24_am_echo.mp3": {
+      "key": "media/sha256/d28147bb2c4a526699d371790559a17fbc953dbe9d1b9feb814a0d6474dbccdb.mp3",
+      "sha256": "d28147bb2c4a526699d371790559a17fbc953dbe9d1b9feb814a0d6474dbccdb",
+      "size": 1196204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/24/LMCMA_24_am_liam.mp3": {
+      "key": "media/sha256/2aaa9b78943c1d24fe44c29c3acf79b3653cf23ecafdb97adef72037f1dd7442.mp3",
+      "sha256": "2aaa9b78943c1d24fe44c29c3acf79b3653cf23ecafdb97adef72037f1dd7442",
+      "size": 1178540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/24/LMCMA_24_am_puck.mp3": {
+      "key": "media/sha256/2a3875977f344d7fe7184344234dcc6b0cf08b498013a324e78c1bf5a3bc7d67.mp3",
+      "sha256": "2a3875977f344d7fe7184344234dcc6b0cf08b498013a324e78c1bf5a3bc7d67",
+      "size": 1251116,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/25/LMCMA_25_af_alloy.mp3": {
+      "key": "media/sha256/61e52e0eb7f6390cfa339d3a94f3707d2c39112191648451ae5544d6aea7397a.mp3",
+      "sha256": "61e52e0eb7f6390cfa339d3a94f3707d2c39112191648451ae5544d6aea7397a",
+      "size": 1194284,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/25/LMCMA_25_am_echo.mp3": {
+      "key": "media/sha256/a9426e67466a957cadf2217411d355bf228af5c1b6ec3d2f5e9167cfc692e1a4.mp3",
+      "sha256": "a9426e67466a957cadf2217411d355bf228af5c1b6ec3d2f5e9167cfc692e1a4",
+      "size": 1207724,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/25/LMCMA_25_bm_fable.mp3": {
+      "key": "media/sha256/4c10becbe8dc52847ba2080b7c1c6bb0a65148b84652cb8625cdd9a45b3e3591.mp3",
+      "sha256": "4c10becbe8dc52847ba2080b7c1c6bb0a65148b84652cb8625cdd9a45b3e3591",
+      "size": 1188524,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/26/LMCMA_26_af_kore.mp3": {
+      "key": "media/sha256/f46ddd176acff664641303a7dcf077696efb754ba14a0264e56d7191128674f2.mp3",
+      "sha256": "f46ddd176acff664641303a7dcf077696efb754ba14a0264e56d7191128674f2",
+      "size": 1201580,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/26/LMCMA_26_am_michael.mp3": {
+      "key": "media/sha256/d0ffa773cb46a9e17bcb9bb106e3034ea0f0f2e1677edc2f8e6474910ae02e04.mp3",
+      "sha256": "d0ffa773cb46a9e17bcb9bb106e3034ea0f0f2e1677edc2f8e6474910ae02e04",
+      "size": 1320620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/26/LMCMA_26_am_puck.mp3": {
+      "key": "media/sha256/0f91ebb3ea1f97712ab3ed499817aa2a5aa4482703e9a96230777f00448f8344.mp3",
+      "sha256": "0f91ebb3ea1f97712ab3ed499817aa2a5aa4482703e9a96230777f00448f8344",
+      "size": 1141292,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/27/LMCMA_27_am_eric.mp3": {
+      "key": "media/sha256/88e333beb9a1b7932a68c74f802ae643a32937975e2432ee3b90686110d515ce.mp3",
+      "sha256": "88e333beb9a1b7932a68c74f802ae643a32937975e2432ee3b90686110d515ce",
+      "size": 1170476,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/27/LMCMA_27_am_michael.mp3": {
+      "key": "media/sha256/9f200d70b288e3164452e99dd33225a21ca7a41bf637d4d470a9fff1de6bf6b0.mp3",
+      "sha256": "9f200d70b288e3164452e99dd33225a21ca7a41bf637d4d470a9fff1de6bf6b0",
+      "size": 1577132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/27/LMCMA_27_am_puck.mp3": {
+      "key": "media/sha256/3bd3bd0fa7d755f06f7b8a8bd391e249374e502f3a9d281d83b89e879bb808f2.mp3",
+      "sha256": "3bd3bd0fa7d755f06f7b8a8bd391e249374e502f3a9d281d83b89e879bb808f2",
+      "size": 1340204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/28/LMCMA_28_af_bella.mp3": {
+      "key": "media/sha256/acb82ea57aacee156825f344eb844cd0a3644a20b840368a647652fda4e6f4aa.mp3",
+      "sha256": "acb82ea57aacee156825f344eb844cd0a3644a20b840368a647652fda4e6f4aa",
+      "size": 1418540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/28/LMCMA_28_af_heart.mp3": {
+      "key": "media/sha256/b8cbb99d4371574b46af11d5ab4147242b6d28781d058c580c6aa0663542a14a.mp3",
+      "sha256": "b8cbb99d4371574b46af11d5ab4147242b6d28781d058c580c6aa0663542a14a",
+      "size": 1380908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/28/LMCMA_28_am_puck.mp3": {
+      "key": "media/sha256/fc994fe810f278d6d8cd58bbdbec91c22222e33d8c493122d6d024b1b3423174.mp3",
+      "sha256": "fc994fe810f278d6d8cd58bbdbec91c22222e33d8c493122d6d024b1b3423174",
+      "size": 1292204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/29/LMCMA_29_af_bella.mp3": {
+      "key": "media/sha256/7ab96ffaab3ec01c84e5b34cd7e5a9f1a0408dfec4e99ce83d40507a060282d0.mp3",
+      "sha256": "7ab96ffaab3ec01c84e5b34cd7e5a9f1a0408dfec4e99ce83d40507a060282d0",
+      "size": 1168556,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/29/LMCMA_29_am_fenrir.mp3": {
+      "key": "media/sha256/cc37addc8bf8e7dccb4070476cba7b0d371d9a9a86a4e22f26ebdec525486778.mp3",
+      "sha256": "cc37addc8bf8e7dccb4070476cba7b0d371d9a9a86a4e22f26ebdec525486778",
+      "size": 1107884,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/29/LMCMA_29_bf_emma.mp3": {
+      "key": "media/sha256/0469e6de80e50d8644e8daed905eaed3790450dba4718601b650fcf2e1a0f820.mp3",
+      "sha256": "0469e6de80e50d8644e8daed905eaed3790450dba4718601b650fcf2e1a0f820",
+      "size": 1041068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/3/LMCMA_3_af_kore.mp3": {
+      "key": "media/sha256/f48006eca552732004a61098259c2ef898d8d0c5db469e97885927293b951684.mp3",
+      "sha256": "f48006eca552732004a61098259c2ef898d8d0c5db469e97885927293b951684",
+      "size": 1515692,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/3/LMCMA_3_am_fenrir.mp3": {
+      "key": "media/sha256/4980d7292fb0216c34a7b24c5ca8291cba354bac7d2b007d4eea391b2f9edbb2.mp3",
+      "sha256": "4980d7292fb0216c34a7b24c5ca8291cba354bac7d2b007d4eea391b2f9edbb2",
+      "size": 1517612,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/3/LMCMA_3_am_liam.mp3": {
+      "key": "media/sha256/6a6a0508ff6ce9aff8c2604ab84833b62fa88f12af642dfab6bbdc15074120c7.mp3",
+      "sha256": "6a6a0508ff6ce9aff8c2604ab84833b62fa88f12af642dfab6bbdc15074120c7",
+      "size": 1365164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/30/LMCMA_30_af_sarah.mp3": {
+      "key": "media/sha256/14a7f382ef264b47406c86cf80375751e0b60a8948ee0f9306ac78743fdd82ff.mp3",
+      "sha256": "14a7f382ef264b47406c86cf80375751e0b60a8948ee0f9306ac78743fdd82ff",
+      "size": 1661996,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/30/LMCMA_30_am_fenrir.mp3": {
+      "key": "media/sha256/61b4bc4e2c62176cb6196e9561b07d2abfe6e300978f54b82ef9920ccbd443d1.mp3",
+      "sha256": "61b4bc4e2c62176cb6196e9561b07d2abfe6e300978f54b82ef9920ccbd443d1",
+      "size": 1632812,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/30/LMCMA_30_bm_fable.mp3": {
+      "key": "media/sha256/91b6e3ac8ceae485fca0a1bf267b7760c080676872990d80fde61dd61c19eb30.mp3",
+      "sha256": "91b6e3ac8ceae485fca0a1bf267b7760c080676872990d80fde61dd61c19eb30",
+      "size": 1486892,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/31/LMCMA_31_af_alloy.mp3": {
+      "key": "media/sha256/6f7b8bf34acfb7e0bb86085e66dc8840fecb16a55d2cfb4dfd00fc3debf7a27b.mp3",
+      "sha256": "6f7b8bf34acfb7e0bb86085e66dc8840fecb16a55d2cfb4dfd00fc3debf7a27b",
+      "size": 1601708,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/31/LMCMA_31_af_bella.mp3": {
+      "key": "media/sha256/33cce3845037db3c05418a6dc242cff61f45eec0a7a7c52cab26527c38cf63e6.mp3",
+      "sha256": "33cce3845037db3c05418a6dc242cff61f45eec0a7a7c52cab26527c38cf63e6",
+      "size": 1868972,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/31/LMCMA_31_am_eric.mp3": {
+      "key": "media/sha256/0c3ae0349b1e776b331b80a5f0f5b56b03fefef9b095776bdedd7b7908d5ed54.mp3",
+      "sha256": "0c3ae0349b1e776b331b80a5f0f5b56b03fefef9b095776bdedd7b7908d5ed54",
+      "size": 1549100,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/32/LMCMA_32_af_bella.mp3": {
+      "key": "media/sha256/0009ca768f0b15b739ba207cf5969dce93550ba3bb064cdc2ee2a70dec802dd6.mp3",
+      "sha256": "0009ca768f0b15b739ba207cf5969dce93550ba3bb064cdc2ee2a70dec802dd6",
+      "size": 1398188,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/32/LMCMA_32_af_heart.mp3": {
+      "key": "media/sha256/ad9caa08c1806b8428e3eab1f6cf64bb265734087dc777a2257569ca12f53e9a.mp3",
+      "sha256": "ad9caa08c1806b8428e3eab1f6cf64bb265734087dc777a2257569ca12f53e9a",
+      "size": 1367468,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/32/LMCMA_32_af_kore.mp3": {
+      "key": "media/sha256/00e373e729bfe48e5bff294dc6127d87399495cf8dcca3ba945e77e2dbad41ef.mp3",
+      "sha256": "00e373e729bfe48e5bff294dc6127d87399495cf8dcca3ba945e77e2dbad41ef",
+      "size": 1372844,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/33/LMCMA_33_af_heart.mp3": {
+      "key": "media/sha256/b05a146299d7277fd6e23f6901eedea82e59aef7d97c3d27e56c049cb5d5a0ab.mp3",
+      "sha256": "b05a146299d7277fd6e23f6901eedea82e59aef7d97c3d27e56c049cb5d5a0ab",
+      "size": 1739564,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/33/LMCMA_33_am_liam.mp3": {
+      "key": "media/sha256/99fa486b22c0c1a09de4ad262521c759b60509ef9667ce3a962068a61b84f7df.mp3",
+      "sha256": "99fa486b22c0c1a09de4ad262521c759b60509ef9667ce3a962068a61b84f7df",
+      "size": 1494572,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/33/LMCMA_33_am_michael.mp3": {
+      "key": "media/sha256/6418d957569cb82312756d2147c11a969cd6472a33fe8748d1e2da295e64f810.mp3",
+      "sha256": "6418d957569cb82312756d2147c11a969cd6472a33fe8748d1e2da295e64f810",
+      "size": 1878188,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/34/LMCMA_34_am_fenrir.mp3": {
+      "key": "media/sha256/933aa55b8b69802b39533216f362501c861b9b8fffbafd61d00795690525c1a9.mp3",
+      "sha256": "933aa55b8b69802b39533216f362501c861b9b8fffbafd61d00795690525c1a9",
+      "size": 1135148,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/34/LMCMA_34_am_liam.mp3": {
+      "key": "media/sha256/44f496b6ff61db201d0a8779820966abb373acef517abaad9948c60f0bdda8df.mp3",
+      "sha256": "44f496b6ff61db201d0a8779820966abb373acef517abaad9948c60f0bdda8df",
+      "size": 1027628,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/34/LMCMA_34_bf_emma.mp3": {
+      "key": "media/sha256/6cdd23c3e70ee770bb323830c8459dc497efec55bebfd9ba2a873790007383f4.mp3",
+      "sha256": "6cdd23c3e70ee770bb323830c8459dc497efec55bebfd9ba2a873790007383f4",
+      "size": 1077932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/35/LMCMA_35_am_fenrir.mp3": {
+      "key": "media/sha256/c3239519ec774c281daa9d27cd028363ee99ad72774db97937d889984afd7cfb.mp3",
+      "sha256": "c3239519ec774c281daa9d27cd028363ee99ad72774db97937d889984afd7cfb",
+      "size": 1614764,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/35/LMCMA_35_bf_emma.mp3": {
+      "key": "media/sha256/188c6e4dfb0b9497f75640024032c26ed9383c912ba8ef3016d0e77f5127ce17.mp3",
+      "sha256": "188c6e4dfb0b9497f75640024032c26ed9383c912ba8ef3016d0e77f5127ce17",
+      "size": 1509548,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/35/LMCMA_35_bm_fable.mp3": {
+      "key": "media/sha256/7c0019c9581cfc802e1544a7d4cfa3b2f261d3003348498760f5ff8342ae9417.mp3",
+      "sha256": "7c0019c9581cfc802e1544a7d4cfa3b2f261d3003348498760f5ff8342ae9417",
+      "size": 1447724,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/36/LMCMA_36_af_alloy.mp3": {
+      "key": "media/sha256/ace6e1819fa6e843ba64967c53f47da6089e7e8551aefef8cfb11a440ccfc3fd.mp3",
+      "sha256": "ace6e1819fa6e843ba64967c53f47da6089e7e8551aefef8cfb11a440ccfc3fd",
+      "size": 1793324,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/36/LMCMA_36_bf_emma.mp3": {
+      "key": "media/sha256/7a0795f09309adab155cee698569929cb2ab2dbd6501652d87694d54ab6601d4.mp3",
+      "sha256": "7a0795f09309adab155cee698569929cb2ab2dbd6501652d87694d54ab6601d4",
+      "size": 1944620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/36/LMCMA_36_bm_george.mp3": {
+      "key": "media/sha256/9f3c15906adf5000bef5d7e874546e6e39438499fa19764f214a2e1f38ba9380.mp3",
+      "sha256": "9f3c15906adf5000bef5d7e874546e6e39438499fa19764f214a2e1f38ba9380",
+      "size": 2220332,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/37/LMCMA_37_af_bella.mp3": {
+      "key": "media/sha256/e5aae3b3200a3146485b488682958d28fb322c1db18e8982a3d13fb87dfd878a.mp3",
+      "sha256": "e5aae3b3200a3146485b488682958d28fb322c1db18e8982a3d13fb87dfd878a",
+      "size": 2492204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/37/LMCMA_37_am_liam.mp3": {
+      "key": "media/sha256/ce801954dfba1969fe6919f69b6a12618b4f81d905a000887f1001f88cd43527.mp3",
+      "sha256": "ce801954dfba1969fe6919f69b6a12618b4f81d905a000887f1001f88cd43527",
+      "size": 2146220,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/37/LMCMA_37_am_michael.mp3": {
+      "key": "media/sha256/2f6749fc6eef7eb13cd962d49d6507eae29e358501b11e7055567ddbba8ebdab.mp3",
+      "sha256": "2f6749fc6eef7eb13cd962d49d6507eae29e358501b11e7055567ddbba8ebdab",
+      "size": 2661548,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/38/LMCMA_38_am_echo.mp3": {
+      "key": "media/sha256/73ae28d8d3bf830b845d722831809c3d8376d788be91b7a608093fa13b5fee07.mp3",
+      "sha256": "73ae28d8d3bf830b845d722831809c3d8376d788be91b7a608093fa13b5fee07",
+      "size": 1216172,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/38/LMCMA_38_am_michael.mp3": {
+      "key": "media/sha256/306d9b0e3ccbce8639725674592b94e275d17ac321685b3ec9746cf489f02562.mp3",
+      "sha256": "306d9b0e3ccbce8639725674592b94e275d17ac321685b3ec9746cf489f02562",
+      "size": 1498412,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/38/LMCMA_38_bm_george.mp3": {
+      "key": "media/sha256/afffd394e0ddeae639d7e56b0ec2c0380e26dce865fbb62bd27fd8819cb8ae32.mp3",
+      "sha256": "afffd394e0ddeae639d7e56b0ec2c0380e26dce865fbb62bd27fd8819cb8ae32",
+      "size": 1481132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/39/LMCMA_39_af_kore.mp3": {
+      "key": "media/sha256/0ccec8f243eda6f0bd7d6112434402aeb68907ffe142c255d2489f5e9cb37568.mp3",
+      "sha256": "0ccec8f243eda6f0bd7d6112434402aeb68907ffe142c255d2489f5e9cb37568",
+      "size": 726188,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/39/LMCMA_39_af_sarah.mp3": {
+      "key": "media/sha256/f63b626029b353fe54105a90345a606817e37a393d8a33fdb75cf9f5b0e11b94.mp3",
+      "sha256": "f63b626029b353fe54105a90345a606817e37a393d8a33fdb75cf9f5b0e11b94",
+      "size": 720428,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/39/LMCMA_39_am_echo.mp3": {
+      "key": "media/sha256/06272876992ce57deee422df3dca7059e13a4559f60ebd292263142466438b68.mp3",
+      "sha256": "06272876992ce57deee422df3dca7059e13a4559f60ebd292263142466438b68",
+      "size": 650924,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/4/LMCMA_4_af_bella.mp3": {
+      "key": "media/sha256/7340542b103639f681df3175637499de407d654d94190f7dafac285eaa6e7ac0.mp3",
+      "sha256": "7340542b103639f681df3175637499de407d654d94190f7dafac285eaa6e7ac0",
+      "size": 969644,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/4/LMCMA_4_af_kore.mp3": {
+      "key": "media/sha256/531d4460e5f4f52c5564ffcdef04178fa3b9d7c9e24f6d43fe9158585431bb5d.mp3",
+      "sha256": "531d4460e5f4f52c5564ffcdef04178fa3b9d7c9e24f6d43fe9158585431bb5d",
+      "size": 921260,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/4/LMCMA_4_af_sarah.mp3": {
+      "key": "media/sha256/2cf1c40da59a93f689da722274a8d2eeb78609d907563d349406a29e3e187bf5.mp3",
+      "sha256": "2cf1c40da59a93f689da722274a8d2eeb78609d907563d349406a29e3e187bf5",
+      "size": 927020,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/40/LMCMA_40_am_eric.mp3": {
+      "key": "media/sha256/45501681457f9b3e6bb50bea95d99a3030abd032afd56bd3d8812aba6b08607c.mp3",
+      "sha256": "45501681457f9b3e6bb50bea95d99a3030abd032afd56bd3d8812aba6b08607c",
+      "size": 1083308,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/40/LMCMA_40_am_fenrir.mp3": {
+      "key": "media/sha256/372dfc0b0f09d89c815d521f5e7876a45e21f5960fd45825956466c69f54d2e4.mp3",
+      "sha256": "372dfc0b0f09d89c815d521f5e7876a45e21f5960fd45825956466c69f54d2e4",
+      "size": 1264172,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/40/LMCMA_40_am_liam.mp3": {
+      "key": "media/sha256/2a44cd7ef63b102d7955419816e9f9ae51f9e3610bfa9a0d458a139efc9baf58.mp3",
+      "sha256": "2a44cd7ef63b102d7955419816e9f9ae51f9e3610bfa9a0d458a139efc9baf58",
+      "size": 1118636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/41/LMCMA_41_af_kore.mp3": {
+      "key": "media/sha256/c66114370f97785427f7100cef2cf57b40040b5195278986dd2dd41a0bb9b474.mp3",
+      "sha256": "c66114370f97785427f7100cef2cf57b40040b5195278986dd2dd41a0bb9b474",
+      "size": 1214636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/41/LMCMA_41_am_echo.mp3": {
+      "key": "media/sha256/81c8c98bbd4d36f691525faaefe3084e485282e154b713266086f12b6faac9f0.mp3",
+      "sha256": "81c8c98bbd4d36f691525faaefe3084e485282e154b713266086f12b6faac9f0",
+      "size": 1088684,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/41/LMCMA_41_bf_emma.mp3": {
+      "key": "media/sha256/f53b5f8d13b6fc66dbeff287a74f89952199c87d5823851cef08b661cfd58abd.mp3",
+      "sha256": "f53b5f8d13b6fc66dbeff287a74f89952199c87d5823851cef08b661cfd58abd",
+      "size": 1125932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/42/LMCMA_42_af_alloy.mp3": {
+      "key": "media/sha256/d5d4b57c601721215f6d6c811eeeaa20eeb040fa787b9e4806c53b390ca3c0e6.mp3",
+      "sha256": "d5d4b57c601721215f6d6c811eeeaa20eeb040fa787b9e4806c53b390ca3c0e6",
+      "size": 2241068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/42/LMCMA_42_af_bella.mp3": {
+      "key": "media/sha256/34fcbc1acf5c6ed9402e72b20d2025f79ec83f09d4c37bd51e66ae9c27ba4d92.mp3",
+      "sha256": "34fcbc1acf5c6ed9402e72b20d2025f79ec83f09d4c37bd51e66ae9c27ba4d92",
+      "size": 2702636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/42/LMCMA_42_am_michael.mp3": {
+      "key": "media/sha256/a3976f53250a280e629c1ee03d0f02a3c7e400c8e3c55690f34c03f0f2633d09.mp3",
+      "sha256": "a3976f53250a280e629c1ee03d0f02a3c7e400c8e3c55690f34c03f0f2633d09",
+      "size": 2866988,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/43/LMCMA_43_af_alloy.mp3": {
+      "key": "media/sha256/b4353d796c06c05acbd3d46b4249be06e9041e6a734c4f1df49a91b5be3b13af.mp3",
+      "sha256": "b4353d796c06c05acbd3d46b4249be06e9041e6a734c4f1df49a91b5be3b13af",
+      "size": 1557932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/43/LMCMA_43_af_sarah.mp3": {
+      "key": "media/sha256/92e141aedd2e8502fa12a272469ebe0132135e7bc2cec93dd275979c871d03f9.mp3",
+      "sha256": "92e141aedd2e8502fa12a272469ebe0132135e7bc2cec93dd275979c871d03f9",
+      "size": 1704620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/43/LMCMA_43_am_puck.mp3": {
+      "key": "media/sha256/40ce268c1ad35c0819a87152d79de14934c28cc33b2d8dc0f11b69b84263e01e.mp3",
+      "sha256": "40ce268c1ad35c0819a87152d79de14934c28cc33b2d8dc0f11b69b84263e01e",
+      "size": 1672364,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/44/LMCMA_44_am_echo.mp3": {
+      "key": "media/sha256/8b6b63c583887e4071391c7c932a1a5dab5f5693c4721243ef04f665360a2806.mp3",
+      "sha256": "8b6b63c583887e4071391c7c932a1a5dab5f5693c4721243ef04f665360a2806",
+      "size": 2052908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/44/LMCMA_44_am_fenrir.mp3": {
+      "key": "media/sha256/f4dc4d8c3c15c2f7613cd0997e0cd4aa69b7861b54085dbf9e052ced440be980.mp3",
+      "sha256": "f4dc4d8c3c15c2f7613cd0997e0cd4aa69b7861b54085dbf9e052ced440be980",
+      "size": 2305196,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/44/LMCMA_44_bm_george.mp3": {
+      "key": "media/sha256/9d23325f65026ee7faa4b202c2024465a2a7caf60082559d953c9adfc9c211c2.mp3",
+      "sha256": "9d23325f65026ee7faa4b202c2024465a2a7caf60082559d953c9adfc9c211c2",
+      "size": 2492588,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/45/LMCMA_45_af_sarah.mp3": {
+      "key": "media/sha256/7d0aca7e2e12d1866788150ee789041067a96e0960818cb8631754b86db59e06.mp3",
+      "sha256": "7d0aca7e2e12d1866788150ee789041067a96e0960818cb8631754b86db59e06",
+      "size": 1779500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/45/LMCMA_45_am_echo.mp3": {
+      "key": "media/sha256/92c93bd132d2ad097a8ef329db0cb38fbdc9707548feeaf4f7b37677fa28f3c4.mp3",
+      "sha256": "92c93bd132d2ad097a8ef329db0cb38fbdc9707548feeaf4f7b37677fa28f3c4",
+      "size": 1624364,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/45/LMCMA_45_am_eric.mp3": {
+      "key": "media/sha256/6914cc260a7b5ffd089b67af53d3086b800c0ddc743eaba63f6d5d1783a881e9.mp3",
+      "sha256": "6914cc260a7b5ffd089b67af53d3086b800c0ddc743eaba63f6d5d1783a881e9",
+      "size": 1564460,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/46/LMCMA_46_af_bella.mp3": {
+      "key": "media/sha256/ebfa4de44d6ddcfa012c3b11e993e4bdc07a21e451d69b8214404d0ba5a32cff.mp3",
+      "sha256": "ebfa4de44d6ddcfa012c3b11e993e4bdc07a21e451d69b8214404d0ba5a32cff",
+      "size": 1186604,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/46/LMCMA_46_am_echo.mp3": {
+      "key": "media/sha256/92946b72f4a845f5bb377612d3d2fc92256a5e4d9f0dacb7535bcee802c1da66.mp3",
+      "sha256": "92946b72f4a845f5bb377612d3d2fc92256a5e4d9f0dacb7535bcee802c1da66",
+      "size": 1014188,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/46/LMCMA_46_bm_lewis.mp3": {
+      "key": "media/sha256/21c342f2b823ddd4b59130006027a9051e93b844cd089d2c0153e1ad33964417.mp3",
+      "sha256": "21c342f2b823ddd4b59130006027a9051e93b844cd089d2c0153e1ad33964417",
+      "size": 1215020,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/47/LMCMA_47_af_bella.mp3": {
+      "key": "media/sha256/d5dbc526405fd7c3777ce40d74fc942046a34734d05692c7d867458f8257f246.mp3",
+      "sha256": "d5dbc526405fd7c3777ce40d74fc942046a34734d05692c7d867458f8257f246",
+      "size": 986540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/47/LMCMA_47_am_echo.mp3": {
+      "key": "media/sha256/7aec7cb7dd9666e0c88e0a97da33513a54f1137319e49a018da918a637638e9c.mp3",
+      "sha256": "7aec7cb7dd9666e0c88e0a97da33513a54f1137319e49a018da918a637638e9c",
+      "size": 852524,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/47/LMCMA_47_bf_emma.mp3": {
+      "key": "media/sha256/07ed0afe49d811a18a059597654c634cd2be4274a940cd7b8de8a382b3b5a922.mp3",
+      "sha256": "07ed0afe49d811a18a059597654c634cd2be4274a940cd7b8de8a382b3b5a922",
+      "size": 880940,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/5/LMCMA_5_af_sarah.mp3": {
+      "key": "media/sha256/25e2fe105b961ce75542760e77987870537efdef771640f1aeb8f29dfe15d1cc.mp3",
+      "sha256": "25e2fe105b961ce75542760e77987870537efdef771640f1aeb8f29dfe15d1cc",
+      "size": 1147052,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/5/LMCMA_5_am_liam.mp3": {
+      "key": "media/sha256/f085b8a16c68be227fa831dae87a93599391a67116241ee7b081a349f0786937.mp3",
+      "sha256": "f085b8a16c68be227fa831dae87a93599391a67116241ee7b081a349f0786937",
+      "size": 1009196,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/5/LMCMA_5_am_puck.mp3": {
+      "key": "media/sha256/12a4bd8b06d851450b819349342d2181dd04a493bb0839fe1e151ffe456a5f19.mp3",
+      "sha256": "12a4bd8b06d851450b819349342d2181dd04a493bb0839fe1e151ffe456a5f19",
+      "size": 1024556,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/55/LMCMA_55_af_bella.mp3": {
+      "key": "media/sha256/0fe63464bfb0d6f960df7fc0cf470b9ba6ee605d50e68f0f74f3db701fd956d7.mp3",
+      "sha256": "0fe63464bfb0d6f960df7fc0cf470b9ba6ee605d50e68f0f74f3db701fd956d7",
+      "size": 913964,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/55/LMCMA_55_af_heart.mp3": {
+      "key": "media/sha256/de547ef14a0806f2cac201780c7a4440977acb36fe23f1147daad5097cdb6c88.mp3",
+      "sha256": "de547ef14a0806f2cac201780c7a4440977acb36fe23f1147daad5097cdb6c88",
+      "size": 889004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/55/LMCMA_55_af_kore.mp3": {
+      "key": "media/sha256/f86aa02177b1fafb0c6c021df2a8639e0887ba197a16f7eeec9d25ab4f66ddaf.mp3",
+      "sha256": "f86aa02177b1fafb0c6c021df2a8639e0887ba197a16f7eeec9d25ab4f66ddaf",
+      "size": 892844,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/6/LMCMA_6_af_bella.mp3": {
+      "key": "media/sha256/dbb20aed1dd8fd647b52429afec2f472779988a8478ae0e46996033c617bb110.mp3",
+      "sha256": "dbb20aed1dd8fd647b52429afec2f472779988a8478ae0e46996033c617bb110",
+      "size": 1416620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/6/LMCMA_6_am_liam.mp3": {
+      "key": "media/sha256/d9350a440cc0c0c9b14d18fff8d199fad50b8ef0f29e3074c7443f23a8facc5d.mp3",
+      "sha256": "d9350a440cc0c0c9b14d18fff8d199fad50b8ef0f29e3074c7443f23a8facc5d",
+      "size": 1168940,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/6/LMCMA_6_bm_fable.mp3": {
+      "key": "media/sha256/16389556e313cba204ee7dd8da3ec5effb3870c49205d468c5bafe963805d464.mp3",
+      "sha256": "16389556e313cba204ee7dd8da3ec5effb3870c49205d468c5bafe963805d464",
+      "size": 1215788,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/63/LMCMA_63_af_sarah.mp3": {
+      "key": "media/sha256/bb5139cb127b566ed4ec86f0f81e83bb97041297532cebe9154a8e6de217d7e5.mp3",
+      "sha256": "bb5139cb127b566ed4ec86f0f81e83bb97041297532cebe9154a8e6de217d7e5",
+      "size": 1544876,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/63/LMCMA_63_am_eric.mp3": {
+      "key": "media/sha256/323c4f1a8360320d730e78f3b3e6fceeda173c591086806df9b2eb6f6e33d9b3.mp3",
+      "sha256": "323c4f1a8360320d730e78f3b3e6fceeda173c591086806df9b2eb6f6e33d9b3",
+      "size": 1308716,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/63/LMCMA_63_bm_lewis.mp3": {
+      "key": "media/sha256/0fb3cb00f71422604ef02079e53b3826d75c13a525504d4d6ea6463e00683221.mp3",
+      "sha256": "0fb3cb00f71422604ef02079e53b3826d75c13a525504d4d6ea6463e00683221",
+      "size": 1668908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/64/LMCMA_64_af_bella.mp3": {
+      "key": "media/sha256/a03ab6035555aad87f5fed7578c980575935ba5390841c27647125f5c1a91e4d.mp3",
+      "sha256": "a03ab6035555aad87f5fed7578c980575935ba5390841c27647125f5c1a91e4d",
+      "size": 1476524,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/64/LMCMA_64_am_eric.mp3": {
+      "key": "media/sha256/60f0254ae6b22a9b96894a8e1c02a2ab7d9b5a58e4ccc7290bd5c3a5ea1ca6e0.mp3",
+      "sha256": "60f0254ae6b22a9b96894a8e1c02a2ab7d9b5a58e4ccc7290bd5c3a5ea1ca6e0",
+      "size": 1242284,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/64/LMCMA_64_am_michael.mp3": {
+      "key": "media/sha256/1fea9afc2b4ece75eb00317877f8a290eb60935dfc12555c961e13a4a8a050ff.mp3",
+      "sha256": "1fea9afc2b4ece75eb00317877f8a290eb60935dfc12555c961e13a4a8a050ff",
+      "size": 1595948,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/7/LMCMA_7_af_heart.mp3": {
+      "key": "media/sha256/11120e2e15250495f01c13b3ac7b9cb2efd1e4ce8b98562c038c8d838f40d94a.mp3",
+      "sha256": "11120e2e15250495f01c13b3ac7b9cb2efd1e4ce8b98562c038c8d838f40d94a",
+      "size": 1125164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/7/LMCMA_7_am_echo.mp3": {
+      "key": "media/sha256/376edd203089419213b7f61fe3f4dff2c94c73c0ae52304071f789931177a772.mp3",
+      "sha256": "376edd203089419213b7f61fe3f4dff2c94c73c0ae52304071f789931177a772",
+      "size": 983084,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/7/LMCMA_7_bf_emma.mp3": {
+      "key": "media/sha256/718a94e8a66124509735386e098d199402fd892df70d3a04ade9ca74f8fd4fe9.mp3",
+      "sha256": "718a94e8a66124509735386e098d199402fd892df70d3a04ade9ca74f8fd4fe9",
+      "size": 1031084,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/8/LMCMA_8_af_kore.mp3": {
+      "key": "media/sha256/aa6ade41bec676f9891e4512d21dc93dba6873a64f68f63d3b3f43faa4343b5f.mp3",
+      "sha256": "aa6ade41bec676f9891e4512d21dc93dba6873a64f68f63d3b3f43faa4343b5f",
+      "size": 836780,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/8/LMCMA_8_am_echo.mp3": {
+      "key": "media/sha256/fd2f6803a49e5ac89720b5b34788699865cca3c65886a3c9418378c8c9f3103c.mp3",
+      "sha256": "fd2f6803a49e5ac89720b5b34788699865cca3c65886a3c9418378c8c9f3103c",
+      "size": 748460,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/8/LMCMA_8_bf_emma.mp3": {
+      "key": "media/sha256/1714f483b69112175e832e76c784c82dbeee0ec4155f2dd6e616eba71d68a626.mp3",
+      "sha256": "1714f483b69112175e832e76c784c82dbeee0ec4155f2dd6e616eba71d68a626",
+      "size": 765356,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/9/LMCMA_9_am_eric.mp3": {
+      "key": "media/sha256/401ff084a40b23680a7a179ddcb851ccdb10c2360b7e04ca132f2923a24ab82e.mp3",
+      "sha256": "401ff084a40b23680a7a179ddcb851ccdb10c2360b7e04ca132f2923a24ab82e",
+      "size": 1074476,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/9/LMCMA_9_am_liam.mp3": {
+      "key": "media/sha256/a6e576498437ab66b34de5c297b1a24b7369fe10304f18a39fe4a1c77e2d26b7.mp3",
+      "sha256": "a6e576498437ab66b34de5c297b1a24b7369fe10304f18a39fe4a1c77e2d26b7",
+      "size": 1118252,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/LMCMA/audio/9/LMCMA_9_bf_emma.mp3": {
+      "key": "media/sha256/c0c6cb54b18dcece9b62ae2c6c8d2657dd2acaa98ee722f109ff294f1b5c34f8.mp3",
+      "sha256": "c0c6cb54b18dcece9b62ae2c6c8d2657dd2acaa98ee722f109ff294f1b5c34f8",
+      "size": 1177772,
+      "contentType": "audio/mpeg"
+    }
+  }
+}

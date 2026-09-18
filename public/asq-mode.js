@@ -341,8 +341,12 @@ class AsqMode {
 
     this.pausePromptAudio();
     const src = this.getAudioSrcForId(this.currentId);
-    audioEl.src = src || '';
-    audioEl.load();
+    if (src && window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+      window.MediaUrlResolver.loadAudio(audioEl, src, { mode: 'quiz' });
+    } else {
+      audioEl.src = src || '';
+      audioEl.load();
+    }
     this.hasAudioSrc = !!src;
     this.audioPlayer?.reset();
     this.audioPlayer?.setEnabled(this.hasAudioSrc);

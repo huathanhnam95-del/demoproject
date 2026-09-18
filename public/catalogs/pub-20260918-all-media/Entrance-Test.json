@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "mode": "Entrance-Test",
+  "ineligibleForProduction": false,
+  "createdAt": "2026-09-18T08:41:36.629Z",
+  "assetCount": 2,
+  "assets": {
+    "public/database/Entrance Test/Listening Q1.mp3": {
+      "key": "media/sha256/664f653885f9b8e14629b51a5d06d8bbcc02a133e981cdb1388305bd9eb0d65f.mp3",
+      "sha256": "664f653885f9b8e14629b51a5d06d8bbcc02a133e981cdb1388305bd9eb0d65f",
+      "size": 1116305,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/Entrance Test/Listening Q2.mp3": {
+      "key": "media/sha256/7faae63f5f8abe88694547aada408c98e24e4d12bcf7196c070f3e71e60ddba2.mp3",
+      "sha256": "7faae63f5f8abe88694547aada408c98e24e4d12bcf7196c070f3e71e60ddba2",
+      "size": 1015159,
+      "contentType": "audio/mpeg"
+    }
+  }
+}

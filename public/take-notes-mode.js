@@ -885,10 +885,23 @@
 
         for (const ext of tryExtensions) {
             const audioPath = `${basePath}.${ext}`;
-            const exists = await checkFileExists(audioPath);
+            let targetUrl = audioPath;
+            let exists = false;
+            if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+                try {
+                    const resolved = await window.MediaUrlResolver.resolveAudioUrl(audioPath, { mode: 'Take-Notes' });
+                    if (resolved && resolved !== audioPath) {
+                        targetUrl = resolved;
+                        exists = true;
+                    }
+                } catch (_) {}
+            }
+            if (!exists) {
+                exists = await checkFileExists(audioPath);
+            }
             if (exists) {
                 if (requestToken !== audioLoadToken || String(currentEntry?.id) !== String(audioId)) return;
-                elements.audio.src = audioPath;
+                elements.audio.src = targetUrl;
                 elements.audio.load();
                 const activePlayer = getAudioPlayer();
                 if (activePlayer) {

@@ -1,0 +1,1090 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "mode": "HCS",
+  "ineligibleForProduction": false,
+  "createdAt": "2026-09-18T08:41:34.335Z",
+  "assetCount": 180,
+  "assets": {
+    "public/database/HCS/audio/1/HCS_1_af_bella.mp3": {
+      "key": "media/sha256/8658346b47e87746ba4833cf872db90aad29d1b2f01b82a23eb33aea6a11a49d.mp3",
+      "sha256": "8658346b47e87746ba4833cf872db90aad29d1b2f01b82a23eb33aea6a11a49d",
+      "size": 1211948,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/1/HCS_1_am_fenrir.mp3": {
+      "key": "media/sha256/1b3533ed9540ed6073913dacb5f1fcfa0f801fc0ccf1d70bdc4050e568e8bfc9.mp3",
+      "sha256": "1b3533ed9540ed6073913dacb5f1fcfa0f801fc0ccf1d70bdc4050e568e8bfc9",
+      "size": 1143980,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/1/HCS_1_bm_lewis.mp3": {
+      "key": "media/sha256/a9eba8e4817b279cfc49b7a62b6bf42436b304e309119aadee18b2aeb6a44161.mp3",
+      "sha256": "a9eba8e4817b279cfc49b7a62b6bf42436b304e309119aadee18b2aeb6a44161",
+      "size": 1223468,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/10/HCS_10_af_alloy.mp3": {
+      "key": "media/sha256/6e5405f8aa313abe5b7fa5333e3a4741bc3178978db4f1809ab1350f177d4421.mp3",
+      "sha256": "6e5405f8aa313abe5b7fa5333e3a4741bc3178978db4f1809ab1350f177d4421",
+      "size": 753452,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/10/HCS_10_am_puck.mp3": {
+      "key": "media/sha256/8a6dc254cdd3a6c573b3aacacff24f32bbc0e7e265e855bf01bbcdbb15dba396.mp3",
+      "sha256": "8a6dc254cdd3a6c573b3aacacff24f32bbc0e7e265e855bf01bbcdbb15dba396",
+      "size": 806060,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/10/HCS_10_bf_emma.mp3": {
+      "key": "media/sha256/9253a0bce6e421106c66c5bbeedb3c8859ff24d44a7ca8dfcfa6375f8c89971a.mp3",
+      "sha256": "9253a0bce6e421106c66c5bbeedb3c8859ff24d44a7ca8dfcfa6375f8c89971a",
+      "size": 777260,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/100/HCS_100_af_alloy.mp3": {
+      "key": "media/sha256/edcbcf72983ac1a13c2855755ba466d93aec57b01a40f8efbfc8dd68abbccfcb.mp3",
+      "sha256": "edcbcf72983ac1a13c2855755ba466d93aec57b01a40f8efbfc8dd68abbccfcb",
+      "size": 641324,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/100/HCS_100_am_puck.mp3": {
+      "key": "media/sha256/413da51de983289927576527f70db65d24193eea3443ac7fcdca8530d84679ea.mp3",
+      "sha256": "413da51de983289927576527f70db65d24193eea3443ac7fcdca8530d84679ea",
+      "size": 692396,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/100/HCS_100_bm_george.mp3": {
+      "key": "media/sha256/6c26c4e7698bad2ae41c83ec7a446bc93b9aed1481da353c7316e2445d8a2e77.mp3",
+      "sha256": "6c26c4e7698bad2ae41c83ec7a446bc93b9aed1481da353c7316e2445d8a2e77",
+      "size": 766124,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/11/HCS_11_af_bella.mp3": {
+      "key": "media/sha256/2e80a2b6ffc767d5b7f2fee9c07aa3a6a3e69a260726ec6b4e3ccd013d674377.mp3",
+      "sha256": "2e80a2b6ffc767d5b7f2fee9c07aa3a6a3e69a260726ec6b4e3ccd013d674377",
+      "size": 767276,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/11/HCS_11_am_echo.mp3": {
+      "key": "media/sha256/305037627273720c7e245dac618b2e0f3f05c2942d9166a37bb3a573cc5f5824.mp3",
+      "sha256": "305037627273720c7e245dac618b2e0f3f05c2942d9166a37bb3a573cc5f5824",
+      "size": 659756,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/11/HCS_11_bm_fable.mp3": {
+      "key": "media/sha256/8c8571bab0940e4151bd4d87850e3a3df9c76356ad9774d66db500b453e2360e.mp3",
+      "sha256": "8c8571bab0940e4151bd4d87850e3a3df9c76356ad9774d66db500b453e2360e",
+      "size": 649004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/117/HCS_117_af_heart.mp3": {
+      "key": "media/sha256/11aa63a356e4759421103d9d6a6908b05046f9ecfe141f1dcefdda70365bb210.mp3",
+      "sha256": "11aa63a356e4759421103d9d6a6908b05046f9ecfe141f1dcefdda70365bb210",
+      "size": 927788,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/117/HCS_117_am_michael.mp3": {
+      "key": "media/sha256/c6fce56bd5b56ce7dc4431645705c5c38a9620374ce54e2c5b8c89c757b1d644.mp3",
+      "sha256": "c6fce56bd5b56ce7dc4431645705c5c38a9620374ce54e2c5b8c89c757b1d644",
+      "size": 1002284,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/117/HCS_117_bm_lewis.mp3": {
+      "key": "media/sha256/e539e9a84c6c88e44b0fe6f4fc31e8af172181c39a42037848bb40cd898a9420.mp3",
+      "sha256": "e539e9a84c6c88e44b0fe6f4fc31e8af172181c39a42037848bb40cd898a9420",
+      "size": 964652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/12/HCS_12_af_heart.mp3": {
+      "key": "media/sha256/ad414a65a4cd050be7ceb70e6fac2c67e299d89ebc264b74ea40d5ce081d98a6.mp3",
+      "sha256": "ad414a65a4cd050be7ceb70e6fac2c67e299d89ebc264b74ea40d5ce081d98a6",
+      "size": 731564,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/12/HCS_12_am_eric.mp3": {
+      "key": "media/sha256/ac2b96277d9c62b66e2f37d6888263a2e1c0dc02ea64ff7e8a2b487b266574ee.mp3",
+      "sha256": "ac2b96277d9c62b66e2f37d6888263a2e1c0dc02ea64ff7e8a2b487b266574ee",
+      "size": 632108,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/12/HCS_12_bm_george.mp3": {
+      "key": "media/sha256/ac69e4dd8a175c5ce5bba462dcb45c9d57627f9ec418eff61469f426d2a210c1.mp3",
+      "sha256": "ac69e4dd8a175c5ce5bba462dcb45c9d57627f9ec418eff61469f426d2a210c1",
+      "size": 789164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/124/HCS_124_af_sarah.mp3": {
+      "key": "media/sha256/64ad00876b4ffde8a7d26d32fc69508fcfed78ecfc3052421c7f368d64ad00ef.mp3",
+      "sha256": "64ad00876b4ffde8a7d26d32fc69508fcfed78ecfc3052421c7f368d64ad00ef",
+      "size": 1792556,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/124/HCS_124_am_puck.mp3": {
+      "key": "media/sha256/803b59e5856a4f43bc114213050ef43d616fae8921cb9202700ef1b81b37dd5e.mp3",
+      "sha256": "803b59e5856a4f43bc114213050ef43d616fae8921cb9202700ef1b81b37dd5e",
+      "size": 1718444,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/124/HCS_124_bm_george.mp3": {
+      "key": "media/sha256/ad4448a894436b4bf3de3308d1360c3794820c475c12a21c8a11f27470dfe267.mp3",
+      "sha256": "ad4448a894436b4bf3de3308d1360c3794820c475c12a21c8a11f27470dfe267",
+      "size": 1955756,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/13/HCS_13_af_kore.mp3": {
+      "key": "media/sha256/b2bb707977a990e267484b8f4505aa1031d5cc9f76211ca10ff9f2c6f10b12aa.mp3",
+      "sha256": "b2bb707977a990e267484b8f4505aa1031d5cc9f76211ca10ff9f2c6f10b12aa",
+      "size": 1103660,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/13/HCS_13_am_fenrir.mp3": {
+      "key": "media/sha256/762f9c7e6cdfc5ddd3b3f585caaaecfe08d7c4b277100a1fb295286e7f6350e5.mp3",
+      "sha256": "762f9c7e6cdfc5ddd3b3f585caaaecfe08d7c4b277100a1fb295286e7f6350e5",
+      "size": 1104812,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/13/HCS_13_bm_lewis.mp3": {
+      "key": "media/sha256/ba4db3289ee819a85ebc6dc3e2c3bcfe880709d230c6f11370a4a21c5e91b2d3.mp3",
+      "sha256": "ba4db3289ee819a85ebc6dc3e2c3bcfe880709d230c6f11370a4a21c5e91b2d3",
+      "size": 1148204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/14/HCS_14_af_sarah.mp3": {
+      "key": "media/sha256/c19832704bb45a891e953d783a2d7fff1d59efc8338b61227aaf8626dedca0ea.mp3",
+      "sha256": "c19832704bb45a891e953d783a2d7fff1d59efc8338b61227aaf8626dedca0ea",
+      "size": 939308,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/14/HCS_14_am_liam.mp3": {
+      "key": "media/sha256/1877c0bb738bb284962f5d1205bbeabfb1f00e6061f42a2bb36e7243d7360361.mp3",
+      "sha256": "1877c0bb738bb284962f5d1205bbeabfb1f00e6061f42a2bb36e7243d7360361",
+      "size": 849452,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/14/HCS_14_bf_emma.mp3": {
+      "key": "media/sha256/9bf2bf53f8577ea37064122befa7d63928fae49afa523f750df4244568004229.mp3",
+      "sha256": "9bf2bf53f8577ea37064122befa7d63928fae49afa523f750df4244568004229",
+      "size": 884012,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/15/HCS_15_af_alloy.mp3": {
+      "key": "media/sha256/35f2ee35f3e12cbb9af27cda55f56f5d4f988a621f34b5e23677fcbb131cfe4a.mp3",
+      "sha256": "35f2ee35f3e12cbb9af27cda55f56f5d4f988a621f34b5e23677fcbb131cfe4a",
+      "size": 1117868,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/15/HCS_15_am_michael.mp3": {
+      "key": "media/sha256/555ed33411182125460e80152a07755716a2c0406e1ce3841b3aedecbca63f62.mp3",
+      "sha256": "555ed33411182125460e80152a07755716a2c0406e1ce3841b3aedecbca63f62",
+      "size": 1365548,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/15/HCS_15_bm_fable.mp3": {
+      "key": "media/sha256/6fe7589eac6141e8069229932096544aaf68fe7c9abac8fcf23c4b837d741df7.mp3",
+      "sha256": "6fe7589eac6141e8069229932096544aaf68fe7c9abac8fcf23c4b837d741df7",
+      "size": 1119020,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/16/HCS_16_af_bella.mp3": {
+      "key": "media/sha256/3b9a933e3882f1456eca47659239859d6161c8a961cc01b493ee510507c3a6b4.mp3",
+      "sha256": "3b9a933e3882f1456eca47659239859d6161c8a961cc01b493ee510507c3a6b4",
+      "size": 1145132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/16/HCS_16_am_puck.mp3": {
+      "key": "media/sha256/b3dc38525368bff24afa954368a3987c272a038e89c00a07ce31b29c385a84cf.mp3",
+      "sha256": "b3dc38525368bff24afa954368a3987c272a038e89c00a07ce31b29c385a84cf",
+      "size": 1008044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/16/HCS_16_bm_george.mp3": {
+      "key": "media/sha256/ff72eed8d3d5a9379c12d16b62f6ec207139e6d342585f76014f82e5c7ccb42a.mp3",
+      "sha256": "ff72eed8d3d5a9379c12d16b62f6ec207139e6d342585f76014f82e5c7ccb42a",
+      "size": 1165100,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/2/HCS_2_af_heart.mp3": {
+      "key": "media/sha256/7493764e9da43bde458ad4bdf438bd1dd5d6a24ffa6815bbc2c1e95ea3464e03.mp3",
+      "sha256": "7493764e9da43bde458ad4bdf438bd1dd5d6a24ffa6815bbc2c1e95ea3464e03",
+      "size": 1366316,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/2/HCS_2_am_liam.mp3": {
+      "key": "media/sha256/f580b053d2998ce763d8bbe8c23fa44577020ac2be25938562f88f2a2cd14a20.mp3",
+      "sha256": "f580b053d2998ce763d8bbe8c23fa44577020ac2be25938562f88f2a2cd14a20",
+      "size": 1202348,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/2/HCS_2_bf_emma.mp3": {
+      "key": "media/sha256/f25fbdcd21233c1b5127a697fdf7f31f5f4416101f30be89f038c1edd8422fee.mp3",
+      "sha256": "f25fbdcd21233c1b5127a697fdf7f31f5f4416101f30be89f038c1edd8422fee",
+      "size": 1266860,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/20/HCS_20_af_alloy.mp3": {
+      "key": "media/sha256/aa2891883a3ec3cc8267c995a318f50f4765ed97ba989efa4c097eb54648e4fd.mp3",
+      "sha256": "aa2891883a3ec3cc8267c995a318f50f4765ed97ba989efa4c097eb54648e4fd",
+      "size": 959276,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/20/HCS_20_am_liam.mp3": {
+      "key": "media/sha256/53c5e3aeaed5b6a8d9955bdddad537d5869ce471efd9c975f185f2328824fcf7.mp3",
+      "sha256": "53c5e3aeaed5b6a8d9955bdddad537d5869ce471efd9c975f185f2328824fcf7",
+      "size": 955820,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/20/HCS_20_bm_george.mp3": {
+      "key": "media/sha256/d6e7f9b7c0e7ce7a9a5a31446999c75f09fe0e926bacd75dfda9ea0e0cbc17a8.mp3",
+      "sha256": "d6e7f9b7c0e7ce7a9a5a31446999c75f09fe0e926bacd75dfda9ea0e0cbc17a8",
+      "size": 1158572,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/21/HCS_21_af_bella.mp3": {
+      "key": "media/sha256/c93aadd32d4bd5a39a089629951946d7051b027cee24545d9cac178a0f64bb81.mp3",
+      "sha256": "c93aadd32d4bd5a39a089629951946d7051b027cee24545d9cac178a0f64bb81",
+      "size": 1096748,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/21/HCS_21_am_michael.mp3": {
+      "key": "media/sha256/025c2bbb5b2beee6fea570e5e91498623bb9941f386b0c0e5e1dc03bf43d2511.mp3",
+      "sha256": "025c2bbb5b2beee6fea570e5e91498623bb9941f386b0c0e5e1dc03bf43d2511",
+      "size": 1171244,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/21/HCS_21_bm_lewis.mp3": {
+      "key": "media/sha256/adb31832325447e86f025a55228c388315a244024ac131d253144600ec2c2381.mp3",
+      "sha256": "adb31832325447e86f025a55228c388315a244024ac131d253144600ec2c2381",
+      "size": 1115564,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/22/HCS_22_af_heart.mp3": {
+      "key": "media/sha256/ac7ca506ba065930bb441f4019f42b0b0cd0ee4cff6c4942ab9901a191281861.mp3",
+      "sha256": "ac7ca506ba065930bb441f4019f42b0b0cd0ee4cff6c4942ab9901a191281861",
+      "size": 1010732,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/22/HCS_22_am_puck.mp3": {
+      "key": "media/sha256/a1f6fffabd940ab16a72dbb2dc2b8feb494d58cabb4f572ee765bd1f1475abe2.mp3",
+      "sha256": "a1f6fffabd940ab16a72dbb2dc2b8feb494d58cabb4f572ee765bd1f1475abe2",
+      "size": 970412,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/22/HCS_22_bf_emma.mp3": {
+      "key": "media/sha256/048cd0a279ead63bbe7231d88f07828465a2ef88227492667a485d20fe4bc091.mp3",
+      "sha256": "048cd0a279ead63bbe7231d88f07828465a2ef88227492667a485d20fe4bc091",
+      "size": 941996,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/23/HCS_23_af_kore.mp3": {
+      "key": "media/sha256/fcf0d06e939fff6d904a2831b94b8be5ed507a5a912cb8c4f3791221a4ef5991.mp3",
+      "sha256": "fcf0d06e939fff6d904a2831b94b8be5ed507a5a912cb8c4f3791221a4ef5991",
+      "size": 1306028,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/23/HCS_23_am_echo.mp3": {
+      "key": "media/sha256/455a97c5ff005a28d4a8360061b1bcad6f7faa5dcb22b5760a90dbd258862af4.mp3",
+      "sha256": "455a97c5ff005a28d4a8360061b1bcad6f7faa5dcb22b5760a90dbd258862af4",
+      "size": 1174316,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/23/HCS_23_bm_fable.mp3": {
+      "key": "media/sha256/e85d866e84e4301f77418c629d103ebfda26a5ce5446241b1838bbc13ebb4d80.mp3",
+      "sha256": "e85d866e84e4301f77418c629d103ebfda26a5ce5446241b1838bbc13ebb4d80",
+      "size": 1177004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/24/HCS_24_af_sarah.mp3": {
+      "key": "media/sha256/bc3f9c58d118f823e4ea35f945c46dff8833ae47e5470d5ad112d9e6f53987f4.mp3",
+      "sha256": "bc3f9c58d118f823e4ea35f945c46dff8833ae47e5470d5ad112d9e6f53987f4",
+      "size": 750380,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/24/HCS_24_am_eric.mp3": {
+      "key": "media/sha256/c373591ce193ed93a39faaaf488c73062cc94a93a76d744c27dc08079209d312.mp3",
+      "sha256": "c373591ce193ed93a39faaaf488c73062cc94a93a76d744c27dc08079209d312",
+      "size": 668588,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/24/HCS_24_bm_george.mp3": {
+      "key": "media/sha256/623c800f7e91fe836d69fb002a4cb3ba4092371dcb4bc986d0f902484059ebac.mp3",
+      "sha256": "623c800f7e91fe836d69fb002a4cb3ba4092371dcb4bc986d0f902484059ebac",
+      "size": 830252,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/25/HCS_25_af_alloy.mp3": {
+      "key": "media/sha256/2f349149f8717ef411390f7059c94acc434e1ec7085644fd40ceac06073cccd5.mp3",
+      "sha256": "2f349149f8717ef411390f7059c94acc434e1ec7085644fd40ceac06073cccd5",
+      "size": 937772,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/25/HCS_25_am_fenrir.mp3": {
+      "key": "media/sha256/3d30034357a88705a5d2bf1583418d8db29db1d8d9d9cea0d7b728ad954f4d52.mp3",
+      "sha256": "3d30034357a88705a5d2bf1583418d8db29db1d8d9d9cea0d7b728ad954f4d52",
+      "size": 1063340,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/25/HCS_25_bm_lewis.mp3": {
+      "key": "media/sha256/dd5396f87c88390d862e8a20b9fcddd1417907aebf4553f76ad4f58b50ce8d3e.mp3",
+      "sha256": "dd5396f87c88390d862e8a20b9fcddd1417907aebf4553f76ad4f58b50ce8d3e",
+      "size": 1092908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/26/HCS_26_af_bella.mp3": {
+      "key": "media/sha256/f14aa7b86e4b6b22131c821bd63608b5b6bd76fcd72e7dd5c9e81862eedcc4aa.mp3",
+      "sha256": "f14aa7b86e4b6b22131c821bd63608b5b6bd76fcd72e7dd5c9e81862eedcc4aa",
+      "size": 1238828,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/26/HCS_26_am_liam.mp3": {
+      "key": "media/sha256/ccff2627500f2519f695b5e1073c15366b9a31bb3e8f4ed2d65628b641a801f0.mp3",
+      "sha256": "ccff2627500f2519f695b5e1073c15366b9a31bb3e8f4ed2d65628b641a801f0",
+      "size": 1066796,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/26/HCS_26_bf_emma.mp3": {
+      "key": "media/sha256/c04b4a95c66b8ba676863a63d5658587b0c6ee25e7b708430867e2d6b3f8d1f5.mp3",
+      "sha256": "c04b4a95c66b8ba676863a63d5658587b0c6ee25e7b708430867e2d6b3f8d1f5",
+      "size": 1103660,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/27/HCS_27_af_heart.mp3": {
+      "key": "media/sha256/6c857b51519615d53cfeed2f58662cde9236724cf64c8879c214e22fc14504b5.mp3",
+      "sha256": "6c857b51519615d53cfeed2f58662cde9236724cf64c8879c214e22fc14504b5",
+      "size": 1526828,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/27/HCS_27_am_michael.mp3": {
+      "key": "media/sha256/82a4a3240cdebb4386e6e06e0ea7e10f8eb4a6bf5de9e9736b86161b00578fb1.mp3",
+      "sha256": "82a4a3240cdebb4386e6e06e0ea7e10f8eb4a6bf5de9e9736b86161b00578fb1",
+      "size": 1676204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/27/HCS_27_bm_fable.mp3": {
+      "key": "media/sha256/4d7df7e0e8a4f3e566e700a3765edf36ec4ea23701ab22cd07e24ebe24faa161.mp3",
+      "sha256": "4d7df7e0e8a4f3e566e700a3765edf36ec4ea23701ab22cd07e24ebe24faa161",
+      "size": 1361708,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/28/HCS_28_af_kore.mp3": {
+      "key": "media/sha256/d4f482488f7d266499760ff25bf4a6a1410efe135013ae0662210527c60f4efa.mp3",
+      "sha256": "d4f482488f7d266499760ff25bf4a6a1410efe135013ae0662210527c60f4efa",
+      "size": 1426220,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/28/HCS_28_am_puck.mp3": {
+      "key": "media/sha256/d8a748fc472d382cd5a022213ba37361c586ddf0f319b57b6433dd3b8ac78512.mp3",
+      "sha256": "d8a748fc472d382cd5a022213ba37361c586ddf0f319b57b6433dd3b8ac78512",
+      "size": 1352492,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/28/HCS_28_bm_george.mp3": {
+      "key": "media/sha256/2a5e650a68d0993698befbfb73963f1f65e8859721c6203dfb07096a0082cab7.mp3",
+      "sha256": "2a5e650a68d0993698befbfb73963f1f65e8859721c6203dfb07096a0082cab7",
+      "size": 1491884,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/29/HCS_29_af_sarah.mp3": {
+      "key": "media/sha256/b6ee683e3cf251e48aaef7fecb4ae13be549890acf3fdf62f9e9ebc5df630f95.mp3",
+      "sha256": "b6ee683e3cf251e48aaef7fecb4ae13be549890acf3fdf62f9e9ebc5df630f95",
+      "size": 1244204,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/29/HCS_29_am_echo.mp3": {
+      "key": "media/sha256/0320042bdadcfe7e4370bca58873bee6c610f46ce6485741d39374db8855860c.mp3",
+      "sha256": "0320042bdadcfe7e4370bca58873bee6c610f46ce6485741d39374db8855860c",
+      "size": 1130924,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/29/HCS_29_bm_lewis.mp3": {
+      "key": "media/sha256/6db8b3ac298a23f804411ef718aea0d2377289354fecf1412b10e20ae90ff84f.mp3",
+      "sha256": "6db8b3ac298a23f804411ef718aea0d2377289354fecf1412b10e20ae90ff84f",
+      "size": 1343660,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/3/HCS_3_af_kore.mp3": {
+      "key": "media/sha256/a310bb486c445eed38b66857f5ce9338c39f0a7ba09f1d2c94b29b07e38592ba.mp3",
+      "sha256": "a310bb486c445eed38b66857f5ce9338c39f0a7ba09f1d2c94b29b07e38592ba",
+      "size": 1392044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/3/HCS_3_am_michael.mp3": {
+      "key": "media/sha256/4495e35393c5ef0b4cf9decc6ceac9df935673372b9b74f24a2b6d067e1c8869.mp3",
+      "sha256": "4495e35393c5ef0b4cf9decc6ceac9df935673372b9b74f24a2b6d067e1c8869",
+      "size": 1577132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/3/HCS_3_bm_fable.mp3": {
+      "key": "media/sha256/193be92e1a4af3c8cb81e6fee72a4d5ceba2350d559607887d5a2ff1d2bd0871.mp3",
+      "sha256": "193be92e1a4af3c8cb81e6fee72a4d5ceba2350d559607887d5a2ff1d2bd0871",
+      "size": 1269548,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/30/HCS_30_af_alloy.mp3": {
+      "key": "media/sha256/abe778de5ac63b0ccf945eaee571ced1793305394bee315fea297116f8d62397.mp3",
+      "sha256": "abe778de5ac63b0ccf945eaee571ced1793305394bee315fea297116f8d62397",
+      "size": 1338284,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/30/HCS_30_am_eric.mp3": {
+      "key": "media/sha256/60a3210c6b21b5c7e740e2120e9a495b88e5d606cd41b8b92c0193a93c46f46c.mp3",
+      "sha256": "60a3210c6b21b5c7e740e2120e9a495b88e5d606cd41b8b92c0193a93c46f46c",
+      "size": 1291436,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/30/HCS_30_bf_emma.mp3": {
+      "key": "media/sha256/74e22dd3d7acdcab12062b4394b5a4fde27858bd34257e7b9bacae2a99eff32b.mp3",
+      "sha256": "74e22dd3d7acdcab12062b4394b5a4fde27858bd34257e7b9bacae2a99eff32b",
+      "size": 1409708,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/31/HCS_31_af_bella.mp3": {
+      "key": "media/sha256/8066e84e5cc12c6c53c068daa86fe4224c9a5a8c76d1ca2e5f15a5f1df0819dc.mp3",
+      "sha256": "8066e84e5cc12c6c53c068daa86fe4224c9a5a8c76d1ca2e5f15a5f1df0819dc",
+      "size": 2138540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/31/HCS_31_am_fenrir.mp3": {
+      "key": "media/sha256/a6da67625502725be88f451fe344a0710fc3cc62d01260e2b8f4018616a77f32.mp3",
+      "sha256": "a6da67625502725be88f451fe344a0710fc3cc62d01260e2b8f4018616a77f32",
+      "size": 2070956,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/31/HCS_31_bm_fable.mp3": {
+      "key": "media/sha256/0c96bb3e95b03e5bd8d3570eea0c29ea567561983c913566e79d7227b0de53b4.mp3",
+      "sha256": "0c96bb3e95b03e5bd8d3570eea0c29ea567561983c913566e79d7227b0de53b4",
+      "size": 1852076,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/32/HCS_32_af_heart.mp3": {
+      "key": "media/sha256/52fc4ef36a26473bd4fe8bde71f9d8158036b321e6b5eb2f77833004c92e58c5.mp3",
+      "sha256": "52fc4ef36a26473bd4fe8bde71f9d8158036b321e6b5eb2f77833004c92e58c5",
+      "size": 1427372,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/32/HCS_32_am_liam.mp3": {
+      "key": "media/sha256/98641451b69d20106a32cc68c9095824b7be4db41bfd4b3e4ea4b1cba961bd4f.mp3",
+      "sha256": "98641451b69d20106a32cc68c9095824b7be4db41bfd4b3e4ea4b1cba961bd4f",
+      "size": 1247660,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/32/HCS_32_bm_george.mp3": {
+      "key": "media/sha256/70f83ba4004167a36d3b1aed7e9d12286d4b12995142d134c9500b028667be99.mp3",
+      "sha256": "70f83ba4004167a36d3b1aed7e9d12286d4b12995142d134c9500b028667be99",
+      "size": 1504940,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/33/HCS_33_af_kore.mp3": {
+      "key": "media/sha256/e65f57a5c0c50e73eac62e7fdbef33303d3ecbb33e8e282123354fd29e459e9e.mp3",
+      "sha256": "e65f57a5c0c50e73eac62e7fdbef33303d3ecbb33e8e282123354fd29e459e9e",
+      "size": 1435052,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/33/HCS_33_am_michael.mp3": {
+      "key": "media/sha256/0a42b3c8cab32e6cf223550d7c8bd04456caef03261cfd5acfb298d9221a8b2a.mp3",
+      "sha256": "0a42b3c8cab32e6cf223550d7c8bd04456caef03261cfd5acfb298d9221a8b2a",
+      "size": 1592876,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/33/HCS_33_bm_lewis.mp3": {
+      "key": "media/sha256/b4f912fe63172d99a633b8e749731b2ffae40e2a9cff22a8f394e07a39db7bae.mp3",
+      "sha256": "b4f912fe63172d99a633b8e749731b2ffae40e2a9cff22a8f394e07a39db7bae",
+      "size": 1508396,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/34/HCS_34_af_sarah.mp3": {
+      "key": "media/sha256/7dcae230a4018b10cd5876aeffb6e0f6a9b757ef136b7dc7bb8d2d4c11abf4e9.mp3",
+      "sha256": "7dcae230a4018b10cd5876aeffb6e0f6a9b757ef136b7dc7bb8d2d4c11abf4e9",
+      "size": 2150060,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/34/HCS_34_am_puck.mp3": {
+      "key": "media/sha256/0955716b474d7816faaee6e7e64b3f0ec302821bd86721861b5510cda967ad49.mp3",
+      "sha256": "0955716b474d7816faaee6e7e64b3f0ec302821bd86721861b5510cda967ad49",
+      "size": 2076332,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/34/HCS_34_bf_emma.mp3": {
+      "key": "media/sha256/c175833f059f607749cadae2ec8096080c1c2c9641e215e9f994640d6e7cb06b.mp3",
+      "sha256": "c175833f059f607749cadae2ec8096080c1c2c9641e215e9f994640d6e7cb06b",
+      "size": 2031020,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/35/HCS_35_af_alloy.mp3": {
+      "key": "media/sha256/0bec91ea42c6819dc60f9e85109762586d0c7e520a9195996ab6eae3eaef811b.mp3",
+      "sha256": "0bec91ea42c6819dc60f9e85109762586d0c7e520a9195996ab6eae3eaef811b",
+      "size": 1181228,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/35/HCS_35_am_echo.mp3": {
+      "key": "media/sha256/8727c4e65922c53c2bfc39d38d33cddeb6ab3eba0cccefcb08f7d9457a513bc0.mp3",
+      "sha256": "8727c4e65922c53c2bfc39d38d33cddeb6ab3eba0cccefcb08f7d9457a513bc0",
+      "size": 1198124,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/35/HCS_35_bm_fable.mp3": {
+      "key": "media/sha256/7d1ec6880085425e0643e70d5a2f07ea17d3cefa99475684681fe0e638ce8124.mp3",
+      "sha256": "7d1ec6880085425e0643e70d5a2f07ea17d3cefa99475684681fe0e638ce8124",
+      "size": 1193132,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/36/HCS_36_af_bella.mp3": {
+      "key": "media/sha256/53aa2e01e3e5b3ceefd4e54cc96b802f154bcc669d98357cc06e422b2e2cefd3.mp3",
+      "sha256": "53aa2e01e3e5b3ceefd4e54cc96b802f154bcc669d98357cc06e422b2e2cefd3",
+      "size": 1445804,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/36/HCS_36_am_eric.mp3": {
+      "key": "media/sha256/6e89c4533db3780a12dc37390f073776af50bd85f2e16bce4b5d1d1a606baec5.mp3",
+      "sha256": "6e89c4533db3780a12dc37390f073776af50bd85f2e16bce4b5d1d1a606baec5",
+      "size": 1152044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/36/HCS_36_bm_george.mp3": {
+      "key": "media/sha256/5459614e82a7c81a930ce9a88bfd15afc28e3d9926c0df3722e429b3912b1501.mp3",
+      "sha256": "5459614e82a7c81a930ce9a88bfd15afc28e3d9926c0df3722e429b3912b1501",
+      "size": 1473068,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/37/HCS_37_af_heart.mp3": {
+      "key": "media/sha256/bcfe93aebd88a4721faf9334d3b0af98cfe985e57742d43a848d69e6b597fbf5.mp3",
+      "sha256": "bcfe93aebd88a4721faf9334d3b0af98cfe985e57742d43a848d69e6b597fbf5",
+      "size": 2126636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/37/HCS_37_am_fenrir.mp3": {
+      "key": "media/sha256/f2db3650935f22fb3b4a5efbfdc5d1c0e2800464cf0dc3d42cba00178e55392c.mp3",
+      "sha256": "f2db3650935f22fb3b4a5efbfdc5d1c0e2800464cf0dc3d42cba00178e55392c",
+      "size": 2093612,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/37/HCS_37_bm_lewis.mp3": {
+      "key": "media/sha256/c1f056c994e7083ec15052353bd7a0732186143491cec6b9df57303a85acc1b1.mp3",
+      "sha256": "c1f056c994e7083ec15052353bd7a0732186143491cec6b9df57303a85acc1b1",
+      "size": 2223788,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/38/HCS_38_af_kore.mp3": {
+      "key": "media/sha256/9b9d6369d237c3415caea57564a0ea30b466e1c6838e3669e50f839e0b881858.mp3",
+      "sha256": "9b9d6369d237c3415caea57564a0ea30b466e1c6838e3669e50f839e0b881858",
+      "size": 1683500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/38/HCS_38_am_liam.mp3": {
+      "key": "media/sha256/7cb53c4809ecff0876cb76edcffe76175849021f579edee14608ba779411f27c.mp3",
+      "sha256": "7cb53c4809ecff0876cb76edcffe76175849021f579edee14608ba779411f27c",
+      "size": 1471916,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/38/HCS_38_bf_emma.mp3": {
+      "key": "media/sha256/bb563ca842fb5d869f0418a2914b7011fadb37533bea57bb063bf9107948bd0b.mp3",
+      "sha256": "bb563ca842fb5d869f0418a2914b7011fadb37533bea57bb063bf9107948bd0b",
+      "size": 1517612,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/39/HCS_39_af_sarah.mp3": {
+      "key": "media/sha256/e66ef8e8a369286b1246c1ac940593eee798e5f9fb079bbf055a11ee6dc6e435.mp3",
+      "sha256": "e66ef8e8a369286b1246c1ac940593eee798e5f9fb079bbf055a11ee6dc6e435",
+      "size": 1527980,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/39/HCS_39_am_michael.mp3": {
+      "key": "media/sha256/93f6c572ed26f8e90de0377eb5ed763f69517cec010f562ef81621a927851f3b.mp3",
+      "sha256": "93f6c572ed26f8e90de0377eb5ed763f69517cec010f562ef81621a927851f3b",
+      "size": 1695788,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/39/HCS_39_bm_fable.mp3": {
+      "key": "media/sha256/602cfd0de12c0b78c695cf613d6b27fc1a226d04ab9a235393b672e6c8f95e82.mp3",
+      "sha256": "602cfd0de12c0b78c695cf613d6b27fc1a226d04ab9a235393b672e6c8f95e82",
+      "size": 1355180,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/4/HCS_4_af_sarah.mp3": {
+      "key": "media/sha256/963fe10bc4c1ee63bb2b0a19f0720c969cc64c32ef3f892f21162fb2069718d2.mp3",
+      "sha256": "963fe10bc4c1ee63bb2b0a19f0720c969cc64c32ef3f892f21162fb2069718d2",
+      "size": 1590572,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/4/HCS_4_am_puck.mp3": {
+      "key": "media/sha256/566fbc62bd1a375b23915b666cead465aab71019b58c29de54296b5bfebfc633.mp3",
+      "sha256": "566fbc62bd1a375b23915b666cead465aab71019b58c29de54296b5bfebfc633",
+      "size": 1513388,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/4/HCS_4_bm_george.mp3": {
+      "key": "media/sha256/045f2c1c070e6f19e802c747b19dbf08ecab4239819f45f5aca71180a3e30288.mp3",
+      "sha256": "045f2c1c070e6f19e802c747b19dbf08ecab4239819f45f5aca71180a3e30288",
+      "size": 1750700,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/5/HCS_5_af_alloy.mp3": {
+      "key": "media/sha256/53aa43bcd7014f616437162be92fd506ca1a00571f5c250889f2a3a65cac91a1.mp3",
+      "sha256": "53aa43bcd7014f616437162be92fd506ca1a00571f5c250889f2a3a65cac91a1",
+      "size": 1296044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/5/HCS_5_am_echo.mp3": {
+      "key": "media/sha256/3989a7da565e7970faaebe4cadf0abae1de45efebeca371b10405a99899f38d7.mp3",
+      "sha256": "3989a7da565e7970faaebe4cadf0abae1de45efebeca371b10405a99899f38d7",
+      "size": 1322540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/5/HCS_5_bm_lewis.mp3": {
+      "key": "media/sha256/667d5eb891e9535593f8f58d24d054e3a6980c6a23cd33a66dab1d6498af65cc.mp3",
+      "sha256": "667d5eb891e9535593f8f58d24d054e3a6980c6a23cd33a66dab1d6498af65cc",
+      "size": 1557164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/6/HCS_6_af_bella.mp3": {
+      "key": "media/sha256/ae683b55416ef15011ad8c9b389a90f8e20fe0f6bcaa07adc24313c6c22ef345.mp3",
+      "sha256": "ae683b55416ef15011ad8c9b389a90f8e20fe0f6bcaa07adc24313c6c22ef345",
+      "size": 1011500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/6/HCS_6_am_eric.mp3": {
+      "key": "media/sha256/ddbc850c63d5278024e8da26bf20c25f322663de580b71cea8bed3a481c8e23f.mp3",
+      "sha256": "ddbc850c63d5278024e8da26bf20c25f322663de580b71cea8bed3a481c8e23f",
+      "size": 836780,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/6/HCS_6_bf_emma.mp3": {
+      "key": "media/sha256/64a353c0c3f1df8d550a6166d8ebf958fd3d4f2eb3c8908fb63ce4507d0da11f.mp3",
+      "sha256": "64a353c0c3f1df8d550a6166d8ebf958fd3d4f2eb3c8908fb63ce4507d0da11f",
+      "size": 915884,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/60/HCS_60_af_alloy.mp3": {
+      "key": "media/sha256/19db5ff9bb5442286ab72a7d64237b5bcb26861fa74603febbd82cc2314f600f.mp3",
+      "sha256": "19db5ff9bb5442286ab72a7d64237b5bcb26861fa74603febbd82cc2314f600f",
+      "size": 1197740,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/60/HCS_60_am_eric.mp3": {
+      "key": "media/sha256/14be48f7b2e90fefdffaac34e79d8ac905bd353766a9e5671410d4d52472f037.mp3",
+      "sha256": "14be48f7b2e90fefdffaac34e79d8ac905bd353766a9e5671410d4d52472f037",
+      "size": 1153196,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/60/HCS_60_bm_george.mp3": {
+      "key": "media/sha256/1bb4f5d0240f2e1562d8e207a4039c4ba9c8eba3369fc2daadd70f4ae88ce0be.mp3",
+      "sha256": "1bb4f5d0240f2e1562d8e207a4039c4ba9c8eba3369fc2daadd70f4ae88ce0be",
+      "size": 1430060,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/61/HCS_61_af_bella.mp3": {
+      "key": "media/sha256/d3d030065e12720df6e53d9b137ad16963f1a4eabdce611169ce4dfdda83b8ad.mp3",
+      "sha256": "d3d030065e12720df6e53d9b137ad16963f1a4eabdce611169ce4dfdda83b8ad",
+      "size": 1197356,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/61/HCS_61_am_fenrir.mp3": {
+      "key": "media/sha256/e47d86a5b952a3a9e00235773d65bace250c1dcfa8db74da171818afee6d428a.mp3",
+      "sha256": "e47d86a5b952a3a9e00235773d65bace250c1dcfa8db74da171818afee6d428a",
+      "size": 1150124,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/61/HCS_61_bm_lewis.mp3": {
+      "key": "media/sha256/affa3726c4e77fec89ba3ae74f20c68d4828c7ee7f7bd2714718dde3a318684b.mp3",
+      "sha256": "affa3726c4e77fec89ba3ae74f20c68d4828c7ee7f7bd2714718dde3a318684b",
+      "size": 1219628,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/7/HCS_7_af_heart.mp3": {
+      "key": "media/sha256/8a873043d5174ff30eb9a2219495df158ea50ea3b6334ec310a06eb69616a57a.mp3",
+      "sha256": "8a873043d5174ff30eb9a2219495df158ea50ea3b6334ec310a06eb69616a57a",
+      "size": 1401644,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/7/HCS_7_am_fenrir.mp3": {
+      "key": "media/sha256/93f3c9968be7e79b466be55a61d9e01efcfb6e7de5019812b1af93b72972319a.mp3",
+      "sha256": "93f3c9968be7e79b466be55a61d9e01efcfb6e7de5019812b1af93b72972319a",
+      "size": 1367468,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/7/HCS_7_bm_fable.mp3": {
+      "key": "media/sha256/048a648b763fa6cf42336d3d1ccdb343149635ee50c91ab79fff74c33c1c8b85.mp3",
+      "sha256": "048a648b763fa6cf42336d3d1ccdb343149635ee50c91ab79fff74c33c1c8b85",
+      "size": 1224620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/79/HCS_79_af_sarah.mp3": {
+      "key": "media/sha256/076ff6610536702deb322fee9f0b860c2f0653e7b3e9f84b51ff24f1ae87ff39.mp3",
+      "sha256": "076ff6610536702deb322fee9f0b860c2f0653e7b3e9f84b51ff24f1ae87ff39",
+      "size": 870188,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/79/HCS_79_am_fenrir.mp3": {
+      "key": "media/sha256/f38a47ab91c98942a5d146d0e6aca01e86d15d5c78bb8be2b417925931e9ab89.mp3",
+      "sha256": "f38a47ab91c98942a5d146d0e6aca01e86d15d5c78bb8be2b417925931e9ab89",
+      "size": 890540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/79/HCS_79_bm_fable.mp3": {
+      "key": "media/sha256/035c0b5f25de068c16ca5b32067a0bfc75ef5165c2448c8f879cd7738221ecc6.mp3",
+      "sha256": "035c0b5f25de068c16ca5b32067a0bfc75ef5165c2448c8f879cd7738221ecc6",
+      "size": 783020,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/8/HCS_8_af_kore.mp3": {
+      "key": "media/sha256/359c92ff718d97fad4ad0965dac9ea5e26af4fb6c3a03c9db65fea61d457bfd9.mp3",
+      "sha256": "359c92ff718d97fad4ad0965dac9ea5e26af4fb6c3a03c9db65fea61d457bfd9",
+      "size": 1329836,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/8/HCS_8_am_liam.mp3": {
+      "key": "media/sha256/ad18c1db653467fe2b867c958d7a3afb7e10aab54a7e3efd98f7bbdc53a6dd3b.mp3",
+      "sha256": "ad18c1db653467fe2b867c958d7a3afb7e10aab54a7e3efd98f7bbdc53a6dd3b",
+      "size": 1173932,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/8/HCS_8_bm_george.mp3": {
+      "key": "media/sha256/f4d5d129e067fc5e834708f071e6003b521db73570968737acd35ba274ffa75c.mp3",
+      "sha256": "f4d5d129e067fc5e834708f071e6003b521db73570968737acd35ba274ffa75c",
+      "size": 1430828,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/80/HCS_80_af_alloy.mp3": {
+      "key": "media/sha256/71ad07f2bf9f2241be799f7bfa2e55c2df804558616d60060691cbd40e983798.mp3",
+      "sha256": "71ad07f2bf9f2241be799f7bfa2e55c2df804558616d60060691cbd40e983798",
+      "size": 817196,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/80/HCS_80_am_liam.mp3": {
+      "key": "media/sha256/29eed80da8dd2b01f83b3d7400113910daaa4fdc80d5ebba3e1ad40d6092703c.mp3",
+      "sha256": "29eed80da8dd2b01f83b3d7400113910daaa4fdc80d5ebba3e1ad40d6092703c",
+      "size": 826412,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/80/HCS_80_bm_george.mp3": {
+      "key": "media/sha256/715f67753ee9c402838534207bb3ebba141e3e45bf0f4d712382bf93fc437383.mp3",
+      "sha256": "715f67753ee9c402838534207bb3ebba141e3e45bf0f4d712382bf93fc437383",
+      "size": 974636,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/81/HCS_81_af_bella.mp3": {
+      "key": "media/sha256/720a8371785f795c07bef8a2de8661a3500a043f347dc8a0b6744ffc45fc2f9b.mp3",
+      "sha256": "720a8371785f795c07bef8a2de8661a3500a043f347dc8a0b6744ffc45fc2f9b",
+      "size": 950444,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/81/HCS_81_am_michael.mp3": {
+      "key": "media/sha256/a8be62c6154b63ff37d55df173fd8044abad0dc3fce092875ccf631a09cdb8fe.mp3",
+      "sha256": "a8be62c6154b63ff37d55df173fd8044abad0dc3fce092875ccf631a09cdb8fe",
+      "size": 1012652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/81/HCS_81_bm_lewis.mp3": {
+      "key": "media/sha256/96b53f47e06f7f8d87fb97f58e30055ecc489a46f779c6a184bedef3b80db76c.mp3",
+      "sha256": "96b53f47e06f7f8d87fb97f58e30055ecc489a46f779c6a184bedef3b80db76c",
+      "size": 963500,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/83/HCS_83_af_kore.mp3": {
+      "key": "media/sha256/a2eb069f87e737322d2c4f3504130fdd8d72982ad72c92c548138f1d36fdb0ec.mp3",
+      "sha256": "a2eb069f87e737322d2c4f3504130fdd8d72982ad72c92c548138f1d36fdb0ec",
+      "size": 1342124,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/83/HCS_83_am_echo.mp3": {
+      "key": "media/sha256/93fd77c7610f38ec54e4be964285edbeff5c423e0d99882fec83648bbfe715ac.mp3",
+      "sha256": "93fd77c7610f38ec54e4be964285edbeff5c423e0d99882fec83648bbfe715ac",
+      "size": 1224236,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/83/HCS_83_bm_fable.mp3": {
+      "key": "media/sha256/9db59363cb4f7c4917a465cbe4d67024220008f8bd3559140514aa9c033527ba.mp3",
+      "sha256": "9db59363cb4f7c4917a465cbe4d67024220008f8bd3559140514aa9c033527ba",
+      "size": 1208876,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/84/HCS_84_af_sarah.mp3": {
+      "key": "media/sha256/ab1a59fe21a856ef921381644dfb1e29573769b79422f7c735c050d0ac0f4ce2.mp3",
+      "sha256": "ab1a59fe21a856ef921381644dfb1e29573769b79422f7c735c050d0ac0f4ce2",
+      "size": 1127852,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/84/HCS_84_am_eric.mp3": {
+      "key": "media/sha256/13eac2ae92ef693aa18c03b77cb4cf57aa5707a66a9df24c76434e02fc43563c.mp3",
+      "sha256": "13eac2ae92ef693aa18c03b77cb4cf57aa5707a66a9df24c76434e02fc43563c",
+      "size": 999212,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/84/HCS_84_bm_george.mp3": {
+      "key": "media/sha256/f189a57e041e2bc238dfceae213572963ba250ce5ff8e3b52b5892315408a761.mp3",
+      "sha256": "f189a57e041e2bc238dfceae213572963ba250ce5ff8e3b52b5892315408a761",
+      "size": 1248812,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/85/HCS_85_af_alloy.mp3": {
+      "key": "media/sha256/2025ce796bee71563575aeb73becf8a39f996cf35c2d9f5d9dfb536d4e5ee69f.mp3",
+      "sha256": "2025ce796bee71563575aeb73becf8a39f996cf35c2d9f5d9dfb536d4e5ee69f",
+      "size": 930476,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/85/HCS_85_am_fenrir.mp3": {
+      "key": "media/sha256/790c4dbe314404a372e0492355e2f6be793c4fed59e4ef5c6ede12a769049e57.mp3",
+      "sha256": "790c4dbe314404a372e0492355e2f6be793c4fed59e4ef5c6ede12a769049e57",
+      "size": 998828,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/85/HCS_85_bm_lewis.mp3": {
+      "key": "media/sha256/83ebf7f71730792f59f6eced8ad2e33b655079103f5816df69e4e81e92ca05dc.mp3",
+      "sha256": "83ebf7f71730792f59f6eced8ad2e33b655079103f5816df69e4e81e92ca05dc",
+      "size": 1092908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/86/HCS_86_af_bella.mp3": {
+      "key": "media/sha256/d8c9168b7cf453ae8a7740ecf7670897ebed2d6d2eed00dd24662771d535a59e.mp3",
+      "sha256": "d8c9168b7cf453ae8a7740ecf7670897ebed2d6d2eed00dd24662771d535a59e",
+      "size": 725420,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/86/HCS_86_am_liam.mp3": {
+      "key": "media/sha256/0d28d80b12a8a899174f388363ace49b8abd34b6cf3605c08f3a1ac25db636c4.mp3",
+      "sha256": "0d28d80b12a8a899174f388363ace49b8abd34b6cf3605c08f3a1ac25db636c4",
+      "size": 642860,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/86/HCS_86_bf_emma.mp3": {
+      "key": "media/sha256/67698169389f41252e40ac68935e44dd63e20a619b9537d42ca33cf73a4159bd.mp3",
+      "sha256": "67698169389f41252e40ac68935e44dd63e20a619b9537d42ca33cf73a4159bd",
+      "size": 655532,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/87/HCS_87_af_heart.mp3": {
+      "key": "media/sha256/756712118adf3c12c8f0b51c98ae9cb922c49ccb793450f93081fdec8d2bb5b7.mp3",
+      "sha256": "756712118adf3c12c8f0b51c98ae9cb922c49ccb793450f93081fdec8d2bb5b7",
+      "size": 1009580,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/87/HCS_87_am_michael.mp3": {
+      "key": "media/sha256/5b0fcf49a9f418470539fc8ac594bce54a9ae2844ae261dffbc13d9ddf894b2e.mp3",
+      "sha256": "5b0fcf49a9f418470539fc8ac594bce54a9ae2844ae261dffbc13d9ddf894b2e",
+      "size": 1081004,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/87/HCS_87_bm_fable.mp3": {
+      "key": "media/sha256/7b708b0ddf7c95d2270beae3570594d5ba8a245c97cfe3277f4fb3f915876377.mp3",
+      "sha256": "7b708b0ddf7c95d2270beae3570594d5ba8a245c97cfe3277f4fb3f915876377",
+      "size": 882860,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/88/HCS_88_af_kore.mp3": {
+      "key": "media/sha256/8fc0a6b31aeb0df4e97289cf0d1be9f1affceef957031311445bc02ccaada0db.mp3",
+      "sha256": "8fc0a6b31aeb0df4e97289cf0d1be9f1affceef957031311445bc02ccaada0db",
+      "size": 1416236,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/88/HCS_88_am_puck.mp3": {
+      "key": "media/sha256/c97b263b8af452b0199bb01396cee7d22d0ec07447947635a98eaf4dbec10691.mp3",
+      "sha256": "c97b263b8af452b0199bb01396cee7d22d0ec07447947635a98eaf4dbec10691",
+      "size": 1350572,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/88/HCS_88_bm_george.mp3": {
+      "key": "media/sha256/8dbdad2921a3249ff0c5e6cc44e1cdd4ba68fbc58a56b6cd418a91c4ebd5407d.mp3",
+      "sha256": "8dbdad2921a3249ff0c5e6cc44e1cdd4ba68fbc58a56b6cd418a91c4ebd5407d",
+      "size": 1513388,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/89/HCS_89_af_sarah.mp3": {
+      "key": "media/sha256/d9c1170a030558a3d9cf1cacd7e03c029d109d69406ff1cbe391ee53c9c9803f.mp3",
+      "sha256": "d9c1170a030558a3d9cf1cacd7e03c029d109d69406ff1cbe391ee53c9c9803f",
+      "size": 948908,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/89/HCS_89_am_echo.mp3": {
+      "key": "media/sha256/b54bf5266661cd84dbd0ef5c7e1c4422e3e6532c52acfbb884ec01331da7f91a.mp3",
+      "sha256": "b54bf5266661cd84dbd0ef5c7e1c4422e3e6532c52acfbb884ec01331da7f91a",
+      "size": 871340,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/89/HCS_89_bm_lewis.mp3": {
+      "key": "media/sha256/6c11a412534a1b8e8e714427584d68630687dbb49aee61edaf68b940ff37a858.mp3",
+      "sha256": "6c11a412534a1b8e8e714427584d68630687dbb49aee61edaf68b940ff37a858",
+      "size": 1039532,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/9/HCS_9_af_sarah.mp3": {
+      "key": "media/sha256/dc984220c4110ad18bf40bb16a11cb5744f2fa67e3ab12fadf7a0e962c04bf2f.mp3",
+      "sha256": "dc984220c4110ad18bf40bb16a11cb5744f2fa67e3ab12fadf7a0e962c04bf2f",
+      "size": 1091372,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/9/HCS_9_am_michael.mp3": {
+      "key": "media/sha256/b5c5175f9675a0b25d2987a3831593c94ea671bfd5175dcac953303529ac25b2.mp3",
+      "sha256": "b5c5175f9675a0b25d2987a3831593c94ea671bfd5175dcac953303529ac25b2",
+      "size": 1206188,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/9/HCS_9_bm_lewis.mp3": {
+      "key": "media/sha256/df88f13a524a212796e5c7bad0c4741bae21a9cdf65d4b99e19ad65a63e8478b.mp3",
+      "sha256": "df88f13a524a212796e5c7bad0c4741bae21a9cdf65d4b99e19ad65a63e8478b",
+      "size": 1159340,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/90/HCS_90_af_alloy.mp3": {
+      "key": "media/sha256/170178830215d0109e555495674d7e09db295e20487e3e615deaa7838d6af76b.mp3",
+      "sha256": "170178830215d0109e555495674d7e09db295e20487e3e615deaa7838d6af76b",
+      "size": 775724,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/90/HCS_90_am_eric.mp3": {
+      "key": "media/sha256/c3b4bb77225eb09a752d230d95c5edce1f087e5d69ca1adef4eb6716fe83c834.mp3",
+      "sha256": "c3b4bb77225eb09a752d230d95c5edce1f087e5d69ca1adef4eb6716fe83c834",
+      "size": 748076,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/90/HCS_90_bf_emma.mp3": {
+      "key": "media/sha256/045a328f7b12d7ba24ebbd4982bbb7df4c06d15317933cb78c9052877dab9b16.mp3",
+      "sha256": "045a328f7b12d7ba24ebbd4982bbb7df4c06d15317933cb78c9052877dab9b16",
+      "size": 829100,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/91/HCS_91_af_bella.mp3": {
+      "key": "media/sha256/dbd446f50b57537fa10ec6b74ecb992f0293c8ce07a0602bc3bc9e2a2262f399.mp3",
+      "sha256": "dbd446f50b57537fa10ec6b74ecb992f0293c8ce07a0602bc3bc9e2a2262f399",
+      "size": 887084,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/91/HCS_91_am_fenrir.mp3": {
+      "key": "media/sha256/25504e933a22c730d05b4ea94d8dcf23cf3e1883b06c1d0151e95cab29c149a2.mp3",
+      "sha256": "25504e933a22c730d05b4ea94d8dcf23cf3e1883b06c1d0151e95cab29c149a2",
+      "size": 850220,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/91/HCS_91_bm_fable.mp3": {
+      "key": "media/sha256/5c1366ad1c609131a4ec6a6919313678a643f3dba13eebc30af7e96de2203fce.mp3",
+      "sha256": "5c1366ad1c609131a4ec6a6919313678a643f3dba13eebc30af7e96de2203fce",
+      "size": 768044,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/92/HCS_92_af_heart.mp3": {
+      "key": "media/sha256/6dc8e98723b5111d90de02c171b1808153173d8553784c0d122e911c88ce4814.mp3",
+      "sha256": "6dc8e98723b5111d90de02c171b1808153173d8553784c0d122e911c88ce4814",
+      "size": 1150124,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/92/HCS_92_am_liam.mp3": {
+      "key": "media/sha256/a821370d34741bed39a940c4c0de7e7ee27ab9b274e9ac7ac5dec3fa3b184519.mp3",
+      "sha256": "a821370d34741bed39a940c4c0de7e7ee27ab9b274e9ac7ac5dec3fa3b184519",
+      "size": 1009580,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/92/HCS_92_bm_george.mp3": {
+      "key": "media/sha256/9ba46308ee515d82bf16a7db42bb358c1bc1ee96779bb5068025407914306417.mp3",
+      "sha256": "9ba46308ee515d82bf16a7db42bb358c1bc1ee96779bb5068025407914306417",
+      "size": 1224620,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/93/HCS_93_af_kore.mp3": {
+      "key": "media/sha256/ff262895e49b5908f92bb0fd73d2f3ad459327e39f456750fa442b9798b05a5d.mp3",
+      "sha256": "ff262895e49b5908f92bb0fd73d2f3ad459327e39f456750fa442b9798b05a5d",
+      "size": 981164,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/93/HCS_93_am_michael.mp3": {
+      "key": "media/sha256/f8daf7fc210a5f57f9349bebaf2972bb17f57540094ed81dcd5a1cbd437a95d9.mp3",
+      "sha256": "f8daf7fc210a5f57f9349bebaf2972bb17f57540094ed81dcd5a1cbd437a95d9",
+      "size": 1082540,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/93/HCS_93_bm_lewis.mp3": {
+      "key": "media/sha256/0924ac63995e7794dafa9c3b12aa3130a631cbc27431455e05eed2b2a1f1592a.mp3",
+      "sha256": "0924ac63995e7794dafa9c3b12aa3130a631cbc27431455e05eed2b2a1f1592a",
+      "size": 1037228,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/94/HCS_94_af_sarah.mp3": {
+      "key": "media/sha256/44ba416fdad36201574f71fd5292b8518bbb7b4815f1d026e58b53f9dcb0fb2a.mp3",
+      "sha256": "44ba416fdad36201574f71fd5292b8518bbb7b4815f1d026e58b53f9dcb0fb2a",
+      "size": 1394732,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/94/HCS_94_am_puck.mp3": {
+      "key": "media/sha256/ba4858fff66ed76abbe4b8d56450f7343989a1f48028dc7e9b8c6eda5255bb7e.mp3",
+      "sha256": "ba4858fff66ed76abbe4b8d56450f7343989a1f48028dc7e9b8c6eda5255bb7e",
+      "size": 1348652,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/94/HCS_94_bf_emma.mp3": {
+      "key": "media/sha256/29376e5e108bdfb9118d938c4c5963a4e2a2ac3e4a56ffdf9102817b37f10bfc.mp3",
+      "sha256": "29376e5e108bdfb9118d938c4c5963a4e2a2ac3e4a56ffdf9102817b37f10bfc",
+      "size": 1315244,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/95/HCS_95_af_alloy.mp3": {
+      "key": "media/sha256/690d549d2e4c06ab4d5f301ab338928c855546e30a0b8a3920f4c81250a5d384.mp3",
+      "sha256": "690d549d2e4c06ab4d5f301ab338928c855546e30a0b8a3920f4c81250a5d384",
+      "size": 1328300,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/95/HCS_95_am_echo.mp3": {
+      "key": "media/sha256/d63b0e534c1d0b9365b85c42a12248c19501ea5e8bff482e36dd3b687ff8c05c.mp3",
+      "sha256": "d63b0e534c1d0b9365b85c42a12248c19501ea5e8bff482e36dd3b687ff8c05c",
+      "size": 1331372,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/95/HCS_95_bm_fable.mp3": {
+      "key": "media/sha256/23634c2390f6725c459a41b0fa366ef74f32e1055792bcef56a9d97aded4cd47.mp3",
+      "sha256": "23634c2390f6725c459a41b0fa366ef74f32e1055792bcef56a9d97aded4cd47",
+      "size": 1324076,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/97/HCS_97_af_heart.mp3": {
+      "key": "media/sha256/d1ba07d132560194080636cc451ded9488a92176c3b7df64f1959ce8e3916597.mp3",
+      "sha256": "d1ba07d132560194080636cc451ded9488a92176c3b7df64f1959ce8e3916597",
+      "size": 1515692,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/97/HCS_97_am_fenrir.mp3": {
+      "key": "media/sha256/9ee6795e5fa730ba908c71de6e261a168d7dbdccde2be82d40636686e07bed33.mp3",
+      "sha256": "9ee6795e5fa730ba908c71de6e261a168d7dbdccde2be82d40636686e07bed33",
+      "size": 1496492,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/97/HCS_97_bm_lewis.mp3": {
+      "key": "media/sha256/75c808c6dc301c2e63f9ccdf4981dde58e7d55b115a2bc091d1eef01cc6f15aa.mp3",
+      "sha256": "75c808c6dc301c2e63f9ccdf4981dde58e7d55b115a2bc091d1eef01cc6f15aa",
+      "size": 1589036,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/98/HCS_98_af_kore.mp3": {
+      "key": "media/sha256/e282d852b1b079909ff6e3367e4748c176781df9f6ea2e15fae3704db7798ab1.mp3",
+      "sha256": "e282d852b1b079909ff6e3367e4748c176781df9f6ea2e15fae3704db7798ab1",
+      "size": 719660,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/98/HCS_98_am_liam.mp3": {
+      "key": "media/sha256/470c41f2d94b45b872eef94b28cd7adff56e34691f9e02717ccb3917410b03c0.mp3",
+      "sha256": "470c41f2d94b45b872eef94b28cd7adff56e34691f9e02717ccb3917410b03c0",
+      "size": 634796,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/98/HCS_98_bf_emma.mp3": {
+      "key": "media/sha256/7ae58ff84cb2f507cf22a8c57e79de2754411ecd84966fcd7e20e561c1a525c6.mp3",
+      "sha256": "7ae58ff84cb2f507cf22a8c57e79de2754411ecd84966fcd7e20e561c1a525c6",
+      "size": 669356,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/99/HCS_99_af_sarah.mp3": {
+      "key": "media/sha256/a572f747ab59aae44d68d5799e9e2baf1a0db884bd6d515751d38107945c0937.mp3",
+      "sha256": "a572f747ab59aae44d68d5799e9e2baf1a0db884bd6d515751d38107945c0937",
+      "size": 872492,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/99/HCS_99_am_michael.mp3": {
+      "key": "media/sha256/ceaef6326eb9ca95276df2d8a6f034c0fd9f0647b1a99f2b03b429dff0e0e98c.mp3",
+      "sha256": "ceaef6326eb9ca95276df2d8a6f034c0fd9f0647b1a99f2b03b429dff0e0e98c",
+      "size": 975404,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/HCS/audio/99/HCS_99_bm_fable.mp3": {
+      "key": "media/sha256/10850ba8dc615786869a15182ae99a322d0356a20ed08067b2d1ac430ceb148d.mp3",
+      "sha256": "10850ba8dc615786869a15182ae99a322d0356a20ed08067b2d1ac430ceb148d",
+      "size": 799148,
+      "contentType": "audio/mpeg"
+    }
+  }
+}

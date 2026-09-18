@@ -132,7 +132,19 @@ function inspectPilotAssets(baseDir) {
   };
 }
 
-function buildPilotCatalogs(pilotData, publicationId, deliveryBaseUrl = DEFAULT_DELIVERY_BASE_URL) {
+function generatePilotPublicationId() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = d.getUTCFullYear();
+  const mm = pad(d.getUTCMonth() + 1);
+  const dd = pad(d.getUTCDate());
+  const hh = pad(d.getUTCHours());
+  const min = pad(d.getUTCMinutes());
+  const ss = pad(d.getUTCSeconds());
+  return `pilot-${yyyy}${mm}${dd}-${hh}${min}${ss}`;
+}
+
+function buildPilotCatalogs(pilotData, publicationId = generatePilotPublicationId(), deliveryBaseUrl = DEFAULT_DELIVERY_BASE_URL) {
   const modeGroups = {};
   for (const item of pilotData.items) {
     // Derive mode from path
@@ -151,6 +163,8 @@ function buildPilotCatalogs(pilotData, publicationId, deliveryBaseUrl = DEFAULT_
       schemaVersion: 1,
       publicationId,
       mode: modeId,
+      ineligibleForProduction: true,
+      selectionRestricted: true,
       createdAt: new Date().toISOString(),
       assetCount: assets.length,
       assets: Object.fromEntries(
@@ -180,6 +194,8 @@ function buildPilotCatalogs(pilotData, publicationId, deliveryBaseUrl = DEFAULT_
     schemaVersion: 1,
     publicationId,
     type: 'pilot',
+    ineligibleForProduction: true,
+    selectionRestricted: true,
     createdAt: new Date().toISOString(),
     deliveryBaseUrl,
     summary: {
@@ -258,6 +274,7 @@ module.exports = {
   DEFAULT_BUCKET_NAME,
   DEFAULT_DELIVERY_BASE_URL,
   sha256File,
+  generatePilotPublicationId,
   inspectPilotAssets,
   buildPilotCatalogs,
   verifyRemoteObject

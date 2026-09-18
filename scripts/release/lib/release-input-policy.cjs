@@ -168,11 +168,141 @@ function validatePublicationEligibility(lockData, options = {}) {
   }
 }
 
+function matchesPattern(relPath, pattern) {
+  const norm = relPath.replace(/\\/g, '/');
+  if (pattern === '*' || pattern === '**') return true;
+  if (pattern.endsWith('/**')) {
+    const prefix = pattern.slice(0, -3);
+    return norm === prefix || norm.startsWith(prefix + '/');
+  }
+  if (pattern.startsWith('*.')) {
+    const ext = pattern.slice(1);
+    return norm.endsWith(ext);
+  }
+  if (pattern.endsWith('*') && !pattern.includes('/')) {
+    const base = path.basename(norm);
+    const prefix = pattern.slice(0, -1);
+    return base.startsWith(prefix);
+  }
+  if (pattern.includes('*')) {
+    const regex = new RegExp('^' + pattern.replace(/\./g, '\\.').replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*') + '$');
+    return regex.test(norm) || regex.test(path.basename(norm));
+  }
+  return norm === pattern || path.basename(norm) === pattern;
+}
+
+function classifyTrackedPath(relPath, profile, policyObj, options = {}) {
+  const policy = policyObj && policyObj.policy ? policyObj.policy : (policyObj || {});
+  const exportPolicy = policy.profileExportPolicy || {};
+  const omissions = policy.omissionClassifications || [];
+  const protectedSet = policyObj && policyObj.protectedSet ? policyObj.protectedSet : new Set(policy.protectedInputs || []);
+
+  const norm = String(relPath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  const profileKey = String(profile || 'hosting').toLowerCase();
+  const profileRules = exportPolicy[profileKey] || exportPolicy.hosting || {};
+
+  // Protected builder inputs required by the profile are always included
+  if (protectedSet.has(norm)) {
+    if (profileKey === 'functions' && norm.startsWith('public/')) {
+      return { status: 'omit', category: 'app-runtime', reason: 'public runtime omitted from functions profile' };
+    }
+    return { status: 'include', category: 'build-only', reason: 'protected builder input' };
+  }
+
+  // 1. Required prefixes for the profile
+  for (const prefix of profileRules.requiredPrefixes || []) {
+    const cleanPrefix = prefix.replace(/\/$/, '');
+    if (norm === cleanPrefix || norm.startsWith(cleanPrefix + '/')) {
+      const category = cleanPrefix === 'public' ? 'app-runtime' : (cleanPrefix === 'functions' ? 'backend-functions' : 'app-runtime');
+      return { status: 'include', category, reason: `matches required prefix ${prefix}` };
+    }
+  }
+
+  // 2. Required exact files
+  if (Array.isArray(profileRules.requiredFiles) && profileRules.requiredFiles.includes(norm)) {
+    return { status: 'include', category: 'build-only', reason: 'matches required release file' };
+  }
+
+  // 3. Required directory prefixes
+  for (const prefix of profileRules.requiredDirectoryPrefixes || []) {
+    if (norm.startsWith(prefix)) {
+      return { status: 'include', category: 'build-only', reason: `matches required directory prefix ${prefix}` };
+    }
+  }
+
+  // 4. Cross-profile exclusions
+  if (profileKey === 'hosting' && norm.startsWith('functions/')) {
+    return { status: 'omit', category: 'backend-functions', reason: 'functions code omitted from hosting profile' };
+  }
+  if (profileKey === 'functions' && norm.startsWith('public/')) {
+    return { status: 'omit', category: 'app-runtime', reason: 'public app omitted from functions profile' };
+  }
+
+  // 5. Omission classifications
+  for (const group of omissions) {
+    for (const pattern of group.patterns || []) {
+      if (matchesPattern(norm, pattern)) {
+        return { status: 'omit', category: group.category, reason: `matches omission pattern ${pattern}` };
+      }
+    }
+  }
+
+  return { status: 'unclassified', category: 'unknown', reason: 'no classification matched' };
+}
+
+function filterTrackedInventoryForProfile(inventory, profile, policyObj, options = {}) {
+  if (!Array.isArray(inventory)) {
+    return { filtered: [], omitted: [], omittedCount: 0, omittedBytes: 0, breakdown: {} };
+  }
+
+  const policy = policyObj && policyObj.policy ? policyObj : loadReleaseInputPolicy(options.policyPath);
+  const filtered = [];
+  const omitted = [];
+  let omittedBytes = 0;
+  const breakdown = {};
+
+  for (const item of inventory) {
+    const rel = String(item.path || '').replace(/\\/g, '/');
+    const classification = classifyTrackedPath(rel, profile, policy, options);
+
+    if (classification.status === 'unclassified') {
+      const err = new Error(`[ReleaseInputPolicy] File '${rel}' is outside profile '${profile}' surface and has no explicit omission classification in release-input-policy.json.`);
+      err.code = 'UNCLASSIFIED_RELEASE_INPUT';
+      err.file = rel;
+      throw err;
+    }
+
+    if (classification.status === 'include') {
+      filtered.push({ ...item, classification: classification.category });
+    } else {
+      omitted.push({ ...item, classification: classification.category });
+      const size = typeof item.size === 'number' ? item.size : 0;
+      omittedBytes += size;
+      if (!breakdown[classification.category]) {
+        breakdown[classification.category] = { count: 0, bytes: 0 };
+      }
+      breakdown[classification.category].count += 1;
+      breakdown[classification.category].bytes += size;
+    }
+  }
+
+  return {
+    filtered,
+    omitted,
+    omittedCount: omitted.length,
+    omittedBytes,
+    breakdown
+  };
+}
+
 module.exports = {
   DEFAULT_POLICY_PATH,
   loadReleaseInputPolicy,
   resolveExcludedPaths,
   resolveExcludedRoots,
   filterTrackedInventory,
-  validatePublicationEligibility
+  validatePublicationEligibility,
+  matchesPattern,
+  classifyTrackedPath,
+  filterTrackedInventoryForProfile
 };

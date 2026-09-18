@@ -13,6 +13,24 @@
     },
     "forbidden-private": {
       "description": "Sensitive credentials and environment files that must never enter a release candidate."
+    },
+    "backend-functions": {
+      "description": "Cloud Functions backend application source code."
+    },
+    "non-runtime-docs": {
+      "description": "Documentation, specifications, and presentation slide decks not required at build or runtime."
+    },
+    "non-runtime-tests": {
+      "description": "Unit, integration, and browser test suites and fixtures not required in candidate."
+    },
+    "non-runtime-assets": {
+      "description": "Raw uncompiled design assets and mockups outside the public runtime surface."
+    },
+    "non-runtime-scratch": {
+      "description": "Scratch scripts, debug dumps, temporary outputs, and developer experiment files."
+    },
+    "non-runtime-tooling": {
+      "description": "Development environment configurations, AI assistant metadata, and local development tools."
     }
   },
   "protectedInputs": [
@@ -154,5 +172,196 @@
         "catalogs/pub-20260918-all-media/echo-forge.json"
       ]
     }
-  }
+  },
+  "profileExportPolicy": {
+    "hosting": {
+      "requiredPrefixes": [
+        "public/"
+      ],
+      "requiredFiles": [
+        "package.json",
+        "package-lock.json",
+        "firebase.json",
+        ".firebaserc",
+        "config/media-release.lock.json",
+        "scripts/release/firebase-release.cjs",
+        "scripts/release/release-input-policy.json",
+        "scripts/release/lib/release-input-policy.cjs",
+        "scripts/release/pilot-media-campaign.cjs",
+        "scripts/release/media-gc.cjs",
+        "scripts/read-aloud/build-connected-speech-index.js",
+        "scripts/read-aloud/connected-speech-index-core.js",
+        "scripts/sync-version.js",
+        "scripts/structure/policy.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/coverage.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/summary.md"
+      ],
+      "requiredDirectoryPrefixes": [
+        "scripts/release/",
+        "scripts/read-aloud/",
+        "tools/release-workspace/"
+      ]
+    },
+    "functions": {
+      "requiredPrefixes": [
+        "functions/"
+      ],
+      "requiredFiles": [
+        "package.json",
+        "package-lock.json",
+        "firebase.json",
+        ".firebaserc",
+        "scripts/release/firebase-release.cjs",
+        "scripts/release/release-input-policy.json",
+        "scripts/release/lib/release-input-policy.cjs",
+        "scripts/segmentation-study/sync-manifest.js",
+        "scripts/structure/policy.json"
+      ],
+      "requiredDirectoryPrefixes": [
+        "scripts/release/"
+      ]
+    },
+    "full": {
+      "requiredPrefixes": [
+        "public/",
+        "functions/"
+      ],
+      "requiredFiles": [
+        "package.json",
+        "package-lock.json",
+        "firebase.json",
+        ".firebaserc",
+        "config/media-release.lock.json",
+        "firestore.rules",
+        "firestore.indexes.json",
+        "storage.rules",
+        "scripts/release/firebase-release.cjs",
+        "scripts/release/release-input-policy.json",
+        "scripts/release/lib/release-input-policy.cjs",
+        "scripts/release/pilot-media-campaign.cjs",
+        "scripts/release/media-gc.cjs",
+        "scripts/read-aloud/build-connected-speech-index.js",
+        "scripts/read-aloud/connected-speech-index-core.js",
+        "scripts/segmentation-study/sync-manifest.js",
+        "scripts/sync-version.js",
+        "scripts/structure/policy.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/coverage.json",
+        "docs/audits/read-aloud-connected-speech/2026-03-26-coverage/summary.md"
+      ],
+      "requiredDirectoryPrefixes": [
+        "scripts/release/",
+        "scripts/read-aloud/",
+        "tools/release-workspace/"
+      ]
+    }
+  },
+  "omissionClassifications": [
+    {
+      "category": "non-runtime-scratch",
+      "description": "Scratch scripts, debug dumps, temporary outputs, and developer experiment files.",
+      "patterns": [
+        "_tmp_pdf_debug/**",
+        "tmp/**",
+        "tmp_pdf_analysis/**",
+        "outputs/**",
+        "scratch/**",
+        "transcripts/**",
+        "reports/**",
+        "work/**",
+        "*.bat",
+        "*.ps1",
+        "*.py",
+        "*.wav",
+        "*.mp3",
+        "*.patch",
+        "inspect*",
+        "temp_*",
+        "recalc_*",
+        "repair_*",
+        "verify_*",
+        "update_*",
+        "manage_*",
+        "patch_*",
+        "insert_*",
+        "tmp_*"
+      ]
+    },
+    {
+      "category": "non-runtime-tests",
+      "description": "Unit, integration, and browser test suites and fixtures.",
+      "patterns": [
+        "tests/**",
+        "test_**",
+        "test-**",
+        "*.test.*"
+      ]
+    },
+    {
+      "category": "non-runtime-assets",
+      "description": "Raw uncompiled design assets and mockups outside the public runtime surface.",
+      "patterns": [
+        "assets/**",
+        "Generated Images/**",
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.vsdx",
+        "*.pdf"
+      ]
+    },
+    {
+      "category": "non-runtime-docs",
+      "description": "Documentation, specifications, and presentation slide decks not required at build or runtime.",
+      "patterns": [
+        "docs/**",
+        "agent_docs/**",
+        "exported_slides/**",
+        "Slide Deck From Walkthrough/**",
+        "deck/**",
+        "*.md",
+        "*.txt",
+        "*.docx",
+        "*.pptx",
+        "*.zip"
+      ]
+    },
+    {
+      "category": "non-runtime-tooling",
+      "description": "Development environment configurations, AI assistant metadata, and local development tools.",
+      "patterns": [
+        ".agent/**",
+        ".claude/**",
+        ".gsd/**",
+        "antigravity-logicware/**",
+        "conductor/**",
+        ".github/**",
+        ".media-checkpoints/**",
+        "backend/**",
+        "src/**",
+        "services/**",
+        "database/**",
+        "data/**",
+        "demo/**",
+        "node_modules/**",
+        "__pycache__/**",
+        ".gemini*",
+        "TASK_TRACKER.csv",
+        "server.js",
+        "server.py",
+        "mkcert.exe",
+        "pyrefly.toml",
+        "requirements.txt",
+        "Admin account",
+        "agy.cmd",
+        ".*",
+        "watch-admin.*",
+        "scripts/**",
+        "tools/**",
+        "*.json",
+        "*.csv",
+        "*.js",
+        "*"
+      ]
+    }
+  ]
 }

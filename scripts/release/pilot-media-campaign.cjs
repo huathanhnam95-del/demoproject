@@ -83,9 +83,14 @@ function inspectPilotAssets(baseDir) {
   let totalBytes = 0;
 
   for (const item of PILOT_ASSETS) {
-    const fullPath = path.join(baseDir, item.path);
+    let fullPath = path.join(baseDir, item.path);
     if (!fs.existsSync(fullPath)) {
-      throw new Error(`Pilot asset not found on disk: ${fullPath}`);
+      const backupPath = path.join(baseDir, '.local', 'media-backup', 'pub-20260918-all-media', item.path);
+      if (fs.existsSync(backupPath)) {
+        fullPath = backupPath;
+      } else {
+        throw new Error(`Pilot asset not found on disk: ${fullPath}`);
+      }
     }
     const stat = fs.statSync(fullPath);
     const sha256 = sha256File(fullPath);

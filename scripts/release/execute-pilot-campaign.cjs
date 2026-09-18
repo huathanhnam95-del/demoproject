@@ -22,7 +22,8 @@ function invokeGCloud(args) {
 
   const res = spawnSync(cmd, fullArgs, {
     encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024
+    maxBuffer: 32 * 1024 * 1024,
+    shell: false
   });
 
   return {
@@ -79,7 +80,7 @@ async function executePilotCampaign(options = {}) {
       obj.absolutePath,
       destination,
       '--if-generation-match=0',
-      `--cache-control=public, max-age=31536000, immutable`,
+      '--cache-control=public, max-age=31536000, immutable',
       `--content-type=${obj.contentType}`,
       `--custom-metadata=sha256=${obj.sha256}`
     ]);
@@ -96,7 +97,7 @@ async function executePilotCampaign(options = {}) {
     } else {
       // Check if failed due to precondition (already exists)
       const combinedOutput = `${cpRes.stdout} ${cpRes.stderr}`;
-      if (combinedOutput.includes('PreconditionFailed') || combinedOutput.includes('412') || combinedOutput.includes('already exists')) {
+      if (combinedOutput.includes('PreconditionFailed') || combinedOutput.includes('412') || combinedOutput.includes('pre-condition') || combinedOutput.includes('already exists')) {
         // Verify remote object metadata
         const descRes = invokeGCloud(['storage', 'objects', 'describe', destination, '--format=json']);
         if (descRes.exitCode === 0) {
@@ -133,6 +134,7 @@ async function executePilotCampaign(options = {}) {
       const tempShardFile = path.join(tempDir, path.basename(shardKey));
       fs.writeFileSync(tempShardFile, payload, 'utf8');
       const shardDest = `gs://${targetBucket}/${shardKey}`;
+      process.stdout.write(`      Uploading shard ${shardKey}... `);
 
       const shardCp = invokeGCloud([
         'storage', 'cp',
@@ -143,14 +145,17 @@ async function executePilotCampaign(options = {}) {
       ]);
 
       if (shardCp.exitCode !== 0) {
+        process.stdout.write('[FAILED]\n');
         throw new Error(`Failed to upload shard ${shardKey}: ${shardCp.stderr}`);
       }
+      process.stdout.write('[UPLOADED]\n');
     }
 
     // Write root release and upload
     const tempRootFile = path.join(tempDir, 'release.json');
     fs.writeFileSync(tempRootFile, catalogs.rootReleasePayload, 'utf8');
     const rootDest = `gs://${targetBucket}/${catalogs.rootReleaseKey}`;
+    process.stdout.write(`      Uploading root release ${catalogs.rootReleaseKey}... `);
 
     const rootCp = invokeGCloud([
       'storage', 'cp',
@@ -161,8 +166,10 @@ async function executePilotCampaign(options = {}) {
     ]);
 
     if (rootCp.exitCode !== 0) {
+      process.stdout.write('[FAILED]\n');
       throw new Error(`Failed to upload root release ${catalogs.rootReleaseKey}: ${rootCp.stderr}`);
     }
+    process.stdout.write('[UPLOADED]\n');
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }

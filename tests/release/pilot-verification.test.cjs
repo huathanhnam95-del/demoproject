@@ -73,3 +73,79 @@ test('Pilot Campaign: buildPilotCatalogs generates valid sharded catalogs and ro
   assert.ok(catalogs.shards['Highlight Incorrect Words']);
   assert.ok(catalogs.shards['Take Notes']);
 });
+
+test('Pilot Campaign: Live GCS root release manifest is valid and marked ineligibleForProduction', async () => {
+  const checkpointsBase = 'C:/Cursor AI/.media-checkpoints';
+  const dirs = fs.existsSync(checkpointsBase)
+    ? fs.readdirSync(checkpointsBase).filter(d => d.startsWith('pilot-')).sort().reverse()
+    : [];
+  const publicationId = dirs.length > 0 ? dirs[0] : 'pilot-20260918-035318';
+  const url = `https://storage.googleapis.com/listening-tasks-3ae34-practice-media/publications/${publicationId}/release.json`;
+
+  const data = await new Promise((resolve, reject) => {
+    const https = require('node:https');
+    https.get(url, (res) => {
+      assert.equal(res.statusCode, 200);
+      assert.equal(res.headers['content-type'], 'application/json');
+      let body = '';
+      res.on('data', (d) => { body += d; });
+      res.on('end', () => resolve(JSON.parse(body)));
+    }).on('error', reject);
+  });
+
+  assert.equal(data.publicationId, publicationId);
+  assert.equal(data.type, 'pilot');
+  assert.equal(data.ineligibleForProduction, true);
+  assert.equal(data.selectionRestricted, true);
+  assert.equal(data.summary.totalLogicalAssets, 26);
+  assert.equal(data.summary.uniqueStorageObjects, 24);
+  assert.ok(data.shards['RA']);
+  assert.ok(data.shards['Describe Image']);
+});
+
+test('Pilot Campaign: Live GCS streaming byte-for-byte readback and HTTP 206 Range check', async () => {
+  const https = require('node:https');
+  const targetKey = 'media/sha256/0ac3e88e6e516eac81c9cf2202b35398da0ec39bf0ddd841954d6dd4498115f6.mp3';
+  const expectedSha256 = '0ac3e88e6e516eac81c9cf2202b35398da0ec39bf0ddd841954d6dd4498115f6';
+  const localFile = 'C:/Cursor AI/public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_alloy_100.mp3';
+
+  if (!fs.existsSync(localFile)) return;
+  const localBytes = fs.readFileSync(localFile);
+
+  // 1. Full streaming readback
+  const fullUrl = `https://storage.googleapis.com/listening-tasks-3ae34-practice-media/${targetKey}`;
+  const streamResult = await new Promise((resolve, reject) => {
+    https.get(fullUrl, (res) => {
+      assert.equal(res.statusCode, 200);
+      assert.equal(res.headers['content-type'], 'audio/mpeg');
+      assert.ok(res.headers['cache-control'].includes('immutable'));
+
+      const hash = require('node:crypto').createHash('sha256');
+      let bytes = 0;
+      res.on('data', (chunk) => {
+        bytes += chunk.length;
+        hash.update(chunk);
+      });
+      res.on('end', () => resolve({ bytes, sha256: hash.digest('hex') }));
+    }).on('error', reject);
+  });
+
+  assert.equal(streamResult.bytes, localBytes.length);
+  assert.equal(streamResult.sha256, expectedSha256);
+
+  // 2. HTTP 206 Partial Content Range check
+  const rangeResult = await new Promise((resolve, reject) => {
+    https.get(fullUrl, { headers: { Range: 'bytes=0-1023' } }, (res) => {
+      assert.equal(res.statusCode, 206);
+      assert.equal(res.headers['content-range'], `bytes 0-1023/${localBytes.length}`);
+      assert.equal(res.headers['content-length'], '1024');
+
+      const chunks = [];
+      res.on('data', (c) => chunks.push(c));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+    }).on('error', reject);
+  });
+
+  assert.equal(rangeResult.length, 1024);
+  assert.ok(rangeResult.equals(localBytes.subarray(0, 1024)));
+});

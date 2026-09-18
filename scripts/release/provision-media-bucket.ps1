@@ -46,7 +46,14 @@ function Invoke-GCloud {
     param([string[]]$Arguments)
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = "cmd.exe"
-    $psi.Arguments = "/c gcloud " + ($Arguments -join " ")
+    $escapedArgs = $Arguments | ForEach-Object {
+        if ($_ -match '\s' -and -not ($_ -match '^".*"$')) {
+            "`"$_`""
+        } else {
+            $_
+        }
+    }
+    $psi.Arguments = "/c gcloud " + ($escapedArgs -join " ")
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
@@ -135,7 +142,12 @@ if (-not $bucketExists) {
         Write-Error "Existing bucket location '$actualLocation' does not match expected location '$Location'."
     }
     # Verify Uniform Bucket-Level Access
-    $ubla = $bucketObj.iam_configuration.uniform_bucket_level_access.enabled
+    $ubla = $false
+    if ($null -ne $bucketObj.PSObject.Properties['uniform_bucket_level_access']) {
+        $ubla = [bool]$bucketObj.uniform_bucket_level_access
+    } elseif ($null -ne $bucketObj.PSObject.Properties['iam_configuration'] -and $null -ne $bucketObj.iam_configuration.PSObject.Properties['uniform_bucket_level_access']) {
+        $ubla = [bool]$bucketObj.iam_configuration.uniform_bucket_level_access.enabled
+    }
     if (-not $ubla) {
         Write-Host "      -> Uniform bucket-level access is DISABLED." -ForegroundColor Yellow
         if ($Apply) {
@@ -170,7 +182,7 @@ $corsJson = @"
 "@
 
 if ($bucketExists) {
-    $hasCors = $null -ne $bucketObj.cors -and $bucketObj.cors.Count -gt 0
+    $hasCors = ($null -ne $bucketObj.PSObject.Properties['cors']) -and ($null -ne $bucketObj.cors) -and ($bucketObj.cors.Count -gt 0)
     if (-not $hasCors) {
         Write-Host " [NOT CONFIGURED]" -ForegroundColor Yellow
         if ($Apply) {
@@ -201,7 +213,8 @@ if ($bucketExists) {
     $hasPublicRead = $false
     if ($iamRes.ExitCode -eq 0 -and $iamRes.Stdout) {
         $iamObj = $iamRes.Stdout | ConvertFrom-Json
-        foreach ($binding in ($iamObj.bindings | Where-Object { $_.role -eq 'roles/storage.objectViewer' })) {
+        $bindings = if ($null -ne $iamObj.PSObject.Properties['bindings']) { $iamObj.bindings } else { @() }
+        foreach ($binding in ($bindings | Where-Object { $_.role -eq 'roles/storage.objectViewer' })) {
             if ($binding.members -contains 'allUsers') {
                 $hasPublicRead = $true
                 break
@@ -264,14 +277,13 @@ if ($bucketExists -and ($saExists -or $Apply)) {
     
     $hasCreator = $false
     $hasViewer = $false
-    if ($iamObj -and $iamObj.bindings) {
-        foreach ($b in $iamObj.bindings) {
-            if ($b.role -eq 'roles/storage.objectCreator' -and $b.members -contains "serviceAccount:$saEmail") {
-                $hasCreator = $true
-            }
-            if ($b.role -eq 'roles/storage.objectViewer' -and $b.members -contains "serviceAccount:$saEmail") {
-                $hasViewer = $true
-            }
+    $bucketBindings = if ($iamObj -and ($null -ne $iamObj.PSObject.Properties['bindings'])) { $iamObj.bindings } else { @() }
+    foreach ($b in $bucketBindings) {
+        if ($b.role -eq 'roles/storage.objectCreator' -and $b.members -contains "serviceAccount:$saEmail") {
+            $hasCreator = $true
+        }
+        if ($b.role -eq 'roles/storage.objectViewer' -and $b.members -contains "serviceAccount:$saEmail") {
+            $hasViewer = $true
         }
     }
 
@@ -312,7 +324,8 @@ if ($saExists -or $Apply) {
     $hasImpersonation = $false
     if ($saPolRes.ExitCode -eq 0 -and $saPolRes.Stdout) {
         $saPolicy = $saPolRes.Stdout | ConvertFrom-Json
-        foreach ($b in $saPolicy.bindings) {
+        $saBindings = if ($saPolicy -and ($null -ne $saPolicy.PSObject.Properties['bindings'])) { $saPolicy.bindings } else { @() }
+        foreach ($b in $saBindings) {
             if ($b.role -eq 'roles/iam.serviceAccountTokenCreator' -and $b.members -contains "user:$ExpectedOperator") {
                 $hasImpersonation = $true
                 break

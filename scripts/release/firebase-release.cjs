@@ -2567,7 +2567,7 @@ function dispatchFirebase(ctx, options = {}) {
     if (ctx.profile !== 'hosting') {
       fail('CHANNEL_UNSUPPORTED', 'Channel deployments (--channel) are only supported for the hosting profile.');
     }
-    args = [...invocation.prefix, 'hosting:channel:deploy', channel, '--project', projectSelector, '--config', ctx.candidateConfigPath, '--only', selector];
+    args = [...invocation.prefix, 'hosting:channel:deploy', channel, '--project', projectSelector, '--config', ctx.candidateConfigPath];
   } else {
     args = [...invocation.prefix, 'deploy', '--project', projectSelector, '--config', ctx.candidateConfigPath, '--only', selector];
   }

@@ -8843,7 +8843,18 @@
       const testPath = `/database/${mode}/audio/${testFile}`;
 
       log.debug(`[loadQuestion] Checking if file exists (attempt ${i + 1}/${tryExtensions.length}): ${testPath}`);
-      const exists = await checkFileExists(testPath);
+      let exists = false;
+      if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+        try {
+          const res = await window.MediaUrlResolver.resolveAudioUrl(testPath, { mode });
+          if (res && res !== testPath) {
+            exists = true;
+          }
+        } catch (_) {}
+      }
+      if (!exists) {
+        exists = await checkFileExists(testPath);
+      }
       if (isStaleModeLoadRequest(mode, requestId)) {
         return false;
       }
@@ -8871,7 +8882,16 @@
       correctSentenceSpeak = question.correctSentence;
     }
 
-    const audioPath = `/database/${mode}/audio/${foundFile}?t=${Date.now()}`;
+    const localAudioPath = `/database/${mode}/audio/${foundFile}`;
+    let resolvedAudioPath = `${localAudioPath}?t=${Date.now()}`;
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
+      try {
+        const res = await window.MediaUrlResolver.resolveAudioUrl(localAudioPath, { mode });
+        if (res && res !== localAudioPath) {
+          resolvedAudioPath = res;
+        }
+      } catch (_) {}
+    }
     const mimeType = getAudioMimeType(foundFile);
 
     // Clear any existing source elements
@@ -8881,7 +8901,7 @@
 
     // Create source element with proper type
     const source = document.createElement('source');
-    source.src = audioPath;
+    source.src = resolvedAudioPath;
     source.type = mimeType;
     audio.appendChild(source);
 

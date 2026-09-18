@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "deliveryBaseUrl": "https://storage.googleapis.com/listening-tasks-3ae34-practice-media/",
+  "defaultRolloutState": "remote-with-fallback",
+  "modes": {
+    "RA": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/RA.json"
+    },
+    "SST": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/SST.json"
+    },
+    "RFIB": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/RFIB.json"
+    },
+    "HIW": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/HIW.json"
+    },
+    "Take-Notes": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/Take-Notes.json"
+    },
+    "collo-dictate": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/collo-dictate.json"
+    },
+    "Describe-Image": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/Describe-Image.json"
+    },
+    "LMCMA": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/LMCMA.json"
+    },
+    "LMCSA": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/LMCSA.json"
+    },
+    "HCS": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/HCS.json"
+    },
+    "type": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/type.json"
+    },
+    "SMW": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/SMW.json"
+    },
+    "speak": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/speak.json"
+    },
+    "extended": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/extended.json"
+    },
+    "LFIB": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/LFIB.json"
+    },
+    "SGD": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/SGD.json"
+    },
+    "quiz": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/quiz.json"
+    },
+    "RTS": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/RTS.json"
+    },
+    "Entrance-Test": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/Entrance-Test.json"
+    },
+    "echo-forge": {
+      "state": "remote-only",
+      "shardKey": "catalogs/pub-20260918-all-media/echo-forge.json"
+    }
+  }
+}

@@ -400,29 +400,37 @@ const ColloDictateMode = (() => {
 
     const phraseAtStart = currentPhrase;
     const key = getColloAudioKey(phraseAtStart);
-    const url = `/database/collo-dictate/audio/${key}.wav`;
-    const sessionId = (playbackSession += 1);
+    const localUrl = `/database/collo-dictate/audio/${key}.wav`;
+    let resolvedUrl = localUrl;
+    let hasOfflineAudio = false;
 
-    els.playBtn.disabled = true;
-    try {
-      stopPlayback();
-      els.input.disabled = false;
-      els.input.focus();
-
-      const hasOfflineAudio = await checkAudioExists(url);
-      if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
-      if (!hasOfflineAudio) {
-        speakFallback(phraseAtStart);
-        return;
-      }
-
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.resolveAudioUrl === 'function') {
       try {
-        if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
-        els.audio.playbackRate = SPEED_PRESETS[speedIdx] || 1.0;
-        els.audio.src = url;
-        els.audio.load();
-        await els.audio.play();
-      } catch {
+        const res = await window.MediaUrlResolver.resolveAudioUrl(localUrl, { mode: 'collo-dictate' });
+        if (res && res !== localUrl) {
+          resolvedUrl = res;
+          hasOfflineAudio = true;
+        }
+      } catch (_) {}
+    }
+
+    if (!hasOfflineAudio) {
+      hasOfflineAudio = await checkAudioExists(localUrl);
+    }
+
+    if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
+    if (!hasOfflineAudio) {
+      speakFallback(phraseAtStart);
+      return;
+    }
+
+    try {
+      if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
+      els.audio.playbackRate = SPEED_PRESETS[speedIdx] || 1.0;
+      els.audio.src = resolvedUrl;
+      els.audio.load();
+      await els.audio.play();
+    } catch {
         // Hybrid: if offline audio fails to decode/play, fall back to browser TTS.
         if (sessionId !== playbackSession || currentPhrase !== phraseAtStart) return;
         speakFallback(phraseAtStart);

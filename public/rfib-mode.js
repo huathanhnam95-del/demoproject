@@ -615,7 +615,13 @@
 
     renderVoiceToggle(inlineToggle, variant, entry);
 
-    elements.supportAudioPlayer.src = `/database/RFIB/audio/${encodeURIComponent(fileName)}`;
+    const supportAudioSrc = `/database/RFIB/audio/${encodeURIComponent(fileName)}`;
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+      window.MediaUrlResolver.loadAudio(elements.supportAudioPlayer, supportAudioSrc, { mode: 'RFIB' });
+    } else {
+      elements.supportAudioPlayer.src = supportAudioSrc;
+      elements.supportAudioPlayer.load();
+    }
     elements.supportAudioPlayer.dataset.variant = variant;
     elements.supportAudioPlayer.dataset.voice = state.supportVoice[variant] || 'male';
 
@@ -715,7 +721,13 @@
 
     elements.fullAudioPlay.disabled = false;
     elements.fullAudioNote.textContent = 'Full passage audio';
-    elements.fullAudioPlayer.src = `/database/RFIB/audio/${encodeURIComponent(fileName)}`;
+    const fullAudioSrc = `/database/RFIB/audio/${encodeURIComponent(fileName)}`;
+    if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+      window.MediaUrlResolver.loadAudio(elements.fullAudioPlayer, fullAudioSrc, { mode: 'RFIB' });
+    } else {
+      elements.fullAudioPlayer.src = fullAudioSrc;
+      elements.fullAudioPlayer.load();
+    }
     elements.fullAudioPlayer.dataset.voice = voice;
 
     if (voices.length > 1) {

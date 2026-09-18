@@ -1,0 +1,496 @@
+{
+  "schemaVersion": 1,
+  "publicationId": "pub-20260918-all-media",
+  "mode": "SGD",
+  "ineligibleForProduction": false,
+  "createdAt": "2026-09-18T08:41:35.853Z",
+  "assetCount": 81,
+  "assets": {
+    "public/database/SGD/audio/10.mp3": {
+      "key": "media/sha256/139562633daa970ac07d354c573484fd0b35f2c236ea22f09e3d83b8b3e25731.mp3",
+      "sha256": "139562633daa970ac07d354c573484fd0b35f2c236ea22f09e3d83b8b3e25731",
+      "size": 2793248,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/11.mp3": {
+      "key": "media/sha256/aafe78e66bf10b0d03001b04ae7e7035e982ee8ca8e52ad0ab544f0ba852e3f3.mp3",
+      "sha256": "aafe78e66bf10b0d03001b04ae7e7035e982ee8ca8e52ad0ab544f0ba852e3f3",
+      "size": 2799519,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/12.mp3": {
+      "key": "media/sha256/a622816a907830e30fa78a51e805bb3c992006ebee47fa539cb799f343f25a72.mp3",
+      "sha256": "a622816a907830e30fa78a51e805bb3c992006ebee47fa539cb799f343f25a72",
+      "size": 2564627,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/13.mp3": {
+      "key": "media/sha256/d36280525fae7f995bc1026bde01f149d6e82117e8810b2012a20cf396aaee05.mp3",
+      "sha256": "d36280525fae7f995bc1026bde01f149d6e82117e8810b2012a20cf396aaee05",
+      "size": 2874333,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/14.mp3": {
+      "key": "media/sha256/4247f7d5c7de0a6b079b40f9fbb8a2dbf99653e27a1544e43f0f097181e42c16.mp3",
+      "sha256": "4247f7d5c7de0a6b079b40f9fbb8a2dbf99653e27a1544e43f0f097181e42c16",
+      "size": 2671622,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/15.mp3": {
+      "key": "media/sha256/909b466a3ebb3a532715d74f25377b1d6525e99fe76c6d720b3c50e85a863be6.mp3",
+      "sha256": "909b466a3ebb3a532715d74f25377b1d6525e99fe76c6d720b3c50e85a863be6",
+      "size": 1425467,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/16.mp3": {
+      "key": "media/sha256/9e57bd9b6cccbd09a8833aa50a9241d4c7d7f6726d38bea2636b1a0b3025689b.mp3",
+      "sha256": "9e57bd9b6cccbd09a8833aa50a9241d4c7d7f6726d38bea2636b1a0b3025689b",
+      "size": 1426512,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/17.mp3": {
+      "key": "media/sha256/9518907b948a255ed61ebba3bee24e80452eb581c165ea835ebe9429cb06d343.mp3",
+      "sha256": "9518907b948a255ed61ebba3bee24e80452eb581c165ea835ebe9429cb06d343",
+      "size": 2794502,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/18.mp3": {
+      "key": "media/sha256/38f296e6c3e5e79d102a6926b9106dd9a71681821bc481e14d1c2999dce30c48.mp3",
+      "sha256": "38f296e6c3e5e79d102a6926b9106dd9a71681821bc481e14d1c2999dce30c48",
+      "size": 2694191,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/19.mp3": {
+      "key": "media/sha256/124fe1844f787e583532a63e273cfa73eeb84135ea2286e38ea5ece01601ca16.mp3",
+      "sha256": "124fe1844f787e583532a63e273cfa73eeb84135ea2286e38ea5ece01601ca16",
+      "size": 1453053,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/2.mp3": {
+      "key": "media/sha256/eb43aa5c9ea0989151eae9af652a5741820149e36981b38b3dc254f20a0e36bc.mp3",
+      "sha256": "eb43aa5c9ea0989151eae9af652a5741820149e36981b38b3dc254f20a0e36bc",
+      "size": 658221,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/20.mp3": {
+      "key": "media/sha256/1311c379838f3923f3805eebce7d124f0a70f0f594b81da5573c0fcd56b7fe08.mp3",
+      "sha256": "1311c379838f3923f3805eebce7d124f0a70f0f594b81da5573c0fcd56b7fe08",
+      "size": 1503208,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/21.mp3": {
+      "key": "media/sha256/dee0bf7c4a92f8dab1928fee72973dfa313c2dde0b0f82a36eec03464b5a1a16.mp3",
+      "sha256": "dee0bf7c4a92f8dab1928fee72973dfa313c2dde0b0f82a36eec03464b5a1a16",
+      "size": 1399972,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/22.mp3": {
+      "key": "media/sha256/ef40d4e1ad26cf5af9360e9ee093b8cc0076f3e78631167b7293359209db2ca7.mp3",
+      "sha256": "ef40d4e1ad26cf5af9360e9ee093b8cc0076f3e78631167b7293359209db2ca7",
+      "size": 1356295,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/23.mp3": {
+      "key": "media/sha256/364a779c05c8ed1f9fbcef0be30dfa73221a3e4dc25ef8508c64534572a13b05.mp3",
+      "sha256": "364a779c05c8ed1f9fbcef0be30dfa73221a3e4dc25ef8508c64534572a13b05",
+      "size": 2909859,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/24.mp3": {
+      "key": "media/sha256/43308406f9adf1ca5be18f1d8faa6718d1acce06f48e7ab4889cdf1a54d9937f.mp3",
+      "sha256": "43308406f9adf1ca5be18f1d8faa6718d1acce06f48e7ab4889cdf1a54d9937f",
+      "size": 1447201,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/25.mp3": {
+      "key": "media/sha256/40b68ae463406cbf118d375782ec814ad8562b429e215ffa3ccf01ec8a34a12d.mp3",
+      "sha256": "40b68ae463406cbf118d375782ec814ad8562b429e215ffa3ccf01ec8a34a12d",
+      "size": 2702969,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/26.mp3": {
+      "key": "media/sha256/c33cc1840520476c94223c4f5e0ea31dea14e0e0aeabbaf17b1131bca93a5b8b.mp3",
+      "sha256": "c33cc1840520476c94223c4f5e0ea31dea14e0e0aeabbaf17b1131bca93a5b8b",
+      "size": 1511149,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/27.mp3": {
+      "key": "media/sha256/7a80f087209561ca4c80eccc3618d3851faf3446ef4d2c4cf43fa0d4a9cc1841.mp3",
+      "sha256": "7a80f087209561ca4c80eccc3618d3851faf3446ef4d2c4cf43fa0d4a9cc1841",
+      "size": 2663681,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/28.mp3": {
+      "key": "media/sha256/32732608d49536bac44a3f4d9a6dcba7391492f89348be42e37875a5b934b7de.mp3",
+      "sha256": "32732608d49536bac44a3f4d9a6dcba7391492f89348be42e37875a5b934b7de",
+      "size": 2952073,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/29.mp3": {
+      "key": "media/sha256/d359a6adaa38480430acb0472794ca167de614b6e0957104dc365a21ae16c47f.mp3",
+      "sha256": "d359a6adaa38480430acb0472794ca167de614b6e0957104dc365a21ae16c47f",
+      "size": 1389941,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/30.mp3": {
+      "key": "media/sha256/f6eb1be3df99a00c5e57953bd85327b3af58f73efca73a4cf4515a8c735be2fa.mp3",
+      "sha256": "f6eb1be3df99a00c5e57953bd85327b3af58f73efca73a4cf4515a8c735be2fa",
+      "size": 1468935,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/31.mp3": {
+      "key": "media/sha256/2b6532a1f7e045300ae3931d3ca1f1ef1435f22cadeb44c1daaaab10207cab16.mp3",
+      "sha256": "2b6532a1f7e045300ae3931d3ca1f1ef1435f22cadeb44c1daaaab10207cab16",
+      "size": 1300080,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/32.mp3": {
+      "key": "media/sha256/bb7bf315c70105c87482171a4173ecdf38635f25c033d372bd6dad626b85b92d.mp3",
+      "sha256": "bb7bf315c70105c87482171a4173ecdf38635f25c033d372bd6dad626b85b92d",
+      "size": 1356922,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/33.mp3": {
+      "key": "media/sha256/df5406838b47a847f03fc2e4d4a9054d5b8c226b1437c53938c4cf8a5729dab4.mp3",
+      "sha256": "df5406838b47a847f03fc2e4d4a9054d5b8c226b1437c53938c4cf8a5729dab4",
+      "size": 1420452,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/34.mp3": {
+      "key": "media/sha256/1ca0fb9939eea75d064886009478bc437f09ea40c46076d574f08628f602c808.mp3",
+      "sha256": "1ca0fb9939eea75d064886009478bc437f09ea40c46076d574f08628f602c808",
+      "size": 1453262,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/35.mp3": {
+      "key": "media/sha256/8301dcb3a71610512e82f3b6a91cad7f962cf2d6f77266a70d0bf404f1b637ef.mp3",
+      "sha256": "8301dcb3a71610512e82f3b6a91cad7f962cf2d6f77266a70d0bf404f1b637ef",
+      "size": 1399136,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/36.mp3": {
+      "key": "media/sha256/3d215e357f741879c455c45f653acba4260ec91d1517930972053528c5cc8de4.mp3",
+      "sha256": "3d215e357f741879c455c45f653acba4260ec91d1517930972053528c5cc8de4",
+      "size": 687405,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/39.mp3": {
+      "key": "media/sha256/572f8ec690b8cac0567ff28ede7557fa4e04b845889db96a45b9872a0055f8c8.mp3",
+      "sha256": "572f8ec690b8cac0567ff28ede7557fa4e04b845889db96a45b9872a0055f8c8",
+      "size": 624141,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/4.mp3": {
+      "key": "media/sha256/3faa898fb9837603ee8d511afd55427318741ace1e20d710ed8ba6ac8969f5a5.mp3",
+      "sha256": "3faa898fb9837603ee8d511afd55427318741ace1e20d710ed8ba6ac8969f5a5",
+      "size": 734253,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/41.mp3": {
+      "key": "media/sha256/00e40ff57cb356ae522227b54792b03548aa19431a7731dd4cf2b383332ec219.mp3",
+      "sha256": "00e40ff57cb356ae522227b54792b03548aa19431a7731dd4cf2b383332ec219",
+      "size": 734925,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/42.mp3": {
+      "key": "media/sha256/850d567c37f03bd9005ec8fc59805de1627432e134238dcb297b59d2d99574a6.mp3",
+      "sha256": "850d567c37f03bd9005ec8fc59805de1627432e134238dcb297b59d2d99574a6",
+      "size": 712269,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/43.mp3": {
+      "key": "media/sha256/c8ea9e5d9174e6b29e0c1572a9d88a683b0c1efd8c6319214906ec852a73b71e.mp3",
+      "sha256": "c8ea9e5d9174e6b29e0c1572a9d88a683b0c1efd8c6319214906ec852a73b71e",
+      "size": 735213,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/46.mp3": {
+      "key": "media/sha256/f1eb2e1be7e201ebb46fc50b1fb84b46f1bc39bb8494146e15e31c94ecb1759f.mp3",
+      "sha256": "f1eb2e1be7e201ebb46fc50b1fb84b46f1bc39bb8494146e15e31c94ecb1759f",
+      "size": 757197,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/47.mp3": {
+      "key": "media/sha256/2568af263dd18ebe1028920a067231b8e21c21b9a68e3041cf176b2b096a4d9e.mp3",
+      "sha256": "2568af263dd18ebe1028920a067231b8e21c21b9a68e3041cf176b2b096a4d9e",
+      "size": 716205,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/48.mp3": {
+      "key": "media/sha256/c27d2e8345b7214488671648d12c841e94cf8b323a439d6fdc69e9c39acd5658.mp3",
+      "sha256": "c27d2e8345b7214488671648d12c841e94cf8b323a439d6fdc69e9c39acd5658",
+      "size": 695757,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/5.mp3": {
+      "key": "media/sha256/8802534877d5b880988b5044f2c8e172518692d51727db157262e4a992ca8070.mp3",
+      "sha256": "8802534877d5b880988b5044f2c8e172518692d51727db157262e4a992ca8070",
+      "size": 686829,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/50.mp3": {
+      "key": "media/sha256/bb4773b350da15e594c91e58fa53a20fbe37572bbe75f60bbbac637f2d6fe7af.mp3",
+      "sha256": "bb4773b350da15e594c91e58fa53a20fbe37572bbe75f60bbbac637f2d6fe7af",
+      "size": 675885,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/54.mp3": {
+      "key": "media/sha256/b135e2f7c70459f40dcdc7873011473fa42d563f6803427d170c7472d7f1b71c.mp3",
+      "sha256": "b135e2f7c70459f40dcdc7873011473fa42d563f6803427d170c7472d7f1b71c",
+      "size": 836973,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/56.mp3": {
+      "key": "media/sha256/68897c0a61e850d545e1fafce02944a576b6e1368a11a1c03e37d06fb2ecb560.mp3",
+      "sha256": "68897c0a61e850d545e1fafce02944a576b6e1368a11a1c03e37d06fb2ecb560",
+      "size": 676365,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/58.mp3": {
+      "key": "media/sha256/2637ec9019873b4ed07595bad37f5f562b335a38dee6051f015cfc22c5539923.mp3",
+      "sha256": "2637ec9019873b4ed07595bad37f5f562b335a38dee6051f015cfc22c5539923",
+      "size": 708429,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/59.mp3": {
+      "key": "media/sha256/94e1c87a39d891cb3e67d94a888697350681ba100fdd43be5cd83d36d6afc0fd.mp3",
+      "sha256": "94e1c87a39d891cb3e67d94a888697350681ba100fdd43be5cd83d36d6afc0fd",
+      "size": 716685,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/6.mp3": {
+      "key": "media/sha256/02beed3212f7eed637a3731c5cbae1f5a2cdec2eafdf0fb5f04f88db01e9888e.mp3",
+      "sha256": "02beed3212f7eed637a3731c5cbae1f5a2cdec2eafdf0fb5f04f88db01e9888e",
+      "size": 2693358,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/60.mp3": {
+      "key": "media/sha256/a7c8a0e4d385e7c4c56240999788912698f3699863f1f8399e723b7a487b4d84.mp3",
+      "sha256": "a7c8a0e4d385e7c4c56240999788912698f3699863f1f8399e723b7a487b4d84",
+      "size": 698733,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/61.mp3": {
+      "key": "media/sha256/bbccac857dce8dce5136c1901b64e75edc4836b08e6b86cbbdfdbeff66a5b36b.mp3",
+      "sha256": "bbccac857dce8dce5136c1901b64e75edc4836b08e6b86cbbdfdbeff66a5b36b",
+      "size": 746541,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/62.mp3": {
+      "key": "media/sha256/a8da2700a6e1de08ab790118afb9cfc3e9291342604097a226a2f899cbbdfe60.mp3",
+      "sha256": "a8da2700a6e1de08ab790118afb9cfc3e9291342604097a226a2f899cbbdfe60",
+      "size": 654093,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/63.mp3": {
+      "key": "media/sha256/0b7439272c2cacabd812505b200151128f1a9b1a91ae18a0f8e577adf70d133f.mp3",
+      "sha256": "0b7439272c2cacabd812505b200151128f1a9b1a91ae18a0f8e577adf70d133f",
+      "size": 648909,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/64.mp3": {
+      "key": "media/sha256/ac45de9c4e334c3bc7f21516465eb0e60c598a3003347894a925de791f7ad372.mp3",
+      "sha256": "ac45de9c4e334c3bc7f21516465eb0e60c598a3003347894a925de791f7ad372",
+      "size": 710637,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/65.mp3": {
+      "key": "media/sha256/f718810b7fd976a8ef8b6d1e6edd822f190a3ea5c50e3ad595443e6df96fb0d1.mp3",
+      "sha256": "f718810b7fd976a8ef8b6d1e6edd822f190a3ea5c50e3ad595443e6df96fb0d1",
+      "size": 651405,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/66.mp3": {
+      "key": "media/sha256/571b1827c82e1316669650d59d4fab28b6007403642757a50e6b46bce6317227.mp3",
+      "sha256": "571b1827c82e1316669650d59d4fab28b6007403642757a50e6b46bce6317227",
+      "size": 663117,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/67.mp3": {
+      "key": "media/sha256/24954b4850aed3be62d3aab9f10d3765fa710929dc41cad54af428b6e2358737.mp3",
+      "sha256": "24954b4850aed3be62d3aab9f10d3765fa710929dc41cad54af428b6e2358737",
+      "size": 664557,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/68.mp3": {
+      "key": "media/sha256/54e33e4957bda2036223dcbcf08eb6dc4bbba75c007f58b45c11a3ad7df36cc4.mp3",
+      "sha256": "54e33e4957bda2036223dcbcf08eb6dc4bbba75c007f58b45c11a3ad7df36cc4",
+      "size": 682317,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/69.mp3": {
+      "key": "media/sha256/7699b5de6249444f7712dd1e9e27cd55896e28e54d256c970bdee50b85fa6360.mp3",
+      "sha256": "7699b5de6249444f7712dd1e9e27cd55896e28e54d256c970bdee50b85fa6360",
+      "size": 750285,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/7.mp3": {
+      "key": "media/sha256/186556dcae8ee82764243090f26910eae05baf5c4f2c85232ad4f17548c4806d.mp3",
+      "sha256": "186556dcae8ee82764243090f26910eae05baf5c4f2c85232ad4f17548c4806d",
+      "size": 2960849,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/70.mp3": {
+      "key": "media/sha256/37d0e66c67fddb7f2618f2743f1f69551be1a89e08cfed06acb76a1d5160d822.mp3",
+      "sha256": "37d0e66c67fddb7f2618f2743f1f69551be1a89e08cfed06acb76a1d5160d822",
+      "size": 730317,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/71.mp3": {
+      "key": "media/sha256/5691fa0a595c07c63db22c7156c64e63ad5638c6ead0016421a2e14e4b7679f0.mp3",
+      "sha256": "5691fa0a595c07c63db22c7156c64e63ad5638c6ead0016421a2e14e4b7679f0",
+      "size": 694125,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/72.mp3": {
+      "key": "media/sha256/5d847a6d62366f101ee07baa1057f1364eee5a1ea2fc6b9ba166b8ca27894798.mp3",
+      "sha256": "5d847a6d62366f101ee07baa1057f1364eee5a1ea2fc6b9ba166b8ca27894798",
+      "size": 706701,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/73.mp3": {
+      "key": "media/sha256/f884528e5be42027302f6ea1fc735fd55f0cfe1872c2a9c9752e8abca0f02173.mp3",
+      "sha256": "f884528e5be42027302f6ea1fc735fd55f0cfe1872c2a9c9752e8abca0f02173",
+      "size": 651117,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/74.mp3": {
+      "key": "media/sha256/e8885bbeb157f7aac02af0cf48f0931ab17173c5b78b0fd138324f036bd3d4c2.mp3",
+      "sha256": "e8885bbeb157f7aac02af0cf48f0931ab17173c5b78b0fd138324f036bd3d4c2",
+      "size": 669645,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/75.mp3": {
+      "key": "media/sha256/68ec6b3894f0248ce15ead83f1777e3cd395925cf8a6dc10f1d7906d56c8c735.mp3",
+      "sha256": "68ec6b3894f0248ce15ead83f1777e3cd395925cf8a6dc10f1d7906d56c8c735",
+      "size": 735789,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/76.mp3": {
+      "key": "media/sha256/2e57723c4d39e99af64f5a8a8316bb5d0153e51c2336ff50de25c219e1cd5b24.mp3",
+      "sha256": "2e57723c4d39e99af64f5a8a8316bb5d0153e51c2336ff50de25c219e1cd5b24",
+      "size": 717645,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/77.mp3": {
+      "key": "media/sha256/e85fadb01f3726892e8a068ff249c714ace43bdc27523494bb20493548f38b65.mp3",
+      "sha256": "e85fadb01f3726892e8a068ff249c714ace43bdc27523494bb20493548f38b65",
+      "size": 722061,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/78.mp3": {
+      "key": "media/sha256/2f22b0147cd0a5ee1da2f118a27a1c2bab45a18015b936e14422454d8d0c2dea.mp3",
+      "sha256": "2f22b0147cd0a5ee1da2f118a27a1c2bab45a18015b936e14422454d8d0c2dea",
+      "size": 695757,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/79.mp3": {
+      "key": "media/sha256/23d73c5c8df8165964a778030aa59604b9f88f7c0d17121ff2adf0e5be341ebc.mp3",
+      "sha256": "23d73c5c8df8165964a778030aa59604b9f88f7c0d17121ff2adf0e5be341ebc",
+      "size": 699309,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/8.mp3": {
+      "key": "media/sha256/3d7682ac07a5c4ee204e0ab1aa6f7a81f928937697441fb7875d7b7717f059ce.mp3",
+      "sha256": "3d7682ac07a5c4ee204e0ab1aa6f7a81f928937697441fb7875d7b7717f059ce",
+      "size": 2584269,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/80.mp3": {
+      "key": "media/sha256/7a04668208732af7ed16a19c0cac31de7f52e9934577bfb395dfdf482507a343.mp3",
+      "sha256": "7a04668208732af7ed16a19c0cac31de7f52e9934577bfb395dfdf482507a343",
+      "size": 654093,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/81.mp3": {
+      "key": "media/sha256/6d60726c0c3d86586f850df18a6d28185a240cd37c7d5f1a2b1ccc18bcc1324b.mp3",
+      "sha256": "6d60726c0c3d86586f850df18a6d28185a240cd37c7d5f1a2b1ccc18bcc1324b",
+      "size": 666765,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/82.mp3": {
+      "key": "media/sha256/f7d59f7c550b12c234e4f107220e10f5a771072f39fd0eb89b41add0426e5279.mp3",
+      "sha256": "f7d59f7c550b12c234e4f107220e10f5a771072f39fd0eb89b41add0426e5279",
+      "size": 660717,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/84.mp3": {
+      "key": "media/sha256/2d73c3af79cb4a506853575995e34006b96ff9d425164c322932e812e890aaae.mp3",
+      "sha256": "2d73c3af79cb4a506853575995e34006b96ff9d425164c322932e812e890aaae",
+      "size": 669165,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/85.mp3": {
+      "key": "media/sha256/83b15d3b24007e4ad520f6b7089f89bde282a519be82651cceebf3fa1da907a9.mp3",
+      "sha256": "83b15d3b24007e4ad520f6b7089f89bde282a519be82651cceebf3fa1da907a9",
+      "size": 671181,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/86.mp3": {
+      "key": "media/sha256/0e54db152bb12aa743541bcbf40ba2c3090f5f14017ed7c7e44e1a1a78f488a6.mp3",
+      "sha256": "0e54db152bb12aa743541bcbf40ba2c3090f5f14017ed7c7e44e1a1a78f488a6",
+      "size": 745965,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/87.mp3": {
+      "key": "media/sha256/bdccb5e7f492682cf9a1cd201aa755bee871c391976c46e18051bc892ff6667a.mp3",
+      "sha256": "bdccb5e7f492682cf9a1cd201aa755bee871c391976c46e18051bc892ff6667a",
+      "size": 667245,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/88.mp3": {
+      "key": "media/sha256/337c027b185ffc9eec1d5fb1c933900abe38024a78620842ee60a75af01441af.mp3",
+      "sha256": "337c027b185ffc9eec1d5fb1c933900abe38024a78620842ee60a75af01441af",
+      "size": 662637,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/89.mp3": {
+      "key": "media/sha256/db1da00f3bc4b0104d348aec84f2830ae4b6d8793d90652a0960d6243a6bd17f.mp3",
+      "sha256": "db1da00f3bc4b0104d348aec84f2830ae4b6d8793d90652a0960d6243a6bd17f",
+      "size": 700269,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/9.mp3": {
+      "key": "media/sha256/628eeb79f8fd01ce6a86c4d413a456d02e0a3a6af5f20d6c1827bb4e10d6d66e.mp3",
+      "sha256": "628eeb79f8fd01ce6a86c4d413a456d02e0a3a6af5f20d6c1827bb4e10d6d66e",
+      "size": 1334143,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/90.mp3": {
+      "key": "media/sha256/0f09bd149ee88ca4ee7385b2758983c2d347f8240413288513ebddba32caa85c.mp3",
+      "sha256": "0f09bd149ee88ca4ee7385b2758983c2d347f8240413288513ebddba32caa85c",
+      "size": 644877,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/91.mp3": {
+      "key": "media/sha256/9b19fd0f17f50c0066bae5d4400d1a6ee930447af93cf9130d5612f6337f4d51.mp3",
+      "sha256": "9b19fd0f17f50c0066bae5d4400d1a6ee930447af93cf9130d5612f6337f4d51",
+      "size": 741069,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/92.mp3": {
+      "key": "media/sha256/6964d402b58e3438a62a97e54de7c1e275c74f07d8539fcb51ffe036d22cfab0.mp3",
+      "sha256": "6964d402b58e3438a62a97e54de7c1e275c74f07d8539fcb51ffe036d22cfab0",
+      "size": 678669,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/93.mp3": {
+      "key": "media/sha256/24b9bab25126eeecf6e2ab416ec8c67a6f488e61c399dff9ca4b8870a4f6350e.mp3",
+      "sha256": "24b9bab25126eeecf6e2ab416ec8c67a6f488e61c399dff9ca4b8870a4f6350e",
+      "size": 708909,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/94.mp3": {
+      "key": "media/sha256/890c472eb453dbc0e6f4b1361b60d16c0d72a1521be483661fd761e75b1e3887.mp3",
+      "sha256": "890c472eb453dbc0e6f4b1361b60d16c0d72a1521be483661fd761e75b1e3887",
+      "size": 674733,
+      "contentType": "audio/mpeg"
+    },
+    "public/database/SGD/audio/96.mp3": {
+      "key": "media/sha256/2a4130fc8e7ac57455555cf4a482a528a787a8e7325f22f9e348e9eae68f2c2f.mp3",
+      "sha256": "2a4130fc8e7ac57455555cf4a482a528a787a8e7325f22f9e348e9eae68f2c2f",
+      "size": 3385728,
+      "contentType": "audio/mpeg"
+    }
+  }
+}

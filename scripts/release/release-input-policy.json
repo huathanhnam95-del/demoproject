@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "description": "Authoritative release input policy defining file categories, protected builder metadata, and externalized media exclusion cohorts.",
+  "categories": {
+    "app-runtime": {
+      "description": "Files required for application runtime on Firebase Hosting."
+    },
+    "build-only": {
+      "description": "Files required during build and release preparation, omitted from production runtime if not in surface."
+    },
+    "external-media": {
+      "description": "Practice media hosted on Google Cloud Storage and referenced via pinned catalogs."
+    },
+    "forbidden-private": {
+      "description": "Sensitive credentials and environment files that must never enter a release candidate."
+    }
+  },
+  "protectedInputs": [
+    "public/database/RA/RA.xlsx",
+    "public/database/RA/Voice/audio/manifest.json",
+    "public/database/RA/connected-speech-index.json",
+    "public/database/RA/connected-speech-featured-prompts.json",
+    "public/database/SST/SST/SST.xlsx",
+    "public/database/SST/audio/manifest.json",
+    "public/database/RFIB/RFIB.xlsx",
+    "public/database/RFIB/index.json",
+    "public/database/Highlight Incorrect Words/HIW/HIW.xlsx",
+    "public/database/Highlight Incorrect Words/audio/manifest.json",
+    "public/database/Take Notes/RL/RL.xlsx",
+    "public/database/Describe Image/DI.xlsx",
+    "public/database/Describe Image/describe-image-questions.json",
+    "public/database/LMCMA/LMCMA/LMCMA.xlsx",
+    "public/database/LMCMA/audio/manifest.json",
+    "public/database/LMCSA/LMCSA/LMCSA.xlsx",
+    "public/database/LMCSA/audio/manifest.json",
+    "public/database/HCS/HCS/HCS.xlsx",
+    "public/database/HCS/audio/manifest.json",
+    "public/database/type/WFD.xlsx",
+    "public/database/type/index.json",
+    "public/database/SMW/SMW/SMW.xlsx",
+    "public/database/SMW/audio/manifest.json",
+    "public/database/speak/RS.xlsx",
+    "public/database/speak/index.json",
+    "public/database/extended/LFIB.xlsx",
+    "public/database/extended/index.json",
+    "public/database/LFIB/LFIB.xlsx",
+    "public/database/LFIB/index.json",
+    "public/database/SGD/SGD/SGD.xlsx",
+    "public/database/quiz/ASQ/ASQ.xlsx",
+    "public/database/RTS/RTS/RTSA.xlsx",
+    "public/database/RTS/audio/manifest.json",
+    "public/database/RTS/rts_questions.json",
+    "public/database/Entrance Test/ENTRANCE TEST 36+ (Full Test).docx",
+    "public/database/echo-forge/audio-manifest.v1.json",
+    "public/database/echo-forge/challenges.v1.json",
+    "public/media-release.json",
+    "config/media-release.lock.json"
+  ],
+  "cohorts": {
+    "pilot-cohort": {
+      "description": "Representative 26 pilot assets verified in Stage 2/3. For testing selective exclusion only; ineligible for production release.",
+      "productionEligible": false,
+      "publicationId": "pilot-20260918-035318",
+      "assets": [
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_alloy_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_bella_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_am_echo_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_am_fenrir_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bf_emma_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bm_george_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bm_lewis_100.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_af_alloy_80.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bf_emma_80.mp3",
+        "public/database/RA/Voice/audio/Audio by folder/1/RA_1_bm_george_80.mp3",
+        "public/database/RA/speech-coach-audio/v1/clips/03/0377aa5df43feaadcb6ea137a9aad78b026486582ed6b0c04cb81c8c46c833ae.mp3",
+        "public/database/RA/speech-coach-audio/v1/clips/04/04097ea03028e0f3f0f85e9fda9e70f2a90f6955ba71b6f762fc279216355541.mp3",
+        "public/database/RA/speech-coach-audio/v1/clips/05/05db4dd4b0e1cb9e49b4943b4d1d25e04c5c13fdad2ee5bbd5cdef9552cbfe15.mp3",
+        "public/database/Describe Image/DI/1.png",
+        "public/database/Describe Image/DI/10.png",
+        "public/database/Describe Image/DI/1001.jpg",
+        "public/database/Describe Image/DI/1002.jpg",
+        "public/database/Highlight Incorrect Words/audio/1/HIW_1_af_bella.mp3",
+        "public/database/Highlight Incorrect Words/audio/10/HIW_10_am_puck.mp3",
+        "public/database/Take Notes/RL/audio/1.mp3",
+        "public/database/type/audio/221.mp3",
+        "public/database/speak/audio/767.mp3",
+        "public/database/collo-dictate/audio/cd_cfa1ba29.wav",
+        "public/database/collo-dictate/audio/cd_d2a87aa7.wav",
+        "public/database/SST/audio/1/SST_1_af_bella.mp3",
+        "public/database/SST/audio/1/SST_1_bm_lewis.mp3"
+      ]
+    },
+    "cohort-ra-sst": {
+      "description": "Full Read Aloud and Summarize Spoken Text externalized production media cohort.",
+      "productionEligible": true,
+      "publicationId": "pub-20260918-ra-sst",
+      "roots": [
+        "public/database/RA/Voice/audio",
+        "public/database/RA/speech-coach-audio/v1/clips",
+        "public/database/SST/audio"
+      ],
+      "catalogShards": [
+        "catalogs/pub-20260918-ra-sst/RA.json",
+        "catalogs/pub-20260918-ra-sst/SST.json"
+      ]
+    },
+    "cohort-all-media": {
+      "description": "Full practice media externalization cohort covering all 20 modes.",
+      "productionEligible": true,
+      "publicationId": "pub-20260918-all-media",
+      "roots": [
+        "public/database/RA/Voice/audio",
+        "public/database/RA/speech-coach-audio/v1/clips",
+        "public/database/SST/audio",
+        "public/database/RFIB/audio",
+        "public/database/Highlight Incorrect Words/audio",
+        "public/database/Take Notes/RL/audio",
+        "public/database/collo-dictate/audio",
+        "public/database/Describe Image/DI",
+        "public/database/LMCMA/audio",
+        "public/database/LMCSA/audio",
+        "public/database/HCS/audio",
+        "public/database/type/audio",
+        "public/database/SMW/audio",
+        "public/database/speak/audio",
+        "public/database/extended/audio",
+        "public/database/LFIB/audio",
+        "public/database/SGD/audio",
+        "public/database/quiz/ASQ",
+        "public/database/RTS/audio",
+        "public/database/Entrance Test",
+        "public/database/echo-forge/audio"
+      ],
+      "catalogShards": [
+        "catalogs/pub-20260918-all-media/RA.json",
+        "catalogs/pub-20260918-all-media/SST.json",
+        "catalogs/pub-20260918-all-media/RFIB.json",
+        "catalogs/pub-20260918-all-media/HIW.json",
+        "catalogs/pub-20260918-all-media/Take-Notes.json",
+        "catalogs/pub-20260918-all-media/collo-dictate.json",
+        "catalogs/pub-20260918-all-media/Describe-Image.json",
+        "catalogs/pub-20260918-all-media/LMCMA.json",
+        "catalogs/pub-20260918-all-media/LMCSA.json",
+        "catalogs/pub-20260918-all-media/HCS.json",
+        "catalogs/pub-20260918-all-media/type.json",
+        "catalogs/pub-20260918-all-media/SMW.json",
+        "catalogs/pub-20260918-all-media/speak.json",
+        "catalogs/pub-20260918-all-media/extended.json",
+        "catalogs/pub-20260918-all-media/LFIB.json",
+        "catalogs/pub-20260918-all-media/SGD.json",
+        "catalogs/pub-20260918-all-media/quiz.json",
+        "catalogs/pub-20260918-all-media/RTS.json",
+        "catalogs/pub-20260918-all-media/Entrance-Test.json",
+        "catalogs/pub-20260918-all-media/echo-forge.json"
+      ]
+    }
+  }
+}

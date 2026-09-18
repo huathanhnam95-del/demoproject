@@ -331,6 +331,14 @@ function createFixture() {
   fs.mkdirSync(path.join(root, 'scripts/data'), { recursive: true });
   fs.mkdirSync(path.join(root, 'scripts/structure'), { recursive: true });
   fs.copyFileSync(CONTROLLER_SOURCE, path.join(root, 'scripts/release/firebase-release.cjs'));
+  const libSource = path.join(REPOSITORY_ROOT, 'scripts/release/lib');
+  if (fs.existsSync(libSource)) {
+    fs.cpSync(libSource, path.join(root, 'scripts/release/lib'), { recursive: true });
+  }
+  const policySource = path.join(REPOSITORY_ROOT, 'scripts/release/release-input-policy.json');
+  if (fs.existsSync(policySource)) {
+    fs.copyFileSync(policySource, path.join(root, 'scripts/release/release-input-policy.json'));
+  }
   writeJson(path.join(root, 'package.json'), {
     name: 'str03a-release-fixture',
     version: '1.2.3',
@@ -1441,3 +1449,176 @@ test('selected LFS files hydrate only with exact worktree oid and size, while ir
   assert.equal(functionsPublishers.length, 1, 'Functions publication must proceed with an irrelevant Hosting pointer');
   assert.equal(functionsPublishers[0].selector, 'functions');
 });
+
+test('minimizeRoots prunes covered child roots while preserving siblings and canonical order', () => {
+  const controller = require(CONTROLLER_SOURCE);
+  assert.equal(typeof controller.minimizeRoots, 'function', 'minimizeRoots must be exported');
+
+  // Basic normalization & child pruning
+  const inputs = [
+    'public/database/RA/Voice/audio',
+    'public/database/RA/speech-coach-audio/v1/clips',
+    'public/database/Highlight Incorrect Words/audio',
+    'public/database/SST/audio',
+    'public/audio',
+    'public/assets',
+    'public/media',
+    'public'
+  ];
+  const minimized = controller.minimizeRoots(inputs);
+  assert.deepEqual(minimized, ['public'], 'root public must prune all covered descendants');
+
+  // Sibling preservation (public/audio vs public/audio2)
+  const siblings = ['public/audio', 'public/audio2', 'public/audio/deep'];
+  assert.deepEqual(controller.minimizeRoots(siblings), ['public/audio', 'public/audio2'], 'sibling directories must not prune each other');
+
+  // Windows slashes, redundant slashes, empty elements
+  const messy = ['public\\\\audio///sub//', '  public/audio  ', 'public/audio/child', '', null];
+  assert.deepEqual(controller.minimizeRoots(messy), ['public/audio'], 'messy path formats must be normalized safely');
+
+  // Inverted input order
+  const inverted = ['a/b/c/d', 'a/b/c', 'a/b', 'a'];
+  assert.deepEqual(controller.minimizeRoots(inverted), ['a'], 'ancestor pruning must work regardless of input ordering');
+});
+
+test('captureObservedProvisionedAssets produces identical inventory with minimized roots', (t) => {
+  const controller = require(CONTROLLER_SOURCE);
+  const fixture = createFixture();
+  t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(fixture.externalRoot, { recursive: true, force: true }));
+
+  // Create sample media files in nested directories
+  writeText(path.join(fixture.root, 'public/audio/test1.mp3'), 'audio-data-1\n');
+  writeText(path.join(fixture.root, 'public/database/RA/Voice/audio/ra1.mp3'), 'audio-data-2\n');
+  writeText(path.join(fixture.root, 'public/database/SST/audio/sst1.wav'), 'audio-data-3\n');
+  writeText(path.join(fixture.root, 'public/media/banner.png'), 'image-data-1\n');
+  writeText(path.join(fixture.root, 'public/ignored.txt'), 'text-data\n');
+
+  const tracked = controller.captureTrackedInventory(fixture.root, fixture.sourceASha);
+
+  const inventoryMinimized = controller.captureObservedProvisionedAssets(fixture.root, tracked, {
+    mediaRoots: ['public']
+  });
+
+  assert.ok(inventoryMinimized.length >= 4, 'at least 4 provisioned media items should be discovered');
+  const relPaths = inventoryMinimized.map((x) => x.sourcePath).sort();
+  assert.ok(relPaths.includes('public/audio/test1.mp3'));
+  assert.ok(relPaths.includes('public/database/RA/Voice/audio/ra1.mp3'));
+  assert.ok(relPaths.includes('public/database/SST/audio/sst1.wav'));
+  assert.ok(relPaths.includes('public/media/banner.png'));
+  assert.ok(!relPaths.includes('public/ignored.txt'), 'non-media files must not be included');
+
+  for (const item of inventoryMinimized) {
+    assert.ok(item.sha256 && item.sha256.length === 64, `valid sha256 expected for ${item.sourcePath}`);
+    assert.ok(item.size > 0, `size > 0 expected for ${item.sourcePath}`);
+  }
+});
+
+test('release CLI --verify-only verifies candidate and receipts without invoking publisher', (t) => {
+  const fixture = createFixture();
+  t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(fixture.externalRoot, { recursive: true, force: true }));
+
+  const profileRoot = path.join(fixture.externalRoot, 'run-verify-only');
+  fs.mkdirSync(profileRoot, { recursive: true });
+
+  const args = [
+    'hosting',
+    '--sha', fixture.sourceASha,
+    '--firebase-cli', fixture.fakeCli.entrypoint,
+    '--npm-cli', fixture.fakeNpm,
+    '--external-root', profileRoot,
+    '--verify-only',
+    '--json'
+  ];
+
+  const result = runChild(fixture, args, {
+    env: baseEnvironment(fixture, profileRoot, { expectedMarker: 'source-A' })
+  });
+
+  const output = jsonOutput(result);
+  assert.equal(output.ok, true, 'verify-only must report ok: true');
+  assert.equal(output.verified, true, 'verify-only must report verified: true');
+  assert.equal(output.published, false, 'verify-only must report published: false');
+
+  const publisherLog = path.join(profileRoot, 'publisher.jsonl');
+  const publisherCalls = fs.existsSync(publisherLog) ? readJsonLines(publisherLog) : [];
+  assert.equal(publisherCalls.length, 0, 'publisher must never be dispatched during --verify-only');
+
+  const receipt = receiptFor({ profileRoot }, 'hosting', fixture.sourceASha);
+  assert.ok(receipt.value.surface.length > 0, 'receipt must have sealed surface');
+
+  const controller = require(CONTROLLER_SOURCE);
+  let publisherCalled = false;
+  const directResult = controller.runRelease({
+    profile: 'hosting',
+    sha: fixture.sourceASha,
+    project: 'demo-project',
+    configPath: path.join(fixture.root, 'firebase.json'),
+    source: { root: fixture.root, sourceSha: fixture.sourceASha, committerEpoch: 1700000000, originalCwd: fixture.root },
+    externalRoot: path.join(fixture.externalRoot, 'direct-verify'),
+    npmCli: fixture.fakeNpm,
+    firebaseCliEntrypoint: fixture.fakeCli.entrypoint,
+    verifyOnly: true,
+    publisher: () => {
+      publisherCalled = true;
+      throw new Error('STUB_PUBLISHER_INVOKED');
+    }
+  });
+  assert.equal(publisherCalled, false, 'programmatic verifyOnly must never invoke publisher');
+  assert.equal(directResult.verified, true);
+  assert.equal(directResult.published, false);
+});
+
+test('phase telemetry records timers, counters, and redacted metrics outside candidate on success and failure', (t) => {
+  const fixture = createFixture();
+  t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(fixture.externalRoot, { recursive: true, force: true }));
+
+  const profileRoot = path.join(fixture.externalRoot, 'run-telemetry');
+  fs.mkdirSync(profileRoot, { recursive: true });
+
+  const successRun = runRelease(fixture, 'hosting', {
+    sha: fixture.sourceASha,
+    environment: { TEST_BEARER: 'Bearer super-secret-token' }
+  });
+  jsonOutput(successRun);
+
+  const metricsPath = path.join(successRun.profileRoot, 'release-metrics.json');
+  assert.ok(fs.existsSync(metricsPath), 'release-metrics.json must be emitted outside candidate');
+
+  const metrics = readJson(metricsPath);
+  assert.equal(metrics.success, true);
+  assert.equal(metrics.version, 1);
+  assert.ok(metrics.wallTimeMs > 0, 'wallTimeMs must be recorded');
+  assert.ok(metrics.phases['git-inventory'] !== undefined, 'git-inventory phase must be recorded');
+  assert.ok(metrics.phases['media-discovery'] !== undefined, 'media-discovery phase must be recorded');
+  assert.ok(metrics.counters.filesVisited > 0, 'filesVisited counter must be > 0');
+  assert.ok(metrics.counters.candidateBytes > 0, 'candidateBytes must be > 0');
+
+  const serialized = JSON.stringify(metrics);
+  assert.ok(!serialized.includes('super-secret-token'), 'metrics must redact secret tokens');
+
+  const failRoot = path.join(fixture.externalRoot, 'run-telemetry-fail');
+  fs.mkdirSync(failRoot, { recursive: true });
+  const badSha = '0000000000000000000000000000000000000000';
+  const failResult = runChild(fixture, [
+    'hosting',
+    '--sha', badSha,
+    '--firebase-cli', fixture.fakeCli.entrypoint,
+    '--npm-cli', fixture.fakeNpm,
+    '--external-root', failRoot,
+    '--json'
+  ], {
+    env: baseEnvironment(fixture, failRoot)
+  });
+
+  assert.notEqual(failResult.status, 0, 'release must fail with nonexistent source SHA');
+  const failMetricsPath = path.join(failRoot, 'release-metrics.json');
+  assert.ok(fs.existsSync(failMetricsPath), 'release-metrics.json must be emitted on failure');
+  const failMetrics = readJson(failMetricsPath);
+  assert.equal(failMetrics.success, false, 'failure metrics must record success: false');
+  assert.ok(failMetrics.error, 'failure metrics must record error details');
+  assert.ok(failMetrics.error.code, 'error code must be recorded');
+});
+

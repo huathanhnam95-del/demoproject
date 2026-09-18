@@ -6,6 +6,31 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+let releaseInputPolicyLib = null;
+try {
+  releaseInputPolicyLib = require('./lib/release-input-policy.cjs');
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+}
+
+function loadReleaseInputPolicy(customPath) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.loadReleaseInputPolicy(customPath);
+  return { policy: {}, policyPath: null, policySha256: null, protectedSet: new Set() };
+}
+
+function resolveExcludedPaths(policyResult, options) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.resolveExcludedPaths(policyResult, options);
+  return new Set();
+}
+
+function filterTrackedInventory(inventory, excludedPaths) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.filterTrackedInventory(inventory, excludedPaths);
+  return { filtered: Array.isArray(inventory) ? inventory.slice() : [], excluded: [], excludedCount: 0, avoidedBytes: 0 };
+}
+
+function validatePublicationEligibility(lockData, options) {
+  if (releaseInputPolicyLib) return releaseInputPolicyLib.validatePublicationEligibility(lockData, options);
+}
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '..', '..');
 const SUPPORTED_FIREBASE_VERSION = '15.2.1';
@@ -68,7 +93,12 @@ const RELEASE_INPUTS = Object.freeze([
   'public/js/read-aloud-connected-speech-rules.js',
   'public/js/read-aloud-linking.js',
   'scripts/segmentation-study/sync-manifest.js',
-  'scripts/release/firebase-release.cjs'
+  'scripts/release/firebase-release.cjs',
+  'scripts/release/release-input-policy.json',
+  'scripts/release/lib/release-input-policy.cjs',
+  'config/media-release.lock.json',
+  'public/media-release.json',
+  'public/js/media-url-resolver.js'
 ]);
 
 class ReleaseError extends Error {
@@ -83,6 +113,190 @@ class ReleaseError extends Error {
 function fail(code, message, details) {
   throw new ReleaseError(code, message, details);
 }
+
+let ACTIVE_METRICS = null;
+
+function getActiveMetrics() {
+  return ACTIVE_METRICS;
+}
+
+function setActiveMetrics(metrics) {
+  ACTIVE_METRICS = metrics;
+}
+
+function redactString(text) {
+  if (typeof text !== 'string') return text;
+  return text
+    .replace(/(?:bearer\s+)[a-zA-Z0-9_\-.]+/gi, 'Bearer [REDACTED]')
+    .replace(/(?:key|token|secret|password|apikey)=([^\s&]+)/gi, '$1=[REDACTED]')
+    .replace(/(firebase[a-z0-9_-]*token\s+)[^\s]+/gi, '$1[REDACTED]');
+}
+
+function redactArgs(args) {
+  if (!Array.isArray(args)) return [];
+  const redacted = [];
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = String(args[i]);
+    if (arg === '--token' && i + 1 < args.length) {
+      redacted.push(arg);
+      redacted.push('[REDACTED]');
+      i += 1;
+    } else {
+      redacted.push(redactString(arg));
+    }
+  }
+  return redacted;
+}
+
+class ReleaseMetrics {
+  constructor(options = {}) {
+    this.startTime = Date.now();
+    this.startHrTime = process.hrtime.bigint();
+    this.options = { ...options };
+    this.sourceSha = options.sha || null;
+    this.profile = options.profile || null;
+    this.mediaPublicationId = options.mediaPublicationId || null;
+    this.projectId = options.project || null;
+    this.projectAlias = null;
+    this.toolVersions = { node: process.version };
+    this.phases = {};
+    this.activePhase = null;
+    this.counters = {
+      filesVisited: 0,
+      mediaBytesRead: 0,
+      rawHashBytes: 0,
+      gitHashBytes: 0,
+      cacheHits: 0,
+      candidateBytes: 0,
+      actualUploadedCount: 0,
+      actualUploadedBytes: 0,
+      excludedMediaFiles: 0,
+      excludedMediaBytes: 0
+    };
+    this.subprocessTimers = [];
+    this.success = null;
+    this.error = null;
+    this.verified = false;
+    this.published = false;
+    this.publication = null;
+  }
+
+  increment(counter, amount = 1) {
+    if (typeof this.counters[counter] === 'number') {
+      this.counters[counter] += amount;
+    }
+  }
+
+  startPhase(name) {
+    if (this.activePhase) this.endPhase(this.activePhase);
+    this.activePhase = name;
+    this.phases[name] = {
+      startHr: process.hrtime.bigint(),
+      startTime: new Date().toISOString(),
+      durationMs: 0
+    };
+  }
+
+  endPhase(name) {
+    const phaseName = name || this.activePhase;
+    if (phaseName && this.phases[phaseName] && this.phases[phaseName].startHr) {
+      const elapsedNs = process.hrtime.bigint() - this.phases[phaseName].startHr;
+      this.phases[phaseName].durationMs = Number(elapsedNs) / 1e6;
+      delete this.phases[phaseName].startHr;
+      if (this.activePhase === phaseName) this.activePhase = null;
+    }
+  }
+
+  recordSubprocess(spec, durationMs, exitCode) {
+    this.subprocessTimers.push({
+      kind: spec.kind || 'subprocess',
+      command: path.basename(spec.command),
+      args: redactArgs(spec.args || []),
+      durationMs: Number(durationMs.toFixed(3)),
+      exitCode: exitCode === undefined ? 0 : exitCode
+    });
+  }
+
+  setContextMetadata(ctx) {
+    if (ctx) {
+      this.sourceSha = ctx.sourceSha || this.sourceSha;
+      this.profile = ctx.profile || this.profile;
+      this.projectId = ctx.project?.id || this.projectId;
+      this.projectAlias = ctx.project?.alias || null;
+      if (ctx.toolVersions) {
+        this.toolVersions = { ...this.toolVersions, ...ctx.toolVersions };
+      }
+      if (ctx.candidateBytes) {
+        this.counters.candidateBytes = ctx.candidateBytes;
+      }
+    }
+  }
+
+  recordSuccess(details = {}) {
+    if (this.activePhase) this.endPhase(this.activePhase);
+    this.success = true;
+    this.verified = Boolean(details.verified);
+    this.published = Boolean(details.published);
+    this.publication = details.publication || null;
+  }
+
+  recordFailure(error) {
+    if (this.activePhase) this.endPhase(this.activePhase);
+    this.success = false;
+    this.verified = false;
+    this.published = false;
+    this.error = {
+      code: error?.code || 'UNKNOWN_ERROR',
+      message: redactString(error?.message || String(error)),
+      phase: this.activePhase
+    };
+  }
+
+  toJSON() {
+    const totalNs = process.hrtime.bigint() - this.startHrTime;
+    const totalWallMs = Number(totalNs) / 1e6;
+    return {
+      version: 1,
+      sourceSha: this.sourceSha,
+      profile: this.profile,
+      mediaPublicationId: this.mediaPublicationId,
+      projectId: this.projectId,
+      projectAlias: this.projectAlias,
+      toolVersions: this.toolVersions,
+      wallTimeMs: Number(totalWallMs.toFixed(3)),
+      startedAt: new Date(this.startTime).toISOString(),
+      completedAt: new Date().toISOString(),
+      success: this.success,
+      verified: this.verified,
+      published: this.published,
+      error: this.error,
+      counters: { ...this.counters },
+      phases: Object.fromEntries(
+        Object.entries(this.phases).map(([k, v]) => [k, { durationMs: Number((v.durationMs || 0).toFixed(3)), startTime: v.startTime }])
+      ),
+      subprocesses: this.subprocessTimers
+    };
+  }
+}
+
+function writeMetricsFile(ctx, metrics, options = {}) {
+  if (!metrics) return null;
+  const metricsData = metrics.toJSON();
+  let targetDir = null;
+  if (ctx && ctx.externalRoot && fs.existsSync(ctx.externalRoot)) {
+    targetDir = ctx.externalRoot;
+  } else if (options.externalRoot && fs.existsSync(options.externalRoot)) {
+    targetDir = options.externalRoot;
+  } else {
+    targetDir = path.join(os.tmpdir(), 'bel-firebase-release');
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  const filePath = path.join(targetDir, 'release-metrics.json');
+  fs.writeFileSync(filePath, `${JSON.stringify(metricsData, null, 2)}\n`, 'utf8');
+  if (ctx) ctx.metricsPath = filePath;
+  return filePath;
+}
+
 
 function isAbsoluteOutside(root, candidate) {
   const relative = path.relative(path.resolve(root), path.resolve(candidate));
@@ -178,18 +392,25 @@ function normalizeRelativePath(value, label = 'path') {
   return normalized;
 }
 
-function sha256File(filePath) {
+function sha256File(filePath, metrics = ACTIVE_METRICS) {
   const hash = crypto.createHash('sha256');
   const fd = fs.openSync(filePath, 'r');
+  let totalBytes = 0;
   try {
     const buffer = Buffer.allocUnsafe(1024 * 1024);
     let read;
     do {
       read = fs.readSync(fd, buffer, 0, buffer.length, null);
-      if (read) hash.update(buffer.subarray(0, read));
+      if (read) {
+        hash.update(buffer.subarray(0, read));
+        totalBytes += read;
+      }
     } while (read);
   } finally {
     fs.closeSync(fd);
+  }
+  if (metrics && typeof metrics.increment === 'function') {
+    metrics.increment('rawHashBytes', totalBytes);
   }
   return hash.digest('hex');
 }
@@ -198,20 +419,27 @@ function sha256Bytes(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
-function gitBlobSha1(filePath) {
+function gitBlobSha1(filePath, metrics = ACTIVE_METRICS) {
   const stat = fs.statSync(filePath);
   const hash = crypto.createHash('sha1');
   hash.update(`blob ${stat.size}\0`);
   const fd = fs.openSync(filePath, 'r');
+  let totalBytes = 0;
   try {
     const buffer = Buffer.allocUnsafe(1024 * 1024);
     let read;
     do {
       read = fs.readSync(fd, buffer, 0, buffer.length, null);
-      if (read) hash.update(buffer.subarray(0, read));
+      if (read) {
+        hash.update(buffer.subarray(0, read));
+        totalBytes += read;
+      }
     } while (read);
   } finally {
     fs.closeSync(fd);
+  }
+  if (metrics && typeof metrics.increment === 'function') {
+    metrics.increment('gitHashBytes', totalBytes);
   }
   return hash.digest('hex');
 }
@@ -229,26 +457,34 @@ function commitSha(value, label = 'source SHA') {
 }
 
 function commandResult(command, args, options = {}) {
+  const startHr = process.hrtime.bigint();
+  let result;
   if (typeof options.executor === 'function') {
-    const result = options.executor([command, ...args], {
+    result = options.executor([command, ...args], {
       cwd: options.cwd,
       env: options.env,
       kind: options.kind || 'command'
     });
-    if (typeof result === 'number') return { status: result, stdout: '', stderr: '' };
-    return result || { status: 0, stdout: '', stderr: '' };
+    if (typeof result === 'number') result = { status: result, stdout: '', stderr: '' };
+    else result = result || { status: 0, stdout: '', stderr: '' };
+  } else {
+    result = spawnSync(command, args, {
+      cwd: options.cwd,
+      env: options.env,
+      stdio: options.stdio || 'pipe',
+      encoding: options.encoding || 'utf8',
+      shell: false,
+      windowsHide: true,
+      input: options.input,
+      maxBuffer: options.maxBuffer || 64 * 1024 * 1024
+    });
   }
-  const result = spawnSync(command, args, {
-    cwd: options.cwd,
-    env: options.env,
-    stdio: options.stdio || 'pipe',
-    encoding: options.encoding || 'utf8',
-    shell: false,
-    windowsHide: true,
-    input: options.input,
-    maxBuffer: options.maxBuffer || 64 * 1024 * 1024
-  });
-  if (result.error) fail('COMMAND_ERROR', `${command} could not be started: ${result.error.message}`);
+  const durationMs = Number(process.hrtime.bigint() - startHr) / 1e6;
+  const metrics = options.metrics || ACTIVE_METRICS;
+  if (metrics && typeof metrics.recordSubprocess === 'function') {
+    metrics.recordSubprocess({ command, args, kind: options.kind }, durationMs, result ? result.status : -1);
+  }
+  if (result && result.error) fail('COMMAND_ERROR', `${command} could not be started: ${result.error.message}`);
   return result;
 }
 function runCommand(command, args, options = {}) {
@@ -314,21 +550,54 @@ const KNOWN_BINARY_EXTENSIONS = Object.freeze(new Set([
   '.pkl', '.pth', '.onnx', '.tflite'
 ]));
 
+function minimizeRoots(roots = []) {
+  if (!Array.isArray(roots)) return [];
+  const normalized = [];
+  for (const raw of roots) {
+    if (typeof raw !== 'string') continue;
+    const trimmed = raw.trim().replace(/\\/g, '/');
+    if (!trimmed) continue;
+    const parts = trimmed.split('/').filter(Boolean);
+    if (!parts.length) continue;
+    normalized.push(parts.join('/'));
+  }
+  const unique = [...new Set(normalized)];
+  const retained = unique.filter((candidate) => {
+    return !unique.some((parent) => parent !== candidate && candidate.startsWith(`${parent}/`));
+  });
+  return retained.sort((a, b) => a.localeCompare(b));
+}
+
 function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options = {}) {
   if (options.autoProvisionedAssets === false) return [];
   const tracked = new Set((trackedInventory || []).map((item) => String(item.path).replace(/\\/g, '/')));
   const assets = [];
   const seenPaths = new Set();
   const configuredRoots = Array.isArray(options.mediaRoots) ? options.mediaRoots : [];
-  for (const relativeRoot of [...new Set([...PROVISIONED_MEDIA_ROOTS, ...configuredRoots])]) {
+  const rawCandidates = [...new Set([...PROVISIONED_MEDIA_ROOTS, ...configuredRoots])];
+  const validatedRoots = [];
+  for (const relativeRoot of rawCandidates) {
     if (typeof relativeRoot !== 'string' || !relativeRoot.trim()) continue;
-    const safeRoot = relativeConfigPath(sourceRoot, relativeRoot, 'Provisioned media root');
+    validatedRoots.push(relativeConfigPath(sourceRoot, relativeRoot, 'Provisioned media root'));
+  }
+  const activeRoots = minimizeRoots(validatedRoots);
+  for (const safeRoot of activeRoots) {
     const absoluteRoot = path.join(sourceRoot, ...safeRoot.split('/'));
     if (!fs.existsSync(absoluteRoot)) continue;
     for (const file of listFiles(absoluteRoot, { exclude: ['node_modules', '.git'] })) {
       const relative = `${safeRoot}/${file.path}`;
       if (seenPaths.has(relative) || tracked.has(relative) || !PROVISIONED_MEDIA_EXTENSIONS.has(path.extname(file.path).toLowerCase())) continue;
+      if (options.excludedPaths && options.excludedPaths.has(relative)) {
+        if (typeof options.recordAvoided === 'function') {
+          options.recordAvoided(relative, file.stat.size);
+        }
+        continue;
+      }
       seenPaths.add(relative);
+      const metrics = options.metrics || ACTIVE_METRICS;
+      if (metrics && typeof metrics.increment === 'function') {
+        metrics.increment('mediaBytesRead', file.stat.size);
+      }
       assets.push({
         sourcePath: relative,
         targetPath: relative,
@@ -336,7 +605,7 @@ function captureObservedProvisionedAssets(sourceRoot, trackedInventory, options 
         mtimeMs: file.stat.mtimeMs,
         ino: file.stat.ino,
         dev: file.stat.dev,
-        sha256: sha256File(file.absolute)
+        sha256: sha256File(file.absolute, metrics)
       });
       if (assets.length > 50000) fail('ASSET_SCOPE', 'Provisioned media inventory exceeds the bounded release scope.');
     }
@@ -880,7 +1149,10 @@ function listFiles(root, options = {}) {
       const stat = fs.lstatSync(child);
       if (stat.isSymbolicLink()) fail('LINK_ESCAPE', `Candidate contains a symlink: ${childRelative}.`);
       if (stat.isDirectory()) visit(child, childRelative);
-      else if (stat.isFile()) files.push({ path: childRelative.replace(/\\/g, '/'), absolute: child, stat });
+      else if (stat.isFile()) {
+        if (ACTIVE_METRICS) ACTIVE_METRICS.increment('filesVisited');
+        files.push({ path: childRelative.replace(/\\/g, '/'), absolute: child, stat });
+      }
     }
   };
   visit(root, '');
@@ -1230,6 +1502,8 @@ function inventorySurface(ctx) {
     const cached = cache ? cache.get(item.relative) : null;
     if (cached && cached.size === stat.size && cached.mtimeMs === stat.mtimeMs) {
       record.sha256 = cached.sha256;
+      const metrics = ctx?.metrics || ACTIVE_METRICS;
+      if (metrics && typeof metrics.increment === 'function') metrics.increment('cacheHits');
     } else {
       record.sha256 = sha256File(item.absolute);
       if (cache) cache.set(item.relative, { size: stat.size, mtimeMs: stat.mtimeMs, sha256: record.sha256 });
@@ -1240,6 +1514,10 @@ function inventorySurface(ctx) {
     }
     records.push(record);
   }
+  const totalCandidateBytes = records.reduce((sum, r) => sum + r.size, 0);
+  if (ctx) ctx.candidateBytes = totalCandidateBytes;
+  const metrics = ctx?.metrics || ACTIVE_METRICS;
+  if (metrics) metrics.counters.candidateBytes = totalCandidateBytes;
   return records;
 }
 
@@ -1354,6 +1632,18 @@ function verifyTrackedSource(ctx) {
     if (!pointer || pointer.size !== stat.size || sha256File(candidate) !== pointer.sha256) failures.push(relative);
   }
   if (failures.length) fail('SOURCE_CHANGED', `Selected source files changed in the candidate: ${failures.slice(0, 12).join(', ')}${failures.length > 12 ? '…' : ''}.`, failures);
+  if (ctx.excludedPaths && ctx.excludedPaths.size > 0) {
+    const presentExcluded = [];
+    for (const excludedPath of ctx.excludedPaths) {
+      const candidateFile = path.join(ctx.candidateRoot, ...excludedPath.split('/'));
+      if (fs.existsSync(candidateFile)) {
+        presentExcluded.push(excludedPath);
+      }
+    }
+    if (presentExcluded.length > 0) {
+      fail('EXCLUDED_MEDIA_PRESENT', `Excluded media was unexpectedly present in the candidate: ${presentExcluded.slice(0, 12).join(', ')}.`, presentExcluded);
+    }
+  }
   return { checked: ctx.trackedInventory.length };
 }
 
@@ -1615,7 +1905,7 @@ function buildDependencyCommands(ctx) {
   const commands = [];
   if (fs.existsSync(path.join(ctx.candidateRoot, 'package-lock.json'))) commands.push({
     command: invocation.command,
-    args: [...invocation.prefix, 'ci', '--no-audit', '--no-fund'],
+    args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
     cwd: ctx.candidateRoot,
     kind: 'npm-root'
   });
@@ -1625,7 +1915,7 @@ function buildDependencyCommands(ctx) {
       : [path.join(ctx.candidateRoot, 'functions')];
     for (const source of configured) if (fs.existsSync(path.join(source, 'package-lock.json'))) commands.push({
       command: invocation.command,
-      args: [...invocation.prefix, 'ci', '--no-audit', '--no-fund'],
+      args: [...invocation.prefix, 'ci', '--prefer-offline', '--no-audit', '--no-fund'],
       cwd: source,
       kind: 'npm-functions'
     });
@@ -1640,8 +1930,9 @@ function buildDependencyCommands(ctx) {
 }
 
 function invokeContextCommand(ctx, spec) {
-  if (typeof ctx.executor === 'function') return commandResult(spec.command, spec.args, { cwd: spec.cwd, env: ctx.env, kind: spec.kind, executor: ctx.executor });
-  return runCommand(spec.command, spec.args, { cwd: spec.cwd, env: ctx.env, kind: spec.kind });
+  const metrics = ctx.metrics || ACTIVE_METRICS;
+  if (typeof ctx.executor === 'function') return commandResult(spec.command, spec.args, { cwd: spec.cwd, env: ctx.env, kind: spec.kind, executor: ctx.executor, metrics });
+  return runCommand(spec.command, spec.args, { cwd: spec.cwd, env: ctx.env, kind: spec.kind, metrics });
 }
 
 function prepareOnce(ctx) {
@@ -1653,8 +1944,12 @@ function prepareOnce(ctx) {
     const result = ctx.prepare({ ...ctx, commands });
     return { commands, result };
   }
+  const metrics = ctx.metrics || ACTIVE_METRICS;
   for (const spec of commands) {
+    const phaseName = spec.kind && spec.kind.startsWith('npm-') ? 'npm-installation' : `generator-${spec.kind}`;
+    if (metrics) metrics.startPhase(phaseName);
     const result = invokeContextCommand(ctx, spec);
+    if (metrics) metrics.endPhase(phaseName);
     if (result && result.status !== 0) fail('PREPARE_FAILED', `${spec.kind} preparation failed.`);
     if (spec.kind === 'npm-version') ctx.toolVersions = { ...(ctx.toolVersions || {}), npm: String(result && result.stdout || '').trim() };
   }
@@ -1671,9 +1966,14 @@ function verifyAndSeal(ctx) {
   verifyUnexpectedSurfaceFiles(ctx);
   verifyProvisionedAssets(ctx);
   comparePrivateInputInventory(ctx, ctx.privateInputSnapshot);
+  const metrics = ctx.metrics || ACTIVE_METRICS;
+  if (metrics) metrics.startPhase('tracked-source-validation');
   verifyTrackedSource(ctx);
   if (ctx.profileConfig.preparation.includes('version')) ctx.versionOracle = validateVersionOracle(ctx);
   validateGeneratedFamilies(ctx);
+  if (metrics) metrics.endPhase('tracked-source-validation');
+
+  if (metrics) metrics.startPhase('app-inventory-sealing');
   const inventory = typeof ctx.inventory === 'function' ? ctx.inventory(ctx) : inventorySurface(ctx);
   const receipt = {
     schemaVersion: 1,
@@ -1684,6 +1984,12 @@ function verifyAndSeal(ctx) {
     candidateRoot: ctx.candidateRoot,
     surface: inventory,
     prepared: ctx.preparation || null,
+    releaseInputPolicy: {
+      policySha256: ctx.policySha256 || null,
+      activeCohorts: ctx.activeCohorts || [],
+      excludedMediaCount: ctx.excludedMediaCount || 0,
+      avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+    },
     tools: {
       node: ctx.node === process.execPath ? process.version : null,
       npm: ctx.toolVersions?.npm || null,
@@ -1712,6 +2018,7 @@ function verifyAndSeal(ctx) {
   ctx.receipt = receipt;
   ctx.receiptPath = filePath;
   ctx.sealed = true;
+  if (metrics) metrics.endPhase('app-inventory-sealing');
   return receipt;
 }
 
@@ -1954,29 +2261,122 @@ function buildReleaseContext(options = {}) {
   }
   const profile = String(options.profile || '').trim();
   if (!PROFILE_CONFIG[profile]) fail('PROFILE', `Unsupported release profile: ${profile}.`);
-  const trackedInventory = Array.isArray(options.trackedInventory)
+  const metrics = options.metrics || ACTIVE_METRICS;
+  if (metrics) metrics.startPhase('git-inventory');
+  const trackedInventoryRaw = Array.isArray(options.trackedInventory)
     ? options.trackedInventory
     : captureTrackedInventory(source.root, source.sourceSha, options);
+  if (metrics) metrics.endPhase('git-inventory');
+
+  let policySha256 = null;
+  let excludedPaths = new Set();
+  let activeCohorts = [];
+  let excludedCount = 0;
+  let avoidedBytes = 0;
+
+  try {
+    const policyResult = loadReleaseInputPolicy(options.policyPath);
+    policySha256 = policyResult.policySha256;
+
+    const isProduction = profile === 'full' || profile === 'hosting';
+
+    let lockData = null;
+    const lockPath = path.join(source.root, 'config', 'media-release.lock.json');
+    if (fs.existsSync(lockPath)) {
+      try {
+        lockData = readJson(lockPath, 'media release lock');
+        validatePublicationEligibility(lockData, {
+          isProduction,
+          allowPilot: options.allowPilot === true
+        });
+      } catch (err) {
+        if (err.code === 'PILOT_MEDIA_INELIGIBLE') {
+          fail('PILOT_MEDIA_INELIGIBLE', err.message);
+        }
+        throw err;
+      }
+    }
+
+    const requestedCohorts = options.cohort
+      ? [options.cohort]
+      : (options.activeCohorts || (lockData && lockData.activeCohorts) || []);
+
+    if (requestedCohorts.length > 0) {
+      excludedPaths = resolveExcludedPaths(policyResult, {
+        ...options,
+        activeCohorts: requestedCohorts,
+        isProduction,
+        allowPilot: options.allowPilot === true,
+        projectRoot: source.root
+      });
+      activeCohorts = requestedCohorts;
+    }
+  } catch (err) {
+    if (err.code === 'PILOT_MEDIA_INELIGIBLE') {
+      fail('PILOT_MEDIA_INELIGIBLE', err.message);
+    }
+    if (!options.policyPath && err.message && err.message.includes('not found')) {
+      // Policy optional if not present
+    } else {
+      throw err;
+    }
+  }
+
+  const {
+    filtered: trackedInventory,
+    excludedCount: count,
+    avoidedBytes: bytes
+  } = filterTrackedInventory(trackedInventoryRaw, excludedPaths);
+
+  excludedCount = count;
+  avoidedBytes = bytes;
+
+  if (metrics && excludedCount > 0) {
+    metrics.increment('excludedMediaFiles', excludedCount);
+    metrics.increment('excludedMediaBytes', avoidedBytes);
+  }
+
+  if (metrics) metrics.startPhase('tracked-source-validation');
   if (!options.projectContext) {
     validateSelectedReleaseWiring(source.root, source.sourceSha, project.config, sourceConfigRelative, profile, {
       ...options,
-      trackedInventory
+      trackedInventory: trackedInventoryRaw
     });
   }
   const selectedPaths = selectedReleaseInputPaths(source.root, project.config, sourceConfigRelative, profile);
-  guardDirtyReleaseInputs(source.root, {
-    ...options,
-    cwd: source.originalCwd,
-    profile,
-    extraPaths: selectedPaths
-  });
+  if (options.guardDirty !== false) {
+    guardDirtyReleaseInputs(source.root, {
+      ...options,
+      cwd: source.originalCwd,
+      profile,
+      extraPaths: selectedPaths
+    });
+  }
+  if (metrics) metrics.endPhase('tracked-source-validation');
   const configuredPublicRoot = (profile === 'hosting' || profile === 'full') && project.config?.hosting && typeof project.config.hosting.public === 'string'
     ? [project.config.hosting.public]
     : [];
+  if (metrics) metrics.startPhase('media-discovery');
+  let observedExcludedCount = 0;
+  let observedAvoidedBytes = 0;
   const observedAssets = captureObservedProvisionedAssets(source.root, trackedInventory, {
     ...options,
-    mediaRoots: configuredPublicRoot
+    mediaRoots: configuredPublicRoot,
+    excludedPaths,
+    recordAvoided: (rel, size) => {
+      observedExcludedCount += 1;
+      observedAvoidedBytes += size;
+      if (metrics && typeof metrics.increment === 'function') {
+        metrics.increment('excludedMediaFiles', 1);
+        metrics.increment('excludedMediaBytes', size);
+      }
+    },
+    metrics
   });
+  if (metrics) metrics.endPhase('media-discovery');
+  const totalExcludedCount = excludedCount + observedExcludedCount;
+  const totalAvoidedBytes = avoidedBytes + observedAvoidedBytes;
+  if (metrics) metrics.startPhase('source-export');
   const candidate = createCandidate({
     ...options,
     sourceRoot: source.root,
@@ -1984,6 +2384,7 @@ function buildReleaseContext(options = {}) {
     treeInventory: trackedInventory,
     externalRoot: options.externalRoot
   });
+  if (metrics) metrics.endPhase('source-export');
   const candidateConfigPath = resolveCandidateConfigPath(source.root, candidate.candidateRoot, project.configPath);
   if (!fs.existsSync(candidateConfigPath)) fail('FIREBASE_CONFIG', 'Selected source does not contain the requested Firebase config.');
   validatePrivateInputLayout(project.config, candidate.candidateRoot, project);
@@ -2011,7 +2412,12 @@ function buildReleaseContext(options = {}) {
     functionsConfigDirs,
     functionsSourceDirs: functionsSourceDirectories(project.config, candidate.candidateRoot),
     prepared: false,
-    sealed: false
+    sealed: false,
+    policySha256,
+    activeCohorts,
+    excludedPaths,
+    excludedMediaCount: totalExcludedCount,
+    avoidedMediaBytes: totalAvoidedBytes
   };
   const invocationRelativeCwd = path.relative(source.root, source.originalCwd);
   ctx.publishCwd = rejectLinkAncestors(
@@ -2024,7 +2430,9 @@ function buildReleaseContext(options = {}) {
   }
   const assets = [...observedAssets, ...(options.provisionedAssets || options.assets || [])];
   ctx.observedAssets = observedAssets;
+  if (metrics) metrics.startPhase('provisioned-copying');
   ctx.assets = copyProvisionedAssets(ctx, assets);
+  if (metrics) metrics.endPhase('provisioned-copying');
   ctx.dotenv = stageFunctionsDotenv(ctx, project, options);
   ctx.privateConfigDelta = ctx.profileConfig.products.includes('functions')
     ? applyFunctionsDotenvIgnore(ctx.candidateRoot, project, ctx.candidateConfigPath)
@@ -2033,6 +2441,7 @@ function buildReleaseContext(options = {}) {
   ctx.surfaceBeforePreparation = surfacePathSet(ctx);
   ctx.privateInputSnapshot = capturePrivateInputInventory(ctx);
   ctx.env = normalizeInheritedEnvironment(source.originalCwd, options.env || process.env);
+  ctx.metrics = metrics;
   return ctx;
 }
 
@@ -2066,6 +2475,9 @@ function resolveFirebaseInvocation(options = {}, ctx = {}) {
 }
 
 function dispatchFirebase(ctx, options = {}) {
+  if (options.verifyOnly || ctx.verifyOnly) {
+    fail('VERIFY_ONLY_DISPATCH', 'dispatchFirebase must not be invoked when verifyOnly is active.');
+  }
   compareSealedSurface(ctx);
   const selector = ctx.profileConfig.selector;
   const invocation = resolveFirebaseInvocation(options, ctx);
@@ -2080,37 +2492,104 @@ function dispatchFirebase(ctx, options = {}) {
     if (result && typeof result.status === 'number' && result.status !== 0) fail('PUBLISH_FAILED', 'Firebase publication failed.');
     return { selector, args, result };
   }
-  const result = runCommand(invocation.command, args, { cwd: ctx.publishCwd || ctx.candidateRoot, env, kind: 'firebase-publish' });
+  const result = runCommand(invocation.command, args, { cwd: ctx.publishCwd || ctx.candidateRoot, env, kind: 'firebase-publish', metrics: ctx.metrics || ACTIVE_METRICS });
   return { selector, args, result };
 }
 
 function runRelease(options = {}) {
-  const ctx = buildReleaseContext(options);
-  ctx.preparation = prepareOnce(ctx);
-  verifyAndSeal(ctx);
-  ctx.env = { ...(ctx.env || process.env), ...buildHookEnvironment(ctx) };
-  const publication = dispatchFirebase(ctx, options);
-  return {
-    ok: true,
-    profile: ctx.profile,
-    selector: ctx.profileConfig.selector,
-    sourceSha: ctx.sourceSha,
-    project: { id: ctx.project.id, alias: ctx.project.alias },
-    publication: { selector: publication.selector, args: publication.args }
-  };
+  const metrics = options.metrics || new ReleaseMetrics(options);
+  setActiveMetrics(metrics);
+  let ctx = null;
+  try {
+    ctx = buildReleaseContext({ ...options, metrics });
+    ctx.metrics = metrics;
+    if (options.verifyOnly) ctx.verifyOnly = true;
+    metrics.setContextMetadata(ctx);
+
+    ctx.preparation = prepareOnce(ctx);
+    verifyAndSeal(ctx);
+    ctx.env = { ...(ctx.env || process.env), ...buildHookEnvironment(ctx) };
+
+    if (options.verifyOnly) {
+      metrics.startPhase('hook-validation');
+      for (const product of ctx.profileConfig.products) {
+        runHook({ product, env: ctx.env });
+      }
+      metrics.endPhase('hook-validation');
+      metrics.recordSuccess({ verified: true, published: false });
+      const metricsPath = writeMetricsFile(ctx, metrics, options);
+      return {
+        ok: true,
+        verified: true,
+        published: false,
+        profile: ctx.profile,
+        selector: ctx.profileConfig.selector,
+        sourceSha: ctx.sourceSha,
+        project: { id: ctx.project.id, alias: ctx.project.alias },
+        publication: null,
+        metricsPath,
+        metrics: metrics.toJSON(),
+        candidateRoot: ctx.candidateRoot,
+        releaseInputPolicy: {
+          policySha256: ctx.policySha256 || null,
+          activeCohorts: ctx.activeCohorts || [],
+          excludedMediaCount: ctx.excludedMediaCount || 0,
+          avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+        }
+      };
+    }
+
+    metrics.startPhase('publish');
+    const publication = dispatchFirebase(ctx, options);
+    metrics.endPhase('publish');
+
+    metrics.recordSuccess({ verified: true, published: true, publication });
+    const metricsPath = writeMetricsFile(ctx, metrics, options);
+    return {
+      ok: true,
+      verified: true,
+      published: true,
+      profile: ctx.profile,
+      selector: ctx.profileConfig.selector,
+      sourceSha: ctx.sourceSha,
+      project: { id: ctx.project.id, alias: ctx.project.alias },
+      publication: { selector: publication.selector, args: publication.args },
+      metricsPath,
+      metrics: metrics.toJSON(),
+      candidateRoot: ctx.candidateRoot,
+      releaseInputPolicy: {
+        policySha256: ctx.policySha256 || null,
+        activeCohorts: ctx.activeCohorts || [],
+        excludedMediaCount: ctx.excludedMediaCount || 0,
+        avoidedMediaBytes: ctx.avoidedMediaBytes || 0
+      }
+    };
+  } catch (error) {
+    metrics.recordFailure(error);
+    writeMetricsFile(ctx, metrics, options);
+    throw error;
+  } finally {
+    setActiveMetrics(null);
+  }
 }
 
 function parseArgs(argv = process.argv.slice(2)) {
-  const args = { json: false, nonInteractive: false };
+  const args = { json: false, nonInteractive: false, verifyOnly: false };
   const tokens = [...argv];
   if (tokens[0] && !tokens[0].startsWith('--')) args.profile = tokens.shift();
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
     if (token === '--json') args.json = true;
     else if (token === '--non-interactive') args.nonInteractive = true;
-    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root'].includes(token)) {
+    else if (token === '--verify-only') args.verifyOnly = true;
+    else if (token === '--allow-pilot-media') args.allowPilot = true;
+    else if (['--sha', '--project', '--config', '--firebase-cli', '--npm-cli', '--external-root', '--cohort', '--policy'].includes(token)) {
       if (!tokens[index + 1] || tokens[index + 1].startsWith('--')) fail('CLI_ARGUMENT', `${token} requires a value.`);
-      args[token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = tokens[++index];
+      if (token === '--policy') {
+        args.policyPath = tokens[++index];
+      } else {
+        args[token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = tokens[++index];
+      }
     } else if (token === '--hook') {
       args.hook = true;
     } else if (token === '--product') {
@@ -2124,7 +2603,16 @@ function parseArgs(argv = process.argv.slice(2)) {
 }
 
 function publicResult(result) {
-  return { ok: Boolean(result && result.ok), profile: result && result.profile, selector: result && result.selector, sourceSha: result && result.sourceSha, project: result && result.project };
+  return {
+    ok: Boolean(result && result.ok),
+    verified: Boolean(result && result.verified !== undefined ? result.verified : result && result.ok),
+    published: Boolean(result && result.published !== undefined ? result.published : result && result.ok),
+    profile: result && result.profile,
+    selector: result && result.selector,
+    sourceSha: result && result.sourceSha,
+    project: result && result.project,
+    releaseInputPolicy: result && result.releaseInputPolicy
+  };
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -2142,10 +2630,15 @@ function main(argv = process.argv.slice(2)) {
     configPath: args.config,
     npmCli: args.npmCli,
     nonInteractive: args.nonInteractive,
+    verifyOnly: args.verifyOnly,
     firebaseCliEntrypoint: args.firebaseCli,
-    externalRoot: args.externalRoot
+    externalRoot: args.externalRoot,
+    cohort: args.cohort,
+    allowPilot: args.allowPilot,
+    policyPath: args.policyPath
   });
   if (args.json) console.log(JSON.stringify(publicResult(result)));
+  else if (args.verifyOnly) console.log(`${args.profile} Firebase release verified without publication.`);
   else console.log(`${args.profile} Firebase release succeeded.`);
   return result;
 }
@@ -2157,6 +2650,14 @@ module.exports = {
   PROFILE_CONFIG,
   PROFILE_NAMES,
   HOOK_CONTEXT_FIELDS,
+  PROVISIONED_MEDIA_ROOTS,
+  minimizeRoots,
+  ReleaseMetrics,
+  redactArgs,
+  redactString,
+  writeMetricsFile,
+  getActiveMetrics,
+  setActiveMetrics,
   ReleaseError,
   canonicalJson,
   commitSha,

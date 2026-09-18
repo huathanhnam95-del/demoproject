@@ -300,8 +300,13 @@
 
         // Pre-load audio
         if (el.rtsAudioPlayer) {
-            el.rtsAudioPlayer.src = `${RTS_AUDIO_DIR}RTS_${currentEntry.id}.mp3`;
-            el.rtsAudioPlayer.load();
+            const rtsAudioUrl = `${RTS_AUDIO_DIR}RTS_${currentEntry.id}.mp3`;
+            if (window.MediaUrlResolver && typeof window.MediaUrlResolver.loadAudio === 'function') {
+                window.MediaUrlResolver.loadAudio(el.rtsAudioPlayer, rtsAudioUrl, { mode: 'RTS' });
+            } else {
+                el.rtsAudioPlayer.src = rtsAudioUrl;
+                el.rtsAudioPlayer.load();
+            }
         }
 
         // Show start button

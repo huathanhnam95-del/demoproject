@@ -53,6 +53,7 @@ merriam-webster api key
 *.tmp
 *.temp
 .tempmediaStorage/
+.media-checkpoints/
 
 # Gemini Agent Folder
 .gemini/

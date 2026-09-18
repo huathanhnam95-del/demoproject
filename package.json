@@ -28,6 +28,7 @@
     "release:verify": "node scripts/release/firebase-release.cjs hosting --verify-only",
     "media:plan": "node scripts/release/media-publisher.cjs plan",
     "media:publish": "node scripts/release/media-publisher.cjs publish",
+    "media:gc": "node scripts/release/media-gc.cjs",
     "deploy:legacy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting",
     "deploy:full:legacy": "npm run version:sync && npm run build:read-aloud:connected-speech-index && firebase deploy --only hosting,functions:api,firestore:rules",
     "lint": "eslint .",

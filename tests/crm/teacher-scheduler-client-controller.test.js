@@ -2823,10 +2823,13 @@ async function runTests() {
         assert(cssContent.includes('z-index: auto'), 'CSS must specify z-index: auto for slot cells to prevent stacking context collision');
         assert(cssContent.includes('.ts-appearance-solid .scheduler-session-pill'), 'CSS must provide solid styling for pills in solid mode');
 
-        // Check completed session styling in solid mode guarantees white text
+        // Completed sessions preserve the resolved appearance tokens rather than
+        // forcing one foreground across Pastel and Solid.
         assert(cssContent.includes('.scheduler-session-pill.is-completed .pill-title'), 'CSS must specify completed pill title rule');
         assert(cssContent.includes('.scheduler-session-pill.is-completed .pill-time'), 'CSS must specify completed pill time rule');
-        assert(cssContent.match(/\.scheduler-session-pill\.is-completed \.pill-title[^}]*color:\s*#ffffff\s*!important/), 'Completed pill title must enforce white text with !important');
+        assert(cssContent.match(/\.scheduler-session-pill\.is-completed \.pill-title[^}]*color:\s*var\(--ts-event-title,\s*#1F1F1F\)/), 'Completed pill title must preserve the resolved title token');
+        assert(cssContent.match(/\.scheduler-session-pill\.is-completed \.pill-time[^}]*color:\s*var\(--ts-event-meta,\s*#3C4043\)/), 'Completed pill time must preserve the resolved metadata token');
+        assert(!cssContent.match(/\.scheduler-session-pill\.is-completed \.pill-title[^}]*color:\s*#ffffff\s*!important/i), 'Completed pill title must not force legacy white text');
 
         // Check mini-calendar actual DOM classes styling
         assert(cssContent.includes('.teacher-scheduler-mini-calendar .mini-cal-header'), 'CSS must style actual DOM mini-cal-header');
@@ -3213,13 +3216,13 @@ async function runTests() {
         assert(css.includes('.mini-cal-day-cell.is-today'), 'mini-cal-day-cell.is-today must be defined');
         assert(css.includes('.mini-cal-day-cell.is-in-range'), 'mini-cal-day-cell.is-in-range must be defined');
 
-        // Contrast bridge
-        assert(css.includes('--pill-ink: #ffffff !important;'), 'Solid appearance mode must enforce white text contrast');
-        assert(css.includes('--pill-meta: rgba(255, 255, 255, 0.95) !important;'), 'Solid appearance mode must enforce white meta contrast');
-
-        // Scoped solid white text overrides and pastel protection
-        assert(css.includes('.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-title'), 'Solid white title color must be scoped to non-pastel');
-        assert(css.includes('.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-title'), 'Pastel title color rule must exist');
+        // Appearance-specific contrast is carried by the shared event token contract.
+        assert(css.includes('.ts-appearance-solid .scheduler-session-pill[data-ts-color="blue"]'), 'Solid appearance must provide family-scoped event tokens');
+        assert(css.includes('--ts-event-title: #FFFFFF;'), 'Solid appearance must provide a contrast-safe title token');
+        assert(css.includes('--ts-event-meta: #FFFFFF;'), 'Solid appearance must provide a contrast-safe metadata token');
+        assert(css.includes('--ts-event-title: #1F1F1F;'), 'Pastel appearance must provide the approved dark title token');
+        assert(css.includes('--ts-event-meta: #3C4043;'), 'Pastel appearance must provide the approved dark metadata token');
+        assert(!css.includes('--pill-ink: #ffffff !important;'), 'Legacy important foreground bridge must be removed');
 
         console.log('✓ Source-grounded repair: CSS contract, specificity, and contrast verified');
     }

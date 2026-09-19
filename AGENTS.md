@@ -70,7 +70,7 @@ When implementing a new practice mode (e.g., in PTE Practice or English Practice
 
 ## Deployment Rule
 
-- **Do not automatically push to production**: Only push/deploy to production when the user explicitly asks you to. Do not perform automated pushes to the remote repository.
+- **Remote Git Synchronization on Production Deployment**: Whenever deploying to production (or executing an approved production release / PAR), ALWAYS push the committed changes to the remote Git repository (`git push origin <branch>`) in addition to deploying the hosting assets. Never leave production releases unpushed to Git. Outside of an explicit deployment/release instruction, do not perform unprompted pushes to production branches.
 - **Production Deployment Session Naming (`(D)`)**: After an approved production deployment, Codex uses the supported task-title API with verified task/title identity to mark the session. Antigravity uses its helper only with an explicit verified CID.
 
 ## Implementation Plan Approval Rule

@@ -2206,3 +2206,6 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1211,2026-09-19,Create PTE exam-style UI redesign mockups for speaking writing and listening modes with BEL controls,Done,2026-09-19
 1212,2026-09-19,Restyle PTE mockups so only the question area follows the reference and the rest uses BEL design tokens,Done,2026-09-19
 1213,2026-09-19,Execute PAR batch deployment V2.0.13 integrating all readied sessions to production,Done,2026-09-19
+1214,2026-09-19,Mock up PTE question area on the real app for all 17 speaking writing listening modes with before/after screenshots,Done,2026-09-19
+1215,2026-09-19,Sequence PTE audio box then recorder box for listen-then-speak modes in question-area mockups,Done,2026-09-19
+1216,2026-09-19,Redesign Read Aloud controls helpers and layout to reduce distraction (mockup),In Progress,

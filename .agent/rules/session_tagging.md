@@ -49,8 +49,9 @@ The agent MUST orchestrate the batch deployment of all readied sessions followin
 4. **Follow Versioning & Changelog Standards**:
    - Perform SemVer version bump per workspace rules (e.g., `V2.0.12`).
    - Append a changelog summarizing all integrated updates.
-5. **Push / Deploy to Remote**:
+5. **Push / Deploy to Remote & Git**:
    Execute the push/deploy command per the approved workspace deployment rules.
+   **Remote Git Synchronization (MANDATORY)**: Whenever deploying to production (or executing an approved production release / PAR), ALWAYS push the committed changes to the remote Git repository (`git push origin <branch>`) in addition to deploying the hosting assets. Never leave production releases unpushed to Git.
 6. **Transition Session Tags (`(R) -> (D)`)**:
    Convert all readied sessions and the deploying session from `(R) ` to `(D) `:
    ```bash

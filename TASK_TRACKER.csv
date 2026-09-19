@@ -2099,3 +2099,5 @@ TaskNo,CreatedDate,Description,Status,DoneDate
 1104,2026-09-12,Compile comprehensive Entrance Test UI ratings and feedback analysis report into docs/entrance-test-ui-analysis.md,Done,2026-09-12
 1105,2026-09-13,Investigate Google Cloud Gemini API billing cost activities,Done,2026-09-13
 1106,2026-09-13,CRM Projects font and interface size control execution,Done,2026-09-13
+1107,2026-09-19,PTE speaking shell v3 Phase 0 setup and baseline evidence - missing RA baseline accepted,Done,2026-09-19
+1108,2026-09-19,PTE speaking shell v3 Phase 1 shared shell and components - Chrome verified with authenticated history fixtures,Done,2026-09-19

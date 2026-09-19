@@ -262,6 +262,15 @@
       body: JSON.stringify(body)
     });
     invalidateHistoryCache();
+    if (!savedAttempt?.skipped) {
+      window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', {
+        detail: {
+          attemptId: savedAttempt?.attemptId || attemptId,
+          practiceMode: input.practiceMode,
+          promptId: getAttemptPromptId(input)
+        }
+      }));
+    }
     return savedAttempt;
   }
 
@@ -1877,6 +1886,8 @@
     isPlainObject,
     updateHistoryUI,
     fetchUserAttemptsCached,
+    resolveHistoryQuestionId,
+    getAttemptPromptId,
     openProgressModal,
     closeProgressModal
   };

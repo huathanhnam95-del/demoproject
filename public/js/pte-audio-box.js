@@ -5,10 +5,18 @@
     if (!audio) throw new TypeError('PteAudioBox requires the mode audio element');
     const box = document.createElement('div'); box.className = 'pte-audio';
     box.innerHTML = '<div class="pte-audio__status">Status: <b></b></div><div class="pte-audio__track"><i></i></div><label class="pte-audio__vol">Volume <input type="range" min="0" max="1" step="0.05" aria-label="Volume"></label>';
-    host.replaceChildren(box);
+    const announcement = document.createElement('span');
+    announcement.className = 'pte-sr-only';
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    host.replaceChildren(box, announcement);
     const status = box.querySelector('b'), fill = box.querySelector('.pte-audio__track i'), volume = box.querySelector('input');
     let destroyed = false, timer, pending, operation = 0;
-    const setStatus = (state, text) => { box.dataset.state = state; status.textContent = text; };
+    const setStatus = (state, text) => {
+      if (box.dataset.state !== state) announcement.textContent = text;
+      box.dataset.state = state; status.textContent = text;
+    };
     const progress = () => { fill.style.width = `${audio.duration > 0 ? Math.min(100, audio.currentTime / audio.duration * 100) : 0}%`; };
     const syncVolume = () => { volume.value = audio.volume; };
     const changeVolume = () => { audio.volume = Number(volume.value); };
@@ -72,7 +80,10 @@
     }
     function reset() {
       cancel(); audio.currentTime = 0; fill.style.width = '0%';
-      setStatus('countdown', 'Beginning in 0 seconds');
+      // Idle is distinct from an actual countdown so its first tick announces
+      // the supplied duration, including after a reset of an earlier countdown.
+      box.dataset.state = 'idle'; status.textContent = 'Ready';
+      announcement.textContent = '';
     }
     audio.addEventListener('timeupdate', progress);
     audio.addEventListener('volumechange', syncVolume);

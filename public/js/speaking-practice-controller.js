@@ -1746,7 +1746,7 @@
         const stay = v3Element('button', 'pte-btn', 'Stay here'); stay.addEventListener('click', () => close(false)); actions.append(stay);
       }
       actions.append(yes); yes.addEventListener('click', () => close(kind !== 'noskip'));
-      overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); close(false); } else trapFocus(panel, e); });
+      overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); close(false); } else if (e.key === 'Tab') trapFocus(panel, e); });
       actions.firstElementChild.focus();
     });
   }

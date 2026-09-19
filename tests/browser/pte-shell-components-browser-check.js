@@ -137,6 +137,25 @@ async function synthetic(page) {
       assert.match(await page.getByRole('alertdialog').textContent(), /Cannot skip/);
       await page.keyboard.press('Escape');
       assert.equal(await page.evaluate(() => document.activeElement.id), 'pte-next-speak');
+      for (const key of ['Enter', 'Space']) {
+        await page.locator('#pte-next-speak').click();
+        await page.getByRole('alertdialog').waitFor();
+        await page.keyboard.press(key);
+        assert.equal(await page.getByRole('alertdialog').count(), 0, `${key} dismisses Cannot skip`);
+        assert.equal(await page.evaluate(() => document.activeElement.id), 'pte-next-speak');
+        await page.evaluate(() => __setPhase('complete'));
+        await page.locator('#pte-next-speak').click();
+        await page.keyboard.press(key);
+        assert.equal(await page.getByRole('alertdialog').count(), 0, `${key} activates Stay here`);
+        assert.deepEqual(await page.evaluate(() => __calls), []);
+        await page.locator('#pte-next-speak').click();
+        await page.keyboard.press('Tab');
+        assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Next question');
+        await page.keyboard.press(key);
+        await page.waitForFunction(() => __calls.length === 1);
+        assert.deepEqual(await page.evaluate(() => __calls), ['next'], `${key} confirms Next`);
+        await page.evaluate(() => { __calls.length = 0; __setPhase('prep'); });
+      }
       await page.evaluate(() => __setPhase('listen'));
       await page.locator('#pte-next-speak').click();
       await page.evaluate(() => __setPhase('prep'));
@@ -199,9 +218,29 @@ async function synthetic(page) {
         for (let i = 0; i < sampleRate; i++) view.setInt16(44 + i * 2, Math.sin(i / sampleRate * Math.PI * 880) * 1000, true);
         window.__audioURL = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
         window.__audio = new Audio(__audioURL); window.__box = PteAudioBox.create(document.getElementById('pte-test-audio'), { audio: __audio });
-        await __box.countdown(0); await __box.play();
+        window.__announcements = [];
+        const live = document.querySelector('#pte-test-audio [role="status"]');
+        if (!live) throw new Error('Audio box requires a visually hidden live status');
+        window.__announcementObserver = new MutationObserver(() => __announcements.push(live.textContent));
+        __announcementObserver.observe(live, { childList: true });
+      });
+      assert.equal(await page.locator('#pte-test-audio [role="status"]').textContent(), '', 'new audio box starts with a silent live region');
+      await page.evaluate(async () => { await __box.countdown(2); });
+      assert.deepEqual(await page.evaluate(() => __announcements), ['Beginning in 2 seconds'], 'first countdown announces its actual starting time once');
+      await page.evaluate(() => { __box.reset(); });
+      assert.equal(await page.locator('#pte-test-audio [role="status"]').textContent(), '', 'reset clears the announcement silently');
+      await page.evaluate(async () => { __announcements.length = 0; await __box.countdown(2); });
+      assert.deepEqual(await page.evaluate(() => __announcements), ['Beginning in 2 seconds'], 'countdown after reset announces its actual starting time once');
+      await page.evaluate(async () => {
+        __announcements.length = 0;
+        await __box.play();
       });
       assert.equal(await page.locator('.pte-audio').getAttribute('data-state'), 'completed');
+      assert.deepEqual(await page.evaluate(() => __announcements), ['Playing', 'Completed'], 'play and completion are announced once');
+      assert.equal(await page.locator('#pte-test-audio [role="status"]').getAttribute('aria-live'), 'polite');
+      assert.equal(await page.locator('#pte-test-audio [role="status"]').evaluate(node => node.classList.contains('pte-sr-only')), true);
+      await page.evaluate(async () => { __announcements.length = 0; await __box.countdown(2); });
+      assert.deepEqual(await page.evaluate(() => __announcements), ['Beginning in 2 seconds'], 'countdown ticks do not repeat announcements');
       await page.locator('.pte-audio input').evaluate(input => { input.value = '0.35'; input.dispatchEvent(new Event('input')); });
       assert.equal(await page.evaluate(() => __audio.volume), .35);
       await page.evaluate(() => {
@@ -210,9 +249,12 @@ async function synthetic(page) {
         __box.reset(); window.__playing = __box.play();
       });
       await page.waitForSelector('.pte-audio[role="button"]');
+      assert.equal(await page.locator('#pte-test-audio [role="status"]').textContent(), 'Click to start audio');
+      await page.evaluate(() => { __announcements.length = 0; });
       await page.locator('.pte-audio').focus(); await page.keyboard.press('Enter');
       await page.evaluate(() => __playing);
       assert.equal(await page.locator('.pte-audio').getAttribute('role'), null);
+      assert.deepEqual(await page.evaluate(() => __announcements), ['Playing', 'Completed'], 'autoplay recovery announces playing and completion once');
       assert.equal(await page.evaluate(async () => {
         const pending = __box.countdown(5).then(() => 'resolved', error => error.name);
         __box.destroy(); URL.revokeObjectURL(__audioURL); return pending;

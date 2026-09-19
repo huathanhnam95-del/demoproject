@@ -1,26 +1,123 @@
 const assert = require('assert');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 
 const registerSchedulingRoutes = require('../../functions/src/routes/admin/scheduling');
 const { CRM_CLASSROOMS, CRM_SCHEDULED_SESSIONS } = require('../../functions/src/crm/collections');
 const { callRoute, createFakeDb } = require('./route-test-helpers');
 
-function createSchedulingRouter(db) {
+const schedulingSource = fs.readFileSync(
+    path.join(__dirname, '../../functions/src/routes/admin/scheduling.js'),
+    'utf8'
+);
+for (const operationType of [
+    'admin.session.seed',
+    'admin.session.add_batch',
+    'admin.session.add',
+    'admin.session.replace',
+    'admin.session.reschedule',
+    'admin.session.cancel',
+    'admin.schedule.regenerate'
+]) {
+    assert(
+        schedulingSource.includes(`operationType: '${operationType}'`),
+        `Expected ${operationType} to use the shared scheduling operation boundary.`
+    );
+}
+
+function createSchedulingRouter(db, actorUid = 'admin-1') {
+    db.auditCalls = Array.isArray(db.auditCalls) ? db.auditCalls : [];
     const router = express.Router();
     registerSchedulingRoutes(router, {
         db,
         requireAdminHandlers: [
             (req, _res, next) => {
-                req.user = { uid: 'admin-1', email: 'admin@example.com' };
+                req.user = { uid: actorUid, email: 'admin@example.com' };
                 next();
             }
         ],
         sendSuccess: (res, data, message) => res.status(200).json({ success: true, ...(message ? { message } : {}), ...data }),
         sendError: (res, status, error, message, details) => res.status(status).json({ success: false, error, message, ...(details ? { details } : {}) }),
         serverTimestamp: () => 'SERVER_TS',
-        writeAuditLog: async () => {}
+        writeAuditLog: async (entry) => { db.auditCalls.push(entry); }
     });
     return router;
+}
+
+async function testAdminAddIsIdempotentAndSerializesConflicts() {
+    const db = createFakeDb({
+        [`${CRM_CLASSROOMS}/class-r9`]: {
+            name: 'R9 class',
+            courseId: 'course-r9',
+            primaryTeacherUid: 'teacher-r9',
+            scheduleConfig: {
+                totalInstructionMinutes: 180,
+                sessionMinutes: 60,
+                targetSessionCount: 3,
+                timezone: 'UTC',
+                scheduleVersion: 1
+            }
+        }
+    });
+    const payload = {
+        operationId: 'sched_admin_add_replay_0001',
+        targetLocalDate: '2026-09-21',
+        targetLocalTime: '09:00',
+        durationMinutes: 60
+    };
+    const router = createSchedulingRouter(db);
+
+    const first = await callRoute(router, '/classrooms/:classId/sessions/add', 'post', {
+        params: { classId: 'class-r9' },
+        body: payload
+    });
+    const replay = await callRoute(router, '/classrooms/:classId/sessions/add', 'post', {
+        params: { classId: 'class-r9' },
+        body: payload
+    });
+
+    assert.strictEqual(first._status, 200);
+    assert.strictEqual(replay._status, 200);
+    assert.strictEqual(replay._json.idempotentReplay, true);
+    assert.strictEqual(replay._json.operationId, payload.operationId);
+    assert.strictEqual(replay._json.sessionId, first._json.sessionId);
+    assert.strictEqual(db.auditCalls.length, 1);
+    assert.strictEqual(
+        [...db.docs.keys()].filter((key) => key.startsWith(`${CRM_SCHEDULED_SESSIONS}/`)).length,
+        1
+    );
+
+    const changedPayload = await callRoute(router, '/classrooms/:classId/sessions/add', 'post', {
+        params: { classId: 'class-r9' },
+        body: { ...payload, targetLocalTime: '10:00' }
+    });
+    assert.strictEqual(changedPayload._status, 409);
+    assert.strictEqual(changedPayload._json.error, 'OPERATION_ID_PAYLOAD_MISMATCH');
+
+    const otherActor = await callRoute(createSchedulingRouter(db, 'admin-2'), '/classrooms/:classId/sessions/add', 'post', {
+        params: { classId: 'class-r9' },
+        body: payload
+    });
+    assert.strictEqual(otherActor._status, 403);
+    assert.strictEqual(otherActor._json.error, 'OPERATION_ID_ACTOR_MISMATCH');
+
+    const concurrentPayload = {
+        targetLocalDate: '2026-09-22',
+        targetLocalTime: '09:00',
+        durationMinutes: 60
+    };
+    const concurrent = await Promise.all([
+        callRoute(router, '/classrooms/:classId/sessions/add', 'post', {
+            params: { classId: 'class-r9' },
+            body: { ...concurrentPayload, operationId: 'sched_admin_concurrent_a' }
+        }),
+        callRoute(router, '/classrooms/:classId/sessions/add', 'post', {
+            params: { classId: 'class-r9' },
+            body: { ...concurrentPayload, operationId: 'sched_admin_concurrent_b' }
+        })
+    ]);
+    assert.deepStrictEqual(concurrent.map((res) => res._status).sort(), [200, 409]);
 }
 
 async function testSeedRejectsAlreadySeededContractedClass() {
@@ -306,6 +403,7 @@ async function testAdminWorkspaceAllTeachersFilterAndRescheduleHealing() {
     await testSeedRejectsAlreadySeededContractedClass();
     await testRegenerateAfterSeededSessionsUsesPreviewApplyPath();
     await testAdminWorkspaceAllTeachersFilterAndRescheduleHealing();
+    await testAdminAddIsIdempotentAndSerializesConflicts();
     process.stdout.write('admin scheduling route behavior passed\n');
 })().catch((error) => {
     process.stderr.write(`${error.stack || error}\n`);

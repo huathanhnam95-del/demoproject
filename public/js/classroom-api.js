@@ -40,6 +40,33 @@ window.ClassroomAPI = (function () {
         throw error;
     }
 
+    function createSchedulingOperationId(prefix = 'operation') {
+        const safePrefix = String(prefix || 'operation')
+            .toLowerCase()
+            .replace(/[^a-z0-9-]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'operation';
+        const randomPart = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+        return `sched_${safePrefix}_${Date.now().toString(36)}_${randomPart}`;
+    }
+
+    async function sendSchedulingMutation(url, { method = 'POST', data = {}, prefix = 'operation' } = {}) {
+        const body = data && typeof data === 'object' ? { ...data } : {};
+        const suppliedOperationId = String(body.operationId || '').trim();
+        body.operationId = suppliedOperationId || createSchedulingOperationId(prefix);
+        const headers = {
+            ...(await getHeaders()),
+            'Idempotency-Key': body.operationId
+        };
+        const res = await fetch(url, {
+            method,
+            headers,
+            body: JSON.stringify(body)
+        });
+        return parseJsonResponse(res);
+    }
+
     // Admin: Read local classroom docs
     async function fetchClassrooms() {
         const headers = await getHeaders();
@@ -422,34 +449,24 @@ window.ClassroomAPI = (function () {
     }
 
     async function seedClassroomSessions(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/seed`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/admin/classrooms/${classId}/sessions/seed`, {
+            data,
+            prefix: 'admin-seed'
         });
-        return parseJsonResponse(res);
     }
 
     async function addClassroomSession(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/add`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/admin/classrooms/${classId}/sessions/add`, {
+            data,
+            prefix: 'admin-add'
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
     }
 
     async function teacherAddClassroomSession(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/teacher/classrooms/${classId}/sessions/add`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/teacher/classrooms/${classId}/sessions/add`, {
+            data,
+            prefix: 'teacher-add'
         });
-        return parseJsonResponse(res);
     }
 
     async function previewClassroomSessionAdd(classId, data) {
@@ -463,33 +480,24 @@ window.ClassroomAPI = (function () {
     }
 
     async function addClassroomSessionBatch(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/add-batch`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/admin/classrooms/${classId}/sessions/add-batch`, {
+            data,
+            prefix: 'admin-add-batch'
         });
-        return parseJsonResponse(res);
     }
 
     async function teacherAddClassroomSessionMulti(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/teacher/classrooms/${classId}/sessions/add-multi`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/teacher/classrooms/${classId}/sessions/add-multi`, {
+            data,
+            prefix: 'teacher-add-multi'
         });
-        return parseJsonResponse(res);
     }
 
     async function replaceClassroomSession(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/sessions/replace`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/admin/classrooms/${classId}/sessions/replace`, {
+            data,
+            prefix: 'admin-replace'
         });
-        return parseJsonResponse(res);
     }
 
     async function previewClassroomSessionReplace(classId, data) {
@@ -503,62 +511,47 @@ window.ClassroomAPI = (function () {
     }
 
     async function rescheduleScheduledSession(sessionId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/sessions/${sessionId}/reschedule`, {
+        return sendSchedulingMutation(`/api/admin/sessions/${sessionId}/reschedule`, {
             method: 'PATCH',
-            headers,
-            body: JSON.stringify(data)
+            data,
+            prefix: 'admin-reschedule'
         });
-        return parseJsonResponse(res);
     }
 
     async function teacherRescheduleScheduledSession(sessionId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/teacher/sessions/${sessionId}/reschedule`, {
+        return sendSchedulingMutation(`/api/teacher/sessions/${sessionId}/reschedule`, {
             method: 'PATCH',
-            headers,
-            body: JSON.stringify(data)
+            data,
+            prefix: 'teacher-reschedule'
         });
-        return parseJsonResponse(res);
     }
 
     async function teacherRescheduleSessionSeries(sessionId, data = {}) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/teacher/sessions/${sessionId}/reschedule-series`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/teacher/sessions/${sessionId}/reschedule-series`, {
+            data,
+            prefix: 'teacher-reschedule-series'
         });
-        return parseJsonResponse(res);
     }
 
     async function teacherBulkRescheduleSessions(data = {}) {
-        const headers = await getHeaders();
-        const res = await fetch('/api/teacher/scheduler/sessions/bulk-reschedule', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation('/api/teacher/scheduler/sessions/bulk-reschedule', {
+            data,
+            prefix: data?.undoOf ? 'teacher-undo' : 'teacher-bulk-reschedule'
         });
-        return parseJsonResponse(res);
     }
 
-    async function cancelScheduledSession(sessionId) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/sessions/${sessionId}/cancel`, {
-            method: 'POST',
-            headers
+    async function cancelScheduledSession(sessionId, data = {}) {
+        return sendSchedulingMutation(`/api/admin/sessions/${sessionId}/cancel`, {
+            data,
+            prefix: 'admin-cancel'
         });
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res.json();
     }
 
-    async function teacherCancelScheduledSession(sessionId) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/teacher/sessions/${sessionId}/cancel`, {
-            method: 'POST',
-            headers
+    async function teacherCancelScheduledSession(sessionId, data = {}) {
+        return sendSchedulingMutation(`/api/teacher/sessions/${sessionId}/cancel`, {
+            data,
+            prefix: 'teacher-cancel'
         });
-        return parseJsonResponse(res);
     }
 
     async function teacherSetScheduledSessionOutcome(sessionId, data = {}) {
@@ -572,13 +565,10 @@ window.ClassroomAPI = (function () {
     }
 
     async function teacherActivateRecurrences(data = {}) {
-        const headers = await getHeaders();
-        const res = await fetch('/api/teacher/scheduler/activate-recurrences', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation('/api/teacher/scheduler/activate-recurrences', {
+            data,
+            prefix: 'teacher-activate-recurrences'
         });
-        return parseJsonResponse(res);
     }
 
     async function previewClassroomScheduleRegeneration(classId, data) {
@@ -596,17 +586,10 @@ window.ClassroomAPI = (function () {
     }
 
     async function regenerateClassroomSchedule(classId, data) {
-        const headers = await getHeaders();
-        const res = await fetch(`/api/admin/classrooms/${classId}/schedule/regenerate`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
+        return sendSchedulingMutation(`/api/admin/classrooms/${classId}/schedule/regenerate`, {
+            data,
+            prefix: 'admin-regenerate'
         });
-        if (!res.ok) {
-            const json = await res.json().catch(() => null);
-            throw new Error(json?.message || `HTTP Error: ${res.status}`);
-        }
-        return res.json();
     }
 
     async function openScheduledAttendanceSession(scheduledSessionId) {
@@ -713,6 +696,7 @@ window.ClassroomAPI = (function () {
         endLiveSession,
         saveAttendanceRecords,
         fetchAttendanceSummary,
+        createSchedulingOperationId,
         fetchSchedulerWorkspace,
         fetchTeacherSchedulerWorkspace,
         updateClassroomScheduleConfig,

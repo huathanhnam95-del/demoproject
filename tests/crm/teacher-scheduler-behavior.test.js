@@ -5,7 +5,12 @@ const path = require('path');
 const vm = require('vm');
 
 const createTeacherSchedulerRouter = require('../../functions/src/routes/teacher/scheduler');
-const { CRM_CLASSROOMS, CRM_SCHEDULED_SESSIONS } = require('../../functions/src/crm/collections');
+const {
+    CRM_CLASSROOMS,
+    CRM_SCHEDULED_SESSIONS,
+    CRM_SCHEDULING_OPERATION_RECEIPTS,
+    CRM_TEACHER_SCHEDULE_LOCKS
+} = require('../../functions/src/crm/collections');
 
 function clone(value) {
     return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -58,6 +63,7 @@ async function invokeHandlers(handlers, req, res) {
 function createFakeDb(initialDocs = {}) {
     const docs = new Map(Object.entries(initialDocs).map(([key, value]) => [key, clone(value)]));
     let autoId = 0;
+    let transactionTail = Promise.resolve();
 
     function listCollectionDocs(collectionName) {
         return Array.from(docs.entries())
@@ -171,6 +177,33 @@ function createFakeDb(initialDocs = {}) {
                     }
                 }
             };
+        },
+        async runTransaction(callback) {
+            const run = transactionTail.then(async () => {
+                const operations = [];
+                const before = new Map([...docs].map(([key, value]) => [key, clone(value)]));
+                const tx = {
+                    get(ref) {
+                        if (operations.length) throw new Error('Transaction reads must precede writes.');
+                        return ref.get();
+                    },
+                    set(ref, payload, options = {}) {
+                        operations.push(() => ref.set(payload, options));
+                        return tx;
+                    }
+                };
+                try {
+                    const result = await callback(tx);
+                    for (const operation of operations) await operation();
+                    return result;
+                } catch (error) {
+                    docs.clear();
+                    for (const [key, value] of before) docs.set(key, value);
+                    throw error;
+                }
+            });
+            transactionTail = run.catch(() => {});
+            return run;
         }
     };
 }
@@ -582,8 +615,8 @@ async function testAdminCanManageAllTeacherSchedules() {
     assert.strictEqual(res._status, 200, `Admin cancelling failed: ${JSON.stringify(res._json)}`);
 }
 
-async function testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking() {
-    const batchSizes = [];
+async function testAdminRecurrenceActivationForSpecificTeacherAndAtomicReceipt() {
+    let transactionCount = 0;
     const db = createFakeDb({
         [`${CRM_CLASSROOMS}/class-target`]: {
             name: 'Target Teacher Class',
@@ -610,21 +643,10 @@ async function testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking()
         }
     });
 
-    const originalBatch = db.batch.bind(db);
-    db.batch = function () {
-        const batchInst = originalBatch();
-        const originalSet = batchInst.set.bind(batchInst);
-        let count = 0;
-        batchInst.set = function (ref, payload) {
-            count += 1;
-            return originalSet(ref, payload);
-        };
-        const originalCommit = batchInst.commit.bind(batchInst);
-        batchInst.commit = async function () {
-            batchSizes.push(count);
-            return originalCommit();
-        };
-        return batchInst;
+    const originalRunTransaction = db.runTransaction.bind(db);
+    db.runTransaction = async function (callback) {
+        transactionCount += 1;
+        return originalRunTransaction(callback);
     };
 
     const router = createTeacherSchedulerRouter({
@@ -663,10 +685,17 @@ async function testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking()
         assert.strictEqual(session.createdBy, 'admin-super', 'Created by should track admin caller');
     }
 
-    assert(batchSizes.length > 0, 'Should have used batch commits');
-    for (const size of batchSizes) {
-        assert(size <= 400, `Batch size ${size} exceeded maximum limit of 400`);
-    }
+    assert.strictEqual(transactionCount, 1, 'Activation must use one atomic scheduling transaction');
+    assert.strictEqual(
+        Array.from(db.docs.keys()).filter((key) => key.startsWith(`${CRM_SCHEDULING_OPERATION_RECEIPTS}/`)).length,
+        1,
+        'Activation must persist one durable operation receipt'
+    );
+    const teacherLock = Array.from(db.docs.entries())
+        .find(([key]) => key.startsWith(`${CRM_TEACHER_SCHEDULE_LOCKS}/`));
+    assert(teacherLock, 'Activation must update the target teacher lock/revision');
+    assert.strictEqual(teacherLock[1].teacherUid, 'teacher-target');
+    assert.strictEqual(teacherLock[1].revision, 1);
 }
 
 async function testNonAdminCannotSpoofTeacherUidInRecurrenceActivation() {
@@ -1179,7 +1208,7 @@ async function testWorkspaceLoadsClassroomsForGuestTeacherSessions() {
     await testTeacherOutcomeUpdatesContractCounting();
     await testTeacherApiErrorMessages();
     await testAdminCanManageAllTeacherSchedules();
-    await testAdminRecurrenceActivationForSpecificTeacherAndBatchChunking();
+    await testAdminRecurrenceActivationForSpecificTeacherAndAtomicReceipt();
     await testNonAdminCannotSpoofTeacherUidInRecurrenceActivation();
     await testNonAdminCannotSpoofTeacherUidInSessionOrPattern();
     await testTeacherRescheduleCancelOutcomeWithAllHealingAndAuth();

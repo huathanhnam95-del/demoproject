@@ -54,6 +54,7 @@ async function invokeHandlers(handlers, req, res) {
 function createFakeDb(initialDocs = {}) {
     const docs = new Map(Object.entries(initialDocs).map(([key, value]) => [key, clone(value)]));
     let autoId = 0;
+    let transactionTail = Promise.resolve();
 
     function listCollectionDocs(collectionName) {
         return Array.from(docs.entries())
@@ -142,6 +143,33 @@ function createFakeDb(initialDocs = {}) {
                     }
                 }
             };
+        },
+        async runTransaction(callback) {
+            const run = transactionTail.then(async () => {
+                const operations = [];
+                const before = new Map([...docs].map(([key, value]) => [key, clone(value)]));
+                const tx = {
+                    get(ref) {
+                        if (operations.length) throw new Error('Transaction reads must precede writes.');
+                        return ref.get();
+                    },
+                    set(ref, payload, options = {}) {
+                        operations.push(() => ref.set(payload, options));
+                        return tx;
+                    }
+                };
+                try {
+                    const result = await callback(tx);
+                    for (const operation of operations) await operation();
+                    return result;
+                } catch (error) {
+                    docs.clear();
+                    for (const [key, value] of before) docs.set(key, value);
+                    throw error;
+                }
+            });
+            transactionTail = run.catch(() => {});
+            return run;
         }
     };
 }

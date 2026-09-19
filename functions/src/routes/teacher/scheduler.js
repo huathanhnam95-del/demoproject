@@ -16,8 +16,12 @@ const {
     deriveContractCountState,
     findTeacherConflict,
     normalizeScheduledSession,
-    sessionsOverlapUtc
 } = require('../../crm/scheduling-service');
+const {
+    SchedulingOperationError,
+    executeSchedulingOperation,
+    normalizeSchedulingOperationId
+} = require('../../crm/scheduling-operation-service');
 
 function defaultSendSuccess(res, data = {}, message = 'OK') {
     return res.json({
@@ -163,6 +167,70 @@ function filterSessionsByRange(sessions, from, to) {
 
 function nextScheduleVersion(scheduleConfig) {
     return Math.max(Number(scheduleConfig?.scheduleVersion || 0) + 1, 1);
+}
+
+function requestOperationId(req, prefix) {
+    const bodyOperationId = cleanOptionalString(req.body?.operationId);
+    const headerOperationId = cleanOptionalString(req.get?.('Idempotency-Key') || req.headers?.['idempotency-key']);
+    if (bodyOperationId && headerOperationId && bodyOperationId !== headerOperationId) {
+        throw new SchedulingOperationError(400, 'OPERATION_ID_MISMATCH', 'Body operationId and Idempotency-Key must match.');
+    }
+    return normalizeSchedulingOperationId(bodyOperationId || headerOperationId, prefix);
+}
+
+function requestOperationPayload(req, identifiers = {}) {
+    const body = req.body && typeof req.body === 'object' ? { ...req.body } : {};
+    delete body.operationId;
+    return { ...body, ...identifiers };
+}
+
+function failSchedulingOperation(status, code, message, details = null) {
+    throw new SchedulingOperationError(status, code, message, details);
+}
+
+function sendSchedulingOperationFailure(sendError, res, error, fallbackCode, fallbackMessage) {
+    if (error instanceof SchedulingOperationError) {
+        return sendError(res, error.status, error.code, error.message, error.details);
+    }
+    return sendError(res, 500, fallbackCode, fallbackMessage, error?.message || error);
+}
+
+async function readClassSessionsInTransaction(tx, db, classId) {
+    const snap = await tx.get(db.collection(CRM_SCHEDULED_SESSIONS).where('classId', '==', classId));
+    return snap.docs.map((doc) => normalizeScheduledSession({ sessionId: doc.id, ...doc.data() }));
+}
+
+function stageClassroomScheduleState(tx, classroomRef, classroom, sessions, options = {}) {
+    const baseScheduleConfig = classroom?.scheduleConfig || null;
+    const scheduleConfig = options.scheduleConfigPatch
+        ? normalizeScheduleConfig(options.scheduleConfigPatch, {
+            existing: baseScheduleConfig,
+            preserveExistingTargetSessionCount: options.preserveExistingTargetSessionCount !== false
+        })
+        : baseScheduleConfig;
+    if (!scheduleConfig?.totalInstructionMinutes || !scheduleConfig?.sessionMinutes) return null;
+
+    const effectiveScheduleConfig = options.bumpVersion === false
+        ? scheduleConfig
+        : { ...scheduleConfig, scheduleVersion: nextScheduleVersion(scheduleConfig) };
+    const scheduleSummary = buildScheduleSummary({
+        totalInstructionMinutes: effectiveScheduleConfig.totalInstructionMinutes,
+        sessionMinutes: effectiveScheduleConfig.sessionMinutes,
+        targetSessionCount: effectiveScheduleConfig.targetSessionCount,
+        sessions
+    });
+    tx.set(classroomRef, {
+        ...(options.rootPatch || {}),
+        scheduleConfig: effectiveScheduleConfig,
+        scheduleSummary
+    }, { merge: true });
+    return { scheduleConfig: effectiveScheduleConfig, scheduleSummary };
+}
+
+function assertTeacherClassroomAccess(classroom, callerUid, isAdmin, message) {
+    if (!isAdmin && cleanOptionalString(classroom?.primaryTeacherUid) !== cleanOptionalString(callerUid)) {
+        failSchedulingOperation(403, 'FORBIDDEN', message);
+    }
 }
 
 async function listClassSessions(db, classId) {
@@ -316,8 +384,22 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
         ? deps.serverTimestamp
         : () => new Date();
     const writeAuditLog = typeof deps.writeAuditLog === 'function' ? deps.writeAuditLog : null;
+    const runSchedulingOperation = deps.executeSchedulingOperation || executeSchedulingOperation;
 
     const router = express.Router();
+
+    async function auditCommitted(outcome, entry, user) {
+        if (outcome.idempotentReplay || !writeAuditLog) return outcome;
+        try {
+            await writeAuditLog(entry, { user });
+            return outcome;
+        } catch (error) {
+            return {
+                ...outcome,
+                warnings: [...(Array.isArray(outcome.warnings) ? outcome.warnings : []), 'AUDIT_LOG_FAILED']
+            };
+        }
+    }
 
     const teacherAccessCache = new Map();
     const TEACHER_ACCESS_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -488,80 +570,96 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            const access = await loadTeacherClassroom(db, classId, callerUid, { isAdmin });
-            if (access.status === 'missing') {
-                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
-            }
-            if (access.status === 'forbidden') {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only schedule your own classrooms.');
-            }
-
-            const classroom = access.classroom;
-            const effectiveTeacherUid = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
-                ? cleanOptionalString(req.body.teacherUid)
-                : (cleanOptionalString(classroom.primaryTeacherUid) || callerUid);
-            const scheduleConfig = classroom.scheduleConfig || {};
-            const classSessions = await listClassSessions(db, classId);
-            const intent = extractLocalIntent(req.body || {}, scheduleConfig.timezone || null, scheduleConfig.sessionMinutes || null);
-            const preview = buildAddSessionPreview({
-                classId,
-                courseId: classroom.courseId || null,
-                teacherUid: effectiveTeacherUid,
-                totalInstructionMinutes: Number(scheduleConfig.totalInstructionMinutes || 0) || null,
-                targetSessionCount: Number(scheduleConfig.targetSessionCount || 0) || null,
-                sessionMinutes: Number(scheduleConfig.sessionMinutes || 0) || intent.durationMinutes || null,
-                timezone: intent.timezone,
-                targetLocalDate: intent.targetLocalDate,
-                targetLocalTime: intent.targetLocalTime,
-                durationMinutes: intent.durationMinutes,
-                addMode: 'once',
-                recurringCount: 1,
-                existingSessions: classSessions
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-add'),
+                actorUid: callerUid,
+                operationType: 'teacher.session.add',
+                payload: requestOperationPayload(req, { classId }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                    const classroomSnap = await tx.get(classroomRef);
+                    if (!classroomSnap.exists) failSchedulingOperation(404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
+                    const classroom = classroomSnap.data() || {};
+                    assertTeacherClassroomAccess(classroom, callerUid, isAdmin, 'You can only schedule your own classrooms.');
+                    const classSessions = await readClassSessionsInTransaction(tx, db, classId);
+                    const teacherUid = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                        ? cleanOptionalString(req.body.teacherUid)
+                        : (cleanOptionalString(classroom.primaryTeacherUid) || callerUid);
+                    return {
+                        teacherUids: [teacherUid],
+                        state: { classroomRef, classroom, classSessions, teacherUid }
+                    };
+                },
+                commit: async ({ tx, state, teacherSessionsByUid }) => {
+                    const scheduleConfig = state.classroom.scheduleConfig || {};
+                    const intent = extractLocalIntent(req.body || {}, scheduleConfig.timezone || null, scheduleConfig.sessionMinutes || null);
+                    const preview = buildAddSessionPreview({
+                        classId,
+                        courseId: state.classroom.courseId || null,
+                        teacherUid: state.teacherUid,
+                        totalInstructionMinutes: Number(scheduleConfig.totalInstructionMinutes || 0) || null,
+                        targetSessionCount: Number(scheduleConfig.targetSessionCount || 0) || null,
+                        sessionMinutes: Number(scheduleConfig.sessionMinutes || 0) || intent.durationMinutes || null,
+                        timezone: intent.timezone,
+                        targetLocalDate: intent.targetLocalDate,
+                        targetLocalTime: intent.targetLocalTime,
+                        durationMinutes: intent.durationMinutes,
+                        addMode: 'once',
+                        recurringCount: 1,
+                        existingSessions: state.classSessions
+                    });
+                    if (!preview.canCommit || !preview.validOccurrences.length) {
+                        failSchedulingOperation(409, 'NO_VALID_OCCURRENCES', 'No valid session could be created for this slot.', {
+                            blockedOccurrences: preview.blockedOccurrences || [],
+                            warnings: preview.warnings || []
+                        });
+                    }
+                    const occurrence = preview.validOccurrences[0];
+                    const conflict = findTeacherConflict(teacherSessionsByUid.get(state.teacherUid) || [], occurrence);
+                    if (conflict) {
+                        failSchedulingOperation(409, 'TEACHER_CONFLICT', 'Teacher conflict with an existing session.', {
+                            conflictSession: conflict
+                        });
+                    }
+                    const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
+                    const payload = {
+                        ...occurrence,
+                        teacherUid: state.teacherUid,
+                        createdAt: serverTimestamp(),
+                        createdBy: callerUid,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: callerUid
+                    };
+                    tx.set(ref, payload);
+                    const session = normalizeScheduledSession({ sessionId: ref.id, ...payload });
+                    const scheduleState = stageClassroomScheduleState(
+                        tx,
+                        state.classroomRef,
+                        state.classroom,
+                        state.classSessions.concat(session)
+                    );
+                    return {
+                        committedIds: [ref.id],
+                        result: {
+                            sessionId: ref.id,
+                            session,
+                            scheduleSummary: scheduleState?.scheduleSummary || null,
+                            scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+                        }
+                    };
+                }
             });
-
-            if (!preview.canCommit || !preview.validOccurrences.length) {
-                return sendError(res, 409, 'NO_VALID_OCCURRENCES', 'No valid session could be created for this slot.', {
-                    blockedOccurrences: preview.blockedOccurrences || [],
-                    warnings: preview.warnings || []
-                });
-            }
-
-            const occurrence = preview.validOccurrences[0];
-            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
-            const teacherConflict = findTeacherConflict(teacherSessions, occurrence);
-            if (teacherConflict) {
-                return sendError(res, 409, 'TEACHER_CONFLICT', 'Teacher conflict with an existing session.', {
-                    conflictSession: teacherConflict
-                });
-            }
-
-            const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
-            const payload = {
-                ...occurrence,
-                teacherUid: effectiveTeacherUid,
-                createdAt: serverTimestamp(),
-                createdBy: callerUid,
-                updatedAt: serverTimestamp(),
-                updatedBy: callerUid
-            };
-            await ref.set(payload);
-            const scheduleState = await syncClassroomScheduleState(db, classId, { bumpVersion: true });
-
-            await writeAuditLog?.({
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.session.add',
                 entityType: 'classroom',
                 entityId: classId,
-                metadata: { sessionId: ref.id, teacherUid: effectiveTeacherUid }
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                sessionId: ref.id,
-                session: normalizeScheduledSession({ sessionId: ref.id, ...payload }),
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, 'Session added.');
+                metadata: { sessionId: outcome.sessionId, teacherUid: outcome.session?.teacherUid || null }
+            }, req.user);
+            return sendSuccess(res, outcome, 'Session added.');
         } catch (error) {
-            return sendError(res, 500, 'TEACHER_ADD_SESSION_ERROR', 'Failed to add session.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_ADD_SESSION_ERROR', 'Failed to add session.');
         }
     });
 
@@ -574,19 +672,6 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             }
 
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            const access = await loadTeacherClassroom(db, classId, callerUid, { isAdmin });
-            if (access.status === 'missing') {
-                return sendError(res, 404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
-            }
-            if (access.status === 'forbidden') {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only schedule your own classrooms.');
-            }
-
-            const classroom = access.classroom;
-            const effectiveTeacherUid = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
-                ? cleanOptionalString(req.body.teacherUid)
-                : (cleanOptionalString(classroom.primaryTeacherUid) || callerUid);
-            const scheduleConfig = classroom.scheduleConfig || {};
             const weekdays = normalizeWeekdays(req.body?.weekdays);
             if (!weekdays.length) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Select at least one weekday.');
@@ -594,137 +679,147 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
 
             const from = cleanOptionalString(req.body?.from, startOfCurrentWeek());
             const to = cleanOptionalString(req.body?.to, endOfCurrentWeek(from));
-            const startTime = cleanOptionalString(req.body?.startTime) || cleanOptionalString(scheduleConfig.seedStartTime);
-            if (!startTime) {
-                return sendError(res, 400, 'VALIDATION_ERROR', 'startTime is required.');
-            }
             if (!from || !to || from > to) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Invalid scheduling range.');
             }
-
-            const classSessions = await listClassSessions(db, classId);
-            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
-            const workingClassSessions = [...classSessions];
-            const workingTeacherSessions = [...teacherSessions];
-            const preparedSessions = [];
-            const skippedOccurrences = [];
-            const durationMinutes = toPositiveInteger(req.body?.durationMinutes, Number(scheduleConfig.sessionMinutes || 0) || null);
-            const sessionMinutes = toPositiveInteger(scheduleConfig.sessionMinutes, durationMinutes || null) || durationMinutes;
-            const timezone = cleanOptionalString(req.body?.timezone, scheduleConfig.timezone || 'UTC');
-            const targetSessionCount = Number(scheduleConfig.targetSessionCount || 0) || null;
-            const totalInstructionMinutes = Number(scheduleConfig.totalInstructionMinutes || 0) || null;
-
-            let cursor = from;
-            while (cursor <= to) {
-                if (weekdays.includes(weekdayNumber(cursor))) {
-                    const preview = buildAddSessionPreview({
-                        classId,
-                        courseId: classroom.courseId || null,
-                        teacherUid: effectiveTeacherUid,
-                        totalInstructionMinutes,
-                        targetSessionCount,
-                        sessionMinutes,
-                        timezone,
-                        targetLocalDate: cursor,
-                        targetLocalTime: startTime,
-                        durationMinutes: sessionMinutes,
-                        addMode: 'once',
-                        recurringCount: 1,
-                        existingSessions: workingClassSessions
-                    });
-
-                    if (!preview.canCommit || !preview.validOccurrences.length) {
-                        const blocked = Array.isArray(preview.blockedOccurrences) && preview.blockedOccurrences.length
-                            ? preview.blockedOccurrences[0]
-                            : { reasonCode: 'blocked', reasonMessage: 'Slot is not available.' };
-                        skippedOccurrences.push({
-                            targetLocalDate: cursor,
-                            targetLocalTime: startTime,
-                            reasonCode: blocked.reasonCode || 'blocked',
-                            reasonMessage: blocked.reasonMessage || 'Slot is not available.'
-                        });
-                    } else {
-                        const occurrence = preview.validOccurrences[0];
-                        const conflict = findTeacherConflict(workingTeacherSessions, occurrence);
-                        if (conflict) {
-                            skippedOccurrences.push({
-                                targetLocalDate: occurrence.scheduledLocalDate,
-                                targetLocalTime: occurrence.scheduledLocalTime,
-                                reasonCode: 'teacher_conflict',
-                                reasonMessage: `Teacher conflict with session ${conflict.sessionId || ''}.`.trim()
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-add-multi'),
+                actorUid: callerUid,
+                operationType: 'teacher.session.add_multi',
+                payload: requestOperationPayload(req, { classId }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                    const classroomSnap = await tx.get(classroomRef);
+                    if (!classroomSnap.exists) failSchedulingOperation(404, 'CLASSROOM_NOT_FOUND', 'Classroom not found.');
+                    const classroom = classroomSnap.data() || {};
+                    assertTeacherClassroomAccess(classroom, callerUid, isAdmin, 'You can only schedule your own classrooms.');
+                    const classSessions = await readClassSessionsInTransaction(tx, db, classId);
+                    const teacherUid = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                        ? cleanOptionalString(req.body.teacherUid)
+                        : (cleanOptionalString(classroom.primaryTeacherUid) || callerUid);
+                    return {
+                        teacherUids: [teacherUid],
+                        state: { classroomRef, classroom, classSessions, teacherUid }
+                    };
+                },
+                commit: async ({ tx, state, teacherSessionsByUid }) => {
+                    const scheduleConfig = state.classroom.scheduleConfig || {};
+                    const startTime = cleanOptionalString(req.body?.startTime) || cleanOptionalString(scheduleConfig.seedStartTime);
+                    if (!startTime) failSchedulingOperation(400, 'VALIDATION_ERROR', 'startTime is required.');
+                    const durationMinutes = toPositiveInteger(req.body?.durationMinutes, Number(scheduleConfig.sessionMinutes || 0) || null);
+                    const sessionMinutes = toPositiveInteger(scheduleConfig.sessionMinutes, durationMinutes || null) || durationMinutes;
+                    const timezone = cleanOptionalString(req.body?.timezone, scheduleConfig.timezone || 'UTC');
+                    const targetSessionCount = Number(scheduleConfig.targetSessionCount || 0) || null;
+                    const totalInstructionMinutes = Number(scheduleConfig.totalInstructionMinutes || 0) || null;
+                    const workingClassSessions = [...state.classSessions];
+                    const workingTeacherSessions = [...(teacherSessionsByUid.get(state.teacherUid) || [])];
+                    const preparedSessions = [];
+                    const skippedOccurrences = [];
+                    let cursor = from;
+                    while (cursor <= to) {
+                        if (weekdays.includes(weekdayNumber(cursor))) {
+                            const preview = buildAddSessionPreview({
+                                classId,
+                                courseId: state.classroom.courseId || null,
+                                teacherUid: state.teacherUid,
+                                totalInstructionMinutes,
+                                targetSessionCount,
+                                sessionMinutes,
+                                timezone,
+                                targetLocalDate: cursor,
+                                targetLocalTime: startTime,
+                                durationMinutes: sessionMinutes,
+                                addMode: 'once',
+                                recurringCount: 1,
+                                existingSessions: workingClassSessions
                             });
-                        } else {
-                            preparedSessions.push(occurrence);
-                            workingClassSessions.push(occurrence);
-                            workingTeacherSessions.push(occurrence);
+                            if (!preview.canCommit || !preview.validOccurrences.length) {
+                                const blocked = preview.blockedOccurrences?.[0] || { reasonCode: 'blocked', reasonMessage: 'Slot is not available.' };
+                                skippedOccurrences.push({
+                                    targetLocalDate: cursor,
+                                    targetLocalTime: startTime,
+                                    reasonCode: blocked.reasonCode || 'blocked',
+                                    reasonMessage: blocked.reasonMessage || 'Slot is not available.'
+                                });
+                            } else {
+                                const occurrence = preview.validOccurrences[0];
+                                const conflict = findTeacherConflict(workingTeacherSessions, occurrence);
+                                if (conflict) {
+                                    skippedOccurrences.push({
+                                        targetLocalDate: occurrence.scheduledLocalDate,
+                                        targetLocalTime: occurrence.scheduledLocalTime,
+                                        reasonCode: 'teacher_conflict',
+                                        reasonMessage: `Teacher conflict with session ${conflict.sessionId || ''}.`.trim()
+                                    });
+                                } else {
+                                    preparedSessions.push(occurrence);
+                                    workingClassSessions.push(occurrence);
+                                    workingTeacherSessions.push(occurrence);
+                                }
+                            }
                         }
+                        cursor = addDays(cursor, 1);
                     }
-                }
-                cursor = addDays(cursor, 1);
-            }
-
-            if (!preparedSessions.length) {
-                return sendError(res, 409, 'NO_VALID_OCCURRENCES', 'No valid sessions could be created for the selected week.', {
-                    skippedOccurrences
-                });
-            }
-
-            const createdSessions = [];
-            if (typeof db.batch === 'function') {
-                const batch = db.batch();
-                preparedSessions.forEach((session) => {
-                    const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
-                    const payload = {
-                        ...session,
-                        teacherUid: effectiveTeacherUid,
-                        createdAt: serverTimestamp(),
-                        createdBy: callerUid,
-                        updatedAt: serverTimestamp(),
-                        updatedBy: callerUid
+                    if (!preparedSessions.length) {
+                        failSchedulingOperation(409, 'NO_VALID_OCCURRENCES', 'No valid sessions could be created for the selected week.', {
+                            skippedOccurrences
+                        });
+                    }
+                    if (preparedSessions.length + 3 > 495) {
+                        failSchedulingOperation(400, 'TOO_MANY_SCHEDULE_WRITES', 'Multi-session creation is too large for one atomic operation. Narrow the date range.');
+                    }
+                    const createdSessions = preparedSessions.map((session) => {
+                        const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
+                        const payload = {
+                            ...session,
+                            teacherUid: state.teacherUid,
+                            createdAt: serverTimestamp(),
+                            createdBy: callerUid,
+                            updatedAt: serverTimestamp(),
+                            updatedBy: callerUid
+                        };
+                        tx.set(ref, payload);
+                        return { sessionId: ref.id, ...normalizeScheduledSession(payload) };
+                    });
+                    const scheduleState = stageClassroomScheduleState(
+                        tx,
+                        state.classroomRef,
+                        state.classroom,
+                        state.classSessions.concat(createdSessions),
+                        {
+                            scheduleConfigPatch: {
+                                ...scheduleConfig,
+                                seedWeekdays: weekdays,
+                                seedStartTime: startTime
+                            }
+                        }
+                    );
+                    return {
+                        committedIds: createdSessions.map((session) => session.sessionId),
+                        result: {
+                            createdSessions,
+                            skippedOccurrences,
+                            scheduleSummary: scheduleState?.scheduleSummary || null,
+                            scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+                        }
                     };
-                    createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
-                    batch.set(ref, payload);
-                });
-                await batch.commit();
-            } else {
-                for (const session of preparedSessions) {
-                    const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
-                    const payload = {
-                        ...session,
-                        teacherUid: effectiveTeacherUid,
-                        createdAt: serverTimestamp(),
-                        createdBy: callerUid,
-                        updatedAt: serverTimestamp(),
-                        updatedBy: callerUid
-                    };
-                    await ref.set(payload);
-                    createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
-                }
-            }
-
-            const scheduleState = await syncClassroomScheduleState(db, classId, {
-                bumpVersion: true,
-                scheduleConfigPatch: {
-                    ...scheduleConfig,
-                    seedWeekdays: weekdays,
-                    seedStartTime: startTime
                 }
             });
-            await writeAuditLog?.({
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.session.add_multi',
                 entityType: 'classroom',
                 entityId: classId,
-                metadata: { createdCount: createdSessions.length, skippedCount: skippedOccurrences.length, teacherUid: effectiveTeacherUid }
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                createdSessions,
-                skippedOccurrences,
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, 'Sessions placed for this week.');
+                metadata: {
+                    createdCount: outcome.createdSessions?.length || 0,
+                    skippedCount: outcome.skippedOccurrences?.length || 0,
+                    teacherUid: outcome.createdSessions?.[0]?.teacherUid || null
+                }
+            }, req.user);
+            return sendSuccess(res, outcome, 'Sessions placed for this week.');
         } catch (error) {
-            return sendError(res, 500, 'TEACHER_ADD_MULTI_ERROR', 'Failed to place weekly sessions.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_ADD_MULTI_ERROR', 'Failed to place weekly sessions.');
         }
     });
 
@@ -736,89 +831,100 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
             }
 
-            const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
-            const sessionSnap = await sessionRef.get();
-            if (!sessionSnap.exists) {
-                return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
-            }
-            const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            if (!cleanOptionalString(existing.classId)) {
-                return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
-            }
-
-            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
-            if (access.status !== 'ok') {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
-            }
-
-            const sessionTeacher = cleanOptionalString(existing.teacherUid);
-            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
-            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
-            if (!isAdmin && !isAuthorizedTeacher) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only edit your own sessions.');
-            }
-            if (isLockedSession(existing)) {
-                return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
-            }
-
-            const expectedVersion = readExpectedScheduleVersion(req.body?.expectedScheduleVersion);
-            const currentVersion = Number(access.classroom?.scheduleConfig?.scheduleVersion || 0);
-            if (expectedVersion !== null && expectedVersion !== currentVersion) {
-                return sendError(res, 409, 'SCHEDULE_VERSION_MISMATCH', 'Schedule version mismatch. Refresh and try again.');
-            }
-
-            const intent = extractLocalIntent(req.body || {}, existing.timezone || null, existing.durationMinutes || null);
-            const nextWindow = buildScheduledSessionWriteData({}, {
-                targetLocalDate: intent.targetLocalDate,
-                targetLocalTime: intent.targetLocalTime,
-                timezone: intent.timezone,
-                durationMinutes: intent.durationMinutes || existing.durationMinutes || null
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-reschedule'),
+                actorUid: callerUid,
+                operationType: 'teacher.session.reschedule',
+                payload: requestOperationPayload(req, { sessionId }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
+                    const sessionSnap = await tx.get(sessionRef);
+                    if (!sessionSnap.exists) failSchedulingOperation(404, 'SESSION_NOT_FOUND', 'Session not found.');
+                    const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+                    const classId = cleanOptionalString(existing.classId);
+                    if (!classId) failSchedulingOperation(400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
+                    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                    const classroomSnap = await tx.get(classroomRef);
+                    if (!classroomSnap.exists) failSchedulingOperation(403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
+                    const classroom = classroomSnap.data() || {};
+                    assertTeacherClassroomAccess(classroom, callerUid, isAdmin, 'You can only edit sessions for your own classrooms.');
+                    const classroomPrimaryTeacher = cleanOptionalString(classroom.primaryTeacherUid);
+                    const sessionTeacher = cleanOptionalString(existing.teacherUid);
+                    const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+                    if (!isAdmin && !isAuthorizedTeacher) failSchedulingOperation(403, 'FORBIDDEN', 'You can only edit your own sessions.');
+                    if (isLockedSession(existing)) failSchedulingOperation(409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
+                    const expectedVersion = readExpectedScheduleVersion(req.body?.expectedScheduleVersion);
+                    const currentVersion = Number(classroom.scheduleConfig?.scheduleVersion || 0);
+                    if (expectedVersion !== null && expectedVersion !== currentVersion) {
+                        failSchedulingOperation(409, 'SCHEDULE_VERSION_MISMATCH', 'Schedule version mismatch. Refresh and try again.');
+                    }
+                    const requestedTeacher = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                        ? cleanOptionalString(req.body.teacherUid)
+                        : null;
+                    const teacherUid = requestedTeacher
+                        || ((sessionTeacher && sessionTeacher !== 'all') ? sessionTeacher : null)
+                        || (classroomPrimaryTeacher || callerUid);
+                    const classSessions = await readClassSessionsInTransaction(tx, db, classId);
+                    return {
+                        teacherUids: [sessionTeacher, teacherUid],
+                        state: { sessionRef, existing, classId, classroomRef, classroom, classSessions, teacherUid }
+                    };
+                },
+                commit: async ({ tx, state, teacherSessionsByUid }) => {
+                    const intent = extractLocalIntent(req.body || {}, state.existing.timezone || null, state.existing.durationMinutes || null);
+                    const nextWindow = buildScheduledSessionWriteData({}, {
+                        targetLocalDate: intent.targetLocalDate,
+                        targetLocalTime: intent.targetLocalTime,
+                        timezone: intent.timezone,
+                        durationMinutes: intent.durationMinutes || state.existing.durationMinutes || null
+                    });
+                    const next = {
+                        ...state.existing,
+                        ...nextWindow,
+                        teacherUid: state.teacherUid,
+                        durationMinutes: intent.durationMinutes || state.existing.durationMinutes || null,
+                        timezone: intent.timezone || state.existing.timezone || null,
+                        version: Number(state.existing.version || 1) + 1,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: callerUid
+                    };
+                    const conflict = findTeacherConflict(
+                        teacherSessionsByUid.get(state.teacherUid) || [],
+                        next,
+                        [sessionId]
+                    );
+                    if (conflict) {
+                        failSchedulingOperation(409, 'TEACHER_CONFLICT', 'Teacher conflict with an existing session.', {
+                            conflictSession: conflict
+                        });
+                    }
+                    tx.set(state.sessionRef, next, { merge: true });
+                    const postSessions = state.classSessions.map((session) => session.sessionId === sessionId ? normalizeScheduledSession(next) : session);
+                    const scheduleState = stageClassroomScheduleState(tx, state.classroomRef, state.classroom, postSessions);
+                    return {
+                        committedIds: [sessionId],
+                        result: {
+                            sessionId,
+                            classId: state.classId,
+                            teacherUid: state.teacherUid,
+                            scheduleSummary: scheduleState?.scheduleSummary || null,
+                            scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+                        }
+                    };
+                }
             });
-
-            const requestedTeacher = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
-                ? cleanOptionalString(req.body.teacherUid)
-                : null;
-            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
-            const effectiveTeacherUid = requestedTeacher
-                || ((rawExistingTeacher && rawExistingTeacher !== 'all') ? rawExistingTeacher : null)
-                || (classroomPrimaryTeacher || callerUid);
-
-            const next = {
-                ...existing,
-                ...nextWindow,
-                teacherUid: effectiveTeacherUid,
-                durationMinutes: intent.durationMinutes || existing.durationMinutes || null,
-                timezone: intent.timezone || existing.timezone || null,
-                version: Number(existing.version || 1) + 1,
-                updatedAt: serverTimestamp(),
-                updatedBy: callerUid
-            };
-
-            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
-            const teacherConflict = findTeacherConflict(teacherSessions, next, [sessionId]);
-            if (teacherConflict) {
-                return sendError(res, 409, 'TEACHER_CONFLICT', 'Teacher conflict with an existing session.', {
-                    conflictSession: teacherConflict
-                });
-            }
-
-            await sessionRef.set(next, { merge: true });
-            const scheduleState = await syncClassroomScheduleState(db, cleanOptionalString(existing.classId), { bumpVersion: true });
-            await writeAuditLog?.({
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.session.reschedule',
                 entityType: 'scheduled_session',
                 entityId: sessionId,
-                metadata: { classId: existing.classId || null, teacherUid: effectiveTeacherUid }
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                sessionId,
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, 'Session rescheduled.');
+                metadata: { classId: outcome.classId || null, teacherUid: outcome.teacherUid || null }
+            }, req.user);
+            return sendSuccess(res, outcome, 'Session rescheduled.');
         } catch (error) {
-            return sendError(res, 500, 'TEACHER_RESCHEDULE_ERROR', 'Failed to reschedule session.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_RESCHEDULE_ERROR', 'Failed to reschedule session.');
         }
     });
 
@@ -829,82 +935,52 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             if (!callerUid || !sessionId) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
             }
-
-            const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
-            const sessionSnap = await sessionRef.get();
-            if (!sessionSnap.exists) {
-                return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
-            }
-            const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            const classId = cleanOptionalString(existing.classId);
-            if (!classId) {
-                return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
-            }
-
-            const access = await loadTeacherClassroom(db, classId, callerUid, { isAdmin });
-            if (access.status !== 'ok') {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
-            }
-
-            const sessionTeacher = cleanOptionalString(existing.teacherUid);
-            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
-            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
-            if (!isAdmin && !isAuthorizedTeacher) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only edit your own sessions.');
-            }
-            if (isLockedSession(existing)) {
-                return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
-            }
-
-            const expectedVersion = readExpectedScheduleVersion(req.body?.expectedScheduleVersion);
-            const currentVersion = Number(access.classroom?.scheduleConfig?.scheduleVersion || 0);
-            if (expectedVersion !== null && expectedVersion !== currentVersion) {
-                return sendError(res, 409, 'SCHEDULE_VERSION_MISMATCH', 'Schedule version mismatch. Refresh and try again.');
-            }
-
-            const intent = extractLocalIntent(req.body || {}, existing.timezone || null, existing.durationMinutes || null);
-            const requestedTeacher = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
-                ? cleanOptionalString(req.body.teacherUid)
-                : null;
-            const rawExistingTeacher = cleanOptionalString(existing.teacherUid);
-            const effectiveTeacherUid = requestedTeacher
-                || ((rawExistingTeacher && rawExistingTeacher !== 'all') ? rawExistingTeacher : null)
-                || (classroomPrimaryTeacher || callerUid);
-
             const dryRun = req.body?.dryRun === true;
             const allowPartial = req.body?.allowPartial === true;
-
-            const classSessions = await listClassSessions(db, classId);
-            const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
-
-            const plan = buildSeriesShiftPlan({
-                sessions: classSessions,
-                anchorSession: existing,
-                targetIntent: {
-                    targetLocalDate: intent.targetLocalDate,
-                    targetLocalTime: intent.targetLocalTime,
-                    durationMinutes: intent.durationMinutes,
-                    timezone: intent.timezone,
-                    teacherUid: effectiveTeacherUid
-                },
-                outsideSessions: teacherSessions,
-                allowPartial,
-                dryRun
-            });
-
-            if (plan.moved.length > 400) {
-                return sendError(res, 400, 'TOO_MANY_MOVES', 'Cannot move more than 400 sessions in a single operation.');
-            }
-
-            if (!dryRun && !plan.canCommit) {
-                return sendError(res, 409, 'SERIES_CONFLICT', 'Teacher conflict with one or more scheduled sessions.', {
-                    conflicts: plan.conflicts,
-                    plan
-                });
-            }
-
             if (dryRun) {
+                const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
+                const sessionSnap = await sessionRef.get();
+                if (!sessionSnap.exists) return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
+                const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+                const classId = cleanOptionalString(existing.classId);
+                if (!classId) return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
+                const access = await loadTeacherClassroom(db, classId, callerUid, { isAdmin });
+                if (access.status !== 'ok') return sendError(res, 403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
+                const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
+                const sessionTeacher = cleanOptionalString(existing.teacherUid);
+                const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+                if (!isAdmin && !isAuthorizedTeacher) return sendError(res, 403, 'FORBIDDEN', 'You can only edit your own sessions.');
+                if (isLockedSession(existing)) return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
+                const expectedVersion = readExpectedScheduleVersion(req.body?.expectedScheduleVersion);
+                const currentVersion = Number(access.classroom?.scheduleConfig?.scheduleVersion || 0);
+                if (expectedVersion !== null && expectedVersion !== currentVersion) {
+                    return sendError(res, 409, 'SCHEDULE_VERSION_MISMATCH', 'Schedule version mismatch. Refresh and try again.');
+                }
+                const intent = extractLocalIntent(req.body || {}, existing.timezone || null, existing.durationMinutes || null);
+                const requestedTeacher = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                    ? cleanOptionalString(req.body.teacherUid)
+                    : null;
+                const effectiveTeacherUid = requestedTeacher
+                    || ((sessionTeacher && sessionTeacher !== 'all') ? sessionTeacher : null)
+                    || (classroomPrimaryTeacher || callerUid);
+                const classSessions = await listClassSessions(db, classId);
+                const teacherSessions = await listTeacherScheduledSessions(db, effectiveTeacherUid);
+                const plan = buildSeriesShiftPlan({
+                    sessions: classSessions,
+                    anchorSession: existing,
+                    targetIntent: {
+                        targetLocalDate: intent.targetLocalDate,
+                        targetLocalTime: intent.targetLocalTime,
+                        durationMinutes: intent.durationMinutes,
+                        timezone: intent.timezone,
+                        teacherUid: effectiveTeacherUid
+                    },
+                    outsideSessions: teacherSessions,
+                    allowPartial,
+                    operationId: cleanOptionalString(req.body?.operationId),
+                    dryRun: true
+                });
                 return sendSuccess(res, {
                     ...plan,
                     scheduleSummary: access.classroom?.scheduleSummary || null,
@@ -912,65 +988,120 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 }, 'Dry run completed.');
             }
 
-            const batch = typeof db.batch === 'function' ? db.batch() : null;
-            for (const m of plan.moved) {
-                const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc(m.sessionId);
-                const prev = classSessions.find((s) => s.sessionId === m.sessionId) || existing;
-                const nextVersion = Number(prev.version || 1) + 1;
-                const patch = {
-                    ...m.patch,
-                    teacherUid: effectiveTeacherUid,
-                    durationMinutes: m.to.durationMinutes,
-                    timezone: m.to.timezone,
-                    version: nextVersion,
-                    updatedAt: serverTimestamp(),
-                    updatedBy: callerUid
-                };
-                if (batch) {
-                    batch.set(ref, patch, { merge: true });
-                } else {
-                    await ref.set(patch, { merge: true });
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-reschedule-series'),
+                actorUid: callerUid,
+                operationType: 'teacher.session.reschedule_series',
+                payload: requestOperationPayload(req, { sessionId }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
+                    const sessionSnap = await tx.get(sessionRef);
+                    if (!sessionSnap.exists) failSchedulingOperation(404, 'SESSION_NOT_FOUND', 'Session not found.');
+                    const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+                    const classId = cleanOptionalString(existing.classId);
+                    if (!classId) failSchedulingOperation(400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
+                    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                    const classroomSnap = await tx.get(classroomRef);
+                    if (!classroomSnap.exists) failSchedulingOperation(403, 'FORBIDDEN', 'You can only edit sessions for your own classrooms.');
+                    const classroom = classroomSnap.data() || {};
+                    assertTeacherClassroomAccess(classroom, callerUid, isAdmin, 'You can only edit sessions for your own classrooms.');
+                    const classroomPrimaryTeacher = cleanOptionalString(classroom.primaryTeacherUid);
+                    const sessionTeacher = cleanOptionalString(existing.teacherUid);
+                    const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+                    if (!isAdmin && !isAuthorizedTeacher) failSchedulingOperation(403, 'FORBIDDEN', 'You can only edit your own sessions.');
+                    if (isLockedSession(existing)) failSchedulingOperation(409, 'SESSION_LOCKED', 'Locked sessions cannot be rescheduled.');
+                    const expectedVersion = readExpectedScheduleVersion(req.body?.expectedScheduleVersion);
+                    const currentVersion = Number(classroom.scheduleConfig?.scheduleVersion || 0);
+                    if (expectedVersion !== null && expectedVersion !== currentVersion) {
+                        failSchedulingOperation(409, 'SCHEDULE_VERSION_MISMATCH', 'Schedule version mismatch. Refresh and try again.');
+                    }
+                    const requestedTeacher = (isAdmin && cleanOptionalString(req.body?.teacherUid) && cleanOptionalString(req.body?.teacherUid) !== 'all')
+                        ? cleanOptionalString(req.body.teacherUid)
+                        : null;
+                    const teacherUid = requestedTeacher
+                        || ((sessionTeacher && sessionTeacher !== 'all') ? sessionTeacher : null)
+                        || (classroomPrimaryTeacher || callerUid);
+                    const classSessions = await readClassSessionsInTransaction(tx, db, classId);
+                    return {
+                        teacherUids: [teacherUid, ...classSessions.map((session) => session.teacherUid)],
+                        state: { classroomRef, classroom, classId, existing, classSessions, teacherUid }
+                    };
+                },
+                commit: async ({ tx, state, teacherUids, teacherSessionsByUid, operationId }) => {
+                    const intent = extractLocalIntent(req.body || {}, state.existing.timezone || null, state.existing.durationMinutes || null);
+                    const plan = buildSeriesShiftPlan({
+                        sessions: state.classSessions,
+                        anchorSession: state.existing,
+                        targetIntent: {
+                            targetLocalDate: intent.targetLocalDate,
+                            targetLocalTime: intent.targetLocalTime,
+                            durationMinutes: intent.durationMinutes,
+                            timezone: intent.timezone,
+                            teacherUid: state.teacherUid
+                        },
+                        outsideSessions: teacherSessionsByUid.get(state.teacherUid) || [],
+                        allowPartial,
+                        operationId,
+                        dryRun: false
+                    });
+                    if (!plan.canCommit) {
+                        failSchedulingOperation(409, 'SERIES_CONFLICT', 'Teacher conflict with one or more scheduled sessions.', {
+                            conflicts: plan.conflicts,
+                            plan
+                        });
+                    }
+                    if (plan.moved.length + teacherUids.length + 2 > 495) {
+                        failSchedulingOperation(400, 'TOO_MANY_SCHEDULE_WRITES', 'Series reschedule is too large for one atomic operation. Narrow the series selection.');
+                    }
+                    const patches = new Map();
+                    for (const moved of plan.moved) {
+                        const previous = state.classSessions.find((session) => session.sessionId === moved.sessionId) || state.existing;
+                        const patch = {
+                            ...moved.patch,
+                            teacherUid: state.teacherUid,
+                            durationMinutes: moved.to.durationMinutes,
+                            timezone: moved.to.timezone,
+                            version: Number(previous.version || 1) + 1,
+                            updatedAt: serverTimestamp(),
+                            updatedBy: callerUid
+                        };
+                        patches.set(moved.sessionId, patch);
+                        tx.set(db.collection(CRM_SCHEDULED_SESSIONS).doc(moved.sessionId), patch, { merge: true });
+                    }
+                    const postMoveSessions = state.classSessions.map((session) => patches.has(session.sessionId)
+                        ? normalizeScheduledSession({ ...session, ...patches.get(session.sessionId) })
+                        : session);
+                    const scheduleState = stageClassroomScheduleState(tx, state.classroomRef, state.classroom, postMoveSessions);
+                    return {
+                        committedIds: plan.moved.map((moved) => moved.sessionId),
+                        result: {
+                            ...plan,
+                            teacherUid: state.teacherUid,
+                            scheduleSummary: scheduleState?.scheduleSummary || null,
+                            scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+                        }
+                    };
                 }
-            }
-            if (batch) {
-                await batch.commit();
-            }
-
-            const movedMap = new Map(plan.moved.map((m) => [m.sessionId, m.patch]));
-            const postMoveSessions = classSessions.map((s) => {
-                if (movedMap.has(s.sessionId)) {
-                    return normalizeScheduledSession({ ...s, ...movedMap.get(s.sessionId) });
-                }
-                return s;
             });
-
-            const scheduleState = await syncClassroomScheduleState(db, classId, {
-                bumpVersion: true,
-                sessions: postMoveSessions
-            });
-
-            await writeAuditLog?.({
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.session.reschedule_series',
                 entityType: 'scheduled_session',
                 entityId: sessionId,
                 metadata: {
-                    classId,
-                    teacherUid: effectiveTeacherUid,
-                    movedCount: plan.moved.length,
-                    operationId: plan.operationId
+                    classId: outcome.classId || null,
+                    teacherUid: outcome.teacherUid || null,
+                    movedCount: outcome.moved?.length || 0,
+                    operationId: outcome.operationId
                 }
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                ...plan,
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, `Moved ${plan.moved.length} session(s).`);
+            }, req.user);
+            return sendSuccess(res, outcome, `Moved ${outcome.moved?.length || 0} session(s).`);
         } catch (error) {
             if (error?.code === 'TOO_MANY_MOVES' || error?.message?.includes('more than 400')) {
                 return sendError(res, 400, 'TOO_MANY_MOVES', 'Cannot move more than 400 sessions in a single operation.');
             }
-            return sendError(res, 500, 'TEACHER_RESCHEDULE_SERIES_ERROR', 'Failed to reschedule series.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_RESCHEDULE_SERIES_ERROR', 'Failed to reschedule series.');
         }
     });
 
@@ -982,55 +1113,70 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                 return sendError(res, 400, 'VALIDATION_ERROR', 'Missing teacher or session identifier.');
             }
 
-            const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
-            const sessionSnap = await sessionRef.get();
-            if (!sessionSnap.exists) {
-                return sendError(res, 404, 'SESSION_NOT_FOUND', 'Session not found.');
-            }
-            const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
             const isAdmin = req.teacherAccess?.isAdmin === true;
-            if (!cleanOptionalString(existing.classId)) {
-                return sendError(res, 400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
-            }
-
-            const access = await loadTeacherClassroom(db, cleanOptionalString(existing.classId), callerUid, { isAdmin });
-            if (access.status !== 'ok') {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only cancel sessions for your own classrooms.');
-            }
-
-            const sessionTeacher = cleanOptionalString(existing.teacherUid);
-            const classroomPrimaryTeacher = cleanOptionalString(access.classroom?.primaryTeacherUid);
-            const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
-            if (!isAdmin && !isAuthorizedTeacher) {
-                return sendError(res, 403, 'FORBIDDEN', 'You can only cancel your own sessions.');
-            }
-            if (isLockedSession(existing)) {
-                return sendError(res, 409, 'SESSION_LOCKED', 'Locked sessions cannot be cancelled.');
-            }
-
-            await sessionRef.set({
-                status: 'cancelled',
-                contractCountState: 'does_not_count',
-                version: Number(existing.version || 1) + 1,
-                updatedAt: serverTimestamp(),
-                updatedBy: callerUid
-            }, { merge: true });
-            const scheduleState = await syncClassroomScheduleState(db, cleanOptionalString(existing.classId), { bumpVersion: true });
-
-            await writeAuditLog?.({
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-cancel'),
+                actorUid: callerUid,
+                operationType: 'teacher.session.cancel',
+                payload: requestOperationPayload(req, { sessionId }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const sessionRef = db.collection(CRM_SCHEDULED_SESSIONS).doc(sessionId);
+                    const sessionSnap = await tx.get(sessionRef);
+                    if (!sessionSnap.exists) failSchedulingOperation(404, 'SESSION_NOT_FOUND', 'Session not found.');
+                    const existing = normalizeScheduledSession({ sessionId, ...(sessionSnap.data() || {}) });
+                    const classId = cleanOptionalString(existing.classId);
+                    if (!classId) failSchedulingOperation(400, 'INVALID_SESSION', 'Session is missing class ownership metadata.');
+                    const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                    const classroomSnap = await tx.get(classroomRef);
+                    if (!classroomSnap.exists) failSchedulingOperation(403, 'FORBIDDEN', 'You can only cancel sessions for your own classrooms.');
+                    const classroom = classroomSnap.data() || {};
+                    assertTeacherClassroomAccess(classroom, callerUid, isAdmin, 'You can only cancel sessions for your own classrooms.');
+                    const sessionTeacher = cleanOptionalString(existing.teacherUid);
+                    const classroomPrimaryTeacher = cleanOptionalString(classroom.primaryTeacherUid);
+                    const isAuthorizedTeacher = sessionTeacher === callerUid || (sessionTeacher === 'all' && classroomPrimaryTeacher === callerUid);
+                    if (!isAdmin && !isAuthorizedTeacher) failSchedulingOperation(403, 'FORBIDDEN', 'You can only cancel your own sessions.');
+                    if (isLockedSession(existing)) failSchedulingOperation(409, 'SESSION_LOCKED', 'Locked sessions cannot be cancelled.');
+                    const classSessions = await readClassSessionsInTransaction(tx, db, classId);
+                    return {
+                        teacherUids: [sessionTeacher === 'all' ? classroomPrimaryTeacher : sessionTeacher],
+                        state: { sessionRef, existing, classId, classroomRef, classroom, classSessions }
+                    };
+                },
+                commit: async ({ tx, state }) => {
+                    const patch = {
+                        status: 'cancelled',
+                        contractCountState: 'does_not_count',
+                        version: Number(state.existing.version || 1) + 1,
+                        updatedAt: serverTimestamp(),
+                        updatedBy: callerUid
+                    };
+                    tx.set(state.sessionRef, patch, { merge: true });
+                    const postSessions = state.classSessions.map((session) => session.sessionId === sessionId
+                        ? normalizeScheduledSession({ ...session, ...patch })
+                        : session);
+                    const scheduleState = stageClassroomScheduleState(tx, state.classroomRef, state.classroom, postSessions);
+                    return {
+                        committedIds: [sessionId],
+                        result: {
+                            sessionId,
+                            classId: state.classId,
+                            scheduleSummary: scheduleState?.scheduleSummary || null,
+                            scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
+                        }
+                    };
+                }
+            });
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.session.cancel',
                 entityType: 'scheduled_session',
                 entityId: sessionId,
-                metadata: { classId: existing.classId || null }
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                sessionId,
-                scheduleSummary: scheduleState?.scheduleSummary || null,
-                scheduleVersion: scheduleState?.scheduleConfig?.scheduleVersion || null
-            }, 'Session cancelled.');
+                metadata: { classId: outcome.classId || null }
+            }, req.user);
+            return sendSuccess(res, outcome, 'Session cancelled.');
         } catch (error) {
-            return sendError(res, 500, 'TEACHER_CANCEL_ERROR', 'Failed to cancel session.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_CANCEL_ERROR', 'Failed to cancel session.');
         }
     });
 
@@ -1143,150 +1289,113 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             const expectedVersions = req.body?.expectedScheduleVersions && typeof req.body.expectedScheduleVersions === 'object'
                 ? req.body.expectedScheduleVersions
                 : {};
-
-            const classrooms = await listTeacherClassrooms(db, teacherUid);
-            const teacherSessions = await listTeacherScheduledSessions(db, teacherUid);
-            const workingTeacherSessions = [...teacherSessions];
-            const details = [];
-
-            for (const entry of classrooms) {
-                const classId = entry.id;
-                const classroom = entry.data || {};
-                const scheduleConfig = classroom.scheduleConfig || {};
-                const className = cleanOptionalString(classroom.name, classId);
-                const currentScheduleVersion = Number(scheduleConfig.scheduleVersion || 1) || 1;
-                const expectedScheduleVersion = readExpectedScheduleVersion(expectedVersions[classId]);
-                if (expectedScheduleVersion && expectedScheduleVersion !== currentScheduleVersion) {
-                    details.push({
-                        classId,
-                        className,
-                        status: 'blocked',
-                        createdCount: 0,
-                        blockedCount: 1,
-                        reason: 'stale_schedule_version',
-                        message: 'Schedule version changed. Refresh before activating recurrences.'
-                    });
-                    continue;
-                }
-
-                const sessionMinutes = toPositiveInteger(scheduleConfig.sessionMinutes, null);
-                const totalInstructionMinutes = toPositiveInteger(scheduleConfig.totalInstructionMinutes, null);
-                const targetSessionCount = toPositiveInteger(scheduleConfig.targetSessionCount, null);
-                const timezone = cleanOptionalString(scheduleConfig.timezone, 'UTC');
-                const startTime = cleanOptionalString(scheduleConfig.seedStartTime);
-                const weekdays = normalizeWeekdays(scheduleConfig.seedWeekdays);
-                if (!sessionMinutes || !targetSessionCount || !startTime || !weekdays.length) {
-                    details.push({
-                        classId,
-                        className,
-                        status: 'blocked',
-                        createdCount: 0,
-                        blockedCount: 1,
-                        reason: 'missing_pattern',
-                        message: 'Missing weekly pattern. Set weekdays and start time first.'
-                    });
-                    continue;
-                }
-
-                const classSessions = await listClassSessions(db, classId);
-                const contractedAssignedCount = classSessions
-                    .filter((session) =>
-                        session.unitType === 'contracted'
-                        && String(session.status || 'scheduled') !== 'cancelled'
-                        && String(session.contractCountState || 'counts') !== 'does_not_count'
-                    )
-                    .length;
-                const remaining = Math.max(targetSessionCount - contractedAssignedCount, 0);
-                if (remaining <= 0) {
-                    details.push({
-                        classId,
-                        className,
-                        status: 'blocked',
-                        createdCount: 0,
-                        blockedCount: 0,
-                        reason: 'already_fulfilled',
-                        message: 'No remaining contracted sessions to activate.'
-                    });
-                    continue;
-                }
-
-                const workingClassSessions = [...classSessions];
-                const preparedSessions = [];
-                const blockedOccurrences = [];
-                let cursorDate = activationStartDate;
-                let searchSteps = 0;
-                const maxSearchSteps = 540;
-
-                while (preparedSessions.length < remaining && searchSteps < maxSearchSteps) {
-                    if (weekdays.includes(weekdayNumber(cursorDate))) {
-                        const preview = buildAddSessionPreview({
-                            classId,
-                            courseId: classroom.courseId || null,
-                            teacherUid,
-                            totalInstructionMinutes,
-                            targetSessionCount,
-                            sessionMinutes,
-                            timezone,
-                            targetLocalDate: cursorDate,
-                            targetLocalTime: startTime,
-                            durationMinutes: sessionMinutes,
-                            addMode: 'once',
-                            recurringCount: 1,
-                            existingSessions: workingClassSessions
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, 'teacher-activate-recurrences'),
+                actorUid: cleanOptionalString(req.user?.uid),
+                operationType: 'teacher.scheduler.activate_recurrences',
+                payload: requestOperationPayload(req, { teacherUid }),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    let query = db.collection(CRM_CLASSROOMS).where('primaryTeacherUid', '==', teacherUid);
+                    if (typeof query.limit === 'function') query = query.limit(200);
+                    const classroomSnap = await tx.get(query);
+                    const classrooms = [];
+                    for (const doc of classroomSnap.docs) {
+                        classrooms.push({
+                            id: doc.id,
+                            ref: doc.ref || db.collection(CRM_CLASSROOMS).doc(doc.id),
+                            data: doc.data() || {},
+                            sessions: await readClassSessionsInTransaction(tx, db, doc.id)
                         });
-
-                        if (!preview.canCommit || !preview.validOccurrences.length) {
-                            const blocked = Array.isArray(preview.blockedOccurrences) && preview.blockedOccurrences.length
-                                ? preview.blockedOccurrences[0]
-                                : { reasonCode: 'blocked', reasonMessage: 'Slot unavailable.' };
-                            blockedOccurrences.push({
-                                targetLocalDate: cursorDate,
-                                targetLocalTime: startTime,
-                                reasonCode: blocked.reasonCode || 'blocked',
-                                reasonMessage: blocked.reasonMessage || 'Slot unavailable.'
-                            });
-                        } else {
-                            const occurrence = preview.validOccurrences[0];
-                            const teacherConflict = findTeacherConflict(workingTeacherSessions, occurrence);
-                            if (teacherConflict) {
-                                blockedOccurrences.push({
-                                    targetLocalDate: occurrence.scheduledLocalDate,
-                                    targetLocalTime: occurrence.scheduledLocalTime,
-                                    reasonCode: 'teacher_conflict',
-                                    reasonMessage: `Teacher conflict with ${teacherConflict.sessionId || 'another session'}.`
-                                });
-                            } else {
-                                preparedSessions.push(occurrence);
-                                workingClassSessions.push(occurrence);
-                                workingTeacherSessions.push(occurrence);
-                            }
-                        }
                     }
-
-                    cursorDate = addDays(cursorDate, 1);
-                    searchSteps += 1;
-                }
-
-                if (!preparedSessions.length) {
-                    details.push({
-                        classId,
-                        className,
-                        status: 'blocked',
-                        createdCount: 0,
-                        blockedCount: blockedOccurrences.length,
-                        reason: 'no_open_slots',
-                        message: 'No conflict-free future slots found for this pattern.'
-                    });
-                    continue;
-                }
-
-                const createdSessions = [];
-                const BATCH_LIMIT = 400;
-                if (typeof db.batch === 'function') {
-                    for (let i = 0; i < preparedSessions.length; i += BATCH_LIMIT) {
-                        const chunk = preparedSessions.slice(i, i + BATCH_LIMIT);
-                        const batch = db.batch();
-                        chunk.forEach((session) => {
+                    return { teacherUids: [teacherUid], state: { classrooms } };
+                },
+                commit: async ({ tx, state, teacherSessionsByUid }) => {
+                    const workingTeacherSessions = [...(teacherSessionsByUid.get(teacherUid) || [])];
+                    const details = [];
+                    const committedIds = [];
+                    let writeCount = 2;
+                    for (const entry of state.classrooms) {
+                        const classId = entry.id;
+                        const classroom = entry.data || {};
+                        const scheduleConfig = classroom.scheduleConfig || {};
+                        const className = cleanOptionalString(classroom.name, classId);
+                        const currentScheduleVersion = Number(scheduleConfig.scheduleVersion || 1) || 1;
+                        const expectedScheduleVersion = readExpectedScheduleVersion(expectedVersions[classId]);
+                        if (expectedScheduleVersion && expectedScheduleVersion !== currentScheduleVersion) {
+                            details.push({ classId, className, status: 'blocked', createdCount: 0, blockedCount: 1, reason: 'stale_schedule_version', message: 'Schedule version changed. Refresh before activating recurrences.' });
+                            continue;
+                        }
+                        const sessionMinutes = toPositiveInteger(scheduleConfig.sessionMinutes, null);
+                        const totalInstructionMinutes = toPositiveInteger(scheduleConfig.totalInstructionMinutes, null);
+                        const targetSessionCount = toPositiveInteger(scheduleConfig.targetSessionCount, null);
+                        const timezone = cleanOptionalString(scheduleConfig.timezone, 'UTC');
+                        const startTime = cleanOptionalString(scheduleConfig.seedStartTime);
+                        const weekdays = normalizeWeekdays(scheduleConfig.seedWeekdays);
+                        if (!sessionMinutes || !targetSessionCount || !startTime || !weekdays.length) {
+                            details.push({ classId, className, status: 'blocked', createdCount: 0, blockedCount: 1, reason: 'missing_pattern', message: 'Missing weekly pattern. Set weekdays and start time first.' });
+                            continue;
+                        }
+                        const contractedAssignedCount = entry.sessions.filter((session) =>
+                            session.unitType === 'contracted'
+                            && String(session.status || 'scheduled') !== 'cancelled'
+                            && String(session.contractCountState || 'counts') !== 'does_not_count'
+                        ).length;
+                        const remaining = Math.max(targetSessionCount - contractedAssignedCount, 0);
+                        if (remaining <= 0) {
+                            details.push({ classId, className, status: 'blocked', createdCount: 0, blockedCount: 0, reason: 'already_fulfilled', message: 'No remaining contracted sessions to activate.' });
+                            continue;
+                        }
+                        const workingClassSessions = [...entry.sessions];
+                        const preparedSessions = [];
+                        const blockedOccurrences = [];
+                        let cursorDate = activationStartDate;
+                        let searchSteps = 0;
+                        while (preparedSessions.length < remaining && searchSteps < 540) {
+                            if (weekdays.includes(weekdayNumber(cursorDate))) {
+                                const preview = buildAddSessionPreview({
+                                    classId,
+                                    courseId: classroom.courseId || null,
+                                    teacherUid,
+                                    totalInstructionMinutes,
+                                    targetSessionCount,
+                                    sessionMinutes,
+                                    timezone,
+                                    targetLocalDate: cursorDate,
+                                    targetLocalTime: startTime,
+                                    durationMinutes: sessionMinutes,
+                                    addMode: 'once',
+                                    recurringCount: 1,
+                                    existingSessions: workingClassSessions
+                                });
+                                if (!preview.canCommit || !preview.validOccurrences.length) {
+                                    const blocked = preview.blockedOccurrences?.[0] || { reasonCode: 'blocked', reasonMessage: 'Slot unavailable.' };
+                                    blockedOccurrences.push({ targetLocalDate: cursorDate, targetLocalTime: startTime, reasonCode: blocked.reasonCode || 'blocked', reasonMessage: blocked.reasonMessage || 'Slot unavailable.' });
+                                } else {
+                                    const occurrence = preview.validOccurrences[0];
+                                    const conflict = findTeacherConflict(workingTeacherSessions, occurrence);
+                                    if (conflict) {
+                                        blockedOccurrences.push({ targetLocalDate: occurrence.scheduledLocalDate, targetLocalTime: occurrence.scheduledLocalTime, reasonCode: 'teacher_conflict', reasonMessage: `Teacher conflict with ${conflict.sessionId || 'another session'}.` });
+                                    } else {
+                                        preparedSessions.push(occurrence);
+                                        workingClassSessions.push(occurrence);
+                                        workingTeacherSessions.push(occurrence);
+                                    }
+                                }
+                            }
+                            cursorDate = addDays(cursorDate, 1);
+                            searchSteps += 1;
+                        }
+                        if (!preparedSessions.length) {
+                            details.push({ classId, className, status: 'blocked', createdCount: 0, blockedCount: blockedOccurrences.length, reason: 'no_open_slots', message: 'No conflict-free future slots found for this pattern.' });
+                            continue;
+                        }
+                        writeCount += preparedSessions.length + 1;
+                        if (writeCount > 495) {
+                            failSchedulingOperation(400, 'TOO_MANY_SCHEDULE_WRITES', 'Recurrence activation is too large for one atomic operation. Narrow the classroom selection.');
+                        }
+                        const createdSessions = preparedSessions.map((session) => {
                             const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
                             const payload = {
                                 ...session,
@@ -1296,67 +1405,41 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
                                 updatedAt: serverTimestamp(),
                                 updatedBy: cleanOptionalString(req.user?.uid) || teacherUid
                             };
-                            createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
-                            batch.set(ref, payload);
+                            tx.set(ref, payload);
+                            committedIds.push(ref.id);
+                            return { sessionId: ref.id, ...normalizeScheduledSession(payload) };
                         });
-                        await batch.commit();
+                        stageClassroomScheduleState(tx, entry.ref, classroom, entry.sessions.concat(createdSessions));
+                        details.push({
+                            classId,
+                            className,
+                            status: preparedSessions.length >= remaining ? 'success' : 'blocked',
+                            createdCount: createdSessions.length,
+                            blockedCount: blockedOccurrences.length,
+                            message: preparedSessions.length >= remaining ? 'Recurrences activated.' : 'Activated partially due to conflicts.'
+                        });
                     }
-                } else {
-                    for (const session of preparedSessions) {
-                        const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc();
-                        const payload = {
-                            ...session,
-                            teacherUid,
-                            createdAt: serverTimestamp(),
-                            createdBy: cleanOptionalString(req.user?.uid) || teacherUid,
-                            updatedAt: serverTimestamp(),
-                            updatedBy: cleanOptionalString(req.user?.uid) || teacherUid
-                        };
-                        if (typeof ref.set === 'function') {
-                            await ref.set(payload);
-                        }
-                        createdSessions.push({ sessionId: ref.id, ...normalizeScheduledSession(payload) });
-                    }
+                    const summary = {
+                        successCount: details.filter((entry) => entry.status === 'success').length,
+                        blockedCount: details.filter((entry) => entry.status === 'blocked').length,
+                        errorCount: details.filter((entry) => entry.status === 'error').length
+                    };
+                    return { committedIds, result: { summary, details, from, to } };
                 }
-
-                await syncClassroomScheduleState(db, classId, { bumpVersion: true });
-                details.push({
-                    classId,
-                    className,
-                    status: preparedSessions.length >= remaining ? 'success' : 'blocked',
-                    createdCount: createdSessions.length,
-                    blockedCount: blockedOccurrences.length,
-                    message: preparedSessions.length >= remaining
-                        ? 'Recurrences activated.'
-                        : 'Activated partially due to conflicts.'
-                });
-            }
-
-            const summary = {
-                successCount: details.filter((entry) => entry.status === 'success').length,
-                blockedCount: details.filter((entry) => entry.status === 'blocked').length,
-                errorCount: details.filter((entry) => entry.status === 'error').length
-            };
-
-            await writeAuditLog?.({
+            });
+            outcome = await auditCommitted(outcome, {
                 action: 'teacher.scheduler.activate_recurrences',
                 entityType: 'teacher',
                 entityId: teacherUid,
                 metadata: {
                     from,
                     to,
-                    summary
+                    summary: outcome.summary
                 }
-            }, { user: req.user });
-
-            return sendSuccess(res, {
-                summary,
-                details,
-                from,
-                to
-            }, 'Recurrence activation completed.');
+            }, req.user);
+            return sendSuccess(res, outcome, 'Recurrence activation completed.');
         } catch (error) {
-            return sendError(res, 500, 'TEACHER_ACTIVATE_RECURRENCES_ERROR', 'Failed to activate recurrences.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_ACTIVATE_RECURRENCES_ERROR', 'Failed to activate recurrences.');
         }
     });
 
@@ -1378,109 +1461,142 @@ module.exports = function createTeacherSchedulerRouter(rawDeps = {}) {
             const isAdmin = req.teacherAccess?.isAdmin === true;
             const dryRun = req.body?.dryRun === true;
             const undoOf = cleanOptionalString(req.body?.undoOf);
-
-            // Parallelize session doc reads
-            const uniqueSessionIds = Array.from(new Set(
-                moves.map((move) => cleanOptionalString(move?.sessionId)).filter(Boolean)
-            ));
-            const sessionSnaps = await Promise.all(
-                uniqueSessionIds.map((sid) => db.collection(CRM_SCHEDULED_SESSIONS).doc(sid).get())
-            );
-            const existingSessionsMap = new Map();
-            const classIdSet = new Set();
-            sessionSnaps.forEach((snap, idx) => {
-                const sid = uniqueSessionIds[idx];
-                if (snap.exists) {
-                    const norm = normalizeScheduledSession({ sessionId: sid, ...(snap.data() || {}) });
-                    existingSessionsMap.set(sid, norm);
-                    if (norm.classId) classIdSet.add(norm.classId);
-                }
-            });
-
-            // Parallelize classroom access checks memoised per classId
-            const uniqueClassIds = Array.from(classIdSet);
-            const accessResults = await Promise.all(
-                uniqueClassIds.map((cid) => loadTeacherClassroom(db, cid, callerUid, { isAdmin }))
-            );
-            const classroomAccessMap = new Map();
-            uniqueClassIds.forEach((cid, idx) => {
-                classroomAccessMap.set(cid, accessResults[idx].status === 'ok');
-            });
-
-            // Parallelize teacher schedule lookups for conflict checking
-            const teacherUids = Array.from(new Set(
-                Array.from(existingSessionsMap.values())
-                    .map((s) => s.teacherUid)
-                    .filter((tuid) => tuid && tuid !== 'all')
-            ));
-            const teacherSessionResults = await Promise.all(
-                teacherUids.map((tuid) => listTeacherScheduledSessions(db, tuid))
-            );
-            const outsideSessions = teacherSessionResults.flat();
-
-            const projection = buildBulkRescheduleProjection({
-                moves,
-                existingSessionsMap,
-                classroomAccessMap,
-                outsideSessions,
-                callerUid,
-                dryRun,
-                undoOf
-            });
-
-            if (!dryRun && projection.moved.length > 0) {
-                const batch = typeof db.batch === 'function' ? db.batch() : null;
-                for (const m of projection.moved) {
-                    const ref = db.collection(CRM_SCHEDULED_SESSIONS).doc(m.sessionId);
-                    const prev = existingSessionsMap.get(m.sessionId);
-                    const nextVersion = Number(prev?.version || 1) + 1;
-                    const patch = {
-                        ...m.patch,
-                        version: nextVersion,
-                        updatedAt: serverTimestamp(),
-                        updatedBy: callerUid
-                    };
-                    if (batch) {
-                        batch.set(ref, patch, { merge: true });
-                    } else {
-                        await ref.set(patch, { merge: true });
-                    }
-                }
-                if (batch) {
-                    await batch.commit();
-                }
-
-                const touchedClassIds = Array.from(new Set(projection.moved.map((m) => m.classId).filter(Boolean)));
-                const syncResults = await Promise.all(
-                    touchedClassIds.map((cid) => syncClassroomScheduleState(db, cid, { bumpVersion: true }))
-                );
-                const lastScheduleState = syncResults[syncResults.length - 1] || null;
-
-                await writeAuditLog?.({
-                    action: 'teacher.scheduler.bulk_reschedule',
-                    entityType: 'scheduled_session',
-                    entityId: projection.operationId,
-                    metadata: {
-                        movedCount: projection.moved.length,
-                        skippedCount: projection.skipped.length,
-                        undoOf
-                    }
-                }, { user: req.user });
-
+            if (dryRun) {
+                const uniqueSessionIds = Array.from(new Set(moves.map((move) => cleanOptionalString(move?.sessionId)).filter(Boolean)));
+                const sessionSnaps = await Promise.all(uniqueSessionIds.map((sid) => db.collection(CRM_SCHEDULED_SESSIONS).doc(sid).get()));
+                const existingSessionsMap = new Map();
+                const classIdSet = new Set();
+                sessionSnaps.forEach((snap, index) => {
+                    if (!snap.exists) return;
+                    const normalized = normalizeScheduledSession({ sessionId: uniqueSessionIds[index], ...(snap.data() || {}) });
+                    existingSessionsMap.set(uniqueSessionIds[index], normalized);
+                    if (normalized.classId) classIdSet.add(normalized.classId);
+                });
+                const uniqueClassIds = Array.from(classIdSet);
+                const accessResults = await Promise.all(uniqueClassIds.map((classId) => loadTeacherClassroom(db, classId, callerUid, { isAdmin })));
+                const classroomAccessMap = new Map(uniqueClassIds.map((classId, index) => [classId, accessResults[index].status === 'ok']));
+                const teacherUids = Array.from(new Set(Array.from(existingSessionsMap.values())
+                    .map((session) => session.teacherUid)
+                    .filter((teacherUid) => teacherUid && teacherUid !== 'all')));
+                const teacherSessionResults = await Promise.all(teacherUids.map((teacherUid) => listTeacherScheduledSessions(db, teacherUid)));
+                const projection = buildBulkRescheduleProjection({
+                    moves,
+                    existingSessionsMap,
+                    classroomAccessMap,
+                    outsideSessions: teacherSessionResults.flat(),
+                    callerUid,
+                    operationId: cleanOptionalString(req.body?.operationId),
+                    dryRun: true,
+                    undoOf
+                });
                 return sendSuccess(res, {
                     ...projection,
-                    scheduleSummary: lastScheduleState?.scheduleSummary || null,
-                    scheduleVersion: lastScheduleState?.scheduleConfig?.scheduleVersion || null
-                }, `Bulk rescheduled ${projection.moved.length} session(s).`);
+                    scheduleSummary: null,
+                    scheduleVersion: null
+                }, `Processed ${projection.moved.length} move(s).`);
             }
 
-            return sendSuccess(res, {
-                ...projection,
-                scheduleSummary: null,
-                scheduleVersion: null
-            }, `Processed ${projection.moved.length} move(s).`);
+            let outcome = await runSchedulingOperation({
+                db,
+                operationId: requestOperationId(req, undoOf ? 'teacher-undo' : 'teacher-bulk-reschedule'),
+                actorUid: callerUid,
+                operationType: 'teacher.scheduler.bulk_reschedule',
+                payload: requestOperationPayload(req),
+                serverTimestamp,
+                prepare: async ({ tx }) => {
+                    const uniqueSessionIds = Array.from(new Set(moves.map((move) => cleanOptionalString(move?.sessionId)).filter(Boolean)));
+                    const existingSessionsMap = new Map();
+                    const classIdSet = new Set();
+                    for (const sid of uniqueSessionIds) {
+                        const snap = await tx.get(db.collection(CRM_SCHEDULED_SESSIONS).doc(sid));
+                        if (!snap.exists) continue;
+                        const normalized = normalizeScheduledSession({ sessionId: sid, ...(snap.data() || {}) });
+                        existingSessionsMap.set(sid, normalized);
+                        if (normalized.classId) classIdSet.add(normalized.classId);
+                    }
+                    const classrooms = new Map();
+                    const classSessions = new Map();
+                    const classroomAccessMap = new Map();
+                    for (const classId of Array.from(classIdSet).sort()) {
+                        const classroomRef = db.collection(CRM_CLASSROOMS).doc(classId);
+                        const classroomSnap = await tx.get(classroomRef);
+                        const classroom = classroomSnap.exists ? (classroomSnap.data() || {}) : null;
+                        const allowed = !!classroom && (isAdmin || cleanOptionalString(classroom.primaryTeacherUid) === callerUid);
+                        classroomAccessMap.set(classId, allowed);
+                        if (classroom) classrooms.set(classId, { ref: classroomRef, data: classroom });
+                        classSessions.set(classId, await readClassSessionsInTransaction(tx, db, classId));
+                    }
+                    for (const [sid, session] of existingSessionsMap) {
+                        if (cleanOptionalString(session.teacherUid) === 'all') {
+                            const primaryTeacher = cleanOptionalString(classrooms.get(session.classId)?.data?.primaryTeacherUid, callerUid);
+                            existingSessionsMap.set(sid, normalizeScheduledSession({ ...session, teacherUid: primaryTeacher }));
+                        }
+                    }
+                    return {
+                        teacherUids: Array.from(existingSessionsMap.values()).map((session) => session.teacherUid),
+                        state: { existingSessionsMap, classrooms, classSessions, classroomAccessMap }
+                    };
+                },
+                commit: async ({ tx, state, teacherUids, teacherSessionsByUid, operationId }) => {
+                    const projection = buildBulkRescheduleProjection({
+                        moves,
+                        existingSessionsMap: state.existingSessionsMap,
+                        classroomAccessMap: state.classroomAccessMap,
+                        outsideSessions: Array.from(teacherSessionsByUid.values()).flat(),
+                        callerUid,
+                        operationId,
+                        dryRun: false,
+                        undoOf
+                    });
+                    const touchedClassIds = Array.from(new Set(projection.moved.map((moved) => moved.classId).filter(Boolean))).sort();
+                    if (projection.moved.length + touchedClassIds.length + teacherUids.length + 1 > 495) {
+                        failSchedulingOperation(400, 'TOO_MANY_SCHEDULE_WRITES', 'Bulk reschedule is too large for one atomic operation. Narrow the move selection.');
+                    }
+                    const patches = new Map();
+                    for (const moved of projection.moved) {
+                        const previous = state.existingSessionsMap.get(moved.sessionId);
+                        const patch = {
+                            ...moved.patch,
+                            teacherUid: previous?.teacherUid || callerUid,
+                            version: Number(previous?.version || 1) + 1,
+                            updatedAt: serverTimestamp(),
+                            updatedBy: callerUid
+                        };
+                        patches.set(moved.sessionId, patch);
+                        tx.set(db.collection(CRM_SCHEDULED_SESSIONS).doc(moved.sessionId), patch, { merge: true });
+                    }
+                    let lastScheduleState = null;
+                    for (const classId of touchedClassIds) {
+                        const classroom = state.classrooms.get(classId);
+                        if (!classroom) continue;
+                        const postSessions = (state.classSessions.get(classId) || []).map((session) => patches.has(session.sessionId)
+                            ? normalizeScheduledSession({ ...session, ...patches.get(session.sessionId) })
+                            : session);
+                        lastScheduleState = stageClassroomScheduleState(tx, classroom.ref, classroom.data, postSessions);
+                    }
+                    return {
+                        committedIds: projection.moved.map((moved) => moved.sessionId),
+                        result: {
+                            ...projection,
+                            scheduleSummary: lastScheduleState?.scheduleSummary || null,
+                            scheduleVersion: lastScheduleState?.scheduleConfig?.scheduleVersion || null
+                        }
+                    };
+                }
+            });
+            outcome = await auditCommitted(outcome, {
+                action: 'teacher.scheduler.bulk_reschedule',
+                entityType: 'scheduled_session',
+                entityId: outcome.operationId,
+                metadata: {
+                    movedCount: outcome.moved?.length || 0,
+                    skippedCount: outcome.skipped?.length || 0,
+                    undoOf
+                }
+            }, req.user);
+            return sendSuccess(res, outcome, `Bulk rescheduled ${outcome.moved?.length || 0} session(s).`);
         } catch (error) {
-            return sendError(res, 500, 'TEACHER_BULK_RESCHEDULE_ERROR', 'Failed to bulk reschedule sessions.', error?.message || error);
+            return sendSchedulingOperationFailure(sendError, res, error, 'TEACHER_BULK_RESCHEDULE_ERROR', 'Failed to bulk reschedule sessions.');
         }
     });
 

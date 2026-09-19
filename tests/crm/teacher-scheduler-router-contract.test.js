@@ -1,4 +1,6 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const createTeacherSchedulerRouter = require('../../functions/src/routes/teacher/scheduler');
 
 function collectRoutes(router, prefix = '') {
@@ -53,5 +55,25 @@ expectRoute(routes, 'POST /sessions/:sessionId/cancel');
 expectRoute(routes, 'POST /sessions/:sessionId/outcome');
 expectRoute(routes, 'POST /scheduler/activate-recurrences');
 expectRoute(routes, 'POST /scheduler/sessions/bulk-reschedule');
+
+const schedulerSource = fs.readFileSync(
+    path.join(__dirname, '../../functions/src/routes/teacher/scheduler.js'),
+    'utf8'
+);
+assert.match(schedulerSource, /executeSchedulingOperation/);
+for (const operationType of [
+    'teacher.session.add',
+    'teacher.session.add_multi',
+    'teacher.session.reschedule',
+    'teacher.session.reschedule_series',
+    'teacher.session.cancel',
+    'teacher.scheduler.activate_recurrences',
+    'teacher.scheduler.bulk_reschedule'
+]) {
+    assert(
+        schedulerSource.includes(`operationType: '${operationType}'`),
+        `Expected ${operationType} to use the shared scheduling operation boundary.`
+    );
+}
 
 console.log('teacher scheduler router contract passed');

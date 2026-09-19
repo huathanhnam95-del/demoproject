@@ -11,6 +11,8 @@ const CRM_ENROLLMENTS = 'crmEnrollments';
 const CRM_ATTENDANCE_SESSIONS = 'crmAttendanceSessions';
 const CRM_ATTENDANCE_RECORDS = 'crmAttendanceRecords';
 const CRM_SCHEDULED_SESSIONS = 'crmScheduledSessions';
+const CRM_SCHEDULING_OPERATION_RECEIPTS = 'crmSchedulingOperationReceipts';
+const CRM_TEACHER_SCHEDULE_LOCKS = 'crmTeacherScheduleLocks';
 const CRM_INVOICES = 'crmInvoices';
 const CRM_PAYMENTS = 'crmPayments';
 const CRM_PAYMENT_OPERATIONS = 'crmPaymentOperations';
@@ -53,6 +55,8 @@ module.exports = {
     CRM_ATTENDANCE_SESSIONS,
     CRM_ATTENDANCE_RECORDS,
     CRM_SCHEDULED_SESSIONS,
+    CRM_SCHEDULING_OPERATION_RECEIPTS,
+    CRM_TEACHER_SCHEDULE_LOCKS,
     CRM_INVOICES,
     CRM_PAYMENTS,
     CRM_PAYMENT_OPERATIONS,

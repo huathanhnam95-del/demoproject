@@ -1596,6 +1596,7 @@
     if (state.isV3) {
       setPhase(modeId, state.config.v3.getPhase?.() || state.phase);
       state.history?.sync();
+      state.config.v3.onSync?.();
       return;
     }
     updateActiveChip(state);
@@ -1823,6 +1824,7 @@
       record.attributes.forEach(([name, value]) => record.node.setAttribute(name, value));
       if (record.anchor?.parentNode) record.anchor.replaceWith(record.node);
     });
+    state.config.v3.onUnmount?.();
     state.v3DOM.card.remove(); state.v3DOM.attempts.remove();
     if (![...activeControllers.values()].some(other => other !== state && other.isV3)) document.body.classList.remove('pte-shell-v3', 'pte-focus');
   }
@@ -1917,9 +1919,11 @@
       buildV3Shell(config, state);
       hideLegacyPicker(config, state);
       buildPicker(config, state);
+      config.v3.onMount?.();
       adoptV3Dock(config, state);
       if (config.v3.attempts) state.history = window.PteAttemptHistory?.mount(state.v3DOM.attempts, config.v3.attempts);
       setPhase(modeId, config.v3.getPhase?.() || 'loading');
+      config.v3.onSync?.();
       return;
     }
 

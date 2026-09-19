@@ -221,6 +221,7 @@ class ReadAloudMode {
    * untouched, so switching to Advanced restores whatever they had picked.
    */
   getActiveConnectedSpeechModes() {
+    if (this.isPteShellEnabled()) return [...(this.connectedSpeechModes || [])];
     if (this.getCoachTier() === 'simple') {
       return [...this.getSimpleTierModes()];
     }
@@ -1093,6 +1094,7 @@ class ReadAloudMode {
     this.refreshFilterControls();
     this.announceLinkingStatus('Prompt guides reset.');
     this.observePromptStage();
+    if (this.isPteShellEnabled()) this.connectedSpeechModes = new Set(this.getSimpleTierModes());
 
     // Initialize Settings sheet — moves inline controls into side panel.
     // Deferred to next frame because SPC.activate() runs AFTER onEnter() in switchToMode(),
@@ -2087,6 +2089,7 @@ class ReadAloudMode {
 
   /** Create the Settings sheet using SPC's createSheet infrastructure */
   initSettingsSheet() {
+    if (this.isPteShellEnabled()) return;
     if (this.settingsSheet) return;
     if (!window.SpeakingPracticeController?.createSheet) {
       console.warn('[RA] SPC.createSheet not ready — retrying initSettingsSheet');
@@ -2161,13 +2164,10 @@ class ReadAloudMode {
       const btn = e.target.closest('[data-diff]');
       if (!btn) return;
       const diff = btn.dataset.diff;
-      this.difficultyFilter = diff;
+      this.setDifficultyFilter(diff);
       diffSection.querySelectorAll('.read-aloud-filter-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.diff === diff);
       });
-      const filtered = this.getFilteredDatabase();
-      const preferredRow = this.getPreferredFilteredPromptRow(filtered, { preferLastPrompt: true });
-      this.syncQuestionPickerOptions(filtered, preferredRow);
     });
     panelsContainer.appendChild(targetPanel);
 
@@ -2851,6 +2851,7 @@ class ReadAloudMode {
   }
 
   retryCurrentPrompt() {
+    if (this.isPteShellEnabled()) { this.pendingBlob = null; this.pendingSession = null; }
     this.invalidateSpeechCoachResultRender();
     this.stopTimer();
     this.state = 'PREP';
@@ -3484,7 +3485,196 @@ class ReadAloudMode {
     if (accuracyElement) accuracyElement.textContent = '--';
   }
 
+  isPteShellEnabled() {
+    return !!window.PteShellConfig?.isModeEnabled('read-aloud', window.PracticeScopeManager?.getScope?.() || 'pte');
+  }
+
+  getPtePhase() {
+    return ({ PREP: 'prep', REQUESTING_MIC: 'recording', RECORDING: 'recording', STOPPING_RECORDING: 'recording', RECORDED: 'complete', RESULTS: 'feedback' })[this.state] || 'loading';
+  }
+
+  setDifficultyFilter(value) {
+    if (!['all', '1', '2', '3'].includes(String(value))) return;
+    this.difficultyFilter = String(value);
+    const filtered = this.getFilteredDatabase();
+    this.syncQuestionPickerOptions(filtered, this.getPreferredFilteredPromptRow(filtered, { preferLastPrompt: true }));
+  }
+
+  mountPteShell() {
+    if (this.pteView || !this.isPteShellEnabled()) return;
+    const panel = document.getElementById('mode-read-aloud');
+    const stage = panel.querySelector('.ra-stage');
+    const split = panel.querySelector('.ra-split');
+    const coach = document.getElementById('ra-connected-speech-box');
+    const view = this.pteView = { panel, stage, split, coach, moved: [], created: [], phase: null, payload: null };
+    const create = (tag, className, id, parent) => {
+      const node = document.createElement(tag); node.className = className; if (id) node.id = id;
+      parent.append(node); view.created.push(node); return node;
+    };
+    const move = (node, parent) => {
+      if (!node) return;
+      const anchor = document.createComment('Read Aloud v3 origin'); node.before(anchor);
+      view.moved.push({ node, anchor }); parent.append(node);
+    };
+    panel.classList.add('ra-pte-v3');
+    view.instruction = create('p', 'pte-instr', 'ra-pte-instruction', stage);
+    const recorderCenter = create('div', 'pte-center', null, stage);
+    const recorder = create('div', '', 'ra-pte-recorder', recorderCenter);
+    stage.prepend(view.instruction, recorderCenter);
+    const announcement = create('p', 'pte-sr-only', 'ra-workspace-instruction', stage);
+    announcement.setAttribute('role', 'status');
+    view.announcement = announcement;
+    this.pteRecorder = window.PteRecorderWidget.create(recorder, { totalSeconds: this.recordSeconds });
+    document.getElementById('ra-prompt-stage').classList.add('pte-passage');
+    view.right = create('div', 'pte-fb__right', 'ra-pte-right', split);
+    view.tabs = create('div', 'pte-tabs', 'ra-pte-feedback-tabs', view.right);
+    view.tabs.setAttribute('role', 'tablist'); view.tabs.setAttribute('aria-label', 'Feedback');
+    for (const [key, label] of [['results', 'Your results'], ['coach', 'Coach tips']]) {
+      const button = create('button', 'pte-btn', `ra-pte-tab-${key}`, view.tabs);
+      button.type = 'button'; button.textContent = label; button.setAttribute('role', 'tab');
+      button.setAttribute('aria-controls', key === 'results' ? 'ra-pte-results' : 'ra-connected-speech-box');
+      button.addEventListener('click', () => this.selectPteFeedbackTab(key));
+      button.addEventListener('keydown', event => {
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+          event.preventDefault();
+          const next = event.key === 'Home' ? 'results' : event.key === 'End' ? 'coach' : key === 'results' ? 'coach' : 'results';
+          this.selectPteFeedbackTab(next); document.getElementById(`ra-pte-tab-${next}`).focus();
+        }
+      });
+    }
+    view.results = create('section', '', 'ra-pte-results', view.right);
+    view.results.setAttribute('role', 'tabpanel'); view.results.setAttribute('aria-labelledby', 'ra-pte-tab-results');
+    view.stats = create('div', 'pte-stats', null, view.results);
+    const heading = create('div', 'ra-pte-next-heading', null, view.results);
+    const title = create('strong', '', null, heading); title.textContent = 'What to practise next';
+    move(document.getElementById('ra-show-advanced-container'), heading);
+    view.fixes = create('div', 'pte-practice-next pte-fixes', null, view.results);
+    move(coach, view.right);
+    move(document.getElementById('ra-prompt-guides-group'), coach.querySelector('.ra-rail-header'));
+    move(document.getElementById('ra-audio-player'), stage);
+    const cancel = create('button', 'pte-btn', 'ra-pte-cancel-btn', panel);
+    cancel.type = 'button'; cancel.textContent = 'Cancel'; cancel.addEventListener('click', () => this.cancelRecording());
+    try { this.pteCoachOpen = localStorage.getItem('bel:ra:coach-open:v1') === 'true'; } catch (_) { this.pteCoachOpen = false; }
+    this.pteFeedbackTab = 'results';
+    view.keydown = event => { if (event.key === 'Escape') this.hideSoundChangeTooltip(); };
+    document.addEventListener('keydown', view.keydown);
+    this.renderPromptForCurrentView();
+    this.syncPteShell();
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  unmountPteShell() {
+    const view = this.pteView; if (!view) return;
+    this.pteRecorder?.destroy(); this.pteRecorder = null;
+    this.hideSoundChangeTooltip(); document.removeEventListener('keydown', view.keydown);
+    view.moved.reverse().forEach(({ node, anchor }) => anchor.replaceWith(node));
+    view.created.reverse().forEach(node => node.remove());
+    view.panel.classList.remove('ra-pte-v3'); view.split.classList.remove('pte-fb');
+    document.getElementById('ra-prompt-stage')?.classList.remove('pte-passage');
+    delete view.panel.dataset.ptePhase; delete view.panel.dataset.pteCoach;
+    this.pteView = null;
+  }
+
+  selectPteFeedbackTab(tab) {
+    this.pteFeedbackTab = tab;
+    if (tab === 'coach' && !this.speechCoachVisible) this.toggleSpeechCoachVisibility();
+    this.syncPteShell();
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  setCoachOpen(open) {
+    this.pteCoachOpen = !!open;
+    try { localStorage.setItem('bel:ra:coach-open:v1', String(this.pteCoachOpen)); } catch (_) { /* local preferences may be unavailable */ }
+    if (this.speechCoachVisible !== this.pteCoachOpen) this.toggleSpeechCoachVisibility();
+    if (this.state === 'RESULTS') this.pteFeedbackTab = 'coach';
+    this.syncPteShell();
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  syncPteShell() {
+    const view = this.pteView; if (!view) return;
+    const phase = this.getPtePhase();
+    const feedback = phase === 'feedback';
+    if (phase !== view.phase) {
+      this.hideSoundChangeTooltip();
+      if (phase === 'prep') this.pteRecorder.showCountdown(this.prepSeconds);
+      else if (phase === 'recording') this.pteRecorder.showRecording(this.recordSeconds);
+      else if (phase === 'complete' || feedback) this.pteRecorder.showComplete();
+      if (feedback) this.pteFeedbackTab = 'results';
+      view.phase = phase;
+    }
+    if (this.state === 'RECORDING' && this.audioStream && view.stream !== this.audioStream) {
+      this.pteRecorder.attachStream(this.audioStream); view.stream = this.audioStream;
+    }
+    view.panel.dataset.ptePhase = phase;
+    view.panel.dataset.pteCoach = this.pteCoachOpen ? 'open' : 'closed';
+    view.split.classList.toggle('pte-fb', feedback);
+    view.instruction.textContent = `Look at the text below. In ${this.prepSeconds} seconds, you must read this text aloud as naturally and clearly as possible. You have ${this.recordSeconds} seconds to read aloud.`;
+    const status = document.getElementById('ra-status-message');
+    if (status) { status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); }
+    const message = feedback ? this.assessmentStatusMessage || 'Getting feedback.' : this.getBasicPhaseInstruction();
+    if (view.announcement.textContent !== message) view.announcement.textContent = message;
+    const labels = { 'ra-record-btn': 'Start recording', 'ra-stop-btn': 'Finish recording', 'ra-retry-btn': feedback ? 'Try again' : 'Record again', 'ra-play-recording-btn': 'Play', 'ra-check-btn': 'Get feedback' };
+    Object.entries(labels).forEach(([id, label]) => {
+      const button = document.getElementById(id);
+      if (!button?.hasAttribute('data-pte-phases')) return;
+      button.textContent = label;
+      button.style.display = '';
+    });
+    const stop = document.getElementById('ra-stop-btn'); if (stop) stop.disabled = this.state !== 'RECORDING';
+    view.tabs.hidden = !feedback; view.results.hidden = !feedback || this.pteFeedbackTab !== 'results';
+    view.right.hidden = !feedback && (phase === 'recording' || !this.pteCoachOpen);
+    view.coach.classList.toggle('ra-pte-coach-hidden', phase === 'recording' || (feedback ? this.pteFeedbackTab !== 'coach' : !this.pteCoachOpen));
+    for (const key of ['results', 'coach']) {
+      const tab = document.getElementById(`ra-pte-tab-${key}`);
+      tab.setAttribute('aria-selected', String(this.pteFeedbackTab === key)); tab.tabIndex = this.pteFeedbackTab === key ? 0 : -1;
+    }
+    document.getElementById('ra-pte-tab-coach').textContent = `Coach tips · ${this.lastAssessmentPayload?.connectedSpeech?.events?.length || 0}`;
+    if (feedback) this.renderPteFeedback();
+    if (document.getElementById('pte-next-read-aloud')) window.SpeakingPracticeController?.setPhase('read-aloud', phase);
+  }
+
+  renderPteFeedback() {
+    const view = this.pteView, payload = this.lastAssessmentPayload;
+    if (!view || view.payload === payload) return;
+    view.payload = payload; view.stats.replaceChildren(); view.fixes.replaceChildren();
+    const node = (tag, text) => { const el = document.createElement(tag); el.textContent = text; return el; };
+    for (const [label, key] of [['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore'], ['Completeness', 'completenessScore'], ['Overall', 'pronScore']]) {
+      const cell = node('div', ''); cell.append(node('small', label), node('strong', Number.isFinite(payload?.[key]) ? `${payload[key]}%` : '—')); view.stats.append(cell);
+    }
+    if (!payload) { view.fixes.append(node('p', this.assessmentStatusMessage || 'Getting feedback…')); return; }
+    const words = (payload.words || []).filter(word => Number.isFinite(word.accuracyScore) && word.accuracyScore < 60);
+    const events = payload.connectedSpeech?.events || [];
+    const rows = [...words.map(word => ({ label: word.word, detail: `Needs practice (${word.accuracyScore}%)`, startMs: word.startMs, endMs: word.endMs, kind: 'error' })),
+      ...events.filter(event => ['uncertain', 'not_detected'].includes(event.status)).map(event => ({ ...event, label: event.phrase, detail: event.feedbackText || event.tip || 'Practise this phrase.', kind: 'uncertain' })),
+      ...events.filter(event => event.status === 'detected').slice(0, 1).map(event => ({ ...event, label: event.phrase, detail: 'Good. Keep linking it.', kind: 'success' }))].slice(0, 4);
+    if (!rows.length) view.fixes.append(node('p', 'Read the scored transcript and use Coach tips to review your pronunciation.'));
+    rows.forEach(item => {
+      const row = node('div', ''); row.className = `ra-pte-fix ra-pte-fix--${item.kind}`;
+      const copy = node('div', ''); copy.append(node('strong', item.label || 'Speech Coach'), node('p', item.detail));
+      const actions = node('div', ''); actions.className = 'ra-pte-fix-actions';
+      const you = node('button', '▶ You'); you.className = 'pte-btn'; you.type = 'button';
+      const start = item.startMs ?? Number(item.startSec) * 1000, end = item.endMs ?? Number(item.endSec) * 1000;
+      you.disabled = !Number.isFinite(start) || !Number.isFinite(end) || end <= start;
+      you.addEventListener('click', () => this.playRecordedWordSegment(start, end, you)); actions.append(you);
+      const model = node('button', '▶ Model'); model.className = 'pte-btn'; model.type = 'button';
+      model.addEventListener('click', () => {
+        const original = [...document.querySelectorAll('#ra-connected-speech-list .sc-model-play-btn')].find(button => button.dataset.eventId === item.eventId);
+        if (original && !original.disabled) this.playSpeechCoachModelAudio(original);
+        else this.speakGuidePhrase(item.label);
+      }); actions.append(model);
+      row.append(node('span', item.kind === 'error' ? '!' : item.kind === 'success' ? '✓' : '?'), copy, actions); view.fixes.append(row);
+    });
+    const advanced = document.getElementById('ra-show-advanced-container'); if (advanced) advanced.style.display = '';
+    const button = document.getElementById('ra-show-advanced-btn'); if (button) button.textContent = 'Show advanced analysis ›';
+  }
+
   updateUIForState() {
+    this.updateLegacyUIForState();
+    this.syncPteShell();
+  }
+
+  updateLegacyUIForState() {
     // Single choke point for every state transition — keep the shared step
     // indicator in step with the state machine from here.
     window.SpeakingPracticeController?.sync?.('read-aloud');
@@ -3755,6 +3945,8 @@ class ReadAloudMode {
 
       const recordedChunks = [];
       const activeRecorder = new window.MediaRecorder(stream);
+      let resolveCapture;
+      recordingSession.capturePromise = new Promise(resolve => { resolveCapture = resolve; });
       activeRecorder.addEventListener('dataavailable', (event) => {
         if (event.data?.size) recordedChunks.push(event.data);
       });
@@ -3767,20 +3959,44 @@ class ReadAloudMode {
           this.mediaRecorder = null;
         }
         if (!shouldSubmit) {
+          resolveCapture();
           return;
         }
         if (recordedChunks.length === 0) {
           this.applyRecordingCaptureFailure(recordingSession, 'We couldn’t capture that recording. Please try again.');
+          resolveCapture();
           return;
         }
         const rawBlob = new Blob(recordedChunks, { type: activeRecorder.mimeType || 'audio/webm' });
         recordingSession.rawBlob = rawBlob;
-        this.setRecordedAudio(rawBlob);
+        let playbackBlob = rawBlob;
+        if (this.isPteShellEnabled()) {
+          try {
+            playbackBlob = await this.prepareWavBlob(rawBlob);
+            if (recordingSession.id !== this.recordingRequestId || !this.shouldApplyAssessment(recordingSession)) { resolveCapture(); return; }
+            recordingSession.wavBlob = playbackBlob;
+            recordingSession.assessmentAudioBuffer = this.assessmentAudioBuffer;
+            recordingSession.durationMs = Math.round((this.assessmentAudioBuffer?.duration || 0) * 1000);
+          } catch (error) {
+            if (recordingSession.id !== this.recordingRequestId) { resolveCapture(); return; }
+            this.applyRecordingCaptureFailure(recordingSession, 'We couldn’t prepare that recording. Please try again.');
+            resolveCapture(); return;
+          }
+        }
+        this.setRecordedAudio(playbackBlob, { preserveAssessmentBuffer: this.isPteShellEnabled() });
 
         this.pendingBlob = rawBlob;
         this.pendingSession = recordingSession;
         this.state = 'RECORDED';
         this.updateUIForState();
+        resolveCapture();
+        if (this.isPteShellEnabled()) {
+          this.savePteCapture(recordingSession).catch(error => {
+            if (!this.shouldApplyAssessment(recordingSession)) return;
+            const status = this.pteView?.panel.querySelector('.pte-dock__status');
+            if (status) status.textContent = `Recording captured, but saving failed: ${error.message}`;
+          });
+        }
       });
       activeRecorder.start();
       if (!this.isSameRecordingSession(recordingSession)) {
@@ -3835,6 +4051,10 @@ class ReadAloudMode {
   }
 
   updateTimerDisplay(elementId, seconds) {
+    if (this.pteRecorder) {
+      if (elementId === 'ra-prep-time' && this.state === 'PREP') this.pteRecorder.tick(seconds);
+      if (elementId === 'ra-record-time' && this.state === 'RECORDING') this.pteRecorder.setElapsed(this.recordSeconds - seconds);
+    }
     const el = document.getElementById(elementId);
     if (!el) return;
     const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -3885,6 +4105,55 @@ class ReadAloudMode {
     this.stopMediaStream();
 
     this.stopReferenceAudioPlayback();
+  }
+
+  cancelRecording() {
+    if (!['REQUESTING_MIC', 'RECORDING', 'STOPPING_RECORDING'].includes(this.state)) return;
+    this.cleanup();
+    this.pendingBlob = null; this.pendingSession = null;
+    this.retryCurrentPrompt();
+  }
+
+  async finishPteRecordingForNext() {
+    if (this.state === 'REQUESTING_MIC') throw new Error('Wait for microphone access or cancel the recording.');
+    const session = this.currentRecordingSession || this.pendingSession;
+    if (!session) throw new Error('There is no recording to save yet.');
+    this.stopRecordingManually();
+    await session.capturePromise;
+    if (!session.wavBlob) throw new Error('The recording could not be captured. Please try again.');
+    await this.savePteCapture(session);
+  }
+
+  async advancePtePrompt() {
+    if (this.pendingSession) await this.savePteCapture(this.pendingSession);
+    return this.loadNextPrompt({ force: true });
+  }
+
+  savePteCapture(session) {
+    if (session.archivePromise) return session.archivePromise;
+    session.archivePromise = (async () => {
+      const blob = session.wavBlob;
+      if (!blob) throw new Error('Finish recording before moving on.');
+      const input = {
+        practiceMode: 'read-aloud',
+        attemptId: session.archiveCandidateId ||= `att_ra_${Date.now()}_${session.id}`,
+        promptSnapshot: { promptId: session.questionId, text: session.referenceText, source: 'read-aloud' },
+        responseSnapshot: { referenceText: session.referenceText },
+        scoringSnapshot: { source: 'none', success: false, status: 'unassessed' },
+        media: [{ slot: 'student', label: 'Student read aloud', blob, contentType: blob.type, durationMs: session.durationMs }]
+      };
+      if (!window.PTEAttemptArchive?.saveAttempt) throw new Error('Attempt saving is unavailable. Please try again.');
+      const saved = await window.PTEAttemptArchive.saveAttempt(input);
+      if (saved?.skipped && saved.reason !== 'guest') throw new Error('This attempt could not be saved.');
+      if (saved?.skipped) {
+        session.localAttemptId ||= `ra-${Date.now()}-${session.id}`;
+        session.historyAudioUrl ||= URL.createObjectURL(blob);
+        window.PteAttemptHistory?.recordLocal({ ...input, media: undefined, attemptId: session.localAttemptId, promptId: session.questionId,
+          audio: { studentUrl: session.historyAudioUrl, durationMs: session.durationMs } });
+      } else session.archiveAttemptId = saved?.attemptId || input.attemptId;
+      return saved;
+    })().catch(error => { session.archivePromise = null; throw error; });
+    return session.archivePromise;
   }
 
   async submitToAzure(rawBlob, recordingSession) {
@@ -4353,7 +4622,7 @@ class ReadAloudMode {
       });
     }
 
-    window.PTEAttemptArchive?.saveAttempt?.({
+    const attemptInput = {
       practiceMode: 'read-aloud',
       promptSnapshot: {
         promptId: recordingSession.questionId || null,
@@ -4390,7 +4659,23 @@ class ReadAloudMode {
         blob: recordingSession.wavBlob,
         contentType: 'audio/wav'
       }] : []
-    }).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
+    };
+    if (this.isPteShellEnabled() && recordingSession.wavBlob) {
+      try {
+        await this.savePteCapture(recordingSession);
+        if (recordingSession.archiveAttemptId) {
+          await window.PTEAttemptArchive.patchAttempt(recordingSession.archiveAttemptId, attemptInput);
+          window.PTEAttemptArchive.invalidateHistoryCache();
+          window.dispatchEvent(new CustomEvent('pte-attempt-archive:saved', { detail: { attemptId: recordingSession.archiveAttemptId, practiceMode: 'read-aloud', promptId: recordingSession.questionId } }));
+        } else {
+          window.PteAttemptHistory?.recordLocal({ ...attemptInput, media: undefined, attemptId: recordingSession.localAttemptId, promptId: recordingSession.questionId,
+            audio: { studentUrl: recordingSession.historyAudioUrl, durationMs: recordingSession.durationMs } });
+        }
+      } catch (error) { console.warn('[PTE Archive] Read Aloud save failed:', error); }
+      this.syncPteShell();
+    } else {
+      window.PTEAttemptArchive?.saveAttempt?.(attemptInput).catch((error) => console.warn('[PTE Archive] Read Aloud save failed:', error));
+    }
   }
 
   clearConnectedSpeechResults() {
@@ -6080,12 +6365,12 @@ class ReadAloudMode {
 
   getSoundChangeTooltipTarget(node) {
     if (!(node instanceof Element)) return null;
-    return node.closest('[data-guide-target][data-sound-change-subtype]');
+    return node.closest(this.pteView ? '[data-guide-target]' : '[data-guide-target][data-sound-change-subtype]');
   }
 
   getSoundChangeTooltipTargets(guideId, stage = document.getElementById('ra-prompt-stage')) {
     if (!guideId || !stage) return [];
-    return Array.from(stage.querySelectorAll('[data-guide-target][data-sound-change-subtype]'))
+    return Array.from(stage.querySelectorAll(this.pteView ? '[data-guide-target]' : '[data-guide-target][data-sound-change-subtype]'))
       .filter((node) => String(node.getAttribute('data-guide-target') || '') === guideId);
   }
 
@@ -6181,6 +6466,12 @@ class ReadAloudMode {
     const guideTarget = String(target.getAttribute('data-guide-target') || '').trim();
     if (!guideTarget) return;
     this.setSelectedGuideItem(guideTarget);
+
+    if (this.pteView && target.closest('#ra-prompt-stage')) {
+      if (this.activeSoundChangeTooltipId === guideTarget && this.soundChangeTooltipPinned) this.hideSoundChangeTooltip();
+      else this.showSoundChangeTooltip(guideTarget, target, { pinned: true });
+      return;
+    }
 
     if (guideTarget.startsWith('boundary-')) {
       const subtype = target.dataset.soundChangeSubtype;
@@ -6406,9 +6697,11 @@ class ReadAloudMode {
     if (!tooltip || !stage) return;
 
     const subtype = clickedSpan?.dataset?.soundChangeSubtype;
-    const copy = subtype && window.ReadAloudLinking
+    let copy = subtype && window.ReadAloudLinking
       ? window.ReadAloudLinking.getSoundChangeCopy(subtype)
       : null;
+    const item = this.pteView && this.currentGuideExplanationItems.find(entry => entry.id === guideId);
+    if (!copy && item) copy = { arrow: item.spokenAs || item.sayItLike || item.badge, explanation: item.explanation };
     if (!copy) {
       this.hideSoundChangeTooltip();
       return;
@@ -6430,6 +6723,8 @@ class ReadAloudMode {
     if (wordsEl) wordsEl.textContent = wordPair;
     if (transformEl) transformEl.textContent = copy.arrow || 'Sound change';
     if (explanationEl) explanationEl.textContent = copy.explanation || '';
+    const badge = tooltip.querySelector('.ra-sound-change-tooltip__badge');
+    if (badge) badge.textContent = item?.badge || 'Sound Change';
 
     const closeBtn = tooltip.querySelector('.ra-sound-change-tooltip__close');
     if (closeBtn) {

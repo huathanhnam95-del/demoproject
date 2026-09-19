@@ -27,3 +27,16 @@
 @keyframes pte-wave { from { transform: scaleY(.45); } to { transform: scaleY(1.15); } }
 @media (max-width: 600px) { .pte-rec { gap: 8px; } .pte-rec__wave { width: 110px; } }
 @media (prefers-reduced-motion: reduce) { .pte-rec i { animation: none !important; } }
+
+/* The linking SVG measures these exact word boxes; no transformed/scaled text. */
+#mode-read-aloud.ra-pte-v3 .ra-stage .pte-passage {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0; margin: 0; max-width: none;
+}
+#mode-read-aloud.ra-pte-v3 #ra-text-prompt,
+#mode-read-aloud.ra-pte-v3 .ra-merged-recognized-transcript {
+  font: 17px/2.15 Arial, Helvetica, sans-serif; color: #222; letter-spacing: normal;
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+#mode-read-aloud.ra-pte-v3 .ra-merged-transcript-shell {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0;
+}

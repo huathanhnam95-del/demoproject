@@ -452,6 +452,51 @@
   // Practice target, audio player, and history are now in the Settings sheet.
   controller.register({
     modeId: 'read-aloud',
+    shell: 'v3',
+    v3: {
+      title: 'Read Aloud', cardBodySelector: '#mode-read-aloud .ra-workbench',
+      progressSteps: ['Prepare', 'Record', 'Feedback'],
+      getPhase: () => window.ReadAloudMode?.getPtePhase?.() || 'loading',
+      onMount: () => window.ReadAloudMode?.mountPteShell?.(),
+      onSync: () => window.ReadAloudMode?.syncPteShell?.(),
+      onUnmount: () => window.ReadAloudMode?.unmountPteShell?.(),
+      filters: [
+        { label: 'Sample audio', get: () => window.ReadAloudMode?.sampleAudioFilter, set: value => window.ReadAloudMode?.setSampleAudioFilter(value),
+          options: [{ value: 'all', label: 'All' }, { value: 'available', label: 'Available' }, { value: 'unavailable', label: 'No audio' }] },
+        { label: 'Prompt feature', get: () => window.ReadAloudMode?.promptFeatureFilter, set: value => window.ReadAloudMode?.setPromptFeatureFilter(value),
+          options: [{ value: 'all', label: 'All prompts' }, { value: 'any_connected', label: 'Any connected speech' }, { value: 'linking', label: 'Linking' }, { value: 'reduced_words', label: 'Reduced words' }, { value: 'sound_changes', label: 'Sound changes' }] },
+        { label: 'Difficulty', get: () => window.ReadAloudMode?.difficultyFilter, set: value => window.ReadAloudMode?.setDifficultyFilter(value),
+          options: [{ value: 'all', label: 'Recommended' }, { value: '1', label: 'Level 1 (Easy)' }, { value: '2', label: 'Level 2 (Medium)' }, { value: '3', label: 'Level 3 (Hard)' }] },
+        { label: 'Order', get: () => window.ReadAloudMode?.promptOrderMode, set: value => window.ReadAloudMode?.setPromptOrderMode(value),
+          options: [{ value: 'random', label: 'Random' }, { value: 'sequential', label: 'In order' }] }
+      ],
+      dock: {
+        helpers: [{ id: 'ra-pte-coach-btn', label: 'Coach', phases: ['prep', 'complete', 'feedback'],
+          count: () => window.ReadAloudMode?.currentGuideExplanationItems?.length || window.ReadAloudMode?.lastAssessmentPayload?.connectedSpeech?.events?.length || 0,
+          pressed: () => !!window.ReadAloudMode?.pteCoachOpen,
+          onClick: () => window.ReadAloudMode?.setCoachOpen(!window.ReadAloudMode.pteCoachOpen) }],
+        actions: [
+          { sourceId: 'ra-record-btn', label: 'Start recording', variant: 'primary', phases: ['prep'] },
+          { sourceId: 'ra-pte-cancel-btn', label: 'Cancel', variant: 'ghost', phases: ['recording'] },
+          { sourceId: 'ra-stop-btn', label: 'Finish recording', variant: 'stop', phases: ['recording'] },
+          { sourceId: 'ra-retry-btn', label: 'Record again', variant: 'ghost', phases: ['complete', 'feedback'] },
+          { sourceId: 'ra-play-recording-btn', label: 'Play', phases: ['complete'] },
+          { sourceId: 'ra-check-btn', label: 'Get feedback', variant: 'primary', phases: ['complete'] }
+        ]
+      },
+      next: {
+        onConfirmFromRecording: () => window.ReadAloudMode.finishPteRecordingForNext(),
+        goNext: () => window.ReadAloudMode.advancePtePrompt()
+      },
+      attempts: {
+        practiceMode: 'read-aloud', modeLabel: 'Read Aloud', getPromptId: () => window.ReadAloudMode?.currentQuestionId,
+        formatScores: attempt => {
+          const score = attempt.resultSnapshot;
+          return [['Overall', 'pronScore'], ['Accuracy', 'accuracyScore'], ['Fluency', 'fluencyScore']]
+            .filter(([, key]) => Number.isFinite(score?.[key])).map(([label, key]) => `${label} ${score[key]}%`);
+        }
+      }
+    },
     enabledScopes: ['pte', 'english'],
     panelId: 'mode-read-aloud',
     // There is no separate Read phase: startPrepTimer() fires as soon as a prompt

@@ -25,6 +25,41 @@
   --ts-dur-popover-exit: 100ms;
   --ts-dur-settle: 120ms;
   --ts-dur-snapback: 140ms;
+
+  /* Approved opaque event families. Pastel is the default presentation; Solid is opt-in. */
+  --ts-pastel-blue-bg: #D2E3FC;
+  --ts-pastel-blue-hover-bg: #C6DAF7;
+  --ts-pastel-purple-bg: #E8DEF8;
+  --ts-pastel-purple-hover-bg: #DDD0F2;
+  --ts-pastel-teal-bg: #CDEBE6;
+  --ts-pastel-teal-hover-bg: #BFE3DC;
+  --ts-pastel-green-bg: #CEEAD6;
+  --ts-pastel-green-hover-bg: #C1E3CB;
+  --ts-pastel-orange-bg: #FCE3C1;
+  --ts-pastel-orange-hover-bg: #F7D6AA;
+  --ts-pastel-red-bg: #FAD2CF;
+  --ts-pastel-red-hover-bg: #F3C3BF;
+  --ts-pastel-indigo-bg: #DDE3FA;
+  --ts-pastel-indigo-hover-bg: #D0D8F5;
+  --ts-pastel-coral-bg: #F8D9E5;
+  --ts-pastel-coral-hover-bg: #F1CAD9;
+
+  --ts-solid-blue-bg: #1A73E8;
+  --ts-solid-blue-hover-bg: #1765CC;
+  --ts-solid-purple-bg: #8E24AA;
+  --ts-solid-purple-hover-bg: #7B1FA2;
+  --ts-solid-teal-bg: #00796B;
+  --ts-solid-teal-hover-bg: #00695C;
+  --ts-solid-green-bg: #188038;
+  --ts-solid-green-hover-bg: #137333;
+  --ts-solid-orange-bg: #B06000;
+  --ts-solid-orange-hover-bg: #A45100;
+  --ts-solid-red-bg: #D93025;
+  --ts-solid-red-hover-bg: #B3261E;
+  --ts-solid-indigo-bg: #3F51B5;
+  --ts-solid-indigo-hover-bg: #34449F;
+  --ts-solid-coral-bg: #C2185B;
+  --ts-solid-coral-hover-bg: #AD1457;
 }
 
 /* --------------------------------------------------------------------------
@@ -842,10 +877,8 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 }
 
 /* ==========================================================================
-   Defect Repair (bel-calendar-three-defect-repair.md):
-   1. Event layering above grid lines & neighbor cells (z-index: auto on slots)
-   2. Unclipped wrapping class titles in left rail
-   3. Solid opaque event fills with authoritative teacher colors
+   Scheduler event presentation
+   Grid geometry stays independent from the complete six-token event theme.
    ========================================================================== */
 
 #teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-calendar-cell.teacher-scheduler-slot,
@@ -859,8 +892,7 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 
 #teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill,
 .teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill,
-.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill,
-.ts-appearance-solid .scheduler-session-pill {
+.teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill {
   position: absolute;
   z-index: 10;
   pointer-events: auto;
@@ -869,8 +901,6 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   line-height: 1.25;
   border-radius: 4px;
   border: 0;
-  color: #ffffff;
-  background: var(--color, #1a73e8);
   box-shadow: 0 1px 2px rgba(60, 64, 67, 0.15);
   padding: 4px 6px;
   text-align: left;
@@ -885,7 +915,14 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
 #teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill:hover,
 .teacher-scheduler-workspace .scheduler-session-pill.teacher-scheduler-session-pill:hover {
   z-index: 20;
+  background-color: var(--ts-event-hover-bg, #C6DAF7);
   box-shadow: 0 2px 6px rgba(60, 64, 67, 0.35);
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-session-pill:focus-visible {
+  outline: 2px solid var(--ts-event-focus, #174EA6);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px #ffffff, 0 0 0 4px color-mix(in srgb, var(--ts-event-focus, #174EA6) 36%, transparent);
 }
 
 #teacher-scheduler-workspace[data-ts-render-repair="v1"] .scheduler-session-pill.teacher-scheduler-session-pill.is-dragging,
@@ -913,21 +950,10 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   z-index: auto;
 }
 
-/* Title and meta colors for solid pills (overriding crm-admin.css legacy variables) */
-.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill {
-  --pill-ink: #ffffff !important;
-  --pill-meta: rgba(255, 255, 255, 0.95) !important;
-  color: #ffffff !important;
-}
-
 .teacher-scheduler-workspace .scheduler-session-pill .pill-title {
   font-size: 12px;
   line-height: 1.25;
   font-weight: 600;
-}
-
-.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-title {
-  color: #ffffff !important;
 }
 
 .teacher-scheduler-workspace .scheduler-session-pill .pill-time {
@@ -936,19 +962,9 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   font-weight: 400;
 }
 
-.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-time {
-  color: #ffffff !important;
-  opacity: 0.95;
-}
-
 .teacher-scheduler-workspace .scheduler-session-pill .pill-teacher {
   font-size: 11px;
   line-height: 1.2;
-}
-
-.teacher-scheduler-workspace:not(.ts-appearance-pastel) .scheduler-session-pill .pill-teacher {
-  color: #ffffff !important;
-  opacity: 0.9;
 }
 
 /* Dynamic 3-tier density styles */
@@ -1014,54 +1030,172 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   letter-spacing: 0.2px;
 }
 
-/* Section C: Authoritative Teacher Color Palette (Solid Fills) - strictly scoped to pills and drag ghosts */
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="blue"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="blue"] {
-  --color: #1a73e8;
-  background-color: #1a73e8;
-  color: #ffffff;
+/* One teacher family resolves to Pastel by default. Inline theme tokens from the
+   controller use the same contract and therefore also work on detached previews. */
+[data-ts-color] {
+  --ts-event-title: #1F1F1F;
+  --ts-event-meta: #3C4043;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="purple"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="purple"] {
-  --color: #8e24aa;
-  background-color: #8e24aa;
-  color: #ffffff;
+
+[data-ts-color="blue"] {
+  --ts-event-bg: var(--ts-pastel-blue-bg);
+  --ts-event-hover-bg: var(--ts-pastel-blue-hover-bg);
+  --ts-event-accent: #1A73E8;
+  --ts-event-focus: #174EA6;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="teal"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="teal"] {
-  --color: #00796b;
-  background-color: #00796b;
-  color: #ffffff;
+[data-ts-color="purple"] {
+  --ts-event-bg: var(--ts-pastel-purple-bg);
+  --ts-event-hover-bg: var(--ts-pastel-purple-hover-bg);
+  --ts-event-accent: #8E24AA;
+  --ts-event-focus: #7B1FA2;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="green"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="green"] {
-  --color: #1e8e3e;
-  background-color: #1e8e3e;
-  color: #ffffff;
+[data-ts-color="teal"] {
+  --ts-event-bg: var(--ts-pastel-teal-bg);
+  --ts-event-hover-bg: var(--ts-pastel-teal-hover-bg);
+  --ts-event-accent: #00796B;
+  --ts-event-focus: #00695C;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="orange"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="orange"] {
-  --color: #e37400;
-  background-color: #e37400;
-  color: #ffffff;
+[data-ts-color="green"] {
+  --ts-event-bg: var(--ts-pastel-green-bg);
+  --ts-event-hover-bg: var(--ts-pastel-green-hover-bg);
+  --ts-event-accent: #188038;
+  --ts-event-focus: #137333;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="red"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="red"] {
-  --color: #d93025;
-  background-color: #d93025;
-  color: #ffffff;
+[data-ts-color="orange"] {
+  --ts-event-bg: var(--ts-pastel-orange-bg);
+  --ts-event-hover-bg: var(--ts-pastel-orange-hover-bg);
+  --ts-event-accent: #B06000;
+  --ts-event-focus: #A45100;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="indigo"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="indigo"] {
-  --color: #3f51b5;
-  background-color: #3f51b5;
-  color: #ffffff;
+[data-ts-color="red"] {
+  --ts-event-bg: var(--ts-pastel-red-bg);
+  --ts-event-hover-bg: var(--ts-pastel-red-hover-bg);
+  --ts-event-accent: #D93025;
+  --ts-event-focus: #B3261E;
 }
-.teacher-scheduler-workspace .scheduler-session-pill[data-ts-color="coral"],
-.teacher-scheduler-workspace .teacher-scheduler-drag-ghost[data-ts-color="coral"] {
-  --color: #c2185b;
-  background-color: #c2185b;
-  color: #ffffff;
+[data-ts-color="indigo"] {
+  --ts-event-bg: var(--ts-pastel-indigo-bg);
+  --ts-event-hover-bg: var(--ts-pastel-indigo-hover-bg);
+  --ts-event-accent: #3F51B5;
+  --ts-event-focus: #34449F;
+}
+[data-ts-color="coral"] {
+  --ts-event-bg: var(--ts-pastel-coral-bg);
+  --ts-event-hover-bg: var(--ts-pastel-coral-hover-bg);
+  --ts-event-accent: #C2185B;
+  --ts-event-focus: #AD1457;
+}
+
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="blue"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="blue"] {
+  --ts-event-bg: var(--ts-solid-blue-bg);
+  --ts-event-hover-bg: var(--ts-solid-blue-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="purple"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="purple"] {
+  --ts-event-bg: var(--ts-solid-purple-bg);
+  --ts-event-hover-bg: var(--ts-solid-purple-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="teal"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="teal"] {
+  --ts-event-bg: var(--ts-solid-teal-bg);
+  --ts-event-hover-bg: var(--ts-solid-teal-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="green"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="green"] {
+  --ts-event-bg: var(--ts-solid-green-bg);
+  --ts-event-hover-bg: var(--ts-solid-green-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="orange"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="orange"] {
+  --ts-event-bg: var(--ts-solid-orange-bg);
+  --ts-event-hover-bg: var(--ts-solid-orange-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="red"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="red"] {
+  --ts-event-bg: var(--ts-solid-red-bg);
+  --ts-event-hover-bg: var(--ts-solid-red-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="indigo"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="indigo"] {
+  --ts-event-bg: var(--ts-solid-indigo-bg);
+  --ts-event-hover-bg: var(--ts-solid-indigo-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+.ts-appearance-solid .scheduler-session-pill[data-ts-color="coral"],
+.teacher-scheduler-drag-ghost.ts-appearance-solid[data-ts-color="coral"] {
+  --ts-event-bg: var(--ts-solid-coral-bg);
+  --ts-event-hover-bg: var(--ts-solid-coral-hover-bg);
+  --ts-event-title: #FFFFFF;
+  --ts-event-meta: #FFFFFF;
+  --ts-event-focus: #FFFFFF;
+}
+
+#teacher-scheduler-calendar .teacher-scheduler-session-pill,
+.teacher-scheduler-drag-ghost {
+  background-color: var(--ts-event-bg, #D2E3FC);
+  color: var(--ts-event-title, #1F1F1F);
+  opacity: 1;
+}
+
+#teacher-scheduler-calendar .teacher-scheduler-session-pill .pill-title,
+.teacher-scheduler-drag-ghost .pill-title {
+  color: var(--ts-event-title, #1F1F1F);
+  opacity: 1;
+}
+
+#teacher-scheduler-calendar .teacher-scheduler-session-pill :is(.pill-time, .pill-teacher),
+.teacher-scheduler-drag-ghost :is(.pill-time, .pill-teacher, .drag-ghost-chip) {
+  color: var(--ts-event-meta, #3C4043);
+  opacity: 1;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-session-pill.is-completed {
+  background-color: var(--ts-event-bg, #D2E3FC);
+  box-shadow: inset 0 0 0 2px var(--ts-event-accent, #1A73E8), 0 1px 2px rgba(60, 64, 67, 0.15);
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-title {
+  color: var(--ts-event-title, #1F1F1F);
+  opacity: 1;
+}
+
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-time,
+.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-teacher {
+  color: var(--ts-event-meta, #3C4043);
+  opacity: 1;
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-session-pill.is-saving {
+  opacity: 1;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ts-event-accent, #1A73E8) 62%, transparent);
+}
+
+.teacher-scheduler-workspace .teacher-scheduler-session-pill .pill-badge-completed,
+.teacher-scheduler-workspace .teacher-scheduler-session-pill .pill-badge-compact {
+  color: var(--ts-event-title, #1F1F1F);
+  background: color-mix(in srgb, var(--ts-event-accent, #1A73E8) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ts-event-accent, #1A73E8) 42%, transparent);
 }
 
 /* Neutral sidebar teacher rows and class cards */
@@ -1082,7 +1216,7 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   color: inherit;
 }
 
-/* Opaque drag ghost with white text and solid teacher fill */
+/* Detached previews use the same opaque token contract as their source event. */
 .teacher-scheduler-drag-ghost {
   position: fixed;
   pointer-events: none;
@@ -1093,11 +1227,10 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   white-space: nowrap;
   font-size: 11px;
   line-height: 14px;
-  color: #ffffff !important;
-  background: var(--color, #1a73e8) !important;
   box-shadow: 0 4px 12px rgba(32, 33, 36, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  opacity: 1 !important;
+  border: 1px solid color-mix(in srgb, var(--ts-event-accent, #1A73E8) 42%, transparent);
+  opacity: 1;
+  transition: none !important;
 }
 
 /* Section B: Left-rail class row layout with full-width text and wrapping title */
@@ -1213,52 +1346,6 @@ body.crm-focus-mode .crm-panel[data-panel="courses/teacher-schedule"] > .crm-pan
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   max-width: 100%;
-}
-
-/* Completed session styling in solid mode - guarantee white text over solid background */
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed,
-.ts-appearance-solid .scheduler-session-pill.is-completed {
-  background-color: var(--color, #1a73e8) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.28) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-title,
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-time,
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-teacher,
-.ts-appearance-solid .scheduler-session-pill.is-completed .pill-title,
-.ts-appearance-solid .scheduler-session-pill.is-completed .pill-time,
-.ts-appearance-solid .scheduler-session-pill.is-completed .pill-teacher {
-  color: #ffffff !important;
-}
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-badge-completed {
-  background: rgba(255, 255, 255, 0.22) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  border-radius: 3px;
-  padding: 1px 5px;
-  font-size: 0.65rem;
-  font-weight: 600;
-}
-.teacher-scheduler-workspace .scheduler-session-pill.is-completed .pill-badge-compact {
-  background: rgba(255, 255, 255, 0.35) !important;
-  color: #ffffff !important;
-}
-
-/* If user explicitly switches appearance to pastel in settings */
-.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill.teacher-scheduler-session-pill {
-  color: var(--pill-ink, #154589);
-  background: var(--pill-bg, #e8f0fe);
-  border: 1px solid var(--pill-border, #bfdbfe);
-  border-left: 3px solid var(--pill-accent, #1a73e8);
-}
-.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-title {
-  color: var(--pill-ink, #154589) !important;
-}
-.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-time,
-.teacher-scheduler-workspace.ts-appearance-pastel .scheduler-session-pill .pill-teacher {
-  color: var(--pill-meta, #1967d2) !important;
 }
 
 .ts-timeline {
@@ -1876,7 +1963,7 @@ dialog.ts-modal-dialog::backdrop,
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--color, #0b57d0);
+  background: var(--ts-event-accent, #1A73E8);
 }
 
 .ts-schedule-row .schedule-teacher {
@@ -2080,12 +2167,10 @@ dialog.ts-modal-dialog::backdrop,
   z-index: 9999;
   pointer-events: none;
   border-radius: 4px;
-  background: var(--ts-blue, #0b57d0);
-  color: #ffffff;
   padding: 6px 8px;
   box-shadow: 0 6px 16px rgba(60, 64, 67, 0.35);
   font-family: Arial, Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  opacity: 0.92;
+  opacity: 1;
   will-change: transform;
   transition: none !important;
 }

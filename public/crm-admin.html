@@ -868,8 +868,8 @@
               <div class="ts-form-field">
                 <label for="ts-setting-appearance">Event appearance</label>
                 <select id="ts-setting-appearance">
-                  <option value="solid" selected>Solid · Google reference (white text)</option>
-                  <option value="pastel">Pastel · soft colors</option>
+                  <option value="pastel" selected>Pastel · soft colors</option>
+                  <option value="solid">Solid · stronger colors</option>
                 </select>
               </div>
             </div>
@@ -1002,15 +1002,15 @@
               <span id="teacher-scheduler-scope-shift-to" style="font-weight:700;color:var(--crm-primary,#157a3b);">Thu 10 Sep, 19:00–21:00</span>
             </div>
             <div class="teacher-scheduler-scope-options">
-              <label class="teacher-scheduler-scope-option" id="scope-option-single-label">
-                <input type="radio" name="teacher-scheduler-scope-choice" id="scope-choice-single" value="single">
+              <label class="teacher-scheduler-scope-option is-selected" id="scope-option-single-label">
+                <input type="radio" name="teacher-scheduler-scope-choice" id="scope-choice-single" value="single" checked>
                 <div class="teacher-scheduler-scope-option-body">
                   <div class="teacher-scheduler-scope-option-title">This session only</div>
                   <div class="teacher-scheduler-scope-option-desc">Only move the selected session. All other sessions remain untouched.</div>
                 </div>
               </label>
-              <label class="teacher-scheduler-scope-option is-selected" id="scope-option-series-label">
-                <input type="radio" name="teacher-scheduler-scope-choice" id="scope-choice-series" value="series" checked>
+              <label class="teacher-scheduler-scope-option" id="scope-option-series-label">
+                <input type="radio" name="teacher-scheduler-scope-choice" id="scope-choice-series" value="series">
                 <div class="teacher-scheduler-scope-option-body">
                   <div class="teacher-scheduler-scope-option-title" id="teacher-scheduler-scope-series-title">This and all following</div>
                   <div class="teacher-scheduler-scope-option-desc" id="teacher-scheduler-scope-series-desc">Move this and all future matching sessions in the series.</div>

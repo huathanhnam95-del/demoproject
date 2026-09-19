@@ -59,6 +59,7 @@ merriam-webster api key
 .gemini/
 
 # Large binaries
+exported_slides/
 .survivalmode/audio/*.wav
 docs/audits/**/*.mp4
 docs/audits/**/*.webm

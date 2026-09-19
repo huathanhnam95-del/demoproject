@@ -1,5 +1,8 @@
 window.TeacherSchedulerWorkspace = (function () {
     const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const browserSessionDrafts = new Map();
+    let nextEditorGeneration = 0;
+    let nextMutationOperation = 0;
 
     function escapeHtml(value) {
         const div = document.createElement('div');
@@ -231,9 +234,166 @@ window.TeacherSchedulerWorkspace = (function () {
             _eventsBound: false,
             miniCalendar: null,
             hourHeightPx: Number(deps.hourHeightPx || 50) || 50,
-            teacherColorAssignments: new Map(),
-            appearance: 'solid'
+            appearance: 'pastel',
+            sessionDrafts: new Map(),
+            cancelOperations: new Map(),
+            pendingMutationIds: new Set(),
+            _deactivated: false,
+            lifecycleGeneration: 0
         };
+        state.focusedDate = null;
+        state.scheduleRangeSpanDays = null;
+
+        function getDraftOwnerUid() {
+            try {
+                const injected = typeof deps.getCurrentUserUid === 'function'
+                    ? deps.getCurrentUserUid()
+                    : deps.currentUserUid;
+                const firebaseUid = typeof window !== 'undefined'
+                    ? window.firebase?.auth?.().currentUser?.uid
+                    : '';
+                return String(injected || firebaseUid || 'anonymous').trim() || 'anonymous';
+            } catch (_) {
+                return 'anonymous';
+            }
+        }
+
+        function createOperationId(kind) {
+            try {
+                const uuid = typeof window !== 'undefined' ? window.crypto?.randomUUID?.() : '';
+                if (uuid) return `${kind}_${uuid}`;
+            } catch (_) {
+                /* deterministic fallback below */
+            }
+            nextMutationOperation += 1;
+            return `${kind}_${Date.now().toString(36)}_${nextMutationOperation.toString(36)}`;
+        }
+
+        function getDraftStorageKey(sessionId) {
+            return `${getDraftOwnerUid()}::${String(sessionId || '').trim()}`;
+        }
+
+        function cloneDraft(draft) {
+            return draft ? {
+                sessionId: draft.sessionId,
+                editorGeneration: draft.editorGeneration,
+                revision: draft.revision,
+                note: draft.note,
+                outcome: draft.outcome,
+                noteDirty: Boolean(draft.noteDirty),
+                outcomeDirty: Boolean(draft.outcomeDirty)
+            } : null;
+        }
+
+        function persistSessionDraft(draft) {
+            if (!draft?.sessionId) return;
+            const storageKey = getDraftStorageKey(draft.sessionId);
+            if (draft.noteDirty || draft.outcomeDirty) {
+                browserSessionDrafts.set(storageKey, cloneDraft(draft));
+            } else {
+                browserSessionDrafts.delete(storageKey);
+            }
+        }
+
+        function createEditorDraft(sessionId) {
+            const normalizedSessionId = String(sessionId || '').trim();
+            const session = state.sessions.find((item) => String(item.sessionId || '') === normalizedSessionId) || null;
+            const localDraft = state.sessionDrafts.get(normalizedSessionId) || null;
+            const persistedDraft = browserSessionDrafts.get(getDraftStorageKey(normalizedSessionId)) || null;
+            const previousDraft = localDraft || persistedDraft;
+            const rawOutcome = String(session?.sessionOutcome || '').trim();
+            const draft = {
+                sessionId: normalizedSessionId,
+                editorGeneration: ++nextEditorGeneration,
+                revision: Number(previousDraft?.revision || 0),
+                note: previousDraft ? String(previousDraft.note || '') : String(session?.sessionNote || '').trim(),
+                outcome: previousDraft ? String(previousDraft.outcome || '') : (rawOutcome && rawOutcome !== 'none' ? rawOutcome : ''),
+                noteDirty: Boolean(previousDraft?.noteDirty),
+                outcomeDirty: Boolean(previousDraft?.outcomeDirty)
+            };
+            state.sessionDrafts.set(normalizedSessionId, draft);
+            persistSessionDraft(draft);
+            return draft;
+        }
+
+        function getSessionDraft(sessionId) {
+            const normalizedSessionId = String(sessionId || '').trim();
+            return state.sessionDrafts.get(normalizedSessionId)
+                || browserSessionDrafts.get(getDraftStorageKey(normalizedSessionId))
+                || null;
+        }
+
+        function syncActiveDraftFlags(draft) {
+            const isActiveDraft = draft
+                && state.sessionBubble
+                && state.sessionBubble.sessionId === draft.sessionId
+                && state.sessionBubble.editorGeneration === draft.editorGeneration;
+            if (!isActiveDraft) return;
+            state.isSessionNoteDirty = Boolean(draft.noteDirty);
+            state.isSessionOutcomeDirty = Boolean(draft.outcomeDirty);
+        }
+
+        function setSessionDraft(changes = {}, context = {}) {
+            const sessionId = String(context.sessionId || state.sessionBubble?.sessionId || '').trim();
+            const draft = state.sessionDrafts.get(sessionId);
+            if (!draft) return null;
+            const expectedGeneration = Number(context.editorGeneration ?? state.sessionBubble?.editorGeneration);
+            if (Number.isFinite(expectedGeneration) && draft.editorGeneration !== expectedGeneration) return null;
+
+            let changed = false;
+            if (Object.prototype.hasOwnProperty.call(changes, 'note')) {
+                const note = String(changes.note ?? '');
+                if (draft.note !== note) {
+                    draft.note = note;
+                    draft.noteDirty = true;
+                    changed = true;
+                }
+            }
+            if (Object.prototype.hasOwnProperty.call(changes, 'outcome')) {
+                const outcome = String(changes.outcome ?? '');
+                if (draft.outcome !== outcome) {
+                    draft.outcome = outcome;
+                    draft.outcomeDirty = true;
+                    changed = true;
+                }
+            }
+            if (changed) draft.revision += 1;
+            persistSessionDraft(draft);
+            syncActiveDraftFlags(draft);
+
+            if (state.sessionBubble?.sessionId === sessionId
+                && state.sessionBubble.editorGeneration === draft.editorGeneration) {
+                if (Object.prototype.hasOwnProperty.call(changes, 'note') && elements.inputTeacherSchedulerSessionNote) {
+                    elements.inputTeacherSchedulerSessionNote.value = draft.note;
+                }
+                if (Object.prototype.hasOwnProperty.call(changes, 'outcome') && elements.inputTeacherSchedulerSessionOutcome) {
+                    elements.inputTeacherSchedulerSessionOutcome.value = draft.outcome;
+                }
+            }
+            return draft;
+        }
+
+        function isEditorContextCurrent(context) {
+            if (!context) return false;
+            const sessionId = String(context.sessionId || '').trim();
+            const draft = state.sessionDrafts.get(sessionId) || null;
+            return Boolean(draft
+                && state.sessionBubble?.sessionId === sessionId
+                && state.sessionBubble.editorGeneration === context.editorGeneration
+                && draft.editorGeneration === context.editorGeneration);
+        }
+
+        function discardSessionDraft(sessionId) {
+            const normalizedSessionId = String(sessionId || '').trim();
+            state.sessionDrafts.delete(normalizedSessionId);
+            browserSessionDrafts.delete(getDraftStorageKey(normalizedSessionId));
+            if (state.sessionBubble?.sessionId === normalizedSessionId) {
+                const replacement = createEditorDraft(normalizedSessionId);
+                state.sessionBubble.editorGeneration = replacement.editorGeneration;
+                syncActiveDraftFlags(replacement);
+                renderSessionBubble();
+            }
+        }
 
         if (elements.teacherSchedulerWorkspace && typeof elements.teacherSchedulerWorkspace.setAttribute === 'function') {
             elements.teacherSchedulerWorkspace.setAttribute('data-ts-render-repair', 'v1');
@@ -247,47 +407,100 @@ window.TeacherSchedulerWorkspace = (function () {
             orange: { key: 'orange', fill: '#E37400', text: '#FFFFFF', name: 'Orange' },
             red:    { key: 'red',    fill: '#D93025', text: '#FFFFFF', name: 'Red' },
             indigo: { key: 'indigo', fill: '#3F51B5', text: '#FFFFFF', name: 'Indigo' },
-            coral:  { key: 'coral',  fill: '#C2185B', text: '#FFFFFF', name: 'Coral' }
+            coral:  { key: 'coral',  fill: '#C2185B', text: '#FFFFFF', name: 'Coral' },
+            neutral:{ key: 'neutral',fill: '#5F6368', text: '#FFFFFF', name: 'Neutral' }
         };
         const SOLID_PALETTE_KEYS = ['blue', 'purple', 'teal', 'green', 'orange', 'red', 'indigo', 'coral'];
+        const KNOWN_TEACHER_FAMILIES = Object.freeze({
+            JP0UmCufWpdDkKkZazh7Ajo4PfX2: 'blue',
+            'teacher-nam': 'blue',
+            'nam-uid': 'blue',
+            eRrS6Ba3QfQ6R9SmPbcb3bYcOK83: 'purple',
+            'teacher-shawn': 'purple',
+            'shawn-uid': 'purple',
+            'teacher-quynh': 'teal',
+            'quynh-uid': 'teal'
+        });
+        const PASTEL_EVENT_BACKGROUNDS = Object.freeze({
+            blue: '#D2E3FC', purple: '#E8DEF8', teal: '#CDEBE6', green: '#CEEAD6',
+            orange: '#FCE3C1', red: '#FAD2CF', indigo: '#DDE3FA', coral: '#F8D9E5',
+            neutral: '#E8EAED'
+        });
+        const PASTEL_EVENT_HOVERS = Object.freeze({
+            blue: '#C2D7F7', purple: '#DBCCF2', teal: '#BCE1DA', green: '#BDE2C8',
+            orange: '#F7D5A7', red: '#F2C1BD', indigo: '#CDD5F3', coral: '#F1C7D8',
+            neutral: '#DADCE0'
+        });
+        const SOLID_EVENT_BACKGROUNDS = Object.freeze({
+            blue: '#1A73E8', purple: '#8E24AA', teal: '#00796B', green: '#137333',
+            orange: '#A14200', red: '#C5221F', indigo: '#3F51B5', coral: '#C2185B',
+            neutral: '#5F6368'
+        });
+        const SOLID_EVENT_HOVERS = Object.freeze({
+            blue: '#1765CC', purple: '#7B1FA2', teal: '#00695C', green: '#0D652D',
+            orange: '#8D3A00', red: '#A50E0E', indigo: '#303F9F', coral: '#AD1457',
+            neutral: '#4A4D51'
+        });
+        const EVENT_THEME_PROPERTIES = Object.freeze({
+            background: '--ts-event-bg',
+            title: '--ts-event-title',
+            meta: '--ts-event-meta',
+            accent: '--ts-event-accent',
+            hoverBackground: '--ts-event-hover-bg',
+            focusOutline: '--ts-event-focus'
+        });
 
-        function resolveTeacherColor(teacherUid, teacherName = '') {
+        function resolveTeacherColor(teacherUid) {
             const uid = String(teacherUid || '').trim();
-            let name = String(teacherName || '').trim();
-            if (!name && uid && state.teacherMap && state.teacherMap.has(uid)) {
-                name = String(state.teacherMap.get(uid) || '').trim();
-            }
-            if (uid && state.teacherColorAssignments && state.teacherColorAssignments.has(uid)) {
-                const key = state.teacherColorAssignments.get(uid);
-                if (SOLID_TEACHER_PALETTE[key]) return SOLID_TEACHER_PALETTE[key];
-            }
-            if (uid === 'JP0UmCufWpdDkKkZazh7Ajo4PfX2' || uid === 'teacher-nam' || uid === 'nam-uid') {
-                return SOLID_TEACHER_PALETTE.blue;
-            }
-            if (uid === 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83' || uid === 'teacher-shawn' || uid === 'shawn-uid') {
-                return SOLID_TEACHER_PALETTE.purple;
-            }
-            if (uid === 'teacher-quynh' || uid === 'quynh-uid') {
-                return SOLID_TEACHER_PALETTE.teal;
-            }
-            const norm = `${name} ${uid}`.toLowerCase();
-            if (norm.includes('nam') || norm.includes('hứa thanh nam')) {
-                return SOLID_TEACHER_PALETTE.blue;
-            }
-            if (norm.includes('shawn')) {
-                return SOLID_TEACHER_PALETTE.purple;
-            }
-            if (norm.includes('quỳnh') || norm.includes('quynh') || norm.includes('như quỳnh')) {
-                return SOLID_TEACHER_PALETTE.teal;
-            }
-            const str = uid || name || 'default';
+            if (!uid || uid.toLowerCase() === 'unassigned') return SOLID_TEACHER_PALETTE.neutral;
+            const knownFamily = KNOWN_TEACHER_FAMILIES[uid];
+            if (knownFamily) return SOLID_TEACHER_PALETTE[knownFamily];
             let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            for (let i = 0; i < uid.length; i++) {
+                hash = ((hash << 5) - hash) + uid.charCodeAt(i);
                 hash |= 0;
             }
-            const colorKey = SOLID_PALETTE_KEYS[Math.abs(hash) % SOLID_PALETTE_KEYS.length];
+            const colorKey = SOLID_PALETTE_KEYS[(hash >>> 0) % SOLID_PALETTE_KEYS.length];
             return SOLID_TEACHER_PALETTE[colorKey] || SOLID_TEACHER_PALETTE.blue;
+        }
+
+        function resolveEventTheme(family, appearance = state.appearance) {
+            const normalizedFamily = Object.prototype.hasOwnProperty.call(PASTEL_EVENT_BACKGROUNDS, family)
+                ? family
+                : 'neutral';
+            const isSolid = appearance === 'solid';
+            const accent = SOLID_TEACHER_PALETTE[normalizedFamily]?.fill || SOLID_TEACHER_PALETTE.neutral.fill;
+            return {
+                background: isSolid ? SOLID_EVENT_BACKGROUNDS[normalizedFamily] : PASTEL_EVENT_BACKGROUNDS[normalizedFamily],
+                title: isSolid ? '#FFFFFF' : '#1F1F1F',
+                meta: isSolid ? '#FFFFFF' : '#3C4043',
+                accent,
+                hoverBackground: isSolid ? SOLID_EVENT_HOVERS[normalizedFamily] : PASTEL_EVENT_HOVERS[normalizedFamily],
+                focusOutline: isSolid ? '#FFFFFF' : accent
+            };
+        }
+
+        function applyEventTheme(node, theme) {
+            if (!node?.style) throw new TypeError('Expected an element with styles.');
+            for (const field of Object.keys(EVENT_THEME_PROPERTIES)) {
+                const value = String(theme?.[field] || '');
+                if (!/^#[0-9a-f]{6}$/i.test(value)) {
+                    throw new TypeError('Event theme colors must be opaque six-digit hex values.');
+                }
+                node.style.setProperty(EVENT_THEME_PROPERTIES[field], value);
+            }
+            return node;
+        }
+
+        function serializeEventTheme(theme) {
+            for (const field of Object.keys(EVENT_THEME_PROPERTIES)) {
+                if (!/^#[0-9a-f]{6}$/i.test(String(theme?.[field] || ''))) {
+                    throw new TypeError('Event theme colors must be opaque six-digit hex values.');
+                }
+            }
+            return Object.entries(EVENT_THEME_PROPERTIES)
+                .map(([field, property]) => `${property}:${theme[field]}`)
+                .join(';') + ';';
         }
 
         function getEffectiveTeacherForSession(session) {
@@ -306,24 +519,62 @@ window.TeacherSchedulerWorkspace = (function () {
 
         const APPEARANCE_STORAGE_KEY = 'teacher_scheduler_appearance_v2';
         const LEGACY_APPEARANCE_STORAGE_KEY = 'teacher_scheduler_appearance';
+        const APPEARANCE_RECORD_PREFIX = 'teacher_scheduler_appearance_v3';
+
+        function getAppearanceRecordKey() {
+            return `${APPEARANCE_RECORD_PREFIX}:${getDraftOwnerUid()}`;
+        }
+
+        function persistAppearancePreference(value, source = 'explicit') {
+            const appearance = value === 'solid' ? 'solid' : 'pastel';
+            state.appearancePreference = { version: 3, value: appearance, source };
+            try {
+                if (typeof localStorage !== 'undefined' && getDraftOwnerUid() !== 'anonymous') {
+                    localStorage.setItem(getAppearanceRecordKey(), JSON.stringify(state.appearancePreference));
+                }
+            } catch (_) {
+                /* keep the in-memory preference */
+            }
+            return appearance;
+        }
+
         function initAppearanceSettings() {
-            let saved = null;
+            let saved = 'pastel';
+            let source = 'default';
             try {
                 if (typeof localStorage !== 'undefined') {
-                    saved = localStorage.getItem(APPEARANCE_STORAGE_KEY);
-                    if (!saved) {
-                        const legacy = localStorage.getItem(LEGACY_APPEARANCE_STORAGE_KEY);
-                        if (legacy === 'solid') {
-                            saved = 'solid';
-                            localStorage.setItem(APPEARANCE_STORAGE_KEY, 'solid');
+                    const rawRecord = localStorage.getItem(getAppearanceRecordKey());
+                    if (rawRecord) {
+                        const record = JSON.parse(rawRecord);
+                        if (record?.version === 3 && (record.value === 'pastel' || record.value === 'solid')) {
+                            if (record.source === 'explicit' || record.source === 'explicit-reset') {
+                                saved = record.value;
+                                source = record.source;
+                            } else {
+                                saved = 'pastel';
+                                source = 'approved-migration';
+                            }
+                        }
+                    } else {
+                        const legacyV2 = localStorage.getItem(APPEARANCE_STORAGE_KEY);
+                        const legacyV1 = localStorage.getItem(LEGACY_APPEARANCE_STORAGE_KEY);
+                        const legacy = legacyV2 || legacyV1;
+                        if (getDraftOwnerUid() === 'anonymous' && (legacy === 'solid' || legacy === 'pastel')) {
+                            saved = legacy;
+                            source = 'unscoped-legacy';
+                        } else if (legacy === 'solid' || legacy === 'pastel') {
+                            saved = 'pastel';
+                            source = 'approved-migration';
                         }
                     }
                 }
-            } catch (e) {
-                /* ignore storage error */
+            } catch (_) {
+                saved = 'pastel';
+                source = 'storage-unavailable';
             }
 
-            state.appearance = (saved === 'pastel' || saved === 'solid') ? saved : 'solid';
+            state.appearance = saved === 'solid' ? 'solid' : 'pastel';
+            persistAppearancePreference(state.appearance, source);
             applyAppearance(state.appearance);
 
             const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-appearance') : null;
@@ -331,18 +582,11 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function resetAppearanceSettings() {
-            state.appearance = 'solid';
-            try {
-                if (typeof localStorage !== 'undefined') {
-                    localStorage.setItem(APPEARANCE_STORAGE_KEY, 'solid');
-                }
-            } catch (e) {
-                /* ignore storage error */
-            }
-            applyAppearance('solid');
+            state.appearance = persistAppearancePreference('pastel', 'explicit-reset');
+            applyAppearance('pastel');
             const select = (typeof document !== 'undefined') ? document.getElementById('ts-setting-appearance') : null;
-            if (select) select.value = 'solid';
-            renderCalendarGrid();
+            if (select) select.value = 'pastel';
+            renderActiveView();
             renderClassRail();
         }
 
@@ -359,18 +603,18 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function applyAppearance(appearance) {
-            state.appearance = appearance;
-            const isSolid = (appearance === 'solid');
+            state.appearance = appearance === 'solid' ? 'solid' : 'pastel';
+            const isSolid = state.appearance === 'solid';
             const ws = elements.teacherSchedulerWorkspace;
             const cal = elements.teacherSchedulerCalendar;
 
             if (ws && ws.classList) {
-                ws.setAttribute?.('data-ts-appearance', appearance);
+                ws.setAttribute?.('data-ts-appearance', state.appearance);
                 ws.classList.toggle('ts-appearance-solid', isSolid);
                 ws.classList.toggle('ts-appearance-pastel', !isSolid);
             }
             if (cal && cal.classList) {
-                cal.setAttribute?.('data-ts-appearance', appearance);
+                cal.setAttribute?.('data-ts-appearance', state.appearance);
                 cal.classList.toggle('ts-appearance-solid', isSolid);
                 cal.classList.toggle('ts-appearance-pastel', !isSolid);
             }
@@ -563,6 +807,91 @@ window.TeacherSchedulerWorkspace = (function () {
             return { from, to };
         }
 
+        function parseLocalDate(value, fallback = null) {
+            if (value instanceof Date && Number.isFinite(value.getTime())) return new Date(value);
+            const parsed = value ? new Date(`${String(value).slice(0, 10)}T00:00:00`) : null;
+            return parsed && Number.isFinite(parsed.getTime()) ? parsed : fallback;
+        }
+
+        function inclusiveRangeSpan(from, to) {
+            const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+            const end = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+            const diff = Math.round((end.getTime() - start.getTime()) / 86400000);
+            return Math.max(1, diff + 1);
+        }
+
+        function applyRangeState(from, to) {
+            state.fromDate = toLocalDateInput(from);
+            state.toDate = toLocalDateInput(to);
+            if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = state.fromDate;
+            if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = state.toDate;
+            state._hasScrolledToHour = false;
+            return { fromDate: state.fromDate, toDate: state.toDate };
+        }
+
+        function transitionViewRange(options = {}) {
+            const nextMode = ['day', 'week', 'schedule'].includes(options.viewMode)
+                ? options.viewMode
+                : state.viewMode;
+            const action = String(options.action || 'focus');
+            const current = currentRange();
+            const currentSpan = inclusiveRangeSpan(current.from, current.to);
+            if (state.viewMode === 'schedule' && currentSpan > 0) {
+                state.scheduleRangeSpanDays = currentSpan;
+            }
+
+            let focus = parseLocalDate(options.focusedDate, parseLocalDate(state.focusedDate, current.from));
+            let from = current.from;
+            let to = current.to;
+
+            if (action === 'custom-range') {
+                from = parseLocalDate(options.rangeStart, current.from);
+                to = parseLocalDate(options.rangeEnd, from);
+                if (to < from) to = new Date(from);
+            } else if (action === 'shift') {
+                const span = nextMode === 'day'
+                    ? 1
+                    : (nextMode === 'week' ? 7 : Number(state.scheduleRangeSpanDays || currentSpan || 1));
+                const direction = Number(options.direction || 0) < 0 ? -1 : 1;
+                from = addDays(current.from, direction * span);
+                to = addDays(from, span - 1);
+                focus = addDays(focus, direction * span);
+            } else if (action === 'week-start-change' && nextMode === 'schedule') {
+                from = current.from;
+                to = current.to;
+            } else {
+                if (action === 'today') focus = getSchedulerNow();
+                if (nextMode === 'day') {
+                    from = new Date(focus);
+                    to = new Date(focus);
+                } else if (nextMode === 'week') {
+                    from = startOfWeek(focus, getWeekStartSetting());
+                    to = addDays(from, 6);
+                } else if (action === 'view' || action === 'week-start-change') {
+                    from = current.from;
+                    to = current.to;
+                } else {
+                    const span = Number(state.scheduleRangeSpanDays || currentSpan || 1);
+                    from = new Date(focus);
+                    to = addDays(from, span - 1);
+                }
+            }
+
+            if (nextMode === 'day') {
+                to = new Date(from);
+                focus = new Date(from);
+            } else if (nextMode === 'week') {
+                from = startOfWeek(focus, getWeekStartSetting());
+                to = addDays(from, 6);
+            } else {
+                state.scheduleRangeSpanDays = inclusiveRangeSpan(from, to);
+            }
+
+            state.viewMode = nextMode;
+            state.focusedDate = toLocalDateInput(focus);
+            return applyRangeState(from, to);
+        }
+
         const MONTH_NAMES = [
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'
@@ -703,29 +1032,6 @@ window.TeacherSchedulerWorkspace = (function () {
             return days;
         }
 
-        const PASTEL_THEMES = [
-            'is-pastel-sky',
-            'is-pastel-lavender',
-            'is-pastel-sage',
-            'is-pastel-peach',
-            'is-pastel-rose',
-            'is-pastel-teal',
-            'is-pastel-coral',
-            'is-pastel-indigo',
-        ];
-
-        function getClassPastelTheme(classId) {
-            const str = String(classId || '').trim();
-            if (!str) return PASTEL_THEMES[0];
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-            const index = Math.abs(hash) % PASTEL_THEMES.length;
-            return PASTEL_THEMES[index];
-        }
-
         function getClassroomById(classId) {
             return state.classrooms.find((classroom) => String(classroom.classroomId || '') === String(classId || '').trim()) || null;
         }
@@ -800,16 +1106,16 @@ window.TeacherSchedulerWorkspace = (function () {
                 const remaining = target > 0 ? Math.max(0, target - assigned) : Number(summary.remainingToScheduleCount || 0);
                 const isArmed = state.placementClassroomId === classId;
                 const activeClass = isArmed ? 'is-armed' : '';
-                const themeClass = getClassPastelTheme(classId);
                 const { teacherUid, teacherName } = getEffectiveTeacherForClassroom(classroom);
                 const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
                 const teacherBadge = teacherName
                     ? `<span class="ts-repair-class-teacher ts-class-teacher">${escapeHtml(teacherName)}</span>`
                     : '';
                 const countText = target > 0 ? `${assigned}/${target} scheduled · ${remaining} remaining` : `${assigned} scheduled`;
                 return `
                     <button type="button" class="scheduler-class-card teacher-scheduler-class-card ts-repair-class-row ts-class-row ${activeClass}" data-classroom-id="${escapeHtml(classId)}" data-ts-color="${escapeHtml(teacherColor.key)}" aria-pressed="${isArmed ? 'true' : 'false'}" title="${escapeHtml(classroom.name || classId)}">
-                        <span class="scheduler-class-card-pip ${themeClass} ts-class-dot ts-repair-color-dot" aria-hidden="true" data-ts-color="${escapeHtml(teacherColor.key)}" style="--dot-color: ${teacherColor.fill};"></span>
+                        <span class="scheduler-class-card-pip ts-class-dot ts-repair-color-dot" aria-hidden="true" data-ts-color="${escapeHtml(teacherColor.key)}" style="--dot-color:${eventTheme.accent};--ts-event-accent:${eventTheme.accent};"></span>
                         <span class="ts-repair-class-body">
                             <span class="ts-repair-class-title name">${escapeHtml(classroom.name || classId)}</span>
                             ${teacherBadge}
@@ -1008,6 +1314,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     const geo = pillLayoutStyle(duration, layoutMap.get(sessionId));
                     const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                     const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                    const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
                     if (pill.setAttribute) {
                         pill.setAttribute('data-ts-color', teacherColor.key);
                     }
@@ -1017,7 +1324,8 @@ window.TeacherSchedulerWorkspace = (function () {
                         pill.style.left = geo.left;
                         pill.style.width = geo.width;
                         pill.style.right = geo.right;
-                        pill.style.setProperty('--color', teacherColor.fill);
+                        pill.style.setProperty('--color', eventTheme.accent);
+                        applyEventTheme(pill, eventTheme);
                     }
                     pill.classList?.toggle?.('is-saving', state.pendingSessionIds.has(sessionId));
 
@@ -1133,6 +1441,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         const locked = isLockedSession(session);
                         const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                         const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                        const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
                         const showTeacherLine = (isAdminMode() && state.selectedTeacherUid === 'all' && teacherName);
                         const teacherPill = showTeacherLine
                             ? `<span class="pill-teacher" style="display:block;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(teacherName)}</span>`
@@ -1149,10 +1458,9 @@ window.TeacherSchedulerWorkspace = (function () {
                         } else {
                             layoutStyle += 'left:2px;right:2px;';
                         }
-                        layoutStyle += ` --color: ${teacherColor.fill};`;
-                        const themeClass = isCompleted ? '' : getClassPastelTheme(session.classId);
+                        layoutStyle += `${serializeEventTheme(eventTheme)}--color:${eventTheme.accent};`;
                         const displayTitle = isCompact ? `${title} · ${timeRange}` : title;
-                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${themeClass} ${pending} ${completedClass} ${densityClasses}" data-session-id="${escapeHtml(sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
+                        return `<button type="button" class="scheduler-session-pill teacher-scheduler-session-pill ${pending} ${completedClass} ${densityClasses}" data-session-id="${escapeHtml(sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${layoutStyle}">`
                             + `<div class="pill-header"><span class="pill-title">${escapeHtml(displayTitle)}</span>${isCompact ? compactBadge : ''}</div>`
                             + (isCompact ? '' : `<div class="pill-meta-row"><span class="pill-time">${escapeHtml(timeRange)}</span>${completedBadge}</div>`)
                             + (isCompact ? '' : teacherPill)
@@ -1223,11 +1531,13 @@ window.TeacherSchedulerWorkspace = (function () {
                             ${daySessions.map((session) => {
                                 const classroom = getClassroomById(session.classId);
                                 const title = classroom?.name || session.classId || 'Class';
-                                const teacherName = resolveTeacherDisplayName(session.teacherUid, session.teacherName || classroom?.primaryTeacherName || '');
+                                const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
+                                const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                                const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
                                 const timeRange = formatTimeRange(getSessionLocalTime(session), session.durationMinutes);
                                 return `
-                                    <div class="ts-schedule-row" data-session-id="${escapeHtml(session.sessionId)}">
-                                        <span class="event-dot"></span>
+                                    <div class="ts-schedule-row" data-session-id="${escapeHtml(session.sessionId)}" data-ts-color="${escapeHtml(teacherColor.key)}" style="${serializeEventTheme(eventTheme)}">
+                                        <span class="event-dot" style="background-color:${eventTheme.accent};"></span>
                                         <span class="schedule-time">${escapeHtml(timeRange)}</span>
                                         <span class="schedule-title">${escapeHtml(title)}</span>
                                         <span class="schedule-teacher">${escapeHtml(teacherName)}</span>
@@ -1243,6 +1553,16 @@ window.TeacherSchedulerWorkspace = (function () {
                 html = '<div class="crm-muted" style="padding:24px;text-align:center;">No sessions scheduled for this period.</div>';
             }
             scheduleListEl.innerHTML = html;
+        }
+
+        function renderActiveView() {
+            if (state._deactivated) return;
+            if (state.viewMode === 'schedule') {
+                renderScheduleList();
+                renderMiniCalendar();
+            } else {
+                renderCalendarGrid();
+            }
         }
 
 
@@ -1278,9 +1598,11 @@ window.TeacherSchedulerWorkspace = (function () {
             }
         }
 
-        function closeQuickAdd() {
+        function closeQuickAdd(options = {}) {
+            if (state.quickAdd?.pending && !options.force) return false;
             state.quickAdd = null;
             renderQuickAdd();
+            return true;
         }
 
         function openQuickAdd(targetDate, targetTime, anchorRect, classId = '', durationMinutes = null) {
@@ -1301,7 +1623,11 @@ window.TeacherSchedulerWorkspace = (function () {
                 anchorLeft: Number(anchorRect?.left || 0),
                 anchorTop: Number(anchorRect?.bottom || 0),
                 error: '',
-                suggestions: []
+                suggestions: [],
+                pending: false,
+                pendingPromise: null,
+                operationId: null,
+                operationSignature: null
             };
             renderQuickAdd();
             if (elements.inputTeacherSchedulerQuickAddDuration) {
@@ -1362,6 +1688,10 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.teacherSchedulerQuickSuggestions.innerHTML = list.length
                     ? `<div class="crm-muted">Suggested open times: ${list.map((item) => `${item.date} ${item.time}`).join(' • ')}</div>`
                     : '';
+            }
+            if (elements.btnTeacherSchedulerQuickAdd) {
+                elements.btnTeacherSchedulerQuickAdd.disabled = Boolean(draft.pending);
+                elements.btnTeacherSchedulerQuickAdd.setAttribute?.('aria-busy', draft.pending ? 'true' : 'false');
             }
 
             const anchor = draft.anchorRect || {
@@ -1472,6 +1802,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 markSlotError(targetDate, targetTime, msg);
                 throw new Error(msg);
             }
+            const operationId = String(options.operationId || createOperationId('create'));
+            if (state.pendingMutationIds.has(operationId)) return options.pendingPromise || null;
+            state.pendingMutationIds.add(operationId);
 
             // --- OPTIMISTIC PLACEMENT: render pill immediately (<16ms) ---
             const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -1490,10 +1823,11 @@ window.TeacherSchedulerWorkspace = (function () {
                 isOptimistic: true
             };
             state.sessions.push(tempSession);
-            renderCalendarGrid();
+            state.pendingSessionIds.add(tempId);
+            renderActiveView();
 
             if (!options.silentToast) {
-                showToast?.('Session added.', 'success');
+                showToast?.('Saving session…', 'info');
             }
 
             try {
@@ -1502,18 +1836,23 @@ window.TeacherSchedulerWorkspace = (function () {
                     targetLocalTime: targetTime,
                     durationMinutes,
                     timezone: classroom.scheduleConfig?.timezone || 'UTC',
-                    ...(teacherUid ? { teacherUid } : {})
+                    ...(teacherUid ? { teacherUid } : {}),
+                    operationId
                 });
                 const realSessionId = res?.sessionId || res?.session?.sessionId;
+                state.pendingSessionIds.delete(tempId);
                 if (realSessionId) {
                     tempSession.sessionId = realSessionId;
                     delete tempSession.isOptimistic;
                 }
-                refresh().catch(() => {});
+                renderActiveView();
+                if (!options.silentToast) showToast?.('Session added.', 'success');
+                refreshActive().catch(() => {});
                 return res;
             } catch (error) {
+                state.pendingSessionIds.delete(tempId);
                 state.sessions = state.sessions.filter((s) => s.sessionId !== tempId);
-                renderCalendarGrid();
+                renderActiveView();
                 const code = error?.code || '';
                 let message = error?.message || 'Failed to add session.';
                 if (code === 'TEACHER_CONFLICT') {
@@ -1524,12 +1863,15 @@ window.TeacherSchedulerWorkspace = (function () {
                 markSlotError(targetDate, targetTime, message);
                 showToast?.(message, 'error');
                 throw error;
+            } finally {
+                state.pendingMutationIds.delete(operationId);
             }
         }
 
         async function commitQuickAdd() {
             const draft = state.quickAdd;
             if (!draft) return;
+            if (draft.pending) return draft.pendingPromise;
             draft.error = '';
             draft.suggestions = [];
             if (elements.inputTeacherSchedulerQuickDate?.value) {
@@ -1554,19 +1896,41 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
 
-            // Immediately close quick add popover (0ms delay)
             const targetClassId = draft.classId;
             const targetDate = draft.targetDate;
             const targetTime = draft.targetTime;
             const duration = draft.durationMinutes;
-            closeQuickAdd();
+            const signature = [targetClassId, targetDate, targetTime, duration, teacherUid || ''].join('|');
+            if (!draft.operationId || draft.operationSignature !== signature) {
+                draft.operationId = createOperationId('create');
+                draft.operationSignature = signature;
+            }
+            draft.pending = true;
+            renderQuickAdd();
 
-            placeClassroomSession(targetClassId, targetDate, targetTime, {
+            const request = placeClassroomSession(targetClassId, targetDate, targetTime, {
                 silentToast: false,
-                durationMinutes: duration
+                durationMinutes: duration,
+                operationId: draft.operationId
+            }).then((result) => {
+                if (state.quickAdd === draft) {
+                    draft.pending = false;
+                    draft.pendingPromise = null;
+                    closeQuickAdd({ force: true });
+                }
+                return result;
             }).catch((err) => {
-                console.warn('[TeacherScheduler] QuickAdd placeClassroomSession error:', err);
+                if (state.quickAdd === draft) {
+                    draft.pending = false;
+                    draft.pendingPromise = null;
+                    draft.error = err?.message || 'Failed to add session.';
+                    draft.suggestions = computeSuggestions(draft.classId, draft.durationMinutes);
+                    renderQuickAdd();
+                }
+                throw err;
             });
+            draft.pendingPromise = request;
+            return request;
         }
 
         function closeSessionBubble() {
@@ -1586,10 +1950,12 @@ window.TeacherSchedulerWorkspace = (function () {
         function openSessionBubble(sessionId, anchorRect) {
             closeSessionBubble();
             closeQuickAdd();
-            state.isSessionNoteDirty = false;
-            state.isSessionOutcomeDirty = false;
+            const draft = createEditorDraft(sessionId);
+            state.isSessionNoteDirty = Boolean(draft.noteDirty);
+            state.isSessionOutcomeDirty = Boolean(draft.outcomeDirty);
             state.sessionBubble = {
                 sessionId: String(sessionId || ''),
+                editorGeneration: draft.editorGeneration,
                 anchorRect: anchorRect || null,
                 anchorLeft: Number(anchorRect?.left || 0),
                 anchorTop: Number(anchorRect?.bottom || 0)
@@ -1607,6 +1973,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 return;
             }
             const classroom = getClassroomById(session.classId);
+            const draft = state.sessionDrafts.get(bubble.sessionId) || null;
             const outcomeLocked = isOutcomeLocked(session);
             const lockStatus = outcomeLocked ? 'Attendance finalized' : 'Attendance editable';
             const label = session.unitType === 'overflow'
@@ -1646,8 +2013,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.teacherSchedulerSessionBubbleLock.textContent = lockStatus;
             }
             if (elements.inputTeacherSchedulerSessionOutcome) {
-                const isFocused = typeof document !== 'undefined' && document.activeElement === elements.inputTeacherSchedulerSessionOutcome;
-                if (!isFocused && !state.isSessionOutcomeDirty) {
+                if (draft && bubble.editorGeneration === draft.editorGeneration) {
+                    elements.inputTeacherSchedulerSessionOutcome.value = draft.outcome;
+                } else {
                     const rawOutcome = String(session.sessionOutcome || '').trim();
                     const outcomeValue = rawOutcome && rawOutcome !== 'none' ? rawOutcome : '';
                     elements.inputTeacherSchedulerSessionOutcome.value = outcomeValue;
@@ -1655,8 +2023,9 @@ window.TeacherSchedulerWorkspace = (function () {
                 elements.inputTeacherSchedulerSessionOutcome.disabled = outcomeLocked;
             }
             if (elements.inputTeacherSchedulerSessionNote) {
-                const isFocused = typeof document !== 'undefined' && document.activeElement === elements.inputTeacherSchedulerSessionNote;
-                if (!isFocused && !state.isSessionNoteDirty) {
+                if (draft && bubble.editorGeneration === draft.editorGeneration) {
+                    elements.inputTeacherSchedulerSessionNote.value = draft.note;
+                } else {
                     const rawNote = String(session.sessionNote || '').trim();
                     elements.inputTeacherSchedulerSessionNote.value = rawNote;
                 }
@@ -1696,56 +2065,103 @@ window.TeacherSchedulerWorkspace = (function () {
             elements.teacherSchedulerSessionBubble.style.visibility = 'visible';
         }
 
-        async function cancelSession(sessionId) {
+        function cancelSession(sessionId) {
             if (!window.ClassroomAPI?.teacherCancelScheduledSession) {
-                throw new Error('Cancel session API unavailable.');
+                return Promise.reject(new Error('Cancel session API unavailable.'));
             }
-            // Close session bubble immediately (0ms delay)
+            const normalizedSessionId = String(sessionId || '').trim();
+            let operation = state.cancelOperations.get(normalizedSessionId) || null;
+            if (operation?.pending && operation.promise) return operation.promise;
+            if (!operation) {
+                operation = { operationId: createOperationId('cancel'), pending: false, promise: null };
+                state.cancelOperations.set(normalizedSessionId, operation);
+            }
+
             closeSessionBubble();
+            const idx = state.sessions.findIndex((session) => String(session.sessionId || '') === normalizedSessionId);
+            const backup = idx === -1 ? null : state.sessions[idx];
+            if (idx !== -1) state.sessions.splice(idx, 1);
+            renderActiveView();
+            showToast?.('Cancelling session…', 'info');
 
-            const idx = state.sessions.findIndex((s) => String(s.sessionId || '') === String(sessionId || ''));
-            if (idx === -1) {
-                await window.ClassroomAPI.teacherCancelScheduledSession(sessionId);
-                showToast?.('Session cancelled.', 'success');
-                await refresh();
-                return;
-            }
-
-            // Optimistically remove session from grid
-            const backup = state.sessions[idx];
-            state.sessions.splice(idx, 1);
-            renderCalendarGrid();
-            showToast?.('Session cancelled.', 'success');
-
-            try {
-                await window.ClassroomAPI.teacherCancelScheduledSession(sessionId);
-                refresh().catch(() => {});
-            } catch (error) {
-                state.sessions.splice(idx, 0, backup);
-                renderCalendarGrid();
-                showToast?.(error?.message || 'Failed to cancel session. Restored.', 'error');
-                throw error;
-            }
+            operation.pending = true;
+            operation.promise = (async () => {
+                try {
+                    await window.ClassroomAPI.teacherCancelScheduledSession(sessionId, {
+                        operationId: operation.operationId
+                    });
+                    state.cancelOperations.delete(normalizedSessionId);
+                    showToast?.('Session cancelled.', 'success');
+                    refreshActive().catch(() => {});
+                } catch (error) {
+                    if (backup && !state.sessions.some((session) => String(session.sessionId || '') === normalizedSessionId)) {
+                        const restoreAt = Math.min(Math.max(idx, 0), state.sessions.length);
+                        state.sessions.splice(restoreAt, 0, backup);
+                    }
+                    renderActiveView();
+                    showToast?.(error?.message || 'Failed to cancel session. Restored.', 'error');
+                    throw error;
+                } finally {
+                    operation.pending = false;
+                    operation.promise = null;
+                }
+            })();
+            return operation.promise;
         }
 
         async function saveSessionOutcome(sessionId, outcomeValue) {
             if (!window.ClassroomAPI?.teacherSetScheduledSessionOutcome) {
                 throw new Error('Outcome API unavailable.');
             }
-            const noteValue = elements.inputTeacherSchedulerSessionNote ? String(elements.inputTeacherSchedulerSessionNote.value || '').trim() : '';
+            const normalizedSessionId = String(sessionId || '').trim();
+            const isVisibleEditor = state.sessionBubble?.sessionId === normalizedSessionId;
+            let draft = state.sessionDrafts.get(normalizedSessionId) || null;
+            if (!draft) {
+                draft = createEditorDraft(normalizedSessionId);
+            }
+            if (isVisibleEditor && state.sessionBubble.editorGeneration === draft.editorGeneration) {
+                const visibleNote = elements.inputTeacherSchedulerSessionNote
+                    ? String(elements.inputTeacherSchedulerSessionNote.value || '')
+                    : draft.note;
+                const visibleOutcome = outcomeValue !== undefined
+                    ? String(outcomeValue || '')
+                    : (elements.inputTeacherSchedulerSessionOutcome ? String(elements.inputTeacherSchedulerSessionOutcome.value || '') : draft.outcome);
+                setSessionDraft({ note: visibleNote, outcome: visibleOutcome }, state.sessionBubble);
+                draft = state.sessionDrafts.get(normalizedSessionId) || draft;
+            }
+            const submittedGeneration = draft.editorGeneration;
+            const submittedRevision = draft.revision;
+            const noteValue = String(draft.note || '').trim();
+            const submittedOutcome = String(draft.outcome || outcomeValue || 'none') || 'none';
             await window.ClassroomAPI.teacherSetScheduledSessionOutcome(sessionId, {
-                outcome: outcomeValue || 'none',
+                outcome: submittedOutcome,
                 note: noteValue || ''
             });
-            const session = state.sessions.find(s => s.sessionId === sessionId);
-            if (session) session.sessionNote = noteValue || '';
-            state.isSessionNoteDirty = false;
-            state.isSessionOutcomeDirty = false;
+            const session = state.sessions.find(s => String(s.sessionId || '') === normalizedSessionId);
+            if (session) {
+                session.sessionNote = noteValue || '';
+                session.sessionOutcome = submittedOutcome;
+            }
+            const currentDraft = state.sessionDrafts.get(normalizedSessionId) || null;
+            const submissionStillCurrent = currentDraft
+                && currentDraft.editorGeneration === submittedGeneration
+                && currentDraft.revision === submittedRevision;
+            if (submissionStillCurrent) {
+                state.sessionDrafts.delete(normalizedSessionId);
+                browserSessionDrafts.delete(getDraftStorageKey(normalizedSessionId));
+                if (state.sessionBubble?.sessionId === normalizedSessionId
+                    && state.sessionBubble.editorGeneration === submittedGeneration) {
+                    state.isSessionNoteDirty = false;
+                    state.isSessionOutcomeDirty = false;
+                }
+            }
             showToast?.('Outcome saved.', 'success');
-            if (state.sessionBubble && String(state.sessionBubble.sessionId || '') === String(sessionId || '')) {
+            if (submissionStillCurrent
+                && state.sessionBubble?.sessionId === normalizedSessionId
+                && state.sessionBubble.editorGeneration === submittedGeneration) {
                 closeSessionBubble();
             }
-            await refresh();
+            await refreshActive();
         }
 
         async function duplicateSession(sessionId) {
@@ -1779,7 +2195,7 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
                 state.activationSummary = result;
                 renderActivationSummary();
-                await refresh();
+                await refreshActive();
             } catch (error) {
                 showToast?.(error?.message || 'Failed to activate recurrences.', 'error');
             }
@@ -1810,26 +2226,32 @@ window.TeacherSchedulerWorkspace = (function () {
                 const createdCount = Array.isArray(result?.createdSessions) ? result.createdSessions.length : 0;
                 const skippedCount = Array.isArray(result?.skippedOccurrences) ? result.skippedOccurrences.length : 0;
                 showToast?.(`${createdCount} session(s) placed${skippedCount ? `, ${skippedCount} skipped` : ''}.`, 'success');
-                await refresh();
+                await refreshActive();
             } catch (error) {
                 showToast?.(error?.message || 'Failed to place weekly pattern.', 'error');
             }
         }
 
-        async function refresh() {
+        async function refresh(options = {}) {
             if (!window.ClassroomAPI?.fetchTeacherSchedulerWorkspace) return;
+            if (state._deactivated) {
+                if (options.reactivate === false) return;
+                state._deactivated = false;
+                state.lifecycleGeneration += 1;
+            }
             clampDateRange('to');
             const from = String(elements.inputTeacherSchedulerFromDate?.value || state.fromDate || '').trim();
             const to = String(elements.inputTeacherSchedulerToDate?.value || state.toDate || '').trim();
             const teacherUid = (isAdminMode() && state.selectedTeacherUid && state.selectedTeacherUid !== 'none') ? state.selectedTeacherUid : undefined;
             const currentGen = ++state.fetchGeneration;
+            const currentLifecycle = state.lifecycleGeneration;
             const payload = await window.ClassroomAPI.fetchTeacherSchedulerWorkspace({
                 from,
                 to,
                 ...(teacherUid ? { teacherUid } : {})
             });
             if (currentGen !== state.fetchGeneration) return;
-            if (state._deactivated) return;
+            if (state._deactivated || currentLifecycle !== state.lifecycleGeneration) return;
             state.classrooms = Array.isArray(payload?.classrooms) ? payload.classrooms : [];
             state.sessions = Array.isArray(payload?.sessions) ? payload.sessions : [];
             const nextFrom = from || payload?.from || null;
@@ -1850,14 +2272,13 @@ window.TeacherSchedulerWorkspace = (function () {
             updateRailLabels();
             renderClassRail();
             renderActivationSummary();
-            if (state.viewMode === 'schedule') {
-                renderScheduleList();
-            } else {
-                renderCalendarGrid();
-            }
-            renderMiniCalendar();
+            renderActiveView();
             renderQuickAdd();
             renderSessionBubble();
+        }
+
+        function refreshActive() {
+            return refresh({ reactivate: false });
         }
 
         function beginPointerDrag(kind, id, sourceEl, evt) {
@@ -2256,7 +2677,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     ? `Rescheduled to ${targetStartTime} (${targetDuration} min).`
                     : `Duration updated to ${targetDuration} min.`;
                 showToast?.(toastMsg, 'success');
-                await refresh();
+                await refreshActive();
             } catch (error) {
                 session.scheduledLocalTime = previousStartTime;
                 session.durationMinutes = previousDuration;
@@ -2365,8 +2786,8 @@ window.TeacherSchedulerWorkspace = (function () {
                     }
                 }
 
-                if (elements.scopeChoiceSeries) elements.scopeChoiceSeries.checked = true;
-                if (elements.scopeChoiceSingle) elements.scopeChoiceSingle.checked = false;
+                if (elements.scopeChoiceSingle) elements.scopeChoiceSingle.checked = true;
+                if (elements.scopeChoiceSeries) elements.scopeChoiceSeries.checked = false;
 
                 const updateButtonState = () => {
                     const isSingle = elements.scopeChoiceSingle && elements.scopeChoiceSingle.checked;
@@ -2558,7 +2979,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         const resData = res?.data || res;
                         const movedList = resData?.moved || seriesMoved;
                         const opId = resData?.operationId || null;
-                        await refresh();
+                        await refreshActive();
 
                         const undoMoves = movedList.map((m) => ({
                             sessionId: m.sessionId,
@@ -2593,7 +3014,7 @@ window.TeacherSchedulerWorkspace = (function () {
                                     const undoData = undoRes?.data || undoRes;
                                     const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : undoMoves.length;
                                     const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
-                                    await refresh();
+                                    await refreshActive();
                                     if (skipped.length > 0) {
                                         const total = restoredCount + skipped.length;
                                         const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
@@ -2611,7 +3032,7 @@ window.TeacherSchedulerWorkspace = (function () {
                         const message = describeTeacherSchedulerError(error, targetDate, targetTime, durationMinutes, sessionId, session.classId, session.teacherUid);
                         showToast?.(message, 'error');
                         markSlotError(targetDate, targetTime, message);
-                        await refresh();
+                        await refreshActive();
                     }
                 } else {
                     try {
@@ -2622,7 +3043,7 @@ window.TeacherSchedulerWorkspace = (function () {
                             timezone: session.timezone || 'UTC',
                             expectedScheduleVersion
                         });
-                        await refresh();
+                        await refreshActive();
 
                         const undoMoves = [{
                             sessionId,
@@ -2656,7 +3077,7 @@ window.TeacherSchedulerWorkspace = (function () {
                                     const undoData = undoRes?.data || undoRes;
                                     const restoredCount = Array.isArray(undoData?.moved) ? undoData.moved.length : 1;
                                     const skipped = Array.isArray(undoData?.skipped) ? undoData.skipped : [];
-                                    await refresh();
+                                    await refreshActive();
                                     if (skipped.length > 0) {
                                         const reason = skipped[0]?.message || (skipped[0]?.reason === 'locked' ? 'locked' : skipped[0]?.reason) || 'locked';
                                         showToast?.(`Could not restore — session is now ${reason}.`, 'info');
@@ -2703,7 +3124,7 @@ window.TeacherSchedulerWorkspace = (function () {
             }
             const appearanceSelect = (typeof document !== 'undefined') ? document.getElementById('ts-setting-appearance') : null;
             if (appearanceSelect) {
-                appearanceSelect.value = state.appearance || 'solid';
+                appearanceSelect.value = state.appearance || 'pastel';
             }
 
             if (settingsDialog && !settingsDialog._tsCloseBound && typeof settingsDialog.addEventListener === 'function') {
@@ -2770,12 +3191,12 @@ window.TeacherSchedulerWorkspace = (function () {
                             cb.checked = (state.selectedTeacherUid === 'all' || cb.value === state.selectedTeacherUid);
                         });
                     }
-                    refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
                 });
             }
             if (elements.btnTeacherSchedulerRefresh) {
                 elements.btnTeacherSchedulerRefresh.addEventListener('click', () => {
-                    refresh().catch((error) => showToast?.(error?.message || 'Failed to refresh teacher scheduler.', 'error'));
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to refresh teacher scheduler.', 'error'));
                 });
             }
 
@@ -2803,7 +3224,7 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (elements.teacherSchedulerTeacherSelect) {
                         elements.teacherSchedulerTeacherSelect.value = state.selectedTeacherUid;
                     }
-                    refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
                 });
             }
 
@@ -2856,7 +3277,7 @@ window.TeacherSchedulerWorkspace = (function () {
             const scheduleListEl = (typeof document !== 'undefined') ? document.getElementById('teacher-scheduler-schedule-list') : null;
 
             function setViewMode(view) {
-                state.viewMode = view;
+                transitionViewRange({ viewMode: view, action: 'view' });
                 if (view === 'day') {
                     if (viewLabel) viewLabel.textContent = 'Day';
                     gridBtn?.classList.add('active');
@@ -2864,12 +3285,8 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (timelineScrollEl) timelineScrollEl.style.display = '';
                     if (calHeadEl) calHeadEl.style.display = '';
                     if (scheduleListEl) scheduleListEl.style.display = 'none';
-                    const { from } = currentRange();
-                    state.fromDate = toLocalDateInput(from);
-                    state.toDate = toLocalDateInput(from);
-                    if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = state.fromDate;
-                    if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = state.toDate;
-                    refresh().catch(() => {});
+                    transitionViewRange({ viewMode: 'day', focusedDate: state.focusedDate || state.fromDate, action: 'focus' });
+                    refreshActive().catch(() => {});
                 } else if (view === 'week') {
                     if (viewLabel) viewLabel.textContent = 'Week';
                     gridBtn?.classList.add('active');
@@ -2877,12 +3294,8 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (timelineScrollEl) timelineScrollEl.style.display = '';
                     if (calHeadEl) calHeadEl.style.display = '';
                     if (scheduleListEl) scheduleListEl.style.display = 'none';
-                    const start = startOfWeek(state.fromDate ? new Date(`${state.fromDate}T00:00:00`) : new Date());
-                    state.fromDate = toLocalDateInput(start);
-                    state.toDate = toLocalDateInput(addDays(start, 6));
-                    if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = state.fromDate;
-                    if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = state.toDate;
-                    refresh().catch(() => {});
+                    transitionViewRange({ viewMode: 'week', focusedDate: state.focusedDate || state.fromDate, action: 'focus' });
+                    refreshActive().catch(() => {});
                 } else if (view === 'schedule') {
                     if (viewLabel) viewLabel.textContent = 'Schedule';
                     gridBtn?.classList.remove('active');
@@ -3012,27 +3425,18 @@ window.TeacherSchedulerWorkspace = (function () {
                     state.hourHeightPx = densityVal;
                 }
                 if (appearance) {
-                    applyAppearance(appearance);
-                    try {
-                        if (typeof localStorage !== 'undefined') {
-                            localStorage.setItem(APPEARANCE_STORAGE_KEY, appearance);
-                        }
-                    } catch (e) {
-                        /* ignore storage error */
-                    }
+                    applyAppearance(persistAppearancePreference(appearance, 'explicit'));
                 }
                 if (weekStartChanged) {
-                    const { from } = currentRange();
-                    const newStart = startOfWeek(from, getWeekStartSetting());
-                    const span = rangeSpanDays();
-                    if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(newStart);
-                    if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = toLocalDateInput(addDays(newStart, span - 1));
-                    state.fromDate = toLocalDateInput(newStart);
-                    state.toDate = toLocalDateInput(addDays(newStart, span - 1));
+                    transitionViewRange({
+                        viewMode: state.viewMode,
+                        focusedDate: state.focusedDate || state.fromDate,
+                        action: 'week-start-change'
+                    });
                     renderMiniCalendar();
-                    refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
                 } else {
-                    renderCalendarGrid();
+                    renderActiveView();
                     renderClassRail();
                 }
                 closeSettings();
@@ -3102,55 +3506,22 @@ window.TeacherSchedulerWorkspace = (function () {
                 });
             });
 
-            /* Week navigation: shift the visible window while preserving its length. */
-            function shiftRange(days) {
-                const fromEl = elements.inputTeacherSchedulerFromDate;
-                const toEl = elements.inputTeacherSchedulerToDate;
-                const { from, to } = currentRange();
-                const nextFrom = addDays(from, days);
-                const nextTo = addDays(to, days);
-                if (fromEl) fromEl.value = toLocalDateInput(nextFrom);
-                if (toEl) toEl.value = toLocalDateInput(nextTo);
-                state.fromDate = toLocalDateInput(nextFrom);
-                state.toDate = toLocalDateInput(nextTo);
-                state._hasScrolledToHour = false;
-                refresh().catch((error) => showToast?.(error?.message || 'Failed to change week.', 'error'));
-            }
-
-            function rangeSpanDays() {
-                if (state.viewMode === 'day') return 1;
-                if (state.viewMode === 'week') return 7;
-                const { from, to } = currentRange();
-                const span = Math.round((to.getTime() - from.getTime()) / 86400000);
-                return Math.max(1, span || 7);
-            }
-
             if (elements.btnTeacherSchedulerPrevWeek) {
-                elements.btnTeacherSchedulerPrevWeek.addEventListener('click', () => shiftRange(-rangeSpanDays()));
+                elements.btnTeacherSchedulerPrevWeek.addEventListener('click', () => {
+                    transitionViewRange({ action: 'shift', direction: -1 });
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to change week.', 'error'));
+                });
             }
             if (elements.btnTeacherSchedulerNextWeek) {
-                elements.btnTeacherSchedulerNextWeek.addEventListener('click', () => shiftRange(rangeSpanDays()));
+                elements.btnTeacherSchedulerNextWeek.addEventListener('click', () => {
+                    transitionViewRange({ action: 'shift', direction: 1 });
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to change week.', 'error'));
+                });
             }
             if (elements.btnTeacherSchedulerToday) {
                 elements.btnTeacherSchedulerToday.addEventListener('click', () => {
-                    if (state.viewMode === 'day') {
-                        const today = new Date();
-                        const todayStr = toLocalDateInput(today);
-                        if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = todayStr;
-                        if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = todayStr;
-                        state.fromDate = todayStr;
-                        state.toDate = todayStr;
-                    } else {
-                        const span = state.viewMode === 'week' ? 7 : rangeSpanDays();
-                        const start = startOfWeek(new Date(), getWeekStartSetting());
-                        const end = addDays(start, span - 1);
-                        if (elements.inputTeacherSchedulerFromDate) elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(start);
-                        if (elements.inputTeacherSchedulerToDate) elements.inputTeacherSchedulerToDate.value = toLocalDateInput(end);
-                        state.fromDate = toLocalDateInput(start);
-                        state.toDate = toLocalDateInput(end);
-                    }
-                    state._hasScrolledToHour = false;
-                    refresh().catch((error) => showToast?.(error?.message || 'Failed to jump to today.', 'error'));
+                    transitionViewRange({ action: 'today' });
+                    refreshActive().catch((error) => showToast?.(error?.message || 'Failed to jump to today.', 'error'));
                 });
             }
             if (elements.teacherSchedulerMiniCalendar) {
@@ -3181,25 +3552,25 @@ window.TeacherSchedulerWorkspace = (function () {
                     if (dayCell) {
                         const dateStr = dayCell.dataset.miniDate;
                         if (!dateStr) return;
-                        const clicked = new Date(`${dateStr}T00:00:00`);
-                        if (!Number.isFinite(clicked.getTime())) return;
-                        const startOfWeekDate = startOfWeek(clicked, getWeekStartSetting());
-                        const endOfWeekDate = addDays(startOfWeekDate, 6);
-                        if (elements.inputTeacherSchedulerFromDate) {
-                            elements.inputTeacherSchedulerFromDate.value = toLocalDateInput(startOfWeekDate);
-                        }
-                        if (elements.inputTeacherSchedulerToDate) {
-                            elements.inputTeacherSchedulerToDate.value = toLocalDateInput(endOfWeekDate);
-                        }
-                        clampDateRange('to');
+                        const clicked = parseLocalDate(dateStr);
+                        if (!clicked) return;
+                        transitionViewRange({ focusedDate: clicked, action: 'focus' });
                         renderMiniCalendar();
-                        refresh().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
+                        refreshActive().catch((error) => showToast?.(error?.message || 'Failed to update teacher schedule.', 'error'));
                     }
                 });
             }
             if (elements.inputTeacherSchedulerFromDate) {
                 const handleFromChange = () => {
                     clampDateRange('from');
+                    transitionViewRange({
+                        viewMode: 'schedule',
+                        action: 'custom-range',
+                        focusedDate: elements.inputTeacherSchedulerFromDate.value,
+                        rangeStart: elements.inputTeacherSchedulerFromDate.value,
+                        rangeEnd: elements.inputTeacherSchedulerToDate?.value
+                    });
+                    setViewMode('schedule');
                     if (state.miniCalendar && elements.inputTeacherSchedulerFromDate.value) {
                         const d = new Date(`${elements.inputTeacherSchedulerFromDate.value}T00:00:00`);
                         if (Number.isFinite(d.getTime())) {
@@ -3208,23 +3579,47 @@ window.TeacherSchedulerWorkspace = (function () {
                         }
                     }
                     renderMiniCalendar();
-                    refresh().catch(() => { });
+                    refreshActive().catch(() => { });
                 };
                 elements.inputTeacherSchedulerFromDate.addEventListener('change', handleFromChange);
                 elements.inputTeacherSchedulerFromDate.addEventListener('input', () => {
                     clampDateRange('from');
+                    transitionViewRange({
+                        viewMode: 'schedule',
+                        action: 'custom-range',
+                        focusedDate: elements.inputTeacherSchedulerFromDate.value,
+                        rangeStart: elements.inputTeacherSchedulerFromDate.value,
+                        rangeEnd: elements.inputTeacherSchedulerToDate?.value
+                    });
+                    setViewMode('schedule');
                     renderMiniCalendar();
                 });
             }
             if (elements.inputTeacherSchedulerToDate) {
                 const handleToChange = () => {
                     clampDateRange('to');
+                    transitionViewRange({
+                        viewMode: 'schedule',
+                        action: 'custom-range',
+                        focusedDate: elements.inputTeacherSchedulerFromDate?.value,
+                        rangeStart: elements.inputTeacherSchedulerFromDate?.value,
+                        rangeEnd: elements.inputTeacherSchedulerToDate.value
+                    });
+                    setViewMode('schedule');
                     renderMiniCalendar();
-                    refresh().catch(() => { });
+                    refreshActive().catch(() => { });
                 };
                 elements.inputTeacherSchedulerToDate.addEventListener('change', handleToChange);
                 elements.inputTeacherSchedulerToDate.addEventListener('input', () => {
                     clampDateRange('to');
+                    transitionViewRange({
+                        viewMode: 'schedule',
+                        action: 'custom-range',
+                        focusedDate: elements.inputTeacherSchedulerFromDate?.value,
+                        rangeStart: elements.inputTeacherSchedulerFromDate?.value,
+                        rangeEnd: elements.inputTeacherSchedulerToDate.value
+                    });
+                    setViewMode('schedule');
                     renderMiniCalendar();
                 });
             }
@@ -3391,13 +3786,15 @@ window.TeacherSchedulerWorkspace = (function () {
 
                 const { teacherUid, teacherName } = getEffectiveTeacherForSession(session);
                 const teacherColor = resolveTeacherColor(teacherUid, teacherName);
+                const eventTheme = resolveEventTheme(teacherColor.key, state.appearance);
                 ghost.dataset.tsColor = teacherColor.key;
-                ghost.style.backgroundColor = teacherColor.fill;
-                ghost.style.color = '#ffffff';
+                applyEventTheme(ghost, eventTheme);
+                ghost.style.backgroundColor = eventTheme.background;
+                ghost.style.color = eventTheme.title;
                 ghost.style.opacity = '1';
 
-                ghost.innerHTML = `<div style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
-                    + `<div class="drag-ghost-chip">${escapeHtml(timeRange)}</div>`;
+                ghost.innerHTML = `<div class="pill-title" style="font-weight:600;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>`
+                    + `<div class="drag-ghost-chip pill-time">${escapeHtml(timeRange)}</div>`;
 
                 document.body.appendChild(ghost);
                 drag.ghostEl = ghost;
@@ -3707,13 +4104,13 @@ window.TeacherSchedulerWorkspace = (function () {
 
             if (elements.inputTeacherSchedulerSessionNote) {
                 elements.inputTeacherSchedulerSessionNote.addEventListener('input', () => {
-                    state.isSessionNoteDirty = true;
+                    setSessionDraft({ note: elements.inputTeacherSchedulerSessionNote.value }, state.sessionBubble || {});
                 });
             }
 
             if (elements.inputTeacherSchedulerSessionOutcome) {
                 elements.inputTeacherSchedulerSessionOutcome.addEventListener('change', () => {
-                    state.isSessionOutcomeDirty = true;
+                    setSessionDraft({ outcome: elements.inputTeacherSchedulerSessionOutcome.value }, state.sessionBubble || {});
                 });
             }
 
@@ -3743,8 +4140,12 @@ window.TeacherSchedulerWorkspace = (function () {
                             .replace(/(?:\+?\d[\d\s\-().]{7,}\d)/g, '[REDACTED_PHONE]');
                     };
 
-                    const stopRecognitionSafe = () => {
-                        if (recognition) { try { recognition.abort(); } catch (_) { /* */ } recognition = null; }
+                    const stopRecognitionSafe = (operation = state._voiceOperation) => {
+                        if (operation && state._voiceOperation && state._voiceOperation !== operation) return;
+                        const ownedRecognition = operation?.recognition || recognition;
+                        if (ownedRecognition) { try { ownedRecognition.abort(); } catch (_) { /* */ } }
+                        if (recognition === ownedRecognition) recognition = null;
+                        if (!operation || state._voiceOperation === operation) state._voiceOperation = null;
                         if (elements.teacherSchedulerVoiceStatus) elements.teacherSchedulerVoiceStatus.style.display = 'none';
                         if (elements.btnTeacherSchedulerVoiceNote) elements.btnTeacherSchedulerVoiceNote.disabled = false;
                     };
@@ -3753,21 +4154,17 @@ window.TeacherSchedulerWorkspace = (function () {
 
                     // Undo AI: button and state
                     const undoBtn = document.getElementById('btn-teacher-scheduler-undo-ai');
-                    let previousNote = '';
-                    let previousOutcome = '';
-                    let undoSessionId = '';
+                    let undoDraft = null;
                     if (undoBtn) {
                         undoBtn.addEventListener('click', () => {
-                            // Only restore if bubble is still open for the same session
-                            if (state.sessionBubble && state.sessionBubble.sessionId === undoSessionId) {
-                                if (elements.inputTeacherSchedulerSessionNote) {
-                                    elements.inputTeacherSchedulerSessionNote.value = previousNote;
-                                }
-                                if (elements.inputTeacherSchedulerSessionOutcome) {
-                                    elements.inputTeacherSchedulerSessionOutcome.value = previousOutcome;
-                                }
+                            if (undoDraft && isEditorContextCurrent(undoDraft.context)) {
+                                setSessionDraft({
+                                    note: undoDraft.note,
+                                    outcome: undoDraft.outcome
+                                }, undoDraft.context);
                                 showToast?.('Previous note restored.', 'info');
                             }
+                            undoDraft = null;
                             undoBtn.style.display = 'none';
                         });
                     }
@@ -3779,43 +4176,49 @@ window.TeacherSchedulerWorkspace = (function () {
                             return;
                         }
                         const recordingSessionId = String(state.sessionBubble?.sessionId || '');
+                        const recordingGeneration = Number(state.sessionBubble?.editorGeneration || 0);
+                        const editorContext = { sessionId: recordingSessionId, editorGeneration: recordingGeneration };
+                        if (!recordingSessionId || !recordingGeneration) return;
                         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        recognition = new SpeechRec();
-                        recognition.continuous = false;
-                        recognition.interimResults = false;
-                        recognition.lang = 'en-US';
+                        const ownedRecognition = new SpeechRec();
+                        recognition = ownedRecognition;
+                        const voiceOperation = { recognition: ownedRecognition, context: editorContext, abortController: null };
+                        state._voiceOperation = voiceOperation;
+                        ownedRecognition.continuous = false;
+                        ownedRecognition.interimResults = false;
+                        ownedRecognition.lang = 'en-US';
 
-                        recognition.onstart = () => {
+                        ownedRecognition.onstart = () => {
                             if (elements.teacherSchedulerVoiceStatus) {
                                 elements.teacherSchedulerVoiceStatus.style.display = 'block';
                                 elements.teacherSchedulerVoiceStatus.textContent = 'Listening… (speak now)';
                             }
                         };
 
-                        recognition.onerror = (e) => {
+                        ownedRecognition.onerror = (e) => {
                             showToast?.('Microphone error: ' + (e.error || 'unknown'), 'error');
-                            stopRecognitionSafe();
+                            stopRecognitionSafe(voiceOperation);
                         };
 
-                        recognition.onresult = async (evt) => {
-                            if (!state.sessionBubble || String(state.sessionBubble.sessionId || '') !== recordingSessionId) {
-                                stopRecognitionSafe();
+                        ownedRecognition.onresult = async (evt) => {
+                            if (!isEditorContextCurrent(editorContext)) {
+                                stopRecognitionSafe(voiceOperation);
                                 return;
                             }
                             const transcript = Array.from(evt.results).map(r => r[0].transcript).join(' ').trim();
                             if (!transcript) {
                                 showToast?.('No speech detected. Try again.', 'info');
-                                stopRecognitionSafe();
+                                stopRecognitionSafe(voiceOperation);
                                 return;
                             }
 
-                            // Capture session context for race-proofing
-                            const capturedSessionId = recordingSessionId;
-
                             // Snapshot for undo
-                            previousNote = elements.inputTeacherSchedulerSessionNote?.value || '';
-                            previousOutcome = elements.inputTeacherSchedulerSessionOutcome?.value || '';
-                            undoSessionId = capturedSessionId;
+                            const currentDraft = getSessionDraft(recordingSessionId);
+                            undoDraft = {
+                                context: editorContext,
+                                note: currentDraft?.note || '',
+                                outcome: currentDraft?.outcome || ''
+                            };
 
                             if (elements.teacherSchedulerVoiceStatus) {
                                 elements.teacherSchedulerVoiceStatus.textContent = 'Processing with Gemma 4…';
@@ -3824,6 +4227,7 @@ window.TeacherSchedulerWorkspace = (function () {
 
                             // Create AbortController for LLM request
                             const llmAbort = new AbortController();
+                            voiceOperation.abortController = llmAbort;
                             state._voiceDraftAbort = llmAbort;
 
                             try {
@@ -3835,10 +4239,7 @@ window.TeacherSchedulerWorkspace = (function () {
                                     ollamaOptions: { temperature: 0.2, num_predict: 240 }
                                 });
 
-                                // Race-proof: verify bubble is still open for the same session
-                                if (!state.sessionBubble || state.sessionBubble.sessionId !== capturedSessionId) {
-                                    return; // Silently discard — session changed
-                                }
+                                if (!isEditorContextCurrent(editorContext)) return;
 
                                 // Strict schema validation
                                 const noteValid = ai && typeof ai.note === 'string' && ai.note.trim().length > 0;
@@ -3847,41 +4248,35 @@ window.TeacherSchedulerWorkspace = (function () {
                                 const outcomeValid = rawOutcome && VALID_OUTCOMES.includes(rawOutcome);
 
                                 if (!noteValid) {
-                                    // Schema invalid — save raw transcript
-                                    elements.inputTeacherSchedulerSessionNote.value = transcript;
+                                    setSessionDraft({ note: transcript }, editorContext);
                                     showToast?.('Saved transcript; AI format invalid.', 'info');
                                 } else {
-                                    elements.inputTeacherSchedulerSessionNote.value = noteText;
-                                    if (outcomeValid) {
-                                        elements.inputTeacherSchedulerSessionOutcome.value = rawOutcome === 'none' ? '' : rawOutcome;
-                                    }
+                                    const changes = { note: noteText };
+                                    if (outcomeValid) changes.outcome = rawOutcome === 'none' ? '' : rawOutcome;
+                                    setSessionDraft(changes, editorContext);
                                     showToast?.('Note drafted by Gemma 4.', 'success');
 
                                     // Show undo button
                                     if (undoBtn) undoBtn.style.display = 'inline-block';
                                 }
                             } catch (err) {
-                                // Race-proof: check session match even on error
-                                if (!state.sessionBubble || state.sessionBubble.sessionId !== capturedSessionId) {
-                                    return;
-                                }
+                                if (!isEditorContextCurrent(editorContext)) return;
                                 if (err?.name === 'AbortError' || /aborted/i.test(String(err?.message || ''))) return;
-                                // Graceful: deposit raw transcript so no data is lost
-                                elements.inputTeacherSchedulerSessionNote.value = transcript;
+                                setSessionDraft({ note: transcript }, editorContext);
                                 showToast?.('AI summary failed — raw transcript saved.', 'info');
                             } finally {
-                                state._voiceDraftAbort = null;
-                                stopRecognitionSafe();
+                                if (state._voiceDraftAbort === llmAbort) state._voiceDraftAbort = null;
+                                stopRecognitionSafe(voiceOperation);
                             }
                         };
 
-                        recognition.onend = () => {
+                        ownedRecognition.onend = () => {
                             // If onresult already handled cleanup, skip
-                            if (!recognition) return;
-                            stopRecognitionSafe();
+                            if (recognition !== ownedRecognition) return;
+                            stopRecognitionSafe(voiceOperation);
                         };
 
-                        recognition.start();
+                        ownedRecognition.start();
                     });
                 }
             }
@@ -3918,8 +4313,13 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         async function init() {
-            if (state.loaded) return;
+            if (state.loaded) {
+                if (state._deactivated) await refresh();
+                return;
+            }
             state.loaded = true;
+            state._deactivated = false;
+            state.lifecycleGeneration += 1;
             setToolbarDefaults();
             initAppearanceSettings();
             initWeekStartSetting();
@@ -3933,7 +4333,10 @@ window.TeacherSchedulerWorkspace = (function () {
         }
 
         function deactivate() {
-            closeQuickAdd();
+            state._deactivated = true;
+            state.lifecycleGeneration += 1;
+            state.fetchGeneration += 1;
+            closeQuickAdd({ force: true });
             closeSessionBubble();
             const createMenu = (typeof document !== 'undefined') ? document.getElementById('ts-create-menu') : null;
             if (createMenu) createMenu.style.display = 'none';
@@ -3986,9 +4389,13 @@ window.TeacherSchedulerWorkspace = (function () {
             formatTimeRange,
             formatGutterHour,
             startOfWeek,
+            transitionViewRange,
+            renderActiveView,
             renderCalendarGrid,
             repaintDayColumns,
             resolveTeacherColor,
+            resolveEventTheme,
+            applyEventTheme,
             applyAppearance,
             initAppearanceSettings,
             resetAppearanceSettings,
@@ -4000,6 +4407,9 @@ window.TeacherSchedulerWorkspace = (function () {
             getSessionLocalTime,
             duplicateSession,
             saveSessionOutcome,
+            getSessionDraft,
+            setSessionDraft,
+            discardSessionDraft,
             clearPointerDrag,
             getState: () => state
         };

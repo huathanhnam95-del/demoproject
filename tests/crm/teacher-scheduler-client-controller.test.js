@@ -214,7 +214,8 @@ async function runTests() {
         Set,
         Date,
         Math,
-        JSON
+        JSON,
+        AbortController
     });
 
     vm.runInContext(workspaceJs, context);
@@ -1235,6 +1236,7 @@ async function runTests() {
 
         // Confirm "This and following sessions"
         testElements.scopeChoiceSeries.checked = true;
+        testElements.scopeChoiceSingle.checked = false;
         testElements.btnTeacherSchedulerScopeConfirm.dispatchEvent({ type: 'click' });
 
         // Allow series reschedule commit to execute
@@ -1361,11 +1363,14 @@ async function runTests() {
         await new Promise((resolve) => setTimeout(resolve, 50));
 
         assert.strictEqual(testElements.teacherSchedulerScopeModal.style.display, 'flex');
-        assert.strictEqual(testElements.btnTeacherSchedulerScopeConfirm.textContent, 'Move 2, skip 1', 'Button text should reflect skipped conflict count');
+        assert.strictEqual(testElements.btnTeacherSchedulerScopeConfirm.textContent, 'Move this session', 'Scope modal must default to one session');
         assert(testElements.teacherSchedulerScopeWarnings.innerHTML.includes('Class Beta 08:00'), 'Warning text should name colliding class and time');
 
         // Confirm
         testElements.scopeChoiceSeries.checked = true;
+        testElements.scopeChoiceSingle.checked = false;
+        testElements.scopeChoiceSeries.dispatchEvent({ type: 'change' });
+        assert.strictEqual(testElements.btnTeacherSchedulerScopeConfirm.textContent, 'Move 2, skip 1', 'Explicit series selection should reflect skipped conflict count');
         testElements.btnTeacherSchedulerScopeConfirm.dispatchEvent({ type: 'click' });
         await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -1568,11 +1573,13 @@ async function runTests() {
         assert(controller.getState().lastMoveUndo, 'lastMoveUndo must be armed after drag drop');
         assert(toastOptions && typeof toastOptions.onAction === 'function', 'Toast with onAction must be registered');
 
+        controller.getState().quickAdd = { pending: true };
         testElements.teacherSchedulerQuickAdd.style.display = 'block';
 
         controller.deactivate();
 
         assert.strictEqual(controller.getState().lastMoveUndo, null, 'deactivate must clear lastMoveUndo');
+        assert.strictEqual(controller.getState().quickAdd, null, 'deactivate must tear down even a pending quick-add editor without cancelling its request');
         assert.strictEqual(testElements.teacherSchedulerQuickAdd.style.display, 'none', 'deactivate must close quick add');
         assert.strictEqual(toastDismissed, true, 'deactivate must dismiss active toast handle');
 
@@ -1775,6 +1782,7 @@ async function runTests() {
 
         // Must auto-clamp to exactly 14 days (2026-09-01 + 13 days = 2026-09-14)
         assert.strictEqual(testElements.inputTeacherSchedulerToDate.value, '2026-09-14', 'Date range must auto-clamp to exactly 14 days from start date');
+        assert.strictEqual(controller.getState().viewMode, 'schedule', 'A custom range must transition to Schedule rather than violating the seven-day Week invariant');
         assert(toastMessages.some((t) => t.msg.includes('Date range automatically adjusted to 14 days maximum')), 'Informational toast must be shown on clamp');
 
         console.log('✓ Automatic 14-day date clamping on input change verified');
@@ -2267,9 +2275,9 @@ async function runTests() {
             ...mockClassroomAPI,
             fetchTeacherSchedulerWorkspace: async () => ({
                 classrooms: [
-                    { classroomId: 'class-huy', name: 'Trần Khắc Huy - PTE Academic 1-1 24h' },
-                    { classroomId: 'class-test', name: 'test - PTE Academic Tutoring' },
-                    { classroomId: 'class-rose', name: 'Lê Hoàng Rose - PTE Academic 30h' }
+                    { classroomId: 'class-huy', name: 'Trần Khắc Huy - PTE Academic 1-1 24h', primaryTeacherUid: 'teacher-1' },
+                    { classroomId: 'class-test', name: 'test - PTE Academic Tutoring', primaryTeacherUid: 'teacher-2' },
+                    { classroomId: 'class-rose', name: 'Lê Hoàng Rose - PTE Academic 30h', primaryTeacherUid: 'teacher-1' }
                 ],
                 sessions: [
                     {
@@ -2323,40 +2331,24 @@ async function runTests() {
         const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
         const railHtml = testElements.teacherSchedulerClassList.innerHTML;
 
-        // 1. Verify active session pill renders with a pastel theme class
-        assert(/is-pastel-(sky|lavender|sage|peach|rose|teal|coral|indigo)/.test(calHtml), 'Calendar session pill must have a pastel theme class');
+        // 1. Verify event paint uses complete pastel tokens rather than class-name-derived fills
+        assert(calHtml.includes('--ts-event-bg:'), 'Calendar session pill must contain resolved event background token');
+        assert(calHtml.includes('--ts-event-title:#1F1F1F'), 'Calendar session pill must contain approved title token');
+        assert(calHtml.includes('--ts-event-meta:#3C4043'), 'Calendar session pill must contain approved metadata token');
         // 2. Verify completed session pill renders with is-completed class
         assert(calHtml.includes('is-completed'), 'Completed session pill must retain is-completed class');
-        // 3. Verify class cards in rail render with scheduler-class-card-pip and pastel theme
+        // 3. Verify class cards in rail render teacher-family accents
         assert(railHtml.includes('scheduler-class-card-pip'), 'Class rail must render color pip');
-        assert(/scheduler-class-card-pip is-pastel-/.test(railHtml), 'Class rail pip must have a pastel theme class');
-
-        // 4. Assert 1:1 matching between classroom rail pip and calendar session pill theme classes for distinct classrooms
-        const extractPipTheme = (classroomId) => {
-            const match = railHtml.match(new RegExp(`data-classroom-id="${classroomId}"[\\s\\S]*?scheduler-class-card-pip\\s+(is-pastel-[a-z]+)`));
-            return match ? match[1] : null;
-        };
-        const extractPillTheme = (sessionId) => {
-            const match = calHtml.match(new RegExp(`<button[^>]*class="[^"]*(is-pastel-[a-z]+)[^"]*"[^>]*data-session-id="${sessionId}"`));
-            return match ? match[1] : null;
-        };
-
-        const huyPipTheme = extractPipTheme('class-huy');
-        const huyPillTheme = extractPillTheme('s-pastel-1');
-        assert(huyPipTheme, 'class-huy rail card pip must have a pastel theme class');
-        assert(huyPillTheme, 's-pastel-1 session pill must have a pastel theme class');
-        assert.strictEqual(huyPillTheme, huyPipTheme, 's-pastel-1 calendar session pill theme must match class-huy rail pip theme 1:1');
-
-        const rosePipTheme = extractPipTheme('class-rose');
-        const rosePillTheme = extractPillTheme('s-pastel-3');
-        assert(rosePipTheme, 'class-rose rail card pip must have a pastel theme class');
-        assert(rosePillTheme, 's-pastel-3 session pill must have a pastel theme class');
-        assert.strictEqual(rosePillTheme, rosePipTheme, 's-pastel-3 calendar session pill theme must match class-rose rail pip theme 1:1');
-
-        // Confirm distinct classrooms hash to distinct themes
-        assert.notStrictEqual(huyPipTheme, rosePipTheme, 'class-huy and class-rose must hash to distinct pastel themes');
-        assert.strictEqual(huyPipTheme, 'is-pastel-lavender');
-        assert.strictEqual(rosePipTheme, 'is-pastel-rose');
+        const extractRailFamily = (classroomId) => railHtml.match(new RegExp(`data-classroom-id="${classroomId}"[^>]*data-ts-color="([a-z]+)"`))?.[1] || null;
+        const extractEventFamily = (sessionId) => calHtml.match(new RegExp(`data-session-id="${sessionId}"[^>]*data-ts-color="([a-z]+)"`))?.[1] || null;
+        const huyFamily = extractRailFamily('class-huy');
+        const roseFamily = extractRailFamily('class-rose');
+        const testFamily = extractRailFamily('class-test');
+        assert(huyFamily && roseFamily && testFamily, 'Every rail marker must expose a resolved teacher family');
+        assert.strictEqual(huyFamily, roseFamily, 'Same teacher UID keeps one family across differently named classes');
+        assert.strictEqual(extractEventFamily('s-pastel-1'), huyFamily, 'Event and rail marker share teacher family');
+        assert.strictEqual(extractEventFamily('s-pastel-3'), roseFamily, 'Second event and rail marker share teacher family');
+        assert.strictEqual(extractEventFamily('s-pastel-2'), testFamily, 'Completed event preserves teacher family');
 
         windowMock.ClassroomAPI = origAPI;
         console.log('✓ Pastel color system for sessions and classroom rail cards verified');
@@ -2722,7 +2714,7 @@ async function runTests() {
         console.log('✓ Defect 1: Class rail full-width title wrapping, teacher name, and separate progress line verified');
     }
 
-    // TEST 35: Defect 3 - Authoritative teacher color resolution, appearance migration, and reset
+    // TEST 35: R5/R6 - UID color family, complete theme tokens, pastel default, and reset
     {
         const testElements = {
             teacherSchedulerWorkspace: doc.createElement('div'),
@@ -2777,13 +2769,30 @@ async function runTests() {
         assert.strictEqual(shawnByUid.key, 'purple', 'Shawn UID must resolve to purple');
         assert.strictEqual(shawnByUid.fill, '#8E24AA', 'Shawn UID must have #8E24AA fill');
 
-        const quynhByName = controller.resolveTeacherColor('usr-quynh', 'Phạm Bích Như Quỳnh');
-        assert.strictEqual(quynhByName.key, 'teal', 'Quynh name must resolve to teal');
-        assert.strictEqual(quynhByName.fill, '#00796B', 'Quynh name must have #00796B fill');
+        const stableBeforeRename = controller.resolveTeacherColor('teacher-stable-uid', 'Original Display Name');
+        const stableAfterRename = controller.resolveTeacherColor('teacher-stable-uid', 'Renamed Teacher');
+        assert.strictEqual(stableAfterRename.key, stableBeforeRename.key, 'Display-name changes must not alter UID-derived family');
+        assert.strictEqual(controller.resolveTeacherColor('', 'Teacher Without UID').key, 'neutral', 'Missing/unassigned UID uses the documented neutral family');
 
         const calHtml = testElements.teacherSchedulerCalendar.innerHTML;
         assert(calHtml.includes('data-ts-color="blue"'), 'Session pill must have data-ts-color="blue"');
-        assert(calHtml.includes('--color: #1A73E8;'), 'Session pill must have --color: #1A73E8;');
+        assert(calHtml.includes('--ts-event-bg:#D2E3FC'), 'Initial event paint must include approved opaque blue pastel token');
+        assert(calHtml.includes('--ts-event-title:#1F1F1F'), 'Initial event paint must include dark title token');
+        assert(calHtml.includes('--ts-event-meta:#3C4043'), 'Initial event paint must include dark metadata token');
+
+        assert.strictEqual(controller.getState().appearance, 'pastel', 'Pastel is the controller default');
+        const purplePastel = controller.resolveEventTheme('purple', 'pastel');
+        assert.strictEqual(purplePastel.background, '#E8DEF8');
+        assert.strictEqual(purplePastel.title, '#1F1F1F');
+        assert.strictEqual(purplePastel.meta, '#3C4043');
+        Object.values(purplePastel).forEach((value) => {
+            assert(/^#[0-9A-F]{6}$/i.test(value), `Theme value must be opaque six-digit hex: ${value}`);
+        });
+        const themedNode = doc.createElement('div');
+        controller.applyEventTheme(themedNode, purplePastel);
+        assert.strictEqual(themedNode.style.getPropertyValue('--ts-event-bg'), '#E8DEF8');
+        assert.strictEqual(themedNode.style.getPropertyValue('--ts-event-title'), '#1F1F1F');
+        assert.strictEqual(themedNode.style.getPropertyValue('--ts-event-meta'), '#3C4043');
 
         // 2. Appearance toggling
         controller.applyAppearance('solid');
@@ -2796,11 +2805,11 @@ async function runTests() {
 
         // 3. Reset appearance settings
         controller.resetAppearanceSettings();
-        assert.strictEqual(controller.getState().appearance, 'solid', 'Reset must restore solid appearance');
-        assert(testElements.teacherSchedulerWorkspace.classList.contains('ts-appearance-solid'), 'Workspace must have solid class after reset');
+        assert.strictEqual(controller.getState().appearance, 'pastel', 'Reset must restore approved pastel appearance');
+        assert(testElements.teacherSchedulerWorkspace.classList.contains('ts-appearance-pastel'), 'Workspace must have pastel class after reset');
 
         windowMock.ClassroomAPI = origAPI;
-        console.log('✓ Defect 3: Authoritative teacher color resolution, appearance migration, and reset verified');
+        console.log('✓ UID family, complete event theme tokens, pastel default, and reset (R5/R6) verified');
     }
 
     // TEST 36: Defect 2 - CSS contract check for slot cell stacking context elimination and mini-calendar
@@ -3634,7 +3643,7 @@ async function runTests() {
 
         // User edits note (setting dirty flag)
         noteInput.value = 'In-progress unsaved draft student observation';
-        state.isSessionNoteDirty = true;
+        noteInput.dispatchEvent({ type: 'input' });
 
         // Background re-render arrives with server session data
         controller.renderSessionBubble(testSession);
@@ -4024,6 +4033,646 @@ async function runTests() {
         assert.strictEqual(voiceStopped, true, 'Opening new session bubble must abort previous voice recognition');
 
         console.log('✓ Interaction lifecycle, outcome dirty tracking, and speech binding (TS-04, TS-13 & TS-16) verified');
+    }
+
+    // TEST 57 (R1): Save completion is bound to the submitted editor generation and revision
+    {
+        const noteInput = doc.createElement('textarea');
+        const outcomeSelect = doc.createElement('select');
+        const bubble = doc.createElement('div');
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerSessionBubble: bubble,
+            inputTeacherSchedulerSessionNote: noteInput,
+            inputTeacherSchedulerSessionOutcome: outcomeSelect,
+            btnTeacherSchedulerSaveOutcome: doc.createElement('button')
+        };
+
+        let resolveSaveA;
+        const saveA = new Promise((resolve) => { resolveSaveA = resolve; });
+        const sessions = [
+            { sessionId: 'draft-race-a', classId: 'c1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60, sessionNote: 'Server A' },
+            { sessionId: 'draft-race-b', classId: 'c1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '10:00', durationMinutes: 60, sessionNote: 'Server B' }
+        ];
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha', primaryTeacherUid: 'teacher-1' }],
+                sessions: sessions.map((session) => ({ ...session })),
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherSetScheduledSessionOutcome: async (sessionId) => {
+                if (sessionId === 'draft-race-a') await saveA;
+                return { success: true };
+            }
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        await controller.init();
+
+        controller.openSessionBubble('draft-race-a');
+        noteInput.value = 'Submitted A';
+        noteInput.dispatchEvent({ type: 'input' });
+        outcomeSelect.value = 'completed';
+        outcomeSelect.dispatchEvent({ type: 'change' });
+        const pendingSave = controller.saveSessionOutcome('draft-race-a', 'completed');
+
+        controller.openSessionBubble('draft-race-b');
+        noteInput.value = 'Unsaved B survives A';
+        noteInput.dispatchEvent({ type: 'input' });
+        resolveSaveA();
+        await pendingSave;
+
+        assert.strictEqual(controller.getState().sessionBubble?.sessionId, 'draft-race-b', 'Save A must not close editor B');
+        assert.strictEqual(noteInput.value, 'Unsaved B survives A', 'Save A must not overwrite editor B draft during refresh');
+        assert.strictEqual(controller.getSessionDraft('draft-race-b')?.note, 'Unsaved B survives A', 'Editor B draft must remain recoverable');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Save completion cannot clear a different session generation (R1) verified');
+    }
+
+    // TEST 58 (R1): Reopening the same session creates a generation that an older save cannot close
+    {
+        const noteInput = doc.createElement('textarea');
+        const bubble = doc.createElement('div');
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            teacherSchedulerSessionBubble: bubble,
+            inputTeacherSchedulerSessionNote: noteInput,
+            inputTeacherSchedulerSessionOutcome: doc.createElement('select'),
+            btnTeacherSchedulerSaveOutcome: doc.createElement('button')
+        };
+
+        let resolveSave;
+        const deferredSave = new Promise((resolve) => { resolveSave = resolve; });
+        const session = { sessionId: 'draft-reopen-a', classId: 'c1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60, sessionNote: 'Server note' };
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha', primaryTeacherUid: 'teacher-1' }],
+                sessions: [{ ...session }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherSetScheduledSessionOutcome: async () => {
+                await deferredSave;
+                return { success: true };
+            }
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({ elements: testElements, showToast: () => {}, isAdmin: () => true });
+        await controller.init();
+        controller.openSessionBubble('draft-reopen-a');
+        noteInput.value = 'First submitted note';
+        noteInput.dispatchEvent({ type: 'input' });
+        const firstGeneration = controller.getState().sessionBubble.editorGeneration;
+        const pendingSave = controller.saveSessionOutcome('draft-reopen-a', 'none');
+
+        controller.closeSessionBubble();
+        controller.openSessionBubble('draft-reopen-a');
+        const reopenedGeneration = controller.getState().sessionBubble.editorGeneration;
+        assert(reopenedGeneration > firstGeneration, 'Reopening a session must advance its editor generation');
+        noteInput.value = 'Newer note after reopen';
+        noteInput.dispatchEvent({ type: 'input' });
+
+        resolveSave();
+        await pendingSave;
+        assert.strictEqual(controller.getState().sessionBubble?.sessionId, 'draft-reopen-a', 'Older save must not close reopened editor');
+        assert.strictEqual(noteInput.value, 'Newer note after reopen', 'Older save must not overwrite reopened draft');
+        assert.strictEqual(controller.getSessionDraft('draft-reopen-a')?.note, 'Newer note after reopen');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Reopened same-session generation survives older save completion (R1) verified');
+    }
+
+    // TEST 59 (R2): Speech/AI, fallback, and Undo share the generation-checked draft setter
+    {
+        const noteInput = doc.createElement('textarea');
+        const outcomeSelect = doc.createElement('select');
+        const voiceButton = doc.createElement('button');
+        const undoButton = doc.getElementById('btn-teacher-scheduler-undo-ai');
+        undoButton.listeners = {};
+        let activeRecognition = null;
+        class FakeSpeechRecognition {
+            constructor() { activeRecognition = this; }
+            start() { this.onstart?.(); }
+            abort() { this.aborted = true; }
+        }
+
+        let resolveAi;
+        const aiDeferred = new Promise((resolve) => { resolveAi = resolve; });
+        const origSpeechRecognition = windowMock.SpeechRecognition;
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.SpeechRecognition = FakeSpeechRecognition;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'c1', name: 'Class Alpha', primaryTeacherUid: 'teacher-1' }],
+                sessions: [{ sessionId: 'voice-gen-a', classId: 'c1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60, sessionNote: 'Before AI' }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: {
+                teacherSchedulerWorkspace: doc.createElement('div'),
+                teacherSchedulerCalendar: doc.createElement('div'),
+                teacherSchedulerSessionBubble: doc.createElement('div'),
+                inputTeacherSchedulerSessionNote: noteInput,
+                inputTeacherSchedulerSessionOutcome: outcomeSelect,
+                btnTeacherSchedulerVoiceNote: voiceButton,
+                teacherSchedulerVoiceStatus: doc.createElement('div')
+            },
+            showToast: () => {},
+            fetchGemmaJSON: async () => aiDeferred,
+            isAdmin: () => true
+        });
+        await controller.init();
+        controller.openSessionBubble('voice-gen-a');
+        voiceButton.dispatchEvent({ type: 'click' });
+        const oldGeneration = controller.getState().sessionBubble.editorGeneration;
+        const aiResultPromise = activeRecognition.onresult({ results: [[{ transcript: 'Student completed the lesson.' }]] });
+
+        controller.closeSessionBubble();
+        controller.openSessionBubble('voice-gen-a');
+        noteInput.value = 'Newer manual note';
+        noteInput.dispatchEvent({ type: 'input' });
+        assert(controller.getState().sessionBubble.editorGeneration > oldGeneration);
+
+        resolveAi({ note: 'Late AI note', outcome: 'completed' });
+        await aiResultPromise;
+        assert.strictEqual(noteInput.value, 'Newer manual note', 'Late AI result from an older generation must be ignored');
+        assert.strictEqual(controller.getSessionDraft('voice-gen-a')?.note, 'Newer manual note');
+
+        controller.closeSessionBubble();
+        controller.openSessionBubble('voice-gen-a');
+        voiceButton.dispatchEvent({ type: 'click' });
+        const immediateResult = activeRecognition.onresult({ results: [[{ transcript: 'Fallback transcript' }]] });
+        await immediateResult;
+        assert.strictEqual(controller.getSessionDraft('voice-gen-a')?.noteDirty, true, 'Programmatic AI/fallback text must be an unsaved draft');
+        assert.strictEqual(controller.getSessionDraft('voice-gen-a')?.note, 'Late AI note', 'Current-generation AI result must flow into the draft');
+
+        undoButton.dispatchEvent({ type: 'click' });
+        assert.strictEqual(controller.getSessionDraft('voice-gen-a')?.note, 'Newer manual note', 'Undo must restore through the draft setter');
+        assert.strictEqual(controller.getSessionDraft('voice-gen-a')?.noteDirty, true, 'Undo result remains unsaved until explicitly saved');
+
+        if (origSpeechRecognition === undefined) delete windowMock.SpeechRecognition;
+        else windowMock.SpeechRecognition = origSpeechRecognition;
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Speech/AI/fallback/Undo generation-bound draft mutations (R2) verified');
+    }
+
+    // TEST 60 (R3): One navigation transition owns Day, Week, and custom Schedule ranges
+    {
+        const fromInput = doc.createElement('input');
+        const toInput = doc.createElement('input');
+        const miniCalendar = doc.createElement('div');
+        const prevButton = doc.createElement('button');
+        const nextButton = doc.createElement('button');
+        const todayButton = doc.createElement('button');
+        fromInput.value = '2026-09-10';
+        toInput.value = '2026-09-14';
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: {
+                teacherSchedulerWorkspace: doc.createElement('div'),
+                teacherSchedulerCalendar: doc.createElement('div'),
+                teacherSchedulerMiniCalendar: miniCalendar,
+                inputTeacherSchedulerFromDate: fromInput,
+                inputTeacherSchedulerToDate: toInput,
+                btnTeacherSchedulerPrevWeek: prevButton,
+                btnTeacherSchedulerNextWeek: nextButton,
+                btnTeacherSchedulerToday: todayButton
+            },
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        await controller.init();
+        assert.strictEqual(typeof controller.transitionViewRange, 'function', 'Controller must expose the shared navigation transition');
+
+        controller.transitionViewRange({ viewMode: 'day', focusedDate: '2026-09-18', action: 'focus' });
+        assert.strictEqual(controller.getState().fromDate, '2026-09-18');
+        assert.strictEqual(controller.getState().toDate, '2026-09-18', 'Day is exactly one date');
+
+        controller.transitionViewRange({ viewMode: 'week', focusedDate: '2026-09-18', action: 'focus' });
+        let fromDate = new Date(`${controller.getState().fromDate}T00:00:00`);
+        let toDate = new Date(`${controller.getState().toDate}T00:00:00`);
+        assert.strictEqual(Math.round((toDate - fromDate) / 86400000) + 1, 7, 'Week is exactly seven dates');
+
+        controller.transitionViewRange({
+            viewMode: 'schedule',
+            rangeStart: '2026-09-10',
+            rangeEnd: '2026-09-14',
+            action: 'custom-range'
+        });
+        nextButton.dispatchEvent({ type: 'click' });
+        assert.strictEqual(controller.getState().fromDate, '2026-09-15', 'Next shifts a five-day Schedule range by five days');
+        assert.strictEqual(controller.getState().toDate, '2026-09-19');
+        prevButton.dispatchEvent({ type: 'click' });
+        assert.strictEqual(controller.getState().fromDate, '2026-09-10', 'Previous restores the same custom span');
+        assert.strictEqual(controller.getState().toDate, '2026-09-14');
+
+        windowMock.__SCHEDULER_NOW__ = '2026-09-20T12:00:00';
+        todayButton.dispatchEvent({ type: 'click' });
+        assert.strictEqual(controller.getState().fromDate, '2026-09-20', 'Today reanchors Schedule on today');
+        assert.strictEqual(controller.getState().toDate, '2026-09-24', 'Today preserves the five-day Schedule span');
+        delete windowMock.__SCHEDULER_NOW__;
+
+        controller.transitionViewRange({ viewMode: 'day', focusedDate: '2026-09-18', action: 'focus' });
+        const dayCell = new MockElement('button');
+        dayCell.dataset.miniDate = '2026-09-22';
+        dayCell.closest = (selector) => selector.includes('[data-mini-date]') ? dayCell : null;
+        miniCalendar.dispatchEvent({ type: 'click', target: dayCell });
+        assert.strictEqual(controller.getState().fromDate, '2026-09-22', 'Mini-calendar click in Day stays Day');
+        assert.strictEqual(controller.getState().toDate, '2026-09-22');
+
+        console.log('✓ Central Day, Week, and Schedule navigation transition (R3) verified');
+    }
+
+    // TEST 61 (R4): Active-view rendering and route lifecycle reject stale reads and remount deliberately
+    {
+        const scheduleList = doc.getElementById('teacher-scheduler-schedule-list');
+        const fromInput = doc.createElement('input');
+        const toInput = doc.createElement('input');
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: {
+                teacherSchedulerWorkspace: doc.createElement('div'),
+                teacherSchedulerCalendar: doc.createElement('div'),
+                inputTeacherSchedulerFromDate: fromInput,
+                inputTeacherSchedulerToDate: toInput
+            },
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        await controller.init();
+        assert.strictEqual(typeof controller.renderActiveView, 'function', 'Controller must expose one active-view renderer');
+
+        const state = controller.getState();
+        state.viewMode = 'schedule';
+        state.fromDate = '2026-09-07';
+        state.toDate = '2026-09-13';
+        fromInput.value = state.fromDate;
+        toInput.value = state.toDate;
+        state.classrooms = [{ classroomId: 'agenda-c1', name: 'Agenda Class', primaryTeacherUid: 'teacher-1' }];
+        state.sessions = [{ sessionId: 'agenda-s1', classId: 'agenda-c1', teacherUid: 'teacher-1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60 }];
+        controller.setTimeFormatSetting('12');
+        controller.renderActiveView();
+        assert(scheduleList.innerHTML.includes('8:00 AM'), 'Agenda visible time must update through renderActiveView');
+        controller.setTimeFormatSetting('24');
+
+        let resolveStale;
+        const staleResponse = new Promise((resolve) => { resolveStale = resolve; });
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => staleResponse
+        };
+        const pendingRefresh = controller.refresh();
+        controller.deactivate();
+        resolveStale({ classrooms: [{ classroomId: 'stale-c' }], sessions: [{ sessionId: 'stale-s' }] });
+        await pendingRefresh;
+        assert.notStrictEqual(state.sessions[0]?.sessionId, 'stale-s', 'Fetch resolving after deactivate must not repaint state');
+        assert.strictEqual(state._deactivated, true, 'Deactivation state is explicit');
+
+        await controller.refresh({ reactivate: false });
+        assert.strictEqual(state._deactivated, true, 'Internal post-mutation refresh must not reactivate a route after leave');
+
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'remount-c' }],
+                sessions: [{ sessionId: 'remount-s' }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+        await controller.refresh();
+        assert.strictEqual(state._deactivated, false, 'Explicit refresh after route re-entry reactivates lifecycle');
+        assert.strictEqual(state.sessions[0]?.sessionId, 'remount-s', 'Remounted refresh is accepted');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Active view and route lifecycle generation handling (R4) verified');
+    }
+
+    // TEST 62 (R7): Recurrence scope always defaults to this session only
+    {
+        const singleChoice = doc.createElement('input');
+        const seriesChoice = doc.createElement('input');
+        const confirmButton = doc.createElement('button');
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input'),
+            teacherSchedulerScopeModal: doc.createElement('div'),
+            teacherSchedulerScopeTitle: doc.createElement('div'),
+            teacherSchedulerScopeShiftFrom: doc.createElement('div'),
+            teacherSchedulerScopeShiftTo: doc.createElement('div'),
+            teacherSchedulerScopeSeriesTitle: doc.createElement('div'),
+            teacherSchedulerScopeSeriesDesc: doc.createElement('div'),
+            teacherSchedulerScopeWarnings: doc.createElement('div'),
+            scopeChoiceSingle: singleChoice,
+            scopeChoiceSeries: seriesChoice,
+            btnTeacherSchedulerScopeCancel: doc.createElement('button'),
+            btnTeacherSchedulerScopeConfirm: confirmButton
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+        let singleCalls = 0;
+        let seriesCalls = 0;
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'scope-c1', name: 'Scope Class', primaryTeacherUid: 'teacher-1' }],
+                sessions: [{ sessionId: 'scope-default-s1', classId: 'scope-c1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60, timezone: 'UTC' }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherRescheduleSessionSeries: async (sessionId, data) => {
+                seriesCalls += 1;
+                return {
+                    success: true,
+                    moved: [
+                        { sessionId, from: { date: '2026-09-08', time: '08:00' }, to: { date: data.targetLocalDate, time: data.targetLocalTime } },
+                        { sessionId: 'scope-default-s2', from: { date: '2026-09-15', time: '08:00' }, to: { date: '2026-09-15', time: '09:00' } }
+                    ],
+                    conflicts: [],
+                    canCommit: true
+                };
+            },
+            teacherRescheduleScheduledSession: async () => {
+                singleCalls += 1;
+                return { success: true };
+            }
+        };
+
+        const controller = TeacherSchedulerWorkspace.createController({ elements: testElements, showToast: () => {}, isAdmin: () => true });
+        await controller.init();
+        const movePromise = controller.handleSessionDrop('scope-default-s1', '2026-09-08', '09:00');
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assert.strictEqual(singleChoice.checked, true, 'This session only must be selected when scope opens');
+        assert.strictEqual(seriesChoice.checked, false, 'Series scope requires explicit selection');
+        confirmButton.dispatchEvent({ type: 'click' });
+        await movePromise;
+        assert.strictEqual(singleCalls, 1, 'Default confirmation must use the single-session endpoint');
+        assert.strictEqual(seriesCalls, 1, 'Series endpoint must be used only for the dry run when single is default');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Recurrence scope defaults to this session only (R7) verified');
+    }
+
+    // TEST 63 (R8): Create/cancel pending state, retry preservation, and stable operation identity
+    {
+        const quickAdd = doc.createElement('div');
+        const quickAddButton = doc.createElement('button');
+        const calendar = doc.createElement('div');
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: calendar,
+            teacherSchedulerQuickAdd: quickAdd,
+            inputTeacherSchedulerQuickClass: doc.createElement('select'),
+            inputTeacherSchedulerQuickDate: doc.createElement('input'),
+            inputTeacherSchedulerQuickTime: doc.createElement('input'),
+            inputTeacherSchedulerQuickDuration: doc.createElement('select'),
+            btnTeacherSchedulerQuickAdd: quickAddButton,
+            teacherSchedulerQuickError: doc.createElement('div'),
+            teacherSchedulerQuickSuggestions: doc.createElement('div'),
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+        const toasts = [];
+        const createCalls = [];
+        const cancelCalls = [];
+        let rejectCreate;
+        let resolveCreateRetry;
+        let createAttempt = 0;
+        let rejectCancel;
+        let resolveCancelRetry;
+        let cancelAttempt = 0;
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'pending-c1', name: 'Pending Class', primaryTeacherUid: 'teacher-1', scheduleConfig: { sessionMinutes: 60, timezone: 'UTC' } }],
+                sessions: [{ sessionId: 'pending-cancel-s1', classId: 'pending-c1', teacherUid: 'teacher-1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60 }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            }),
+            teacherAddClassroomSession: async (classId, data) => {
+                createCalls.push({ classId, data });
+                createAttempt += 1;
+                if (createAttempt === 1) return new Promise((resolve, reject) => { rejectCreate = reject; });
+                return new Promise((resolve) => { resolveCreateRetry = resolve; });
+            },
+            teacherCancelScheduledSession: async (sessionId, options) => {
+                cancelCalls.push({ sessionId, options });
+                cancelAttempt += 1;
+                if (cancelAttempt === 1) return new Promise((resolve, reject) => { rejectCancel = reject; });
+                return new Promise((resolve) => { resolveCancelRetry = resolve; });
+            }
+        };
+        const controller = TeacherSchedulerWorkspace.createController({
+            elements: testElements,
+            showToast: (message, kind) => { toasts.push({ message, kind }); },
+            isAdmin: () => true
+        });
+        await controller.init();
+
+        const slot = new MockElement('div');
+        slot.dataset.date = '2026-09-09';
+        slot.dataset.time = '10:00';
+        slot.closest = (selector) => selector.includes('.teacher-scheduler-slot') ? slot : null;
+        calendar.dispatchEvent({ type: 'click', target: slot });
+        testElements.inputTeacherSchedulerQuickClass.value = 'pending-c1';
+        testElements.inputTeacherSchedulerQuickDate.value = '2026-09-09';
+        testElements.inputTeacherSchedulerQuickTime.value = '10:00';
+        testElements.inputTeacherSchedulerQuickDuration.value = '60';
+
+        const firstCreate = controller.commitQuickAdd().catch(() => {});
+        assert.strictEqual(controller.getState().quickAdd?.pending, true, 'Quick Add remains open and pending until server confirmation');
+        assert.strictEqual(quickAddButton.disabled, true, 'Pending create disables repeated submission');
+        assert.strictEqual(createCalls.length, 1);
+        assert(createCalls[0].data.operationId, 'Create payload must include a stable operationId');
+        const createOperationId = createCalls[0].data.operationId;
+        const duplicateCreate = controller.commitQuickAdd();
+        assert.strictEqual(createCalls.length, 1, 'Repeated click while pending must not issue another create');
+        assert(!toasts.some((toast) => toast.kind === 'success'), 'Pending create must not report success');
+
+        rejectCreate(new Error('Create network failure'));
+        await Promise.all([firstCreate, duplicateCreate.catch(() => {})]);
+        assert.strictEqual(controller.getState().quickAdd?.targetDate, '2026-09-09', 'Failed Quick Add preserves retry date');
+        assert.strictEqual(controller.getState().quickAdd?.targetTime, '10:00', 'Failed Quick Add preserves retry time');
+        assert.strictEqual(controller.getState().quickAdd?.operationId, createOperationId, 'Failed Quick Add preserves logical operationId');
+        assert.strictEqual(quickAddButton.disabled, false, 'Retry is enabled after failure');
+
+        const retryCreate = controller.commitQuickAdd();
+        assert.strictEqual(createCalls[1].data.operationId, createOperationId, 'Create retry reuses the same operationId');
+        assert(!toasts.some((toast) => toast.kind === 'success'), 'Retry remains pending before confirmation');
+        resolveCreateRetry({ sessionId: 'pending-created-real' });
+        await retryCreate;
+        assert.strictEqual(controller.getState().quickAdd, null, 'Confirmed create closes Quick Add');
+        assert(toasts.some((toast) => toast.kind === 'success' && /added/i.test(toast.message)), 'Create success is reported after confirmation');
+
+        toasts.length = 0;
+        const firstCancel = controller.cancelSession('pending-cancel-s1').catch(() => {});
+        assert.strictEqual(cancelCalls.length, 1);
+        assert(cancelCalls[0].options?.operationId, 'Cancel call must carry controller operationId for transport integration');
+        const cancelOperationId = cancelCalls[0].options.operationId;
+        const duplicateCancel = controller.cancelSession('pending-cancel-s1');
+        assert.strictEqual(cancelCalls.length, 1, 'Repeated cancel while pending must not issue another mutation');
+        assert(!toasts.some((toast) => toast.kind === 'success'), 'Pending cancel must not report success');
+        rejectCancel(new Error('Cancel network failure'));
+        await Promise.all([firstCancel, duplicateCancel.catch(() => {})]);
+        assert(controller.getState().sessions.some((session) => session.sessionId === 'pending-cancel-s1'), 'Failed cancel restores event');
+
+        const retryCancel = controller.cancelSession('pending-cancel-s1');
+        assert.strictEqual(cancelCalls[1].options.operationId, cancelOperationId, 'Cancel retry reuses the same operationId');
+        resolveCancelRetry({ success: true });
+        await retryCancel;
+        assert(toasts.some((toast) => toast.kind === 'success' && /cancelled/i.test(toast.message)), 'Cancel success is reported only after confirmation');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Pending create/cancel and stable retry operation identity (R8) verified');
+    }
+
+    // TEST 64 (R5/R6): Agenda marker and detached drag preview consume the same complete theme
+    {
+        const calendar = doc.createElement('div');
+        const scheduleList = doc.getElementById('teacher-scheduler-schedule-list');
+        const testElements = {
+            teacherSchedulerWorkspace: doc.createElement('div'),
+            teacherSchedulerCalendar: calendar,
+            inputTeacherSchedulerFromDate: doc.createElement('input'),
+            inputTeacherSchedulerToDate: doc.createElement('input')
+        };
+        testElements.inputTeacherSchedulerFromDate.value = '2026-09-07';
+        testElements.inputTeacherSchedulerToDate.value = '2026-09-13';
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({
+                classrooms: [{ classroomId: 'theme-c1', name: 'Lavender Class', primaryTeacherUid: 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83', primaryTeacherName: 'Teacher Shawn' }],
+                sessions: [{ sessionId: 'theme-s1', classId: 'theme-c1', teacherUid: 'eRrS6Ba3QfQ6R9SmPbcb3bYcOK83', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60 }],
+                from: '2026-09-07',
+                to: '2026-09-13'
+            })
+        };
+        const controller = TeacherSchedulerWorkspace.createController({ elements: testElements, showToast: () => {}, isAdmin: () => true });
+        await controller.init();
+        assert(calendar.innerHTML.includes('--ts-event-bg:#E8DEF8'), 'Purple teacher event uses lavender background');
+
+        controller.getState().viewMode = 'schedule';
+        controller.renderActiveView();
+        assert(scheduleList.innerHTML.includes('data-ts-color="purple"'), 'Agenda row carries the shared teacher family');
+        assert(scheduleList.innerHTML.includes('--ts-event-accent:#8E24AA'), 'Agenda marker derives from the shared family accent');
+
+        controller.getState().viewMode = 'week';
+        const sourcePill = new MockElement('button');
+        sourcePill.dataset.sessionId = 'theme-s1';
+        sourcePill.closest = (selector) => selector.includes('.teacher-scheduler-session-pill') ? sourcePill : null;
+        sourcePill.getBoundingClientRect = () => ({ left: 100, top: 100, width: 120, height: 48 });
+        const oldBody = doc.body;
+        const appended = [];
+        const body = new MockElement('body');
+        body.appendChild = (node) => { node.parentNode = body; appended.push(node); };
+        body.removeChild = (node) => { const index = appended.indexOf(node); if (index >= 0) appended.splice(index, 1); node.parentNode = null; };
+        doc.body = body;
+        calendar.dispatchEvent({ type: 'mousedown', button: 0, clientX: 112, clientY: 112, target: sourcePill });
+        doc.dispatchEvent({ type: 'mousemove', clientX: 140, clientY: 145, target: sourcePill });
+        const ghost = appended.find((node) => node.className === 'teacher-scheduler-drag-ghost');
+        assert(ghost, 'Dragging creates a detached preview');
+        assert.strictEqual(ghost.style.getPropertyValue('--ts-event-bg'), '#E8DEF8');
+        assert.strictEqual(ghost.style.getPropertyValue('--ts-event-title'), '#1F1F1F');
+        assert.strictEqual(ghost.style.getPropertyValue('--ts-event-meta'), '#3C4043');
+        assert(ghost.innerHTML.includes('pill-title') && ghost.innerHTML.includes('pill-time'), 'Detached preview uses normal event content classes');
+        controller.clearPointerDrag();
+        doc.body = oldBody;
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Agenda and detached preview complete theme application (R5/R6) verified');
+    }
+
+    // TEST 65 (R6): Per-user v3 appearance migration preserves later explicit Solid
+    {
+        const records = new Map([['teacher_scheduler_appearance_v2', 'solid']]);
+        const storage = {
+            getItem: (key) => records.has(key) ? records.get(key) : null,
+            setItem: (key, value) => records.set(key, String(value)),
+            removeItem: (key) => records.delete(key)
+        };
+        context.localStorage = storage;
+        windowMock.firebase = { auth: () => ({ currentUser: { uid: 'appearance-user-a' } }) };
+
+        const first = TeacherSchedulerWorkspace.createController({
+            elements: { teacherSchedulerWorkspace: doc.createElement('div'), teacherSchedulerCalendar: doc.createElement('div') },
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        first.initAppearanceSettings();
+        assert.strictEqual(first.getState().appearance, 'pastel', 'Current user legacy Solid migrates once to approved Pastel');
+        const scopedKey = 'teacher_scheduler_appearance_v3:appearance-user-a';
+        assert.strictEqual(JSON.parse(records.get(scopedKey)).value, 'pastel');
+
+        records.set(scopedKey, JSON.stringify({ version: 3, value: 'solid', source: 'explicit' }));
+        const second = TeacherSchedulerWorkspace.createController({
+            elements: { teacherSchedulerWorkspace: doc.createElement('div'), teacherSchedulerCalendar: doc.createElement('div') },
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        second.initAppearanceSettings();
+        assert.strictEqual(second.getState().appearance, 'solid', 'Explicit v3 Solid remains stable after migration');
+
+        delete context.localStorage;
+        delete windowMock.firebase;
+        console.log('✓ Scoped appearance migration and explicit preference preservation (R6) verified');
+    }
+
+    // TEST 66 (R1): Dirty drafts survive controller remount and clear only on explicit discard
+    {
+        const session = { sessionId: 'route-remount-draft', classId: 'c1', scheduledLocalDate: '2026-09-08', scheduledLocalTime: '08:00', durationMinutes: 60, sessionNote: 'Server remount note' };
+        const origAPI = windowMock.ClassroomAPI;
+        windowMock.ClassroomAPI = {
+            ...origAPI,
+            fetchTeacherSchedulerWorkspace: async () => ({ classrooms: [{ classroomId: 'c1', name: 'Class Alpha' }], sessions: [{ ...session }], from: '2026-09-07', to: '2026-09-13' })
+        };
+        const firstNote = doc.createElement('textarea');
+        const first = TeacherSchedulerWorkspace.createController({
+            elements: { teacherSchedulerWorkspace: doc.createElement('div'), teacherSchedulerCalendar: doc.createElement('div'), teacherSchedulerSessionBubble: doc.createElement('div'), inputTeacherSchedulerSessionNote: firstNote },
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        await first.init();
+        first.openSessionBubble('route-remount-draft');
+        firstNote.value = 'Browser-session retained note';
+        firstNote.dispatchEvent({ type: 'input' });
+        first.deactivate();
+
+        const secondNote = doc.createElement('textarea');
+        const second = TeacherSchedulerWorkspace.createController({
+            elements: { teacherSchedulerWorkspace: doc.createElement('div'), teacherSchedulerCalendar: doc.createElement('div'), teacherSchedulerSessionBubble: doc.createElement('div'), inputTeacherSchedulerSessionNote: secondNote },
+            showToast: () => {},
+            isAdmin: () => true
+        });
+        await second.init();
+        second.openSessionBubble('route-remount-draft');
+        assert.strictEqual(secondNote.value, 'Browser-session retained note', 'Dirty draft survives controller remount');
+        second.discardSessionDraft('route-remount-draft');
+        assert.strictEqual(secondNote.value, 'Server remount note', 'Explicit discard restores server value');
+
+        windowMock.ClassroomAPI = origAPI;
+        console.log('✓ Browser-session draft remount and explicit discard (R1) verified');
     }
 
     console.log('All teacher scheduler client controller tests passed successfully!');
